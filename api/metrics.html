@@ -1,0 +1,1232 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>opentelemetry.metrics package &mdash; OpenTelemetry Python  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="opentelemetry.trace package" href="trace.html" />
+    <link rel="prev" title="opentelemetry.context.base_context module" href="context.context.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> OpenTelemetry Python
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started with OpenTelemetry Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq-and-cookbook.html">Frequently Asked Questions and Cookbook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Python Packages</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">OpenTelemetry Python API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="baggage.html">opentelemetry.baggage package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">opentelemetry.configuration module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="context.html">opentelemetry.context package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">opentelemetry.metrics package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-opentelemetry.metrics">Module contents</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="trace.html">opentelemetry.trace package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../sdk/sdk.html">OpenTelemetry Python SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Exporters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/jaeger/jaeger.html">Opentelemetry Jaeger Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/opencensus/opencensus.html">OpenCensus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/otlp/otlp.html">Opentelemetry OTLP Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/prometheus/prometheus.html">OpenTelemetry Prometheus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/zipkin/zipkin.html">Opentelemetry Zipkin Exporter</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Instrumentations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentor.html">opentelemetry.instrumentation.instrumentor package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/metric.html">opentelemetry.instrumentation.metric package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/opentracing_shim/opentracing_shim.html">OpenTracing Shim for OpenTelemetry</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples/auto-instrumentation/README.html">Autoinstrumentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_context/README.html">Basic Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_meter/README.html">Basic Meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_tracer/README.html">Basic Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/datadog_exporter/README.html">Datadog Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/django/README.html">OpenTelemetry Django Instrumentation Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/README.html">Global Error Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/error_handler_0/README.html">Error Handler 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/error_handler_1/README.html">Error Handler 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opencensus-exporter-metrics/README.html">OpenTelemetry Collector Metrics OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opencensus-exporter-tracer/README.html">OpenTelemetry Collector Tracer OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opentelemetry-example-app/README.html">OpenTelemetry Example Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opentracing/README.html">OpenTracing Shim Example</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenTelemetry Python</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="api.html">OpenTelemetry Python API</a> &raquo;</li>
+        
+      <li>opentelemetry.metrics package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api/metrics.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="opentelemetry-metrics-package">
+<h1>opentelemetry.metrics package<a class="headerlink" href="#opentelemetry-metrics-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-opentelemetry.metrics">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-opentelemetry.metrics" title="Permalink to this headline">¶</a></h2>
+<p>The OpenTelemetry metrics API describes the classes used to report raw
+measurements, as well as metrics with known aggregation and labels.</p>
+<p>The <a class="reference internal" href="#opentelemetry.metrics.Meter" title="opentelemetry.metrics.Meter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Meter</span></code></a> class is used to construct <a class="reference internal" href="#opentelemetry.metrics.Metric" title="opentelemetry.metrics.Metric"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Metric</span></code></a> s to record raw statistics
+as well as metrics with predefined aggregation.</p>
+<p><a class="reference internal" href="#opentelemetry.metrics.Meter" title="opentelemetry.metrics.Meter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Meter</span></code></a> s can be obtained via the <a class="reference internal" href="#opentelemetry.metrics.MeterProvider" title="opentelemetry.metrics.MeterProvider"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MeterProvider</span></code></a>, corresponding to the name
+of the instrumenting library and (optionally) a version.</p>
+<p>See the <a class="reference external" href="https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/metrics/api.md">metrics api</a> spec for terminology and context clarification.</p>
+<dl class="class">
+<dt id="opentelemetry.metrics.BoundCounter">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">BoundCounter</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#BoundCounter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.BoundCounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<dl class="method">
+<dt id="opentelemetry.metrics.BoundCounter.add">
+<em class="property">abstract </em><code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#BoundCounter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.BoundCounter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increases the value of the bound counter by <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>~ValueT</em>) – The value to add to the bound counter. Must be positive.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.DefaultBoundCounter">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">DefaultBoundCounter</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultBoundCounter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultBoundCounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.metrics.BoundCounter" title="opentelemetry.metrics.BoundCounter"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.BoundCounter</span></code></a></p>
+<p>The default bound counter instrument.</p>
+<p>Used when no bound counter implementation is available.</p>
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultBoundCounter.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultBoundCounter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultBoundCounter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increases the value of the bound counter by <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>~ValueT</em>) – The value to add to the bound counter. Must be positive.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.BoundUpDownCounter">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">BoundUpDownCounter</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#BoundUpDownCounter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.BoundUpDownCounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<dl class="method">
+<dt id="opentelemetry.metrics.BoundUpDownCounter.add">
+<em class="property">abstract </em><code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#BoundUpDownCounter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.BoundUpDownCounter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increases the value of the bound updowncounter by <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>~ValueT</em>) – The value to add to the bound updowncounter. Can be positive
+or negative.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.DefaultBoundUpDownCounter">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">DefaultBoundUpDownCounter</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultBoundUpDownCounter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultBoundUpDownCounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.metrics.BoundUpDownCounter" title="opentelemetry.metrics.BoundUpDownCounter"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.BoundUpDownCounter</span></code></a></p>
+<p>The default bound updowncounter instrument.</p>
+<p>Used when no bound updowncounter implementation is available.</p>
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultBoundUpDownCounter.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultBoundUpDownCounter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultBoundUpDownCounter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increases the value of the bound updowncounter by <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>~ValueT</em>) – The value to add to the bound updowncounter. Can be positive
+or negative.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.BoundValueRecorder">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">BoundValueRecorder</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#BoundValueRecorder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.BoundValueRecorder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<dl class="method">
+<dt id="opentelemetry.metrics.BoundValueRecorder.record">
+<em class="property">abstract </em><code class="sig-name descname">record</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#BoundValueRecorder.record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.BoundValueRecorder.record" title="Permalink to this definition">¶</a></dt>
+<dd><p>Records the given <code class="docutils literal notranslate"><span class="pre">value</span></code> to this bound valuerecorder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>~ValueT</em>) – The value to record to the bound valuerecorder.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.DefaultBoundValueRecorder">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">DefaultBoundValueRecorder</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultBoundValueRecorder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultBoundValueRecorder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.metrics.BoundValueRecorder" title="opentelemetry.metrics.BoundValueRecorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.BoundValueRecorder</span></code></a></p>
+<p>The default bound valuerecorder instrument.</p>
+<p>Used when no bound valuerecorder implementation is available.</p>
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultBoundValueRecorder.record">
+<code class="sig-name descname">record</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultBoundValueRecorder.record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultBoundValueRecorder.record" title="Permalink to this definition">¶</a></dt>
+<dd><p>Records the given <code class="docutils literal notranslate"><span class="pre">value</span></code> to this bound valuerecorder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>value</strong> (<em>~ValueT</em>) – The value to record to the bound valuerecorder.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.Metric">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">Metric</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#Metric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.Metric" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>Base class for various types of metrics.</p>
+<p>Metric class that inherit from this class are specialized with the type of
+bound metric instrument that the metric holds.</p>
+<dl class="method">
+<dt id="opentelemetry.metrics.Metric.bind">
+<em class="property">abstract </em><code class="sig-name descname">bind</code><span class="sig-paren">(</span><em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#Metric.bind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.Metric.bind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets a bound metric instrument.</p>
+<p>Bound metric instruments are useful to reduce the cost of repeatedly
+recording a metric with a pre-defined set of label values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Labels to associate with the bound instrument.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.Counter">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">Counter</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#Counter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.Counter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.metrics.Metric" title="opentelemetry.metrics.Metric"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.Metric</span></code></a></p>
+<p>A counter type metric that expresses the computation of a sum.</p>
+<dl class="method">
+<dt id="opentelemetry.metrics.Counter.add">
+<em class="property">abstract </em><code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#Counter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.Counter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increases the value of the counter by <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>~ValueT</em>) – The value to add to the counter metric. Should be positive
+or zero. For a Counter that can decrease, use
+<a class="reference internal" href="#opentelemetry.metrics.UpDownCounter" title="opentelemetry.metrics.UpDownCounter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UpDownCounter</span></code></a>.</p></li>
+<li><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Labels to associate with the bound instrument.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.DefaultCounter">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">DefaultCounter</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultCounter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultCounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.metrics.Counter" title="opentelemetry.metrics.Counter"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.Counter</span></code></a></p>
+<p>The default counter instrument.</p>
+<p>Used when no <a class="reference internal" href="#opentelemetry.metrics.Counter" title="opentelemetry.metrics.Counter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Counter</span></code></a> implementation is available.</p>
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultCounter.bind">
+<code class="sig-name descname">bind</code><span class="sig-paren">(</span><em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultCounter.bind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultCounter.bind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets a bound metric instrument.</p>
+<p>Bound metric instruments are useful to reduce the cost of repeatedly
+recording a metric with a pre-defined set of label values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Labels to associate with the bound instrument.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.metrics.DefaultBoundCounter" title="opentelemetry.metrics.DefaultBoundCounter"><code class="xref py py-class docutils literal notranslate"><span class="pre">DefaultBoundCounter</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultCounter.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultCounter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultCounter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increases the value of the counter by <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>~ValueT</em>) – The value to add to the counter metric. Should be positive
+or zero. For a Counter that can decrease, use
+<a class="reference internal" href="#opentelemetry.metrics.UpDownCounter" title="opentelemetry.metrics.UpDownCounter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UpDownCounter</span></code></a>.</p></li>
+<li><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Labels to associate with the bound instrument.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.UpDownCounter">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">UpDownCounter</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#UpDownCounter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.UpDownCounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.metrics.Metric" title="opentelemetry.metrics.Metric"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.Metric</span></code></a></p>
+<p>A counter type metric that expresses the computation of a sum,
+allowing negative increments.</p>
+<dl class="method">
+<dt id="opentelemetry.metrics.UpDownCounter.add">
+<em class="property">abstract </em><code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#UpDownCounter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.UpDownCounter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increases the value of the counter by <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>~ValueT</em>) – The value to add to the counter metric. Can be positive or
+negative. For a Counter that is never decreasing, use
+<a class="reference internal" href="#opentelemetry.metrics.Counter" title="opentelemetry.metrics.Counter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Counter</span></code></a>.</p></li>
+<li><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Labels to associate with the bound instrument.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.DefaultUpDownCounter">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">DefaultUpDownCounter</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultUpDownCounter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultUpDownCounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.metrics.UpDownCounter" title="opentelemetry.metrics.UpDownCounter"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.UpDownCounter</span></code></a></p>
+<p>The default updowncounter instrument.</p>
+<p>Used when no <a class="reference internal" href="#opentelemetry.metrics.UpDownCounter" title="opentelemetry.metrics.UpDownCounter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UpDownCounter</span></code></a> implementation is available.</p>
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultUpDownCounter.bind">
+<code class="sig-name descname">bind</code><span class="sig-paren">(</span><em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultUpDownCounter.bind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultUpDownCounter.bind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets a bound metric instrument.</p>
+<p>Bound metric instruments are useful to reduce the cost of repeatedly
+recording a metric with a pre-defined set of label values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Labels to associate with the bound instrument.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.metrics.DefaultBoundUpDownCounter" title="opentelemetry.metrics.DefaultBoundUpDownCounter"><code class="xref py py-class docutils literal notranslate"><span class="pre">DefaultBoundUpDownCounter</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultUpDownCounter.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultUpDownCounter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultUpDownCounter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Increases the value of the counter by <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>~ValueT</em>) – The value to add to the counter metric. Can be positive or
+negative. For a Counter that is never decreasing, use
+<a class="reference internal" href="#opentelemetry.metrics.Counter" title="opentelemetry.metrics.Counter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Counter</span></code></a>.</p></li>
+<li><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Labels to associate with the bound instrument.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.ValueRecorder">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">ValueRecorder</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#ValueRecorder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.ValueRecorder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.metrics.Metric" title="opentelemetry.metrics.Metric"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.Metric</span></code></a></p>
+<p>A valuerecorder type metric that represent raw stats.</p>
+<dl class="method">
+<dt id="opentelemetry.metrics.ValueRecorder.record">
+<em class="property">abstract </em><code class="sig-name descname">record</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#ValueRecorder.record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.ValueRecorder.record" title="Permalink to this definition">¶</a></dt>
+<dd><p>Records the <code class="docutils literal notranslate"><span class="pre">value</span></code> to the valuerecorder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>~ValueT</em>) – The value to record to this valuerecorder metric.</p></li>
+<li><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Labels to associate with the bound instrument.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.DefaultValueRecorder">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">DefaultValueRecorder</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultValueRecorder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultValueRecorder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.metrics.ValueRecorder" title="opentelemetry.metrics.ValueRecorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.ValueRecorder</span></code></a></p>
+<p>The default valuerecorder instrument.</p>
+<p>Used when no <a class="reference internal" href="#opentelemetry.metrics.ValueRecorder" title="opentelemetry.metrics.ValueRecorder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ValueRecorder</span></code></a> implementation is available.</p>
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultValueRecorder.bind">
+<code class="sig-name descname">bind</code><span class="sig-paren">(</span><em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultValueRecorder.bind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultValueRecorder.bind" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets a bound metric instrument.</p>
+<p>Bound metric instruments are useful to reduce the cost of repeatedly
+recording a metric with a pre-defined set of label values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Labels to associate with the bound instrument.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.metrics.DefaultBoundValueRecorder" title="opentelemetry.metrics.DefaultBoundValueRecorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">DefaultBoundValueRecorder</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultValueRecorder.record">
+<code class="sig-name descname">record</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultValueRecorder.record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultValueRecorder.record" title="Permalink to this definition">¶</a></dt>
+<dd><p>Records the <code class="docutils literal notranslate"><span class="pre">value</span></code> to the valuerecorder.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>~ValueT</em>) – The value to record to this valuerecorder metric.</p></li>
+<li><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Labels to associate with the bound instrument.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.Observer">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">Observer</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#Observer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.Observer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>An observer type metric instrument used to capture a current set of
+values.</p>
+<p>Observer instruments are asynchronous, a callback is invoked with the
+observer instrument as argument allowing the user to capture multiple
+values per collection interval.</p>
+<dl class="method">
+<dt id="opentelemetry.metrics.Observer.observe">
+<em class="property">abstract </em><code class="sig-name descname">observe</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#Observer.observe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.Observer.observe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Captures <code class="docutils literal notranslate"><span class="pre">value</span></code> to the observer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>~ValueT</em>) – The value to capture to this observer metric.</p></li>
+<li><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Labels associated to <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.SumObserver">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">SumObserver</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#SumObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.SumObserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.metrics.Observer" title="opentelemetry.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.Observer</span></code></a></p>
+<p>Asynchronous instrument used to capture a monotonic sum.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.DefaultSumObserver">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">DefaultSumObserver</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultSumObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultSumObserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.metrics.SumObserver" title="opentelemetry.metrics.SumObserver"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.SumObserver</span></code></a></p>
+<p>No-op implementation of <code class="docutils literal notranslate"><span class="pre">SumObserver</span></code>.</p>
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultSumObserver.observe">
+<code class="sig-name descname">observe</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultSumObserver.observe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultSumObserver.observe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Captures <code class="docutils literal notranslate"><span class="pre">value</span></code> to the observer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>~ValueT</em>) – The value to capture to this observer metric.</p></li>
+<li><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Labels associated to <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.UpDownSumObserver">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">UpDownSumObserver</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#UpDownSumObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.UpDownSumObserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.metrics.Observer" title="opentelemetry.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.Observer</span></code></a></p>
+<p>Asynchronous instrument used to capture a non-monotonic count.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.DefaultUpDownSumObserver">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">DefaultUpDownSumObserver</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultUpDownSumObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultUpDownSumObserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.metrics.UpDownSumObserver" title="opentelemetry.metrics.UpDownSumObserver"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.UpDownSumObserver</span></code></a></p>
+<p>No-op implementation of <code class="docutils literal notranslate"><span class="pre">UpDownSumObserver</span></code>.</p>
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultUpDownSumObserver.observe">
+<code class="sig-name descname">observe</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultUpDownSumObserver.observe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultUpDownSumObserver.observe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Captures <code class="docutils literal notranslate"><span class="pre">value</span></code> to the observer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>~ValueT</em>) – The value to capture to this observer metric.</p></li>
+<li><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Labels associated to <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.ValueObserver">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">ValueObserver</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#ValueObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.ValueObserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.metrics.Observer" title="opentelemetry.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.Observer</span></code></a></p>
+<p>Asynchronous instrument used to capture grouping measurements.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.DefaultValueObserver">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">DefaultValueObserver</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultValueObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultValueObserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.metrics.ValueObserver" title="opentelemetry.metrics.ValueObserver"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.ValueObserver</span></code></a></p>
+<p>No-op implementation of <code class="docutils literal notranslate"><span class="pre">ValueObserver</span></code>.</p>
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultValueObserver.observe">
+<code class="sig-name descname">observe</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultValueObserver.observe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultValueObserver.observe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Captures <code class="docutils literal notranslate"><span class="pre">value</span></code> to the observer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>~ValueT</em>) – The value to capture to this observer metric.</p></li>
+<li><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Labels associated to <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.MeterProvider">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">MeterProvider</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#MeterProvider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.MeterProvider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<dl class="method">
+<dt id="opentelemetry.metrics.MeterProvider.get_meter">
+<em class="property">abstract </em><code class="sig-name descname">get_meter</code><span class="sig-paren">(</span><em class="sig-param">instrumenting_module_name</em>, <em class="sig-param">instrumenting_library_version=''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#MeterProvider.get_meter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.MeterProvider.get_meter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a <a class="reference internal" href="#opentelemetry.metrics.Meter" title="opentelemetry.metrics.Meter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Meter</span></code></a> for use by the given instrumentation library.</p>
+<p>This function may return different <a class="reference internal" href="#opentelemetry.metrics.Meter" title="opentelemetry.metrics.Meter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Meter</span></code></a> types (e.g. a no-op meter
+vs. a functional meter).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instrumenting_module_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – <p>The name of the instrumenting module
+(usually just <code class="docutils literal notranslate"><span class="pre">__name__</span></code>).</p>
+<p>This should <em>not</em> be the name of the module that is
+instrumented but the name of the module doing the instrumentation.
+E.g., instead of <code class="docutils literal notranslate"><span class="pre">&quot;requests&quot;</span></code>, use
+<code class="docutils literal notranslate"><span class="pre">&quot;opentelemetry.instrumentation.requests&quot;</span></code>.</p>
+</p></li>
+<li><p><strong>instrumenting_library_version</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Optional. The version string of the
+instrumenting library.  Usually this should be the same as
+<code class="docutils literal notranslate"><span class="pre">pkg_resources.get_distribution(instrumenting_library_name).version</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.metrics.Meter" title="opentelemetry.metrics.Meter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Meter</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.DefaultMeterProvider">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">DefaultMeterProvider</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultMeterProvider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultMeterProvider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.metrics.MeterProvider" title="opentelemetry.metrics.MeterProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.MeterProvider</span></code></a></p>
+<p>The default MeterProvider, used when no implementation is available.</p>
+<p>All operations are no-op.</p>
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultMeterProvider.get_meter">
+<code class="sig-name descname">get_meter</code><span class="sig-paren">(</span><em class="sig-param">instrumenting_module_name</em>, <em class="sig-param">instrumenting_library_version=''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultMeterProvider.get_meter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultMeterProvider.get_meter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a <a class="reference internal" href="#opentelemetry.metrics.Meter" title="opentelemetry.metrics.Meter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Meter</span></code></a> for use by the given instrumentation library.</p>
+<p>This function may return different <a class="reference internal" href="#opentelemetry.metrics.Meter" title="opentelemetry.metrics.Meter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Meter</span></code></a> types (e.g. a no-op meter
+vs. a functional meter).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>instrumenting_module_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – <p>The name of the instrumenting module
+(usually just <code class="docutils literal notranslate"><span class="pre">__name__</span></code>).</p>
+<p>This should <em>not</em> be the name of the module that is
+instrumented but the name of the module doing the instrumentation.
+E.g., instead of <code class="docutils literal notranslate"><span class="pre">&quot;requests&quot;</span></code>, use
+<code class="docutils literal notranslate"><span class="pre">&quot;opentelemetry.instrumentation.requests&quot;</span></code>.</p>
+</p></li>
+<li><p><strong>instrumenting_library_version</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Optional. The version string of the
+instrumenting library.  Usually this should be the same as
+<code class="docutils literal notranslate"><span class="pre">pkg_resources.get_distribution(instrumenting_library_name).version</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.metrics.Meter" title="opentelemetry.metrics.Meter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Meter</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.Meter">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">Meter</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#Meter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.Meter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>An interface to allow the recording of metrics.</p>
+<p><a class="reference internal" href="#opentelemetry.metrics.Metric" title="opentelemetry.metrics.Metric"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Metric</span></code></a> s or metric instruments, are devices used for capturing raw
+measurements. Each metric instrument supports a single method, each with
+fixed interpretation to capture measurements.</p>
+<dl class="method">
+<dt id="opentelemetry.metrics.Meter.record_batch">
+<em class="property">abstract </em><code class="sig-name descname">record_batch</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">record_tuples</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#Meter.record_batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.Meter.record_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically records a batch of <a class="reference internal" href="#opentelemetry.metrics.Metric" title="opentelemetry.metrics.Metric"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Metric</span></code></a> and value pairs.</p>
+<p>Allows the functionality of acting upon multiple metrics with a single
+API call. Implementations should find bound metric instruments that
+match the key-value pairs in the labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Labels associated with all measurements in the
+batch.</p></li>
+<li><p><strong>record_tuples</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="#opentelemetry.metrics.Metric" title="opentelemetry.metrics.Metric"><code class="xref py py-class docutils literal notranslate"><span class="pre">Metric</span></code></a>, ~ValueT]]) – A sequence of pairs of <a class="reference internal" href="#opentelemetry.metrics.Metric" title="opentelemetry.metrics.Metric"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Metric</span></code></a> s and the
+corresponding value to record for that metric.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.metrics.Meter.create_counter">
+<em class="property">abstract </em><code class="sig-name descname">create_counter</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#Meter.create_counter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.Meter.create_counter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a <a class="reference internal" href="#opentelemetry.metrics.Counter" title="opentelemetry.metrics.Counter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Counter</span></code></a> metric with type <code class="docutils literal notranslate"><span class="pre">value_type</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The name of the metric.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Human-readable description of the metric.</p></li>
+<li><p><strong>unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Unit of the metric values following the UCUM convention
+(<a class="reference external" href="https://unitsofmeasure.org/ucum.html">https://unitsofmeasure.org/ucum.html</a>).</p></li>
+<li><p><strong>value_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[~ValueT]) – The type of values being recorded by the metric.</p></li>
+<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Whether to report the metric by default.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.metrics.Counter" title="opentelemetry.metrics.Counter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Counter</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.metrics.Meter.create_updowncounter">
+<em class="property">abstract </em><code class="sig-name descname">create_updowncounter</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#Meter.create_updowncounter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.Meter.create_updowncounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a <a class="reference internal" href="#opentelemetry.metrics.UpDownCounter" title="opentelemetry.metrics.UpDownCounter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UpDownCounter</span></code></a> metric with type <code class="docutils literal notranslate"><span class="pre">value_type</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The name of the metric.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Human-readable description of the metric.</p></li>
+<li><p><strong>unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Unit of the metric values following the UCUM convention
+(<a class="reference external" href="https://unitsofmeasure.org/ucum.html">https://unitsofmeasure.org/ucum.html</a>).</p></li>
+<li><p><strong>value_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[~ValueT]) – The type of values being recorded by the metric.</p></li>
+<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Whether to report the metric by default.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.metrics.UpDownCounter" title="opentelemetry.metrics.UpDownCounter"><code class="xref py py-class docutils literal notranslate"><span class="pre">UpDownCounter</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.metrics.Meter.create_valuerecorder">
+<em class="property">abstract </em><code class="sig-name descname">create_valuerecorder</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#Meter.create_valuerecorder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.Meter.create_valuerecorder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a <a class="reference internal" href="#opentelemetry.metrics.ValueRecorder" title="opentelemetry.metrics.ValueRecorder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ValueRecorder</span></code></a> metric with type <code class="docutils literal notranslate"><span class="pre">value_type</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The name of the metric.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Human-readable description of the metric.</p></li>
+<li><p><strong>unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Unit of the metric values following the UCUM convention
+(<a class="reference external" href="https://unitsofmeasure.org/ucum.html">https://unitsofmeasure.org/ucum.html</a>).</p></li>
+<li><p><strong>value_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[~ValueT]) – The type of values being recorded by the metric.</p></li>
+<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Whether to report the metric by default.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.metrics.ValueRecorder" title="opentelemetry.metrics.ValueRecorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueRecorder</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.metrics.Meter.register_sumobserver">
+<em class="property">abstract </em><code class="sig-name descname">register_sumobserver</code><span class="sig-paren">(</span><em class="sig-param">callback</em>, <em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">label_keys=()</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#Meter.register_sumobserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.Meter.register_sumobserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers an <code class="docutils literal notranslate"><span class="pre">SumObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>callback</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="#opentelemetry.metrics.Observer" title="opentelemetry.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a>], <code class="docutils literal notranslate"><span class="pre">None</span></code>]) – Callback invoked each collection interval with the
+observer as argument.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The name of the metric.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Human-readable description of the metric.</p></li>
+<li><p><strong>unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Unit of the metric values following the UCUM convention
+(<a class="reference external" href="https://unitsofmeasure.org/ucum.html">https://unitsofmeasure.org/ucum.html</a>).</p></li>
+<li><p><strong>value_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[~ValueT]) – The type of values being recorded by the metric.</p></li>
+<li><p><strong>label_keys</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – The keys for the labels with dynamic values.</p></li>
+<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Whether to report the metric by default.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns: A new <code class="docutils literal notranslate"><span class="pre">SumObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.metrics.SumObserver" title="opentelemetry.metrics.SumObserver"><code class="xref py py-class docutils literal notranslate"><span class="pre">SumObserver</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.metrics.Meter.register_updownsumobserver">
+<em class="property">abstract </em><code class="sig-name descname">register_updownsumobserver</code><span class="sig-paren">(</span><em class="sig-param">callback</em>, <em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">label_keys=()</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#Meter.register_updownsumobserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.Meter.register_updownsumobserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers an <code class="docutils literal notranslate"><span class="pre">UpDownSumObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>callback</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="#opentelemetry.metrics.Observer" title="opentelemetry.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a>], <code class="docutils literal notranslate"><span class="pre">None</span></code>]) – Callback invoked each collection interval with the
+observer as argument.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The name of the metric.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Human-readable description of the metric.</p></li>
+<li><p><strong>unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Unit of the metric values following the UCUM convention
+(<a class="reference external" href="https://unitsofmeasure.org/ucum.html">https://unitsofmeasure.org/ucum.html</a>).</p></li>
+<li><p><strong>value_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[~ValueT]) – The type of values being recorded by the metric.</p></li>
+<li><p><strong>label_keys</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – The keys for the labels with dynamic values.</p></li>
+<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Whether to report the metric by default.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns: A new <code class="docutils literal notranslate"><span class="pre">UpDownSumObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.metrics.UpDownSumObserver" title="opentelemetry.metrics.UpDownSumObserver"><code class="xref py py-class docutils literal notranslate"><span class="pre">UpDownSumObserver</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.metrics.Meter.register_valueobserver">
+<em class="property">abstract </em><code class="sig-name descname">register_valueobserver</code><span class="sig-paren">(</span><em class="sig-param">callback</em>, <em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">label_keys=()</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#Meter.register_valueobserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.Meter.register_valueobserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers an <code class="docutils literal notranslate"><span class="pre">ValueObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>callback</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="#opentelemetry.metrics.Observer" title="opentelemetry.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a>], <code class="docutils literal notranslate"><span class="pre">None</span></code>]) – Callback invoked each collection interval with the
+observer as argument.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The name of the metric.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Human-readable description of the metric.</p></li>
+<li><p><strong>unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Unit of the metric values following the UCUM convention
+(<a class="reference external" href="https://unitsofmeasure.org/ucum.html">https://unitsofmeasure.org/ucum.html</a>).</p></li>
+<li><p><strong>value_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[~ValueT]) – The type of values being recorded by the metric.</p></li>
+<li><p><strong>label_keys</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – The keys for the labels with dynamic values.</p></li>
+<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Whether to report the metric by default.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns: A new <code class="docutils literal notranslate"><span class="pre">ValueObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.metrics.ValueObserver" title="opentelemetry.metrics.ValueObserver"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueObserver</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.metrics.Meter.unregister_observer">
+<em class="property">abstract </em><code class="sig-name descname">unregister_observer</code><span class="sig-paren">(</span><em class="sig-param">observer</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#Meter.unregister_observer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.Meter.unregister_observer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unregisters an <code class="docutils literal notranslate"><span class="pre">Observer</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>observer</strong> (<a class="reference internal" href="#opentelemetry.metrics.Observer" title="opentelemetry.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a>) – The observer to unregister.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.metrics.DefaultMeter">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">DefaultMeter</code><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultMeter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultMeter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.metrics.Meter" title="opentelemetry.metrics.Meter"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.Meter</span></code></a></p>
+<p>The default Meter used when no Meter implementation is available.</p>
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultMeter.record_batch">
+<code class="sig-name descname">record_batch</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">record_tuples</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultMeter.record_batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultMeter.record_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atomically records a batch of <a class="reference internal" href="#opentelemetry.metrics.Metric" title="opentelemetry.metrics.Metric"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Metric</span></code></a> and value pairs.</p>
+<p>Allows the functionality of acting upon multiple metrics with a single
+API call. Implementations should find bound metric instruments that
+match the key-value pairs in the labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Labels associated with all measurements in the
+batch.</p></li>
+<li><p><strong>record_tuples</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference internal" href="#opentelemetry.metrics.Metric" title="opentelemetry.metrics.Metric"><code class="xref py py-class docutils literal notranslate"><span class="pre">Metric</span></code></a>, ~ValueT]]) – A sequence of pairs of <a class="reference internal" href="#opentelemetry.metrics.Metric" title="opentelemetry.metrics.Metric"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Metric</span></code></a> s and the
+corresponding value to record for that metric.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultMeter.create_counter">
+<code class="sig-name descname">create_counter</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultMeter.create_counter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultMeter.create_counter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a <a class="reference internal" href="#opentelemetry.metrics.Counter" title="opentelemetry.metrics.Counter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Counter</span></code></a> metric with type <code class="docutils literal notranslate"><span class="pre">value_type</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The name of the metric.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Human-readable description of the metric.</p></li>
+<li><p><strong>unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Unit of the metric values following the UCUM convention
+(<a class="reference external" href="https://unitsofmeasure.org/ucum.html">https://unitsofmeasure.org/ucum.html</a>).</p></li>
+<li><p><strong>value_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[~ValueT]) – The type of values being recorded by the metric.</p></li>
+<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Whether to report the metric by default.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.metrics.Counter" title="opentelemetry.metrics.Counter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Counter</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultMeter.create_updowncounter">
+<code class="sig-name descname">create_updowncounter</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultMeter.create_updowncounter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultMeter.create_updowncounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a <a class="reference internal" href="#opentelemetry.metrics.UpDownCounter" title="opentelemetry.metrics.UpDownCounter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">UpDownCounter</span></code></a> metric with type <code class="docutils literal notranslate"><span class="pre">value_type</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The name of the metric.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Human-readable description of the metric.</p></li>
+<li><p><strong>unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Unit of the metric values following the UCUM convention
+(<a class="reference external" href="https://unitsofmeasure.org/ucum.html">https://unitsofmeasure.org/ucum.html</a>).</p></li>
+<li><p><strong>value_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[~ValueT]) – The type of values being recorded by the metric.</p></li>
+<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Whether to report the metric by default.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.metrics.UpDownCounter" title="opentelemetry.metrics.UpDownCounter"><code class="xref py py-class docutils literal notranslate"><span class="pre">UpDownCounter</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultMeter.create_valuerecorder">
+<code class="sig-name descname">create_valuerecorder</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultMeter.create_valuerecorder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultMeter.create_valuerecorder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a <a class="reference internal" href="#opentelemetry.metrics.ValueRecorder" title="opentelemetry.metrics.ValueRecorder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ValueRecorder</span></code></a> metric with type <code class="docutils literal notranslate"><span class="pre">value_type</span></code>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The name of the metric.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Human-readable description of the metric.</p></li>
+<li><p><strong>unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Unit of the metric values following the UCUM convention
+(<a class="reference external" href="https://unitsofmeasure.org/ucum.html">https://unitsofmeasure.org/ucum.html</a>).</p></li>
+<li><p><strong>value_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[~ValueT]) – The type of values being recorded by the metric.</p></li>
+<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Whether to report the metric by default.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.metrics.ValueRecorder" title="opentelemetry.metrics.ValueRecorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueRecorder</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultMeter.register_sumobserver">
+<code class="sig-name descname">register_sumobserver</code><span class="sig-paren">(</span><em class="sig-param">callback</em>, <em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">label_keys=()</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultMeter.register_sumobserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultMeter.register_sumobserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers an <code class="docutils literal notranslate"><span class="pre">SumObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>callback</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="#opentelemetry.metrics.Observer" title="opentelemetry.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a>], <code class="docutils literal notranslate"><span class="pre">None</span></code>]) – Callback invoked each collection interval with the
+observer as argument.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The name of the metric.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Human-readable description of the metric.</p></li>
+<li><p><strong>unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Unit of the metric values following the UCUM convention
+(<a class="reference external" href="https://unitsofmeasure.org/ucum.html">https://unitsofmeasure.org/ucum.html</a>).</p></li>
+<li><p><strong>value_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[~ValueT]) – The type of values being recorded by the metric.</p></li>
+<li><p><strong>label_keys</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – The keys for the labels with dynamic values.</p></li>
+<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Whether to report the metric by default.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns: A new <code class="docutils literal notranslate"><span class="pre">SumObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.metrics.DefaultSumObserver" title="opentelemetry.metrics.DefaultSumObserver"><code class="xref py py-class docutils literal notranslate"><span class="pre">DefaultSumObserver</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultMeter.register_updownsumobserver">
+<code class="sig-name descname">register_updownsumobserver</code><span class="sig-paren">(</span><em class="sig-param">callback</em>, <em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">label_keys=()</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultMeter.register_updownsumobserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultMeter.register_updownsumobserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers an <code class="docutils literal notranslate"><span class="pre">UpDownSumObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>callback</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="#opentelemetry.metrics.Observer" title="opentelemetry.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a>], <code class="docutils literal notranslate"><span class="pre">None</span></code>]) – Callback invoked each collection interval with the
+observer as argument.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The name of the metric.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Human-readable description of the metric.</p></li>
+<li><p><strong>unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Unit of the metric values following the UCUM convention
+(<a class="reference external" href="https://unitsofmeasure.org/ucum.html">https://unitsofmeasure.org/ucum.html</a>).</p></li>
+<li><p><strong>value_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[~ValueT]) – The type of values being recorded by the metric.</p></li>
+<li><p><strong>label_keys</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – The keys for the labels with dynamic values.</p></li>
+<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Whether to report the metric by default.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns: A new <code class="docutils literal notranslate"><span class="pre">UpDownSumObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.metrics.DefaultUpDownSumObserver" title="opentelemetry.metrics.DefaultUpDownSumObserver"><code class="xref py py-class docutils literal notranslate"><span class="pre">DefaultUpDownSumObserver</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultMeter.register_valueobserver">
+<code class="sig-name descname">register_valueobserver</code><span class="sig-paren">(</span><em class="sig-param">callback</em>, <em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">label_keys=()</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultMeter.register_valueobserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultMeter.register_valueobserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers an <code class="docutils literal notranslate"><span class="pre">ValueObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>callback</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="#opentelemetry.metrics.Observer" title="opentelemetry.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a>], <code class="docutils literal notranslate"><span class="pre">None</span></code>]) – Callback invoked each collection interval with the
+observer as argument.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The name of the metric.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Human-readable description of the metric.</p></li>
+<li><p><strong>unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Unit of the metric values following the UCUM convention
+(<a class="reference external" href="https://unitsofmeasure.org/ucum.html">https://unitsofmeasure.org/ucum.html</a>).</p></li>
+<li><p><strong>value_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[~ValueT]) – The type of values being recorded by the metric.</p></li>
+<li><p><strong>label_keys</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – The keys for the labels with dynamic values.</p></li>
+<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Whether to report the metric by default.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns: A new <code class="docutils literal notranslate"><span class="pre">ValueObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.metrics.DefaultValueObserver" title="opentelemetry.metrics.DefaultValueObserver"><code class="xref py py-class docutils literal notranslate"><span class="pre">DefaultValueObserver</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.metrics.DefaultMeter.unregister_observer">
+<code class="sig-name descname">unregister_observer</code><span class="sig-paren">(</span><em class="sig-param">observer</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#DefaultMeter.unregister_observer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.DefaultMeter.unregister_observer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unregisters an <code class="docutils literal notranslate"><span class="pre">Observer</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>observer</strong> (<a class="reference internal" href="#opentelemetry.metrics.Observer" title="opentelemetry.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a>) – The observer to unregister.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="opentelemetry.metrics.get_meter">
+<code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">get_meter</code><span class="sig-paren">(</span><em class="sig-param">instrumenting_module_name</em>, <em class="sig-param">instrumenting_library_version=''</em>, <em class="sig-param">meter_provider=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#get_meter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.get_meter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a <a class="reference internal" href="#opentelemetry.metrics.Meter" title="opentelemetry.metrics.Meter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Meter</span></code></a> for use by the given instrumentation library.
+This function is a convenience wrapper for
+opentelemetry.metrics.get_meter_provider().get_meter</p>
+<p>If meter_provider is omitted the current configured one is used.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.metrics.Meter" title="opentelemetry.metrics.Meter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Meter</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="opentelemetry.metrics.set_meter_provider">
+<code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">set_meter_provider</code><span class="sig-paren">(</span><em class="sig-param">meter_provider</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#set_meter_provider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.set_meter_provider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the current global <a class="reference internal" href="#opentelemetry.metrics.MeterProvider" title="opentelemetry.metrics.MeterProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">MeterProvider</span></code></a> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="opentelemetry.metrics.get_meter_provider">
+<code class="sig-prename descclassname">opentelemetry.metrics.</code><code class="sig-name descname">get_meter_provider</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/metrics.html#get_meter_provider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.metrics.get_meter_provider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the current global <a class="reference internal" href="#opentelemetry.metrics.MeterProvider" title="opentelemetry.metrics.MeterProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">MeterProvider</span></code></a> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.metrics.MeterProvider" title="opentelemetry.metrics.MeterProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">MeterProvider</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="trace.html" class="btn btn-neutral float-right" title="opentelemetry.trace package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="context.context.html" class="btn btn-neutral float-left" title="opentelemetry.context.base_context module" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright OpenTelemetry Authors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

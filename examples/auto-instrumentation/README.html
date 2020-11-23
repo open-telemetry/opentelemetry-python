@@ -1,0 +1,429 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Autoinstrumentation &mdash; OpenTelemetry Python  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Basic Context" href="../basic_context/README.html" />
+    <link rel="prev" title="OpenTracing Shim for OpenTelemetry" href="../../instrumentation/opentracing_shim/opentracing_shim.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> OpenTelemetry Python
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting-started.html">Getting Started with OpenTelemetry Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq-and-cookbook.html">Frequently Asked Questions and Cookbook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Python Packages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/api.html">OpenTelemetry Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sdk/sdk.html">OpenTelemetry Python SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Exporters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/jaeger/jaeger.html">Opentelemetry Jaeger Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/opencensus/opencensus.html">OpenCensus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/otlp/otlp.html">Opentelemetry OTLP Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/prometheus/prometheus.html">OpenTelemetry Prometheus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/zipkin/zipkin.html">Opentelemetry Zipkin Exporter</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Instrumentations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../instrumentation/instrumentor.html">opentelemetry.instrumentation.instrumentor package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../instrumentation/metric.html">opentelemetry.instrumentation.metric package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../instrumentation/opentracing_shim/opentracing_shim.html">OpenTracing Shim for OpenTelemetry</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Autoinstrumentation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#overview">Overview</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#manually-instrumented-server">Manually instrumented server</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#publisher-not-instrumented-manually">Publisher not instrumented manually</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#preparation">Preparation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#execution-of-the-manually-instrumented-server">Execution of the manually instrumented server</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#execution-of-an-automatically-instrumented-server">Execution of an automatically instrumented server</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_context/README.html">Basic Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_meter/README.html">Basic Meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_tracer/README.html">Basic Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datadog_exporter/README.html">Datadog Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../django/README.html">OpenTelemetry Django Instrumentation Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../error_hander/README.html">Global Error Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../error_hander/error_handler_0/README.html">Error Handler 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../error_hander/error_handler_1/README.html">Error Handler 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../opencensus-exporter-metrics/README.html">OpenTelemetry Collector Metrics OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../opencensus-exporter-tracer/README.html">OpenTelemetry Collector Tracer OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../opentelemetry-example-app/README.html">OpenTelemetry Example Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../opentracing/README.html">OpenTracing Shim Example</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenTelemetry Python</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>Autoinstrumentation</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/examples/auto-instrumentation/README.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="autoinstrumentation">
+<h1>Autoinstrumentation<a class="headerlink" href="#autoinstrumentation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="overview">
+<h2>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h2>
+<p>This example shows how to use auto-instrumentation in OpenTelemetry.
+This example is also based on a previous example for OpenTracing that
+can be found
+<a class="reference external" href="https://github.com/yurishkuro/opentracing-tutorial/tree/master/python">here</a>.</p>
+<p>The source files of these examples are available <a class="reference external" href="https://github.com/open-telemetry/opentelemetry-python/blob/master/docs/examples/auto-instrumentation/">here</a>.</p>
+<p>This example uses 2 scripts whose main difference is they being
+instrumented manually or not:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">server_instrumented.py</span></code> which has been instrumented manually</p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">server_uninstrumented.py</span></code> which has not been instrumented manually</p></li>
+</ol>
+<p>The former will be run without the automatic instrumentation agent and
+the latter with the automatic instrumentation agent. They should produce
+the same result, showing that the automatic instrumentation agent does
+the equivalent of what manual instrumentation does.</p>
+<p>In order to understand this better, here is the relevant part of both
+scripts:</p>
+<div class="section" id="manually-instrumented-server">
+<h3>Manually instrumented server<a class="headerlink" href="#manually-instrumented-server" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">server_instrumented.py</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/server_request&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">server_request</span><span class="p">():</span>
+    <span class="k">with</span> <span class="n">tracer</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span>
+        <span class="s2">&quot;server_request&quot;</span><span class="p">,</span>
+        <span class="n">parent</span><span class="o">=</span><span class="n">propagators</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">dict_</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">dict_</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="p">[]),</span> <span class="n">request</span><span class="o">.</span><span class="n">headers</span>
+        <span class="p">)[</span><span class="s2">&quot;current-span&quot;</span><span class="p">],</span>
+    <span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;param&quot;</span><span class="p">))</span>
+        <span class="k">return</span> <span class="s2">&quot;served&quot;</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="publisher-not-instrumented-manually">
+<h3>Publisher not instrumented manually<a class="headerlink" href="#publisher-not-instrumented-manually" title="Permalink to this headline">¶</a></h3>
+<p><code class="docutils literal notranslate"><span class="pre">server_uninstrumented.py</span></code></p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nd">@app</span><span class="o">.</span><span class="n">route</span><span class="p">(</span><span class="s2">&quot;/server_request&quot;</span><span class="p">)</span>
+<span class="k">def</span> <span class="nf">server_request</span><span class="p">():</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;param&quot;</span><span class="p">))</span>
+    <span class="k">return</span> <span class="s2">&quot;served&quot;</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="preparation">
+<h2>Preparation<a class="headerlink" href="#preparation" title="Permalink to this headline">¶</a></h2>
+<p>This example will be executed in a separate virtual environment:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ mkdir auto_instrumentation
+$ virtualenv auto_instrumentation
+$ <span class="nb">source</span> auto_instrumentation/bin/activate
+</pre></div>
+</div>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ pip install opentelemetry-sdk
+$ pip install opentelemetry-instrumentation
+$ pip install opentelemetry-instrumentation-flask
+$ pip install requests
+</pre></div>
+</div>
+</div>
+<div class="section" id="execution">
+<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="execution-of-the-manually-instrumented-server">
+<h3>Execution of the manually instrumented server<a class="headerlink" href="#execution-of-the-manually-instrumented-server" title="Permalink to this headline">¶</a></h3>
+<p>This is done in 2 separate consoles, one to run each of the scripts that
+make up this example:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">source</span> auto_instrumentation/bin/activate
+$ python server_instrumented.py
+</pre></div>
+</div>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ <span class="nb">source</span> auto_instrumentation/bin/activate
+$ python client.py testing
+</pre></div>
+</div>
+<p>The execution of <code class="docutils literal notranslate"><span class="pre">server_instrumented.py</span></code> should return an output
+similar to:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="o">{</span>
+    <span class="s2">&quot;name&quot;</span>: <span class="s2">&quot;server_request&quot;</span>,
+    <span class="s2">&quot;context&quot;</span>: <span class="o">{</span>
+        <span class="s2">&quot;trace_id&quot;</span>: <span class="s2">&quot;0xfa002aad260b5f7110db674a9ddfcd23&quot;</span>,
+        <span class="s2">&quot;span_id&quot;</span>: <span class="s2">&quot;0x8b8bbaf3ca9c5131&quot;</span>,
+        <span class="s2">&quot;trace_state&quot;</span>: <span class="s2">&quot;{}&quot;</span>
+    <span class="o">}</span>,
+    <span class="s2">&quot;kind&quot;</span>: <span class="s2">&quot;SpanKind.SERVER&quot;</span>,
+    <span class="s2">&quot;parent_id&quot;</span>: null,
+    <span class="s2">&quot;start_time&quot;</span>: <span class="s2">&quot;2020-04-30T17:28:57.886397Z&quot;</span>,
+    <span class="s2">&quot;end_time&quot;</span>: <span class="s2">&quot;2020-04-30T17:28:57.886490Z&quot;</span>,
+    <span class="s2">&quot;status&quot;</span>: <span class="o">{</span>
+        <span class="s2">&quot;status_code&quot;</span>: <span class="s2">&quot;OK&quot;</span>
+    <span class="o">}</span>,
+    <span class="s2">&quot;attributes&quot;</span>: <span class="o">{</span>
+        <span class="s2">&quot;component&quot;</span>: <span class="s2">&quot;http&quot;</span>,
+        <span class="s2">&quot;http.method&quot;</span>: <span class="s2">&quot;GET&quot;</span>,
+        <span class="s2">&quot;http.server_name&quot;</span>: <span class="s2">&quot;127.0.0.1&quot;</span>,
+        <span class="s2">&quot;http.scheme&quot;</span>: <span class="s2">&quot;http&quot;</span>,
+        <span class="s2">&quot;host.port&quot;</span>: <span class="m">8082</span>,
+        <span class="s2">&quot;http.host&quot;</span>: <span class="s2">&quot;localhost:8082&quot;</span>,
+        <span class="s2">&quot;http.target&quot;</span>: <span class="s2">&quot;/server_request?param=testing&quot;</span>,
+        <span class="s2">&quot;net.peer.ip&quot;</span>: <span class="s2">&quot;127.0.0.1&quot;</span>,
+        <span class="s2">&quot;net.peer.port&quot;</span>: <span class="m">52872</span>,
+        <span class="s2">&quot;http.flavor&quot;</span>: <span class="s2">&quot;1.1&quot;</span>
+    <span class="o">}</span>,
+    <span class="s2">&quot;events&quot;</span>: <span class="o">[]</span>,
+    <span class="s2">&quot;links&quot;</span>: <span class="o">[]</span>
+<span class="o">}</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="execution-of-an-automatically-instrumented-server">
+<h3>Execution of an automatically instrumented server<a class="headerlink" href="#execution-of-an-automatically-instrumented-server" title="Permalink to this headline">¶</a></h3>
+<p>Now, kill the execution of <code class="docutils literal notranslate"><span class="pre">server_instrumented.py</span></code> with <code class="docutils literal notranslate"><span class="pre">ctrl</span> <span class="pre">+</span> <span class="pre">c</span></code>
+and run this instead:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ opentelemetry-instrument python server_uninstrumented.py
+</pre></div>
+</div>
+<p>In the console where you previously executed <code class="docutils literal notranslate"><span class="pre">client.py</span></code>, run again
+this again:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>$ python client.py testing
+</pre></div>
+</div>
+<p>The execution of <code class="docutils literal notranslate"><span class="pre">server_uninstrumented.py</span></code> should return an output
+similar to:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span><span class="o">{</span>
+    <span class="s2">&quot;name&quot;</span>: <span class="s2">&quot;server_request&quot;</span>,
+    <span class="s2">&quot;context&quot;</span>: <span class="o">{</span>
+        <span class="s2">&quot;trace_id&quot;</span>: <span class="s2">&quot;0x9f528e0b76189f539d9c21b1a7a2fc24&quot;</span>,
+        <span class="s2">&quot;span_id&quot;</span>: <span class="s2">&quot;0xd79760685cd4c269&quot;</span>,
+        <span class="s2">&quot;trace_state&quot;</span>: <span class="s2">&quot;{}&quot;</span>
+    <span class="o">}</span>,
+    <span class="s2">&quot;kind&quot;</span>: <span class="s2">&quot;SpanKind.SERVER&quot;</span>,
+    <span class="s2">&quot;parent_id&quot;</span>: <span class="s2">&quot;0xb4fb7eee22ef78e4&quot;</span>,
+    <span class="s2">&quot;start_time&quot;</span>: <span class="s2">&quot;2020-04-30T17:10:02.400604Z&quot;</span>,
+    <span class="s2">&quot;end_time&quot;</span>: <span class="s2">&quot;2020-04-30T17:10:02.401858Z&quot;</span>,
+    <span class="s2">&quot;status&quot;</span>: <span class="o">{</span>
+        <span class="s2">&quot;status_code&quot;</span>: <span class="s2">&quot;OK&quot;</span>
+    <span class="o">}</span>,
+    <span class="s2">&quot;attributes&quot;</span>: <span class="o">{</span>
+        <span class="s2">&quot;component&quot;</span>: <span class="s2">&quot;http&quot;</span>,
+        <span class="s2">&quot;http.method&quot;</span>: <span class="s2">&quot;GET&quot;</span>,
+        <span class="s2">&quot;http.server_name&quot;</span>: <span class="s2">&quot;127.0.0.1&quot;</span>,
+        <span class="s2">&quot;http.scheme&quot;</span>: <span class="s2">&quot;http&quot;</span>,
+        <span class="s2">&quot;host.port&quot;</span>: <span class="m">8082</span>,
+        <span class="s2">&quot;http.host&quot;</span>: <span class="s2">&quot;localhost:8082&quot;</span>,
+        <span class="s2">&quot;http.target&quot;</span>: <span class="s2">&quot;/server_request?param=testing&quot;</span>,
+        <span class="s2">&quot;net.peer.ip&quot;</span>: <span class="s2">&quot;127.0.0.1&quot;</span>,
+        <span class="s2">&quot;net.peer.port&quot;</span>: <span class="m">48240</span>,
+        <span class="s2">&quot;http.flavor&quot;</span>: <span class="s2">&quot;1.1&quot;</span>,
+        <span class="s2">&quot;http.route&quot;</span>: <span class="s2">&quot;/server_request&quot;</span>,
+        <span class="s2">&quot;http.status_text&quot;</span>: <span class="s2">&quot;OK&quot;</span>,
+        <span class="s2">&quot;http.status_code&quot;</span>: <span class="m">200</span>
+    <span class="o">}</span>,
+    <span class="s2">&quot;events&quot;</span>: <span class="o">[]</span>,
+    <span class="s2">&quot;links&quot;</span>: <span class="o">[]</span>
+<span class="o">}</span>
+</pre></div>
+</div>
+<p>Both outputs are equivalent since the automatic instrumentation does
+what the manual instrumentation does too.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../basic_context/README.html" class="btn btn-neutral float-right" title="Basic Context" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../../instrumentation/opentracing_shim/opentracing_shim.html" class="btn btn-neutral float-left" title="OpenTracing Shim for OpenTelemetry" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright OpenTelemetry Authors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

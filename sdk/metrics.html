@@ -1,0 +1,814 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>opentelemetry.sdk.metrics package &mdash; OpenTelemetry Python  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="opentelemetry.sdk.metrics.export.aggregate" href="metrics.export.aggregate.html" />
+    <link rel="prev" title="OpenTelemetry Python SDK" href="sdk.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> OpenTelemetry Python
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started with OpenTelemetry Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq-and-cookbook.html">Frequently Asked Questions and Cookbook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Python Packages</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../api/api.html">OpenTelemetry Python API</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="sdk.html">OpenTelemetry Python SDK</a><ul class="current">
+<li class="toctree-l2 current"><a class="current reference internal" href="#">opentelemetry.sdk.metrics package</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#submodules">Submodules</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="metrics.export.aggregate.html">opentelemetry.sdk.metrics.export.aggregate</a></li>
+<li class="toctree-l4"><a class="reference internal" href="metrics.export.processor.html">opentelemetry.sdk.metrics.export.processor</a></li>
+<li class="toctree-l4"><a class="reference internal" href="util.instrumentation.html">opentelemetry.sdk.util.instrumentation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="resources.html">opentelemetry.sdk.resources package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trace.html">opentelemetry.sdk.trace package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="error_handler.html">opentelemetry.sdk.error_handler package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Exporters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/jaeger/jaeger.html">Opentelemetry Jaeger Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/opencensus/opencensus.html">OpenCensus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/otlp/otlp.html">Opentelemetry OTLP Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/prometheus/prometheus.html">OpenTelemetry Prometheus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/zipkin/zipkin.html">Opentelemetry Zipkin Exporter</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Instrumentations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentor.html">opentelemetry.instrumentation.instrumentor package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/metric.html">opentelemetry.instrumentation.metric package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/opentracing_shim/opentracing_shim.html">OpenTracing Shim for OpenTelemetry</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples/auto-instrumentation/README.html">Autoinstrumentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_context/README.html">Basic Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_meter/README.html">Basic Meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_tracer/README.html">Basic Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/datadog_exporter/README.html">Datadog Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/django/README.html">OpenTelemetry Django Instrumentation Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/README.html">Global Error Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/error_handler_0/README.html">Error Handler 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/error_handler_1/README.html">Error Handler 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opencensus-exporter-metrics/README.html">OpenTelemetry Collector Metrics OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opencensus-exporter-tracer/README.html">OpenTelemetry Collector Tracer OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opentelemetry-example-app/README.html">OpenTelemetry Example Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opentracing/README.html">OpenTracing Shim Example</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenTelemetry Python</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="sdk.html">OpenTelemetry Python SDK</a> &raquo;</li>
+        
+      <li>opentelemetry.sdk.metrics package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/sdk/metrics.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="opentelemetry-sdk-metrics-package">
+<h1>opentelemetry.sdk.metrics package<a class="headerlink" href="#opentelemetry-sdk-metrics-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+<div class="toctree-wrapper compound">
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="metrics.export.aggregate.html">opentelemetry.sdk.metrics.export.aggregate</a></li>
+<li class="toctree-l1"><a class="reference internal" href="metrics.export.processor.html">opentelemetry.sdk.metrics.export.processor</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="metrics.export.html">opentelemetry.sdk.metrics.export</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="util.instrumentation.html">opentelemetry.sdk.util.instrumentation</a></li>
+</ul>
+</div>
+<span class="target" id="module-opentelemetry.sdk.metrics"></span><dl class="class">
+<dt id="opentelemetry.sdk.metrics.BaseBoundInstrument">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.metrics.</code><code class="sig-name descname">BaseBoundInstrument</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">metric</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#BaseBoundInstrument"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.BaseBoundInstrument" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Class containing common behavior for all bound metric instruments.</p>
+<p>Bound metric instruments are responsible for operating on data for metric
+instruments for a specific set of labels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Tuple" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Tuple</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]]) – A set of labels as keys that bind this metric instrument.</p></li>
+<li><p><strong>metric</strong> (<em>~MetricT</em>) – The metric that created this bound instrument.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.BaseBoundInstrument.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#BaseBoundInstrument.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.BaseBoundInstrument.update" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.BaseBoundInstrument.release">
+<code class="sig-name descname">release</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#BaseBoundInstrument.release"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.BaseBoundInstrument.release" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.BaseBoundInstrument.decrease_ref_count">
+<code class="sig-name descname">decrease_ref_count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#BaseBoundInstrument.decrease_ref_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.BaseBoundInstrument.decrease_ref_count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.BaseBoundInstrument.increase_ref_count">
+<code class="sig-name descname">increase_ref_count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#BaseBoundInstrument.increase_ref_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.BaseBoundInstrument.increase_ref_count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.BaseBoundInstrument.ref_count">
+<code class="sig-name descname">ref_count</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#BaseBoundInstrument.ref_count"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.BaseBoundInstrument.ref_count" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.metrics.BoundCounter">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.metrics.</code><code class="sig-name descname">BoundCounter</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">metric</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#BoundCounter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.BoundCounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.BoundCounter" title="opentelemetry.metrics.BoundCounter"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.BoundCounter</span></code></a>, <a class="reference internal" href="#opentelemetry.sdk.metrics.BaseBoundInstrument" title="opentelemetry.sdk.metrics.BaseBoundInstrument"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.sdk.metrics.BaseBoundInstrument</span></code></a></p>
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.BoundCounter.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#BoundCounter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.BoundCounter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.BoundCounter.add" title="opentelemetry.metrics.BoundCounter.add"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">opentelemetry.metrics.BoundCounter.add</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.metrics.BoundUpDownCounter">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.metrics.</code><code class="sig-name descname">BoundUpDownCounter</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">metric</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#BoundUpDownCounter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.BoundUpDownCounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.BoundUpDownCounter" title="opentelemetry.metrics.BoundUpDownCounter"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.BoundUpDownCounter</span></code></a>, <a class="reference internal" href="#opentelemetry.sdk.metrics.BaseBoundInstrument" title="opentelemetry.sdk.metrics.BaseBoundInstrument"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.sdk.metrics.BaseBoundInstrument</span></code></a></p>
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.BoundUpDownCounter.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#BoundUpDownCounter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.BoundUpDownCounter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.BoundUpDownCounter.add" title="opentelemetry.metrics.BoundUpDownCounter.add"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">opentelemetry.metrics.BoundUpDownCounter.add</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.metrics.BoundValueRecorder">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.metrics.</code><code class="sig-name descname">BoundValueRecorder</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">metric</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#BoundValueRecorder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.BoundValueRecorder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.BoundValueRecorder" title="opentelemetry.metrics.BoundValueRecorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.BoundValueRecorder</span></code></a>, <a class="reference internal" href="#opentelemetry.sdk.metrics.BaseBoundInstrument" title="opentelemetry.sdk.metrics.BaseBoundInstrument"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.sdk.metrics.BaseBoundInstrument</span></code></a></p>
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.BoundValueRecorder.record">
+<code class="sig-name descname">record</code><span class="sig-paren">(</span><em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#BoundValueRecorder.record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.BoundValueRecorder.record" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.BoundValueRecorder.record" title="opentelemetry.metrics.BoundValueRecorder.record"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">opentelemetry.metrics.BoundValueRecorder.record</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.metrics.Metric">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.metrics.</code><code class="sig-name descname">Metric</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">meter</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Metric"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Metric" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Metric" title="opentelemetry.metrics.Metric"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.Metric</span></code></a></p>
+<p>Base class for all synchronous metric types.</p>
+<p>This is the class that is used to represent a metric that is to be
+synchronously recorded and tracked. Synchronous instruments are called
+inside a request, meaning they have an associated distributed context
+(i.e. Span context, baggage). Multiple metric events may occur
+for a synchronous instrument within a give collection interval.</p>
+<p>Each metric has a set of bound metrics that are created from the metric.
+See <a class="reference internal" href="#opentelemetry.sdk.metrics.BaseBoundInstrument" title="opentelemetry.sdk.metrics.BaseBoundInstrument"><code class="xref any py py-class docutils literal notranslate"><span class="pre">BaseBoundInstrument</span></code></a> for information on bound metric instruments.</p>
+<dl class="attribute">
+<dt id="opentelemetry.sdk.metrics.Metric.BOUND_INSTR_TYPE">
+<code class="sig-name descname">BOUND_INSTR_TYPE</code><a class="headerlink" href="#opentelemetry.sdk.metrics.Metric.BOUND_INSTR_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#opentelemetry.sdk.metrics.BaseBoundInstrument" title="opentelemetry.sdk.metrics.BaseBoundInstrument"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseBoundInstrument</span></code></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.Metric.bind">
+<code class="sig-name descname">bind</code><span class="sig-paren">(</span><em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Metric.bind"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Metric.bind" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Metric.bind" title="opentelemetry.metrics.Metric.bind"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">opentelemetry.metrics.Metric.bind</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.sdk.metrics.BaseBoundInstrument" title="opentelemetry.sdk.metrics.BaseBoundInstrument"><code class="xref py py-class docutils literal notranslate"><span class="pre">BaseBoundInstrument</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.Metric.UPDATE_FUNCTION">
+<code class="sig-name descname">UPDATE_FUNCTION</code><span class="sig-paren">(</span><em class="sig-param">y</em><span class="sig-paren">)</span><a class="headerlink" href="#opentelemetry.sdk.metrics.Metric.UPDATE_FUNCTION" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.metrics.Counter">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.metrics.</code><code class="sig-name descname">Counter</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">meter</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Counter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Counter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.sdk.metrics.Metric" title="opentelemetry.sdk.metrics.Metric"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.sdk.metrics.Metric</span></code></a>, <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Counter" title="opentelemetry.metrics.Counter"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.Counter</span></code></a></p>
+<p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Counter" title="opentelemetry.metrics.Counter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.Counter</span></code></a>.</p>
+<dl class="attribute">
+<dt id="opentelemetry.sdk.metrics.Counter.BOUND_INSTR_TYPE">
+<code class="sig-name descname">BOUND_INSTR_TYPE</code><a class="headerlink" href="#opentelemetry.sdk.metrics.Counter.BOUND_INSTR_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#opentelemetry.sdk.metrics.BoundCounter" title="opentelemetry.sdk.metrics.BoundCounter"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoundCounter</span></code></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.Counter.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Counter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Counter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Counter.add" title="opentelemetry.metrics.Counter.add"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">opentelemetry.metrics.Counter.add</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.Counter.UPDATE_FUNCTION">
+<code class="sig-name descname">UPDATE_FUNCTION</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">labels</em><span class="sig-paren">)</span><a class="headerlink" href="#opentelemetry.sdk.metrics.Counter.UPDATE_FUNCTION" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Counter.add" title="opentelemetry.metrics.Counter.add"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">opentelemetry.metrics.Counter.add</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.metrics.UpDownCounter">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.metrics.</code><code class="sig-name descname">UpDownCounter</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">meter</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#UpDownCounter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.UpDownCounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.sdk.metrics.Metric" title="opentelemetry.sdk.metrics.Metric"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.sdk.metrics.Metric</span></code></a>, <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.UpDownCounter" title="opentelemetry.metrics.UpDownCounter"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.UpDownCounter</span></code></a></p>
+<p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.UpDownCounter" title="opentelemetry.metrics.UpDownCounter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.UpDownCounter</span></code></a>.</p>
+<dl class="attribute">
+<dt id="opentelemetry.sdk.metrics.UpDownCounter.BOUND_INSTR_TYPE">
+<code class="sig-name descname">BOUND_INSTR_TYPE</code><a class="headerlink" href="#opentelemetry.sdk.metrics.UpDownCounter.BOUND_INSTR_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#opentelemetry.sdk.metrics.BoundUpDownCounter" title="opentelemetry.sdk.metrics.BoundUpDownCounter"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoundUpDownCounter</span></code></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.UpDownCounter.add">
+<code class="sig-name descname">add</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#UpDownCounter.add"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.UpDownCounter.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.UpDownCounter.add" title="opentelemetry.metrics.UpDownCounter.add"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">opentelemetry.metrics.UpDownCounter.add</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.UpDownCounter.UPDATE_FUNCTION">
+<code class="sig-name descname">UPDATE_FUNCTION</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">labels</em><span class="sig-paren">)</span><a class="headerlink" href="#opentelemetry.sdk.metrics.UpDownCounter.UPDATE_FUNCTION" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.UpDownCounter.add" title="opentelemetry.metrics.UpDownCounter.add"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">opentelemetry.metrics.UpDownCounter.add</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.metrics.ValueRecorder">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.metrics.</code><code class="sig-name descname">ValueRecorder</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">meter</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#ValueRecorder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.ValueRecorder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.sdk.metrics.Metric" title="opentelemetry.sdk.metrics.Metric"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.sdk.metrics.Metric</span></code></a>, <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.ValueRecorder" title="opentelemetry.metrics.ValueRecorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.ValueRecorder</span></code></a></p>
+<p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.ValueRecorder" title="opentelemetry.metrics.ValueRecorder"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.ValueRecorder</span></code></a>.</p>
+<dl class="attribute">
+<dt id="opentelemetry.sdk.metrics.ValueRecorder.BOUND_INSTR_TYPE">
+<code class="sig-name descname">BOUND_INSTR_TYPE</code><a class="headerlink" href="#opentelemetry.sdk.metrics.ValueRecorder.BOUND_INSTR_TYPE" title="Permalink to this definition">¶</a></dt>
+<dd><p>alias of <a class="reference internal" href="#opentelemetry.sdk.metrics.BoundValueRecorder" title="opentelemetry.sdk.metrics.BoundValueRecorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">BoundValueRecorder</span></code></a></p>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.ValueRecorder.record">
+<code class="sig-name descname">record</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#ValueRecorder.record"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.ValueRecorder.record" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.ValueRecorder.record" title="opentelemetry.metrics.ValueRecorder.record"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">opentelemetry.metrics.ValueRecorder.record</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.ValueRecorder.UPDATE_FUNCTION">
+<code class="sig-name descname">UPDATE_FUNCTION</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">labels</em><span class="sig-paren">)</span><a class="headerlink" href="#opentelemetry.sdk.metrics.ValueRecorder.UPDATE_FUNCTION" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.ValueRecorder.record" title="opentelemetry.metrics.ValueRecorder.record"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">opentelemetry.metrics.ValueRecorder.record</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.metrics.Observer">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.metrics.</code><code class="sig-name descname">Observer</code><span class="sig-paren">(</span><em class="sig-param">callback</em>, <em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">label_keys=()</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Observer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Observer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Observer" title="opentelemetry.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.Observer</span></code></a></p>
+<p>Base class for all asynchronous metric types.</p>
+<p>Also known as Observers, observer metric instruments are asynchronous in
+that they are reported by a callback, once per collection interval, and
+lack context. They are permitted to report only one value per distinct
+label set per period.</p>
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.Observer.observe">
+<code class="sig-name descname">observe</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">labels</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Observer.observe"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Observer.observe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Captures <code class="docutils literal notranslate"><span class="pre">value</span></code> to the observer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>~ValueT</em>) – The value to capture to this observer metric.</p></li>
+<li><p><strong>labels</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Labels associated to <code class="docutils literal notranslate"><span class="pre">value</span></code>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.Observer.run">
+<code class="sig-name descname">run</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Observer.run"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Observer.run" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.metrics.SumObserver">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.metrics.</code><code class="sig-name descname">SumObserver</code><span class="sig-paren">(</span><em class="sig-param">callback</em>, <em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">label_keys=()</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#SumObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.SumObserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.sdk.metrics.Observer" title="opentelemetry.sdk.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.sdk.metrics.Observer</span></code></a>, <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.SumObserver" title="opentelemetry.metrics.SumObserver"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.SumObserver</span></code></a></p>
+<p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.SumObserver" title="opentelemetry.metrics.SumObserver"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.SumObserver</span></code></a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.metrics.UpDownSumObserver">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.metrics.</code><code class="sig-name descname">UpDownSumObserver</code><span class="sig-paren">(</span><em class="sig-param">callback</em>, <em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">label_keys=()</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#UpDownSumObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.UpDownSumObserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.sdk.metrics.Observer" title="opentelemetry.sdk.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.sdk.metrics.Observer</span></code></a>, <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.UpDownSumObserver" title="opentelemetry.metrics.UpDownSumObserver"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.UpDownSumObserver</span></code></a></p>
+<p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.UpDownSumObserver" title="opentelemetry.metrics.UpDownSumObserver"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.UpDownSumObserver</span></code></a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.metrics.ValueObserver">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.metrics.</code><code class="sig-name descname">ValueObserver</code><span class="sig-paren">(</span><em class="sig-param">callback</em>, <em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">label_keys=()</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#ValueObserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.ValueObserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.sdk.metrics.Observer" title="opentelemetry.sdk.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.sdk.metrics.Observer</span></code></a>, <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.ValueObserver" title="opentelemetry.metrics.ValueObserver"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.ValueObserver</span></code></a></p>
+<p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.ValueObserver" title="opentelemetry.metrics.ValueObserver"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.ValueObserver</span></code></a>.</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.metrics.Accumulation">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.metrics.</code><code class="sig-name descname">Accumulation</code><span class="sig-paren">(</span><em class="sig-param">instrument</em>, <em class="sig-param">labels</em>, <em class="sig-param">aggregator</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Accumulation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Accumulation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>Container class used for processing in the <a class="reference internal" href="metrics.export.processor.html#opentelemetry.sdk.metrics.export.processor.Processor" title="opentelemetry.sdk.metrics.export.processor.Processor"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Processor</span></code></a></p>
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.metrics.Accumulator">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.metrics.</code><code class="sig-name descname">Accumulator</code><span class="sig-paren">(</span><em class="sig-param">source</em>, <em class="sig-param">instrumentation_info</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Accumulator"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Accumulator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Meter" title="opentelemetry.metrics.Meter"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.Meter</span></code></a></p>
+<p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Meter" title="opentelemetry.metrics.Meter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.Meter</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>source</strong> (<a class="reference internal" href="#opentelemetry.sdk.metrics.MeterProvider" title="opentelemetry.sdk.metrics.MeterProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">MeterProvider</span></code></a>) – The <a class="reference internal" href="#opentelemetry.sdk.metrics.MeterProvider" title="opentelemetry.sdk.metrics.MeterProvider"><code class="xref any py py-class docutils literal notranslate"><span class="pre">MeterProvider</span></code></a> that created this meter.</p></li>
+<li><p><strong>instrumentation_info</strong> (<a class="reference internal" href="util.instrumentation.html#opentelemetry.sdk.util.instrumentation.InstrumentationInfo" title="opentelemetry.sdk.util.instrumentation.InstrumentationInfo"><code class="xref py py-class docutils literal notranslate"><span class="pre">InstrumentationInfo</span></code></a>) – The <a class="reference internal" href="util.instrumentation.html#opentelemetry.sdk.util.instrumentation.InstrumentationInfo" title="opentelemetry.sdk.util.instrumentation.InstrumentationInfo"><code class="xref any py py-class docutils literal notranslate"><span class="pre">InstrumentationInfo</span></code></a> for this meter.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.Accumulator.collect">
+<code class="sig-name descname">collect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Accumulator.collect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Accumulator.collect" title="Permalink to this definition">¶</a></dt>
+<dd><p>Collects all the metrics created with this <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Meter" title="opentelemetry.metrics.Meter"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Meter</span></code></a> for export.</p>
+<p>Utilizes the processor to create checkpoints of the current values in
+each aggregator belonging to the metrics that were created with this
+meter instance.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.Accumulator.record_batch">
+<code class="sig-name descname">record_batch</code><span class="sig-paren">(</span><em class="sig-param">labels</em>, <em class="sig-param">record_tuples</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Accumulator.record_batch"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Accumulator.record_batch" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Meter.record_batch" title="opentelemetry.metrics.Meter.record_batch"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">opentelemetry.metrics.Meter.record_batch</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.Accumulator.create_counter">
+<code class="sig-name descname">create_counter</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Accumulator.create_counter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Accumulator.create_counter" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Meter.create_counter" title="opentelemetry.metrics.Meter.create_counter"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">opentelemetry.metrics.Meter.create_counter</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Counter" title="opentelemetry.metrics.Counter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Counter</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.Accumulator.create_updowncounter">
+<code class="sig-name descname">create_updowncounter</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Accumulator.create_updowncounter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Accumulator.create_updowncounter" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Meter.create_updowncounter" title="opentelemetry.metrics.Meter.create_updowncounter"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">opentelemetry.metrics.Meter.create_updowncounter</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.UpDownCounter" title="opentelemetry.metrics.UpDownCounter"><code class="xref py py-class docutils literal notranslate"><span class="pre">UpDownCounter</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.Accumulator.create_valuerecorder">
+<code class="sig-name descname">create_valuerecorder</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Accumulator.create_valuerecorder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Accumulator.create_valuerecorder" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Meter.create_valuerecorder" title="opentelemetry.metrics.Meter.create_valuerecorder"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">opentelemetry.metrics.Meter.create_valuerecorder</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.ValueRecorder" title="opentelemetry.metrics.ValueRecorder"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueRecorder</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.Accumulator.register_sumobserver">
+<code class="sig-name descname">register_sumobserver</code><span class="sig-paren">(</span><em class="sig-param">callback</em>, <em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">label_keys=()</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Accumulator.register_sumobserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Accumulator.register_sumobserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers an <code class="docutils literal notranslate"><span class="pre">SumObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>callback</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Observer" title="opentelemetry.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a>], <code class="docutils literal notranslate"><span class="pre">None</span></code>]) – Callback invoked each collection interval with the
+observer as argument.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The name of the metric.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Human-readable description of the metric.</p></li>
+<li><p><strong>unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Unit of the metric values following the UCUM convention
+(<a class="reference external" href="https://unitsofmeasure.org/ucum.html">https://unitsofmeasure.org/ucum.html</a>).</p></li>
+<li><p><strong>value_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[~ValueT]) – The type of values being recorded by the metric.</p></li>
+<li><p><strong>label_keys</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – The keys for the labels with dynamic values.</p></li>
+<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Whether to report the metric by default.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns: A new <code class="docutils literal notranslate"><span class="pre">SumObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.SumObserver" title="opentelemetry.metrics.SumObserver"><code class="xref py py-class docutils literal notranslate"><span class="pre">SumObserver</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.Accumulator.register_updownsumobserver">
+<code class="sig-name descname">register_updownsumobserver</code><span class="sig-paren">(</span><em class="sig-param">callback</em>, <em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">label_keys=()</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Accumulator.register_updownsumobserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Accumulator.register_updownsumobserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers an <code class="docutils literal notranslate"><span class="pre">UpDownSumObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>callback</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Observer" title="opentelemetry.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a>], <code class="docutils literal notranslate"><span class="pre">None</span></code>]) – Callback invoked each collection interval with the
+observer as argument.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The name of the metric.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Human-readable description of the metric.</p></li>
+<li><p><strong>unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Unit of the metric values following the UCUM convention
+(<a class="reference external" href="https://unitsofmeasure.org/ucum.html">https://unitsofmeasure.org/ucum.html</a>).</p></li>
+<li><p><strong>value_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[~ValueT]) – The type of values being recorded by the metric.</p></li>
+<li><p><strong>label_keys</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – The keys for the labels with dynamic values.</p></li>
+<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Whether to report the metric by default.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns: A new <code class="docutils literal notranslate"><span class="pre">UpDownSumObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.UpDownSumObserver" title="opentelemetry.metrics.UpDownSumObserver"><code class="xref py py-class docutils literal notranslate"><span class="pre">UpDownSumObserver</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.Accumulator.register_valueobserver">
+<code class="sig-name descname">register_valueobserver</code><span class="sig-paren">(</span><em class="sig-param">callback</em>, <em class="sig-param">name</em>, <em class="sig-param">description</em>, <em class="sig-param">unit</em>, <em class="sig-param">value_type</em>, <em class="sig-param">label_keys=()</em>, <em class="sig-param">enabled=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Accumulator.register_valueobserver"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Accumulator.register_valueobserver" title="Permalink to this definition">¶</a></dt>
+<dd><p>Registers an <code class="docutils literal notranslate"><span class="pre">ValueObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>callback</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Callable" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Callable</span></code></a>[[<a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Observer" title="opentelemetry.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a>], <code class="docutils literal notranslate"><span class="pre">None</span></code>]) – Callback invoked each collection interval with the
+observer as argument.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The name of the metric.</p></li>
+<li><p><strong>description</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Human-readable description of the metric.</p></li>
+<li><p><strong>unit</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Unit of the metric values following the UCUM convention
+(<a class="reference external" href="https://unitsofmeasure.org/ucum.html">https://unitsofmeasure.org/ucum.html</a>).</p></li>
+<li><p><strong>value_type</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Type" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Type</span></code></a>[~ValueT]) – The type of values being recorded by the metric.</p></li>
+<li><p><strong>label_keys</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – The keys for the labels with dynamic values.</p></li>
+<li><p><strong>enabled</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Whether to report the metric by default.</p></li>
+</ul>
+</dd>
+</dl>
+<p>Returns: A new <code class="docutils literal notranslate"><span class="pre">ValueObserver</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.ValueObserver" title="opentelemetry.metrics.ValueObserver"><code class="xref py py-class docutils literal notranslate"><span class="pre">ValueObserver</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.Accumulator.unregister_observer">
+<code class="sig-name descname">unregister_observer</code><span class="sig-paren">(</span><em class="sig-param">observer</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Accumulator.unregister_observer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Accumulator.unregister_observer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Unregisters an <code class="docutils literal notranslate"><span class="pre">Observer</span></code> metric instrument.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>observer</strong> (<a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Observer" title="opentelemetry.metrics.Observer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Observer</span></code></a>) – The observer to unregister.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.Accumulator.register_view">
+<code class="sig-name descname">register_view</code><span class="sig-paren">(</span><em class="sig-param">view</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Accumulator.register_view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Accumulator.register_view" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.Accumulator.unregister_view">
+<code class="sig-name descname">unregister_view</code><span class="sig-paren">(</span><em class="sig-param">view</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#Accumulator.unregister_view"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.Accumulator.unregister_view" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.metrics.MeterProvider">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.metrics.</code><code class="sig-name descname">MeterProvider</code><span class="sig-paren">(</span><em class="sig-param">stateful=True</em>, <em class="sig-param">resource=&lt;opentelemetry.sdk.resources.Resource object&gt;</em>, <em class="sig-param">shutdown_on_exit=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#MeterProvider"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.MeterProvider" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.MeterProvider" title="opentelemetry.metrics.MeterProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.MeterProvider</span></code></a></p>
+<p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.MeterProvider" title="opentelemetry.metrics.MeterProvider"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.MeterProvider</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>stateful</strong> – Indicates whether meters created are going to be stateful</p></li>
+<li><p><strong>resource</strong> (<a class="reference internal" href="resources.html#opentelemetry.sdk.resources.Resource" title="opentelemetry.sdk.resources.Resource"><code class="xref py py-class docutils literal notranslate"><span class="pre">Resource</span></code></a>) – Resource for this MeterProvider</p></li>
+<li><p><strong>shutdown_on_exit</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Register an atexit hook to shut down when the
+application exists</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.MeterProvider.get_meter">
+<code class="sig-name descname">get_meter</code><span class="sig-paren">(</span><em class="sig-param">instrumenting_module_name</em>, <em class="sig-param">instrumenting_library_version=''</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#MeterProvider.get_meter"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.MeterProvider.get_meter" title="Permalink to this definition">¶</a></dt>
+<dd><p>See <a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.MeterProvider" title="opentelemetry.metrics.MeterProvider"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.metrics.MeterProvider</span></code></a>.get_meter.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Meter" title="opentelemetry.metrics.Meter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Meter</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.MeterProvider.start_pipeline">
+<code class="sig-name descname">start_pipeline</code><span class="sig-paren">(</span><em class="sig-param">meter</em>, <em class="sig-param">exporter=None</em>, <em class="sig-param">interval=15.0</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#MeterProvider.start_pipeline"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.MeterProvider.start_pipeline" title="Permalink to this definition">¶</a></dt>
+<dd><p>Method to begin the collect/export pipeline.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>meter</strong> (<a class="reference internal" href="../api/metrics.html#opentelemetry.metrics.Meter" title="opentelemetry.metrics.Meter"><code class="xref py py-class docutils literal notranslate"><span class="pre">Meter</span></code></a>) – The meter to collect metrics from.</p></li>
+<li><p><strong>exporter</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference internal" href="metrics.export.html#opentelemetry.sdk.metrics.export.MetricsExporter" title="opentelemetry.sdk.metrics.export.MetricsExporter"><code class="xref py py-class docutils literal notranslate"><span class="pre">MetricsExporter</span></code></a>]) – The exporter to export metrics to.</p></li>
+<li><p><strong>interval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>) – The collect/export interval in seconds.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.metrics.MeterProvider.shutdown">
+<code class="sig-name descname">shutdown</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/metrics.html#MeterProvider.shutdown"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.metrics.MeterProvider.shutdown" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="metrics.export.aggregate.html" class="btn btn-neutral float-right" title="opentelemetry.sdk.metrics.export.aggregate" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="sdk.html" class="btn btn-neutral float-left" title="OpenTelemetry Python SDK" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright OpenTelemetry Authors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

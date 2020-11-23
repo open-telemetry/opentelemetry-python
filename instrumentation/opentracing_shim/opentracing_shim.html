@@ -1,0 +1,856 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>OpenTracing Shim for OpenTelemetry &mdash; OpenTelemetry Python  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Autoinstrumentation" href="../../examples/auto-instrumentation/README.html" />
+    <link rel="prev" title="Opentelemetry Zipkin Exporter" href="../../exporter/zipkin/zipkin.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> OpenTelemetry Python
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting-started.html">Getting Started with OpenTelemetry Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq-and-cookbook.html">Frequently Asked Questions and Cookbook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Python Packages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/api.html">OpenTelemetry Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sdk/sdk.html">OpenTelemetry Python SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Exporters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/jaeger/jaeger.html">Opentelemetry Jaeger Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/opencensus/opencensus.html">OpenCensus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/otlp/otlp.html">Opentelemetry OTLP Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/prometheus/prometheus.html">OpenTelemetry Prometheus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/zipkin/zipkin.html">Opentelemetry Zipkin Exporter</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Instrumentations</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentor.html">opentelemetry.instrumentation.instrumentor package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../metric.html">opentelemetry.instrumentation.metric package</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">OpenTracing Shim for OpenTelemetry</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#api">API</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/auto-instrumentation/README.html">Autoinstrumentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/basic_context/README.html">Basic Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/basic_meter/README.html">Basic Meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/basic_tracer/README.html">Basic Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/datadog_exporter/README.html">Datadog Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/django/README.html">OpenTelemetry Django Instrumentation Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/error_hander/README.html">Global Error Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/error_hander/error_handler_0/README.html">Error Handler 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/error_hander/error_handler_1/README.html">Error Handler 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/opencensus-exporter-metrics/README.html">OpenTelemetry Collector Metrics OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/opencensus-exporter-tracer/README.html">OpenTelemetry Collector Tracer OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/opentelemetry-example-app/README.html">OpenTelemetry Example Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../examples/opentracing/README.html">OpenTracing Shim Example</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenTelemetry Python</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>OpenTracing Shim for OpenTelemetry</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/instrumentation/opentracing_shim/opentracing_shim.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-opentelemetry.instrumentation.opentracing_shim">
+<span id="opentracing-shim-for-opentelemetry"></span><h1>OpenTracing Shim for OpenTelemetry<a class="headerlink" href="#module-opentelemetry.instrumentation.opentracing_shim" title="Permalink to this headline">¶</a></h1>
+<p>The OpenTelemetry OpenTracing shim is a library which allows an easy migration
+from OpenTracing to OpenTelemetry.</p>
+<p>The shim consists of a set of classes which implement the OpenTracing Python
+API while using OpenTelemetry constructs behind the scenes. Its purpose is to
+allow applications which are already instrumented using OpenTracing to start
+using OpenTelemetry with a minimal effort, without having to rewrite large
+portions of the codebase.</p>
+<p>To use the shim, a <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim" title="opentelemetry.instrumentation.opentracing_shim.TracerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracerShim</span></code></a> instance is created and then used as if
+it were an “ordinary” OpenTracing <a class="reference external" href="https://opentracing-python.readthedocs.io/en/latest/api.html#opentracing.Tracer" title="(in opentracing-python v1.2.3.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentracing.Tracer</span></code></a>, as in the
+following example:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="kn">import</span> <span class="nn">time</span>
+
+<span class="kn">from</span> <span class="nn">opentelemetry</span> <span class="kn">import</span> <span class="n">trace</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.sdk.trace</span> <span class="kn">import</span> <span class="n">TracerProvider</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.instrumentation.opentracing_shim</span> <span class="kn">import</span> <span class="n">create_tracer</span>
+
+<span class="c1"># Define which OpenTelemetry Tracer provider implementation to use.</span>
+<span class="n">trace</span><span class="o">.</span><span class="n">set_tracer_provider</span><span class="p">(</span><span class="n">TracerProvider</span><span class="p">())</span>
+
+<span class="c1"># Create an OpenTelemetry Tracer.</span>
+<span class="n">otel_tracer</span> <span class="o">=</span> <span class="n">trace</span><span class="o">.</span><span class="n">get_tracer</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># Create an OpenTracing shim.</span>
+<span class="n">shim</span> <span class="o">=</span> <span class="n">create_tracer</span><span class="p">(</span><span class="n">otel_tracer</span><span class="p">)</span>
+
+<span class="k">with</span> <span class="n">shim</span><span class="o">.</span><span class="n">start_active_span</span><span class="p">(</span><span class="s2">&quot;ProcessHTTPRequest&quot;</span><span class="p">):</span>
+    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Processing HTTP request&quot;</span><span class="p">)</span>
+    <span class="c1"># Sleeping to mock real work.</span>
+    <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.1</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">shim</span><span class="o">.</span><span class="n">start_active_span</span><span class="p">(</span><span class="s2">&quot;GetDataFromDB&quot;</span><span class="p">):</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Getting data from DB&quot;</span><span class="p">)</span>
+        <span class="c1"># Sleeping to mock real work.</span>
+        <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="mf">0.2</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>While the OpenTracing Python API represents time values as the number of
+<strong>seconds</strong> since the epoch expressed as <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">float</span></code></a> values, the
+OpenTelemetry Python API represents time values as the number of
+<strong>nanoseconds</strong> since the epoch expressed as <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">int</span></code></a> values. This fact
+requires the OpenTracing shim to convert time values back and forth between
+the two representations, which involves floating point arithmetic.</p>
+<p>Due to the way computers represent floating point values in hardware,
+representation of decimal floating point values in binary-based hardware is
+imprecise by definition.</p>
+<p>The above results in <strong>slight imprecisions</strong> in time values passed to the
+shim via the OpenTracing API when comparing the value passed to the shim
+and the value stored in the OpenTelemetry <a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Span" title="opentelemetry.trace.Span"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Span</span></code></a>
+object behind the scenes. <strong>This is not a bug in this library or in
+Python</strong>. Rather, this is a generic problem which stems from the fact that
+not every decimal floating point number can be correctly represented in
+binary, and therefore affects other libraries and programming languages as
+well. More information about this problem can be found in the
+<a class="reference external" href="https://docs.python.org/3/tutorial/floatingpoint.html">Floating Point Arithmetic: Issues and Limitations</a> section of the
+Python documentation.</p>
+<p>While testing this library, the aforementioned imprecisions were observed
+to be of <em>less than a microsecond</em>.</p>
+</div>
+<div class="section" id="api">
+<h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<dl class="function">
+<dt id="opentelemetry.instrumentation.opentracing_shim.create_tracer">
+<code class="sig-prename descclassname">opentelemetry.instrumentation.opentracing_shim.</code><code class="sig-name descname">create_tracer</code><span class="sig-paren">(</span><em class="sig-param">otel_tracer_provider</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#create_tracer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.create_tracer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim" title="opentelemetry.instrumentation.opentracing_shim.TracerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracerShim</span></code></a> object from the provided OpenTelemetry
+<a class="reference internal" href="../../api/trace.html#opentelemetry.trace.TracerProvider" title="opentelemetry.trace.TracerProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.TracerProvider</span></code></a>.</p>
+<p>The returned <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim" title="opentelemetry.instrumentation.opentracing_shim.TracerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracerShim</span></code></a> is an implementation of
+<a class="reference external" href="https://opentracing-python.readthedocs.io/en/latest/api.html#opentracing.Tracer" title="(in opentracing-python v1.2.3.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentracing.Tracer</span></code></a> using OpenTelemetry under the hood.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>otel_tracer_provider</strong> (<a class="reference internal" href="../../api/trace.html#opentelemetry.trace.TracerProvider" title="opentelemetry.trace.TracerProvider"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracerProvider</span></code></a>) – A tracer from this provider  will be used to
+perform the actual tracing when user code is instrumented using the
+OpenTracing API.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim" title="opentelemetry.instrumentation.opentracing_shim.TracerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracerShim</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The created <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim" title="opentelemetry.instrumentation.opentracing_shim.TracerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracerShim</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.instrumentation.opentracing_shim.SpanContextShim">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.instrumentation.opentracing_shim.</code><code class="sig-name descname">SpanContextShim</code><span class="sig-paren">(</span><em class="sig-param">otel_context</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#SpanContextShim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.SpanContextShim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements <a class="reference external" href="https://opentracing-python.readthedocs.io/en/latest/api.html#opentracing.SpanContext" title="(in opentracing-python v1.2.3.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentracing.SpanContext</span></code></a> by wrapping a
+<a class="reference internal" href="../../api/trace.html#opentelemetry.trace.SpanContext" title="opentelemetry.trace.SpanContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.SpanContext</span></code></a> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>otel_context</strong> (<a class="reference internal" href="../../api/trace.span.html#opentelemetry.trace.span.SpanContext" title="opentelemetry.trace.span.SpanContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanContext</span></code></a>) – A <a class="reference internal" href="../../api/trace.html#opentelemetry.trace.SpanContext" title="opentelemetry.trace.SpanContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.SpanContext</span></code></a> to be used for
+constructing the <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanContextShim" title="opentelemetry.instrumentation.opentracing_shim.SpanContextShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanContextShim</span></code></a>.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.SpanContextShim.unwrap">
+<code class="sig-name descname">unwrap</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#SpanContextShim.unwrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.SpanContextShim.unwrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the wrapped <a class="reference internal" href="../../api/trace.html#opentelemetry.trace.SpanContext" title="opentelemetry.trace.SpanContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.SpanContext</span></code></a>
+object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../api/trace.span.html#opentelemetry.trace.span.SpanContext" title="opentelemetry.trace.span.SpanContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanContext</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The <a class="reference internal" href="../../api/trace.html#opentelemetry.trace.SpanContext" title="opentelemetry.trace.SpanContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.SpanContext</span></code></a> object wrapped by this
+<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanContextShim" title="opentelemetry.instrumentation.opentracing_shim.SpanContextShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanContextShim</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.SpanContextShim.baggage">
+<em class="property">property </em><code class="sig-name descname">baggage</code><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.SpanContextShim.baggage" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the <code class="docutils literal notranslate"><span class="pre">baggage</span></code> associated with this object</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="../../api/context.context.html#opentelemetry.context.context.Context" title="opentelemetry.context.context.Context"><code class="xref py py-class docutils literal notranslate"><span class="pre">Context</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.instrumentation.opentracing_shim.SpanShim">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.instrumentation.opentracing_shim.</code><code class="sig-name descname">SpanShim</code><span class="sig-paren">(</span><em class="sig-param">tracer</em>, <em class="sig-param">context</em>, <em class="sig-param">span</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#SpanShim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wraps a <a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Span" title="opentelemetry.trace.Span"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Span</span></code></a> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>tracer</strong> – The <a class="reference external" href="https://opentracing-python.readthedocs.io/en/latest/api.html#opentracing.Tracer" title="(in opentracing-python v1.2.3.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentracing.Tracer</span></code></a> that created this <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a>.</p></li>
+<li><p><strong>context</strong> (<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanContextShim" title="opentelemetry.instrumentation.opentracing_shim.SpanContextShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanContextShim</span></code></a>) – A <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanContextShim" title="opentelemetry.instrumentation.opentracing_shim.SpanContextShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanContextShim</span></code></a> which contains the context for this
+<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a>.</p></li>
+<li><p><strong>span</strong> – A <a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Span" title="opentelemetry.trace.Span"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Span</span></code></a> to wrap.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.SpanShim.unwrap">
+<code class="sig-name descname">unwrap</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#SpanShim.unwrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim.unwrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the wrapped <a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Span" title="opentelemetry.trace.Span"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Span</span></code></a> object.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The <a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Span" title="opentelemetry.trace.Span"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Span</span></code></a> object wrapped by this
+<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.SpanShim.set_operation_name">
+<code class="sig-name descname">set_operation_name</code><span class="sig-paren">(</span><em class="sig-param">operation_name</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#SpanShim.set_operation_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim.set_operation_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the name of the wrapped OpenTelemetry span.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>operation_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – The new name to be used for the underlying
+<a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Span" title="opentelemetry.trace.Span"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Span</span></code></a> object.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Returns this <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a> instance to allow call chaining.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.SpanShim.finish">
+<code class="sig-name descname">finish</code><span class="sig-paren">(</span><em class="sig-param">finish_time=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#SpanShim.finish"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim.finish" title="Permalink to this definition">¶</a></dt>
+<dd><p>Ends the OpenTelemetry span wrapped by this <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a>.</p>
+<p>If <em>finish_time</em> is provided, the time value is converted to the
+OpenTelemetry time format (number of nanoseconds since the epoch,
+expressed as an integer) and passed on to the OpenTelemetry tracer when
+ending the OpenTelemetry span. If <em>finish_time</em> isn’t provided, it is
+up to the OpenTelemetry tracer implementation to generate a timestamp
+when ending the span.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>finish_time</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]) – A value that represents the finish time expressed as
+the number of seconds since the epoch as returned by
+<a class="reference external" href="https://docs.python.org/3/library/time.html#time.time" title="(in Python v3.9)"><code class="xref py py-func docutils literal notranslate"><span class="pre">time.time()</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.SpanShim.set_tag">
+<code class="sig-name descname">set_tag</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#SpanShim.set_tag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim.set_tag" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets an OpenTelemetry attribute on the wrapped OpenTelemetry span.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – A tag key.</p></li>
+<li><p><strong>value</strong> (<em>~ValueT</em>) – A tag value.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Returns this <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a> instance to allow call chaining.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.SpanShim.log_kv">
+<code class="sig-name descname">log_kv</code><span class="sig-paren">(</span><em class="sig-param">key_values</em>, <em class="sig-param">timestamp=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#SpanShim.log_kv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim.log_kv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Logs an event for the wrapped OpenTelemetry span.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>The OpenTracing API defines the values of <em>key_values</em> to be of any
+type. However, the OpenTelemetry API requires that the values be
+any one of the types defined in
+<code class="docutils literal notranslate"><span class="pre">opentelemetry.trace.util.Attributes</span></code> therefore, only these types
+are supported as values.</p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key_values</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Mapping" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]]]]]) – A dictionary as specified in
+<code class="docutils literal notranslate"><span class="pre">opentelemetry.trace.util.Attributes</span></code>.</p></li>
+<li><p><strong>timestamp</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]) – Timestamp of the OpenTelemetry event, will be generated
+automatically if omitted.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Returns this <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a> instance to allow call chaining.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.SpanShim.log">
+<code class="sig-name descname">log</code><span class="sig-paren">(</span><em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#SpanShim.log"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim.log" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.SpanShim.log_event">
+<code class="sig-name descname">log_event</code><span class="sig-paren">(</span><em class="sig-param">event</em>, <em class="sig-param">payload=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#SpanShim.log_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim.log_event" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.SpanShim.set_baggage_item">
+<code class="sig-name descname">set_baggage_item</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#SpanShim.set_baggage_item"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim.set_baggage_item" title="Permalink to this definition">¶</a></dt>
+<dd><p>Stores a Baggage item in the span as a key/value
+pair.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – A tag key.</p></li>
+<li><p><strong>value</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – A tag value.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.SpanShim.get_baggage_item">
+<code class="sig-name descname">get_baggage_item</code><span class="sig-paren">(</span><em class="sig-param">key</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#SpanShim.get_baggage_item"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim.get_baggage_item" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves value of the baggage item with the given key.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>key</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – A tag key.</p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a>]</p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>Returns this <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a> instance to allow call chaining.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.instrumentation.opentracing_shim.ScopeShim">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.instrumentation.opentracing_shim.</code><code class="sig-name descname">ScopeShim</code><span class="sig-paren">(</span><em class="sig-param">manager</em>, <em class="sig-param">span</em>, <em class="sig-param">span_cm=None</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#ScopeShim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="Permalink to this definition">¶</a></dt>
+<dd><p>A <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> wraps the OpenTelemetry functionality related to span
+activation/deactivation while using OpenTracing <a class="reference external" href="https://opentracing-python.readthedocs.io/en/latest/api.html#opentracing.Scope" title="(in opentracing-python v1.2.3.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentracing.Scope</span></code></a>
+objects for presentation.</p>
+<p>Unlike other classes in this package, the <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> class doesn’t wrap an
+OpenTelemetry class because OpenTelemetry doesn’t have the notion of
+“scope” (though it <em>does</em> have similar functionality).</p>
+<p>There are two ways to construct a <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> object: using the default
+initializer and using the <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim.from_context_manager" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim.from_context_manager"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_context_manager()</span></code></a> class method.</p>
+<p>It is necessary to have both ways for constructing <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> objects
+because in some cases we need to create the object from an OpenTelemetry
+<a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Span" title="opentelemetry.trace.Span"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Span</span></code></a> context manager (as returned by
+<a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Tracer.use_span" title="opentelemetry.trace.Tracer.use_span"><code class="xref py py-meth docutils literal notranslate"><span class="pre">opentelemetry.trace.Tracer.use_span()</span></code></a>), in which case our only way of
+retrieving a <a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Span" title="opentelemetry.trace.Span"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Span</span></code></a> object is by calling the
+<code class="docutils literal notranslate"><span class="pre">__enter__()</span></code> method on the context manager, which makes the span active
+in the OpenTelemetry tracer; whereas in other cases we need to accept a
+<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a> object and wrap it in a <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a>. The former is used mainly
+when the instrumentation code retrieves the currently-active span using
+<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim.active" title="opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim.active"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">ScopeManagerShim.active</span></code></a>. The latter is mainly used when the
+instrumentation code activates a span using
+<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim.activate" title="opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim.activate"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ScopeManagerShim.activate()</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>manager</strong> (<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeManagerShim</span></code></a>) – The <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeManagerShim</span></code></a> that created this
+<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a>.</p></li>
+<li><p><strong>span</strong> (<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a>) – The <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a> this <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> controls.</p></li>
+<li><p><strong>span_cm</strong> – A Python context manager which yields an OpenTelemetry
+<a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Span" title="opentelemetry.trace.Span"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Span</span></code></a> from its <code class="docutils literal notranslate"><span class="pre">__enter__()</span></code> method. Used
+by <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim.from_context_manager" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim.from_context_manager"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_context_manager()</span></code></a> to store the context manager as
+an attribute so that it can later be closed by calling its
+<code class="docutils literal notranslate"><span class="pre">__exit__()</span></code> method. Defaults to <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a>.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.ScopeShim.from_context_manager">
+<em class="property">classmethod </em><code class="sig-name descname">from_context_manager</code><span class="sig-paren">(</span><em class="sig-param">manager</em>, <em class="sig-param">span_cm</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#ScopeShim.from_context_manager"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim.from_context_manager" title="Permalink to this definition">¶</a></dt>
+<dd><p>Constructs a <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> from an OpenTelemetry
+<a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Span" title="opentelemetry.trace.Span"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Span</span></code></a> context
+manager.</p>
+<p>The method extracts a <a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Span" title="opentelemetry.trace.Span"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Span</span></code></a> object from the
+context manager by calling the context manager’s <code class="docutils literal notranslate"><span class="pre">__enter__()</span></code>
+method. This causes the span to start in the OpenTelemetry tracer.</p>
+<p>Example usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">span</span> <span class="o">=</span> <span class="n">otel_tracer</span><span class="o">.</span><span class="n">start_span</span><span class="p">(</span><span class="s2">&quot;TestSpan&quot;</span><span class="p">)</span>
+<span class="n">span_cm</span> <span class="o">=</span> <span class="n">otel_tracer</span><span class="o">.</span><span class="n">use_span</span><span class="p">(</span><span class="n">span</span><span class="p">)</span>
+<span class="n">scope_shim</span> <span class="o">=</span> <span class="n">ScopeShim</span><span class="o">.</span><span class="n">from_context_manager</span><span class="p">(</span>
+    <span class="n">scope_manager_shim</span><span class="p">,</span>
+    <span class="n">span_cm</span><span class="o">=</span><span class="n">span_cm</span><span class="p">,</span>
+<span class="p">)</span>
+</pre></div>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>manager</strong> (<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeManagerShim</span></code></a>) – The <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeManagerShim</span></code></a> that created this
+<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a>.</p></li>
+<li><p><strong>span_cm</strong> – A context manager as returned by
+<a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Tracer.use_span" title="opentelemetry.trace.Tracer.use_span"><code class="xref py py-meth docutils literal notranslate"><span class="pre">opentelemetry.trace.Tracer.use_span()</span></code></a>.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.ScopeShim.close">
+<code class="sig-name descname">close</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#ScopeShim.close"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim.close" title="Permalink to this definition">¶</a></dt>
+<dd><p>Closes the <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a>. If the <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> was created from a
+context manager, calling this method sets the active span in the
+OpenTelemetry tracer back to the span which was active before this
+<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> was created. In addition, if the span represented by this
+<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> was activated with the <em>finish_on_close</em> argument set to
+<a class="reference external" href="https://docs.python.org/3/library/constants.html#True" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">True</span></code></a>, calling this method will end the span.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>In the current state of the implementation it is possible to create
+a <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> directly from a <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref any py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a>, that is - without using
+<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim.from_context_manager" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim.from_context_manager"><code class="xref py py-meth docutils literal notranslate"><span class="pre">from_context_manager()</span></code></a>. For that reason we need to be able
+to end the span represented by the <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> in this case, too.
+Please note that closing a <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> created this way (for
+example as returned by <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim.active" title="opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim.active"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ScopeManagerShim.active()</span></code></a>) <strong>always
+ends the associated span</strong>, regardless of the value passed in
+<em>finish_on_close</em> when activating the span.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.instrumentation.opentracing_shim.</code><code class="sig-name descname">ScopeManagerShim</code><span class="sig-paren">(</span><em class="sig-param">tracer</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#ScopeManagerShim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements <a class="reference external" href="https://opentracing-python.readthedocs.io/en/latest/api.html#opentracing.ScopeManager" title="(in opentracing-python v1.2.3.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentracing.ScopeManager</span></code></a> by setting and getting the
+active <a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Span" title="opentelemetry.trace.Span"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Span</span></code></a> in the OpenTelemetry tracer.</p>
+<p>This class keeps a reference to a <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim" title="opentelemetry.instrumentation.opentracing_shim.TracerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracerShim</span></code></a> as an attribute. This
+reference is used to communicate with the OpenTelemetry tracer. It is
+necessary to have a reference to the <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim" title="opentelemetry.instrumentation.opentracing_shim.TracerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracerShim</span></code></a> rather than the
+<a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Tracer" title="opentelemetry.trace.Tracer"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Tracer</span></code></a> wrapped by it because when constructing
+a <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a> we need to pass a reference to a
+<a class="reference external" href="https://opentracing-python.readthedocs.io/en/latest/api.html#opentracing.Tracer" title="(in opentracing-python v1.2.3.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentracing.Tracer</span></code></a>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tracer</strong> (<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim" title="opentelemetry.instrumentation.opentracing_shim.TracerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracerShim</span></code></a>) – A <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim" title="opentelemetry.instrumentation.opentracing_shim.TracerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracerShim</span></code></a> to use for setting and getting active
+span state.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim.activate">
+<code class="sig-name descname">activate</code><span class="sig-paren">(</span><em class="sig-param">span</em>, <em class="sig-param">finish_on_close</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#ScopeManagerShim.activate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim.activate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Activates a <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a> and returns a <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> which
+represents the active span.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>span</strong> (<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a>) – A <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a> to be activated.</p></li>
+<li><p><strong>finish_on_close</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-obj docutils literal notranslate"><span class="pre">bool</span></code></a>) – Determines whether the OpenTelemetry
+span should be ended when the returned <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> is
+closed.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> representing the activated span.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim.active">
+<em class="property">property </em><code class="sig-name descname">active</code><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim.active" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> object representing the
+currently-active span in the OpenTelemetry tracer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> representing the active span in the
+OpenTelemetry tracer, or <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a> if no span is currently active.</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Calling <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim.close" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim.close"><code class="xref py py-meth docutils literal notranslate"><span class="pre">ScopeShim.close()</span></code></a> on the <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> returned
+by this property <strong>always ends the corresponding span</strong>, regardless
+of the <em>finish_on_close</em> value used when activating the span. This
+is a limitation of the current implementation of the OpenTracing
+shim and is likely to be handled in future versions.</p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim.tracer">
+<em class="property">property </em><code class="sig-name descname">tracer</code><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim.tracer" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim" title="opentelemetry.instrumentation.opentracing_shim.TracerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracerShim</span></code></a> reference used by this
+<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeManagerShim</span></code></a> for setting and getting the active span from
+the OpenTelemetry tracer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim" title="opentelemetry.instrumentation.opentracing_shim.TracerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracerShim</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim" title="opentelemetry.instrumentation.opentracing_shim.TracerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracerShim</span></code></a> used for setting and getting the active
+span.</p>
+</dd>
+</dl>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This property is <em>not</em> a part of the OpenTracing API. It is used
+internally by the current implementation of the OpenTracing shim
+and will likely be removed in future versions.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.instrumentation.opentracing_shim.TracerShim">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.instrumentation.opentracing_shim.</code><code class="sig-name descname">TracerShim</code><span class="sig-paren">(</span><em class="sig-param">tracer</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#TracerShim"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim" title="Permalink to this definition">¶</a></dt>
+<dd><p>Wraps a <a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Tracer" title="opentelemetry.trace.Tracer"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Tracer</span></code></a> object.</p>
+<p>This wrapper class allows using an OpenTelemetry tracer as if it were an
+OpenTracing tracer. It exposes the same methods as an “ordinary”
+OpenTracing tracer, and uses OpenTelemetry transparently for performing the
+actual tracing.</p>
+<p>This class depends on the <em>OpenTelemetry API</em>. Therefore, any
+implementation of a <a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Tracer" title="opentelemetry.trace.Tracer"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Tracer</span></code></a> should work with
+this class.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>tracer</strong> (<a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Tracer" title="opentelemetry.trace.Tracer"><code class="xref py py-class docutils literal notranslate"><span class="pre">Tracer</span></code></a>) – A <a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Tracer" title="opentelemetry.trace.Tracer"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Tracer</span></code></a> to use for tracing. This
+tracer will be invoked by the shim to create actual spans.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.TracerShim.unwrap">
+<code class="sig-name descname">unwrap</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#TracerShim.unwrap"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim.unwrap" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the <a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Tracer" title="opentelemetry.trace.Tracer"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Tracer</span></code></a> object that is
+wrapped by this <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim" title="opentelemetry.instrumentation.opentracing_shim.TracerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">TracerShim</span></code></a> and used for actual tracing.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>The <a class="reference internal" href="../../api/trace.html#opentelemetry.trace.Tracer" title="opentelemetry.trace.Tracer"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Tracer</span></code></a> used for actual tracing.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.TracerShim.start_active_span">
+<code class="sig-name descname">start_active_span</code><span class="sig-paren">(</span><em class="sig-param">operation_name</em>, <em class="sig-param">child_of=None</em>, <em class="sig-param">references=None</em>, <em class="sig-param">tags=None</em>, <em class="sig-param">start_time=None</em>, <em class="sig-param">ignore_active_span=False</em>, <em class="sig-param">finish_on_close=True</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#TracerShim.start_active_span"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim.start_active_span" title="Permalink to this definition">¶</a></dt>
+<dd><p>Starts and activates a span. In terms of functionality, this method
+behaves exactly like the same method on a “regular” OpenTracing tracer.
+See <a class="reference external" href="https://opentracing-python.readthedocs.io/en/latest/api.html#opentracing.Tracer.start_active_span" title="(in opentracing-python v1.2.3.dev0)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">opentracing.Tracer.start_active_span()</span></code></a> for more details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>operation_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>) – Name of the operation represented by
+the new span from the perspective of the current service.</p></li>
+<li><p><strong>child_of</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a>, <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanContextShim" title="opentelemetry.instrumentation.opentracing_shim.SpanContextShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanContextShim</span></code></a>, <code class="docutils literal notranslate"><span class="pre">None</span></code>]) – A <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a> or <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanContextShim" title="opentelemetry.instrumentation.opentracing_shim.SpanContextShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanContextShim</span></code></a>
+representing the parent in a “child of” reference. If
+specified, the <em>references</em> parameter must be omitted.</p></li>
+<li><p><strong>references</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>]) – A list of <a class="reference external" href="https://opentracing-python.readthedocs.io/en/latest/api.html#opentracing.Reference" title="(in opentracing-python v1.2.3.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentracing.Reference</span></code></a> objects that
+identify one or more parents of type <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanContextShim" title="opentelemetry.instrumentation.opentracing_shim.SpanContextShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanContextShim</span></code></a>.</p></li>
+<li><p><strong>tags</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Mapping" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]]]]]) – A dictionary of tags.</p></li>
+<li><p><strong>start_time</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]) – An explicit start time expressed as the number of
+seconds since the epoch as returned by <a class="reference external" href="https://docs.python.org/3/library/time.html#time.time" title="(in Python v3.9)"><code class="xref py py-func docutils literal notranslate"><span class="pre">time.time()</span></code></a>.</p></li>
+<li><p><strong>ignore_active_span</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Ignore the currently-active span in the
+OpenTelemetry tracer and make the created span the root span of
+a new trace.</p></li>
+<li><p><strong>finish_on_close</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Determines whether the created span should end
+automatically when closing the returned <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a>.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>A <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeShim</span></code></a> that is already activated by the
+<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim" title="opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">ScopeManagerShim</span></code></a>.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.TracerShim.start_span">
+<code class="sig-name descname">start_span</code><span class="sig-paren">(</span><em class="sig-param">operation_name=None</em>, <em class="sig-param">child_of=None</em>, <em class="sig-param">references=None</em>, <em class="sig-param">tags=None</em>, <em class="sig-param">start_time=None</em>, <em class="sig-param">ignore_active_span=False</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#TracerShim.start_span"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim.start_span" title="Permalink to this definition">¶</a></dt>
+<dd><p>Implements the <code class="docutils literal notranslate"><span class="pre">start_span()</span></code> method from the base class.</p>
+<p>Starts a span. In terms of functionality, this method behaves exactly
+like the same method on a “regular” OpenTracing tracer. See
+<a class="reference external" href="https://opentracing-python.readthedocs.io/en/latest/api.html#opentracing.Tracer.start_span" title="(in opentracing-python v1.2.3.dev0)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">opentracing.Tracer.start_span()</span></code></a> for more details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>operation_name</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]) – Name of the operation represented by the new span
+from the perspective of the current service.</p></li>
+<li><p><strong>child_of</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a>, <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanContextShim" title="opentelemetry.instrumentation.opentracing_shim.SpanContextShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanContextShim</span></code></a>, <code class="docutils literal notranslate"><span class="pre">None</span></code>]) – A <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a> or <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanContextShim" title="opentelemetry.instrumentation.opentracing_shim.SpanContextShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanContextShim</span></code></a>
+representing the parent in a “child of” reference. If
+specified, the <em>references</em> parameter must be omitted.</p></li>
+<li><p><strong>references</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">list</span></code></a>]) – A list of <a class="reference external" href="https://opentracing-python.readthedocs.io/en/latest/api.html#opentracing.Reference" title="(in opentracing-python v1.2.3.dev0)"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentracing.Reference</span></code></a> objects that
+identify one or more parents of type <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanContextShim" title="opentelemetry.instrumentation.opentracing_shim.SpanContextShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanContextShim</span></code></a>.</p></li>
+<li><p><strong>tags</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Mapping" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]]]]]) – A dictionary of tags.</p></li>
+<li><p><strong>start_time</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]) – An explicit start time expressed as the number of
+seconds since the epoch as returned by <a class="reference external" href="https://docs.python.org/3/library/time.html#time.time" title="(in Python v3.9)"><code class="xref py py-func docutils literal notranslate"><span class="pre">time.time()</span></code></a>.</p></li>
+<li><p><strong>ignore_active_span</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>) – Ignore the currently-active span in the
+OpenTelemetry tracer and make the created span the root span of
+a new trace.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p>An already-started <a class="reference internal" href="#opentelemetry.instrumentation.opentracing_shim.SpanShim" title="opentelemetry.instrumentation.opentracing_shim.SpanShim"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanShim</span></code></a> instance.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.TracerShim.inject">
+<code class="sig-name descname">inject</code><span class="sig-paren">(</span><em class="sig-param">span_context</em>, <em class="sig-param">format</em>, <em class="sig-param">carrier</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#TracerShim.inject"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim.inject" title="Permalink to this definition">¶</a></dt>
+<dd><p>Injects <code class="docutils literal notranslate"><span class="pre">span_context</span></code> into <code class="docutils literal notranslate"><span class="pre">carrier</span></code>.</p>
+<p>See base class for more details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>span_context</strong> – The <code class="docutils literal notranslate"><span class="pre">opentracing.SpanContext</span></code> to inject.</p></li>
+<li><p><strong>format</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a>) – a Python object instance that represents a given
+carrier format. <a class="reference external" href="https://docs.python.org/3/library/functions.html#format" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">format</span></code></a> may be of any type, and <a class="reference external" href="https://docs.python.org/3/library/functions.html#format" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">format</span></code></a>
+equality is defined by Python <code class="docutils literal notranslate"><span class="pre">==</span></code> operator.</p></li>
+<li><p><strong>carrier</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a>) – the format-specific carrier object to inject into</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.instrumentation.opentracing_shim.TracerShim.extract">
+<code class="sig-name descname">extract</code><span class="sig-paren">(</span><em class="sig-param">format</em>, <em class="sig-param">carrier</em><span class="sig-paren">)</span><a class="reference internal" href="../../_modules/opentelemetry/instrumentation/opentracing_shim.html#TracerShim.extract"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.instrumentation.opentracing_shim.TracerShim.extract" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an <code class="docutils literal notranslate"><span class="pre">opentracing.SpanContext</span></code> instance extracted from a
+<code class="docutils literal notranslate"><span class="pre">carrier</span></code>.</p>
+<p>See base class for more details.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>format</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a>) – a Python object instance that represents a given
+carrier format. <code class="docutils literal notranslate"><span class="pre">format</span></code> may be of any type, and <code class="docutils literal notranslate"><span class="pre">format</span></code>
+equality is defined by python <code class="docutils literal notranslate"><span class="pre">==</span></code> operator.</p></li>
+<li><p><strong>carrier</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a>) – the format-specific carrier object to extract from</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>An <code class="docutils literal notranslate"><span class="pre">opentracing.SpanContext</span></code> extracted from <code class="docutils literal notranslate"><span class="pre">carrier</span></code> or
+<code class="docutils literal notranslate"><span class="pre">None</span></code> if no such <code class="docutils literal notranslate"><span class="pre">SpanContext</span></code> could be found.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../../examples/auto-instrumentation/README.html" class="btn btn-neutral float-right" title="Autoinstrumentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../../exporter/zipkin/zipkin.html" class="btn btn-neutral float-left" title="Opentelemetry Zipkin Exporter" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright OpenTelemetry Authors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

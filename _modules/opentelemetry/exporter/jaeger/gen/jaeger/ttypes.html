@@ -1,0 +1,1069 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>opentelemetry.exporter.jaeger.gen.jaeger.ttypes &mdash; OpenTelemetry Python  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../../../../" src="../../../../../../_static/documentation_options.js"></script>
+        <script src="../../../../../../_static/jquery.js"></script>
+        <script src="../../../../../../_static/underscore.js"></script>
+        <script src="../../../../../../_static/doctools.js"></script>
+        <script src="../../../../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../../../../index.html" class="icon icon-home" alt="Documentation Home"> OpenTelemetry Python
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../getting-started.html">Getting Started with OpenTelemetry Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../faq-and-cookbook.html">Frequently Asked Questions and Cookbook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Python Packages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../api/api.html">OpenTelemetry Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../sdk/sdk.html">OpenTelemetry Python SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Exporters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../exporter/jaeger/jaeger.html">Opentelemetry Jaeger Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../exporter/opencensus/opencensus.html">OpenCensus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../exporter/otlp/otlp.html">Opentelemetry OTLP Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../exporter/prometheus/prometheus.html">OpenTelemetry Prometheus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../exporter/zipkin/zipkin.html">Opentelemetry Zipkin Exporter</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Instrumentations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../instrumentation/instrumentor.html">opentelemetry.instrumentation.instrumentor package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../instrumentation/metric.html">opentelemetry.instrumentation.metric package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../instrumentation/opentracing_shim/opentracing_shim.html">OpenTracing Shim for OpenTelemetry</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../examples/auto-instrumentation/README.html">Autoinstrumentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../examples/basic_context/README.html">Basic Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../examples/basic_meter/README.html">Basic Meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../examples/basic_tracer/README.html">Basic Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../examples/datadog_exporter/README.html">Datadog Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../examples/django/README.html">OpenTelemetry Django Instrumentation Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../examples/error_hander/README.html">Global Error Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../examples/error_hander/error_handler_0/README.html">Error Handler 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../examples/error_hander/error_handler_1/README.html">Error Handler 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../examples/opencensus-exporter-metrics/README.html">OpenTelemetry Collector Metrics OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../examples/opencensus-exporter-tracer/README.html">OpenTelemetry Collector Tracer OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../examples/opentelemetry-example-app/README.html">OpenTelemetry Example Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../../../../examples/opentracing/README.html">OpenTracing Shim Example</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../../../../index.html">OpenTelemetry Python</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../../../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../../../jaeger.html">opentelemetry.exporter.jaeger</a> &raquo;</li>
+        
+      <li>opentelemetry.exporter.jaeger.gen.jaeger.ttypes</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for opentelemetry.exporter.jaeger.gen.jaeger.ttypes</h1><div class="highlight"><pre>
+<span></span><span class="c1">#</span>
+<span class="c1"># Autogenerated by Thrift Compiler (0.10.0)</span>
+<span class="c1">#</span>
+<span class="c1"># DO NOT EDIT UNLESS YOU ARE SURE THAT YOU KNOW WHAT YOU ARE DOING</span>
+<span class="c1">#</span>
+<span class="c1">#  options string: py</span>
+<span class="c1">#</span>
+
+<span class="kn">from</span> <span class="nn">thrift.Thrift</span> <span class="kn">import</span> <span class="n">TType</span><span class="p">,</span> <span class="n">TMessageType</span><span class="p">,</span> <span class="n">TFrozenDict</span><span class="p">,</span> <span class="n">TException</span><span class="p">,</span> <span class="n">TApplicationException</span>
+<span class="kn">from</span> <span class="nn">thrift.protocol.TProtocol</span> <span class="kn">import</span> <span class="n">TProtocolException</span>
+<span class="kn">import</span> <span class="nn">sys</span>
+
+<span class="kn">from</span> <span class="nn">thrift.transport</span> <span class="kn">import</span> <span class="n">TTransport</span>
+
+
+<div class="viewcode-block" id="TagType"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.TagType">[docs]</a><span class="k">class</span> <span class="nc">TagType</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">STRING</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">DOUBLE</span> <span class="o">=</span> <span class="mi">1</span>
+    <span class="n">BOOL</span> <span class="o">=</span> <span class="mi">2</span>
+    <span class="n">LONG</span> <span class="o">=</span> <span class="mi">3</span>
+    <span class="n">BINARY</span> <span class="o">=</span> <span class="mi">4</span>
+
+    <span class="n">_VALUES_TO_NAMES</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;STRING&quot;</span><span class="p">,</span>
+        <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;DOUBLE&quot;</span><span class="p">,</span>
+        <span class="mi">2</span><span class="p">:</span> <span class="s2">&quot;BOOL&quot;</span><span class="p">,</span>
+        <span class="mi">3</span><span class="p">:</span> <span class="s2">&quot;LONG&quot;</span><span class="p">,</span>
+        <span class="mi">4</span><span class="p">:</span> <span class="s2">&quot;BINARY&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">_NAMES_TO_VALUES</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;STRING&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;DOUBLE&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">&quot;BOOL&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+        <span class="s2">&quot;LONG&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+        <span class="s2">&quot;BINARY&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="SpanRefType"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.SpanRefType">[docs]</a><span class="k">class</span> <span class="nc">SpanRefType</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="n">CHILD_OF</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">FOLLOWS_FROM</span> <span class="o">=</span> <span class="mi">1</span>
+
+    <span class="n">_VALUES_TO_NAMES</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="mi">0</span><span class="p">:</span> <span class="s2">&quot;CHILD_OF&quot;</span><span class="p">,</span>
+        <span class="mi">1</span><span class="p">:</span> <span class="s2">&quot;FOLLOWS_FROM&quot;</span><span class="p">,</span>
+    <span class="p">}</span>
+
+    <span class="n">_NAMES_TO_VALUES</span> <span class="o">=</span> <span class="p">{</span>
+        <span class="s2">&quot;CHILD_OF&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+        <span class="s2">&quot;FOLLOWS_FROM&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="p">}</span></div>
+
+
+<div class="viewcode-block" id="Tag"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Tag">[docs]</a><span class="k">class</span> <span class="nc">Tag</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">     - key</span>
+<span class="sd">     - vType</span>
+<span class="sd">     - vStr</span>
+<span class="sd">     - vDouble</span>
+<span class="sd">     - vBool</span>
+<span class="sd">     - vLong</span>
+<span class="sd">     - vBinary</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">thrift_spec</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>  <span class="c1"># 0</span>
+        <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRING</span><span class="p">,</span> <span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="s1">&#39;UTF8&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 1</span>
+        <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I32</span><span class="p">,</span> <span class="s1">&#39;vType&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 2</span>
+        <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRING</span><span class="p">,</span> <span class="s1">&#39;vStr&#39;</span><span class="p">,</span> <span class="s1">&#39;UTF8&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 3</span>
+        <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">DOUBLE</span><span class="p">,</span> <span class="s1">&#39;vDouble&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 4</span>
+        <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">BOOL</span><span class="p">,</span> <span class="s1">&#39;vBool&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 5</span>
+        <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="s1">&#39;vLong&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 6</span>
+        <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRING</span><span class="p">,</span> <span class="s1">&#39;vBinary&#39;</span><span class="p">,</span> <span class="s1">&#39;BINARY&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 7</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vType</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vStr</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vDouble</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vBool</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vLong</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">vBinary</span><span class="o">=</span><span class="kc">None</span><span class="p">,):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">key</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vType</span> <span class="o">=</span> <span class="n">vType</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vStr</span> <span class="o">=</span> <span class="n">vStr</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vDouble</span> <span class="o">=</span> <span class="n">vDouble</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vBool</span> <span class="o">=</span> <span class="n">vBool</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vLong</span> <span class="o">=</span> <span class="n">vLong</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">vBinary</span> <span class="o">=</span> <span class="n">vBinary</span>
+
+<div class="viewcode-block" id="Tag.read"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Tag.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iprot</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">iprot</span><span class="o">.</span><span class="n">_fast_decode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iprot</span><span class="o">.</span><span class="n">trans</span><span class="p">,</span> <span class="n">TTransport</span><span class="o">.</span><span class="n">CReadableTransport</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">iprot</span><span class="o">.</span><span class="n">_fast_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iprot</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="n">iprot</span><span class="o">.</span><span class="n">readStructBegin</span><span class="p">()</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">ftype</span><span class="p">,</span> <span class="n">fid</span><span class="p">)</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readFieldBegin</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">STOP</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRING</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readString</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readString</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">I32</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">vType</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readI32</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRING</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">vStr</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readString</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readString</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">DOUBLE</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">vDouble</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readDouble</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">BOOL</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">vBool</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readBool</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">vLong</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readI64</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">7</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRING</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">vBinary</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readBinary</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="n">iprot</span><span class="o">.</span><span class="n">readFieldEnd</span><span class="p">()</span>
+        <span class="n">iprot</span><span class="o">.</span><span class="n">readStructEnd</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Tag.write"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Tag.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oprot</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">oprot</span><span class="o">.</span><span class="n">_fast_encode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">trans</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">oprot</span><span class="o">.</span><span class="n">_fast_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">)))</span>
+            <span class="k">return</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeStructBegin</span><span class="p">(</span><span class="s1">&#39;Tag&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;key&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRING</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vType</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;vType&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I32</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeI32</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vType</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vStr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;vStr&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRING</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vStr</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">vStr</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vDouble</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;vDouble&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">DOUBLE</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeDouble</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vDouble</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vBool</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;vBool&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">BOOL</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeBool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vBool</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vLong</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;vLong&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeI64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vLong</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vBinary</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;vBinary&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRING</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeBinary</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">vBinary</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldStop</span><span class="p">()</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeStructEnd</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Tag.validate"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Tag.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">key</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field key is unset!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">vType</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field vType is unset!&#39;</span><span class="p">)</span>
+        <span class="k">return</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">=</span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">(</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="vm">__dict__</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Log"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Log">[docs]</a><span class="k">class</span> <span class="nc">Log</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">     - timestamp</span>
+<span class="sd">     - fields</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">thrift_spec</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>  <span class="c1"># 0</span>
+        <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="s1">&#39;timestamp&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 1</span>
+        <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">,</span> <span class="s1">&#39;fields&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">TType</span><span class="o">.</span><span class="n">STRUCT</span><span class="p">,</span> <span class="p">(</span><span class="n">Tag</span><span class="p">,</span> <span class="n">Tag</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">),</span> <span class="kc">False</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 2</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">timestamp</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">fields</span><span class="o">=</span><span class="kc">None</span><span class="p">,):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">=</span> <span class="n">timestamp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="o">=</span> <span class="n">fields</span>
+
+<div class="viewcode-block" id="Log.read"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Log.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iprot</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">iprot</span><span class="o">.</span><span class="n">_fast_decode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iprot</span><span class="o">.</span><span class="n">trans</span><span class="p">,</span> <span class="n">TTransport</span><span class="o">.</span><span class="n">CReadableTransport</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">iprot</span><span class="o">.</span><span class="n">_fast_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iprot</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="n">iprot</span><span class="o">.</span><span class="n">readStructBegin</span><span class="p">()</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">ftype</span><span class="p">,</span> <span class="n">fid</span><span class="p">)</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readFieldBegin</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">STOP</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readI64</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="p">(</span><span class="n">_etype3</span><span class="p">,</span> <span class="n">_size0</span><span class="p">)</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readListBegin</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">_i4</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_size0</span><span class="p">):</span>
+                        <span class="n">_elem5</span> <span class="o">=</span> <span class="n">Tag</span><span class="p">()</span>
+                        <span class="n">_elem5</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">iprot</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_elem5</span><span class="p">)</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">readListEnd</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="n">iprot</span><span class="o">.</span><span class="n">readFieldEnd</span><span class="p">()</span>
+        <span class="n">iprot</span><span class="o">.</span><span class="n">readStructEnd</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Log.write"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Log.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oprot</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">oprot</span><span class="o">.</span><span class="n">_fast_encode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">trans</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">oprot</span><span class="o">.</span><span class="n">_fast_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">)))</span>
+            <span class="k">return</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeStructBegin</span><span class="p">(</span><span class="s1">&#39;Log&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;timestamp&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeI64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;fields&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeListBegin</span><span class="p">(</span><span class="n">TType</span><span class="o">.</span><span class="n">STRUCT</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">iter6</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span><span class="p">:</span>
+                <span class="n">iter6</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">oprot</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeListEnd</span><span class="p">()</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldStop</span><span class="p">()</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeStructEnd</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Log.validate"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Log.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">timestamp</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field timestamp is unset!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fields</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field fields is unset!&#39;</span><span class="p">)</span>
+        <span class="k">return</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">=</span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">(</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="vm">__dict__</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SpanRef"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.SpanRef">[docs]</a><span class="k">class</span> <span class="nc">SpanRef</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">     - refType</span>
+<span class="sd">     - traceIdLow</span>
+<span class="sd">     - traceIdHigh</span>
+<span class="sd">     - spanId</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">thrift_spec</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>  <span class="c1"># 0</span>
+        <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I32</span><span class="p">,</span> <span class="s1">&#39;refType&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 1</span>
+        <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="s1">&#39;traceIdLow&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 2</span>
+        <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="s1">&#39;traceIdHigh&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 3</span>
+        <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="s1">&#39;spanId&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 4</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">refType</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">traceIdLow</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">traceIdHigh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">spanId</span><span class="o">=</span><span class="kc">None</span><span class="p">,):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">refType</span> <span class="o">=</span> <span class="n">refType</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traceIdLow</span> <span class="o">=</span> <span class="n">traceIdLow</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traceIdHigh</span> <span class="o">=</span> <span class="n">traceIdHigh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spanId</span> <span class="o">=</span> <span class="n">spanId</span>
+
+<div class="viewcode-block" id="SpanRef.read"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.SpanRef.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iprot</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">iprot</span><span class="o">.</span><span class="n">_fast_decode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iprot</span><span class="o">.</span><span class="n">trans</span><span class="p">,</span> <span class="n">TTransport</span><span class="o">.</span><span class="n">CReadableTransport</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">iprot</span><span class="o">.</span><span class="n">_fast_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iprot</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="n">iprot</span><span class="o">.</span><span class="n">readStructBegin</span><span class="p">()</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">ftype</span><span class="p">,</span> <span class="n">fid</span><span class="p">)</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readFieldBegin</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">STOP</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">I32</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">refType</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readI32</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">traceIdLow</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readI64</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">traceIdHigh</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readI64</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">spanId</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readI64</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="n">iprot</span><span class="o">.</span><span class="n">readFieldEnd</span><span class="p">()</span>
+        <span class="n">iprot</span><span class="o">.</span><span class="n">readStructEnd</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SpanRef.write"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.SpanRef.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oprot</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">oprot</span><span class="o">.</span><span class="n">_fast_encode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">trans</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">oprot</span><span class="o">.</span><span class="n">_fast_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">)))</span>
+            <span class="k">return</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeStructBegin</span><span class="p">(</span><span class="s1">&#39;SpanRef&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">refType</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;refType&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I32</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeI32</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">refType</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">traceIdLow</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;traceIdLow&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeI64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">traceIdLow</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">traceIdHigh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;traceIdHigh&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeI64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">traceIdHigh</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spanId</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;spanId&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeI64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spanId</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldStop</span><span class="p">()</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeStructEnd</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="SpanRef.validate"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.SpanRef.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">refType</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field refType is unset!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">traceIdLow</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field traceIdLow is unset!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">traceIdHigh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field traceIdHigh is unset!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spanId</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field spanId is unset!&#39;</span><span class="p">)</span>
+        <span class="k">return</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">=</span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">(</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="vm">__dict__</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Span"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Span">[docs]</a><span class="k">class</span> <span class="nc">Span</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">     - traceIdLow</span>
+<span class="sd">     - traceIdHigh</span>
+<span class="sd">     - spanId</span>
+<span class="sd">     - parentSpanId</span>
+<span class="sd">     - operationName</span>
+<span class="sd">     - references</span>
+<span class="sd">     - flags</span>
+<span class="sd">     - startTime</span>
+<span class="sd">     - duration</span>
+<span class="sd">     - tags</span>
+<span class="sd">     - logs</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">thrift_spec</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>  <span class="c1"># 0</span>
+        <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="s1">&#39;traceIdLow&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 1</span>
+        <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="s1">&#39;traceIdHigh&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 2</span>
+        <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="s1">&#39;spanId&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 3</span>
+        <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="s1">&#39;parentSpanId&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 4</span>
+        <span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRING</span><span class="p">,</span> <span class="s1">&#39;operationName&#39;</span><span class="p">,</span> <span class="s1">&#39;UTF8&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 5</span>
+        <span class="p">(</span><span class="mi">6</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">,</span> <span class="s1">&#39;references&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">TType</span><span class="o">.</span><span class="n">STRUCT</span><span class="p">,</span> <span class="p">(</span><span class="n">SpanRef</span><span class="p">,</span> <span class="n">SpanRef</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">),</span> <span class="kc">False</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 6</span>
+        <span class="p">(</span><span class="mi">7</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I32</span><span class="p">,</span> <span class="s1">&#39;flags&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 7</span>
+        <span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="s1">&#39;startTime&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 8</span>
+        <span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="s1">&#39;duration&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 9</span>
+        <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">,</span> <span class="s1">&#39;tags&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">TType</span><span class="o">.</span><span class="n">STRUCT</span><span class="p">,</span> <span class="p">(</span><span class="n">Tag</span><span class="p">,</span> <span class="n">Tag</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">),</span> <span class="kc">False</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 10</span>
+        <span class="p">(</span><span class="mi">11</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">,</span> <span class="s1">&#39;logs&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">TType</span><span class="o">.</span><span class="n">STRUCT</span><span class="p">,</span> <span class="p">(</span><span class="n">Log</span><span class="p">,</span> <span class="n">Log</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">),</span> <span class="kc">False</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 11</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">traceIdLow</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">traceIdHigh</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">spanId</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">parentSpanId</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">operationName</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">references</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">flags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">startTime</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">duration</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">logs</span><span class="o">=</span><span class="kc">None</span><span class="p">,):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traceIdLow</span> <span class="o">=</span> <span class="n">traceIdLow</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">traceIdHigh</span> <span class="o">=</span> <span class="n">traceIdHigh</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spanId</span> <span class="o">=</span> <span class="n">spanId</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">parentSpanId</span> <span class="o">=</span> <span class="n">parentSpanId</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">operationName</span> <span class="o">=</span> <span class="n">operationName</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">references</span> <span class="o">=</span> <span class="n">references</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">flags</span> <span class="o">=</span> <span class="n">flags</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">startTime</span> <span class="o">=</span> <span class="n">startTime</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="n">duration</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tags</span> <span class="o">=</span> <span class="n">tags</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">logs</span> <span class="o">=</span> <span class="n">logs</span>
+
+<div class="viewcode-block" id="Span.read"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Span.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iprot</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">iprot</span><span class="o">.</span><span class="n">_fast_decode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iprot</span><span class="o">.</span><span class="n">trans</span><span class="p">,</span> <span class="n">TTransport</span><span class="o">.</span><span class="n">CReadableTransport</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">iprot</span><span class="o">.</span><span class="n">_fast_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iprot</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="n">iprot</span><span class="o">.</span><span class="n">readStructBegin</span><span class="p">()</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">ftype</span><span class="p">,</span> <span class="n">fid</span><span class="p">)</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readFieldBegin</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">STOP</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">traceIdLow</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readI64</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">traceIdHigh</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readI64</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">spanId</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readI64</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">4</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">parentSpanId</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readI64</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">5</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRING</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">operationName</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readString</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readString</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">6</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">references</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="p">(</span><span class="n">_etype10</span><span class="p">,</span> <span class="n">_size7</span><span class="p">)</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readListBegin</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">_i11</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_size7</span><span class="p">):</span>
+                        <span class="n">_elem12</span> <span class="o">=</span> <span class="n">SpanRef</span><span class="p">()</span>
+                        <span class="n">_elem12</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">iprot</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">references</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_elem12</span><span class="p">)</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">readListEnd</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">7</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">I32</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">flags</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readI32</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">8</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">startTime</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readI64</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">9</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readI64</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">10</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">tags</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="p">(</span><span class="n">_etype16</span><span class="p">,</span> <span class="n">_size13</span><span class="p">)</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readListBegin</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">_i17</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_size13</span><span class="p">):</span>
+                        <span class="n">_elem18</span> <span class="o">=</span> <span class="n">Tag</span><span class="p">()</span>
+                        <span class="n">_elem18</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">iprot</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_elem18</span><span class="p">)</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">readListEnd</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">11</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">logs</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="p">(</span><span class="n">_etype22</span><span class="p">,</span> <span class="n">_size19</span><span class="p">)</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readListBegin</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">_i23</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_size19</span><span class="p">):</span>
+                        <span class="n">_elem24</span> <span class="o">=</span> <span class="n">Log</span><span class="p">()</span>
+                        <span class="n">_elem24</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">iprot</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">logs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_elem24</span><span class="p">)</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">readListEnd</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="n">iprot</span><span class="o">.</span><span class="n">readFieldEnd</span><span class="p">()</span>
+        <span class="n">iprot</span><span class="o">.</span><span class="n">readStructEnd</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Span.write"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Span.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oprot</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">oprot</span><span class="o">.</span><span class="n">_fast_encode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">trans</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">oprot</span><span class="o">.</span><span class="n">_fast_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">)))</span>
+            <span class="k">return</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeStructBegin</span><span class="p">(</span><span class="s1">&#39;Span&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">traceIdLow</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;traceIdLow&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeI64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">traceIdLow</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">traceIdHigh</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;traceIdHigh&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeI64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">traceIdHigh</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spanId</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;spanId&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeI64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spanId</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parentSpanId</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;parentSpanId&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="mi">4</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeI64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">parentSpanId</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">operationName</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;operationName&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRING</span><span class="p">,</span> <span class="mi">5</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">operationName</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">operationName</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">references</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;references&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">,</span> <span class="mi">6</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeListBegin</span><span class="p">(</span><span class="n">TType</span><span class="o">.</span><span class="n">STRUCT</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">references</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">iter25</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">references</span><span class="p">:</span>
+                <span class="n">iter25</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">oprot</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeListEnd</span><span class="p">()</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flags</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;flags&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I32</span><span class="p">,</span> <span class="mi">7</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeI32</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">flags</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">startTime</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;startTime&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="mi">8</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeI64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">startTime</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;duration&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">I64</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeI64</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">duration</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tags</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;tags&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">,</span> <span class="mi">10</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeListBegin</span><span class="p">(</span><span class="n">TType</span><span class="o">.</span><span class="n">STRUCT</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tags</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">iter26</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tags</span><span class="p">:</span>
+                <span class="n">iter26</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">oprot</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeListEnd</span><span class="p">()</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">logs</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;logs&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeListBegin</span><span class="p">(</span><span class="n">TType</span><span class="o">.</span><span class="n">STRUCT</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">logs</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">iter27</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">logs</span><span class="p">:</span>
+                <span class="n">iter27</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">oprot</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeListEnd</span><span class="p">()</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldStop</span><span class="p">()</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeStructEnd</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Span.validate"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Span.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">traceIdLow</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field traceIdLow is unset!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">traceIdHigh</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field traceIdHigh is unset!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spanId</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field spanId is unset!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">parentSpanId</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field parentSpanId is unset!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">operationName</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field operationName is unset!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">flags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field flags is unset!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">startTime</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field startTime is unset!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">duration</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field duration is unset!&#39;</span><span class="p">)</span>
+        <span class="k">return</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">=</span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">(</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="vm">__dict__</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Process"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Process">[docs]</a><span class="k">class</span> <span class="nc">Process</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">     - serviceName</span>
+<span class="sd">     - tags</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">thrift_spec</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>  <span class="c1"># 0</span>
+        <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRING</span><span class="p">,</span> <span class="s1">&#39;serviceName&#39;</span><span class="p">,</span> <span class="s1">&#39;UTF8&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 1</span>
+        <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">,</span> <span class="s1">&#39;tags&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">TType</span><span class="o">.</span><span class="n">STRUCT</span><span class="p">,</span> <span class="p">(</span><span class="n">Tag</span><span class="p">,</span> <span class="n">Tag</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">),</span> <span class="kc">False</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 2</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">serviceName</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">tags</span><span class="o">=</span><span class="kc">None</span><span class="p">,):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">serviceName</span> <span class="o">=</span> <span class="n">serviceName</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">tags</span> <span class="o">=</span> <span class="n">tags</span>
+
+<div class="viewcode-block" id="Process.read"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Process.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iprot</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">iprot</span><span class="o">.</span><span class="n">_fast_decode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iprot</span><span class="o">.</span><span class="n">trans</span><span class="p">,</span> <span class="n">TTransport</span><span class="o">.</span><span class="n">CReadableTransport</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">iprot</span><span class="o">.</span><span class="n">_fast_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iprot</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="n">iprot</span><span class="o">.</span><span class="n">readStructBegin</span><span class="p">()</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">ftype</span><span class="p">,</span> <span class="n">fid</span><span class="p">)</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readFieldBegin</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">STOP</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRING</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">serviceName</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readString</span><span class="p">()</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readString</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">tags</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="p">(</span><span class="n">_etype31</span><span class="p">,</span> <span class="n">_size28</span><span class="p">)</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readListBegin</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">_i32</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_size28</span><span class="p">):</span>
+                        <span class="n">_elem33</span> <span class="o">=</span> <span class="n">Tag</span><span class="p">()</span>
+                        <span class="n">_elem33</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">iprot</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_elem33</span><span class="p">)</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">readListEnd</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="n">iprot</span><span class="o">.</span><span class="n">readFieldEnd</span><span class="p">()</span>
+        <span class="n">iprot</span><span class="o">.</span><span class="n">readStructEnd</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Process.write"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Process.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oprot</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">oprot</span><span class="o">.</span><span class="n">_fast_encode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">trans</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">oprot</span><span class="o">.</span><span class="n">_fast_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">)))</span>
+            <span class="k">return</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeStructBegin</span><span class="p">(</span><span class="s1">&#39;Process&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">serviceName</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;serviceName&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRING</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeString</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">serviceName</span><span class="o">.</span><span class="n">encode</span><span class="p">(</span><span class="s1">&#39;utf-8&#39;</span><span class="p">)</span> <span class="k">if</span> <span class="n">sys</span><span class="o">.</span><span class="n">version_info</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">2</span> <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">serviceName</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tags</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;tags&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeListBegin</span><span class="p">(</span><span class="n">TType</span><span class="o">.</span><span class="n">STRUCT</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tags</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">iter34</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">tags</span><span class="p">:</span>
+                <span class="n">iter34</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">oprot</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeListEnd</span><span class="p">()</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldStop</span><span class="p">()</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeStructEnd</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Process.validate"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Process.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">serviceName</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field serviceName is unset!&#39;</span><span class="p">)</span>
+        <span class="k">return</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">=</span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">(</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="vm">__dict__</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="Batch"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Batch">[docs]</a><span class="k">class</span> <span class="nc">Batch</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">     - process</span>
+<span class="sd">     - spans</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">thrift_spec</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>  <span class="c1"># 0</span>
+        <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRUCT</span><span class="p">,</span> <span class="s1">&#39;process&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">Process</span><span class="p">,</span> <span class="n">Process</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 1</span>
+        <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">,</span> <span class="s1">&#39;spans&#39;</span><span class="p">,</span> <span class="p">(</span><span class="n">TType</span><span class="o">.</span><span class="n">STRUCT</span><span class="p">,</span> <span class="p">(</span><span class="n">Span</span><span class="p">,</span> <span class="n">Span</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">),</span> <span class="kc">False</span><span class="p">),</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 2</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">process</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">spans</span><span class="o">=</span><span class="kc">None</span><span class="p">,):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="o">=</span> <span class="n">process</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">spans</span> <span class="o">=</span> <span class="n">spans</span>
+
+<div class="viewcode-block" id="Batch.read"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Batch.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iprot</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">iprot</span><span class="o">.</span><span class="n">_fast_decode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iprot</span><span class="o">.</span><span class="n">trans</span><span class="p">,</span> <span class="n">TTransport</span><span class="o">.</span><span class="n">CReadableTransport</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">iprot</span><span class="o">.</span><span class="n">_fast_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iprot</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="n">iprot</span><span class="o">.</span><span class="n">readStructBegin</span><span class="p">()</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">ftype</span><span class="p">,</span> <span class="n">fid</span><span class="p">)</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readFieldBegin</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">STOP</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRUCT</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="o">=</span> <span class="n">Process</span><span class="p">()</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">iprot</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">spans</span> <span class="o">=</span> <span class="p">[]</span>
+                    <span class="p">(</span><span class="n">_etype38</span><span class="p">,</span> <span class="n">_size35</span><span class="p">)</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readListBegin</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">_i39</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">_size35</span><span class="p">):</span>
+                        <span class="n">_elem40</span> <span class="o">=</span> <span class="n">Span</span><span class="p">()</span>
+                        <span class="n">_elem40</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">iprot</span><span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">spans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_elem40</span><span class="p">)</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">readListEnd</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="n">iprot</span><span class="o">.</span><span class="n">readFieldEnd</span><span class="p">()</span>
+        <span class="n">iprot</span><span class="o">.</span><span class="n">readStructEnd</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Batch.write"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Batch.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oprot</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">oprot</span><span class="o">.</span><span class="n">_fast_encode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">trans</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">oprot</span><span class="o">.</span><span class="n">_fast_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">)))</span>
+            <span class="k">return</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeStructBegin</span><span class="p">(</span><span class="s1">&#39;Batch&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;process&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">STRUCT</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">process</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">oprot</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spans</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;spans&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">LIST</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeListBegin</span><span class="p">(</span><span class="n">TType</span><span class="o">.</span><span class="n">STRUCT</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">spans</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">iter41</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">spans</span><span class="p">:</span>
+                <span class="n">iter41</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">oprot</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeListEnd</span><span class="p">()</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldStop</span><span class="p">()</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeStructEnd</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="Batch.validate"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.Batch.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">process</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field process is unset!&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">spans</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field spans is unset!&#39;</span><span class="p">)</span>
+        <span class="k">return</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">=</span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">(</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="vm">__dict__</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="BatchSubmitResponse"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.BatchSubmitResponse">[docs]</a><span class="k">class</span> <span class="nc">BatchSubmitResponse</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Attributes:</span>
+<span class="sd">     - ok</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">thrift_spec</span> <span class="o">=</span> <span class="p">(</span>
+        <span class="kc">None</span><span class="p">,</span>  <span class="c1"># 0</span>
+        <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">BOOL</span><span class="p">,</span> <span class="s1">&#39;ok&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="p">),</span>  <span class="c1"># 1</span>
+    <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">ok</span><span class="o">=</span><span class="kc">None</span><span class="p">,):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ok</span> <span class="o">=</span> <span class="n">ok</span>
+
+<div class="viewcode-block" id="BatchSubmitResponse.read"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.BatchSubmitResponse.read">[docs]</a>    <span class="k">def</span> <span class="nf">read</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iprot</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">iprot</span><span class="o">.</span><span class="n">_fast_decode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">iprot</span><span class="o">.</span><span class="n">trans</span><span class="p">,</span> <span class="n">TTransport</span><span class="o">.</span><span class="n">CReadableTransport</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">iprot</span><span class="o">.</span><span class="n">_fast_decode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">iprot</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">))</span>
+            <span class="k">return</span>
+        <span class="n">iprot</span><span class="o">.</span><span class="n">readStructBegin</span><span class="p">()</span>
+        <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
+            <span class="p">(</span><span class="n">fname</span><span class="p">,</span> <span class="n">ftype</span><span class="p">,</span> <span class="n">fid</span><span class="p">)</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readFieldBegin</span><span class="p">()</span>
+            <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">STOP</span><span class="p">:</span>
+                <span class="k">break</span>
+            <span class="k">if</span> <span class="n">fid</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">ftype</span> <span class="o">==</span> <span class="n">TType</span><span class="o">.</span><span class="n">BOOL</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">ok</span> <span class="o">=</span> <span class="n">iprot</span><span class="o">.</span><span class="n">readBool</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">iprot</span><span class="o">.</span><span class="n">skip</span><span class="p">(</span><span class="n">ftype</span><span class="p">)</span>
+            <span class="n">iprot</span><span class="o">.</span><span class="n">readFieldEnd</span><span class="p">()</span>
+        <span class="n">iprot</span><span class="o">.</span><span class="n">readStructEnd</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BatchSubmitResponse.write"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.BatchSubmitResponse.write">[docs]</a>    <span class="k">def</span> <span class="nf">write</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">oprot</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">oprot</span><span class="o">.</span><span class="n">_fast_encode</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">trans</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">oprot</span><span class="o">.</span><span class="n">_fast_encode</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">thrift_spec</span><span class="p">)))</span>
+            <span class="k">return</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeStructBegin</span><span class="p">(</span><span class="s1">&#39;BatchSubmitResponse&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ok</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldBegin</span><span class="p">(</span><span class="s1">&#39;ok&#39;</span><span class="p">,</span> <span class="n">TType</span><span class="o">.</span><span class="n">BOOL</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeBool</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">ok</span><span class="p">)</span>
+            <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldEnd</span><span class="p">()</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeFieldStop</span><span class="p">()</span>
+        <span class="n">oprot</span><span class="o">.</span><span class="n">writeStructEnd</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BatchSubmitResponse.validate"><a class="viewcode-back" href="../../../../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.gen.jaeger.ttypes.BatchSubmitResponse.validate">[docs]</a>    <span class="k">def</span> <span class="nf">validate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ok</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">TProtocolException</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Required field ok is unset!&#39;</span><span class="p">)</span>
+        <span class="k">return</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">L</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;</span><span class="si">%s</span><span class="s1">=</span><span class="si">%r</span><span class="s1">&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+             <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span><span class="o">.</span><span class="n">items</span><span class="p">()]</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">%s</span><span class="s1">(</span><span class="si">%s</span><span class="s1">)&#39;</span> <span class="o">%</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">L</span><span class="p">))</span>
+
+    <span class="k">def</span> <span class="fm">__eq__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">other</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="p">)</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__dict__</span> <span class="o">==</span> <span class="n">other</span><span class="o">.</span><span class="vm">__dict__</span>
+
+    <span class="k">def</span> <span class="fm">__ne__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">other</span><span class="p">):</span>
+        <span class="k">return</span> <span class="ow">not</span> <span class="p">(</span><span class="bp">self</span> <span class="o">==</span> <span class="n">other</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright OpenTelemetry Authors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

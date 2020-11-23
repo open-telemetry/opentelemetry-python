@@ -1,0 +1,558 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>opentelemetry.trace.span &mdash; OpenTelemetry Python  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> OpenTelemetry Python
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started.html">Getting Started with OpenTelemetry Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq-and-cookbook.html">Frequently Asked Questions and Cookbook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Python Packages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/api.html">OpenTelemetry Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sdk/sdk.html">OpenTelemetry Python SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Exporters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/jaeger/jaeger.html">Opentelemetry Jaeger Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/opencensus/opencensus.html">OpenCensus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/otlp/otlp.html">Opentelemetry OTLP Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/prometheus/prometheus.html">OpenTelemetry Prometheus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/zipkin/zipkin.html">Opentelemetry Zipkin Exporter</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Instrumentations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/instrumentor.html">opentelemetry.instrumentation.instrumentor package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/metric.html">opentelemetry.instrumentation.metric package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/opentracing_shim/opentracing_shim.html">OpenTracing Shim for OpenTelemetry</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/auto-instrumentation/README.html">Autoinstrumentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/basic_context/README.html">Basic Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/basic_meter/README.html">Basic Meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/basic_tracer/README.html">Basic Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/datadog_exporter/README.html">Datadog Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/django/README.html">OpenTelemetry Django Instrumentation Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/error_hander/README.html">Global Error Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/error_hander/error_handler_0/README.html">Error Handler 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/error_hander/error_handler_1/README.html">Error Handler 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opencensus-exporter-metrics/README.html">OpenTelemetry Collector Metrics OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opencensus-exporter-tracer/README.html">OpenTelemetry Collector Tracer OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opentelemetry-example-app/README.html">OpenTelemetry Example Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opentracing/README.html">OpenTracing Shim Example</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OpenTelemetry Python</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+          <li><a href="../trace.html">opentelemetry.trace</a> &raquo;</li>
+        
+      <li>opentelemetry.trace.span</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for opentelemetry.trace.span</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">abc</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">types</span> <span class="k">as</span> <span class="nn">python_types</span>
+<span class="kn">import</span> <span class="nn">typing</span>
+
+<span class="kn">from</span> <span class="nn">opentelemetry.trace.status</span> <span class="kn">import</span> <span class="n">Status</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.util</span> <span class="kn">import</span> <span class="n">types</span>
+
+<span class="n">_logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Span"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.Span">[docs]</a><span class="k">class</span> <span class="nc">Span</span><span class="p">(</span><span class="n">abc</span><span class="o">.</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A span represents a single operation within a trace.&quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="Span.end"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.Span.end">[docs]</a>    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">end_time</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets the current time as the span&#39;s end time.</span>
+
+<span class="sd">        The span&#39;s end time is the wall time at which the operation finished.</span>
+
+<span class="sd">        Only the first call to `end` should modify the span, and</span>
+<span class="sd">        implementations are free to ignore or raise on further calls.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="Span.get_span_context"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.Span.get_span_context">[docs]</a>    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">get_span_context</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SpanContext&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Gets the span&#39;s SpanContext.</span>
+
+<span class="sd">        Get an immutable, serializable identifier for this span that can be</span>
+<span class="sd">        used to create new child spans.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A :class:`opentelemetry.trace.SpanContext` with a copy of this span&#39;s immutable state.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="Span.set_attribute"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.Span.set_attribute">[docs]</a>    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">set_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">AttributeValue</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets an Attribute.</span>
+
+<span class="sd">        Sets a single Attribute with the key and value passed as arguments.</span>
+
+<span class="sd">        Note: The behavior of `None` value attributes is undefined, and hence strongly discouraged.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="Span.add_event"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.Span.add_event">[docs]</a>    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">add_event</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">attributes</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">Attributes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">timestamp</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Adds an `Event`.</span>
+
+<span class="sd">        Adds a single `Event` with the name and, optionally, a timestamp and</span>
+<span class="sd">        attributes passed as arguments. Implementations should generate a</span>
+<span class="sd">        timestamp if the `timestamp` argument is omitted.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="Span.update_name"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.Span.update_name">[docs]</a>    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">update_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Updates the `Span` name.</span>
+
+<span class="sd">        This will override the name provided via :func:`opentelemetry.trace.Tracer.start_span`.</span>
+
+<span class="sd">        Upon this update, any sampling behavior based on Span name will depend</span>
+<span class="sd">        on the implementation.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="Span.is_recording"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.Span.is_recording">[docs]</a>    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">is_recording</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns whether this span will be recorded.</span>
+
+<span class="sd">        Returns true if this Span is active and recording information like</span>
+<span class="sd">        events with the add_event operation and attributes using set_attribute.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="Span.set_status"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.Span.set_status">[docs]</a>    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">set_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">:</span> <span class="n">Status</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets the Status of the Span. If used, this will override the default</span>
+<span class="sd">        Span status, which is OK.</span>
+<span class="sd">        &quot;&quot;&quot;</span></div>
+
+<div class="viewcode-block" id="Span.record_exception"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.Span.record_exception">[docs]</a>    <span class="nd">@abc</span><span class="o">.</span><span class="n">abstractmethod</span>
+    <span class="k">def</span> <span class="nf">record_exception</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">exception</span><span class="p">:</span> <span class="ne">Exception</span><span class="p">,</span>
+        <span class="n">attributes</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">Attributes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">timestamp</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">escaped</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Records an exception as a span event.&quot;&quot;&quot;</span></div>
+
+    <span class="k">def</span> <span class="fm">__enter__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;Span&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Invoked when `Span` is used as a context manager.</span>
+
+<span class="sd">        Returns the `Span` itself.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="fm">__exit__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">exc_type</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">typing</span><span class="o">.</span><span class="n">Type</span><span class="p">[</span><span class="ne">BaseException</span><span class="p">]],</span>
+        <span class="n">exc_val</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="ne">BaseException</span><span class="p">],</span>
+        <span class="n">exc_tb</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="n">python_types</span><span class="o">.</span><span class="n">TracebackType</span><span class="p">],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Ends context manager and calls `end` on the `Span`.&quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">end</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TraceFlags"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.TraceFlags">[docs]</a><span class="k">class</span> <span class="nc">TraceFlags</span><span class="p">(</span><span class="nb">int</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A bitmask that represents options specific to the trace.</span>
+
+<span class="sd">    The only supported option is the &quot;sampled&quot; flag (``0x01``). If set, this</span>
+<span class="sd">    flag indicates that the trace may have been sampled upstream.</span>
+
+<span class="sd">    See the `W3C Trace Context - Traceparent`_ spec for details.</span>
+
+<span class="sd">    .. _W3C Trace Context - Traceparent:</span>
+<span class="sd">        https://www.w3.org/TR/trace-context/#trace-flags</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">DEFAULT</span> <span class="o">=</span> <span class="mh">0x00</span>
+    <span class="n">SAMPLED</span> <span class="o">=</span> <span class="mh">0x01</span>
+
+<div class="viewcode-block" id="TraceFlags.get_default"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.TraceFlags.get_default">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_default</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TraceFlags&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="n">DEFAULT</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">sampled</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="nb">bool</span><span class="p">(</span><span class="bp">self</span> <span class="o">&amp;</span> <span class="n">TraceFlags</span><span class="o">.</span><span class="n">SAMPLED</span><span class="p">)</span></div>
+
+
+<span class="n">DEFAULT_TRACE_OPTIONS</span> <span class="o">=</span> <span class="n">TraceFlags</span><span class="o">.</span><span class="n">get_default</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="TraceState"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.TraceState">[docs]</a><span class="k">class</span> <span class="nc">TraceState</span><span class="p">(</span><span class="n">typing</span><span class="o">.</span><span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]):</span>
+    <span class="sd">&quot;&quot;&quot;A list of key-value pairs representing vendor-specific trace info.</span>
+
+<span class="sd">    Keys and values are strings of up to 256 printable US-ASCII characters.</span>
+<span class="sd">    Implementations should conform to the `W3C Trace Context - Tracestate`_</span>
+<span class="sd">    spec, which describes additional restrictions on valid field values.</span>
+
+<span class="sd">    .. _W3C Trace Context - Tracestate:</span>
+<span class="sd">        https://www.w3.org/TR/trace-context/#tracestate-field</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+<div class="viewcode-block" id="TraceState.get_default"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.TraceState.get_default">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_default</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TraceState&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">()</span></div></div>
+
+
+<span class="n">DEFAULT_TRACE_STATE</span> <span class="o">=</span> <span class="n">TraceState</span><span class="o">.</span><span class="n">get_default</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="SpanContext"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.SpanContext">[docs]</a><span class="k">class</span> <span class="nc">SpanContext</span><span class="p">(</span>
+    <span class="n">typing</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="s2">&quot;TraceFlags&quot;</span><span class="p">,</span> <span class="s2">&quot;TraceState&quot;</span><span class="p">,</span> <span class="nb">bool</span><span class="p">]</span>
+<span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The state of a Span to propagate between processes.</span>
+
+<span class="sd">    This class includes the immutable attributes of a :class:`.Span` that must</span>
+<span class="sd">    be propagated to a span&#39;s children and across process boundaries.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        trace_id: The ID of the trace that this span belongs to.</span>
+<span class="sd">        span_id: This span&#39;s ID.</span>
+<span class="sd">        trace_flags: Trace options to propagate.</span>
+<span class="sd">        trace_state: Tracing-system-specific info to propagate.</span>
+<span class="sd">        is_remote: True if propagated from a remote parent.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__new__</span><span class="p">(</span>
+        <span class="bp">cls</span><span class="p">,</span>
+        <span class="n">trace_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">span_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
+        <span class="n">is_remote</span><span class="p">:</span> <span class="nb">bool</span><span class="p">,</span>
+        <span class="n">trace_flags</span><span class="p">:</span> <span class="s2">&quot;TraceFlags&quot;</span> <span class="o">=</span> <span class="n">DEFAULT_TRACE_OPTIONS</span><span class="p">,</span>
+        <span class="n">trace_state</span><span class="p">:</span> <span class="s2">&quot;TraceState&quot;</span> <span class="o">=</span> <span class="n">DEFAULT_TRACE_STATE</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SpanContext&quot;</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">trace_flags</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">trace_flags</span> <span class="o">=</span> <span class="n">DEFAULT_TRACE_OPTIONS</span>
+        <span class="k">if</span> <span class="n">trace_state</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">trace_state</span> <span class="o">=</span> <span class="n">DEFAULT_TRACE_STATE</span>
+
+        <span class="n">is_valid</span> <span class="o">=</span> <span class="n">trace_id</span> <span class="o">!=</span> <span class="n">INVALID_TRACE_ID</span> <span class="ow">and</span> <span class="n">span_id</span> <span class="o">!=</span> <span class="n">INVALID_SPAN_ID</span>
+
+        <span class="k">return</span> <span class="nb">tuple</span><span class="o">.</span><span class="fm">__new__</span><span class="p">(</span>
+            <span class="bp">cls</span><span class="p">,</span>
+            <span class="p">(</span><span class="n">trace_id</span><span class="p">,</span> <span class="n">span_id</span><span class="p">,</span> <span class="n">is_remote</span><span class="p">,</span> <span class="n">trace_flags</span><span class="p">,</span> <span class="n">trace_state</span><span class="p">,</span> <span class="n">is_valid</span><span class="p">),</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__getnewargs__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">typing</span><span class="o">.</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">int</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="s2">&quot;TraceFlags&quot;</span><span class="p">,</span> <span class="s2">&quot;TraceState&quot;</span><span class="p">]:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trace_id</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">span_id</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_remote</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trace_flags</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trace_state</span><span class="p">,</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">trace_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>  <span class="c1"># pylint: disable=unsubscriptable-object</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">span_id</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">int</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>  <span class="c1"># pylint: disable=unsubscriptable-object</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_remote</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span>  <span class="c1"># pylint: disable=unsubscriptable-object</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">trace_flags</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TraceFlags&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span>  <span class="c1"># pylint: disable=unsubscriptable-object</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">trace_state</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TraceState&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="mi">4</span><span class="p">]</span>  <span class="c1"># pylint: disable=unsubscriptable-object</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">is_valid</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span>  <span class="c1"># pylint: disable=unsubscriptable-object</span>
+
+    <span class="k">def</span> <span class="fm">__setattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Immutable type, ignoring call to set attribute&quot;</span><span class="p">,</span> <span class="n">stack_info</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__delattr__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">_logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span>
+            <span class="s2">&quot;Immutable type, ignoring call to set attribute&quot;</span><span class="p">,</span> <span class="n">stack_info</span><span class="o">=</span><span class="kc">True</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">(trace_id=</span><span class="si">{}</span><span class="s2">, span_id=</span><span class="si">{}</span><span class="s2">, trace_state=</span><span class="si">{!r}</span><span class="s2">, is_remote=</span><span class="si">{}</span><span class="s2">)&quot;</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="n">format_trace_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">trace_id</span><span class="p">),</span>
+            <span class="n">format_span_id</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">span_id</span><span class="p">),</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">trace_state</span><span class="p">,</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">is_remote</span><span class="p">,</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="DefaultSpan"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.DefaultSpan">[docs]</a><span class="k">class</span> <span class="nc">DefaultSpan</span><span class="p">(</span><span class="n">Span</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;The default Span that is used when no Span implementation is available.</span>
+
+<span class="sd">    All operations are no-op except context propagation.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="s2">&quot;SpanContext&quot;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context</span> <span class="o">=</span> <span class="n">context</span>
+
+<div class="viewcode-block" id="DefaultSpan.get_span_context"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.DefaultSpan.get_span_context">[docs]</a>    <span class="k">def</span> <span class="nf">get_span_context</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SpanContext&quot;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span></div>
+
+<div class="viewcode-block" id="DefaultSpan.is_recording"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.DefaultSpan.is_recording">[docs]</a>    <span class="k">def</span> <span class="nf">is_recording</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">False</span></div>
+
+<div class="viewcode-block" id="DefaultSpan.end"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.DefaultSpan.end">[docs]</a>    <span class="k">def</span> <span class="nf">end</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">end_time</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="DefaultSpan.set_attribute"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.DefaultSpan.set_attribute">[docs]</a>    <span class="k">def</span> <span class="nf">set_attribute</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">AttributeValue</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="DefaultSpan.add_event"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.DefaultSpan.add_event">[docs]</a>    <span class="k">def</span> <span class="nf">add_event</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">attributes</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">Attributes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">timestamp</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="DefaultSpan.update_name"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.DefaultSpan.update_name">[docs]</a>    <span class="k">def</span> <span class="nf">update_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="DefaultSpan.set_status"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.DefaultSpan.set_status">[docs]</a>    <span class="k">def</span> <span class="nf">set_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">status</span><span class="p">:</span> <span class="n">Status</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="DefaultSpan.record_exception"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.DefaultSpan.record_exception">[docs]</a>    <span class="k">def</span> <span class="nf">record_exception</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">exception</span><span class="p">:</span> <span class="ne">Exception</span><span class="p">,</span>
+        <span class="n">attributes</span><span class="p">:</span> <span class="n">types</span><span class="o">.</span><span class="n">Attributes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">timestamp</span><span class="p">:</span> <span class="n">typing</span><span class="o">.</span><span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">escaped</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">pass</span></div></div>
+
+
+<span class="n">INVALID_SPAN_ID</span> <span class="o">=</span> <span class="mh">0x0000000000000000</span>
+<span class="n">INVALID_TRACE_ID</span> <span class="o">=</span> <span class="mh">0x00000000000000000000000000000000</span>
+<span class="n">INVALID_SPAN_CONTEXT</span> <span class="o">=</span> <span class="n">SpanContext</span><span class="p">(</span>
+    <span class="n">trace_id</span><span class="o">=</span><span class="n">INVALID_TRACE_ID</span><span class="p">,</span>
+    <span class="n">span_id</span><span class="o">=</span><span class="n">INVALID_SPAN_ID</span><span class="p">,</span>
+    <span class="n">is_remote</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">trace_flags</span><span class="o">=</span><span class="n">DEFAULT_TRACE_OPTIONS</span><span class="p">,</span>
+    <span class="n">trace_state</span><span class="o">=</span><span class="n">DEFAULT_TRACE_STATE</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">INVALID_SPAN</span> <span class="o">=</span> <span class="n">DefaultSpan</span><span class="p">(</span><span class="n">INVALID_SPAN_CONTEXT</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="format_trace_id"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.format_trace_id">[docs]</a><span class="k">def</span> <span class="nf">format_trace_id</span><span class="p">(</span><span class="n">trace_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s2">&quot;0x</span><span class="si">{:032x}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">trace_id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="format_span_id"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.format_span_id">[docs]</a><span class="k">def</span> <span class="nf">format_span_id</span><span class="p">(</span><span class="n">span_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s2">&quot;0x</span><span class="si">{:016x}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">span_id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_hexadecimal_trace_id"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.get_hexadecimal_trace_id">[docs]</a><span class="k">def</span> <span class="nf">get_hexadecimal_trace_id</span><span class="p">(</span><span class="n">trace_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{:032x}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">trace_id</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="get_hexadecimal_span_id"><a class="viewcode-back" href="../../../api/trace.span.html#opentelemetry.trace.get_hexadecimal_span_id">[docs]</a><span class="k">def</span> <span class="nf">get_hexadecimal_span_id</span><span class="p">(</span><span class="n">span_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+    <span class="k">return</span> <span class="s2">&quot;</span><span class="si">{:016x}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">span_id</span><span class="p">)</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright OpenTelemetry Authors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

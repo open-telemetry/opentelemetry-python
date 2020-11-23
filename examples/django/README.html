@@ -1,0 +1,357 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>OpenTelemetry Django Instrumentation Example &mdash; OpenTelemetry Python  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Global Error Handler" href="../error_hander/README.html" />
+    <link rel="prev" title="Datadog Exporter Example" href="../datadog_exporter/README.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> OpenTelemetry Python
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting-started.html">Getting Started with OpenTelemetry Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq-and-cookbook.html">Frequently Asked Questions and Cookbook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Python Packages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/api.html">OpenTelemetry Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sdk/sdk.html">OpenTelemetry Python SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Exporters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/jaeger/jaeger.html">Opentelemetry Jaeger Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/opencensus/opencensus.html">OpenCensus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/otlp/otlp.html">Opentelemetry OTLP Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/prometheus/prometheus.html">OpenTelemetry Prometheus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/zipkin/zipkin.html">Opentelemetry Zipkin Exporter</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Instrumentations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../instrumentation/instrumentor.html">opentelemetry.instrumentation.instrumentor package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../instrumentation/metric.html">opentelemetry.instrumentation.metric package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../instrumentation/opentracing_shim/opentracing_shim.html">OpenTracing Shim for OpenTelemetry</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../auto-instrumentation/README.html">Autoinstrumentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_context/README.html">Basic Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_meter/README.html">Basic Meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_tracer/README.html">Basic Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datadog_exporter/README.html">Datadog Exporter Example</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">OpenTelemetry Django Instrumentation Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#preparation">Preparation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#execution">Execution</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#execution-of-the-django-app">Execution of the Django app</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#execution-of-the-client">Execution of the client</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#disabling-django-instrumentation">Disabling Django Instrumentation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#references">References</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../error_hander/README.html">Global Error Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../error_hander/error_handler_0/README.html">Error Handler 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../error_hander/error_handler_1/README.html">Error Handler 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../opencensus-exporter-metrics/README.html">OpenTelemetry Collector Metrics OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../opencensus-exporter-tracer/README.html">OpenTelemetry Collector Tracer OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../opentelemetry-example-app/README.html">OpenTelemetry Example Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../opentracing/README.html">OpenTracing Shim Example</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenTelemetry Python</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>OpenTelemetry Django Instrumentation Example</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/examples/django/README.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="opentelemetry-django-instrumentation-example">
+<h1>OpenTelemetry Django Instrumentation Example<a class="headerlink" href="#opentelemetry-django-instrumentation-example" title="Permalink to this headline">¶</a></h1>
+<p>This shows how to use <code class="docutils literal notranslate"><span class="pre">opentelemetry-instrumentation-django</span></code> to automatically instrument a
+Django app.</p>
+<p>For more user convenience, a Django app is already provided in this directory.</p>
+<div class="section" id="preparation">
+<h2>Preparation<a class="headerlink" href="#preparation" title="Permalink to this headline">¶</a></h2>
+<p>This example will be executed in a separate virtual environment:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ mkdir django_auto_instrumentation
+$ virtualenv django_auto_instrumentation
+$ source django_auto_instrumentation/bin/activate
+</pre></div>
+</div>
+</div>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span>$ pip install opentelemetry-sdk
+$ pip install opentelemetry-instrumentation-django
+$ pip install requests
+</pre></div>
+</div>
+</div>
+<div class="section" id="execution">
+<h2>Execution<a class="headerlink" href="#execution" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="execution-of-the-django-app">
+<h3>Execution of the Django app<a class="headerlink" href="#execution-of-the-django-app" title="Permalink to this headline">¶</a></h3>
+<p>Set these environment variables first:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">DJANGO_SETTINGS_MODULE=instrumentation_example.settings</span></code></p></li>
+</ol>
+<p>The way to achieve OpenTelemetry instrumentation for your Django app is to use
+an <code class="docutils literal notranslate"><span class="pre">opentelemetry.instrumentation.django.DjangoInstrumentor</span></code> to instrument the app.</p>
+<p>Clone the <code class="docutils literal notranslate"><span class="pre">opentelemetry-python</span></code> repository and go to <code class="docutils literal notranslate"><span class="pre">opentelemetry-python/docs/examples/django</span></code>.</p>
+<p>Once there, open the <code class="docutils literal notranslate"><span class="pre">manage.py</span></code> file. The call to <code class="docutils literal notranslate"><span class="pre">DjangoInstrumentor().instrument()</span></code>
+in <code class="docutils literal notranslate"><span class="pre">main</span></code> is all that is needed to make the app be instrumented.</p>
+<p>Run the Django app with <code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">manage.py</span> <span class="pre">runserver</span></code>.</p>
+</div>
+<div class="section" id="execution-of-the-client">
+<h3>Execution of the client<a class="headerlink" href="#execution-of-the-client" title="Permalink to this headline">¶</a></h3>
+<p>Open up a new console and activate the previous virtual environment there too:</p>
+<p><code class="docutils literal notranslate"><span class="pre">source</span> <span class="pre">django_auto_instrumentation/bin/activate</span></code></p>
+<p>Go to <code class="docutils literal notranslate"><span class="pre">opentelemetry-python/docs/examples/django</span></code>, once there
+run the client with:</p>
+<p><code class="docutils literal notranslate"><span class="pre">python</span> <span class="pre">client.py</span> <span class="pre">hello</span></code></p>
+<p>Go to the previous console, where the Django app is running. You should see
+output similar to this one:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="p">{</span>
+    <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;home_page_view&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;context&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;trace_id&quot;</span><span class="p">:</span> <span class="s2">&quot;0xed88755c56d95d05a506f5f70e7849b9&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;span_id&quot;</span><span class="p">:</span> <span class="s2">&quot;0x0a94c7a60e0650d5&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;trace_state&quot;</span><span class="p">:</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">&quot;</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="s2">&quot;SpanKind.SERVER&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;parent_id&quot;</span><span class="p">:</span> <span class="s2">&quot;0x3096ef92e621c22d&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;start_time&quot;</span><span class="p">:</span> <span class="s2">&quot;2020-04-26T01:49:57.205833Z&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;end_time&quot;</span><span class="p">:</span> <span class="s2">&quot;2020-04-26T01:49:57.206214Z&quot;</span><span class="p">,</span>
+    <span class="s2">&quot;status&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;status_code&quot;</span><span class="p">:</span> <span class="s2">&quot;OK&quot;</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;attributes&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">&quot;component&quot;</span><span class="p">:</span> <span class="s2">&quot;http&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;http.method&quot;</span><span class="p">:</span> <span class="s2">&quot;GET&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;http.server_name&quot;</span><span class="p">:</span> <span class="s2">&quot;localhost&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;http.scheme&quot;</span><span class="p">:</span> <span class="s2">&quot;http&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;host.port&quot;</span><span class="p">:</span> <span class="mi">8000</span><span class="p">,</span>
+        <span class="s2">&quot;http.host&quot;</span><span class="p">:</span> <span class="s2">&quot;localhost:8000&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;http.url&quot;</span><span class="p">:</span> <span class="s2">&quot;http://localhost:8000/?param=hello&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;net.peer.ip&quot;</span><span class="p">:</span> <span class="s2">&quot;127.0.0.1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;http.flavor&quot;</span><span class="p">:</span> <span class="s2">&quot;1.1&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;http.status_text&quot;</span><span class="p">:</span> <span class="s2">&quot;OK&quot;</span><span class="p">,</span>
+        <span class="s2">&quot;http.status_code&quot;</span><span class="p">:</span> <span class="mi">200</span>
+    <span class="p">},</span>
+    <span class="s2">&quot;events&quot;</span><span class="p">:</span> <span class="p">[],</span>
+    <span class="s2">&quot;links&quot;</span><span class="p">:</span> <span class="p">[]</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>The last output shows spans automatically generated by the OpenTelemetry Django
+Instrumentation package.</p>
+</div>
+</div>
+<div class="section" id="disabling-django-instrumentation">
+<h2>Disabling Django Instrumentation<a class="headerlink" href="#disabling-django-instrumentation" title="Permalink to this headline">¶</a></h2>
+<p>Django’s instrumentation can be disabled by setting the following environment variable.</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">export</span> <span class="pre">OTEL_PYTHON_DJANGO_INSTRUMENT=False</span></code></p></li>
+</ol>
+</div>
+<div class="section" id="references">
+<h2>References<a class="headerlink" href="#references" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://djangoproject.com/">Django</a></p></li>
+<li><p><a class="reference external" href="https://opentelemetry.io/">OpenTelemetry Project</a></p></li>
+<li><p><a class="reference external" href="https://github.com/open-telemetry/opentelemetry-python-contib/tree/master/instrumentation/opentelemetry-instrumentation-django">OpenTelemetry Django extension</a></p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../error_hander/README.html" class="btn btn-neutral float-right" title="Global Error Handler" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../datadog_exporter/README.html" class="btn btn-neutral float-left" title="Datadog Exporter Example" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright OpenTelemetry Authors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,339 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>OpenTracing Shim Example &mdash; OpenTelemetry Python  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="prev" title="OpenTelemetry Example Application" href="../opentelemetry-example-app/README.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home" alt="Documentation Home"> OpenTelemetry Python
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../getting-started.html">Getting Started with OpenTelemetry Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../faq-and-cookbook.html">Frequently Asked Questions and Cookbook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Python Packages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/api.html">OpenTelemetry Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../sdk/sdk.html">OpenTelemetry Python SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Exporters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/jaeger/jaeger.html">Opentelemetry Jaeger Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/opencensus/opencensus.html">OpenCensus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/otlp/otlp.html">Opentelemetry OTLP Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/prometheus/prometheus.html">OpenTelemetry Prometheus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../exporter/zipkin/zipkin.html">Opentelemetry Zipkin Exporter</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Instrumentations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../instrumentation/instrumentor.html">opentelemetry.instrumentation.instrumentor package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../instrumentation/metric.html">opentelemetry.instrumentation.metric package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../instrumentation/opentracing_shim/opentracing_shim.html">OpenTracing Shim for OpenTelemetry</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../auto-instrumentation/README.html">Autoinstrumentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_context/README.html">Basic Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_meter/README.html">Basic Meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../basic_tracer/README.html">Basic Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../datadog_exporter/README.html">Datadog Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../django/README.html">OpenTelemetry Django Instrumentation Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../error_hander/README.html">Global Error Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../error_hander/error_handler_0/README.html">Error Handler 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../error_hander/error_handler_1/README.html">Error Handler 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../opencensus-exporter-metrics/README.html">OpenTelemetry Collector Metrics OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../opencensus-exporter-tracer/README.html">OpenTelemetry Collector Tracer OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../opentelemetry-example-app/README.html">OpenTelemetry Example Application</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">OpenTracing Shim Example</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#jaeger">Jaeger</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#redis">Redis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#python-dependencies">Python Dependencies</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#run-the-application">Run the Application</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#jaeger-ui">Jaeger UI</a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#useful-links">Useful links</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">OpenTelemetry Python</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>OpenTracing Shim Example</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../../_sources/examples/opentracing/README.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="opentracing-shim-example">
+<h1>OpenTracing Shim Example<a class="headerlink" href="#opentracing-shim-example" title="Permalink to this headline">¶</a></h1>
+<p>This example shows how to use the <a class="reference internal" href="../../instrumentation/opentracing_shim/opentracing_shim.html"><span class="doc">opentelemetry-instrumentation-opentracing-shim
+package</span></a>
+to interact with libraries instrumented with
+<a class="reference external" href="https://github.com/opentracing/opentracing-python">opentracing-python</a>.</p>
+<p>The included <code class="docutils literal notranslate"><span class="pre">rediscache</span></code> library creates spans via the OpenTracing Redis
+integration,
+<a class="reference external" href="https://github.com/opentracing-contrib/python-redis">redis_opentracing</a>.
+Spans are exported via the Jaeger exporter, which is attached to the
+OpenTelemetry tracer.</p>
+<p>The source files required to run this example are available <a class="reference external" href="https://github.com/open-telemetry/opentelemetry-python/blob/master/docs/examples/opentracing/">here</a>.</p>
+<div class="section" id="installation">
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="jaeger">
+<h3>Jaeger<a class="headerlink" href="#jaeger" title="Permalink to this headline">¶</a></h3>
+<p>Start Jaeger</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>docker run --rm <span class="se">\</span>
+    -p <span class="m">6831</span>:6831/udp <span class="se">\</span>
+    -p <span class="m">6832</span>:6832/udp <span class="se">\</span>
+    -p <span class="m">16686</span>:16686 <span class="se">\</span>
+    jaegertracing/all-in-one:1.13 <span class="se">\</span>
+    --log-level<span class="o">=</span>debug
+</pre></div>
+</div>
+</div>
+<div class="section" id="redis">
+<h3>Redis<a class="headerlink" href="#redis" title="Permalink to this headline">¶</a></h3>
+<p>Install Redis following the <a class="reference external" href="https://redis.io/topics/quickstart">instructions</a>.</p>
+<p>Make sure that the Redis server is running by executing this:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>redis-server
+</pre></div>
+</div>
+</div>
+<div class="section" id="python-dependencies">
+<h3>Python Dependencies<a class="headerlink" href="#python-dependencies" title="Permalink to this headline">¶</a></h3>
+<p>Install the Python dependencies in <a class="reference external" href="https://raw.githubusercontent.com/open-telemetry/opentelemetry-python/master/docs/examples/opentracing/requirements.txt ">requirements.txt</a></p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pip install -r requirements.txt
+</pre></div>
+</div>
+<p>Alternatively, you can install the Python dependencies separately:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>pip install <span class="se">\</span>
+    opentelemetry-api <span class="se">\</span>
+    opentelemetry-sdk <span class="se">\</span>
+    opentelemetry-exporter-jaeger <span class="se">\</span>
+    opentelemetry-opentracing-shim <span class="se">\</span>
+    redis <span class="se">\</span>
+    redis_opentracing
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="run-the-application">
+<h2>Run the Application<a class="headerlink" href="#run-the-application" title="Permalink to this headline">¶</a></h2>
+<p>The example script calculates a few Fibonacci numbers and stores the results in
+Redis. The script, the <code class="docutils literal notranslate"><span class="pre">rediscache</span></code> library, and the OpenTracing Redis
+integration all contribute spans to the trace.</p>
+<p>To run the script:</p>
+<div class="highlight-sh notranslate"><div class="highlight"><pre><span></span>python main.py
+</pre></div>
+</div>
+<p>After running, you can view the generated trace in the Jaeger UI.</p>
+<div class="section" id="jaeger-ui">
+<h3>Jaeger UI<a class="headerlink" href="#jaeger-ui" title="Permalink to this headline">¶</a></h3>
+<p>Open the Jaeger UI in your browser at
+<a class="reference external" href="http://localhost:16686">http://localhost:16686</a> and view traces for the
+“OpenTracing Shim Example” service.</p>
+<p>Each <code class="docutils literal notranslate"><span class="pre">main.py</span></code> run should generate a trace, and each trace should include
+multiple spans that represent calls to Redis.</p>
+<p>Note that tags and logs (OpenTracing) and attributes and events (OpenTelemetry)
+from both tracing systems appear in the exported trace.</p>
+</div>
+</div>
+<div class="section" id="useful-links">
+<h2>Useful links<a class="headerlink" href="#useful-links" title="Permalink to this headline">¶</a></h2>
+<ul class="simple">
+<li><p><a class="reference external" href="https://github.com/open-telemetry/opentelemetry-python/">OpenTelemetry</a></p></li>
+<li><p><a class="reference internal" href="../../instrumentation/opentracing_shim/opentracing_shim.html"><span class="doc">OpenTracing Shim for OpenTelemetry</span></a></p></li>
+</ul>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+      
+        <a href="../opentelemetry-example-app/README.html" class="btn btn-neutral float-left" title="OpenTelemetry Example Application" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright OpenTelemetry Authors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

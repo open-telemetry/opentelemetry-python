@@ -1,0 +1,833 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>opentelemetry.sdk.metrics &mdash; OpenTelemetry Python  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> OpenTelemetry Python
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started.html">Getting Started with OpenTelemetry Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq-and-cookbook.html">Frequently Asked Questions and Cookbook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Python Packages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/api.html">OpenTelemetry Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sdk/sdk.html">OpenTelemetry Python SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Exporters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/jaeger/jaeger.html">Opentelemetry Jaeger Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/opencensus/opencensus.html">OpenCensus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/otlp/otlp.html">Opentelemetry OTLP Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/prometheus/prometheus.html">OpenTelemetry Prometheus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/zipkin/zipkin.html">Opentelemetry Zipkin Exporter</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Instrumentations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/instrumentor.html">opentelemetry.instrumentation.instrumentor package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/metric.html">opentelemetry.instrumentation.metric package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/opentracing_shim/opentracing_shim.html">OpenTracing Shim for OpenTelemetry</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/auto-instrumentation/README.html">Autoinstrumentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/basic_context/README.html">Basic Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/basic_meter/README.html">Basic Meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/basic_tracer/README.html">Basic Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/datadog_exporter/README.html">Datadog Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/django/README.html">OpenTelemetry Django Instrumentation Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/error_hander/README.html">Global Error Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/error_hander/error_handler_0/README.html">Error Handler 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/error_hander/error_handler_1/README.html">Error Handler 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opencensus-exporter-metrics/README.html">OpenTelemetry Collector Metrics OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opencensus-exporter-tracer/README.html">OpenTelemetry Collector Tracer OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opentelemetry-example-app/README.html">OpenTelemetry Example Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opentracing/README.html">OpenTracing Shim Example</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OpenTelemetry Python</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>opentelemetry.sdk.metrics</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for opentelemetry.sdk.metrics</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright The OpenTelemetry Authors</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+
+<span class="kn">import</span> <span class="nn">atexit</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Dict</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Tuple</span><span class="p">,</span> <span class="n">Type</span><span class="p">,</span> <span class="n">TypeVar</span>
+
+<span class="kn">from</span> <span class="nn">opentelemetry</span> <span class="kn">import</span> <span class="n">metrics</span> <span class="k">as</span> <span class="n">metrics_api</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.sdk.metrics.export</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ConsoleMetricsExporter</span><span class="p">,</span>
+    <span class="n">MetricsExporter</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.sdk.metrics.export.aggregate</span> <span class="kn">import</span> <span class="n">Aggregator</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.sdk.metrics.export.controller</span> <span class="kn">import</span> <span class="n">PushController</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.sdk.metrics.export.processor</span> <span class="kn">import</span> <span class="n">Processor</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.sdk.metrics.view</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ViewData</span><span class="p">,</span>
+    <span class="n">ViewManager</span><span class="p">,</span>
+    <span class="n">get_default_aggregator</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.sdk.resources</span> <span class="kn">import</span> <span class="n">Resource</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.sdk.util</span> <span class="kn">import</span> <span class="n">get_dict_as_key</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.sdk.util.instrumentation</span> <span class="kn">import</span> <span class="n">InstrumentationInfo</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="BaseBoundInstrument"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.BaseBoundInstrument">[docs]</a><span class="k">class</span> <span class="nc">BaseBoundInstrument</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Class containing common behavior for all bound metric instruments.</span>
+
+<span class="sd">    Bound metric instruments are responsible for operating on data for metric</span>
+<span class="sd">    instruments for a specific set of labels.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        labels: A set of labels as keys that bind this metric instrument.</span>
+<span class="sd">        metric: The metric that created this bound instrument.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span> <span class="n">metric</span><span class="p">:</span> <span class="s2">&quot;MetricT&quot;</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_labels</span> <span class="o">=</span> <span class="n">labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span> <span class="o">=</span> <span class="n">metric</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view_datas</span> <span class="o">=</span> <span class="n">metric</span><span class="o">.</span><span class="n">meter</span><span class="o">.</span><span class="n">view_manager</span><span class="o">.</span><span class="n">get_view_datas</span><span class="p">(</span>
+            <span class="n">metric</span><span class="p">,</span> <span class="n">labels</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_view_datas_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ref_count</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_ref_count_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_validate_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span><span class="o">.</span><span class="n">value_type</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid value passed for </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_metric</span><span class="o">.</span><span class="n">value_type</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="BaseBoundInstrument.update"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.BaseBoundInstrument.update">[docs]</a>    <span class="k">def</span> <span class="nf">update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_view_datas_lock</span><span class="p">:</span>
+            <span class="c1"># record the value for each view_data belonging to this aggregator</span>
+            <span class="k">for</span> <span class="n">view_data</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">view_datas</span><span class="p">:</span>
+                <span class="n">view_data</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="BaseBoundInstrument.release"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.BaseBoundInstrument.release">[docs]</a>    <span class="k">def</span> <span class="nf">release</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">decrease_ref_count</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="BaseBoundInstrument.decrease_ref_count"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.BaseBoundInstrument.decrease_ref_count">[docs]</a>    <span class="k">def</span> <span class="nf">decrease_ref_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ref_count_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ref_count</span> <span class="o">-=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="BaseBoundInstrument.increase_ref_count"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.BaseBoundInstrument.increase_ref_count">[docs]</a>    <span class="k">def</span> <span class="nf">increase_ref_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ref_count_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_ref_count</span> <span class="o">+=</span> <span class="mi">1</span></div>
+
+<div class="viewcode-block" id="BaseBoundInstrument.ref_count"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.BaseBoundInstrument.ref_count">[docs]</a>    <span class="k">def</span> <span class="nf">ref_count</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ref_count_lock</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_ref_count</span></div></div>
+
+
+<div class="viewcode-block" id="BoundCounter"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.BoundCounter">[docs]</a><span class="k">class</span> <span class="nc">BoundCounter</span><span class="p">(</span><span class="n">metrics_api</span><span class="o">.</span><span class="n">BoundCounter</span><span class="p">,</span> <span class="n">BaseBoundInstrument</span><span class="p">):</span>
+<div class="viewcode-block" id="BoundCounter.add"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.BoundCounter.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.BoundCounter.add`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_update</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_validate_update</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_validate_update</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid value </span><span class="si">%s</span><span class="s2"> passed to Counter, value must be non-negative. &quot;</span>
+                <span class="s2">&quot;For a Counter that can decrease, use UpDownCounter.&quot;</span><span class="p">,</span>
+                <span class="n">value</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="BoundUpDownCounter"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.BoundUpDownCounter">[docs]</a><span class="k">class</span> <span class="nc">BoundUpDownCounter</span><span class="p">(</span><span class="n">metrics_api</span><span class="o">.</span><span class="n">BoundUpDownCounter</span><span class="p">,</span> <span class="n">BaseBoundInstrument</span><span class="p">):</span>
+<div class="viewcode-block" id="BoundUpDownCounter.add"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.BoundUpDownCounter.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.BoundUpDownCounter.add`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_update</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="BoundValueRecorder"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.BoundValueRecorder">[docs]</a><span class="k">class</span> <span class="nc">BoundValueRecorder</span><span class="p">(</span><span class="n">metrics_api</span><span class="o">.</span><span class="n">BoundValueRecorder</span><span class="p">,</span> <span class="n">BaseBoundInstrument</span><span class="p">):</span>
+<div class="viewcode-block" id="BoundValueRecorder.record"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.BoundValueRecorder.record">[docs]</a>    <span class="k">def</span> <span class="nf">record</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.BoundValueRecorder.record`.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_update</span><span class="p">(</span><span class="n">value</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Metric"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Metric">[docs]</a><span class="k">class</span> <span class="nc">Metric</span><span class="p">(</span><span class="n">metrics_api</span><span class="o">.</span><span class="n">Metric</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for all synchronous metric types.</span>
+
+<span class="sd">    This is the class that is used to represent a metric that is to be</span>
+<span class="sd">    synchronously recorded and tracked. Synchronous instruments are called</span>
+<span class="sd">    inside a request, meaning they have an associated distributed context</span>
+<span class="sd">    (i.e. Span context, baggage). Multiple metric events may occur</span>
+<span class="sd">    for a synchronous instrument within a give collection interval.</span>
+
+<span class="sd">    Each metric has a set of bound metrics that are created from the metric.</span>
+<span class="sd">    See `BaseBoundInstrument` for information on bound metric instruments.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">BOUND_INSTR_TYPE</span> <span class="o">=</span> <span class="n">BaseBoundInstrument</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">value_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">],</span>
+        <span class="n">meter</span><span class="p">:</span> <span class="s2">&quot;Accumulator&quot;</span><span class="p">,</span>
+        <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="n">unit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value_type</span> <span class="o">=</span> <span class="n">value_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">meter</span> <span class="o">=</span> <span class="n">meter</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="n">enabled</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bound_instruments</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">bound_instruments_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Metric.bind"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Metric.bind">[docs]</a>    <span class="k">def</span> <span class="nf">bind</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">BaseBoundInstrument</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.Metric.bind`.&quot;&quot;&quot;</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">get_dict_as_key</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">bound_instruments_lock</span><span class="p">:</span>
+            <span class="n">bound_instrument</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bound_instruments</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">bound_instrument</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">bound_instrument</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">BOUND_INSTR_TYPE</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">bound_instruments</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">bound_instrument</span>
+        <span class="n">bound_instrument</span><span class="o">.</span><span class="n">increase_ref_count</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">bound_instrument</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(name=&quot;</span><span class="si">{}</span><span class="s1">&quot;, description=&quot;</span><span class="si">{}</span><span class="s1">&quot;)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span>
+        <span class="p">)</span>
+
+    <span class="n">UPDATE_FUNCTION</span> <span class="o">=</span> <span class="k">lambda</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="kc">None</span>  <span class="c1"># noqa: E731</span></div>
+
+
+<div class="viewcode-block" id="Counter"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Counter">[docs]</a><span class="k">class</span> <span class="nc">Counter</span><span class="p">(</span><span class="n">Metric</span><span class="p">,</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">Counter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.Counter`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">BOUND_INSTR_TYPE</span> <span class="o">=</span> <span class="n">BoundCounter</span>
+
+<div class="viewcode-block" id="Counter.add"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Counter.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.Counter.add`.&quot;&quot;&quot;</span>
+        <span class="n">bound_intrument</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+        <span class="n">bound_intrument</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">bound_intrument</span><span class="o">.</span><span class="n">release</span><span class="p">()</span></div>
+
+    <span class="n">UPDATE_FUNCTION</span> <span class="o">=</span> <span class="n">add</span></div>
+
+
+<div class="viewcode-block" id="UpDownCounter"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.UpDownCounter">[docs]</a><span class="k">class</span> <span class="nc">UpDownCounter</span><span class="p">(</span><span class="n">Metric</span><span class="p">,</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">UpDownCounter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.UpDownCounter`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">BOUND_INSTR_TYPE</span> <span class="o">=</span> <span class="n">BoundUpDownCounter</span>
+
+<div class="viewcode-block" id="UpDownCounter.add"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.UpDownCounter.add">[docs]</a>    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.UpDownCounter.add`.&quot;&quot;&quot;</span>
+        <span class="n">bound_intrument</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+        <span class="n">bound_intrument</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">bound_intrument</span><span class="o">.</span><span class="n">release</span><span class="p">()</span></div>
+
+    <span class="n">UPDATE_FUNCTION</span> <span class="o">=</span> <span class="n">add</span></div>
+
+
+<div class="viewcode-block" id="ValueRecorder"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.ValueRecorder">[docs]</a><span class="k">class</span> <span class="nc">ValueRecorder</span><span class="p">(</span><span class="n">Metric</span><span class="p">,</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueRecorder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.ValueRecorder`.&quot;&quot;&quot;</span>
+
+    <span class="n">BOUND_INSTR_TYPE</span> <span class="o">=</span> <span class="n">BoundValueRecorder</span>
+
+<div class="viewcode-block" id="ValueRecorder.record"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.ValueRecorder.record">[docs]</a>    <span class="k">def</span> <span class="nf">record</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.ValueRecorder.record`.&quot;&quot;&quot;</span>
+        <span class="n">bound_intrument</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">bind</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+        <span class="n">bound_intrument</span><span class="o">.</span><span class="n">record</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+        <span class="n">bound_intrument</span><span class="o">.</span><span class="n">release</span><span class="p">()</span></div>
+
+    <span class="n">UPDATE_FUNCTION</span> <span class="o">=</span> <span class="n">record</span></div>
+
+
+<span class="n">MetricT</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;MetricT&quot;</span><span class="p">,</span> <span class="n">Counter</span><span class="p">,</span> <span class="n">UpDownCounter</span><span class="p">,</span> <span class="n">ValueRecorder</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Observer"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Observer">[docs]</a><span class="k">class</span> <span class="nc">Observer</span><span class="p">(</span><span class="n">metrics_api</span><span class="o">.</span><span class="n">Observer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Base class for all asynchronous metric types.</span>
+
+<span class="sd">    Also known as Observers, observer metric instruments are asynchronous in</span>
+<span class="sd">    that they are reported by a callback, once per collection interval, and</span>
+<span class="sd">    lack context. They are permitted to report only one value per distinct</span>
+<span class="sd">    label set per period.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">callback</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ObserverCallbackT</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">value_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">],</span>
+        <span class="n">label_keys</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">callback</span> <span class="o">=</span> <span class="n">callback</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">description</span> <span class="o">=</span> <span class="n">description</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">unit</span> <span class="o">=</span> <span class="n">unit</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">value_type</span> <span class="o">=</span> <span class="n">value_type</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">label_keys</span> <span class="o">=</span> <span class="n">label_keys</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span> <span class="o">=</span> <span class="n">enabled</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregators</span> <span class="o">=</span> <span class="p">{}</span>
+
+<div class="viewcode-block" id="Observer.observe"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Observer.observe">[docs]</a>    <span class="k">def</span> <span class="nf">observe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">,</span> <span class="n">labels</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">key</span> <span class="o">=</span> <span class="n">get_dict_as_key</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">_validate_observe</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="n">key</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregators</span><span class="p">:</span>
+            <span class="c1"># TODO: how to cleanup aggregators?</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">aggregators</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">get_default_aggregator</span><span class="p">(</span><span class="bp">self</span><span class="p">)()</span>
+        <span class="n">aggregator</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregators</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="n">aggregator</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">value</span><span class="p">)</span></div>
+
+    <span class="c1"># pylint: disable=W0613</span>
+    <span class="k">def</span> <span class="nf">_validate_observe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_type</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Invalid value passed for </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">value_type</span><span class="o">.</span><span class="vm">__name__</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+        <span class="k">return</span> <span class="kc">True</span>
+
+<div class="viewcode-block" id="Observer.run"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Observer.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">callback</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+        <span class="c1"># pylint: disable=broad-except</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Exception while executing observer callback: </span><span class="si">%s</span><span class="s2">.&quot;</span><span class="p">,</span> <span class="n">exc</span>
+            <span class="p">)</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+    <span class="k">def</span> <span class="fm">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="s1">&#39;</span><span class="si">{}</span><span class="s1">(name=&quot;</span><span class="si">{}</span><span class="s1">&quot;, description=&quot;</span><span class="si">{}</span><span class="s1">&quot;)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+            <span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="vm">__name__</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">description</span>
+        <span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="SumObserver"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.SumObserver">[docs]</a><span class="k">class</span> <span class="nc">SumObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">,</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">SumObserver</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.SumObserver`.&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="nf">_validate_observe</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]]</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_validate_observe</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">key</span><span class="p">):</span>
+            <span class="k">return</span> <span class="kc">False</span>
+        <span class="c1"># Must be non-decreasing because monotonic</span>
+        <span class="k">if</span> <span class="p">(</span>
+            <span class="n">key</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregators</span>
+            <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregators</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">current</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="p">):</span>
+            <span class="k">if</span> <span class="n">value</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">aggregators</span><span class="p">[</span><span class="n">key</span><span class="p">]</span><span class="o">.</span><span class="n">current</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Value passed must be non-decreasing.&quot;</span><span class="p">)</span>
+                <span class="k">return</span> <span class="kc">False</span>
+        <span class="k">return</span> <span class="kc">True</span></div>
+
+
+<div class="viewcode-block" id="UpDownSumObserver"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.UpDownSumObserver">[docs]</a><span class="k">class</span> <span class="nc">UpDownSumObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">,</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">UpDownSumObserver</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.UpDownSumObserver`.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="ValueObserver"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.ValueObserver">[docs]</a><span class="k">class</span> <span class="nc">ValueObserver</span><span class="p">(</span><span class="n">Observer</span><span class="p">,</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueObserver</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.ValueObserver`.&quot;&quot;&quot;</span></div>
+
+
+<div class="viewcode-block" id="Accumulation"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Accumulation">[docs]</a><span class="k">class</span> <span class="nc">Accumulation</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Container class used for processing in the `Processor`&quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">instrument</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">InstrumentT</span><span class="p">,</span>
+        <span class="n">labels</span><span class="p">:</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">]],</span>
+        <span class="n">aggregator</span><span class="p">:</span> <span class="n">Aggregator</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrument</span> <span class="o">=</span> <span class="n">instrument</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">labels</span> <span class="o">=</span> <span class="n">labels</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">aggregator</span> <span class="o">=</span> <span class="n">aggregator</span></div>
+
+
+<div class="viewcode-block" id="Accumulator"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Accumulator">[docs]</a><span class="k">class</span> <span class="nc">Accumulator</span><span class="p">(</span><span class="n">metrics_api</span><span class="o">.</span><span class="n">Meter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.Meter`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        source: The `MeterProvider` that created this meter.</span>
+<span class="sd">        instrumentation_info: The `InstrumentationInfo` for this meter.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">source</span><span class="p">:</span> <span class="s2">&quot;MeterProvider&quot;</span><span class="p">,</span>
+        <span class="n">instrumentation_info</span><span class="p">:</span> <span class="s2">&quot;InstrumentationInfo&quot;</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">instrumentation_info</span> <span class="o">=</span> <span class="n">instrumentation_info</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">processor</span> <span class="o">=</span> <span class="n">Processor</span><span class="p">(</span><span class="n">source</span><span class="o">.</span><span class="n">stateful</span><span class="p">,</span> <span class="n">source</span><span class="o">.</span><span class="n">resource</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observers</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">metrics_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">observers_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view_manager</span> <span class="o">=</span> <span class="n">ViewManager</span><span class="p">()</span>
+
+<div class="viewcode-block" id="Accumulator.collect"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Accumulator.collect">[docs]</a>    <span class="k">def</span> <span class="nf">collect</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Collects all the metrics created with this `Meter` for export.</span>
+
+<span class="sd">        Utilizes the processor to create checkpoints of the current values in</span>
+<span class="sd">        each aggregator belonging to the metrics that were created with this</span>
+<span class="sd">        meter instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_collect_metrics</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_collect_observers</span><span class="p">()</span></div>
+
+    <span class="k">def</span> <span class="nf">_collect_metrics</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">metric</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="p">:</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">metric</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+                <span class="k">continue</span>
+            <span class="n">to_remove</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">with</span> <span class="n">metric</span><span class="o">.</span><span class="n">bound_instruments_lock</span><span class="p">:</span>
+                <span class="k">for</span> <span class="p">(</span>
+                    <span class="n">labels</span><span class="p">,</span>
+                    <span class="n">bound_instrument</span><span class="p">,</span>
+                <span class="p">)</span> <span class="ow">in</span> <span class="n">metric</span><span class="o">.</span><span class="n">bound_instruments</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="k">for</span> <span class="n">view_data</span> <span class="ow">in</span> <span class="n">bound_instrument</span><span class="o">.</span><span class="n">view_datas</span><span class="p">:</span>
+                        <span class="n">accumulation</span> <span class="o">=</span> <span class="n">Accumulation</span><span class="p">(</span>
+                            <span class="n">metric</span><span class="p">,</span> <span class="n">view_data</span><span class="o">.</span><span class="n">labels</span><span class="p">,</span> <span class="n">view_data</span><span class="o">.</span><span class="n">aggregator</span>
+                        <span class="p">)</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">accumulation</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="n">bound_instrument</span><span class="o">.</span><span class="n">ref_count</span><span class="p">()</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                        <span class="n">to_remove</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">labels</span><span class="p">)</span>
+
+            <span class="c1"># Remove handles that were released</span>
+            <span class="k">for</span> <span class="n">labels</span> <span class="ow">in</span> <span class="n">to_remove</span><span class="p">:</span>
+                <span class="k">del</span> <span class="n">metric</span><span class="o">.</span><span class="n">bound_instruments</span><span class="p">[</span><span class="n">labels</span><span class="p">]</span>
+
+    <span class="k">def</span> <span class="nf">_collect_observers</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">observers_lock</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">observer</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">observers</span><span class="p">:</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">observer</span><span class="o">.</span><span class="n">enabled</span><span class="p">:</span>
+                    <span class="k">continue</span>
+
+                <span class="k">if</span> <span class="ow">not</span> <span class="n">observer</span><span class="o">.</span><span class="n">run</span><span class="p">():</span>
+                    <span class="k">continue</span>
+
+                <span class="k">for</span> <span class="n">labels</span><span class="p">,</span> <span class="n">aggregator</span> <span class="ow">in</span> <span class="n">observer</span><span class="o">.</span><span class="n">aggregators</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="n">accumulation</span> <span class="o">=</span> <span class="n">Accumulation</span><span class="p">(</span><span class="n">observer</span><span class="p">,</span> <span class="n">labels</span><span class="p">,</span> <span class="n">aggregator</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">processor</span><span class="o">.</span><span class="n">process</span><span class="p">(</span><span class="n">accumulation</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Accumulator.record_batch"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Accumulator.record_batch">[docs]</a>    <span class="k">def</span> <span class="nf">record_batch</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">labels</span><span class="p">:</span> <span class="n">Dict</span><span class="p">[</span><span class="nb">str</span><span class="p">,</span> <span class="nb">str</span><span class="p">],</span>
+        <span class="n">record_tuples</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Tuple</span><span class="p">[</span><span class="n">metrics_api</span><span class="o">.</span><span class="n">Metric</span><span class="p">,</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">]],</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.Meter.record_batch`.&quot;&quot;&quot;</span>
+        <span class="c1"># TODO: Avoid enconding the labels for each instrument, encode once</span>
+        <span class="c1"># and reuse.</span>
+        <span class="k">for</span> <span class="n">metric</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">record_tuples</span><span class="p">:</span>
+            <span class="n">metric</span><span class="o">.</span><span class="n">UPDATE_FUNCTION</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="n">labels</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Accumulator.create_counter"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Accumulator.create_counter">[docs]</a>    <span class="k">def</span> <span class="nf">create_counter</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">value_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">],</span>
+        <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">Counter</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.Meter.create_counter`.&quot;&quot;&quot;</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="n">Counter</span><span class="p">(</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">value_type</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="o">=</span><span class="n">enabled</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">counter</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">counter</span></div>
+
+<div class="viewcode-block" id="Accumulator.create_updowncounter"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Accumulator.create_updowncounter">[docs]</a>    <span class="k">def</span> <span class="nf">create_updowncounter</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">value_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">],</span>
+        <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">UpDownCounter</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.Meter.create_updowncounter`.&quot;&quot;&quot;</span>
+        <span class="n">counter</span> <span class="o">=</span> <span class="n">UpDownCounter</span><span class="p">(</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">value_type</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="o">=</span><span class="n">enabled</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">counter</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">counter</span></div>
+
+<div class="viewcode-block" id="Accumulator.create_valuerecorder"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Accumulator.create_valuerecorder">[docs]</a>    <span class="k">def</span> <span class="nf">create_valuerecorder</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">value_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">],</span>
+        <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueRecorder</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.Meter.create_valuerecorder`.&quot;&quot;&quot;</span>
+        <span class="n">recorder</span> <span class="o">=</span> <span class="n">ValueRecorder</span><span class="p">(</span>
+            <span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">value_type</span><span class="p">,</span> <span class="bp">self</span><span class="p">,</span> <span class="n">enabled</span><span class="o">=</span><span class="n">enabled</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">metrics_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">metrics</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">recorder</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">recorder</span></div>
+
+<div class="viewcode-block" id="Accumulator.register_sumobserver"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Accumulator.register_sumobserver">[docs]</a>    <span class="k">def</span> <span class="nf">register_sumobserver</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">callback</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ObserverCallbackT</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">value_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">],</span>
+        <span class="n">label_keys</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">SumObserver</span><span class="p">:</span>
+        <span class="n">ob</span> <span class="o">=</span> <span class="n">SumObserver</span><span class="p">(</span>
+            <span class="n">callback</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">value_type</span><span class="p">,</span> <span class="n">label_keys</span><span class="p">,</span> <span class="n">enabled</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">observers_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ob</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ob</span></div>
+
+<div class="viewcode-block" id="Accumulator.register_updownsumobserver"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Accumulator.register_updownsumobserver">[docs]</a>    <span class="k">def</span> <span class="nf">register_updownsumobserver</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">callback</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ObserverCallbackT</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">value_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">],</span>
+        <span class="n">label_keys</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">UpDownSumObserver</span><span class="p">:</span>
+        <span class="n">ob</span> <span class="o">=</span> <span class="n">UpDownSumObserver</span><span class="p">(</span>
+            <span class="n">callback</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">value_type</span><span class="p">,</span> <span class="n">label_keys</span><span class="p">,</span> <span class="n">enabled</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">observers_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ob</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ob</span></div>
+
+<div class="viewcode-block" id="Accumulator.register_valueobserver"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Accumulator.register_valueobserver">[docs]</a>    <span class="k">def</span> <span class="nf">register_valueobserver</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">callback</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ObserverCallbackT</span><span class="p">,</span>
+        <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">description</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">unit</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">value_type</span><span class="p">:</span> <span class="n">Type</span><span class="p">[</span><span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueT</span><span class="p">],</span>
+        <span class="n">label_keys</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="p">(),</span>
+        <span class="n">enabled</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">ValueObserver</span><span class="p">:</span>
+        <span class="n">ob</span> <span class="o">=</span> <span class="n">ValueObserver</span><span class="p">(</span>
+            <span class="n">callback</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">description</span><span class="p">,</span> <span class="n">unit</span><span class="p">,</span> <span class="n">value_type</span><span class="p">,</span> <span class="n">label_keys</span><span class="p">,</span> <span class="n">enabled</span>
+        <span class="p">)</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">observers_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">ob</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">ob</span></div>
+
+<div class="viewcode-block" id="Accumulator.unregister_observer"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Accumulator.unregister_observer">[docs]</a>    <span class="k">def</span> <span class="nf">unregister_observer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">observer</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">Observer</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">observers_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">observers</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">observer</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Accumulator.register_view"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Accumulator.register_view">[docs]</a>    <span class="k">def</span> <span class="nf">register_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">view</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view_manager</span><span class="o">.</span><span class="n">register_view</span><span class="p">(</span><span class="n">view</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="Accumulator.unregister_view"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.Accumulator.unregister_view">[docs]</a>    <span class="k">def</span> <span class="nf">unregister_view</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">view</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">view_manager</span><span class="o">.</span><span class="n">unregister_view</span><span class="p">(</span><span class="n">view</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="MeterProvider"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.MeterProvider">[docs]</a><span class="k">class</span> <span class="nc">MeterProvider</span><span class="p">(</span><span class="n">metrics_api</span><span class="o">.</span><span class="n">MeterProvider</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.MeterProvider`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        stateful: Indicates whether meters created are going to be stateful</span>
+<span class="sd">        resource: Resource for this MeterProvider</span>
+<span class="sd">        shutdown_on_exit: Register an atexit hook to shut down when the</span>
+<span class="sd">            application exists</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">stateful</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+        <span class="n">resource</span><span class="p">:</span> <span class="n">Resource</span> <span class="o">=</span> <span class="n">Resource</span><span class="o">.</span><span class="n">create</span><span class="p">({}),</span>
+        <span class="n">shutdown_on_exit</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">stateful</span> <span class="o">=</span> <span class="n">stateful</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resource</span> <span class="o">=</span> <span class="n">resource</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_controllers</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exporters</span> <span class="o">=</span> <span class="nb">set</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_atexit_handler</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="n">shutdown_on_exit</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_atexit_handler</span> <span class="o">=</span> <span class="n">atexit</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shutdown</span><span class="p">)</span>
+
+<div class="viewcode-block" id="MeterProvider.get_meter"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.MeterProvider.get_meter">[docs]</a>    <span class="k">def</span> <span class="nf">get_meter</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">instrumenting_module_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">instrumenting_library_version</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;metrics_api.Meter&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;See `opentelemetry.metrics.MeterProvider`.get_meter.&quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">instrumenting_module_name</span><span class="p">:</span>  <span class="c1"># Reject empty strings too.</span>
+            <span class="n">instrumenting_module_name</span> <span class="o">=</span> <span class="s2">&quot;ERROR:MISSING MODULE NAME&quot;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;get_meter called with missing module name.&quot;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">Accumulator</span><span class="p">(</span>
+            <span class="bp">self</span><span class="p">,</span>
+            <span class="n">InstrumentationInfo</span><span class="p">(</span>
+                <span class="n">instrumenting_module_name</span><span class="p">,</span> <span class="n">instrumenting_library_version</span>
+            <span class="p">),</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="MeterProvider.start_pipeline"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.MeterProvider.start_pipeline">[docs]</a>    <span class="k">def</span> <span class="nf">start_pipeline</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">meter</span><span class="p">:</span> <span class="n">metrics_api</span><span class="o">.</span><span class="n">Meter</span><span class="p">,</span>
+        <span class="n">exporter</span><span class="p">:</span> <span class="n">MetricsExporter</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">interval</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="mf">15.0</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Method to begin the collect/export pipeline.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            meter: The meter to collect metrics from.</span>
+<span class="sd">            exporter: The exporter to export metrics to.</span>
+<span class="sd">            interval: The collect/export interval in seconds.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">exporter</span><span class="p">:</span>
+            <span class="n">exporter</span> <span class="o">=</span> <span class="n">ConsoleMetricsExporter</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_exporters</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">exporter</span><span class="p">)</span>
+        <span class="c1"># TODO: Controller type configurable?</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_controllers</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PushController</span><span class="p">(</span><span class="n">meter</span><span class="p">,</span> <span class="n">exporter</span><span class="p">,</span> <span class="n">interval</span><span class="p">))</span></div>
+
+<div class="viewcode-block" id="MeterProvider.shutdown"><a class="viewcode-back" href="../../../sdk/metrics.html#opentelemetry.sdk.metrics.MeterProvider.shutdown">[docs]</a>    <span class="k">def</span> <span class="nf">shutdown</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">for</span> <span class="n">controller</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_controllers</span><span class="p">:</span>
+            <span class="n">controller</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">exporter</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_exporters</span><span class="p">:</span>
+            <span class="n">exporter</span><span class="o">.</span><span class="n">shutdown</span><span class="p">()</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_atexit_handler</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">atexit</span><span class="o">.</span><span class="n">unregister</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_atexit_handler</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_atexit_handler</span> <span class="o">=</span> <span class="kc">None</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright OpenTelemetry Authors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

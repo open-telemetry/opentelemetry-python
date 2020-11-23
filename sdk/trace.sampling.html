@@ -1,0 +1,533 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>opentelemetry.sdk.trace.sampling &mdash; OpenTelemetry Python  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="opentelemetry.sdk.error_handler package" href="error_handler.html" />
+    <link rel="prev" title="opentelemetry.sdk.trace.export" href="trace.export.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> OpenTelemetry Python
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started with OpenTelemetry Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq-and-cookbook.html">Frequently Asked Questions and Cookbook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Python Packages</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../api/api.html">OpenTelemetry Python API</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="sdk.html">OpenTelemetry Python SDK</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="metrics.html">opentelemetry.sdk.metrics package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="resources.html">opentelemetry.sdk.resources package</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="trace.html">opentelemetry.sdk.trace package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="trace.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="trace.export.html">opentelemetry.sdk.trace.export</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">opentelemetry.sdk.trace.sampling</a></li>
+<li class="toctree-l4"><a class="reference internal" href="util.instrumentation.html">opentelemetry.sdk.util.instrumentation</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="error_handler.html">opentelemetry.sdk.error_handler package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Exporters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/jaeger/jaeger.html">Opentelemetry Jaeger Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/opencensus/opencensus.html">OpenCensus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/otlp/otlp.html">Opentelemetry OTLP Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/prometheus/prometheus.html">OpenTelemetry Prometheus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/zipkin/zipkin.html">Opentelemetry Zipkin Exporter</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Instrumentations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentor.html">opentelemetry.instrumentation.instrumentor package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/metric.html">opentelemetry.instrumentation.metric package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/opentracing_shim/opentracing_shim.html">OpenTracing Shim for OpenTelemetry</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples/auto-instrumentation/README.html">Autoinstrumentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_context/README.html">Basic Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_meter/README.html">Basic Meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_tracer/README.html">Basic Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/datadog_exporter/README.html">Datadog Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/django/README.html">OpenTelemetry Django Instrumentation Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/README.html">Global Error Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/error_handler_0/README.html">Error Handler 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/error_handler_1/README.html">Error Handler 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opencensus-exporter-metrics/README.html">OpenTelemetry Collector Metrics OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opencensus-exporter-tracer/README.html">OpenTelemetry Collector Tracer OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opentelemetry-example-app/README.html">OpenTelemetry Example Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opentracing/README.html">OpenTracing Shim Example</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenTelemetry Python</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="sdk.html">OpenTelemetry Python SDK</a> &raquo;</li>
+        
+          <li><a href="trace.html">opentelemetry.sdk.trace package</a> &raquo;</li>
+        
+      <li>opentelemetry.sdk.trace.sampling</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/sdk/trace.sampling.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-opentelemetry.sdk.trace.sampling">
+<span id="opentelemetry-sdk-trace-sampling"></span><h1>opentelemetry.sdk.trace.sampling<a class="headerlink" href="#module-opentelemetry.sdk.trace.sampling" title="Permalink to this headline">¶</a></h1>
+<p>For general information about sampling, see <a class="reference external" href="https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/sdk.md#sampling">the specification</a>.</p>
+<p>OpenTelemetry provides two types of samplers:</p>
+<ul class="simple">
+<li><p><a class="reference internal" href="#opentelemetry.sdk.trace.sampling.StaticSampler" title="opentelemetry.sdk.trace.sampling.StaticSampler"><code class="xref any py py-class docutils literal notranslate"><span class="pre">StaticSampler</span></code></a></p></li>
+<li><p><a class="reference internal" href="#opentelemetry.sdk.trace.sampling.TraceIdRatioBased" title="opentelemetry.sdk.trace.sampling.TraceIdRatioBased"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TraceIdRatioBased</span></code></a></p></li>
+</ul>
+<p>A <a class="reference internal" href="#opentelemetry.sdk.trace.sampling.StaticSampler" title="opentelemetry.sdk.trace.sampling.StaticSampler"><code class="xref any py py-class docutils literal notranslate"><span class="pre">StaticSampler</span></code></a> always returns the same sampling result regardless of the conditions. Both possible StaticSamplers are already created:</p>
+<ul class="simple">
+<li><p>Always sample spans: ALWAYS_ON</p></li>
+<li><p>Never sample spans: ALWAYS_OFF</p></li>
+</ul>
+<p>A <a class="reference internal" href="#opentelemetry.sdk.trace.sampling.TraceIdRatioBased" title="opentelemetry.sdk.trace.sampling.TraceIdRatioBased"><code class="xref any py py-class docutils literal notranslate"><span class="pre">TraceIdRatioBased</span></code></a> sampler makes a random sampling result based on the sampling probability given.</p>
+<p>If the span being sampled has a parent, <a class="reference internal" href="#opentelemetry.sdk.trace.sampling.ParentBased" title="opentelemetry.sdk.trace.sampling.ParentBased"><code class="xref any py py-class docutils literal notranslate"><span class="pre">ParentBased</span></code></a> will respect the parent span’s sampling result. Otherwise, it returns the sampling result from the given delegate sampler.</p>
+<p>Currently, sampling results are always made during the creation of the span. However, this might not always be the case in the future (see <a class="reference external" href="https://github.com/open-telemetry/oteps/pull/115">OTEP #115</a>).</p>
+<p>Custom samplers can be created by subclassing <a class="reference internal" href="#opentelemetry.sdk.trace.sampling.Sampler" title="opentelemetry.sdk.trace.sampling.Sampler"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Sampler</span></code></a> and implementing <a class="reference internal" href="#opentelemetry.sdk.trace.sampling.Sampler.should_sample" title="opentelemetry.sdk.trace.sampling.Sampler.should_sample"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Sampler.should_sample</span></code></a> as well as <a class="reference internal" href="#opentelemetry.sdk.trace.sampling.Sampler.get_description" title="opentelemetry.sdk.trace.sampling.Sampler.get_description"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Sampler.get_description</span></code></a>.</p>
+<p>To use a sampler, pass it into the tracer provider constructor. For example:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">opentelemetry</span> <span class="kn">import</span> <span class="n">trace</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.sdk.trace</span> <span class="kn">import</span> <span class="n">TracerProvider</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.sdk.trace.export</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">ConsoleSpanExporter</span><span class="p">,</span>
+    <span class="n">SimpleExportSpanProcessor</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.sdk.trace.sampling</span> <span class="kn">import</span> <span class="n">TraceIdRatioBased</span>
+
+<span class="c1"># sample 1 in every 1000 traces</span>
+<span class="n">sampler</span> <span class="o">=</span> <span class="n">TraceIdRatioBased</span><span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="mi">1000</span><span class="p">)</span>
+
+<span class="c1"># set the sampler onto the global tracer provider</span>
+<span class="n">trace</span><span class="o">.</span><span class="n">set_tracer_provider</span><span class="p">(</span><span class="n">TracerProvider</span><span class="p">(</span><span class="n">sampler</span><span class="o">=</span><span class="n">sampler</span><span class="p">))</span>
+
+<span class="c1"># set up an exporter for sampled spans</span>
+<span class="n">trace</span><span class="o">.</span><span class="n">get_tracer_provider</span><span class="p">()</span><span class="o">.</span><span class="n">add_span_processor</span><span class="p">(</span>
+    <span class="n">SimpleExportSpanProcessor</span><span class="p">(</span><span class="n">ConsoleSpanExporter</span><span class="p">())</span>
+<span class="p">)</span>
+
+<span class="c1"># created spans will now be sampled by the TraceIdRatioBased sampler</span>
+<span class="k">with</span> <span class="n">trace</span><span class="o">.</span><span class="n">get_tracer</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span><span class="o">.</span><span class="n">start_as_current_span</span><span class="p">(</span><span class="s2">&quot;Test Span&quot;</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="opentelemetry.sdk.trace.sampling.Decision">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.trace.sampling.</code><code class="sig-name descname">Decision</code><a class="reference internal" href="../_modules/opentelemetry/sdk/trace/sampling.html#Decision"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.Decision" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/enum.html#enum.Enum" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">enum.Enum</span></code></a></p>
+<p>An enumeration.</p>
+<dl class="attribute">
+<dt id="opentelemetry.sdk.trace.sampling.Decision.DROP">
+<code class="sig-name descname">DROP</code><em class="property"> = 0</em><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.Decision.DROP" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="opentelemetry.sdk.trace.sampling.Decision.RECORD_ONLY">
+<code class="sig-name descname">RECORD_ONLY</code><em class="property"> = 1</em><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.Decision.RECORD_ONLY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="opentelemetry.sdk.trace.sampling.Decision.RECORD_AND_SAMPLE">
+<code class="sig-name descname">RECORD_AND_SAMPLE</code><em class="property"> = 2</em><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.Decision.RECORD_AND_SAMPLE" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.trace.sampling.Decision.is_recording">
+<code class="sig-name descname">is_recording</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/trace/sampling.html#Decision.is_recording"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.Decision.is_recording" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.trace.sampling.Decision.is_sampled">
+<code class="sig-name descname">is_sampled</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/trace/sampling.html#Decision.is_sampled"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.Decision.is_sampled" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.trace.sampling.SamplingResult">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.trace.sampling.</code><code class="sig-name descname">SamplingResult</code><span class="sig-paren">(</span><em class="sig-param">decision</em>, <em class="sig-param">attributes=None</em>, <em class="sig-param">trace_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/trace/sampling.html#SamplingResult"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.SamplingResult" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<p>A sampling result as applied to a newly-created Span.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>decision</strong> (<a class="reference internal" href="#opentelemetry.sdk.trace.sampling.Decision" title="opentelemetry.sdk.trace.sampling.Decision"><code class="xref py py-class docutils literal notranslate"><span class="pre">Decision</span></code></a>) – A sampling decision based off of whether the span is recorded
+and the sampled flag in trace flags in the span context.</p></li>
+<li><p><strong>attributes</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Mapping" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Mapping</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>]], <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Sequence" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sequence</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]]]]]) – Attributes to add to the <a class="reference internal" href="../api/trace.html#opentelemetry.trace.Span" title="opentelemetry.trace.Span"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Span</span></code></a>.</p></li>
+<li><p><strong>trace_state</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference internal" href="../api/trace.span.html#opentelemetry.trace.span.TraceState" title="opentelemetry.trace.span.TraceState"><code class="xref py py-class docutils literal notranslate"><span class="pre">TraceState</span></code></a>]) – The tracestate used for the <a class="reference internal" href="../api/trace.html#opentelemetry.trace.Span" title="opentelemetry.trace.Span"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.Span</span></code></a>.
+Could possibly have been modified by the sampler.</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.trace.sampling.Sampler">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.trace.sampling.</code><code class="sig-name descname">Sampler</code><a class="reference internal" href="../_modules/opentelemetry/sdk/trace/sampling.html#Sampler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.Sampler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<dl class="method">
+<dt id="opentelemetry.sdk.trace.sampling.Sampler.should_sample">
+<em class="property">abstract </em><code class="sig-name descname">should_sample</code><span class="sig-paren">(</span><em class="sig-param">parent_context</em>, <em class="sig-param">trace_id</em>, <em class="sig-param">name</em>, <em class="sig-param">attributes=None</em>, <em class="sig-param">links=None</em>, <em class="sig-param">trace_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/trace/sampling.html#Sampler.should_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.Sampler.should_sample" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.sdk.trace.sampling.SamplingResult" title="opentelemetry.sdk.trace.sampling.SamplingResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">SamplingResult</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.trace.sampling.Sampler.get_description">
+<em class="property">abstract </em><code class="sig-name descname">get_description</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/trace/sampling.html#Sampler.get_description"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.Sampler.get_description" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.trace.sampling.StaticSampler">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.trace.sampling.</code><code class="sig-name descname">StaticSampler</code><span class="sig-paren">(</span><em class="sig-param">decision</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/trace/sampling.html#StaticSampler"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.StaticSampler" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.sdk.trace.sampling.Sampler" title="opentelemetry.sdk.trace.sampling.Sampler"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.sdk.trace.sampling.Sampler</span></code></a></p>
+<p>Sampler that always returns the same decision.</p>
+<dl class="method">
+<dt id="opentelemetry.sdk.trace.sampling.StaticSampler.should_sample">
+<code class="sig-name descname">should_sample</code><span class="sig-paren">(</span><em class="sig-param">parent_context</em>, <em class="sig-param">trace_id</em>, <em class="sig-param">name</em>, <em class="sig-param">attributes=None</em>, <em class="sig-param">links=None</em>, <em class="sig-param">trace_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/trace/sampling.html#StaticSampler.should_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.StaticSampler.should_sample" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.sdk.trace.sampling.SamplingResult" title="opentelemetry.sdk.trace.sampling.SamplingResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">SamplingResult</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.trace.sampling.StaticSampler.get_description">
+<code class="sig-name descname">get_description</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/trace/sampling.html#StaticSampler.get_description"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.StaticSampler.get_description" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.trace.sampling.TraceIdRatioBased">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.trace.sampling.</code><code class="sig-name descname">TraceIdRatioBased</code><span class="sig-paren">(</span><em class="sig-param">rate</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/trace/sampling.html#TraceIdRatioBased"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.TraceIdRatioBased" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.sdk.trace.sampling.Sampler" title="opentelemetry.sdk.trace.sampling.Sampler"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.sdk.trace.sampling.Sampler</span></code></a></p>
+<p>Sampler that makes sampling decisions probabalistically based on <a class="reference internal" href="#opentelemetry.sdk.trace.sampling.TraceIdRatioBased.rate" title="opentelemetry.sdk.trace.sampling.TraceIdRatioBased.rate"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">rate</span></code></a>,
+while also respecting the parent span sampling decision.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>rate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>) – Probability (between 0 and 1) that a span will be sampled</p>
+</dd>
+</dl>
+<dl class="attribute">
+<dt id="opentelemetry.sdk.trace.sampling.TraceIdRatioBased.TRACE_ID_LIMIT">
+<code class="sig-name descname">TRACE_ID_LIMIT</code><em class="property"> = 18446744073709551615</em><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.TraceIdRatioBased.TRACE_ID_LIMIT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.trace.sampling.TraceIdRatioBased.get_bound_for_rate">
+<em class="property">classmethod </em><code class="sig-name descname">get_bound_for_rate</code><span class="sig-paren">(</span><em class="sig-param">rate</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/trace/sampling.html#TraceIdRatioBased.get_bound_for_rate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.TraceIdRatioBased.get_bound_for_rate" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.trace.sampling.TraceIdRatioBased.rate">
+<em class="property">property </em><code class="sig-name descname">rate</code><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.TraceIdRatioBased.rate" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.trace.sampling.TraceIdRatioBased.bound">
+<em class="property">property </em><code class="sig-name descname">bound</code><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.TraceIdRatioBased.bound" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.trace.sampling.TraceIdRatioBased.should_sample">
+<code class="sig-name descname">should_sample</code><span class="sig-paren">(</span><em class="sig-param">parent_context</em>, <em class="sig-param">trace_id</em>, <em class="sig-param">name</em>, <em class="sig-param">attributes=None</em>, <em class="sig-param">links=None</em>, <em class="sig-param">trace_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/trace/sampling.html#TraceIdRatioBased.should_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.TraceIdRatioBased.should_sample" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.sdk.trace.sampling.SamplingResult" title="opentelemetry.sdk.trace.sampling.SamplingResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">SamplingResult</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.trace.sampling.TraceIdRatioBased.get_description">
+<code class="sig-name descname">get_description</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/trace/sampling.html#TraceIdRatioBased.get_description"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.TraceIdRatioBased.get_description" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.trace.sampling.ParentBased">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.trace.sampling.</code><code class="sig-name descname">ParentBased</code><span class="sig-paren">(</span><em class="sig-param">delegate</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/trace/sampling.html#ParentBased"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.ParentBased" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.sdk.trace.sampling.Sampler" title="opentelemetry.sdk.trace.sampling.Sampler"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.sdk.trace.sampling.Sampler</span></code></a></p>
+<p>If a parent is set, follows the same sampling decision as the parent.
+Otherwise, uses the delegate provided at initialization to make a
+decision.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><p><strong>delegate</strong> (<a class="reference internal" href="#opentelemetry.sdk.trace.sampling.Sampler" title="opentelemetry.sdk.trace.sampling.Sampler"><code class="xref py py-class docutils literal notranslate"><span class="pre">Sampler</span></code></a>) – The delegate sampler to use if parent is not set.</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="opentelemetry.sdk.trace.sampling.ParentBased.should_sample">
+<code class="sig-name descname">should_sample</code><span class="sig-paren">(</span><em class="sig-param">parent_context</em>, <em class="sig-param">trace_id</em>, <em class="sig-param">name</em>, <em class="sig-param">attributes=None</em>, <em class="sig-param">links=None</em>, <em class="sig-param">trace_state=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/trace/sampling.html#ParentBased.should_sample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.ParentBased.should_sample" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.sdk.trace.sampling.SamplingResult" title="opentelemetry.sdk.trace.sampling.SamplingResult"><code class="xref py py-class docutils literal notranslate"><span class="pre">SamplingResult</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.trace.sampling.ParentBased.get_description">
+<code class="sig-name descname">get_description</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/trace/sampling.html#ParentBased.get_description"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.ParentBased.get_description" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="data">
+<dt id="opentelemetry.sdk.trace.sampling.ALWAYS_OFF">
+<code class="sig-prename descclassname">opentelemetry.sdk.trace.sampling.</code><code class="sig-name descname">ALWAYS_OFF</code><em class="property"> = &lt;opentelemetry.sdk.trace.sampling.StaticSampler object&gt;</em><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.ALWAYS_OFF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sampler that never samples spans, regardless of the parent span’s sampling decision.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="opentelemetry.sdk.trace.sampling.ALWAYS_ON">
+<code class="sig-prename descclassname">opentelemetry.sdk.trace.sampling.</code><code class="sig-name descname">ALWAYS_ON</code><em class="property"> = &lt;opentelemetry.sdk.trace.sampling.StaticSampler object&gt;</em><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.ALWAYS_ON" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sampler that always samples spans, regardless of the parent span’s sampling decision.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="opentelemetry.sdk.trace.sampling.DEFAULT_OFF">
+<code class="sig-prename descclassname">opentelemetry.sdk.trace.sampling.</code><code class="sig-name descname">DEFAULT_OFF</code><em class="property"> = &lt;opentelemetry.sdk.trace.sampling.ParentBased object&gt;</em><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.DEFAULT_OFF" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sampler that respects its parent span’s sampling decision, but otherwise never samples.</p>
+</dd></dl>
+
+<dl class="data">
+<dt id="opentelemetry.sdk.trace.sampling.DEFAULT_ON">
+<code class="sig-prename descclassname">opentelemetry.sdk.trace.sampling.</code><code class="sig-name descname">DEFAULT_ON</code><em class="property"> = &lt;opentelemetry.sdk.trace.sampling.ParentBased object&gt;</em><a class="headerlink" href="#opentelemetry.sdk.trace.sampling.DEFAULT_ON" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sampler that respects its parent span’s sampling decision, but otherwise always samples.</p>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="error_handler.html" class="btn btn-neutral float-right" title="opentelemetry.sdk.error_handler package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="trace.export.html" class="btn btn-neutral float-left" title="opentelemetry.sdk.trace.export" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright OpenTelemetry Authors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

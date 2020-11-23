@@ -1,0 +1,680 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>opentelemetry.trace.span &mdash; OpenTelemetry Python  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="opentelemetry.trace.ids_generator" href="trace.ids_generator.html" />
+    <link rel="prev" title="opentelemetry.trace.status" href="trace.status.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> OpenTelemetry Python
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started with OpenTelemetry Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq-and-cookbook.html">Frequently Asked Questions and Cookbook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Python Packages</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">OpenTelemetry Python API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="baggage.html">opentelemetry.baggage package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="configuration.html">opentelemetry.configuration module</a></li>
+<li class="toctree-l2"><a class="reference internal" href="context.html">opentelemetry.context package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="metrics.html">opentelemetry.metrics package</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="trace.html">opentelemetry.trace package</a><ul class="current">
+<li class="toctree-l3 current"><a class="reference internal" href="trace.html#submodules">Submodules</a><ul class="current">
+<li class="toctree-l4"><a class="reference internal" href="trace.status.html">opentelemetry.trace.status</a></li>
+<li class="toctree-l4 current"><a class="current reference internal" href="#">opentelemetry.trace.span</a></li>
+<li class="toctree-l4"><a class="reference internal" href="trace.ids_generator.html">opentelemetry.trace.ids_generator</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="trace.html#module-opentelemetry.trace">Module contents</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../sdk/sdk.html">OpenTelemetry Python SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Exporters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/jaeger/jaeger.html">Opentelemetry Jaeger Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/opencensus/opencensus.html">OpenCensus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/otlp/otlp.html">Opentelemetry OTLP Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/prometheus/prometheus.html">OpenTelemetry Prometheus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/zipkin/zipkin.html">Opentelemetry Zipkin Exporter</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Instrumentations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentor.html">opentelemetry.instrumentation.instrumentor package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/metric.html">opentelemetry.instrumentation.metric package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/opentracing_shim/opentracing_shim.html">OpenTracing Shim for OpenTelemetry</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples/auto-instrumentation/README.html">Autoinstrumentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_context/README.html">Basic Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_meter/README.html">Basic Meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_tracer/README.html">Basic Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/datadog_exporter/README.html">Datadog Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/django/README.html">OpenTelemetry Django Instrumentation Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/README.html">Global Error Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/error_handler_0/README.html">Error Handler 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/error_handler_1/README.html">Error Handler 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opencensus-exporter-metrics/README.html">OpenTelemetry Collector Metrics OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opencensus-exporter-tracer/README.html">OpenTelemetry Collector Tracer OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opentelemetry-example-app/README.html">OpenTelemetry Example Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opentracing/README.html">OpenTracing Shim Example</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenTelemetry Python</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="api.html">OpenTelemetry Python API</a> &raquo;</li>
+        
+          <li><a href="trace.html">opentelemetry.trace package</a> &raquo;</li>
+        
+      <li>opentelemetry.trace.span</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api/trace.span.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-opentelemetry.trace.span">
+<span id="opentelemetry-trace-span"></span><h1>opentelemetry.trace.span<a class="headerlink" href="#module-opentelemetry.trace.span" title="Permalink to this headline">¶</a></h1>
+<dl class="class">
+<dt id="opentelemetry.trace.span.Span">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.trace.span.</code><code class="sig-name descname">Span</code><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#Span"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.Span" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<p>A span represents a single operation within a trace.</p>
+<dl class="method">
+<dt id="opentelemetry.trace.span.Span.end">
+<em class="property">abstract </em><code class="sig-name descname">end</code><span class="sig-paren">(</span><em class="sig-param">end_time=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#Span.end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.Span.end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the current time as the span’s end time.</p>
+<p>The span’s end time is the wall time at which the operation finished.</p>
+<p>Only the first call to <a class="reference internal" href="#opentelemetry.trace.span.Span.end" title="opentelemetry.trace.span.Span.end"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">end</span></code></a> should modify the span, and
+implementations are free to ignore or raise on further calls.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.Span.get_span_context">
+<em class="property">abstract </em><code class="sig-name descname">get_span_context</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#Span.get_span_context"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.Span.get_span_context" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the span’s SpanContext.</p>
+<p>Get an immutable, serializable identifier for this span that can be
+used to create new child spans.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.trace.span.SpanContext" title="opentelemetry.trace.span.SpanContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanContext</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <a class="reference internal" href="trace.html#opentelemetry.trace.SpanContext" title="opentelemetry.trace.SpanContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.SpanContext</span></code></a> with a copy of this span’s immutable state.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.Span.set_attribute">
+<em class="property">abstract </em><code class="sig-name descname">set_attribute</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#Span.set_attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.Span.set_attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets an Attribute.</p>
+<p>Sets a single Attribute with the key and value passed as arguments.</p>
+<p>Note: The behavior of <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a> value attributes is undefined, and hence strongly discouraged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.Span.add_event">
+<em class="property">abstract </em><code class="sig-name descname">add_event</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">attributes=None</em>, <em class="sig-param">timestamp=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#Span.add_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.Span.add_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an <a class="reference internal" href="../sdk/trace.html#opentelemetry.sdk.trace.Event" title="opentelemetry.sdk.trace.Event"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>.</p>
+<p>Adds a single <a class="reference internal" href="../sdk/trace.html#opentelemetry.sdk.trace.Event" title="opentelemetry.sdk.trace.Event"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> with the name and, optionally, a timestamp and
+attributes passed as arguments. Implementations should generate a
+timestamp if the <a class="reference internal" href="../sdk/trace.html#opentelemetry.sdk.trace.EventBase.timestamp" title="opentelemetry.sdk.trace.EventBase.timestamp"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">timestamp</span></code></a> argument is omitted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.Span.update_name">
+<em class="property">abstract </em><code class="sig-name descname">update_name</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#Span.update_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.Span.update_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the <a class="reference internal" href="#opentelemetry.trace.span.Span" title="opentelemetry.trace.span.Span"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Span</span></code></a> name.</p>
+<p>This will override the name provided via <a class="reference internal" href="trace.html#opentelemetry.trace.Tracer.start_span" title="opentelemetry.trace.Tracer.start_span"><code class="xref py py-func docutils literal notranslate"><span class="pre">opentelemetry.trace.Tracer.start_span()</span></code></a>.</p>
+<p>Upon this update, any sampling behavior based on Span name will depend
+on the implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.Span.is_recording">
+<em class="property">abstract </em><code class="sig-name descname">is_recording</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#Span.is_recording"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.Span.is_recording" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether this span will be recorded.</p>
+<p>Returns true if this Span is active and recording information like
+events with the add_event operation and attributes using set_attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.Span.set_status">
+<em class="property">abstract </em><code class="sig-name descname">set_status</code><span class="sig-paren">(</span><em class="sig-param">status</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#Span.set_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.Span.set_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the Status of the Span. If used, this will override the default
+Span status, which is OK.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.Span.record_exception">
+<em class="property">abstract </em><code class="sig-name descname">record_exception</code><span class="sig-paren">(</span><em class="sig-param">exception</em>, <em class="sig-param">attributes=None</em>, <em class="sig-param">timestamp=None</em>, <em class="sig-param">escaped=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#Span.record_exception"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.Span.record_exception" title="Permalink to this definition">¶</a></dt>
+<dd><p>Records an exception as a span event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.trace.span.TraceFlags">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.trace.span.</code><code class="sig-name descname">TraceFlags</code><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#TraceFlags"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.TraceFlags" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+<p>A bitmask that represents options specific to the trace.</p>
+<p>The only supported option is the “sampled” flag (<code class="docutils literal notranslate"><span class="pre">0x01</span></code>). If set, this
+flag indicates that the trace may have been sampled upstream.</p>
+<p>See the <a class="reference external" href="https://www.w3.org/TR/trace-context/#trace-flags">W3C Trace Context - Traceparent</a> spec for details.</p>
+<dl class="attribute">
+<dt id="opentelemetry.trace.span.TraceFlags.DEFAULT">
+<code class="sig-name descname">DEFAULT</code><em class="property"> = 0</em><a class="headerlink" href="#opentelemetry.trace.span.TraceFlags.DEFAULT" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="opentelemetry.trace.span.TraceFlags.SAMPLED">
+<code class="sig-name descname">SAMPLED</code><em class="property"> = 1</em><a class="headerlink" href="#opentelemetry.trace.span.TraceFlags.SAMPLED" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.TraceFlags.get_default">
+<em class="property">classmethod </em><code class="sig-name descname">get_default</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#TraceFlags.get_default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.TraceFlags.get_default" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.trace.span.TraceFlags" title="opentelemetry.trace.span.TraceFlags"><code class="xref py py-class docutils literal notranslate"><span class="pre">TraceFlags</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.TraceFlags.sampled">
+<em class="property">property </em><code class="sig-name descname">sampled</code><a class="headerlink" href="#opentelemetry.trace.span.TraceFlags.sampled" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.trace.span.TraceState">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.trace.span.</code><code class="sig-name descname">TraceState</code><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#TraceState"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.TraceState" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">dict</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generic" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">typing.Generic</span></code></a></p>
+<p>A list of key-value pairs representing vendor-specific trace info.</p>
+<p>Keys and values are strings of up to 256 printable US-ASCII characters.
+Implementations should conform to the <a class="reference external" href="https://www.w3.org/TR/trace-context/#tracestate-field">W3C Trace Context - Tracestate</a>
+spec, which describes additional restrictions on valid field values.</p>
+<dl class="method">
+<dt id="opentelemetry.trace.span.TraceState.get_default">
+<em class="property">classmethod </em><code class="sig-name descname">get_default</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#TraceState.get_default"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.TraceState.get_default" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.trace.span.TraceState" title="opentelemetry.trace.span.TraceState"><code class="xref py py-class docutils literal notranslate"><span class="pre">TraceState</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.trace.span.SpanContext">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.trace.span.</code><code class="sig-name descname">SpanContext</code><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#SpanContext"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.SpanContext" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">tuple</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Generic" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">typing.Generic</span></code></a></p>
+<p>The state of a Span to propagate between processes.</p>
+<p>This class includes the immutable attributes of a <a class="reference internal" href="#opentelemetry.trace.span.Span" title="opentelemetry.trace.span.Span"><code class="xref py py-class docutils literal notranslate"><span class="pre">Span</span></code></a> that must
+be propagated to a span’s children and across process boundaries.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>trace_id</strong> – The ID of the trace that this span belongs to.</p></li>
+<li><p><strong>span_id</strong> – This span’s ID.</p></li>
+<li><p><strong>trace_flags</strong> – Trace options to propagate.</p></li>
+<li><p><strong>trace_state</strong> – Tracing-system-specific info to propagate.</p></li>
+<li><p><strong>is_remote</strong> – True if propagated from a remote parent.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="opentelemetry.trace.span.SpanContext.trace_id">
+<em class="property">property </em><code class="sig-name descname">trace_id</code><a class="headerlink" href="#opentelemetry.trace.span.SpanContext.trace_id" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.SpanContext.span_id">
+<em class="property">property </em><code class="sig-name descname">span_id</code><a class="headerlink" href="#opentelemetry.trace.span.SpanContext.span_id" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.SpanContext.is_remote">
+<em class="property">property </em><code class="sig-name descname">is_remote</code><a class="headerlink" href="#opentelemetry.trace.span.SpanContext.is_remote" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.SpanContext.trace_flags">
+<em class="property">property </em><code class="sig-name descname">trace_flags</code><a class="headerlink" href="#opentelemetry.trace.span.SpanContext.trace_flags" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.trace.span.TraceFlags" title="opentelemetry.trace.span.TraceFlags"><code class="xref py py-class docutils literal notranslate"><span class="pre">TraceFlags</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.SpanContext.trace_state">
+<em class="property">property </em><code class="sig-name descname">trace_state</code><a class="headerlink" href="#opentelemetry.trace.span.SpanContext.trace_state" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.trace.span.TraceState" title="opentelemetry.trace.span.TraceState"><code class="xref py py-class docutils literal notranslate"><span class="pre">TraceState</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.SpanContext.is_valid">
+<em class="property">property </em><code class="sig-name descname">is_valid</code><a class="headerlink" href="#opentelemetry.trace.span.SpanContext.is_valid" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.trace.span.DefaultSpan">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.trace.span.</code><code class="sig-name descname">DefaultSpan</code><span class="sig-paren">(</span><em class="sig-param">context</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#DefaultSpan"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.DefaultSpan" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.trace.span.Span" title="opentelemetry.trace.span.Span"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.span.Span</span></code></a></p>
+<p>The default Span that is used when no Span implementation is available.</p>
+<p>All operations are no-op except context propagation.</p>
+<dl class="method">
+<dt id="opentelemetry.trace.span.DefaultSpan.get_span_context">
+<code class="sig-name descname">get_span_context</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#DefaultSpan.get_span_context"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.DefaultSpan.get_span_context" title="Permalink to this definition">¶</a></dt>
+<dd><p>Gets the span’s SpanContext.</p>
+<p>Get an immutable, serializable identifier for this span that can be
+used to create new child spans.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.trace.span.SpanContext" title="opentelemetry.trace.span.SpanContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">SpanContext</span></code></a></p>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>A <a class="reference internal" href="trace.html#opentelemetry.trace.SpanContext" title="opentelemetry.trace.SpanContext"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.trace.SpanContext</span></code></a> with a copy of this span’s immutable state.</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.DefaultSpan.is_recording">
+<code class="sig-name descname">is_recording</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#DefaultSpan.is_recording"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.DefaultSpan.is_recording" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns whether this span will be recorded.</p>
+<p>Returns true if this Span is active and recording information like
+events with the add_event operation and attributes using set_attribute.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.DefaultSpan.end">
+<code class="sig-name descname">end</code><span class="sig-paren">(</span><em class="sig-param">end_time=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#DefaultSpan.end"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.DefaultSpan.end" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the current time as the span’s end time.</p>
+<p>The span’s end time is the wall time at which the operation finished.</p>
+<p>Only the first call to <a class="reference internal" href="#opentelemetry.trace.span.DefaultSpan.end" title="opentelemetry.trace.span.DefaultSpan.end"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">end</span></code></a> should modify the span, and
+implementations are free to ignore or raise on further calls.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.DefaultSpan.set_attribute">
+<code class="sig-name descname">set_attribute</code><span class="sig-paren">(</span><em class="sig-param">key</em>, <em class="sig-param">value</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#DefaultSpan.set_attribute"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.DefaultSpan.set_attribute" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets an Attribute.</p>
+<p>Sets a single Attribute with the key and value passed as arguments.</p>
+<p>Note: The behavior of <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">None</span></code></a> value attributes is undefined, and hence strongly discouraged.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.DefaultSpan.add_event">
+<code class="sig-name descname">add_event</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">attributes=None</em>, <em class="sig-param">timestamp=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#DefaultSpan.add_event"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.DefaultSpan.add_event" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds an <a class="reference internal" href="../sdk/trace.html#opentelemetry.sdk.trace.Event" title="opentelemetry.sdk.trace.Event"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Event</span></code></a>.</p>
+<p>Adds a single <a class="reference internal" href="../sdk/trace.html#opentelemetry.sdk.trace.Event" title="opentelemetry.sdk.trace.Event"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Event</span></code></a> with the name and, optionally, a timestamp and
+attributes passed as arguments. Implementations should generate a
+timestamp if the <a class="reference internal" href="../sdk/trace.html#opentelemetry.sdk.trace.EventBase.timestamp" title="opentelemetry.sdk.trace.EventBase.timestamp"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">timestamp</span></code></a> argument is omitted.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.DefaultSpan.update_name">
+<code class="sig-name descname">update_name</code><span class="sig-paren">(</span><em class="sig-param">name</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#DefaultSpan.update_name"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.DefaultSpan.update_name" title="Permalink to this definition">¶</a></dt>
+<dd><p>Updates the <a class="reference internal" href="#opentelemetry.trace.span.Span" title="opentelemetry.trace.span.Span"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Span</span></code></a> name.</p>
+<p>This will override the name provided via <a class="reference internal" href="trace.html#opentelemetry.trace.Tracer.start_span" title="opentelemetry.trace.Tracer.start_span"><code class="xref py py-func docutils literal notranslate"><span class="pre">opentelemetry.trace.Tracer.start_span()</span></code></a>.</p>
+<p>Upon this update, any sampling behavior based on Span name will depend
+on the implementation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.DefaultSpan.set_status">
+<code class="sig-name descname">set_status</code><span class="sig-paren">(</span><em class="sig-param">status</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#DefaultSpan.set_status"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.DefaultSpan.set_status" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets the Status of the Span. If used, this will override the default
+Span status, which is OK.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.trace.span.DefaultSpan.record_exception">
+<code class="sig-name descname">record_exception</code><span class="sig-paren">(</span><em class="sig-param">exception</em>, <em class="sig-param">attributes=None</em>, <em class="sig-param">timestamp=None</em>, <em class="sig-param">escaped=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#DefaultSpan.record_exception"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.DefaultSpan.record_exception" title="Permalink to this definition">¶</a></dt>
+<dd><p>Records an exception as a span event.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><code class="docutils literal notranslate"><span class="pre">None</span></code></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="opentelemetry.trace.span.format_trace_id">
+<code class="sig-prename descclassname">opentelemetry.trace.span.</code><code class="sig-name descname">format_trace_id</code><span class="sig-paren">(</span><em class="sig-param">trace_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#format_trace_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.format_trace_id" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="opentelemetry.trace.span.format_span_id">
+<code class="sig-prename descclassname">opentelemetry.trace.span.</code><code class="sig-name descname">format_span_id</code><span class="sig-paren">(</span><em class="sig-param">span_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#format_span_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.format_span_id" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="opentelemetry.trace.span.get_hexadecimal_trace_id">
+<code class="sig-prename descclassname">opentelemetry.trace.span.</code><code class="sig-name descname">get_hexadecimal_trace_id</code><span class="sig-paren">(</span><em class="sig-param">trace_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#get_hexadecimal_trace_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.get_hexadecimal_trace_id" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="opentelemetry.trace.span.get_hexadecimal_span_id">
+<code class="sig-prename descclassname">opentelemetry.trace.span.</code><code class="sig-name descname">get_hexadecimal_span_id</code><span class="sig-paren">(</span><em class="sig-param">span_id</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/trace/span.html#get_hexadecimal_span_id"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.trace.span.get_hexadecimal_span_id" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="trace.ids_generator.html" class="btn btn-neutral float-right" title="opentelemetry.trace.ids_generator" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="trace.status.html" class="btn btn-neutral float-left" title="opentelemetry.trace.status" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright OpenTelemetry Authors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

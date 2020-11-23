@@ -1,0 +1,416 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>opentelemetry.sdk.resources package &mdash; OpenTelemetry Python  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="opentelemetry.sdk.trace package" href="trace.html" />
+    <link rel="prev" title="opentelemetry.sdk.util.instrumentation" href="util.instrumentation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> OpenTelemetry Python
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started with OpenTelemetry Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq-and-cookbook.html">Frequently Asked Questions and Cookbook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Python Packages</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../api/api.html">OpenTelemetry Python API</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="sdk.html">OpenTelemetry Python SDK</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="metrics.html">opentelemetry.sdk.metrics package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">opentelemetry.sdk.resources package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trace.html">opentelemetry.sdk.trace package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="error_handler.html">opentelemetry.sdk.error_handler package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Exporters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/jaeger/jaeger.html">Opentelemetry Jaeger Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/opencensus/opencensus.html">OpenCensus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/otlp/otlp.html">Opentelemetry OTLP Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/prometheus/prometheus.html">OpenTelemetry Prometheus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/zipkin/zipkin.html">Opentelemetry Zipkin Exporter</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Instrumentations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentor.html">opentelemetry.instrumentation.instrumentor package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/metric.html">opentelemetry.instrumentation.metric package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/opentracing_shim/opentracing_shim.html">OpenTracing Shim for OpenTelemetry</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples/auto-instrumentation/README.html">Autoinstrumentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_context/README.html">Basic Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_meter/README.html">Basic Meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_tracer/README.html">Basic Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/datadog_exporter/README.html">Datadog Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/django/README.html">OpenTelemetry Django Instrumentation Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/README.html">Global Error Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/error_handler_0/README.html">Error Handler 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/error_handler_1/README.html">Error Handler 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opencensus-exporter-metrics/README.html">OpenTelemetry Collector Metrics OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opencensus-exporter-tracer/README.html">OpenTelemetry Collector Tracer OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opentelemetry-example-app/README.html">OpenTelemetry Example Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opentracing/README.html">OpenTracing Shim Example</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenTelemetry Python</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="sdk.html">OpenTelemetry Python SDK</a> &raquo;</li>
+        
+      <li>opentelemetry.sdk.resources package</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/sdk/resources.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="module-opentelemetry.sdk.resources">
+<span id="opentelemetry-sdk-resources-package"></span><h1>opentelemetry.sdk.resources package<a class="headerlink" href="#module-opentelemetry.sdk.resources" title="Permalink to this headline">¶</a></h1>
+<p>This package implements <a class="reference external" href="https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/sdk.md#resource-sdk">OpenTelemetry Resources</a>:</p>
+<blockquote>
+<div><p><em>A Resource is an immutable representation of the entity producing
+telemetry. For example, a process producing telemetry that is running in
+a container on Kubernetes has a Pod name, it is in a namespace and
+possibly is part of a Deployment which also has a name. All three of
+these attributes can be included in the Resource.</em></p>
+</div></blockquote>
+<p>Resource objects are created with <a class="reference internal" href="#opentelemetry.sdk.resources.Resource.create" title="opentelemetry.sdk.resources.Resource.create"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Resource.create</span></code></a>, which accepts attributes
+(key-values). Resource attributes can also be passed at process invocation in
+the <span class="target" id="index-0"></span><a class="reference internal" href="#envvar-OTEL_RESOURCE_ATTRIBUTES"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">OTEL_RESOURCE_ATTRIBUTES</span></code></a> environment variable. You should
+register your resource with the <a class="reference internal" href="metrics.html#opentelemetry.sdk.metrics.MeterProvider" title="opentelemetry.sdk.metrics.MeterProvider"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.sdk.metrics.MeterProvider</span></code></a> and
+<a class="reference internal" href="trace.html#opentelemetry.sdk.trace.TracerProvider" title="opentelemetry.sdk.trace.TracerProvider"><code class="xref any py py-class docutils literal notranslate"><span class="pre">opentelemetry.sdk.trace.TracerProvider</span></code></a> by passing them into their
+constructors. The <a class="reference internal" href="#opentelemetry.sdk.resources.Resource" title="opentelemetry.sdk.resources.Resource"><code class="xref any py py-class docutils literal notranslate"><span class="pre">Resource</span></code></a> passed to a provider is available to the
+exporter, which can send on this information as it sees fit.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">metrics</span><span class="o">.</span><span class="n">set_meter_provider</span><span class="p">(</span>
+    <span class="n">MeterProvider</span><span class="p">(</span>
+        <span class="n">resource</span><span class="o">=</span><span class="n">Resource</span><span class="o">.</span><span class="n">create</span><span class="p">({</span>
+            <span class="s2">&quot;service.name&quot;</span><span class="p">:</span> <span class="s2">&quot;shoppingcart&quot;</span><span class="p">,</span>
+            <span class="s2">&quot;service.instance.id&quot;</span><span class="p">:</span> <span class="s2">&quot;instance-12&quot;</span><span class="p">,</span>
+        <span class="p">}),</span>
+    <span class="p">),</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">metrics</span><span class="o">.</span><span class="n">get_meter_provider</span><span class="p">()</span><span class="o">.</span><span class="n">resource</span><span class="o">.</span><span class="n">attributes</span><span class="p">)</span>
+
+<span class="p">{</span><span class="s1">&#39;telemetry.sdk.language&#39;</span><span class="p">:</span> <span class="s1">&#39;python&#39;</span><span class="p">,</span>
+<span class="s1">&#39;telemetry.sdk.name&#39;</span><span class="p">:</span> <span class="s1">&#39;opentelemetry&#39;</span><span class="p">,</span>
+<span class="s1">&#39;telemetry.sdk.version&#39;</span><span class="p">:</span> <span class="s1">&#39;0.13.dev0&#39;</span><span class="p">,</span>
+<span class="s1">&#39;service.name&#39;</span><span class="p">:</span> <span class="s1">&#39;shoppingcart&#39;</span><span class="p">,</span>
+<span class="s1">&#39;service.instance.id&#39;</span><span class="p">:</span> <span class="s1">&#39;instance-12&#39;</span><span class="p">}</span>
+</pre></div>
+</div>
+<p>Note that the OpenTelemetry project documents certain <a class="reference external" href="https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/semantic_conventions/README.md">“standard attributes”</a>
+that have prescribed semantic meanings, for example <code class="docutils literal notranslate"><span class="pre">service.name</span></code> in the
+above example.</p>
+<dl class="envvar">
+<dt id="envvar-OTEL_RESOURCE_ATTRIBUTES">
+<code class="sig-name descname">OTEL_RESOURCE_ATTRIBUTES</code><a class="headerlink" href="#envvar-OTEL_RESOURCE_ATTRIBUTES" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<p>The <span class="target" id="index-1"></span><a class="reference internal" href="#envvar-OTEL_RESOURCE_ATTRIBUTES"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">OTEL_RESOURCE_ATTRIBUTES</span></code></a> environment variable allows resource
+attributes to be passed to the SDK at process invocation. The attributes from
+<span class="target" id="index-2"></span><a class="reference internal" href="#envvar-OTEL_RESOURCE_ATTRIBUTES"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">OTEL_RESOURCE_ATTRIBUTES</span></code></a> are merged with those passed to
+<a class="reference internal" href="#opentelemetry.sdk.resources.Resource.create" title="opentelemetry.sdk.resources.Resource.create"><code class="xref any py py-meth docutils literal notranslate"><span class="pre">Resource.create</span></code></a>, meaning <span class="target" id="index-3"></span><a class="reference internal" href="#envvar-OTEL_RESOURCE_ATTRIBUTES"><code class="xref std std-envvar docutils literal notranslate"><span class="pre">OTEL_RESOURCE_ATTRIBUTES</span></code></a> takes <em>lower</em>
+priority. Attributes should be in the format <code class="docutils literal notranslate"><span class="pre">key1=value1,key2=value2</span></code>.
+Additional details are available <a class="reference external" href="https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/sdk.md#specifying-resource-information-via-an-environment-variable">in the specification</a>.</p>
+<div class="highlight-console notranslate"><div class="highlight"><pre><span></span><span class="gp">$</span> <span class="nv">OTEL_RESOURCE_ATTRIBUTES</span><span class="o">=</span><span class="s2">&quot;service.name=shoppingcard,will_be_overridden=foo&quot;</span> python - &lt;&lt;EOF
+<span class="go">import pprint</span>
+<span class="go">from opentelemetry.sdk.resources import Resource</span>
+<span class="go">pprint.pprint(Resource.create({&quot;will_be_overridden&quot;: &quot;bar&quot;}).attributes)</span>
+<span class="go">EOF</span>
+<span class="go">{&#39;service.name&#39;: &#39;shoppingcard&#39;,</span>
+<span class="go">&#39;telemetry.sdk.language&#39;: &#39;python&#39;,</span>
+<span class="go">&#39;telemetry.sdk.name&#39;: &#39;opentelemetry&#39;,</span>
+<span class="go">&#39;telemetry.sdk.version&#39;: &#39;0.13.dev0&#39;,</span>
+<span class="go">&#39;will_be_overridden&#39;: &#39;bar&#39;}</span>
+</pre></div>
+</div>
+<dl class="class">
+<dt id="opentelemetry.sdk.resources.Resource">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.resources.</code><code class="sig-name descname">Resource</code><span class="sig-paren">(</span><em class="sig-param">attributes</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/resources.html#Resource"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.resources.Resource" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="method">
+<dt id="opentelemetry.sdk.resources.Resource.create">
+<em class="property">static </em><code class="sig-name descname">create</code><span class="sig-paren">(</span><em class="sig-param">attributes=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/resources.html#Resource.create"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.resources.Resource.create" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.sdk.resources.Resource" title="opentelemetry.sdk.resources.Resource"><code class="xref py py-class docutils literal notranslate"><span class="pre">Resource</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.resources.Resource.create_empty">
+<em class="property">static </em><code class="sig-name descname">create_empty</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/resources.html#Resource.create_empty"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.resources.Resource.create_empty" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.sdk.resources.Resource" title="opentelemetry.sdk.resources.Resource"><code class="xref py py-class docutils literal notranslate"><span class="pre">Resource</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.resources.Resource.attributes">
+<em class="property">property </em><code class="sig-name descname">attributes</code><a class="headerlink" href="#opentelemetry.sdk.resources.Resource.attributes" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Dict" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">Dict</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Union" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Union</span></code></a>[<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">str</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">bool</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">int</span></code></a>, <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">float</span></code></a>]]</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="opentelemetry.sdk.resources.Resource.merge">
+<code class="sig-name descname">merge</code><span class="sig-paren">(</span><em class="sig-param">other</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/resources.html#Resource.merge"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.resources.Resource.merge" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.sdk.resources.Resource" title="opentelemetry.sdk.resources.Resource"><code class="xref py py-class docutils literal notranslate"><span class="pre">Resource</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.resources.ResourceDetector">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.resources.</code><code class="sig-name descname">ResourceDetector</code><span class="sig-paren">(</span><em class="sig-param">raise_on_error=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/resources.html#ResourceDetector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.resources.ResourceDetector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/abc.html#abc.ABC" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></a></p>
+<dl class="method">
+<dt id="opentelemetry.sdk.resources.ResourceDetector.detect">
+<em class="property">abstract </em><code class="sig-name descname">detect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/resources.html#ResourceDetector.detect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.resources.ResourceDetector.detect" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.sdk.resources.Resource" title="opentelemetry.sdk.resources.Resource"><code class="xref py py-class docutils literal notranslate"><span class="pre">Resource</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="opentelemetry.sdk.resources.OTELResourceDetector">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.sdk.resources.</code><code class="sig-name descname">OTELResourceDetector</code><span class="sig-paren">(</span><em class="sig-param">raise_on_error=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/resources.html#OTELResourceDetector"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.resources.OTELResourceDetector" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#opentelemetry.sdk.resources.ResourceDetector" title="opentelemetry.sdk.resources.ResourceDetector"><code class="xref py py-class docutils literal notranslate"><span class="pre">opentelemetry.sdk.resources.ResourceDetector</span></code></a></p>
+<dl class="method">
+<dt id="opentelemetry.sdk.resources.OTELResourceDetector.detect">
+<code class="sig-name descname">detect</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/resources.html#OTELResourceDetector.detect"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.resources.OTELResourceDetector.detect" title="Permalink to this definition">¶</a></dt>
+<dd><dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#opentelemetry.sdk.resources.Resource" title="opentelemetry.sdk.resources.Resource"><code class="xref py py-class docutils literal notranslate"><span class="pre">Resource</span></code></a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="opentelemetry.sdk.resources.get_aggregated_resources">
+<code class="sig-prename descclassname">opentelemetry.sdk.resources.</code><code class="sig-name descname">get_aggregated_resources</code><span class="sig-paren">(</span><em class="sig-param">detectors</em>, <em class="sig-param">initial_resource=None</em>, <em class="sig-param">timeout=5</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/sdk/resources.html#get_aggregated_resources"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.sdk.resources.get_aggregated_resources" title="Permalink to this definition">¶</a></dt>
+<dd><p>Retrieves resources from detectors in the order that they were passed</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>detectors</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.List" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">List</span></code></a>[<a class="reference internal" href="#opentelemetry.sdk.resources.ResourceDetector" title="opentelemetry.sdk.resources.ResourceDetector"><code class="xref py py-class docutils literal notranslate"><span class="pre">ResourceDetector</span></code></a>]) – List of resources in order of priority</p></li>
+<li><p><strong>initial_resource</strong> (<a class="reference external" href="https://docs.python.org/3/library/typing.html#typing.Optional" title="(in Python v3.9)"><code class="xref py py-data docutils literal notranslate"><span class="pre">Optional</span></code></a>[<a class="reference internal" href="#opentelemetry.sdk.resources.Resource" title="opentelemetry.sdk.resources.Resource"><code class="xref py py-class docutils literal notranslate"><span class="pre">Resource</span></code></a>]) – Static resource. This has highest priority</p></li>
+<li><p><strong>timeout</strong> – Number of seconds to wait for each detector to return</p></li>
+</ul>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p><a class="reference internal" href="#opentelemetry.sdk.resources.Resource" title="opentelemetry.sdk.resources.Resource"><code class="xref py py-class docutils literal notranslate"><span class="pre">Resource</span></code></a></p>
+</dd>
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+</dl>
+</dd></dl>
+
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="trace.html" class="btn btn-neutral float-right" title="opentelemetry.sdk.trace package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="util.instrumentation.html" class="btn btn-neutral float-left" title="opentelemetry.sdk.util.instrumentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright OpenTelemetry Authors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

@@ -1,0 +1,357 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>opentelemetry.configuration module &mdash; OpenTelemetry Python  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+        <script src="../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="opentelemetry.context package" href="context.html" />
+    <link rel="prev" title="opentelemetry.baggage.propagation package" href="baggage.propagation.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home" alt="Documentation Home"> OpenTelemetry Python
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../getting-started.html">Getting Started with OpenTelemetry Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../faq-and-cookbook.html">Frequently Asked Questions and Cookbook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Python Packages</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="reference internal" href="api.html">OpenTelemetry Python API</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="baggage.html">opentelemetry.baggage package</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">opentelemetry.configuration module</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#module-opentelemetry.configuration">Module contents</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#environment-variables-used-by-opentelemetry">Environment variables used by OpenTelemetry</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="context.html">opentelemetry.context package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="metrics.html">opentelemetry.metrics package</a></li>
+<li class="toctree-l2"><a class="reference internal" href="trace.html">opentelemetry.trace package</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../sdk/sdk.html">OpenTelemetry Python SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Exporters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/jaeger/jaeger.html">Opentelemetry Jaeger Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/opencensus/opencensus.html">OpenCensus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/otlp/otlp.html">Opentelemetry OTLP Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/prometheus/prometheus.html">OpenTelemetry Prometheus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../exporter/zipkin/zipkin.html">Opentelemetry Zipkin Exporter</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Instrumentations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/instrumentor.html">opentelemetry.instrumentation.instrumentor package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/metric.html">opentelemetry.instrumentation.metric package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../instrumentation/opentracing_shim/opentracing_shim.html">OpenTracing Shim for OpenTelemetry</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../examples/auto-instrumentation/README.html">Autoinstrumentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_context/README.html">Basic Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_meter/README.html">Basic Meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/basic_tracer/README.html">Basic Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/datadog_exporter/README.html">Datadog Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/django/README.html">OpenTelemetry Django Instrumentation Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/README.html">Global Error Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/error_handler_0/README.html">Error Handler 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/error_hander/error_handler_1/README.html">Error Handler 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opencensus-exporter-metrics/README.html">OpenTelemetry Collector Metrics OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opencensus-exporter-tracer/README.html">OpenTelemetry Collector Tracer OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opentelemetry-example-app/README.html">OpenTelemetry Example Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../examples/opentracing/README.html">OpenTracing Shim Example</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">OpenTelemetry Python</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="api.html">OpenTelemetry Python API</a> &raquo;</li>
+        
+      <li>opentelemetry.configuration module</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+            
+            <a href="../_sources/api/configuration.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="opentelemetry-configuration-module">
+<h1>opentelemetry.configuration module<a class="headerlink" href="#opentelemetry-configuration-module" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="module-opentelemetry.configuration">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-opentelemetry.configuration" title="Permalink to this headline">¶</a></h2>
+<p>Simple configuration manager</p>
+<p>This is a configuration manager for OpenTelemetry. It reads configuration
+values from environment variables prefixed with <code class="docutils literal notranslate"><span class="pre">OTEL_</span></code> (for environment
+variables that apply to any OpenTelemetry implementation) or with
+<code class="docutils literal notranslate"><span class="pre">OTEL_PYTHON_</span></code> (for environment variables that are specific to the Python
+implementation of OpenTelemetry) whose characters are only alphanumeric
+characters and unserscores, except for the first character after <code class="docutils literal notranslate"><span class="pre">OTEL_</span></code> or
+<code class="docutils literal notranslate"><span class="pre">OTEL_PYTHON_</span></code> which must not be a number.</p>
+<p>For example, these environment variables will be read:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">OTEL_SOMETHING</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OTEL_SOMETHING_ELSE_</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OTEL_SOMETHING_ELSE_AND__ELSE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OTEL_SOMETHING_ELSE_AND_else</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OTEL_SOMETHING_ELSE_AND_else2</span></code></p></li>
+</ol>
+<p>These won’t:</p>
+<ol class="arabic simple">
+<li><p><code class="docutils literal notranslate"><span class="pre">OPENTELEMETRY_PYTH_SOMETHING</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OTEL_2_SOMETHING_AND__ELSE</span></code></p></li>
+<li><p><code class="docutils literal notranslate"><span class="pre">OTEL_SOMETHING_%_ELSE</span></code></p></li>
+</ol>
+<p>The values stored in the environment variables can be found in an instance of
+<code class="docutils literal notranslate"><span class="pre">opentelemetry.configuration.Configuration</span></code>. This class can be instantiated
+freely because instantiating it returns always the same object.</p>
+<p>For example, if the environment variable
+<code class="docutils literal notranslate"><span class="pre">OTEL_PYTHON_METER_PROVIDER</span></code> value is <code class="docutils literal notranslate"><span class="pre">my_meter_provider</span></code>, then
+<code class="docutils literal notranslate"><span class="pre">Configuration().METER_PROVIDER</span> <span class="pre">==</span> <span class="pre">&quot;my_meter_provider&quot;</span></code> would be <code class="docutils literal notranslate"><span class="pre">True</span></code>.</p>
+<p>Non defined attributes will always return <code class="docutils literal notranslate"><span class="pre">None</span></code>. This is intended to make it
+easier to use the <code class="docutils literal notranslate"><span class="pre">Configuration</span></code> object in actual code, because it won’t be
+necessary to check for the attribute to be defined first.</p>
+<div class="section" id="environment-variables-used-by-opentelemetry">
+<h3>Environment variables used by OpenTelemetry<a class="headerlink" href="#environment-variables-used-by-opentelemetry" title="Permalink to this headline">¶</a></h3>
+<ol class="arabic simple">
+<li><p>OTEL_PYTHON_METER_PROVIDER</p></li>
+<li><p>OTEL_PYTHON_TRACER_PROVIDER</p></li>
+</ol>
+<p>The value of these environment variables should be the name of the entry point
+that points to the class that implements either provider. This OpenTelemetry
+API package provides one entry point for each, which can be found in the
+setup.py file:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">entry_points</span><span class="o">=</span><span class="p">{</span>
+    <span class="o">...</span>
+    <span class="s2">&quot;opentelemetry_meter_provider&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">&quot;default_meter_provider = &quot;</span>
+        <span class="s2">&quot;opentelemetry.metrics:DefaultMeterProvider&quot;</span>
+    <span class="p">],</span>
+    <span class="s2">&quot;opentelemetry_tracer_provider&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">&quot;default_tracer_provider = &quot;</span>
+        <span class="s2">&quot;opentelemetry.trace:DefaultTracerProvider&quot;</span>
+    <span class="p">],</span>
+<span class="p">}</span>
+</pre></div>
+</div>
+<p>To use the meter provider above, then the
+<code class="docutils literal notranslate"><span class="pre">OTEL_PYTHON_METER_PROVIDER</span></code> should be set to
+<code class="docutils literal notranslate"><span class="pre">&quot;default_meter_provider&quot;</span></code> (this is not actually necessary since the
+OpenTelemetry API provided providers are the default ones used if no
+configuration is found in the environment variables).</p>
+<p>Configuration values that are exactly <code class="docutils literal notranslate"><span class="pre">&quot;True&quot;</span></code> or <code class="docutils literal notranslate"><span class="pre">&quot;False&quot;</span></code> will be
+converted to its boolean values of <code class="docutils literal notranslate"><span class="pre">True</span></code> and <code class="docutils literal notranslate"><span class="pre">False</span></code> respectively.</p>
+<p>Configuration values that can be casted to integers or floats will be casted.</p>
+<p>This object can be used by any OpenTelemetry component, native or external.
+For that reason, the <code class="docutils literal notranslate"><span class="pre">Configuration</span></code> object is designed to be immutable.
+If a component would change the value of one of the <code class="docutils literal notranslate"><span class="pre">Configuration</span></code> object
+attributes then another component that relied on that value may break, leading
+to bugs that are very hard to debug. To avoid this situation, the preferred
+approach for components that need a different value than the one provided by
+the <code class="docutils literal notranslate"><span class="pre">Configuration</span></code> object is to implement a mechanism that allows the user
+to override this value instead of changing it.</p>
+<dl class="class">
+<dt id="opentelemetry.configuration.Configuration">
+<em class="property">class </em><code class="sig-prename descclassname">opentelemetry.configuration.</code><code class="sig-name descname">Configuration</code><a class="reference internal" href="../_modules/opentelemetry/configuration.html#Configuration"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.configuration.Configuration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference external" href="https://docs.python.org/3/library/functions.html#object" title="(in Python v3.9)"><code class="xref py py-class docutils literal notranslate"><span class="pre">object</span></code></a></p>
+<dl class="method">
+<dt id="opentelemetry.configuration.Configuration.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">default</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/opentelemetry/configuration.html#Configuration.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#opentelemetry.configuration.Configuration.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Use this typed method for dynamic access instead of <a class="reference external" href="https://docs.python.org/3/library/functions.html#getattr" title="(in Python v3.9)"><code class="xref any docutils literal notranslate"><span class="pre">getattr</span></code></a></p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.9)">str</a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.9)">bool</a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.9)">int</a> or <a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.9)">float</a> or <a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.9)">None</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="context.html" class="btn btn-neutral float-right" title="opentelemetry.context package" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="baggage.propagation.html" class="btn btn-neutral float-left" title="opentelemetry.baggage.propagation package" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright OpenTelemetry Authors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

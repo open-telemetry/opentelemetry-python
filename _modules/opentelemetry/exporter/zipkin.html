@@ -1,0 +1,632 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>opentelemetry.exporter.zipkin &mdash; OpenTelemetry Python  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> OpenTelemetry Python
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started.html">Getting Started with OpenTelemetry Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq-and-cookbook.html">Frequently Asked Questions and Cookbook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Python Packages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/api.html">OpenTelemetry Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sdk/sdk.html">OpenTelemetry Python SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Exporters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/jaeger/jaeger.html">Opentelemetry Jaeger Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/opencensus/opencensus.html">OpenCensus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/otlp/otlp.html">Opentelemetry OTLP Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/prometheus/prometheus.html">OpenTelemetry Prometheus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/zipkin/zipkin.html">Opentelemetry Zipkin Exporter</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Instrumentations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/instrumentor.html">opentelemetry.instrumentation.instrumentor package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/metric.html">opentelemetry.instrumentation.metric package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/opentracing_shim/opentracing_shim.html">OpenTracing Shim for OpenTelemetry</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/auto-instrumentation/README.html">Autoinstrumentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/basic_context/README.html">Basic Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/basic_meter/README.html">Basic Meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/basic_tracer/README.html">Basic Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/datadog_exporter/README.html">Datadog Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/django/README.html">OpenTelemetry Django Instrumentation Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/error_hander/README.html">Global Error Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/error_hander/error_handler_0/README.html">Error Handler 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/error_hander/error_handler_1/README.html">Error Handler 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opencensus-exporter-metrics/README.html">OpenTelemetry Collector Metrics OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opencensus-exporter-tracer/README.html">OpenTelemetry Collector Tracer OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opentelemetry-example-app/README.html">OpenTelemetry Example Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opentracing/README.html">OpenTracing Shim Example</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OpenTelemetry Python</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>opentelemetry.exporter.zipkin</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for opentelemetry.exporter.zipkin</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright The OpenTelemetry Authors</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">This library allows to export tracing data to `Zipkin &lt;https://zipkin.io/&gt;`_.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">-----</span>
+
+<span class="sd">The **OpenTelemetry Zipkin Exporter** allows to export `OpenTelemetry`_ traces to `Zipkin`_.</span>
+<span class="sd">This exporter always send traces to the configured Zipkin collector using HTTP.</span>
+
+
+<span class="sd">.. _Zipkin: https://zipkin.io/</span>
+<span class="sd">.. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/</span>
+<span class="sd">.. _Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/sdk-environment-variables.md#zipkin-exporter</span>
+
+<span class="sd">.. envvar:: OTEL_EXPORTER_ZIPKIN_ENDPOINT</span>
+<span class="sd">.. envvar:: OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT</span>
+
+<span class="sd">.. code:: python</span>
+
+<span class="sd">    from opentelemetry import trace</span>
+<span class="sd">    from opentelemetry.exporter import zipkin</span>
+<span class="sd">    from opentelemetry.sdk.trace import TracerProvider</span>
+<span class="sd">    from opentelemetry.sdk.trace.export import BatchExportSpanProcessor</span>
+
+<span class="sd">    trace.set_tracer_provider(TracerProvider())</span>
+<span class="sd">    tracer = trace.get_tracer(__name__)</span>
+
+<span class="sd">    # create a ZipkinSpanExporter</span>
+<span class="sd">    zipkin_exporter = zipkin.ZipkinSpanExporter(</span>
+<span class="sd">        service_name=&quot;my-helloworld-service&quot;,</span>
+<span class="sd">        # optional:</span>
+<span class="sd">        # url=&quot;http://localhost:9411/api/v2/spans&quot;,</span>
+<span class="sd">        # ipv4=&quot;&quot;,</span>
+<span class="sd">        # ipv6=&quot;&quot;,</span>
+<span class="sd">        # retry=False,</span>
+<span class="sd">    )</span>
+
+<span class="sd">    # Create a BatchExportSpanProcessor and add the exporter to it</span>
+<span class="sd">    span_processor = BatchExportSpanProcessor(zipkin_exporter)</span>
+
+<span class="sd">    # add to the tracer</span>
+<span class="sd">    trace.get_tracer_provider().add_span_processor(span_processor)</span>
+
+<span class="sd">    with tracer.start_as_current_span(&quot;foo&quot;):</span>
+<span class="sd">        print(&quot;Hello world!&quot;)</span>
+
+<span class="sd">The exporter supports the following environment variables for configuration:</span>
+
+<span class="sd">:envvar:`OTEL_EXPORTER_ZIPKIN_ENDPOINT`: target to which the exporter will</span>
+<span class="sd">send data. This may include a path (e.g. http://example.com:9411/api/v2/spans).</span>
+
+<span class="sd">:envvar:`OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT`: transport interchange format</span>
+<span class="sd">to use when sending data. Currently only Zipkin&#39;s v2 json and protobuf formats</span>
+<span class="sd">are supported, with v2 json being the default.</span>
+
+<span class="sd">API</span>
+<span class="sd">---</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">Sequence</span><span class="p">,</span> <span class="n">Union</span>
+<span class="kn">from</span> <span class="nn">urllib.parse</span> <span class="kn">import</span> <span class="n">urlparse</span>
+
+<span class="kn">import</span> <span class="nn">requests</span>
+
+<span class="kn">from</span> <span class="nn">opentelemetry.configuration</span> <span class="kn">import</span> <span class="n">Configuration</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.exporter.zipkin.gen</span> <span class="kn">import</span> <span class="n">zipkin_pb2</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.sdk.trace.export</span> <span class="kn">import</span> <span class="n">SpanExporter</span><span class="p">,</span> <span class="n">SpanExportResult</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.trace</span> <span class="kn">import</span> <span class="n">Span</span><span class="p">,</span> <span class="n">SpanContext</span><span class="p">,</span> <span class="n">SpanKind</span>
+
+<span class="n">TRANSPORT_FORMAT_JSON</span> <span class="o">=</span> <span class="s2">&quot;json&quot;</span>
+<span class="n">TRANSPORT_FORMAT_PROTOBUF</span> <span class="o">=</span> <span class="s2">&quot;protobuf&quot;</span>
+
+<span class="n">DEFAULT_RETRY</span> <span class="o">=</span> <span class="kc">False</span>
+<span class="n">DEFAULT_URL</span> <span class="o">=</span> <span class="s2">&quot;http://localhost:9411/api/v2/spans&quot;</span>
+<span class="n">DEFAULT_MAX_TAG_VALUE_LENGTH</span> <span class="o">=</span> <span class="mi">128</span>
+
+<span class="n">SPAN_KIND_MAP_JSON</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">SpanKind</span><span class="o">.</span><span class="n">INTERNAL</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="n">SpanKind</span><span class="o">.</span><span class="n">SERVER</span><span class="p">:</span> <span class="s2">&quot;SERVER&quot;</span><span class="p">,</span>
+    <span class="n">SpanKind</span><span class="o">.</span><span class="n">CLIENT</span><span class="p">:</span> <span class="s2">&quot;CLIENT&quot;</span><span class="p">,</span>
+    <span class="n">SpanKind</span><span class="o">.</span><span class="n">PRODUCER</span><span class="p">:</span> <span class="s2">&quot;PRODUCER&quot;</span><span class="p">,</span>
+    <span class="n">SpanKind</span><span class="o">.</span><span class="n">CONSUMER</span><span class="p">:</span> <span class="s2">&quot;CONSUMER&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">SPAN_KIND_MAP_PROTOBUF</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">SpanKind</span><span class="o">.</span><span class="n">INTERNAL</span><span class="p">:</span> <span class="n">zipkin_pb2</span><span class="o">.</span><span class="n">Span</span><span class="o">.</span><span class="n">Kind</span><span class="o">.</span><span class="n">SPAN_KIND_UNSPECIFIED</span><span class="p">,</span>
+    <span class="n">SpanKind</span><span class="o">.</span><span class="n">SERVER</span><span class="p">:</span> <span class="n">zipkin_pb2</span><span class="o">.</span><span class="n">Span</span><span class="o">.</span><span class="n">Kind</span><span class="o">.</span><span class="n">SERVER</span><span class="p">,</span>
+    <span class="n">SpanKind</span><span class="o">.</span><span class="n">CLIENT</span><span class="p">:</span> <span class="n">zipkin_pb2</span><span class="o">.</span><span class="n">Span</span><span class="o">.</span><span class="n">Kind</span><span class="o">.</span><span class="n">CLIENT</span><span class="p">,</span>
+    <span class="n">SpanKind</span><span class="o">.</span><span class="n">PRODUCER</span><span class="p">:</span> <span class="n">zipkin_pb2</span><span class="o">.</span><span class="n">Span</span><span class="o">.</span><span class="n">Kind</span><span class="o">.</span><span class="n">PRODUCER</span><span class="p">,</span>
+    <span class="n">SpanKind</span><span class="o">.</span><span class="n">CONSUMER</span><span class="p">:</span> <span class="n">zipkin_pb2</span><span class="o">.</span><span class="n">Span</span><span class="o">.</span><span class="n">Kind</span><span class="o">.</span><span class="n">CONSUMER</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">SUCCESS_STATUS_CODES</span> <span class="o">=</span> <span class="p">(</span><span class="mi">200</span><span class="p">,</span> <span class="mi">202</span><span class="p">)</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="ZipkinSpanExporter"><a class="viewcode-back" href="../../../exporter/zipkin/zipkin.html#opentelemetry.exporter.zipkin.ZipkinSpanExporter">[docs]</a><span class="k">class</span> <span class="nc">ZipkinSpanExporter</span><span class="p">(</span><span class="n">SpanExporter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Zipkin span exporter for OpenTelemetry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        service_name: Service that logged an annotation in a trace.Classifier</span>
+<span class="sd">            when query for spans.</span>
+<span class="sd">        url: The Zipkin endpoint URL</span>
+<span class="sd">        ipv4: Primary IPv4 address associated with this connection.</span>
+<span class="sd">        ipv6: Primary IPv6 address associated with this connection.</span>
+<span class="sd">        retry: Set to True to configure the exporter to retry on failure.</span>
+<span class="sd">        transport_format: transport interchange format to use</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">service_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">ipv4</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">ipv6</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">retry</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_RETRY</span><span class="p">,</span>
+        <span class="n">max_tag_value_length</span><span class="p">:</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">int</span><span class="p">]</span> <span class="o">=</span> <span class="n">DEFAULT_MAX_TAG_VALUE_LENGTH</span><span class="p">,</span>
+        <span class="n">transport_format</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span>
+            <span class="n">TRANSPORT_FORMAT_JSON</span><span class="p">,</span> <span class="n">TRANSPORT_FORMAT_PROTOBUF</span><span class="p">,</span> <span class="kc">None</span>
+        <span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">service_name</span> <span class="o">=</span> <span class="n">service_name</span>
+        <span class="k">if</span> <span class="n">url</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">Configuration</span><span class="p">()</span><span class="o">.</span><span class="n">EXPORTER_ZIPKIN_ENDPOINT</span> <span class="ow">or</span> <span class="n">DEFAULT_URL</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">url</span> <span class="o">=</span> <span class="n">url</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">port</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">)</span><span class="o">.</span><span class="n">port</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ipv4</span> <span class="o">=</span> <span class="n">ipv4</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">ipv6</span> <span class="o">=</span> <span class="n">ipv6</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">retry</span> <span class="o">=</span> <span class="n">retry</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_tag_value_length</span> <span class="o">=</span> <span class="n">max_tag_value_length</span>
+
+        <span class="k">if</span> <span class="n">transport_format</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transport_format</span> <span class="o">=</span> <span class="p">(</span>
+                <span class="n">Configuration</span><span class="p">()</span><span class="o">.</span><span class="n">EXPORTER_ZIPKIN_TRANSPORT_FORMAT</span>
+                <span class="ow">or</span> <span class="n">TRANSPORT_FORMAT_JSON</span>
+            <span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">transport_format</span> <span class="o">=</span> <span class="n">transport_format</span>
+
+<div class="viewcode-block" id="ZipkinSpanExporter.export"><a class="viewcode-back" href="../../../exporter/zipkin/zipkin.html#opentelemetry.exporter.zipkin.ZipkinSpanExporter.export">[docs]</a>    <span class="k">def</span> <span class="nf">export</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spans</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Span</span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n">SpanExportResult</span><span class="p">:</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transport_format</span> <span class="o">==</span> <span class="n">TRANSPORT_FORMAT_JSON</span><span class="p">:</span>
+            <span class="n">content_type</span> <span class="o">=</span> <span class="s2">&quot;application/json&quot;</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">transport_format</span> <span class="o">==</span> <span class="n">TRANSPORT_FORMAT_PROTOBUF</span><span class="p">:</span>
+            <span class="n">content_type</span> <span class="o">=</span> <span class="s2">&quot;application/x-protobuf&quot;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Invalid transport format </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">transport_format</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">SpanExportResult</span><span class="o">.</span><span class="n">FAILURE</span>
+
+        <span class="n">result</span> <span class="o">=</span> <span class="n">requests</span><span class="o">.</span><span class="n">post</span><span class="p">(</span>
+            <span class="n">url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">url</span><span class="p">,</span>
+            <span class="n">data</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_translate_to_transport_format</span><span class="p">(</span><span class="n">spans</span><span class="p">),</span>
+            <span class="n">headers</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;Content-Type&quot;</span><span class="p">:</span> <span class="n">content_type</span><span class="p">},</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">result</span><span class="o">.</span><span class="n">status_code</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">SUCCESS_STATUS_CODES</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">&quot;Traces cannot be uploaded; status code: </span><span class="si">%s</span><span class="s2">, message </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">status_code</span><span class="p">,</span>
+                <span class="n">result</span><span class="o">.</span><span class="n">text</span><span class="p">,</span>
+            <span class="p">)</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">retry</span><span class="p">:</span>
+                <span class="k">return</span> <span class="n">SpanExportResult</span><span class="o">.</span><span class="n">FAILURE</span>
+            <span class="k">return</span> <span class="n">SpanExportResult</span><span class="o">.</span><span class="n">FAILURE</span>
+        <span class="k">return</span> <span class="n">SpanExportResult</span><span class="o">.</span><span class="n">SUCCESS</span></div>
+
+<div class="viewcode-block" id="ZipkinSpanExporter.shutdown"><a class="viewcode-back" href="../../../exporter/zipkin/zipkin.html#opentelemetry.exporter.zipkin.ZipkinSpanExporter.shutdown">[docs]</a>    <span class="k">def</span> <span class="nf">shutdown</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">pass</span></div>
+
+    <span class="k">def</span> <span class="nf">_translate_to_transport_format</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spans</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Span</span><span class="p">]):</span>
+        <span class="k">return</span> <span class="p">(</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_translate_to_json</span><span class="p">(</span><span class="n">spans</span><span class="p">)</span>
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">transport_format</span> <span class="o">==</span> <span class="n">TRANSPORT_FORMAT_JSON</span>
+            <span class="k">else</span> <span class="bp">self</span><span class="o">.</span><span class="n">_translate_to_protobuf</span><span class="p">(</span><span class="n">spans</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_translate_to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spans</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Span</span><span class="p">]):</span>
+        <span class="n">local_endpoint</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;serviceName&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">service_name</span><span class="p">,</span> <span class="s2">&quot;port&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">port</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ipv4</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">local_endpoint</span><span class="p">[</span><span class="s2">&quot;ipv4&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ipv4</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ipv6</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">local_endpoint</span><span class="p">[</span><span class="s2">&quot;ipv6&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ipv6</span>
+
+        <span class="n">zipkin_spans</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">span</span> <span class="ow">in</span> <span class="n">spans</span><span class="p">:</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="n">span</span><span class="o">.</span><span class="n">get_span_context</span><span class="p">()</span>
+            <span class="n">trace_id</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">trace_id</span>
+            <span class="n">span_id</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">span_id</span>
+
+            <span class="c1"># Timestamp in zipkin spans is int of microseconds.</span>
+            <span class="c1"># see: https://zipkin.io/pages/instrumenting.html</span>
+            <span class="n">start_timestamp_mus</span> <span class="o">=</span> <span class="n">nsec_to_usec_round</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span>
+            <span class="n">duration_mus</span> <span class="o">=</span> <span class="n">nsec_to_usec_round</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">end_time</span> <span class="o">-</span> <span class="n">span</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span>
+
+            <span class="n">zipkin_span</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="c1"># Ensure left-zero-padding of traceId, spanId, parentId</span>
+                <span class="s2">&quot;traceId&quot;</span><span class="p">:</span> <span class="nb">format</span><span class="p">(</span><span class="n">trace_id</span><span class="p">,</span> <span class="s2">&quot;032x&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;id&quot;</span><span class="p">:</span> <span class="nb">format</span><span class="p">(</span><span class="n">span_id</span><span class="p">,</span> <span class="s2">&quot;016x&quot;</span><span class="p">),</span>
+                <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">span</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">start_timestamp_mus</span><span class="p">,</span>
+                <span class="s2">&quot;duration&quot;</span><span class="p">:</span> <span class="n">duration_mus</span><span class="p">,</span>
+                <span class="s2">&quot;localEndpoint&quot;</span><span class="p">:</span> <span class="n">local_endpoint</span><span class="p">,</span>
+                <span class="s2">&quot;kind&quot;</span><span class="p">:</span> <span class="n">SPAN_KIND_MAP_JSON</span><span class="p">[</span><span class="n">span</span><span class="o">.</span><span class="n">kind</span><span class="p">],</span>
+                <span class="s2">&quot;tags&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_tags_from_span</span><span class="p">(</span><span class="n">span</span><span class="p">),</span>
+                <span class="s2">&quot;annotations&quot;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_annotations_from_events</span><span class="p">(</span>
+                    <span class="n">span</span><span class="o">.</span><span class="n">events</span>
+                <span class="p">),</span>
+            <span class="p">}</span>
+
+            <span class="k">if</span> <span class="n">span</span><span class="o">.</span><span class="n">instrumentation_info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">zipkin_span</span><span class="p">[</span><span class="s2">&quot;tags&quot;</span><span class="p">][</span>
+                    <span class="s2">&quot;otel.instrumentation_library.name&quot;</span>
+                <span class="p">]</span> <span class="o">=</span> <span class="n">span</span><span class="o">.</span><span class="n">instrumentation_info</span><span class="o">.</span><span class="n">name</span>
+                <span class="n">zipkin_span</span><span class="p">[</span><span class="s2">&quot;tags&quot;</span><span class="p">][</span>
+                    <span class="s2">&quot;otel.instrumentation_library.version&quot;</span>
+                <span class="p">]</span> <span class="o">=</span> <span class="n">span</span><span class="o">.</span><span class="n">instrumentation_info</span><span class="o">.</span><span class="n">version</span>
+
+            <span class="k">if</span> <span class="n">span</span><span class="o">.</span><span class="n">status</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">zipkin_span</span><span class="p">[</span><span class="s2">&quot;tags&quot;</span><span class="p">][</span><span class="s2">&quot;otel.status_code&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span>
+                    <span class="n">span</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">status_code</span><span class="o">.</span><span class="n">value</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">span</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">zipkin_span</span><span class="p">[</span><span class="s2">&quot;tags&quot;</span><span class="p">][</span>
+                        <span class="s2">&quot;otel.status_description&quot;</span>
+                    <span class="p">]</span> <span class="o">=</span> <span class="n">span</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">description</span>
+
+            <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">trace_flags</span><span class="o">.</span><span class="n">sampled</span><span class="p">:</span>
+                <span class="n">zipkin_span</span><span class="p">[</span><span class="s2">&quot;debug&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">Span</span><span class="p">):</span>
+                <span class="n">zipkin_span</span><span class="p">[</span><span class="s2">&quot;parentId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span>
+                    <span class="n">span</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">get_span_context</span><span class="p">()</span><span class="o">.</span><span class="n">span_id</span><span class="p">,</span> <span class="s2">&quot;016x&quot;</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">SpanContext</span><span class="p">):</span>
+                <span class="n">zipkin_span</span><span class="p">[</span><span class="s2">&quot;parentId&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">format</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">span_id</span><span class="p">,</span> <span class="s2">&quot;016x&quot;</span><span class="p">)</span>
+
+            <span class="n">zipkin_spans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">zipkin_span</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">zipkin_spans</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_translate_to_protobuf</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spans</span><span class="p">:</span> <span class="n">Sequence</span><span class="p">[</span><span class="n">Span</span><span class="p">]):</span>
+
+        <span class="n">local_endpoint</span> <span class="o">=</span> <span class="n">zipkin_pb2</span><span class="o">.</span><span class="n">Endpoint</span><span class="p">(</span>
+            <span class="n">service_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">service_name</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">port</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ipv4</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">local_endpoint</span><span class="o">.</span><span class="n">ipv4</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ipv4</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">ipv6</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">local_endpoint</span><span class="o">.</span><span class="n">ipv6</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">ipv6</span>
+
+        <span class="n">pbuf_spans</span> <span class="o">=</span> <span class="n">zipkin_pb2</span><span class="o">.</span><span class="n">ListOfSpans</span><span class="p">()</span>
+
+        <span class="k">for</span> <span class="n">span</span> <span class="ow">in</span> <span class="n">spans</span><span class="p">:</span>
+            <span class="n">context</span> <span class="o">=</span> <span class="n">span</span><span class="o">.</span><span class="n">get_span_context</span><span class="p">()</span>
+            <span class="n">trace_id</span> <span class="o">=</span> <span class="n">context</span><span class="o">.</span><span class="n">trace_id</span><span class="o">.</span><span class="n">to_bytes</span><span class="p">(</span>
+                <span class="n">length</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">byteorder</span><span class="o">=</span><span class="s2">&quot;big&quot;</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="n">span_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_pbuf_span_id</span><span class="p">(</span><span class="n">context</span><span class="o">.</span><span class="n">span_id</span><span class="p">)</span>
+
+            <span class="c1"># Timestamp in zipkin spans is int of microseconds.</span>
+            <span class="c1"># see: https://zipkin.io/pages/instrumenting.html</span>
+            <span class="n">start_timestamp_mus</span> <span class="o">=</span> <span class="n">nsec_to_usec_round</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span>
+            <span class="n">duration_mus</span> <span class="o">=</span> <span class="n">nsec_to_usec_round</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">end_time</span> <span class="o">-</span> <span class="n">span</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span>
+
+            <span class="c1"># pylint: disable=no-member</span>
+            <span class="n">pbuf_span</span> <span class="o">=</span> <span class="n">zipkin_pb2</span><span class="o">.</span><span class="n">Span</span><span class="p">(</span>
+                <span class="n">trace_id</span><span class="o">=</span><span class="n">trace_id</span><span class="p">,</span>
+                <span class="nb">id</span><span class="o">=</span><span class="n">span_id</span><span class="p">,</span>
+                <span class="n">name</span><span class="o">=</span><span class="n">span</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                <span class="n">timestamp</span><span class="o">=</span><span class="n">start_timestamp_mus</span><span class="p">,</span>
+                <span class="n">duration</span><span class="o">=</span><span class="n">duration_mus</span><span class="p">,</span>
+                <span class="n">local_endpoint</span><span class="o">=</span><span class="n">local_endpoint</span><span class="p">,</span>
+                <span class="n">kind</span><span class="o">=</span><span class="n">SPAN_KIND_MAP_PROTOBUF</span><span class="p">[</span><span class="n">span</span><span class="o">.</span><span class="n">kind</span><span class="p">],</span>
+                <span class="n">tags</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_extract_tags_from_span</span><span class="p">(</span><span class="n">span</span><span class="p">),</span>
+            <span class="p">)</span>
+
+            <span class="n">annotations</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_annotations_from_events</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">events</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">annotations</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">annotation</span> <span class="ow">in</span> <span class="n">annotations</span><span class="p">:</span>
+                    <span class="n">pbuf_span</span><span class="o">.</span><span class="n">annotations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                        <span class="n">zipkin_pb2</span><span class="o">.</span><span class="n">Annotation</span><span class="p">(</span>
+                            <span class="n">timestamp</span><span class="o">=</span><span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;timestamp&quot;</span><span class="p">],</span>
+                            <span class="n">value</span><span class="o">=</span><span class="n">annotation</span><span class="p">[</span><span class="s2">&quot;value&quot;</span><span class="p">],</span>
+                        <span class="p">)</span>
+                    <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">span</span><span class="o">.</span><span class="n">instrumentation_info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">pbuf_span</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                    <span class="p">{</span>
+                        <span class="s2">&quot;otel.instrumentation_library.name&quot;</span><span class="p">:</span> <span class="n">span</span><span class="o">.</span><span class="n">instrumentation_info</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                        <span class="s2">&quot;otel.instrumentation_library.version&quot;</span><span class="p">:</span> <span class="n">span</span><span class="o">.</span><span class="n">instrumentation_info</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+                    <span class="p">}</span>
+                <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">span</span><span class="o">.</span><span class="n">status</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">pbuf_span</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                    <span class="p">{</span><span class="s2">&quot;otel.status_code&quot;</span><span class="p">:</span> <span class="nb">str</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">status_code</span><span class="o">.</span><span class="n">value</span><span class="p">)}</span>
+                <span class="p">)</span>
+                <span class="k">if</span> <span class="n">span</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">description</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">pbuf_span</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">update</span><span class="p">(</span>
+                        <span class="p">{</span><span class="s2">&quot;otel.status_description&quot;</span><span class="p">:</span> <span class="n">span</span><span class="o">.</span><span class="n">status</span><span class="o">.</span><span class="n">description</span><span class="p">}</span>
+                    <span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">trace_flags</span><span class="o">.</span><span class="n">sampled</span><span class="p">:</span>
+                <span class="n">pbuf_span</span><span class="o">.</span><span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span>
+
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">Span</span><span class="p">):</span>
+                <span class="n">pbuf_span</span><span class="o">.</span><span class="n">parent_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_pbuf_span_id</span><span class="p">(</span>
+                    <span class="n">span</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">get_span_context</span><span class="p">()</span><span class="o">.</span><span class="n">span_id</span>
+                <span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">parent</span><span class="p">,</span> <span class="n">SpanContext</span><span class="p">):</span>
+                <span class="n">pbuf_span</span><span class="o">.</span><span class="n">parent_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">format_pbuf_span_id</span><span class="p">(</span>
+                    <span class="n">span</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">span_id</span>
+                <span class="p">)</span>
+
+            <span class="n">pbuf_spans</span><span class="o">.</span><span class="n">spans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">pbuf_span</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">pbuf_spans</span><span class="o">.</span><span class="n">SerializeToString</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ZipkinSpanExporter.format_pbuf_span_id"><a class="viewcode-back" href="../../../exporter/zipkin/zipkin.html#opentelemetry.exporter.zipkin.ZipkinSpanExporter.format_pbuf_span_id">[docs]</a>    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">format_pbuf_span_id</span><span class="p">(</span><span class="n">span_id</span><span class="p">:</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">span_id</span><span class="o">.</span><span class="n">to_bytes</span><span class="p">(</span><span class="n">length</span><span class="o">=</span><span class="mi">8</span><span class="p">,</span> <span class="n">byteorder</span><span class="o">=</span><span class="s2">&quot;big&quot;</span><span class="p">,</span> <span class="n">signed</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_extract_tags_from_dict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tags_dict</span><span class="p">):</span>
+        <span class="n">tags</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">tags_dict</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">tags</span>
+        <span class="k">for</span> <span class="n">attribute_key</span><span class="p">,</span> <span class="n">attribute_value</span> <span class="ow">in</span> <span class="n">tags_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">float</span><span class="p">)):</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attribute_value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">attribute_value</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not serialize tag </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">attribute_key</span><span class="p">)</span>
+                <span class="k">continue</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_tag_value_length</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_tag_value_length</span><span class="p">]</span>
+            <span class="n">tags</span><span class="p">[</span><span class="n">attribute_key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="k">return</span> <span class="n">tags</span>
+
+    <span class="k">def</span> <span class="nf">_extract_tags_from_span</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">span</span><span class="p">:</span> <span class="n">Span</span><span class="p">):</span>
+        <span class="n">tags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_extract_tags_from_dict</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">span</span><span class="p">,</span> <span class="s2">&quot;attributes&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">))</span>
+        <span class="k">if</span> <span class="n">span</span><span class="o">.</span><span class="n">resource</span><span class="p">:</span>
+            <span class="n">tags</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_extract_tags_from_dict</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">resource</span><span class="o">.</span><span class="n">attributes</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">tags</span>
+
+    <span class="k">def</span> <span class="nf">_extract_annotations_from_events</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">events</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">events</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">annotations</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">events</span><span class="p">:</span>
+            <span class="n">attrs</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">event</span><span class="o">.</span><span class="n">attributes</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                    <span class="n">value</span> <span class="o">=</span> <span class="n">value</span><span class="p">[:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_tag_value_length</span><span class="p">]</span>
+                <span class="n">attrs</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">value</span>
+
+            <span class="n">annotations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+                <span class="p">{</span>
+                    <span class="s2">&quot;timestamp&quot;</span><span class="p">:</span> <span class="n">nsec_to_usec_round</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">timestamp</span><span class="p">),</span>
+                    <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">({</span><span class="n">event</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="n">attrs</span><span class="p">}),</span>
+                <span class="p">}</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="n">annotations</span></div>
+
+
+<div class="viewcode-block" id="nsec_to_usec_round"><a class="viewcode-back" href="../../../exporter/zipkin/zipkin.html#opentelemetry.exporter.zipkin.nsec_to_usec_round">[docs]</a><span class="k">def</span> <span class="nf">nsec_to_usec_round</span><span class="p">(</span><span class="n">nsec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Round nanoseconds to microseconds&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">nsec</span> <span class="o">+</span> <span class="mi">500</span><span class="p">)</span> <span class="o">//</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">3</span></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright OpenTelemetry Authors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

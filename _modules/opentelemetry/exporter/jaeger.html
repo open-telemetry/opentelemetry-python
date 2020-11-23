@@ -1,0 +1,704 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>opentelemetry.exporter.jaeger &mdash; OpenTelemetry Python  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> OpenTelemetry Python
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started.html">Getting Started with OpenTelemetry Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq-and-cookbook.html">Frequently Asked Questions and Cookbook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Python Packages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/api.html">OpenTelemetry Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sdk/sdk.html">OpenTelemetry Python SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Exporters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/jaeger/jaeger.html">Opentelemetry Jaeger Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/opencensus/opencensus.html">OpenCensus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/otlp/otlp.html">Opentelemetry OTLP Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/prometheus/prometheus.html">OpenTelemetry Prometheus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/zipkin/zipkin.html">Opentelemetry Zipkin Exporter</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Instrumentations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/instrumentor.html">opentelemetry.instrumentation.instrumentor package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/metric.html">opentelemetry.instrumentation.metric package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/opentracing_shim/opentracing_shim.html">OpenTracing Shim for OpenTelemetry</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/auto-instrumentation/README.html">Autoinstrumentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/basic_context/README.html">Basic Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/basic_meter/README.html">Basic Meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/basic_tracer/README.html">Basic Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/datadog_exporter/README.html">Datadog Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/django/README.html">OpenTelemetry Django Instrumentation Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/error_hander/README.html">Global Error Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/error_hander/error_handler_0/README.html">Error Handler 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/error_hander/error_handler_1/README.html">Error Handler 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opencensus-exporter-metrics/README.html">OpenTelemetry Collector Metrics OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opencensus-exporter-tracer/README.html">OpenTelemetry Collector Tracer OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opentelemetry-example-app/README.html">OpenTelemetry Example Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opentracing/README.html">OpenTracing Shim Example</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OpenTelemetry Python</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>opentelemetry.exporter.jaeger</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for opentelemetry.exporter.jaeger</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright 2018, OpenCensus Authors</span>
+<span class="c1"># Copyright The OpenTelemetry Authors</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The **OpenTelemetry Jaeger Exporter** allows to export `OpenTelemetry`_ traces to `Jaeger`_.</span>
+<span class="sd">This exporter always send traces to the configured agent using Thrift compact protocol over UDP.</span>
+<span class="sd">An optional collector can be configured, in this case Thrift binary protocol over HTTP is used.</span>
+<span class="sd">gRPC is still not supported by this implementation.</span>
+
+<span class="sd">Usage</span>
+<span class="sd">-----</span>
+
+<span class="sd">.. code:: python</span>
+
+<span class="sd">    from opentelemetry import trace</span>
+<span class="sd">    from opentelemetry.exporter import jaeger</span>
+<span class="sd">    from opentelemetry.sdk.trace import TracerProvider</span>
+<span class="sd">    from opentelemetry.sdk.trace.export import BatchExportSpanProcessor</span>
+
+<span class="sd">    trace.set_tracer_provider(TracerProvider())</span>
+<span class="sd">    tracer = trace.get_tracer(__name__)</span>
+
+<span class="sd">    # create a JaegerSpanExporter</span>
+<span class="sd">    jaeger_exporter = jaeger.JaegerSpanExporter(</span>
+<span class="sd">        service_name=&#39;my-helloworld-service&#39;,</span>
+<span class="sd">        # configure agent</span>
+<span class="sd">        agent_host_name=&#39;localhost&#39;,</span>
+<span class="sd">        agent_port=6831,</span>
+<span class="sd">        # optional: configure also collector</span>
+<span class="sd">        # collector_endpoint=&#39;http://localhost:14268/api/traces?format=jaeger.thrift&#39;,</span>
+<span class="sd">        # username=xxxx, # optional</span>
+<span class="sd">        # password=xxxx, # optional</span>
+<span class="sd">    )</span>
+
+<span class="sd">    # Create a BatchExportSpanProcessor and add the exporter to it</span>
+<span class="sd">    span_processor = BatchExportSpanProcessor(jaeger_exporter)</span>
+
+<span class="sd">    # add to the tracer</span>
+<span class="sd">    trace.get_tracer_provider().add_span_processor(span_processor)</span>
+
+<span class="sd">    with tracer.start_as_current_span(&#39;foo&#39;):</span>
+<span class="sd">        print(&#39;Hello world!&#39;)</span>
+
+<span class="sd">API</span>
+<span class="sd">---</span>
+<span class="sd">.. _Jaeger: https://www.jaegertracing.io/</span>
+<span class="sd">.. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">base64</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">socket</span>
+
+<span class="kn">from</span> <span class="nn">thrift.protocol</span> <span class="kn">import</span> <span class="n">TBinaryProtocol</span><span class="p">,</span> <span class="n">TCompactProtocol</span>
+<span class="kn">from</span> <span class="nn">thrift.transport</span> <span class="kn">import</span> <span class="n">THttpClient</span><span class="p">,</span> <span class="n">TTransport</span>
+
+<span class="kn">from</span> <span class="nn">opentelemetry.configuration</span> <span class="kn">import</span> <span class="n">Configuration</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.exporter.jaeger.gen.agent</span> <span class="kn">import</span> <span class="n">Agent</span> <span class="k">as</span> <span class="n">agent</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.exporter.jaeger.gen.jaeger</span> <span class="kn">import</span> <span class="n">Collector</span> <span class="k">as</span> <span class="n">jaeger</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.sdk.trace.export</span> <span class="kn">import</span> <span class="n">Span</span><span class="p">,</span> <span class="n">SpanExporter</span><span class="p">,</span> <span class="n">SpanExportResult</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.trace</span> <span class="kn">import</span> <span class="n">SpanKind</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.trace.status</span> <span class="kn">import</span> <span class="n">StatusCode</span>
+
+<span class="n">DEFAULT_AGENT_HOST_NAME</span> <span class="o">=</span> <span class="s2">&quot;localhost&quot;</span>
+<span class="n">DEFAULT_AGENT_PORT</span> <span class="o">=</span> <span class="mi">6831</span>
+
+<span class="n">UDP_PACKET_MAX_LENGTH</span> <span class="o">=</span> <span class="mi">65000</span>
+
+<span class="n">OTLP_JAEGER_SPAN_KIND</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="n">SpanKind</span><span class="o">.</span><span class="n">CLIENT</span><span class="p">:</span> <span class="s2">&quot;client&quot;</span><span class="p">,</span>
+    <span class="n">SpanKind</span><span class="o">.</span><span class="n">SERVER</span><span class="p">:</span> <span class="s2">&quot;server&quot;</span><span class="p">,</span>
+    <span class="n">SpanKind</span><span class="o">.</span><span class="n">CONSUMER</span><span class="p">:</span> <span class="s2">&quot;consumer&quot;</span><span class="p">,</span>
+    <span class="n">SpanKind</span><span class="o">.</span><span class="n">PRODUCER</span><span class="p">:</span> <span class="s2">&quot;producer&quot;</span><span class="p">,</span>
+    <span class="n">SpanKind</span><span class="o">.</span><span class="n">INTERNAL</span><span class="p">:</span> <span class="s2">&quot;internal&quot;</span><span class="p">,</span>
+<span class="p">}</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="JaegerSpanExporter"><a class="viewcode-back" href="../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.JaegerSpanExporter">[docs]</a><span class="k">class</span> <span class="nc">JaegerSpanExporter</span><span class="p">(</span><span class="n">SpanExporter</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Jaeger span exporter for OpenTelemetry.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        service_name: Service that logged an annotation in a trace.Classifier</span>
+<span class="sd">            when query for spans.</span>
+<span class="sd">        agent_host_name: The host name of the Jaeger-Agent.</span>
+<span class="sd">        agent_port: The port of the Jaeger-Agent.</span>
+<span class="sd">        collector_endpoint: The endpoint of the Jaeger-Collector HTTP/HTTPS Thrift.</span>
+<span class="sd">        username: The user name of the Basic Auth if authentication is</span>
+<span class="sd">            required.</span>
+<span class="sd">        password: The password of the Basic Auth if authentication is</span>
+<span class="sd">            required.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">service_name</span><span class="p">,</span>
+        <span class="n">agent_host_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">agent_port</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">collector_endpoint</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">username</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="n">password</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">service_name</span> <span class="o">=</span> <span class="n">service_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">agent_host_name</span> <span class="o">=</span> <span class="n">_parameter_setter</span><span class="p">(</span>
+            <span class="n">param</span><span class="o">=</span><span class="n">agent_host_name</span><span class="p">,</span>
+            <span class="n">env_variable</span><span class="o">=</span><span class="n">Configuration</span><span class="p">()</span><span class="o">.</span><span class="n">EXPORTER_JAEGER_AGENT_HOST</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="n">DEFAULT_AGENT_HOST_NAME</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">agent_port</span> <span class="o">=</span> <span class="n">_parameter_setter</span><span class="p">(</span>
+            <span class="n">param</span><span class="o">=</span><span class="n">agent_port</span><span class="p">,</span>
+            <span class="n">env_variable</span><span class="o">=</span><span class="n">Configuration</span><span class="p">()</span><span class="o">.</span><span class="n">EXPORTER_JAEGER_AGENT_PORT</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="n">DEFAULT_AGENT_PORT</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_agent_client</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">collector_endpoint</span> <span class="o">=</span> <span class="n">_parameter_setter</span><span class="p">(</span>
+            <span class="n">param</span><span class="o">=</span><span class="n">collector_endpoint</span><span class="p">,</span>
+            <span class="n">env_variable</span><span class="o">=</span><span class="n">Configuration</span><span class="p">()</span><span class="o">.</span><span class="n">EXPORTER_JAEGER_ENDPOINT</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="o">=</span> <span class="n">_parameter_setter</span><span class="p">(</span>
+            <span class="n">param</span><span class="o">=</span><span class="n">username</span><span class="p">,</span>
+            <span class="n">env_variable</span><span class="o">=</span><span class="n">Configuration</span><span class="p">()</span><span class="o">.</span><span class="n">EXPORTER_JAEGER_USER</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="o">=</span> <span class="n">_parameter_setter</span><span class="p">(</span>
+            <span class="n">param</span><span class="o">=</span><span class="n">password</span><span class="p">,</span>
+            <span class="n">env_variable</span><span class="o">=</span><span class="n">Configuration</span><span class="p">()</span><span class="o">.</span><span class="n">EXPORTER_JAEGER_PASSWORD</span><span class="p">,</span>
+            <span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_collector</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">agent_client</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent_client</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_agent_client</span> <span class="o">=</span> <span class="n">AgentClientUDP</span><span class="p">(</span>
+                <span class="n">host_name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_host_name</span><span class="p">,</span> <span class="n">port</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">agent_port</span>
+            <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_agent_client</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">collector</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collector</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">collector_endpoint</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="n">auth</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">username</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">auth</span> <span class="o">=</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">username</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">password</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_collector</span> <span class="o">=</span> <span class="n">Collector</span><span class="p">(</span>
+            <span class="n">thrift_url</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">collector_endpoint</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="n">auth</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_collector</span>
+
+<div class="viewcode-block" id="JaegerSpanExporter.export"><a class="viewcode-back" href="../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.JaegerSpanExporter.export">[docs]</a>    <span class="k">def</span> <span class="nf">export</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">spans</span><span class="p">):</span>
+        <span class="n">jaeger_spans</span> <span class="o">=</span> <span class="n">_translate_to_jaeger</span><span class="p">(</span><span class="n">spans</span><span class="p">)</span>
+
+        <span class="n">batch</span> <span class="o">=</span> <span class="n">jaeger</span><span class="o">.</span><span class="n">Batch</span><span class="p">(</span>
+            <span class="n">spans</span><span class="o">=</span><span class="n">jaeger_spans</span><span class="p">,</span>
+            <span class="n">process</span><span class="o">=</span><span class="n">jaeger</span><span class="o">.</span><span class="n">Process</span><span class="p">(</span><span class="n">serviceName</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">service_name</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">collector</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">collector</span><span class="o">.</span><span class="n">submit</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">agent_client</span><span class="o">.</span><span class="n">emit</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">SpanExportResult</span><span class="o">.</span><span class="n">SUCCESS</span></div>
+
+<div class="viewcode-block" id="JaegerSpanExporter.shutdown"><a class="viewcode-back" href="../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.JaegerSpanExporter.shutdown">[docs]</a>    <span class="k">def</span> <span class="nf">shutdown</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span></div></div>
+
+
+<span class="k">def</span> <span class="nf">_parameter_setter</span><span class="p">(</span><span class="n">param</span><span class="p">,</span> <span class="n">env_variable</span><span class="p">,</span> <span class="n">default</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Returns value according to the provided data.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        param: Constructor parameter value</span>
+<span class="sd">        env_variable: Environment variable related to the parameter</span>
+<span class="sd">        default: Constructor parameter default value</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">param</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">env_variable</span> <span class="ow">or</span> <span class="n">default</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">res</span> <span class="o">=</span> <span class="n">param</span>
+
+    <span class="k">return</span> <span class="n">res</span>
+
+
+<span class="k">def</span> <span class="nf">_nsec_to_usec_round</span><span class="p">(</span><span class="n">nsec</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Round nanoseconds to microseconds&quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">nsec</span> <span class="o">+</span> <span class="mi">500</span><span class="p">)</span> <span class="o">//</span> <span class="mi">10</span> <span class="o">**</span> <span class="mi">3</span>
+
+
+<span class="k">def</span> <span class="nf">_translate_to_jaeger</span><span class="p">(</span><span class="n">spans</span><span class="p">:</span> <span class="n">Span</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Translate the spans to Jaeger format.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        spans: Tuple of spans to convert</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">jaeger_spans</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">span</span> <span class="ow">in</span> <span class="n">spans</span><span class="p">:</span>
+        <span class="n">ctx</span> <span class="o">=</span> <span class="n">span</span><span class="o">.</span><span class="n">get_span_context</span><span class="p">()</span>
+        <span class="n">trace_id</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">trace_id</span>
+        <span class="n">span_id</span> <span class="o">=</span> <span class="n">ctx</span><span class="o">.</span><span class="n">span_id</span>
+
+        <span class="n">start_time_us</span> <span class="o">=</span> <span class="n">_nsec_to_usec_round</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span>
+        <span class="n">duration_us</span> <span class="o">=</span> <span class="n">_nsec_to_usec_round</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">end_time</span> <span class="o">-</span> <span class="n">span</span><span class="o">.</span><span class="n">start_time</span><span class="p">)</span>
+
+        <span class="n">status</span> <span class="o">=</span> <span class="n">span</span><span class="o">.</span><span class="n">status</span>
+
+        <span class="n">parent_id</span> <span class="o">=</span> <span class="n">span</span><span class="o">.</span><span class="n">parent</span><span class="o">.</span><span class="n">span_id</span> <span class="k">if</span> <span class="n">span</span><span class="o">.</span><span class="n">parent</span> <span class="k">else</span> <span class="mi">0</span>
+
+        <span class="n">tags</span> <span class="o">=</span> <span class="n">_extract_tags</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">attributes</span><span class="p">)</span>
+        <span class="n">tags</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">_extract_tags</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">resource</span><span class="o">.</span><span class="n">attributes</span><span class="p">))</span>
+
+        <span class="n">tags</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+            <span class="p">[</span>
+                <span class="n">_get_long_tag</span><span class="p">(</span><span class="s2">&quot;status.code&quot;</span><span class="p">,</span> <span class="n">status</span><span class="o">.</span><span class="n">status_code</span><span class="o">.</span><span class="n">value</span><span class="p">),</span>
+                <span class="n">_get_string_tag</span><span class="p">(</span><span class="s2">&quot;status.message&quot;</span><span class="p">,</span> <span class="n">status</span><span class="o">.</span><span class="n">description</span><span class="p">),</span>
+                <span class="n">_get_string_tag</span><span class="p">(</span><span class="s2">&quot;span.kind&quot;</span><span class="p">,</span> <span class="n">OTLP_JAEGER_SPAN_KIND</span><span class="p">[</span><span class="n">span</span><span class="o">.</span><span class="n">kind</span><span class="p">]),</span>
+            <span class="p">]</span>
+        <span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">span</span><span class="o">.</span><span class="n">instrumentation_info</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">tags</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span>
+                <span class="p">[</span>
+                    <span class="n">_get_string_tag</span><span class="p">(</span>
+                        <span class="s2">&quot;otel.instrumentation_library.name&quot;</span><span class="p">,</span>
+                        <span class="n">span</span><span class="o">.</span><span class="n">instrumentation_info</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+                    <span class="p">),</span>
+                    <span class="n">_get_string_tag</span><span class="p">(</span>
+                        <span class="s2">&quot;otel.instrumentation_library.version&quot;</span><span class="p">,</span>
+                        <span class="n">span</span><span class="o">.</span><span class="n">instrumentation_info</span><span class="o">.</span><span class="n">version</span><span class="p">,</span>
+                    <span class="p">),</span>
+                <span class="p">]</span>
+            <span class="p">)</span>
+
+        <span class="c1"># Ensure that if Status.Code is not OK, that we set the &quot;error&quot; tag on the Jaeger span.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">status</span><span class="o">.</span><span class="n">is_ok</span><span class="p">:</span>
+            <span class="n">tags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_get_bool_tag</span><span class="p">(</span><span class="s2">&quot;error&quot;</span><span class="p">,</span> <span class="kc">True</span><span class="p">))</span>
+
+        <span class="n">refs</span> <span class="o">=</span> <span class="n">_extract_refs_from_span</span><span class="p">(</span><span class="n">span</span><span class="p">)</span>
+        <span class="n">logs</span> <span class="o">=</span> <span class="n">_extract_logs_from_span</span><span class="p">(</span><span class="n">span</span><span class="p">)</span>
+
+        <span class="n">flags</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">ctx</span><span class="o">.</span><span class="n">trace_flags</span><span class="p">)</span>
+
+        <span class="n">jaeger_span</span> <span class="o">=</span> <span class="n">jaeger</span><span class="o">.</span><span class="n">Span</span><span class="p">(</span>
+            <span class="n">traceIdHigh</span><span class="o">=</span><span class="n">_get_trace_id_high</span><span class="p">(</span><span class="n">trace_id</span><span class="p">),</span>
+            <span class="n">traceIdLow</span><span class="o">=</span><span class="n">_get_trace_id_low</span><span class="p">(</span><span class="n">trace_id</span><span class="p">),</span>
+            <span class="c1"># generated code expects i64</span>
+            <span class="n">spanId</span><span class="o">=</span><span class="n">_convert_int_to_i64</span><span class="p">(</span><span class="n">span_id</span><span class="p">),</span>
+            <span class="n">operationName</span><span class="o">=</span><span class="n">span</span><span class="o">.</span><span class="n">name</span><span class="p">,</span>
+            <span class="n">startTime</span><span class="o">=</span><span class="n">start_time_us</span><span class="p">,</span>
+            <span class="n">duration</span><span class="o">=</span><span class="n">duration_us</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
+            <span class="n">logs</span><span class="o">=</span><span class="n">logs</span><span class="p">,</span>
+            <span class="n">references</span><span class="o">=</span><span class="n">refs</span><span class="p">,</span>
+            <span class="n">flags</span><span class="o">=</span><span class="n">flags</span><span class="p">,</span>
+            <span class="n">parentSpanId</span><span class="o">=</span><span class="n">_convert_int_to_i64</span><span class="p">(</span><span class="n">parent_id</span><span class="p">),</span>
+        <span class="p">)</span>
+
+        <span class="n">jaeger_spans</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">jaeger_span</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">jaeger_spans</span>
+
+
+<span class="k">def</span> <span class="nf">_extract_refs_from_span</span><span class="p">(</span><span class="n">span</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">span</span><span class="o">.</span><span class="n">links</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">refs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">link</span> <span class="ow">in</span> <span class="n">span</span><span class="o">.</span><span class="n">links</span><span class="p">:</span>
+        <span class="n">trace_id</span> <span class="o">=</span> <span class="n">link</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">trace_id</span>
+        <span class="n">span_id</span> <span class="o">=</span> <span class="n">link</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">span_id</span>
+        <span class="n">refs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">jaeger</span><span class="o">.</span><span class="n">SpanRef</span><span class="p">(</span>
+                <span class="n">refType</span><span class="o">=</span><span class="n">jaeger</span><span class="o">.</span><span class="n">SpanRefType</span><span class="o">.</span><span class="n">FOLLOWS_FROM</span><span class="p">,</span>
+                <span class="n">traceIdHigh</span><span class="o">=</span><span class="n">_get_trace_id_high</span><span class="p">(</span><span class="n">trace_id</span><span class="p">),</span>
+                <span class="n">traceIdLow</span><span class="o">=</span><span class="n">_get_trace_id_low</span><span class="p">(</span><span class="n">trace_id</span><span class="p">),</span>
+                <span class="n">spanId</span><span class="o">=</span><span class="n">_convert_int_to_i64</span><span class="p">(</span><span class="n">span_id</span><span class="p">),</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">refs</span>
+
+
+<span class="k">def</span> <span class="nf">_convert_int_to_i64</span><span class="p">(</span><span class="n">val</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert integer to signed int64 (i64)&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">val</span> <span class="o">&gt;</span> <span class="mh">0x7FFFFFFFFFFFFFFF</span><span class="p">:</span>
+        <span class="n">val</span> <span class="o">-=</span> <span class="mh">0x10000000000000000</span>
+    <span class="k">return</span> <span class="n">val</span>
+
+
+<span class="k">def</span> <span class="nf">_get_trace_id_low</span><span class="p">(</span><span class="n">trace_id</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">_convert_int_to_i64</span><span class="p">(</span><span class="n">trace_id</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_trace_id_high</span><span class="p">(</span><span class="n">trace_id</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">_convert_int_to_i64</span><span class="p">((</span><span class="n">trace_id</span> <span class="o">&gt;&gt;</span> <span class="mi">64</span><span class="p">)</span> <span class="o">&amp;</span> <span class="mh">0xFFFFFFFFFFFFFFFF</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_extract_logs_from_span</span><span class="p">(</span><span class="n">span</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">span</span><span class="o">.</span><span class="n">events</span><span class="p">:</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="n">logs</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">for</span> <span class="n">event</span> <span class="ow">in</span> <span class="n">span</span><span class="o">.</span><span class="n">events</span><span class="p">:</span>
+        <span class="n">fields</span> <span class="o">=</span> <span class="n">_extract_tags</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">attributes</span><span class="p">)</span>
+
+        <span class="n">fields</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">jaeger</span><span class="o">.</span><span class="n">Tag</span><span class="p">(</span>
+                <span class="n">key</span><span class="o">=</span><span class="s2">&quot;message&quot;</span><span class="p">,</span> <span class="n">vType</span><span class="o">=</span><span class="n">jaeger</span><span class="o">.</span><span class="n">TagType</span><span class="o">.</span><span class="n">STRING</span><span class="p">,</span> <span class="n">vStr</span><span class="o">=</span><span class="n">event</span><span class="o">.</span><span class="n">name</span>
+            <span class="p">)</span>
+        <span class="p">)</span>
+
+        <span class="n">event_timestamp_us</span> <span class="o">=</span> <span class="n">_nsec_to_usec_round</span><span class="p">(</span><span class="n">event</span><span class="o">.</span><span class="n">timestamp</span><span class="p">)</span>
+        <span class="n">logs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+            <span class="n">jaeger</span><span class="o">.</span><span class="n">Log</span><span class="p">(</span><span class="n">timestamp</span><span class="o">=</span><span class="nb">int</span><span class="p">(</span><span class="n">event_timestamp_us</span><span class="p">),</span> <span class="n">fields</span><span class="o">=</span><span class="n">fields</span><span class="p">)</span>
+        <span class="p">)</span>
+    <span class="k">return</span> <span class="n">logs</span>
+
+
+<span class="k">def</span> <span class="nf">_extract_tags</span><span class="p">(</span><span class="n">attr</span><span class="p">):</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">attr</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">[]</span>
+    <span class="n">tags</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">attribute_key</span><span class="p">,</span> <span class="n">attribute_value</span> <span class="ow">in</span> <span class="n">attr</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">tag</span> <span class="o">=</span> <span class="n">_convert_attribute_to_tag</span><span class="p">(</span><span class="n">attribute_key</span><span class="p">,</span> <span class="n">attribute_value</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">tag</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">continue</span>
+        <span class="n">tags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tags</span>
+
+
+<span class="k">def</span> <span class="nf">_convert_attribute_to_tag</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Convert the attributes to jaeger tags.&quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">bool</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">jaeger</span><span class="o">.</span><span class="n">Tag</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">vBool</span><span class="o">=</span><span class="n">attr</span><span class="p">,</span> <span class="n">vType</span><span class="o">=</span><span class="n">jaeger</span><span class="o">.</span><span class="n">TagType</span><span class="o">.</span><span class="n">BOOL</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">jaeger</span><span class="o">.</span><span class="n">Tag</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">vStr</span><span class="o">=</span><span class="n">attr</span><span class="p">,</span> <span class="n">vType</span><span class="o">=</span><span class="n">jaeger</span><span class="o">.</span><span class="n">TagType</span><span class="o">.</span><span class="n">STRING</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">jaeger</span><span class="o">.</span><span class="n">Tag</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">vLong</span><span class="o">=</span><span class="n">attr</span><span class="p">,</span> <span class="n">vType</span><span class="o">=</span><span class="n">jaeger</span><span class="o">.</span><span class="n">TagType</span><span class="o">.</span><span class="n">LONG</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">float</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">jaeger</span><span class="o">.</span><span class="n">Tag</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">vDouble</span><span class="o">=</span><span class="n">attr</span><span class="p">,</span> <span class="n">vType</span><span class="o">=</span><span class="n">jaeger</span><span class="o">.</span><span class="n">TagType</span><span class="o">.</span><span class="n">DOUBLE</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">attr</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">jaeger</span><span class="o">.</span><span class="n">Tag</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">vStr</span><span class="o">=</span><span class="nb">str</span><span class="p">(</span><span class="n">attr</span><span class="p">),</span> <span class="n">vType</span><span class="o">=</span><span class="n">jaeger</span><span class="o">.</span><span class="n">TagType</span><span class="o">.</span><span class="n">STRING</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s2">&quot;Could not serialize attribute </span><span class="si">%s</span><span class="s2">:</span><span class="si">%r</span><span class="s2"> to tag&quot;</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span>
+    <span class="k">return</span> <span class="kc">None</span>
+
+
+<span class="k">def</span> <span class="nf">_get_long_tag</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">jaeger</span><span class="o">.</span><span class="n">Tag</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">vLong</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">vType</span><span class="o">=</span><span class="n">jaeger</span><span class="o">.</span><span class="n">TagType</span><span class="o">.</span><span class="n">LONG</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_string_tag</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">jaeger</span><span class="o">.</span><span class="n">Tag</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">vStr</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">vType</span><span class="o">=</span><span class="n">jaeger</span><span class="o">.</span><span class="n">TagType</span><span class="o">.</span><span class="n">STRING</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_get_bool_tag</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">val</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">jaeger</span><span class="o">.</span><span class="n">Tag</span><span class="p">(</span><span class="n">key</span><span class="o">=</span><span class="n">key</span><span class="p">,</span> <span class="n">vBool</span><span class="o">=</span><span class="n">val</span><span class="p">,</span> <span class="n">vType</span><span class="o">=</span><span class="n">jaeger</span><span class="o">.</span><span class="n">TagType</span><span class="o">.</span><span class="n">BOOL</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="AgentClientUDP"><a class="viewcode-back" href="../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.AgentClientUDP">[docs]</a><span class="k">class</span> <span class="nc">AgentClientUDP</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Implement a UDP client to agent.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        host_name: The host name of the Jaeger server.</span>
+<span class="sd">        port: The port of the Jaeger server.</span>
+<span class="sd">        max_packet_size: Maximum size of UDP packet.</span>
+<span class="sd">        client: Class for creating new client objects for agencies.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">host_name</span><span class="p">,</span>
+        <span class="n">port</span><span class="p">,</span>
+        <span class="n">max_packet_size</span><span class="o">=</span><span class="n">UDP_PACKET_MAX_LENGTH</span><span class="p">,</span>
+        <span class="n">client</span><span class="o">=</span><span class="n">agent</span><span class="o">.</span><span class="n">Client</span><span class="p">,</span>
+    <span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">address</span> <span class="o">=</span> <span class="p">(</span><span class="n">host_name</span><span class="p">,</span> <span class="n">port</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_packet_size</span> <span class="o">=</span> <span class="n">max_packet_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span> <span class="o">=</span> <span class="n">TTransport</span><span class="o">.</span><span class="n">TMemoryBuffer</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span> <span class="o">=</span> <span class="n">client</span><span class="p">(</span>
+            <span class="n">iprot</span><span class="o">=</span><span class="n">TCompactProtocol</span><span class="o">.</span><span class="n">TCompactProtocol</span><span class="p">(</span><span class="n">trans</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="p">)</span>
+        <span class="p">)</span>
+
+<div class="viewcode-block" id="AgentClientUDP.emit"><a class="viewcode-back" href="../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.AgentClientUDP.emit">[docs]</a>    <span class="k">def</span> <span class="nf">emit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">jaeger</span><span class="o">.</span><span class="n">Batch</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Args:</span>
+<span class="sd">            batch: Object to emit Jaeger spans.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># pylint: disable=protected-access</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">_seqid</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="c1">#  truncate and reset the position of BytesIO object</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="o">.</span><span class="n">_buffer</span><span class="o">.</span><span class="n">truncate</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="o">.</span><span class="n">_buffer</span><span class="o">.</span><span class="n">seek</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">client</span><span class="o">.</span><span class="n">emitBatch</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+        <span class="n">buff</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">buffer</span><span class="o">.</span><span class="n">getvalue</span><span class="p">()</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">buff</span><span class="p">)</span> <span class="o">&gt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_packet_size</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span>
+                <span class="s2">&quot;Data exceeds the max UDP packet size; size </span><span class="si">%r</span><span class="s2">, max </span><span class="si">%r</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="nb">len</span><span class="p">(</span><span class="n">buff</span><span class="p">),</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">max_packet_size</span><span class="p">,</span>
+            <span class="p">)</span>
+            <span class="k">return</span>
+
+        <span class="k">with</span> <span class="n">socket</span><span class="o">.</span><span class="n">socket</span><span class="p">(</span><span class="n">socket</span><span class="o">.</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">socket</span><span class="o">.</span><span class="n">SOCK_DGRAM</span><span class="p">)</span> <span class="k">as</span> <span class="n">udp_socket</span><span class="p">:</span>
+            <span class="n">udp_socket</span><span class="o">.</span><span class="n">sendto</span><span class="p">(</span><span class="n">buff</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">address</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="Collector"><a class="viewcode-back" href="../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.Collector">[docs]</a><span class="k">class</span> <span class="nc">Collector</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Submits collected spans to Thrift HTTP server.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        thrift_url: URL of the Jaeger HTTP Thrift.</span>
+<span class="sd">        auth: Auth tuple that contains username and password for Basic Auth.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">thrift_url</span><span class="o">=</span><span class="s2">&quot;&quot;</span><span class="p">,</span> <span class="n">auth</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">thrift_url</span> <span class="o">=</span> <span class="n">thrift_url</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">auth</span> <span class="o">=</span> <span class="n">auth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">http_transport</span> <span class="o">=</span> <span class="n">THttpClient</span><span class="o">.</span><span class="n">THttpClient</span><span class="p">(</span>
+            <span class="n">uri_or_host</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">thrift_url</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">protocol</span> <span class="o">=</span> <span class="n">TBinaryProtocol</span><span class="o">.</span><span class="n">TBinaryProtocol</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">http_transport</span><span class="p">)</span>
+
+        <span class="c1"># set basic auth header</span>
+        <span class="k">if</span> <span class="n">auth</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">auth_header</span> <span class="o">=</span> <span class="s2">&quot;</span><span class="si">{}</span><span class="s2">:</span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="o">*</span><span class="n">auth</span><span class="p">)</span>
+            <span class="n">decoded</span> <span class="o">=</span> <span class="n">base64</span><span class="o">.</span><span class="n">b64encode</span><span class="p">(</span><span class="n">auth_header</span><span class="o">.</span><span class="n">encode</span><span class="p">())</span><span class="o">.</span><span class="n">decode</span><span class="p">(</span><span class="s2">&quot;ascii&quot;</span><span class="p">)</span>
+            <span class="n">basic_auth</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">Authorization</span><span class="o">=</span><span class="s2">&quot;Basic </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">decoded</span><span class="p">))</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">http_transport</span><span class="o">.</span><span class="n">setCustomHeaders</span><span class="p">(</span><span class="n">basic_auth</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Collector.submit"><a class="viewcode-back" href="../../../exporter/jaeger/jaeger.html#opentelemetry.exporter.jaeger.Collector.submit">[docs]</a>    <span class="k">def</span> <span class="nf">submit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">batch</span><span class="p">:</span> <span class="n">jaeger</span><span class="o">.</span><span class="n">Batch</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Submits batches to Thrift HTTP Server through Binary Protocol.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            batch: Object to emit Jaeger spans.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">batch</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">protocol</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">http_transport</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+        <span class="n">code</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">http_transport</span><span class="o">.</span><span class="n">code</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">http_transport</span><span class="o">.</span><span class="n">message</span>
+        <span class="k">if</span> <span class="n">code</span> <span class="o">&gt;=</span> <span class="mi">300</span> <span class="ow">or</span> <span class="n">code</span> <span class="o">&lt;</span> <span class="mi">200</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span>
+                <span class="s2">&quot;Traces cannot be uploaded; HTTP status code: </span><span class="si">%s</span><span class="s2">, message: </span><span class="si">%s</span><span class="s2">&quot;</span><span class="p">,</span>
+                <span class="n">code</span><span class="p">,</span>
+                <span class="n">msg</span><span class="p">,</span>
+            <span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright OpenTelemetry Authors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

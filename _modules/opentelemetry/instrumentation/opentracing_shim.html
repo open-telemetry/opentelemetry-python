@@ -1,0 +1,959 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8">
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>opentelemetry.instrumentation.opentracing_shim &mdash; OpenTelemetry Python  documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+
+  
+  
+  
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/language_data.js"></script>
+    
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../../index.html" class="icon icon-home" alt="Documentation Home"> OpenTelemetry Python
+          
+
+          
+          </a>
+
+          
+            
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <p class="caption"><span class="caption-text">Getting Started</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../getting-started.html">Getting Started with OpenTelemetry Python</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../faq-and-cookbook.html">Frequently Asked Questions and Cookbook</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Python Packages</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/api.html">OpenTelemetry Python API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../sdk/sdk.html">OpenTelemetry Python SDK</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Exporters</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/jaeger/jaeger.html">Opentelemetry Jaeger Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/opencensus/opencensus.html">OpenCensus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/otlp/otlp.html">Opentelemetry OTLP Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/prometheus/prometheus.html">OpenTelemetry Prometheus Exporter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../exporter/zipkin/zipkin.html">Opentelemetry Zipkin Exporter</a></li>
+</ul>
+<p class="caption"><span class="caption-text">OpenTelemetry Instrumentations</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/instrumentation.html">OpenTelemetry Python Instrumentor</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/instrumentor.html">opentelemetry.instrumentation.instrumentor package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/metric.html">opentelemetry.instrumentation.metric package</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../instrumentation/opentracing_shim/opentracing_shim.html">OpenTracing Shim for OpenTelemetry</a></li>
+</ul>
+<p class="caption"><span class="caption-text">Examples</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/auto-instrumentation/README.html">Autoinstrumentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/basic_context/README.html">Basic Context</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/basic_meter/README.html">Basic Meter</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/basic_tracer/README.html">Basic Trace</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/datadog_exporter/README.html">Datadog Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/django/README.html">OpenTelemetry Django Instrumentation Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/error_hander/README.html">Global Error Handler</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/error_hander/error_handler_0/README.html">Error Handler 0</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/error_hander/error_handler_1/README.html">Error Handler 1</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opencensus-exporter-metrics/README.html">OpenTelemetry Collector Metrics OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opencensus-exporter-tracer/README.html">OpenTelemetry Collector Tracer OpenCensus Exporter Example</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opentelemetry-example-app/README.html">OpenTelemetry Example Application</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../examples/opentracing/README.html">OpenTracing Shim Example</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">OpenTelemetry Python</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+        
+      <li>opentelemetry.instrumentation.opentracing_shim</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <h1>Source code for opentelemetry.instrumentation.opentracing_shim</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright The OpenTelemetry Authors</span>
+<span class="c1">#</span>
+<span class="c1"># Licensed under the Apache License, Version 2.0 (the &quot;License&quot;);</span>
+<span class="c1"># you may not use this file except in compliance with the License.</span>
+<span class="c1"># You may obtain a copy of the License at</span>
+<span class="c1">#</span>
+<span class="c1">#     http://www.apache.org/licenses/LICENSE-2.0</span>
+<span class="c1">#</span>
+<span class="c1"># Unless required by applicable law or agreed to in writing, software</span>
+<span class="c1"># distributed under the License is distributed on an &quot;AS IS&quot; BASIS,</span>
+<span class="c1"># WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.</span>
+<span class="c1"># See the License for the specific language governing permissions and</span>
+<span class="c1"># limitations under the License.</span>
+
+<span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">The OpenTelemetry OpenTracing shim is a library which allows an easy migration</span>
+<span class="sd">from OpenTracing to OpenTelemetry.</span>
+
+<span class="sd">The shim consists of a set of classes which implement the OpenTracing Python</span>
+<span class="sd">API while using OpenTelemetry constructs behind the scenes. Its purpose is to</span>
+<span class="sd">allow applications which are already instrumented using OpenTracing to start</span>
+<span class="sd">using OpenTelemetry with a minimal effort, without having to rewrite large</span>
+<span class="sd">portions of the codebase.</span>
+
+<span class="sd">To use the shim, a :class:`TracerShim` instance is created and then used as if</span>
+<span class="sd">it were an &quot;ordinary&quot; OpenTracing :class:`opentracing.Tracer`, as in the</span>
+<span class="sd">following example::</span>
+
+<span class="sd">    import time</span>
+
+<span class="sd">    from opentelemetry import trace</span>
+<span class="sd">    from opentelemetry.sdk.trace import TracerProvider</span>
+<span class="sd">    from opentelemetry.instrumentation.opentracing_shim import create_tracer</span>
+
+<span class="sd">    # Define which OpenTelemetry Tracer provider implementation to use.</span>
+<span class="sd">    trace.set_tracer_provider(TracerProvider())</span>
+
+<span class="sd">    # Create an OpenTelemetry Tracer.</span>
+<span class="sd">    otel_tracer = trace.get_tracer(__name__)</span>
+
+<span class="sd">    # Create an OpenTracing shim.</span>
+<span class="sd">    shim = create_tracer(otel_tracer)</span>
+
+<span class="sd">    with shim.start_active_span(&quot;ProcessHTTPRequest&quot;):</span>
+<span class="sd">        print(&quot;Processing HTTP request&quot;)</span>
+<span class="sd">        # Sleeping to mock real work.</span>
+<span class="sd">        time.sleep(0.1)</span>
+<span class="sd">        with shim.start_active_span(&quot;GetDataFromDB&quot;):</span>
+<span class="sd">            print(&quot;Getting data from DB&quot;)</span>
+<span class="sd">            # Sleeping to mock real work.</span>
+<span class="sd">            time.sleep(0.2)</span>
+
+<span class="sd">Note:</span>
+<span class="sd">    While the OpenTracing Python API represents time values as the number of</span>
+<span class="sd">    **seconds** since the epoch expressed as :obj:`float` values, the</span>
+<span class="sd">    OpenTelemetry Python API represents time values as the number of</span>
+<span class="sd">    **nanoseconds** since the epoch expressed as :obj:`int` values. This fact</span>
+<span class="sd">    requires the OpenTracing shim to convert time values back and forth between</span>
+<span class="sd">    the two representations, which involves floating point arithmetic.</span>
+
+<span class="sd">    Due to the way computers represent floating point values in hardware,</span>
+<span class="sd">    representation of decimal floating point values in binary-based hardware is</span>
+<span class="sd">    imprecise by definition.</span>
+
+<span class="sd">    The above results in **slight imprecisions** in time values passed to the</span>
+<span class="sd">    shim via the OpenTracing API when comparing the value passed to the shim</span>
+<span class="sd">    and the value stored in the OpenTelemetry :class:`opentelemetry.trace.Span`</span>
+<span class="sd">    object behind the scenes. **This is not a bug in this library or in</span>
+<span class="sd">    Python**. Rather, this is a generic problem which stems from the fact that</span>
+<span class="sd">    not every decimal floating point number can be correctly represented in</span>
+<span class="sd">    binary, and therefore affects other libraries and programming languages as</span>
+<span class="sd">    well. More information about this problem can be found in the</span>
+<span class="sd">    `Floating Point Arithmetic\\: Issues and Limitations`_ section of the</span>
+<span class="sd">    Python documentation.</span>
+
+<span class="sd">    While testing this library, the aforementioned imprecisions were observed</span>
+<span class="sd">    to be of *less than a microsecond*.</span>
+
+<span class="sd">API</span>
+<span class="sd">---</span>
+<span class="sd">.. _Floating Point Arithmetic\\: Issues and Limitations:</span>
+<span class="sd">    https://docs.python.org/3/tutorial/floatingpoint.html</span>
+<span class="sd">&quot;&quot;&quot;</span>
+
+<span class="c1"># TODO: make pylint use 3p opentracing module for type inference</span>
+<span class="c1"># pylint:disable=no-member</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">from</span> <span class="nn">typing</span> <span class="kn">import</span> <span class="n">Optional</span><span class="p">,</span> <span class="n">TypeVar</span><span class="p">,</span> <span class="n">Union</span>
+
+<span class="kn">from</span> <span class="nn">deprecated</span> <span class="kn">import</span> <span class="n">deprecated</span>
+<span class="kn">from</span> <span class="nn">opentracing</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">Format</span><span class="p">,</span>
+    <span class="n">Scope</span><span class="p">,</span>
+    <span class="n">ScopeManager</span><span class="p">,</span>
+    <span class="n">Span</span><span class="p">,</span>
+    <span class="n">SpanContext</span><span class="p">,</span>
+    <span class="n">Tracer</span><span class="p">,</span>
+    <span class="n">UnsupportedFormatException</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="kn">from</span> <span class="nn">opentelemetry</span> <span class="kn">import</span> <span class="n">propagators</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.baggage</span> <span class="kn">import</span> <span class="n">get_baggage</span><span class="p">,</span> <span class="n">set_baggage</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.context</span> <span class="kn">import</span> <span class="n">Context</span><span class="p">,</span> <span class="n">attach</span><span class="p">,</span> <span class="n">detach</span><span class="p">,</span> <span class="n">get_value</span><span class="p">,</span> <span class="n">set_value</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.instrumentation.opentracing_shim</span> <span class="kn">import</span> <span class="n">util</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.instrumentation.opentracing_shim.version</span> <span class="kn">import</span> <span class="n">__version__</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.trace</span> <span class="kn">import</span> <span class="n">INVALID_SPAN_CONTEXT</span><span class="p">,</span> <span class="n">DefaultSpan</span><span class="p">,</span> <span class="n">Link</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.trace</span> <span class="kn">import</span> <span class="n">SpanContext</span> <span class="k">as</span> <span class="n">OtelSpanContext</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.trace</span> <span class="kn">import</span> <span class="n">Tracer</span> <span class="k">as</span> <span class="n">OtelTracer</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.trace</span> <span class="kn">import</span> <span class="p">(</span>
+    <span class="n">TracerProvider</span><span class="p">,</span>
+    <span class="n">get_current_span</span><span class="p">,</span>
+    <span class="n">set_span_in_context</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.trace.propagation.textmap</span> <span class="kn">import</span> <span class="n">DictGetter</span>
+<span class="kn">from</span> <span class="nn">opentelemetry.util.types</span> <span class="kn">import</span> <span class="n">Attributes</span>
+
+<span class="n">ValueT</span> <span class="o">=</span> <span class="n">TypeVar</span><span class="p">(</span><span class="s2">&quot;ValueT&quot;</span><span class="p">,</span> <span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">bool</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span>
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="create_tracer"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.create_tracer">[docs]</a><span class="k">def</span> <span class="nf">create_tracer</span><span class="p">(</span><span class="n">otel_tracer_provider</span><span class="p">:</span> <span class="n">TracerProvider</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TracerShim&quot;</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;Creates a :class:`TracerShim` object from the provided OpenTelemetry</span>
+<span class="sd">    :class:`opentelemetry.trace.TracerProvider`.</span>
+
+<span class="sd">    The returned :class:`TracerShim` is an implementation of</span>
+<span class="sd">    :class:`opentracing.Tracer` using OpenTelemetry under the hood.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        otel_tracer_provider: A tracer from this provider  will be used to</span>
+<span class="sd">            perform the actual tracing when user code is instrumented using the</span>
+<span class="sd">            OpenTracing API.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        The created :class:`TracerShim`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">return</span> <span class="n">TracerShim</span><span class="p">(</span><span class="n">otel_tracer_provider</span><span class="o">.</span><span class="n">get_tracer</span><span class="p">(</span><span class="vm">__name__</span><span class="p">,</span> <span class="n">__version__</span><span class="p">))</span></div>
+
+
+<div class="viewcode-block" id="SpanContextShim"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.SpanContextShim">[docs]</a><span class="k">class</span> <span class="nc">SpanContextShim</span><span class="p">(</span><span class="n">SpanContext</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Implements :class:`opentracing.SpanContext` by wrapping a</span>
+<span class="sd">    :class:`opentelemetry.trace.SpanContext` object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        otel_context: A :class:`opentelemetry.trace.SpanContext` to be used for</span>
+<span class="sd">            constructing the :class:`SpanContextShim`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">otel_context</span><span class="p">:</span> <span class="n">OtelSpanContext</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_otel_context</span> <span class="o">=</span> <span class="n">otel_context</span>
+        <span class="c1"># Context is being used here since it must be immutable.</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_baggage</span> <span class="o">=</span> <span class="n">Context</span><span class="p">()</span>
+
+<div class="viewcode-block" id="SpanContextShim.unwrap"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.SpanContextShim.unwrap">[docs]</a>    <span class="k">def</span> <span class="nf">unwrap</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">OtelSpanContext</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the wrapped :class:`opentelemetry.trace.SpanContext`</span>
+<span class="sd">        object.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The :class:`opentelemetry.trace.SpanContext` object wrapped by this</span>
+<span class="sd">            :class:`SpanContextShim`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_otel_context</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">baggage</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Context</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the ``baggage`` associated with this object&quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_baggage</span></div>
+
+
+<div class="viewcode-block" id="SpanShim"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.SpanShim">[docs]</a><span class="k">class</span> <span class="nc">SpanShim</span><span class="p">(</span><span class="n">Span</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wraps a :class:`opentelemetry.trace.Span` object.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tracer: The :class:`opentracing.Tracer` that created this `SpanShim`.</span>
+<span class="sd">        context: A :class:`SpanContextShim` which contains the context for this</span>
+<span class="sd">            :class:`SpanShim`.</span>
+<span class="sd">        span: A :class:`opentelemetry.trace.Span` to wrap.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tracer</span><span class="p">,</span> <span class="n">context</span><span class="p">:</span> <span class="n">SpanContextShim</span><span class="p">,</span> <span class="n">span</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">tracer</span><span class="p">,</span> <span class="n">context</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_otel_span</span> <span class="o">=</span> <span class="n">span</span>
+
+<div class="viewcode-block" id="SpanShim.unwrap"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.SpanShim.unwrap">[docs]</a>    <span class="k">def</span> <span class="nf">unwrap</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the wrapped :class:`opentelemetry.trace.Span` object.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The :class:`opentelemetry.trace.Span` object wrapped by this</span>
+<span class="sd">            :class:`SpanShim`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_otel_span</span></div>
+
+<div class="viewcode-block" id="SpanShim.set_operation_name"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.SpanShim.set_operation_name">[docs]</a>    <span class="k">def</span> <span class="nf">set_operation_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">operation_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SpanShim&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Updates the name of the wrapped OpenTelemetry span.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            operation_name: The new name to be used for the underlying</span>
+<span class="sd">                :class:`opentelemetry.trace.Span` object.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Returns this :class:`SpanShim` instance to allow call chaining.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_otel_span</span><span class="o">.</span><span class="n">update_name</span><span class="p">(</span><span class="n">operation_name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="SpanShim.finish"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.SpanShim.finish">[docs]</a>    <span class="k">def</span> <span class="nf">finish</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">finish_time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Ends the OpenTelemetry span wrapped by this :class:`SpanShim`.</span>
+
+<span class="sd">        If *finish_time* is provided, the time value is converted to the</span>
+<span class="sd">        OpenTelemetry time format (number of nanoseconds since the epoch,</span>
+<span class="sd">        expressed as an integer) and passed on to the OpenTelemetry tracer when</span>
+<span class="sd">        ending the OpenTelemetry span. If *finish_time* isn&#39;t provided, it is</span>
+<span class="sd">        up to the OpenTelemetry tracer implementation to generate a timestamp</span>
+<span class="sd">        when ending the span.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            finish_time: A value that represents the finish time expressed as</span>
+<span class="sd">                the number of seconds since the epoch as returned by</span>
+<span class="sd">                :func:`time.time()`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">end_time</span> <span class="o">=</span> <span class="n">finish_time</span>
+        <span class="k">if</span> <span class="n">end_time</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">end_time</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">time_seconds_to_ns</span><span class="p">(</span><span class="n">finish_time</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_otel_span</span><span class="o">.</span><span class="n">end</span><span class="p">(</span><span class="n">end_time</span><span class="o">=</span><span class="n">end_time</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpanShim.set_tag"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.SpanShim.set_tag">[docs]</a>    <span class="k">def</span> <span class="nf">set_tag</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="n">ValueT</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SpanShim&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Sets an OpenTelemetry attribute on the wrapped OpenTelemetry span.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            key: A tag key.</span>
+<span class="sd">            value: A tag value.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Returns this :class:`SpanShim` instance to allow call chaining.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_otel_span</span><span class="o">.</span><span class="n">set_attribute</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="SpanShim.log_kv"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.SpanShim.log_kv">[docs]</a>    <span class="k">def</span> <span class="nf">log_kv</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">key_values</span><span class="p">:</span> <span class="n">Attributes</span><span class="p">,</span> <span class="n">timestamp</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;SpanShim&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Logs an event for the wrapped OpenTelemetry span.</span>
+
+<span class="sd">        Note:</span>
+<span class="sd">            The OpenTracing API defines the values of *key_values* to be of any</span>
+<span class="sd">            type. However, the OpenTelemetry API requires that the values be</span>
+<span class="sd">            any one of the types defined in</span>
+<span class="sd">            ``opentelemetry.trace.util.Attributes`` therefore, only these types</span>
+<span class="sd">            are supported as values.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            key_values: A dictionary as specified in</span>
+<span class="sd">                ``opentelemetry.trace.util.Attributes``.</span>
+<span class="sd">            timestamp: Timestamp of the OpenTelemetry event, will be generated</span>
+<span class="sd">                automatically if omitted.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Returns this :class:`SpanShim` instance to allow call chaining.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">if</span> <span class="n">timestamp</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">event_timestamp</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">time_seconds_to_ns</span><span class="p">(</span><span class="n">timestamp</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">event_timestamp</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="n">event_name</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">event_name_from_kv</span><span class="p">(</span><span class="n">key_values</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_otel_span</span><span class="o">.</span><span class="n">add_event</span><span class="p">(</span><span class="n">event_name</span><span class="p">,</span> <span class="n">key_values</span><span class="p">,</span> <span class="n">event_timestamp</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span></div>
+
+<div class="viewcode-block" id="SpanShim.log"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.SpanShim.log">[docs]</a>    <span class="nd">@deprecated</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="s2">&quot;This method is deprecated in favor of log_kv&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">log</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpanShim.log_event"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.SpanShim.log_event">[docs]</a>    <span class="nd">@deprecated</span><span class="p">(</span><span class="n">reason</span><span class="o">=</span><span class="s2">&quot;This method is deprecated in favor of log_kv&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">log_event</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">event</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">log_event</span><span class="p">(</span><span class="n">event</span><span class="p">,</span> <span class="n">payload</span><span class="o">=</span><span class="n">payload</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpanShim.set_baggage_item"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.SpanShim.set_baggage_item">[docs]</a>    <span class="k">def</span> <span class="nf">set_baggage_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">value</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Stores a Baggage item in the span as a key/value</span>
+<span class="sd">        pair.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            key: A tag key.</span>
+<span class="sd">            value: A tag value.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># pylint: disable=protected-access</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">_baggage</span> <span class="o">=</span> <span class="n">set_baggage</span><span class="p">(</span>
+            <span class="n">key</span><span class="p">,</span> <span class="n">value</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">_baggage</span>
+        <span class="p">)</span></div>
+
+<div class="viewcode-block" id="SpanShim.get_baggage_item"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.SpanShim.get_baggage_item">[docs]</a>    <span class="k">def</span> <span class="nf">get_baggage_item</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="nb">object</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;Retrieves value of the baggage item with the given key.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            key: A tag key.</span>
+<span class="sd">        Returns:</span>
+<span class="sd">            Returns this :class:`SpanShim` instance to allow call chaining.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># pylint: disable=protected-access</span>
+        <span class="k">return</span> <span class="n">get_baggage</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">_context</span><span class="o">.</span><span class="n">_baggage</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ScopeShim"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.ScopeShim">[docs]</a><span class="k">class</span> <span class="nc">ScopeShim</span><span class="p">(</span><span class="n">Scope</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;A `ScopeShim` wraps the OpenTelemetry functionality related to span</span>
+<span class="sd">    activation/deactivation while using OpenTracing :class:`opentracing.Scope`</span>
+<span class="sd">    objects for presentation.</span>
+
+<span class="sd">    Unlike other classes in this package, the `ScopeShim` class doesn&#39;t wrap an</span>
+<span class="sd">    OpenTelemetry class because OpenTelemetry doesn&#39;t have the notion of</span>
+<span class="sd">    &quot;scope&quot; (though it *does* have similar functionality).</span>
+
+<span class="sd">    There are two ways to construct a `ScopeShim` object: using the default</span>
+<span class="sd">    initializer and using the :meth:`from_context_manager()` class method.</span>
+
+<span class="sd">    It is necessary to have both ways for constructing `ScopeShim` objects</span>
+<span class="sd">    because in some cases we need to create the object from an OpenTelemetry</span>
+<span class="sd">    `opentelemetry.trace.Span` context manager (as returned by</span>
+<span class="sd">    :meth:`opentelemetry.trace.Tracer.use_span`), in which case our only way of</span>
+<span class="sd">    retrieving a `opentelemetry.trace.Span` object is by calling the</span>
+<span class="sd">    ``__enter__()`` method on the context manager, which makes the span active</span>
+<span class="sd">    in the OpenTelemetry tracer; whereas in other cases we need to accept a</span>
+<span class="sd">    `SpanShim` object and wrap it in a `ScopeShim`. The former is used mainly</span>
+<span class="sd">    when the instrumentation code retrieves the currently-active span using</span>
+<span class="sd">    `ScopeManagerShim.active`. The latter is mainly used when the</span>
+<span class="sd">    instrumentation code activates a span using</span>
+<span class="sd">    :meth:`ScopeManagerShim.activate`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        manager: The :class:`ScopeManagerShim` that created this</span>
+<span class="sd">            :class:`ScopeShim`.</span>
+<span class="sd">        span: The :class:`SpanShim` this :class:`ScopeShim` controls.</span>
+<span class="sd">        span_cm: A Python context manager which yields an OpenTelemetry</span>
+<span class="sd">            `opentelemetry.trace.Span` from its ``__enter__()`` method. Used</span>
+<span class="sd">            by :meth:`from_context_manager` to store the context manager as</span>
+<span class="sd">            an attribute so that it can later be closed by calling its</span>
+<span class="sd">            ``__exit__()`` method. Defaults to `None`.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span> <span class="n">manager</span><span class="p">:</span> <span class="s2">&quot;ScopeManagerShim&quot;</span><span class="p">,</span> <span class="n">span</span><span class="p">:</span> <span class="n">SpanShim</span><span class="p">,</span> <span class="n">span_cm</span><span class="o">=</span><span class="kc">None</span>
+    <span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">manager</span><span class="p">,</span> <span class="n">span</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_span_cm</span> <span class="o">=</span> <span class="n">span_cm</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_token</span> <span class="o">=</span> <span class="n">attach</span><span class="p">(</span><span class="n">set_value</span><span class="p">(</span><span class="s2">&quot;scope_shim&quot;</span><span class="p">,</span> <span class="bp">self</span><span class="p">))</span>
+
+    <span class="c1"># TODO: Change type of `manager` argument to `opentracing.ScopeManager`? We</span>
+    <span class="c1"># need to get rid of `manager.tracer` for this.</span>
+<div class="viewcode-block" id="ScopeShim.from_context_manager"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.ScopeShim.from_context_manager">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">from_context_manager</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">manager</span><span class="p">:</span> <span class="s2">&quot;ScopeManagerShim&quot;</span><span class="p">,</span> <span class="n">span_cm</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Constructs a :class:`ScopeShim` from an OpenTelemetry</span>
+<span class="sd">        `opentelemetry.trace.Span` context</span>
+<span class="sd">        manager.</span>
+
+<span class="sd">        The method extracts a `opentelemetry.trace.Span` object from the</span>
+<span class="sd">        context manager by calling the context manager&#39;s ``__enter__()``</span>
+<span class="sd">        method. This causes the span to start in the OpenTelemetry tracer.</span>
+
+<span class="sd">        Example usage::</span>
+
+<span class="sd">            span = otel_tracer.start_span(&quot;TestSpan&quot;)</span>
+<span class="sd">            span_cm = otel_tracer.use_span(span)</span>
+<span class="sd">            scope_shim = ScopeShim.from_context_manager(</span>
+<span class="sd">                scope_manager_shim,</span>
+<span class="sd">                span_cm=span_cm,</span>
+<span class="sd">            )</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            manager: The :class:`ScopeManagerShim` that created this</span>
+<span class="sd">                :class:`ScopeShim`.</span>
+<span class="sd">            span_cm: A context manager as returned by</span>
+<span class="sd">                :meth:`opentelemetry.trace.Tracer.use_span`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">otel_span</span> <span class="o">=</span> <span class="n">span_cm</span><span class="o">.</span><span class="fm">__enter__</span><span class="p">()</span>
+        <span class="n">span_context</span> <span class="o">=</span> <span class="n">SpanContextShim</span><span class="p">(</span><span class="n">otel_span</span><span class="o">.</span><span class="n">get_span_context</span><span class="p">())</span>
+        <span class="n">span</span> <span class="o">=</span> <span class="n">SpanShim</span><span class="p">(</span><span class="n">manager</span><span class="o">.</span><span class="n">tracer</span><span class="p">,</span> <span class="n">span_context</span><span class="p">,</span> <span class="n">otel_span</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">manager</span><span class="p">,</span> <span class="n">span</span><span class="p">,</span> <span class="n">span_cm</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="ScopeShim.close"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.ScopeShim.close">[docs]</a>    <span class="k">def</span> <span class="nf">close</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Closes the `ScopeShim`. If the `ScopeShim` was created from a</span>
+<span class="sd">        context manager, calling this method sets the active span in the</span>
+<span class="sd">        OpenTelemetry tracer back to the span which was active before this</span>
+<span class="sd">        `ScopeShim` was created. In addition, if the span represented by this</span>
+<span class="sd">        `ScopeShim` was activated with the *finish_on_close* argument set to</span>
+<span class="sd">        `True`, calling this method will end the span.</span>
+
+<span class="sd">        Warning:</span>
+<span class="sd">            In the current state of the implementation it is possible to create</span>
+<span class="sd">            a `ScopeShim` directly from a `SpanShim`, that is - without using</span>
+<span class="sd">            :meth:`from_context_manager()`. For that reason we need to be able</span>
+<span class="sd">            to end the span represented by the `ScopeShim` in this case, too.</span>
+<span class="sd">            Please note that closing a `ScopeShim` created this way (for</span>
+<span class="sd">            example as returned by :meth:`ScopeManagerShim.active`) **always</span>
+<span class="sd">            ends the associated span**, regardless of the value passed in</span>
+<span class="sd">            *finish_on_close* when activating the span.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">detach</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_token</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_span_cm</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="c1"># We don&#39;t have error information to pass to `__exit__()` so we</span>
+            <span class="c1"># pass `None` in all arguments. If the OpenTelemetry tracer</span>
+            <span class="c1"># implementation requires this information, the `__exit__()` method</span>
+            <span class="c1"># on `opentracing.Scope` should be overridden and modified to pass</span>
+            <span class="c1"># the relevant values to this `close()` method.</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_span_cm</span><span class="o">.</span><span class="fm">__exit__</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_span</span><span class="o">.</span><span class="n">unwrap</span><span class="p">()</span><span class="o">.</span><span class="n">end</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="ScopeManagerShim"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim">[docs]</a><span class="k">class</span> <span class="nc">ScopeManagerShim</span><span class="p">(</span><span class="n">ScopeManager</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Implements :class:`opentracing.ScopeManager` by setting and getting the</span>
+<span class="sd">    active `opentelemetry.trace.Span` in the OpenTelemetry tracer.</span>
+
+<span class="sd">    This class keeps a reference to a :class:`TracerShim` as an attribute. This</span>
+<span class="sd">    reference is used to communicate with the OpenTelemetry tracer. It is</span>
+<span class="sd">    necessary to have a reference to the :class:`TracerShim` rather than the</span>
+<span class="sd">    :class:`opentelemetry.trace.Tracer` wrapped by it because when constructing</span>
+<span class="sd">    a :class:`SpanShim` we need to pass a reference to a</span>
+<span class="sd">    :class:`opentracing.Tracer`.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tracer: A :class:`TracerShim` to use for setting and getting active</span>
+<span class="sd">            span state.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tracer</span><span class="p">:</span> <span class="s2">&quot;TracerShim&quot;</span><span class="p">):</span>
+        <span class="c1"># The only thing the ``__init__()``` method on the base class does is</span>
+        <span class="c1"># initialize `self._noop_span` and `self._noop_scope` with no-op</span>
+        <span class="c1"># objects. Therefore, it doesn&#39;t seem useful to call it.</span>
+        <span class="c1"># pylint: disable=super-init-not-called</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_tracer</span> <span class="o">=</span> <span class="n">tracer</span>
+
+<div class="viewcode-block" id="ScopeManagerShim.activate"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.ScopeManagerShim.activate">[docs]</a>    <span class="k">def</span> <span class="nf">activate</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">span</span><span class="p">:</span> <span class="n">SpanShim</span><span class="p">,</span> <span class="n">finish_on_close</span><span class="p">:</span> <span class="nb">bool</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ScopeShim&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Activates a :class:`SpanShim` and returns a :class:`ScopeShim` which</span>
+<span class="sd">        represents the active span.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            span: A :class:`SpanShim` to be activated.</span>
+<span class="sd">            finish_on_close(:obj:`bool`): Determines whether the OpenTelemetry</span>
+<span class="sd">                span should be ended when the returned :class:`ScopeShim` is</span>
+<span class="sd">                closed.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A :class:`ScopeShim` representing the activated span.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">span_cm</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tracer</span><span class="o">.</span><span class="n">unwrap</span><span class="p">()</span><span class="o">.</span><span class="n">use_span</span><span class="p">(</span>
+            <span class="n">span</span><span class="o">.</span><span class="n">unwrap</span><span class="p">(),</span> <span class="n">end_on_exit</span><span class="o">=</span><span class="n">finish_on_close</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="n">ScopeShim</span><span class="o">.</span><span class="n">from_context_manager</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">span_cm</span><span class="o">=</span><span class="n">span_cm</span><span class="p">)</span></div>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">active</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ScopeShim&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns a :class:`ScopeShim` object representing the</span>
+<span class="sd">        currently-active span in the OpenTelemetry tracer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A :class:`ScopeShim` representing the active span in the</span>
+<span class="sd">            OpenTelemetry tracer, or `None` if no span is currently active.</span>
+
+<span class="sd">        Warning:</span>
+<span class="sd">            Calling :meth:`ScopeShim.close` on the :class:`ScopeShim` returned</span>
+<span class="sd">            by this property **always ends the corresponding span**, regardless</span>
+<span class="sd">            of the *finish_on_close* value used when activating the span. This</span>
+<span class="sd">            is a limitation of the current implementation of the OpenTracing</span>
+<span class="sd">            shim and is likely to be handled in future versions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">span</span> <span class="o">=</span> <span class="n">get_current_span</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">span</span><span class="o">.</span><span class="n">get_span_context</span><span class="p">()</span> <span class="o">==</span> <span class="n">INVALID_SPAN_CONTEXT</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">None</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">get_value</span><span class="p">(</span><span class="s2">&quot;scope_shim&quot;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span><span class="p">:</span>
+            <span class="n">span_context</span> <span class="o">=</span> <span class="n">SpanContextShim</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">get_span_context</span><span class="p">())</span>
+            <span class="n">wrapped_span</span> <span class="o">=</span> <span class="n">SpanShim</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_tracer</span><span class="p">,</span> <span class="n">span_context</span><span class="p">,</span> <span class="n">span</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">ScopeShim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">span</span><span class="o">=</span><span class="n">wrapped_span</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">tracer</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;TracerShim&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Returns the :class:`TracerShim` reference used by this</span>
+<span class="sd">        :class:`ScopeManagerShim` for setting and getting the active span from</span>
+<span class="sd">        the OpenTelemetry tracer.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The :class:`TracerShim` used for setting and getting the active</span>
+<span class="sd">            span.</span>
+
+<span class="sd">        Warning:</span>
+<span class="sd">            This property is *not* a part of the OpenTracing API. It is used</span>
+<span class="sd">            internally by the current implementation of the OpenTracing shim</span>
+<span class="sd">            and will likely be removed in future versions.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tracer</span></div>
+
+
+<div class="viewcode-block" id="TracerShim"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.TracerShim">[docs]</a><span class="k">class</span> <span class="nc">TracerShim</span><span class="p">(</span><span class="n">Tracer</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Wraps a :class:`opentelemetry.trace.Tracer` object.</span>
+
+<span class="sd">    This wrapper class allows using an OpenTelemetry tracer as if it were an</span>
+<span class="sd">    OpenTracing tracer. It exposes the same methods as an &quot;ordinary&quot;</span>
+<span class="sd">    OpenTracing tracer, and uses OpenTelemetry transparently for performing the</span>
+<span class="sd">    actual tracing.</span>
+
+<span class="sd">    This class depends on the *OpenTelemetry API*. Therefore, any</span>
+<span class="sd">    implementation of a :class:`opentelemetry.trace.Tracer` should work with</span>
+<span class="sd">    this class.</span>
+
+<span class="sd">    Args:</span>
+<span class="sd">        tracer: A :class:`opentelemetry.trace.Tracer` to use for tracing. This</span>
+<span class="sd">            tracer will be invoked by the shim to create actual spans.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tracer</span><span class="p">:</span> <span class="n">OtelTracer</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">scope_manager</span><span class="o">=</span><span class="n">ScopeManagerShim</span><span class="p">(</span><span class="bp">self</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_otel_tracer</span> <span class="o">=</span> <span class="n">tracer</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_supported_formats</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="n">Format</span><span class="o">.</span><span class="n">TEXT_MAP</span><span class="p">,</span>
+            <span class="n">Format</span><span class="o">.</span><span class="n">HTTP_HEADERS</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_carrier_getter</span> <span class="o">=</span> <span class="n">DictGetter</span><span class="p">()</span>
+
+<div class="viewcode-block" id="TracerShim.unwrap"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.TracerShim.unwrap">[docs]</a>    <span class="k">def</span> <span class="nf">unwrap</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns the :class:`opentelemetry.trace.Tracer` object that is</span>
+<span class="sd">        wrapped by this :class:`TracerShim` and used for actual tracing.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            The :class:`opentelemetry.trace.Tracer` used for actual tracing.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_otel_tracer</span></div>
+
+<div class="viewcode-block" id="TracerShim.start_active_span"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.TracerShim.start_active_span">[docs]</a>    <span class="k">def</span> <span class="nf">start_active_span</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">operation_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span>
+        <span class="n">child_of</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">SpanShim</span><span class="p">,</span> <span class="n">SpanContextShim</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">references</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tags</span><span class="p">:</span> <span class="n">Attributes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">start_time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">ignore_active_span</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+        <span class="n">finish_on_close</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="s2">&quot;ScopeShim&quot;</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Starts and activates a span. In terms of functionality, this method</span>
+<span class="sd">        behaves exactly like the same method on a &quot;regular&quot; OpenTracing tracer.</span>
+<span class="sd">        See :meth:`opentracing.Tracer.start_active_span` for more details.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            operation_name: Name of the operation represented by</span>
+<span class="sd">                the new span from the perspective of the current service.</span>
+<span class="sd">            child_of: A :class:`SpanShim` or :class:`SpanContextShim`</span>
+<span class="sd">                representing the parent in a &quot;child of&quot; reference. If</span>
+<span class="sd">                specified, the *references* parameter must be omitted.</span>
+<span class="sd">            references: A list of :class:`opentracing.Reference` objects that</span>
+<span class="sd">                identify one or more parents of type :class:`SpanContextShim`.</span>
+<span class="sd">            tags: A dictionary of tags.</span>
+<span class="sd">            start_time: An explicit start time expressed as the number of</span>
+<span class="sd">                seconds since the epoch as returned by :func:`time.time()`.</span>
+<span class="sd">            ignore_active_span: Ignore the currently-active span in the</span>
+<span class="sd">                OpenTelemetry tracer and make the created span the root span of</span>
+<span class="sd">                a new trace.</span>
+<span class="sd">            finish_on_close: Determines whether the created span should end</span>
+<span class="sd">                automatically when closing the returned :class:`ScopeShim`.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            A :class:`ScopeShim` that is already activated by the</span>
+<span class="sd">            :class:`ScopeManagerShim`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="n">current_span</span> <span class="o">=</span> <span class="n">get_current_span</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">child_of</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> <span class="n">current_span</span> <span class="ow">is</span> <span class="ow">not</span> <span class="n">INVALID_SPAN_CONTEXT</span><span class="p">:</span>
+            <span class="n">child_of</span> <span class="o">=</span> <span class="n">SpanShim</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">current_span</span><span class="p">)</span>
+
+        <span class="n">span</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">start_span</span><span class="p">(</span>
+            <span class="n">operation_name</span><span class="o">=</span><span class="n">operation_name</span><span class="p">,</span>
+            <span class="n">child_of</span><span class="o">=</span><span class="n">child_of</span><span class="p">,</span>
+            <span class="n">references</span><span class="o">=</span><span class="n">references</span><span class="p">,</span>
+            <span class="n">tags</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
+            <span class="n">start_time</span><span class="o">=</span><span class="n">start_time</span><span class="p">,</span>
+            <span class="n">ignore_active_span</span><span class="o">=</span><span class="n">ignore_active_span</span><span class="p">,</span>
+        <span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_scope_manager</span><span class="o">.</span><span class="n">activate</span><span class="p">(</span><span class="n">span</span><span class="p">,</span> <span class="n">finish_on_close</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TracerShim.start_span"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.TracerShim.start_span">[docs]</a>    <span class="k">def</span> <span class="nf">start_span</span><span class="p">(</span>
+        <span class="bp">self</span><span class="p">,</span>
+        <span class="n">operation_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">child_of</span><span class="p">:</span> <span class="n">Union</span><span class="p">[</span><span class="n">SpanShim</span><span class="p">,</span> <span class="n">SpanContextShim</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">references</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">tags</span><span class="p">:</span> <span class="n">Attributes</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">start_time</span><span class="p">:</span> <span class="nb">float</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
+        <span class="n">ignore_active_span</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span>
+    <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">SpanShim</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;Implements the ``start_span()`` method from the base class.</span>
+
+<span class="sd">        Starts a span. In terms of functionality, this method behaves exactly</span>
+<span class="sd">        like the same method on a &quot;regular&quot; OpenTracing tracer. See</span>
+<span class="sd">        :meth:`opentracing.Tracer.start_span` for more details.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            operation_name: Name of the operation represented by the new span</span>
+<span class="sd">                from the perspective of the current service.</span>
+<span class="sd">            child_of: A :class:`SpanShim` or :class:`SpanContextShim`</span>
+<span class="sd">                representing the parent in a &quot;child of&quot; reference. If</span>
+<span class="sd">                specified, the *references* parameter must be omitted.</span>
+<span class="sd">            references: A list of :class:`opentracing.Reference` objects that</span>
+<span class="sd">                identify one or more parents of type :class:`SpanContextShim`.</span>
+<span class="sd">            tags: A dictionary of tags.</span>
+<span class="sd">            start_time: An explicit start time expressed as the number of</span>
+<span class="sd">                seconds since the epoch as returned by :func:`time.time()`.</span>
+<span class="sd">            ignore_active_span: Ignore the currently-active span in the</span>
+<span class="sd">                OpenTelemetry tracer and make the created span the root span of</span>
+<span class="sd">                a new trace.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            An already-started :class:`SpanShim` instance.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># Use active span as parent when no explicit parent is specified.</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">ignore_active_span</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">child_of</span><span class="p">:</span>
+            <span class="n">child_of</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">active_span</span>
+
+        <span class="c1"># Use the specified parent or the active span if possible. Otherwise,</span>
+        <span class="c1"># use a `None` parent, which triggers the creation of a new trace.</span>
+        <span class="n">parent</span> <span class="o">=</span> <span class="n">child_of</span><span class="o">.</span><span class="n">unwrap</span><span class="p">()</span> <span class="k">if</span> <span class="n">child_of</span> <span class="k">else</span> <span class="kc">None</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">parent</span><span class="p">,</span> <span class="n">OtelSpanContext</span><span class="p">):</span>
+            <span class="n">parent</span> <span class="o">=</span> <span class="n">DefaultSpan</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+
+        <span class="n">parent_span_context</span> <span class="o">=</span> <span class="n">set_span_in_context</span><span class="p">(</span><span class="n">parent</span><span class="p">)</span>
+
+        <span class="n">links</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">if</span> <span class="n">references</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">ref</span> <span class="ow">in</span> <span class="n">references</span><span class="p">:</span>
+                <span class="n">links</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Link</span><span class="p">(</span><span class="n">ref</span><span class="o">.</span><span class="n">referenced_context</span><span class="o">.</span><span class="n">unwrap</span><span class="p">()))</span>
+
+        <span class="c1"># The OpenTracing API expects time values to be `float` values which</span>
+        <span class="c1"># represent the number of seconds since the epoch. OpenTelemetry</span>
+        <span class="c1"># represents time values as nanoseconds since the epoch.</span>
+        <span class="n">start_time_ns</span> <span class="o">=</span> <span class="n">start_time</span>
+        <span class="k">if</span> <span class="n">start_time_ns</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">start_time_ns</span> <span class="o">=</span> <span class="n">util</span><span class="o">.</span><span class="n">time_seconds_to_ns</span><span class="p">(</span><span class="n">start_time</span><span class="p">)</span>
+
+        <span class="n">span</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_otel_tracer</span><span class="o">.</span><span class="n">start_span</span><span class="p">(</span>
+            <span class="n">operation_name</span><span class="p">,</span>
+            <span class="n">context</span><span class="o">=</span><span class="n">parent_span_context</span><span class="p">,</span>
+            <span class="n">links</span><span class="o">=</span><span class="n">links</span><span class="p">,</span>
+            <span class="n">attributes</span><span class="o">=</span><span class="n">tags</span><span class="p">,</span>
+            <span class="n">start_time</span><span class="o">=</span><span class="n">start_time_ns</span><span class="p">,</span>
+        <span class="p">)</span>
+
+        <span class="n">context</span> <span class="o">=</span> <span class="n">SpanContextShim</span><span class="p">(</span><span class="n">span</span><span class="o">.</span><span class="n">get_span_context</span><span class="p">())</span>
+        <span class="k">return</span> <span class="n">SpanShim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">,</span> <span class="n">span</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TracerShim.inject"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.TracerShim.inject">[docs]</a>    <span class="k">def</span> <span class="nf">inject</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">span_context</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="n">carrier</span><span class="p">:</span> <span class="nb">object</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Injects ``span_context`` into ``carrier``.</span>
+
+<span class="sd">        See base class for more details.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            span_context: The ``opentracing.SpanContext`` to inject.</span>
+<span class="sd">            format: a Python object instance that represents a given</span>
+<span class="sd">                carrier format. `format` may be of any type, and `format`</span>
+<span class="sd">                equality is defined by Python ``==`` operator.</span>
+<span class="sd">            carrier: the format-specific carrier object to inject into</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># pylint: disable=redefined-builtin</span>
+        <span class="c1"># This implementation does not perform the injecting by itself but</span>
+        <span class="c1"># uses the configured propagators in opentelemetry.propagators.</span>
+        <span class="c1"># TODO: Support Format.BINARY once it is supported in</span>
+        <span class="c1"># opentelemetry-python.</span>
+
+        <span class="k">if</span> <span class="nb">format</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supported_formats</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UnsupportedFormatException</span>
+
+        <span class="n">propagator</span> <span class="o">=</span> <span class="n">propagators</span><span class="o">.</span><span class="n">get_global_textmap</span><span class="p">()</span>
+
+        <span class="n">ctx</span> <span class="o">=</span> <span class="n">set_span_in_context</span><span class="p">(</span><span class="n">DefaultSpan</span><span class="p">(</span><span class="n">span_context</span><span class="o">.</span><span class="n">unwrap</span><span class="p">()))</span>
+        <span class="n">propagator</span><span class="o">.</span><span class="n">inject</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">carrier</span><span class="p">)</span><span class="o">.</span><span class="fm">__setitem__</span><span class="p">,</span> <span class="n">carrier</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="n">ctx</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TracerShim.extract"><a class="viewcode-back" href="../../../instrumentation/opentracing_shim/opentracing_shim.html#opentelemetry.instrumentation.opentracing_shim.TracerShim.extract">[docs]</a>    <span class="k">def</span> <span class="nf">extract</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">format</span><span class="p">:</span> <span class="nb">object</span><span class="p">,</span> <span class="n">carrier</span><span class="p">:</span> <span class="nb">object</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Returns an ``opentracing.SpanContext`` instance extracted from a</span>
+<span class="sd">        ``carrier``.</span>
+
+<span class="sd">        See base class for more details.</span>
+
+<span class="sd">        Args:</span>
+<span class="sd">            format: a Python object instance that represents a given</span>
+<span class="sd">                carrier format. ``format`` may be of any type, and ``format``</span>
+<span class="sd">                equality is defined by python ``==`` operator.</span>
+<span class="sd">            carrier: the format-specific carrier object to extract from</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            An ``opentracing.SpanContext`` extracted from ``carrier`` or</span>
+<span class="sd">            ``None`` if no such ``SpanContext`` could be found.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+
+        <span class="c1"># pylint: disable=redefined-builtin</span>
+        <span class="c1"># This implementation does not perform the extracing by itself but</span>
+        <span class="c1"># uses the configured propagators in opentelemetry.propagators.</span>
+        <span class="c1"># TODO: Support Format.BINARY once it is supported in</span>
+        <span class="c1"># opentelemetry-python.</span>
+        <span class="k">if</span> <span class="nb">format</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_supported_formats</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="n">UnsupportedFormatException</span>
+
+        <span class="n">propagator</span> <span class="o">=</span> <span class="n">propagators</span><span class="o">.</span><span class="n">get_global_textmap</span><span class="p">()</span>
+        <span class="n">ctx</span> <span class="o">=</span> <span class="n">propagator</span><span class="o">.</span><span class="n">extract</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_carrier_getter</span><span class="p">,</span> <span class="n">carrier</span><span class="p">)</span>
+        <span class="n">span</span> <span class="o">=</span> <span class="n">get_current_span</span><span class="p">(</span><span class="n">ctx</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">span</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">otel_context</span> <span class="o">=</span> <span class="n">span</span><span class="o">.</span><span class="n">get_span_context</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">otel_context</span> <span class="o">=</span> <span class="n">INVALID_SPAN_CONTEXT</span>
+
+        <span class="k">return</span> <span class="n">SpanContextShim</span><span class="p">(</span><span class="n">otel_context</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+           
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        
+        &copy; Copyright OpenTelemetry Authors
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/rtfd/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
