@@ -47,7 +47,7 @@ class NodeEndpoint:
         self.port = port
 
     @property
-    def ipv4(self) -> Union[ipaddress.IPv4Address, None]:
+    def ipv4(self) -> Optional[ipaddress.IPv4Address]:
         return self._ipv4
 
     @ipv4.setter
@@ -63,7 +63,7 @@ class NodeEndpoint:
             self._ipv4 = ipv4_address
 
     @property
-    def ipv6(self) -> Union[ipaddress.IPv6Address, None]:
+    def ipv6(self) -> Optional[ipaddress.IPv6Address]:
         return self._ipv6
 
     @ipv6.setter
