@@ -3,7 +3,6 @@ line-length = 79
 exclude = '''
 (
   /(  # generated files
-    docs/examples/opentelemetry-example-app/src/opentelemetry_example_app/grpc/gen|
     exporter/opentelemetry-exporter-jaeger/src/opentelemetry/exporter/jaeger/gen|
     exporter/opentelemetry-exporter-zipkin/src/opentelemetry/exporter/zipkin/encoder/v2/protobuf/gen|
     opentelemetry-proto/src/opentelemetry/proto/collector|
