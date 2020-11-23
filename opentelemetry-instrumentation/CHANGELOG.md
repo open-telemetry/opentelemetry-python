@@ -2,11 +2,13 @@
 
 ## Unreleased
 
+- Added support for `OTEL_EXPORTER` to the `opentelemetry-instrument` command ([#1036](https://github.com/open-telemetry/opentelemetry-python/pull/1036))
+
 ## Version 0.14b0
 
 Released 2020-10-13
 
-- Fixed boostrap command to correctly install opentelemetry-instrumentation-falcon instead of opentelemetry-instrumentation-flask
+- Fixed bootstrap command to correctly install opentelemetry-instrumentation-falcon instead of opentelemetry-instrumentation-flask. ([#1138](https://github.com/open-telemetry/opentelemetry-python/pull/1138))
 
 ## Version 0.13b0
 
