@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from collections import OrderedDict
 from unittest import TestCase
 from unittest.mock import patch
@@ -44,9 +45,13 @@ from opentelemetry.sdk.metrics.export import ExportRecord
 from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
 from opentelemetry.sdk.resources import Resource as SDKResource
 
+THIS_DIR = os.path.dirname(__file__)
+
 
 class TestOTLPMetricExporter(TestCase):
-    def setUp(self):
+    @patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
+    def setUp(self, mock_time_ns):  # pylint: disable=arguments-differ
+        mock_time_ns.configure_mock(**{"return_value": 1})
         self.exporter = OTLPMetricsExporter(insecure=True)
         resource = SDKResource(OrderedDict([("a", 1), ("b", False)]))
 
@@ -73,7 +78,8 @@ class TestOTLPMetricExporter(TestCase):
         "os.environ",
         {
             "OTEL_EXPORTER_OTLP_METRIC_ENDPOINT": "collector:55680",
-            "OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE": "fixtures/test.cert",
+            "OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE": THIS_DIR
+            + "/fixtures/test.cert",
             "OTEL_EXPORTER_OTLP_METRIC_HEADERS": "key1:value1;key2:value2",
             "OTEL_EXPORTER_OTLP_METRIC_TIMEOUT": "10",
         },
@@ -91,11 +97,12 @@ class TestOTLPMetricExporter(TestCase):
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
 
-    @patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
-    def test_translate_metrics(self, mock_time_ns):
-        # pylint: disable=no-member
+    def test_no_credentials_error(self):
+        with self.assertRaises(ValueError):
+            OTLPMetricsExporter()
 
-        mock_time_ns.configure_mock(**{"return_value": 1})
+    def test_translate_metrics(self):
+        # pylint: disable=no-member
 
         self.counter_export_record.aggregator.checkpoint = 1
         self.counter_export_record.aggregator.initial_checkpoint_timestamp = 1
@@ -133,7 +140,7 @@ class TestOTLPMetricExporter(TestCase):
                                             )
                                         ],
                                         aggregation_temporality=(
-                                            AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA
+                                            AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
                                         ),
                                         is_monotonic=True,
                                     ),

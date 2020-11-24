@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from unittest import TestCase
@@ -52,6 +53,8 @@ from opentelemetry.sdk.trace.export import (
     SpanExportResult,
 )
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+
+THIS_DIR = os.path.dirname(__file__)
 
 
 class TraceServiceServicerUNAVAILABLEDelay(TraceServiceServicer):
@@ -165,7 +168,8 @@ class TestOTLPSpanExporter(TestCase):
         "os.environ",
         {
             "OTEL_EXPORTER_OTLP_SPAN_ENDPOINT": "collector:55680",
-            "OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE": "fixtures/test.cert",
+            "OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE": THIS_DIR
+            + "/fixtures/test.cert",
             "OTEL_EXPORTER_OTLP_SPAN_HEADERS": "key1:value1;key2:value2",
             "OTEL_EXPORTER_OTLP_SPAN_TIMEOUT": "10",
         },
@@ -182,6 +186,10 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(kwargs["timeout"], 10)
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+
+    def test_no_credentials_error(self):
+        with self.assertRaises(ValueError):
+            OTLPSpanExporter()
 
     @patch("opentelemetry.exporter.otlp.exporter.expo")
     @patch("opentelemetry.exporter.otlp.exporter.sleep")

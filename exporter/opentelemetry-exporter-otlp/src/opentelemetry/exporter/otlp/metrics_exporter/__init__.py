@@ -15,8 +15,7 @@
 """OTLP Metrics Exporter"""
 
 import logging
-import os
-from typing import List, Optional, Sequence, Type, TypeVar, Union
+from typing import List, Optional, Sequence, Type, TypeVar
 
 from grpc import ChannelCredentials
 
@@ -71,7 +70,9 @@ DataPointT = TypeVar("DataPointT", IntDataPoint, DoubleDataPoint)
 
 
 def _get_data_points(
-    export_record: ExportRecord, data_point_class: Type[DataPointT]
+    export_record: ExportRecord,
+    data_point_class: Type[DataPointT],
+    aggregation_temporality: int,
 ) -> List[DataPointT]:
 
     if isinstance(export_record.aggregator, SumAggregator):
@@ -91,6 +92,15 @@ def _get_data_points(
     elif isinstance(export_record.aggregator, ValueObserverAggregator):
         value = export_record.aggregator.checkpoint.last
 
+    if aggregation_temporality == (
+        AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
+    ):
+        start_time_unix_nano = export_record.aggregator.first_timestamp
+    else:
+        start_time_unix_nano = (
+            export_record.aggregator.initial_checkpoint_timestamp
+        )
+
     return [
         data_point_class(
             labels=[
@@ -98,9 +108,7 @@ def _get_data_points(
                 for label_key, label_value in export_record.labels
             ],
             value=value,
-            start_time_unix_nano=(
-                export_record.aggregator.initial_checkpoint_timestamp
-            ),
+            start_time_unix_nano=start_time_unix_nano,
             time_unix_nano=(export_record.aggregator.last_update_timestamp),
         )
     ]
@@ -215,25 +223,35 @@ class OTLPMetricsExporter(
             data_point_class = type_class[value_type]["data_point_class"]
 
             if isinstance(export_record.instrument, Counter):
+
+                aggregation_temporality = (
+                    AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
+                )
+
                 otlp_metric_data = sum_class(
                     data_points=_get_data_points(
-                        export_record, data_point_class
+                        export_record,
+                        data_point_class,
+                        aggregation_temporality,
                     ),
-                    aggregation_temporality=(
-                        AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA
-                    ),
+                    aggregation_temporality=aggregation_temporality,
                     is_monotonic=True,
                 )
                 argument = type_class[value_type]["sum"]["argument"]
 
             elif isinstance(export_record.instrument, UpDownCounter):
+
+                aggregation_temporality = (
+                    AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
+                )
+
                 otlp_metric_data = sum_class(
                     data_points=_get_data_points(
-                        export_record, data_point_class
+                        export_record,
+                        data_point_class,
+                        aggregation_temporality,
                     ),
-                    aggregation_temporality=(
-                        AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA
-                    ),
+                    aggregation_temporality=aggregation_temporality,
                     is_monotonic=False,
                 )
                 argument = type_class[value_type]["sum"]["argument"]
@@ -243,25 +261,35 @@ class OTLPMetricsExporter(
                 continue
 
             elif isinstance(export_record.instrument, SumObserver):
+
+                aggregation_temporality = (
+                    AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
+                )
+
                 otlp_metric_data = sum_class(
                     data_points=_get_data_points(
-                        export_record, data_point_class
+                        export_record,
+                        data_point_class,
+                        aggregation_temporality,
                     ),
-                    aggregation_temporality=(
-                        AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
-                    ),
+                    aggregation_temporality=aggregation_temporality,
                     is_monotonic=True,
                 )
                 argument = type_class[value_type]["sum"]["argument"]
 
             elif isinstance(export_record.instrument, UpDownSumObserver):
+
+                aggregation_temporality = (
+                    AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
+                )
+
                 otlp_metric_data = sum_class(
                     data_points=_get_data_points(
-                        export_record, data_point_class
+                        export_record,
+                        data_point_class,
+                        aggregation_temporality,
                     ),
-                    aggregation_temporality=(
-                        AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
-                    ),
+                    aggregation_temporality=aggregation_temporality,
                     is_monotonic=False,
                 )
                 argument = type_class[value_type]["sum"]["argument"]
@@ -269,7 +297,9 @@ class OTLPMetricsExporter(
             elif isinstance(export_record.instrument, (ValueObserver)):
                 otlp_metric_data = gauge_class(
                     data_points=_get_data_points(
-                        export_record, data_point_class
+                        export_record,
+                        data_point_class,
+                        AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA,
                     )
                 )
                 argument = type_class[value_type]["gauge"]["argument"]
