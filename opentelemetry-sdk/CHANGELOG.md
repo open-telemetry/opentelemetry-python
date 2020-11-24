@@ -14,8 +14,6 @@
   ([#1373](https://github.com/open-telemetry/opentelemetry-python/pull/1373))
 - Rename Meter class to Accumulator in Metrics SDK
   ([#1372](https://github.com/open-telemetry/opentelemetry-python/pull/1372))
-- Rename Meter class to Accumulator in Metrics SDK
-  ([#1372](https://github.com/open-telemetry/opentelemetry-python/pull/1372))
 
 ## Version 0.15b0
 
