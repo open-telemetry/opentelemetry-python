@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.16b0
+
+Released 2020-11-24
+
 - Support for v2 api protobuf format ([#1318](https://github.com/open-telemetry/opentelemetry-python/pull/1318))
 
 ## Version 0.14b0
