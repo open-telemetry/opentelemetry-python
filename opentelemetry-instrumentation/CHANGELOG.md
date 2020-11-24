@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.16b0
+
+Released 2020-11-24
+
 - Add IDs Generator as Configurable Property of Auto Instrumentation
   ([#1404](https://github.com/open-telemetry/opentelemetry-python/pull/1404))
 - Added support for `OTEL_EXPORTER` to the `opentelemetry-instrument` command ([#1036](https://github.com/open-telemetry/opentelemetry-python/pull/1036))
