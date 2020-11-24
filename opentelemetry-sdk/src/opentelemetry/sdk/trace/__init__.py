@@ -44,11 +44,7 @@ from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
 from opentelemetry.trace.propagation import SPAN_KEY
-from opentelemetry.trace.status import (
-    EXCEPTION_STATUS_FIELD,
-    Status,
-    StatusCode,
-)
+from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import time_ns, types
 
 logger = logging.getLogger(__name__)
@@ -666,7 +662,7 @@ class Span(trace_api.Span):
         exc_tb: Optional[TracebackType],
     ) -> None:
         """Ends context manager and calls `end` on the `Span`."""
-        if exc_val is not None:
+        if exc_val is not None and self.is_recording():
             # Record the exception as an event
             # pylint:disable=protected-access
             if self._record_exception:
@@ -857,7 +853,7 @@ class Tracer(trace_api.Tracer):
 
         except Exception as exc:  # pylint: disable=broad-except
             # Record the exception as an event
-            if isinstance(span, Span):
+            if isinstance(span, Span) and span.is_recording():
                 # pylint:disable=protected-access
                 if span._record_exception:
                     span.record_exception(exc)
