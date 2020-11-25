@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Add instrumentation library name and version to OTLP exported metrics
+  ([#1418](https://github.com/open-telemetry/opentelemetry-python/pull/1418))
 - Change temporality for Counter and UpDownCounter
   ([#1384](https://github.com/open-telemetry/opentelemetry-python/pull/1384))
 - Add Gzip compression for exporter

@@ -304,9 +304,11 @@ class OTLPMetricsExporter(
                 )
                 argument = type_class[value_type]["gauge"]["argument"]
 
-            sdk_resource_instrumentation_library_metrics[
+            instrumentation_library_metrics = sdk_resource_instrumentation_library_metrics[
                 export_record.resource
-            ].metrics.append(
+            ]
+
+            instrumentation_library_metrics.metrics.append(
                 OTLPMetric(
                     **{
                         "name": export_record.instrument.name,
@@ -316,6 +318,19 @@ class OTLPMetricsExporter(
                     }
                 )
             )
+
+            instrumentation_library_metrics.instrumentation_library.name = (
+                export_record.instrument.meter.instrumentation_info.name
+            )
+
+            version = (
+                export_record.instrument.meter.instrumentation_info.version
+            )
+
+            if version:
+                (
+                    instrumentation_library_metrics.instrumentation_library.version
+                ) = version
 
         return ExportMetricsServiceRequest(
             resource_metrics=_get_resource_data(
