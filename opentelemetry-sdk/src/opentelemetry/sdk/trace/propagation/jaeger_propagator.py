@@ -18,14 +18,13 @@ import urllib.parse
 import opentelemetry.trace as trace
 from opentelemetry import baggage
 from opentelemetry.context import Context, get_current
+from opentelemetry.sdk.trace.propagation import extract_first_element
 from opentelemetry.trace.propagation.textmap import (
     Getter,
     Setter,
     TextMapPropagator,
     TextMapPropagatorT,
 )
-
-from . import extract_first_element
 
 
 class JaegerPropagator(TextMapPropagator):
