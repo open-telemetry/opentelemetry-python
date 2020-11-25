@@ -74,11 +74,11 @@ def init_tracing(
 
     for exporter_name, exporter_class in exporters.items():
         exporter_args = {}
-        if exporter_name not in [
-            EXPORTER_OTLP,
-            EXPORTER_OTLP_SPAN,
-        ]:
-            exporter_args["service_name"] = service_name
+        # if exporter_name not in [
+        #     EXPORTER_OTLP,
+        #     EXPORTER_OTLP_SPAN,
+        # ]:
+        #     exporter_args["service_name"] = service_name
 
         provider.add_span_processor(
             BatchExportSpanProcessor(exporter_class(**exporter_args))
@@ -161,3 +161,8 @@ def initialize_components():
     # some boilerplate in order to make sure current implementation does not
     # lock us out of supporting metrics later without major surgery.
     init_metrics(metric_exporters)
+
+
+class Configurator:
+    def configure(self):
+        initialize_components()

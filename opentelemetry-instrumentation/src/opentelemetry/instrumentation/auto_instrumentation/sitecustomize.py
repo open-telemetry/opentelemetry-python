@@ -18,9 +18,6 @@ from logging import getLogger
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry.instrumentation.auto_instrumentation.components import (
-    initialize_components,
-)
 
 logger = getLogger(__file__)
 
@@ -32,6 +29,15 @@ def auto_instrument():
             logger.debug("Instrumented %s", entry_point.name)
         except Exception as exc:  # pylint: disable=broad-except
             logger.exception("Instrumenting of %s failed", entry_point.name)
+            raise exc
+
+
+def initialize_components():
+    for entry_point in iter_entry_points("opentelemetry_configure"):
+        try:
+            entry_point.load()().configure()  # type: ignore
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.exception("Configuration of %s failed", entry_point.name)
             raise exc
 
 
