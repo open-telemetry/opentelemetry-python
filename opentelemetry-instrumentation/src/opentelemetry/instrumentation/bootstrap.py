@@ -23,7 +23,15 @@ from logging import getLogger
 logger = getLogger(__file__)
 
 
-# target library to desired instrumentor path/versioned package name
+# A mapping of "target library" to "desired instrumentor path/versioned package
+# name". Used as part of the `opentelemetry-bootstrap` command which looks at
+# libraries used by the application that is to be instrumented, and handles
+# automatically installing the appropriate instrumentations for that app.
+# This helps for those who prefer to turn on as much instrumentation as
+# possible, and don't want to go through the manual process of combing through
+# the libraries their application uses to figure which one can be
+# instrumented.
+# NOTE: system-metrics is not to be included.
 instrumentations = {
     "aiohttp-client": "opentelemetry-instrumentation-aiohttp-client>=0.15b0",
     "aiopg": "opentelemetry-instrumentation-aiopg>=0.15b0",
@@ -52,7 +60,6 @@ instrumentations = {
     "sqlalchemy": "opentelemetry-instrumentation-sqlalchemy>=0.8b0",
     "sqlite3": "opentelemetry-instrumentation-sqlite3>=0.11b0",
     "starlette": "opentelemetry-instrumentation-starlette>=0.11b0",
-    "system-metrics": "opentelemetry-instrumentation-system-metrics>=0.15b0",
     "tornado": "opentelemetry-instrumentation-tornado>=0.13b0",
     "wsgi": "opentelemetry-instrumentation-wsgi>=0.8b0",
 }
@@ -86,7 +93,6 @@ libraries = {
     "sqlalchemy": ("opentelemetry-instrumentation-sqlalchemy",),
     "sqlite3": ("opentelemetry-instrumentation-sqlite3",),
     "starlette": ("opentelemetry-instrumentation-starlette",),
-    "system-metrics": ("opentelemetry-instrumentation-system-metrics",),
     "tornado": ("opentelemetry-instrumentation-tornado",),
     "wsgi": ("opentelemetry-instrumentation-wsgi",),
 }
