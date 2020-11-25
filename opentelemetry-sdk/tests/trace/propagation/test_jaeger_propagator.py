@@ -55,6 +55,12 @@ def get_context_new_carrier(old_carrier, carrier_baggage=None):
     return ctx, new_carrier
 
 
+def _format_uber_trace_id(trace_id, span_id, parent_span_id, flags):
+    return "{:032x}:{:016x}:{:016x}:{:02x}".format(
+        trace_id, span_id, parent_span_id, flags
+    )
+
+
 class TestJaegerPropagator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -62,8 +68,8 @@ class TestJaegerPropagator(unittest.TestCase):
         cls.trace_id = ids_generator.generate_trace_id()
         cls.span_id = ids_generator.generate_span_id()
         cls.parent_span_id = ids_generator.generate_span_id()
-        cls.serialized_uber_trace_id = "{:032x}:{:016x}:{:016x}:{:02x}".format(
-            cls.trace_id, cls.span_id, cls.parent_span_id, 1
+        cls.serialized_uber_trace_id = _format_uber_trace_id(
+            cls.trace_id, cls.span_id, cls.parent_span_id, 11
         )
 
     def test_extract_valid_span(self):
@@ -88,13 +94,34 @@ class TestJaegerPropagator(unittest.TestCase):
         parent_span_id = new_carrier[FORMAT.TRACE_ID_KEY].split(":")[2]
         self.assertEqual(span_id, parent_span_id)
 
-    def test_sampled_flag(self):
+    def test_sampled_flag_set(self):
         old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}
         _, new_carrier = get_context_new_carrier(old_carrier)
         sample_flag_value = (
             int(new_carrier[FORMAT.TRACE_ID_KEY].split(":")[3]) & 0x01
         )
         self.assertEqual(1, sample_flag_value)
+
+    def test_debug_flag_set(self):
+        old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}
+        _, new_carrier = get_context_new_carrier(old_carrier)
+        debug_flag_value = (
+            int(new_carrier[FORMAT.TRACE_ID_KEY].split(":")[3])
+            & FORMAT.DEBUG_FLAG
+        )
+        self.assertEqual(FORMAT.DEBUG_FLAG, debug_flag_value)
+
+    def test_sample_debug_flags_unset(self):
+        uber_trace_id = _format_uber_trace_id(
+            self.trace_id, self.span_id, self.parent_span_id, 0
+        )
+        old_carrier = {FORMAT.TRACE_ID_KEY: uber_trace_id}
+        _, new_carrier = get_context_new_carrier(old_carrier)
+        flags = int(new_carrier[FORMAT.TRACE_ID_KEY].split(":")[3])
+        sample_flag_value = flags & 0x01
+        debug_flag_value = flags & FORMAT.DEBUG_FLAG
+        self.assertEqual(0, sample_flag_value)
+        self.assertEqual(0, debug_flag_value)
 
     def test_baggage(self):
         old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}

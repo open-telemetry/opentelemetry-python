@@ -25,6 +25,8 @@ from opentelemetry.trace.propagation.textmap import (
     TextMapPropagatorT,
 )
 
+from . import extract_first_element
+
 
 class JaegerPropagator(TextMapPropagator):
     """Propagator for the Jaeger format.
@@ -34,6 +36,7 @@ class JaegerPropagator(TextMapPropagator):
 
     TRACE_ID_KEY = "uber-trace-id"
     BAGGAGE_PREFIX = "uberctx-"
+    DEBUG_FLAG = 0x02
 
     def extract(
         self,
@@ -44,7 +47,7 @@ class JaegerPropagator(TextMapPropagator):
 
         if context is None:
             context = get_current()
-        fields = _extract_first_element(
+        fields = extract_first_element(
             getter.get(carrier, self.TRACE_ID_KEY)
         ).split(":")
 
@@ -84,9 +87,8 @@ class JaegerPropagator(TextMapPropagator):
 
         span_parent_id = span.parent.span_id if span.parent else 0
         trace_flags = span_context.trace_flags
-        # set debug flag to True if sampled flag is set
         if trace_flags.sampled:
-            trace_flags |= 0x02
+            trace_flags |= self.DEBUG_FLAG
 
         # set span identity
         set_in_carrier(
@@ -117,7 +119,7 @@ class JaegerPropagator(TextMapPropagator):
             if key.startswith(self.BAGGAGE_PREFIX)
         ]
         for key in baggage_keys:
-            value = _extract_first_element(getter.get(carrier, key))
+            value = extract_first_element(getter.get(carrier, key))
             context = baggage.set_baggage(
                 key.replace(self.BAGGAGE_PREFIX, ""),
                 urllib.parse.unquote(value).strip(),
@@ -130,11 +132,3 @@ def _format_uber_trace_id(trace_id, span_id, parent_span_id, flags):
     return "{:032x}:{:016x}:{:016x}:{:02x}".format(
         trace_id, span_id, parent_span_id, flags
     )
-
-
-def _extract_first_element(
-    items: typing.Iterable[TextMapPropagatorT],
-) -> typing.Optional[TextMapPropagatorT]:
-    if items is None:
-        return None
-    return next(iter(items), None)

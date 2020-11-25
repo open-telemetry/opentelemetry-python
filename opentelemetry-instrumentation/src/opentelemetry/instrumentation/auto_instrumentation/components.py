@@ -34,6 +34,13 @@ EXPORTER_OTLP_SPAN = "otlp_span"
 EXPORTER_OTLP_METRIC = "otlp_metric"
 _DEFAULT_EXPORTER = EXPORTER_OTLP
 
+RANDOM_IDS_GENERATOR = "random"
+_DEFAULT_IDS_GENERATOR = RANDOM_IDS_GENERATOR
+
+
+def get_ids_generator() -> str:
+    return Configuration().IDS_GENERATOR or _DEFAULT_IDS_GENERATOR
+
 
 def get_service_name() -> str:
     return Configuration().SERVICE_NAME or ""
@@ -55,10 +62,13 @@ def get_exporter_names() -> Sequence[str]:
     return names
 
 
-def init_tracing(exporters: Sequence[SpanExporter]):
+def init_tracing(
+    exporters: Sequence[SpanExporter], ids_generator: trace.IdsGenerator
+):
     service_name = get_service_name()
     provider = TracerProvider(
         resource=Resource.create({"service.name": service_name}),
+        ids_generator=ids_generator(),
     )
     trace.set_tracer_provider(provider)
 
@@ -80,23 +90,39 @@ def init_metrics(exporters: Sequence[MetricsExporter]):
         logger.warning("automatic metric initialization is not supported yet.")
 
 
+def import_tracer_provider_config_components(
+    selected_components, entry_point_name
+) -> Sequence[Tuple[str, object]]:
+    component_entry_points = {
+        ep.name: ep for ep in iter_entry_points(entry_point_name)
+    }
+    component_impls = []
+    for selected_component in selected_components:
+        entry_point = component_entry_points.get(selected_component, None)
+        if not entry_point:
+            raise RuntimeError(
+                "Requested component '{}' not found in entry points for '{}'".format(
+                    selected_component, entry_point_name
+                )
+            )
+
+        component_impl = entry_point.load()
+        component_impls.append((selected_component, component_impl))
+
+    return component_impls
+
+
 def import_exporters(
     exporter_names: Sequence[str],
 ) -> Tuple[Sequence[SpanExporter], Sequence[MetricsExporter]]:
     trace_exporters, metric_exporters = {}, {}
 
-    exporters = {
-        ep.name: ep for ep in iter_entry_points("opentelemetry_exporter")
-    }
-
-    for exporter_name in exporter_names:
-        entry_point = exporters.get(exporter_name, None)
-        if not entry_point:
-            raise RuntimeError(
-                "Requested exporter not found: {0}".format(exporter_name)
-            )
-
-        exporter_impl = entry_point.load()
+    for (
+        exporter_name,
+        exporter_impl,
+    ) in import_tracer_provider_config_components(
+        exporter_names, "opentelemetry_exporter"
+    ):
         if issubclass(exporter_impl, SpanExporter):
             trace_exporters[exporter_name] = exporter_impl
         elif issubclass(exporter_impl, MetricsExporter):
@@ -110,10 +136,26 @@ def import_exporters(
     return trace_exporters, metric_exporters
 
 
+def import_ids_generator(ids_generator_name: str) -> trace.IdsGenerator:
+    # pylint: disable=unbalanced-tuple-unpacking
+    [
+        (ids_generator_name, ids_generator_impl)
+    ] = import_tracer_provider_config_components(
+        [ids_generator_name.strip()], "opentelemetry_ids_generator"
+    )
+
+    if issubclass(ids_generator_impl, trace.IdsGenerator):
+        return ids_generator_impl
+
+    raise RuntimeError("{0} is not an IdsGenerator".format(ids_generator_name))
+
+
 def initialize_components():
     exporter_names = get_exporter_names()
     trace_exporters, metric_exporters = import_exporters(exporter_names)
-    init_tracing(trace_exporters)
+    ids_generator_name = get_ids_generator()
+    ids_generator = import_ids_generator(ids_generator_name)
+    init_tracing(trace_exporters, ids_generator)
 
     # We don't support automatic initialization for metric yet but have added
     # some boilerplate in order to make sure current implementation does not
