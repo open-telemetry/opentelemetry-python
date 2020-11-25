@@ -33,9 +33,18 @@ def auto_instrument():
 
 
 def initialize_components():
+    configured = None
     for entry_point in iter_entry_points("opentelemetry_configure"):
+        if configured is not None:
+            logger.warning(
+                "Configuration of %s not loaded, %s already loaded",
+                entry_point.name,
+                configured,
+            )
+            continue
         try:
             entry_point.load()().configure()  # type: ignore
+            configured = entry_point.name
         except Exception as exc:  # pylint: disable=broad-except
             logger.exception("Configuration of %s failed", entry_point.name)
             raise exc
