@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.16b0
+
+Released 2020-11-25
+
 - Allow samplers to modify tracestate
   ([#1319](https://github.com/open-telemetry/opentelemetry-python/pull/1319))
 - Add optional parameter to `record_exception` method
