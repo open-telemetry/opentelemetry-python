@@ -145,3 +145,17 @@ class TestConfiguration(TestCase):
         self.assertEqual(
             Configuration().NON_FLOAT, "-12z3.123"
         )  # pylint: disable=no-member
+
+    @patch.dict(
+        "os.environ",  # type: ignore
+        {
+            "OTEL_PYTHON_WEBFRAMEWORK_TRACED_REQUEST_ATTRS": "content_type,keep_alive",
+        },
+    )
+    def test_traced_request_attrs(self) -> None:
+        cfg = Configuration()
+        request_attrs = cfg.traced_request_attrs("webframework")
+        self.assertEqual(len(request_attrs), 2)
+        self.assertIn("content_type", request_attrs)
+        self.assertIn("keep_alive", request_attrs)
+        self.assertNotIn("authorization", request_attrs)
