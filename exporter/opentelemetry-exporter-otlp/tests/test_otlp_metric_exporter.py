@@ -47,12 +47,9 @@ from opentelemetry.sdk.metrics import (
     SumObserver,
     UpDownCounter,
     UpDownSumObserver,
-    ValueRecorder
 )
 from opentelemetry.sdk.metrics.export import ExportRecord
-from opentelemetry.sdk.metrics.export.aggregate import (
-    SumAggregator, MinMaxSumCountAggregator
-)
+from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
 from opentelemetry.sdk.resources import Resource as SDKResource
 
 THIS_DIR = os.path.dirname(__file__)
@@ -147,8 +144,7 @@ class TestOTLPMetricExporter(TestCase):
                                             )
                                         ],
                                         aggregation_temporality=(
-                                            AggregationTemporality.
-                                            AGGREGATION_TEMPORALITY_CUMULATIVE
+                                            AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
                                         ),
                                         is_monotonic=True,
                                     ),
@@ -214,8 +210,7 @@ class TestOTLPMetricExporter(TestCase):
                                             )
                                         ],
                                         aggregation_temporality=(
-                                            AggregationTemporality.
-                                            AGGREGATION_TEMPORALITY_CUMULATIVE
+                                            AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
                                         ),
                                         is_monotonic=True,
                                     ),
@@ -282,8 +277,7 @@ class TestOTLPMetricExporter(TestCase):
                                             )
                                         ],
                                         aggregation_temporality=(
-                                            AggregationTemporality.
-                                            AGGREGATION_TEMPORALITY_CUMULATIVE
+                                            AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
                                         ),
                                     ),
                                 )
@@ -348,8 +342,7 @@ class TestOTLPMetricExporter(TestCase):
                                             )
                                         ],
                                         aggregation_temporality=(
-                                            AggregationTemporality.
-                                            AGGREGATION_TEMPORALITY_CUMULATIVE
+                                            AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
                                         ),
                                     ),
                                 )
