@@ -159,3 +159,18 @@ class TestConfiguration(TestCase):
         self.assertIn("content_type", request_attrs)
         self.assertIn("keep_alive", request_attrs)
         self.assertNotIn("authorization", request_attrs)
+
+    @patch.dict(
+        "os.environ",  # type: ignore
+        {
+            "OTEL_PYTHON_WEBFRAMEWORK_EXCLUDED_URLS": "/healthzz,path,/issues/.*/view",
+        },
+    )
+    def test_excluded_urls(self) -> None:
+        cfg = Configuration()
+        excluded_urls = cfg.excluded_urls("webframework")
+        self.assertTrue(excluded_urls.url_disabled("/healthzz"))
+        self.assertTrue(excluded_urls.url_disabled("/path"))
+        self.assertTrue(excluded_urls.url_disabled("/issues/123/view"))
+        self.assertFalse(excluded_urls.url_disabled("/issues"))
+        self.assertFalse(excluded_urls.url_disabled("/hello"))
