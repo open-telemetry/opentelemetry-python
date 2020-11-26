@@ -95,7 +95,7 @@ to override this value instead of changing it.
 
 from os import environ
 from re import fullmatch
-from typing import ClassVar, Dict, Optional, TypeVar, Union
+from typing import ClassVar, Dict, Optional, TypeVar, Union, List
 
 ConfigValue = Union[str, bool, int, float]
 _T = TypeVar("_T", ConfigValue, Optional[ConfigValue])
@@ -167,3 +167,11 @@ class Configuration:
         if cls._instance:
             cls._instance._config_map.clear()  # pylint: disable=protected-access
             cls._instance = None
+
+    def traced_request_attrs(self, instrumentation: str) -> List[str]:
+        key = "{}_TRACED_REQUEST_ATTRS".format(instrumentation.upper())
+        value = self.get(key, "")
+        request_attrs = (
+            [attr.strip() for attr in str.split(value, ",")] if value else []
+        )
+        return request_attrs
