@@ -393,7 +393,7 @@ class TestSumObserver(unittest.TestCase):
     def test_run(self):
         callback = Mock()
         observer = metrics.SumObserver(
-            callback, "name", "desc", "unit", int, Mock(), True
+            callback, "name", "desc", "unit", int, Mock(), (), True
         )
 
         self.assertTrue(observer.run())
@@ -405,7 +405,7 @@ class TestSumObserver(unittest.TestCase):
         callback.side_effect = Exception("We have a problem!")
 
         observer = metrics.SumObserver(
-            callback, "name", "desc", "unit", int, Mock(), True
+            callback, "name", "desc", "unit", int, Mock(), (), True
         )
 
         self.assertFalse(observer.run())
@@ -446,7 +446,7 @@ class TestUpDownSumObserver(unittest.TestCase):
     def test_run(self):
         callback = Mock()
         observer = metrics.UpDownSumObserver(
-            callback, "name", "desc", "unit", int, Mock(), True
+            callback, "name", "desc", "unit", int, Mock(), (), True
         )
 
         self.assertTrue(observer.run())
@@ -458,7 +458,7 @@ class TestUpDownSumObserver(unittest.TestCase):
         callback.side_effect = Exception("We have a problem!")
 
         observer = metrics.UpDownSumObserver(
-            callback, "name", "desc", "unit", int, Mock(), True
+            callback, "name", "desc", "unit", int, Mock(), (), True
         )
 
         self.assertFalse(observer.run())
@@ -503,7 +503,7 @@ class TestValueObserver(unittest.TestCase):
     def test_run(self):
         callback = Mock()
         observer = metrics.ValueObserver(
-            callback, "name", "desc", "unit", int, Mock(), True
+            callback, "name", "desc", "unit", int, Mock(), (), True
         )
 
         self.assertTrue(observer.run())
@@ -515,7 +515,7 @@ class TestValueObserver(unittest.TestCase):
         callback.side_effect = Exception("We have a problem!")
 
         observer = metrics.ValueObserver(
-            callback, "name", "desc", "unit", int, Mock(), True
+            callback, "name", "desc", "unit", int, Mock(), (), True
         )
 
         self.assertFalse(observer.run())
