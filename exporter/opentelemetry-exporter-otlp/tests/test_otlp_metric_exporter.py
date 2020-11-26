@@ -26,6 +26,7 @@ from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
 )
 from opentelemetry.proto.common.v1.common_pb2 import (
     AnyValue,
+    InstrumentationLibrary,
     KeyValue,
     StringKeyValue,
 )
@@ -61,7 +62,7 @@ class TestOTLPMetricExporter(TestCase):
                 "d",
                 "e",
                 int,
-                MeterProvider(resource=resource,).get_meter(__name__),
+                MeterProvider(resource=resource,).get_meter("name", "version"),
                 ("f",),
             ),
             [("g", "h")],
@@ -121,6 +122,9 @@ class TestOTLPMetricExporter(TestCase):
                     ),
                     instrumentation_library_metrics=[
                         InstrumentationLibraryMetrics(
+                            instrumentation_library=InstrumentationLibrary(
+                                name="name", version="version",
+                            ),
                             metrics=[
                                 OTLPMetric(
                                     name="c",
@@ -145,7 +149,7 @@ class TestOTLPMetricExporter(TestCase):
                                         is_monotonic=True,
                                     ),
                                 )
-                            ]
+                            ],
                         )
                     ],
                 )

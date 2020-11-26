@@ -14,7 +14,6 @@
 """OTLP Span Exporter"""
 
 import logging
-import os
 from typing import Optional, Sequence
 
 from grpc import ChannelCredentials
