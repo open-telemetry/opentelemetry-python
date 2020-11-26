@@ -42,10 +42,17 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
 from opentelemetry.sdk.metrics import (
-    Counter, MeterProvider, SumObserver, UpDownCounter
+    Counter,
+    MeterProvider,
+    SumObserver,
+    UpDownCounter,
+    UpDownSumObserver,
+    ValueRecorder
 )
 from opentelemetry.sdk.metrics.export import ExportRecord
-from opentelemetry.sdk.metrics.export.aggregate import SumAggregator
+from opentelemetry.sdk.metrics.export.aggregate import (
+    SumAggregator, MinMaxSumCountAggregator
+)
 from opentelemetry.sdk.resources import Resource as SDKResource
 
 THIS_DIR = os.path.dirname(__file__)
@@ -230,7 +237,73 @@ class TestOTLPMetricExporter(TestCase):
         mock_time_ns.configure_mock(**{"return_value": 1})
 
         counter_export_record = ExportRecord(
-            UpDownCounter("c", "d", "e", int, self.meter, ("f",),),
+            UpDownCounter("c", "d", "e", int, self.meter),
+            [("g", "h")],
+            SumAggregator(),
+            self.resource,
+        )
+
+        counter_export_record.aggregator.checkpoint = 1
+        counter_export_record.aggregator.initial_checkpoint_timestamp = 1
+        counter_export_record.aggregator.last_update_timestamp = 1
+
+        expected = ExportMetricsServiceRequest(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=OTLPResource(
+                        attributes=[
+                            KeyValue(key="a", value=AnyValue(int_value=1)),
+                            KeyValue(
+                                key="b", value=AnyValue(bool_value=False)
+                            ),
+                        ]
+                    ),
+                    instrumentation_library_metrics=[
+                        InstrumentationLibraryMetrics(
+                            instrumentation_library=InstrumentationLibrary(
+                                name="name", version="version",
+                            ),
+                            metrics=[
+                                OTLPMetric(
+                                    name="c",
+                                    description="d",
+                                    unit="e",
+                                    int_sum=IntSum(
+                                        data_points=[
+                                            IntDataPoint(
+                                                labels=[
+                                                    StringKeyValue(
+                                                        key="g", value="h"
+                                                    )
+                                                ],
+                                                value=1,
+                                                time_unix_nano=1,
+                                                start_time_unix_nano=1,
+                                            )
+                                        ],
+                                        aggregation_temporality=(
+                                            AggregationTemporality.
+                                            AGGREGATION_TEMPORALITY_CUMULATIVE
+                                        ),
+                                    ),
+                                )
+                            ],
+                        )
+                    ],
+                )
+            ]
+        )
+
+        # pylint: disable=protected-access
+        actual = self.exporter._translate_data([counter_export_record])
+
+        self.assertEqual(expected, actual)
+
+    @patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
+    def test_translate_updownsum_observer_export_record(self, mock_time_ns):
+        mock_time_ns.configure_mock(**{"return_value": 1})
+        counter_export_record = ExportRecord(
+            UpDownSumObserver(Mock(), "c", "d", "e", int, self.meter, ("f",),),
             [("g", "h")],
             SumAggregator(),
             self.resource,
