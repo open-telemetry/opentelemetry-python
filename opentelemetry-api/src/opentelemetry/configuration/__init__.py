@@ -186,7 +186,7 @@ class Configuration:
         value = self._config_map.get(key, "")
 
         request_attrs = (
-            [attr.strip() for attr in str.split(value, ",")] if value else []
+            [attr.strip() for attr in str.split(value, ",")] if value else []  # type: ignore
         )
         return request_attrs
 
@@ -194,5 +194,5 @@ class Configuration:
         key = "{}_EXCLUDED_URLS".format(instrumentation.upper())
         value = self._config_map.get(key, "")
 
-        urls = str.split(value, ",") if value else []
+        urls = str.split(value, ",") if value else []  # type: ignore
         return ExcludeList(urls)
