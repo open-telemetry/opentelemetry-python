@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import unittest
-from unittest import mock
+from unittest.mock import Mock, patch
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk import metrics, resources
@@ -41,7 +41,7 @@ class TestMeterProvider(unittest.TestCase):
         self.assertEqual(meter_provider.resource, resources._DEFAULT_RESOURCE)
 
     def test_start_pipeline(self):
-        exporter = mock.Mock()
+        exporter = Mock()
         meter_provider = metrics.MeterProvider()
         meter = meter_provider.get_meter(__name__)
         # pylint: disable=protected-access
@@ -53,8 +53,8 @@ class TestMeterProvider(unittest.TestCase):
             meter_provider.shutdown()
 
     def test_shutdown(self):
-        controller = mock.Mock()
-        exporter = mock.Mock()
+        controller = Mock()
+        exporter = Mock()
         meter_provider = metrics.MeterProvider()
         # pylint: disable=protected-access
         meter_provider._controllers = [controller]
@@ -72,7 +72,7 @@ class TestMeter(unittest.TestCase):
 
     def test_collect_metrics(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        processor_mock = mock.Mock()
+        processor_mock = Mock()
         meter.processor = processor_mock
         counter = meter.create_counter("name", "desc", "unit", float,)
         labels = {"key1": "value1"}
@@ -83,14 +83,14 @@ class TestMeter(unittest.TestCase):
 
     def test_collect_no_metrics(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        processor_mock = mock.Mock()
+        processor_mock = Mock()
         meter.processor = processor_mock
         meter.collect()
         self.assertFalse(processor_mock.process.called)
 
     def test_collect_not_registered(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        processor_mock = mock.Mock()
+        processor_mock = Mock()
         meter.processor = processor_mock
         counter = metrics.Counter("name", "desc", "unit", float, meter)
         labels = {"key1": "value1"}
@@ -100,7 +100,7 @@ class TestMeter(unittest.TestCase):
 
     def test_collect_disabled_metric(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        processor_mock = mock.Mock()
+        processor_mock = Mock()
         meter.processor = processor_mock
         counter = metrics.Counter("name", "desc", "unit", float, meter, False)
         labels = {"key1": "value1"}
@@ -111,7 +111,7 @@ class TestMeter(unittest.TestCase):
 
     def test_collect_observers(self):
         meter = metrics.MeterProvider().get_meter(__name__)
-        processor_mock = mock.Mock()
+        processor_mock = Mock()
         meter.processor = processor_mock
 
         def callback(observer):
@@ -154,7 +154,7 @@ class TestMeter(unittest.TestCase):
         )
 
     def test_create_counter(self):
-        resource = mock.Mock(spec=resources.Resource)
+        resource = Mock(spec=resources.Resource)
         meter_provider = metrics.MeterProvider(resource=resource)
         meter = meter_provider.get_meter(__name__)
         counter = meter.create_counter("name", "desc", "unit", int,)
@@ -186,7 +186,7 @@ class TestMeter(unittest.TestCase):
     def test_register_sumobserver(self):
         meter = metrics.MeterProvider().get_meter(__name__)
 
-        callback = mock.Mock()
+        callback = Mock()
 
         observer = meter.register_sumobserver(
             callback, "name", "desc", "unit", int,
@@ -206,7 +206,7 @@ class TestMeter(unittest.TestCase):
     def test_register_updownsumobserver(self):
         meter = metrics.MeterProvider().get_meter(__name__)
 
-        callback = mock.Mock()
+        callback = Mock()
 
         observer = meter.register_updownsumobserver(
             callback, "name", "desc", "unit", int,
@@ -226,7 +226,7 @@ class TestMeter(unittest.TestCase):
     def test_register_valueobserver(self):
         meter = metrics.MeterProvider().get_meter(__name__)
 
-        callback = mock.Mock()
+        callback = Mock()
 
         observer = meter.register_valueobserver(
             callback, "name", "desc", "unit", int,
@@ -246,7 +246,7 @@ class TestMeter(unittest.TestCase):
     def test_unregister_observer(self):
         meter = metrics.MeterProvider().get_meter(__name__)
 
-        callback = mock.Mock()
+        callback = Mock()
 
         observer = meter.register_valueobserver(
             callback, "name", "desc", "unit", int, metrics.ValueObserver
@@ -286,7 +286,7 @@ class TestCounter(unittest.TestCase):
         metric.add(2, labels)
         self.assertEqual(bound_mock.view_datas.pop().aggregator.current, 5)
 
-    @mock.patch("opentelemetry.sdk.metrics.logger")
+    @patch("opentelemetry.sdk.metrics.logger")
     def test_add_non_decreasing_int_error(self, logger_mock):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric = metrics.Counter("name", "desc", "unit", int, meter)
@@ -300,7 +300,7 @@ class TestCounter(unittest.TestCase):
         self.assertEqual(bound_counter.view_datas.pop().aggregator.current, 3)
         self.assertEqual(logger_mock.warning.call_count, 1)
 
-    @mock.patch("opentelemetry.sdk.metrics.logger")
+    @patch("opentelemetry.sdk.metrics.logger")
     def test_add_non_decreasing_float_error(self, logger_mock):
         meter = metrics.MeterProvider().get_meter(__name__)
         metric = metrics.Counter("name", "desc", "unit", float, meter)
@@ -351,7 +351,7 @@ class TestValueRecorder(unittest.TestCase):
 class TestSumObserver(unittest.TestCase):
     def test_observe(self):
         observer = metrics.SumObserver(
-            None, "name", "desc", "unit", int, ("key",), True
+            None, "name", "desc", "unit", int, Mock(), ("key",), True
         )
         labels = {"key": "value"}
         key_labels = metrics.get_dict_as_key(labels)
@@ -363,26 +363,26 @@ class TestSumObserver(unittest.TestCase):
 
     def test_observe_disabled(self):
         observer = metrics.SumObserver(
-            None, "name", "desc", "unit", int, ("key",), False
+            None, "name", "desc", "unit", int, Mock(), ("key",), False
         )
         labels = {"key": "value"}
         observer.observe(37, labels)
         self.assertEqual(len(observer.aggregators), 0)
 
-    @mock.patch("opentelemetry.sdk.metrics.logger")
+    @patch("opentelemetry.sdk.metrics.logger")
     def test_observe_incorrect_type(self, logger_mock):
         observer = metrics.SumObserver(
-            None, "name", "desc", "unit", int, ("key",), True
+            None, "name", "desc", "unit", int, Mock(), ("key",), True
         )
         labels = {"key": "value"}
         observer.observe(37.0, labels)
         self.assertEqual(len(observer.aggregators), 0)
         self.assertTrue(logger_mock.warning.called)
 
-    @mock.patch("opentelemetry.sdk.metrics.logger")
+    @patch("opentelemetry.sdk.metrics.logger")
     def test_observe_non_decreasing_error(self, logger_mock):
         observer = metrics.SumObserver(
-            None, "name", "desc", "unit", int, ("key",), True
+            None, "name", "desc", "unit", int, Mock(), ("key",), True
         )
         labels = {"key": "value"}
         observer.observe(37, labels)
@@ -391,21 +391,21 @@ class TestSumObserver(unittest.TestCase):
         self.assertTrue(logger_mock.warning.called)
 
     def test_run(self):
-        callback = mock.Mock()
+        callback = Mock()
         observer = metrics.SumObserver(
-            callback, "name", "desc", "unit", int, (), True
+            callback, "name", "desc", "unit", int, Mock(), True
         )
 
         self.assertTrue(observer.run())
         callback.assert_called_once_with(observer)
 
-    @mock.patch("opentelemetry.sdk.metrics.logger")
+    @patch("opentelemetry.sdk.metrics.logger")
     def test_run_exception(self, logger_mock):
-        callback = mock.Mock()
+        callback = Mock()
         callback.side_effect = Exception("We have a problem!")
 
         observer = metrics.SumObserver(
-            callback, "name", "desc", "unit", int, (), True
+            callback, "name", "desc", "unit", int, Mock(), True
         )
 
         self.assertFalse(observer.run())
@@ -415,7 +415,7 @@ class TestSumObserver(unittest.TestCase):
 class TestUpDownSumObserver(unittest.TestCase):
     def test_observe(self):
         observer = metrics.UpDownSumObserver(
-            None, "name", "desc", "unit", int, ("key",), True
+            None, "name", "desc", "unit", int, Mock(), ("key",), True
         )
         labels = {"key": "value"}
         key_labels = metrics.get_dict_as_key(labels)
@@ -427,16 +427,16 @@ class TestUpDownSumObserver(unittest.TestCase):
 
     def test_observe_disabled(self):
         observer = metrics.UpDownSumObserver(
-            None, "name", "desc", "unit", int, ("key",), False
+            None, "name", "desc", "unit", int, Mock(), ("key",), False
         )
         labels = {"key": "value"}
         observer.observe(37, labels)
         self.assertEqual(len(observer.aggregators), 0)
 
-    @mock.patch("opentelemetry.sdk.metrics.logger")
+    @patch("opentelemetry.sdk.metrics.logger")
     def test_observe_incorrect_type(self, logger_mock):
         observer = metrics.UpDownSumObserver(
-            None, "name", "desc", "unit", int, ("key",), True
+            None, "name", "desc", "unit", int, Mock(), ("key",), True
         )
         labels = {"key": "value"}
         observer.observe(37.0, labels)
@@ -444,21 +444,21 @@ class TestUpDownSumObserver(unittest.TestCase):
         self.assertTrue(logger_mock.warning.called)
 
     def test_run(self):
-        callback = mock.Mock()
+        callback = Mock()
         observer = metrics.UpDownSumObserver(
-            callback, "name", "desc", "unit", int, (), True
+            callback, "name", "desc", "unit", int, Mock(), True
         )
 
         self.assertTrue(observer.run())
         callback.assert_called_once_with(observer)
 
-    @mock.patch("opentelemetry.sdk.metrics.logger")
+    @patch("opentelemetry.sdk.metrics.logger")
     def test_run_exception(self, logger_mock):
-        callback = mock.Mock()
+        callback = Mock()
         callback.side_effect = Exception("We have a problem!")
 
         observer = metrics.UpDownSumObserver(
-            callback, "name", "desc", "unit", int, (), True
+            callback, "name", "desc", "unit", int, Mock(), True
         )
 
         self.assertFalse(observer.run())
@@ -468,7 +468,7 @@ class TestUpDownSumObserver(unittest.TestCase):
 class TestValueObserver(unittest.TestCase):
     def test_observe(self):
         observer = metrics.ValueObserver(
-            None, "name", "desc", "unit", int, ("key",), True
+            None, "name", "desc", "unit", int, Mock(), ("key",), True
         )
         labels = {"key": "value"}
         key_labels = metrics.get_dict_as_key(labels)
@@ -484,16 +484,16 @@ class TestValueObserver(unittest.TestCase):
 
     def test_observe_disabled(self):
         observer = metrics.ValueObserver(
-            None, "name", "desc", "unit", int, ("key",), False
+            None, "name", "desc", "unit", int, Mock(), ("key",), False
         )
         labels = {"key": "value"}
         observer.observe(37, labels)
         self.assertEqual(len(observer.aggregators), 0)
 
-    @mock.patch("opentelemetry.sdk.metrics.logger")
+    @patch("opentelemetry.sdk.metrics.logger")
     def test_observe_incorrect_type(self, logger_mock):
         observer = metrics.ValueObserver(
-            None, "name", "desc", "unit", int, ("key",), True
+            None, "name", "desc", "unit", int, Mock(), ("key",), True
         )
         labels = {"key": "value"}
         observer.observe(37.0, labels)
@@ -501,21 +501,21 @@ class TestValueObserver(unittest.TestCase):
         self.assertTrue(logger_mock.warning.called)
 
     def test_run(self):
-        callback = mock.Mock()
+        callback = Mock()
         observer = metrics.ValueObserver(
-            callback, "name", "desc", "unit", int, (), True
+            callback, "name", "desc", "unit", int, Mock(), True
         )
 
         self.assertTrue(observer.run())
         callback.assert_called_once_with(observer)
 
-    @mock.patch("opentelemetry.sdk.metrics.logger")
+    @patch("opentelemetry.sdk.metrics.logger")
     def test_run_exception(self, logger_mock):
-        callback = mock.Mock()
+        callback = Mock()
         callback.side_effect = Exception("We have a problem!")
 
         observer = metrics.ValueObserver(
-            callback, "name", "desc", "unit", int, (), True
+            callback, "name", "desc", "unit", int, Mock(), True
         )
 
         self.assertFalse(observer.run())
@@ -525,40 +525,40 @@ class TestValueObserver(unittest.TestCase):
 # pylint: disable=no-self-use
 class TestBoundCounter(unittest.TestCase):
     def test_add(self):
-        meter_mock = mock.Mock()
-        metric_mock = mock.Mock()
+        meter_mock = Mock()
+        metric_mock = Mock()
         metric_mock.enabled = True
         metric_mock.value_type = int
         metric_mock.meter = meter_mock
         bound_metric = metrics.BoundCounter((), metric_mock)
-        view_datas_mock = mock.Mock()
+        view_datas_mock = Mock()
         bound_metric.view_datas = [view_datas_mock]
         bound_metric.add(3)
         view_datas_mock.record.assert_called_once_with(3)
 
     def test_add_disabled(self):
-        meter_mock = mock.Mock()
-        metric_mock = mock.Mock()
+        meter_mock = Mock()
+        metric_mock = Mock()
         metric_mock.enabled = False
         metric_mock.value_type = int
         metric_mock.meter = meter_mock
         bound_metric = metrics.BoundCounter((), metric_mock)
-        view_datas_mock = mock.Mock()
+        view_datas_mock = Mock()
         bound_metric.view_datas = [view_datas_mock]
         bound_metric.add(3)
         view_datas_mock.record.update_view.assert_not_called()
 
-    @mock.patch("opentelemetry.sdk.metrics.logger")
+    @patch("opentelemetry.sdk.metrics.logger")
     def test_add_incorrect_type(self, logger_mock):
-        meter_mock = mock.Mock()
-        viewm_mock = mock.Mock()
+        meter_mock = Mock()
+        viewm_mock = Mock()
         meter_mock.view_manager = viewm_mock
-        metric_mock = mock.Mock()
+        metric_mock = Mock()
         metric_mock.enabled = True
         metric_mock.value_type = float
         metric_mock.meter = meter_mock
         bound_metric = metrics.BoundCounter((), metric_mock)
-        view_datas_mock = mock.Mock()
+        view_datas_mock = Mock()
         bound_metric.view_datas = [view_datas_mock]
         bound_metric.add(3)
         view_datas_mock.record.update_view.assert_not_called()
@@ -567,38 +567,38 @@ class TestBoundCounter(unittest.TestCase):
 
 class TestBoundValueRecorder(unittest.TestCase):
     def test_record(self):
-        meter_mock = mock.Mock()
-        metric_mock = mock.Mock()
+        meter_mock = Mock()
+        metric_mock = Mock()
         metric_mock.enabled = True
         metric_mock.value_type = int
         metric_mock.meter = meter_mock
         bound_valuerecorder = metrics.BoundValueRecorder((), metric_mock)
-        view_datas_mock = mock.Mock()
+        view_datas_mock = Mock()
         bound_valuerecorder.view_datas = [view_datas_mock]
         bound_valuerecorder.record(3)
         view_datas_mock.record.assert_called_once_with(3)
 
     def test_record_disabled(self):
-        meter_mock = mock.Mock()
-        metric_mock = mock.Mock()
+        meter_mock = Mock()
+        metric_mock = Mock()
         metric_mock.enabled = False
         metric_mock.value_type = int
         metric_mock.meter = meter_mock
         bound_valuerecorder = metrics.BoundValueRecorder((), metric_mock)
-        view_datas_mock = mock.Mock()
+        view_datas_mock = Mock()
         bound_valuerecorder.view_datas = [view_datas_mock]
         bound_valuerecorder.record(3)
         view_datas_mock.record.update_view.assert_not_called()
 
-    @mock.patch("opentelemetry.sdk.metrics.logger")
+    @patch("opentelemetry.sdk.metrics.logger")
     def test_record_incorrect_type(self, logger_mock):
-        meter_mock = mock.Mock()
-        metric_mock = mock.Mock()
+        meter_mock = Mock()
+        metric_mock = Mock()
         metric_mock.enabled = True
         metric_mock.value_type = float
         metric_mock.meter = meter_mock
         bound_valuerecorder = metrics.BoundValueRecorder((), metric_mock)
-        view_datas_mock = mock.Mock()
+        view_datas_mock = Mock()
         bound_valuerecorder.view_datas = [view_datas_mock]
         bound_valuerecorder.record(3)
         view_datas_mock.record.update_view.assert_not_called()
