@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.16b0
+
+Released 2020-11-25
+
 - Add instrumentation library name and version to OTLP exported metrics
   ([#1418](https://github.com/open-telemetry/opentelemetry-python/pull/1418))
 - Change temporality for Counter and UpDownCounter
