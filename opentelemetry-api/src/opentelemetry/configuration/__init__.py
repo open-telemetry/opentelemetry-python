@@ -181,8 +181,10 @@ class Configuration:
             cls._instance = None
 
     def traced_request_attrs(self, instrumentation: str) -> List[str]:
+        """Returns list of traced request attributes for instrumentation."""
         key = "{}_TRACED_REQUEST_ATTRS".format(instrumentation.upper())
-        value = self.get(key, "")
+        value = self._config_map.get(key, "")
+
         request_attrs = (
             [attr.strip() for attr in str.split(value, ",")] if value else []
         )
@@ -190,6 +192,7 @@ class Configuration:
 
     def excluded_urls(self, instrumentation: str) -> ExcludeList:
         key = "{}_EXCLUDED_URLS".format(instrumentation.upper())
-        value = self.get(key, "")
+        value = self._config_map.get(key, "")
+
         urls = str.split(value, ",") if value else []
         return ExcludeList(urls)
