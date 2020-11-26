@@ -7,6 +7,8 @@
 - Added support for `OTEL_EXPORTER` to the `opentelemetry-instrument` command ([#1036](https://github.com/open-telemetry/opentelemetry-python/pull/1036))
 - Add missing references to instrumented packages
   ([#1416](https://github.com/open-telemetry/opentelemetry-python/pull/1416))
+- Instrumentation Package depends on the OTel SDK
+  ([#1405](https://github.com/open-telemetry/opentelemetry-python/pull/1405))
 
 ## Version 0.14b0
 
