@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+## Version 0.16b1
+
+Released 2020-11-26
+
 - Add meter reference to observers
   ([#1425](https://github.com/open-telemetry/opentelemetry-python/pull/1425))
 
