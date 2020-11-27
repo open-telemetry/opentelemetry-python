@@ -23,8 +23,18 @@ from logging import getLogger
 logger = getLogger(__file__)
 
 
-# target library to desired instrumentor path/versioned package name
+# A mapping of "target library" to "desired instrumentor path/versioned package
+# name". Used as part of the `opentelemetry-bootstrap` command which looks at
+# libraries used by the application that is to be instrumented, and handles
+# automatically installing the appropriate instrumentations for that app.
+# This helps for those who prefer to turn on as much instrumentation as
+# possible, and don't want to go through the manual process of combing through
+# the libraries their application uses to figure which one can be
+# instrumented.
+# NOTE: system-metrics is not to be included.
 instrumentations = {
+    "aiohttp-client": "opentelemetry-instrumentation-aiohttp-client>=0.15b0",
+    "aiopg": "opentelemetry-instrumentation-aiopg>=0.15b0",
     "asgi": "opentelemetry-instrumentation-asgi>=0.11b0",
     "asyncpg": "opentelemetry-instrumentation-asyncpg>=0.11b0",
     "boto": "opentelemetry-instrumentation-boto>=0.11b0",
@@ -33,8 +43,8 @@ instrumentations = {
     "dbapi": "opentelemetry-instrumentation-dbapi>=0.8b0",
     "django": "opentelemetry-instrumentation-django>=0.8b0",
     "elasticsearch": "opentelemetry-instrumentation-elasticsearch>=0.11b0",
-    "fastapi": "opentelemetry-instrumentation-fastapi>=0.11b0",
     "falcon": "opentelemetry-instrumentation-falcon>=0.13b0",
+    "fastapi": "opentelemetry-instrumentation-fastapi>=0.11b0",
     "flask": "opentelemetry-instrumentation-flask>=0.8b0",
     "grpc": "opentelemetry-instrumentation-grpc>=0.8b0",
     "jinja2": "opentelemetry-instrumentation-jinja2>=0.8b0",
@@ -46,6 +56,7 @@ instrumentations = {
     "pyramid": "opentelemetry-instrumentation-pyramid>=0.11b0",
     "redis": "opentelemetry-instrumentation-redis>=0.8b0",
     "requests": "opentelemetry-instrumentation-requests>=0.8b0",
+    "sklearn": "opentelemetry-instrumentation-sklearn>=0.15b0",
     "sqlalchemy": "opentelemetry-instrumentation-sqlalchemy>=0.8b0",
     "sqlite3": "opentelemetry-instrumentation-sqlite3>=0.11b0",
     "starlette": "opentelemetry-instrumentation-starlette>=0.11b0",
@@ -55,6 +66,8 @@ instrumentations = {
 
 # relevant instrumentors and tracers to uninstall and check for conflicts for target libraries
 libraries = {
+    "aiohttp-client": ("opentelemetry-instrumentation-aiohttp-client",),
+    "aiopg": ("opentelemetry-instrumentation-aiopg",),
     "asgi": ("opentelemetry-instrumentation-asgi",),
     "asyncpg": ("opentelemetry-instrumentation-asyncpg",),
     "boto": ("opentelemetry-instrumentation-boto",),
@@ -63,8 +76,8 @@ libraries = {
     "dbapi": ("opentelemetry-instrumentation-dbapi",),
     "django": ("opentelemetry-instrumentation-django",),
     "elasticsearch": ("opentelemetry-instrumentation-elasticsearch",),
-    "fastapi": ("opentelemetry-instrumentation-fastapi",),
     "falcon": ("opentelemetry-instrumentation-falcon",),
+    "fastapi": ("opentelemetry-instrumentation-fastapi",),
     "flask": ("opentelemetry-instrumentation-flask",),
     "grpc": ("opentelemetry-instrumentation-grpc",),
     "jinja2": ("opentelemetry-instrumentation-jinja2",),
@@ -76,6 +89,7 @@ libraries = {
     "pyramid": ("opentelemetry-instrumentation-pyramid",),
     "redis": ("opentelemetry-instrumentation-redis",),
     "requests": ("opentelemetry-instrumentation-requests",),
+    "sklearn": ("opentelemetry-instrumentation-sklearn",),
     "sqlalchemy": ("opentelemetry-instrumentation-sqlalchemy",),
     "sqlite3": ("opentelemetry-instrumentation-sqlite3",),
     "starlette": ("opentelemetry-instrumentation-starlette",),
