@@ -90,9 +90,10 @@ class TestOTLPMetricExporter(TestCase):
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
 
-    def test_no_credentials_error(self):
-        with self.assertRaises(ValueError):
-            OTLPMetricsExporter()
+    @patch("grpc.ssl_channel_credentials")
+    def test_no_credentials_error(self, mock_ssl_channel):
+        OTLPMetricsExporter(insecure=False)
+        mock_ssl_channel.assert_called_with()
 
     @patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
     def test_translate_counter_export_record(self, mock_time_ns):
