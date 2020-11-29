@@ -373,7 +373,6 @@ class ConsoleSpanExporter(SpanExporter):
         out: typing.IO = sys.stdout,
         formatter: typing.Callable[[Span], str] = lambda span: span.to_json()
         + os.linesep,
-        **kwargs
     ):
         self.out = out
         self.formatter = formatter
