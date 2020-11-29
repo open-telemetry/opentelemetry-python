@@ -37,9 +37,8 @@ Manually instrumented server
     def server_request():
         with tracer.start_as_current_span(
             "server_request",
-            parent=propagators.extract(
-                lambda dict_, key: dict_.get(key, []), request.headers
-            )["current-span"],
+            context=propagators.extract(DictGetter(), request.headers
+            ),
         ):
             print(request.args.get("param"))
             return "served"
@@ -148,7 +147,7 @@ and run the following command instead:
 
 .. code:: sh
 
-    $ opentelemetry-instrument python server_uninstrumented.py
+    $ opentelemetry-instrument -e console_span python server_uninstrumented.py
 
 In the console where you previously executed ``client.py``, run the following
 command again:
