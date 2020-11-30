@@ -361,6 +361,14 @@ class Accumulator(metrics_api.Meter):
         self.metrics_lock = threading.Lock()
         self.observers_lock = threading.Lock()
         self.view_manager = ViewManager()
+        self.instrumentation_names = set()
+
+    def _check_instrumentation_name(self, name: str):
+        if name in self.instrumentation_names:
+            raise ValueError(
+                "Multiple instruments can't registered by the same name"
+            )
+        self.instrumentation_names.add(name)
 
     def collect(self) -> None:
         """Collects all the metrics created with this `Meter` for export.
@@ -429,6 +437,7 @@ class Accumulator(metrics_api.Meter):
         enabled: bool = True,
     ) -> metrics_api.Counter:
         """See `opentelemetry.metrics.Meter.create_counter`."""
+        self._check_instrumentation_name(name)
         counter = Counter(
             name, description, unit, value_type, self, enabled=enabled
         )
@@ -445,6 +454,7 @@ class Accumulator(metrics_api.Meter):
         enabled: bool = True,
     ) -> metrics_api.UpDownCounter:
         """See `opentelemetry.metrics.Meter.create_updowncounter`."""
+        self._check_instrumentation_name(name)
         counter = UpDownCounter(
             name, description, unit, value_type, self, enabled=enabled
         )
@@ -461,6 +471,7 @@ class Accumulator(metrics_api.Meter):
         enabled: bool = True,
     ) -> metrics_api.ValueRecorder:
         """See `opentelemetry.metrics.Meter.create_valuerecorder`."""
+        self._check_instrumentation_name(name)
         recorder = ValueRecorder(
             name, description, unit, value_type, self, enabled=enabled
         )
@@ -478,6 +489,7 @@ class Accumulator(metrics_api.Meter):
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> metrics_api.SumObserver:
+        self._check_instrumentation_name(name)
         ob = SumObserver(
             callback,
             name,
@@ -502,6 +514,7 @@ class Accumulator(metrics_api.Meter):
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> metrics_api.UpDownSumObserver:
+        self._check_instrumentation_name(name)
         ob = UpDownSumObserver(
             callback,
             name,
@@ -526,6 +539,7 @@ class Accumulator(metrics_api.Meter):
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> metrics_api.ValueObserver:
+        self._check_instrumentation_name(name)
         ob = ValueObserver(
             callback,
             name,
