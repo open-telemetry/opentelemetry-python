@@ -2,6 +2,15 @@
 
 ## Unreleased
 
+- Add meter reference to observers
+  ([#1425](https://github.com/open-telemetry/opentelemetry-python/pull/1425))
+- Added support for Jaeger propagator
+  ([#1219](https://github.com/open-telemetry/opentelemetry-python/pull/1219))
+
+## Version 0.16b0
+
+Released 2020-11-25
+
 - Allow samplers to modify tracestate
   ([#1319](https://github.com/open-telemetry/opentelemetry-python/pull/1319))
 - Add optional parameter to `record_exception` method
@@ -14,10 +23,9 @@
   ([#1373](https://github.com/open-telemetry/opentelemetry-python/pull/1373))
 - Rename Meter class to Accumulator in Metrics SDK
   ([#1372](https://github.com/open-telemetry/opentelemetry-python/pull/1372))
-- Rename Meter class to Accumulator in Metrics SDK
-  ([#1372](https://github.com/open-telemetry/opentelemetry-python/pull/1372))
-- Added support for Jaeger propagator
-  ([#1219](https://github.com/open-telemetry/opentelemetry-python/pull/1219))
+- Fix `ParentBased` sampler for implicit parent spans. Fix also `trace_state` 
+  erasure for dropped spans or spans sampled by the `TraceIdRatioBased` sampler. 
+  ([#1394](https://github.com/open-telemetry/opentelemetry-python/pull/1394))
 
 ## Version 0.15b0
 
