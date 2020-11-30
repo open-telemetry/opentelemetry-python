@@ -73,6 +73,11 @@ Well known trace exporter names:
 
 When present the value is passed on to the relevant exporter initializer as ``service_name`` argument.
 
+* ``--ids-generator`` or ``OTEL_IDS_GENERATOR``
+
+Used to specify which IDs Generator to use for the global Tracer Provider. By default, it
+will use the random IDs generator.
+
 The code in ``program.py`` needs to use one of the packages for which there is
 an OpenTelemetry integration. For a list of the available integrations please
 check `here <https://opentelemetry-python.readthedocs.io/en/stable/index.html#integrations>`_
@@ -92,6 +97,13 @@ The above command will pass ``-e otlp`` to the instrument command and ``--port=3
 
 The above command will configure global trace provider, attach zipkin and otlp exporters to it and then
 start celery with the rest of the arguments. 
+
+::
+
+    opentelemetry-instrument --ids-generator random flask run --port=3000
+
+The above command will configure the global trace provider to use the Random IDs Generator, and then
+pass ``--port=3000`` to ``flask run``.
 
 References
 ----------

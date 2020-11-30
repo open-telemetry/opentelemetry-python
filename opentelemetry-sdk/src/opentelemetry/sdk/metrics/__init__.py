@@ -241,6 +241,7 @@ class Observer(metrics_api.Observer):
         description: str,
         unit: str,
         value_type: Type[metrics_api.ValueT],
+        meter: "Accumulator",
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ):
@@ -249,6 +250,7 @@ class Observer(metrics_api.Observer):
         self.description = description
         self.unit = unit
         self.value_type = value_type
+        self.meter = meter
         self.label_keys = label_keys
         self.enabled = enabled
 
@@ -477,7 +479,14 @@ class Accumulator(metrics_api.Meter):
         enabled: bool = True,
     ) -> metrics_api.SumObserver:
         ob = SumObserver(
-            callback, name, description, unit, value_type, label_keys, enabled
+            callback,
+            name,
+            description,
+            unit,
+            value_type,
+            self,
+            label_keys,
+            enabled,
         )
         with self.observers_lock:
             self.observers.add(ob)
@@ -494,7 +503,14 @@ class Accumulator(metrics_api.Meter):
         enabled: bool = True,
     ) -> metrics_api.UpDownSumObserver:
         ob = UpDownSumObserver(
-            callback, name, description, unit, value_type, label_keys, enabled
+            callback,
+            name,
+            description,
+            unit,
+            value_type,
+            self,
+            label_keys,
+            enabled,
         )
         with self.observers_lock:
             self.observers.add(ob)
@@ -511,7 +527,14 @@ class Accumulator(metrics_api.Meter):
         enabled: bool = True,
     ) -> metrics_api.ValueObserver:
         ob = ValueObserver(
-            callback, name, description, unit, value_type, label_keys, enabled
+            callback,
+            name,
+            description,
+            unit,
+            value_type,
+            self,
+            label_keys,
+            enabled,
         )
         with self.observers_lock:
             self.observers.add(ob)
