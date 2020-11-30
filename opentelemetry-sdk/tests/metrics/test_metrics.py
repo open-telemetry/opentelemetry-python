@@ -164,6 +164,23 @@ class TestMeter(unittest.TestCase):
         self.assertIs(meter_provider.resource, resource)
         self.assertEqual(counter.meter, meter)
 
+    def test_instrumentation_same_name_error(self):
+        resource = Mock(spec=resources.Resource)
+        meter_provider = metrics.MeterProvider(resource=resource)
+        meter = meter_provider.get_meter(__name__)
+        counter = meter.create_counter("name", "desc", "unit", int,)
+        self.assertIsInstance(counter, metrics.Counter)
+        self.assertEqual(counter.value_type, int)
+        self.assertEqual(counter.name, "name")
+        self.assertIs(meter_provider.resource, resource)
+        self.assertEqual(counter.meter, meter)
+        with self.assertRaises(ValueError) as ctx:
+            _ = meter.create_counter("name", "desc", "unit", int,)
+        self.assertTrue(
+            "Multiple instruments can't registered by the same name"
+            in str(ctx.exception)
+        )
+
     def test_create_updowncounter(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         updowncounter = meter.create_updowncounter(
