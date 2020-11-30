@@ -18,7 +18,7 @@ import unittest
 
 
 class TestBasicMetricsExample(unittest.TestCase):
-    def test_basic_tracer(self):
+    def test_basic_meter(self):
         dirpath = os.path.dirname(os.path.realpath(__file__))
         test_script = "{}/../metrics_example.py".format(dirpath)
         output = subprocess.check_output(
