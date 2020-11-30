@@ -77,7 +77,7 @@ class Span(abc.ABC):
     @abc.abstractmethod
     def set_status(self, status: Status) -> None:
         """Sets the Status of the Span. If used, this will override the default
-        Span status, which is UNSET.
+        Span status.
         """
 
     @abc.abstractmethod
