@@ -298,6 +298,7 @@ class ParentBased(Sampler):
                 self._remote_parent_not_sampled.get_description(),
                 self._local_parent_sampled.get_description(),
                 self._local_parent_not_sampled.get_description(),
+            )
         )
 
 
