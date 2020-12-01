@@ -363,7 +363,7 @@ class Accumulator(metrics_api.Meter):
         self.view_manager = ViewManager()
         self.instrumentation_names = set()
 
-    def _check_instrumentation_name(self, name: str):
+    def _check_instrument_name(self, name: str):
         if name in self.instrumentation_names:
             raise ValueError(
                 "Multiple instruments can't registered by the same name"
