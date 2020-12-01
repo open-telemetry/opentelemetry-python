@@ -361,14 +361,14 @@ class Accumulator(metrics_api.Meter):
         self.metrics_lock = threading.Lock()
         self.observers_lock = threading.Lock()
         self.view_manager = ViewManager()
-        self.instrumentation_names = set()
+        self.instrument_names = set()
 
     def _check_instrument_name(self, name: str):
-        if name in self.instrumentation_names:
+        if name in self.instrument_names:
             raise ValueError(
                 "Multiple instruments can't registered by the same name"
             )
-        self.instrumentation_names.add(name)
+        self.instrument_names.add(name)
 
     def collect(self) -> None:
         """Collects all the metrics created with this `Meter` for export.
@@ -556,7 +556,7 @@ class Accumulator(metrics_api.Meter):
 
     def unregister_observer(self, observer: metrics_api.Observer) -> None:
         with self.observers_lock:
-            self.instrumentation_names.remove(observer.name)
+            self.instrument_names.remove(observer.name)
             self.observers.remove(observer)
 
     def register_view(self, view):

@@ -164,7 +164,7 @@ class TestMeter(unittest.TestCase):
         self.assertIs(meter_provider.resource, resource)
         self.assertEqual(counter.meter, meter)
 
-    def test_instrumentation_same_name_error(self):
+    def test_instrument_same_name_error(self):
         resource = Mock(spec=resources.Resource)
         meter_provider = metrics.MeterProvider(resource=resource)
         meter = meter_provider.get_meter(__name__)
