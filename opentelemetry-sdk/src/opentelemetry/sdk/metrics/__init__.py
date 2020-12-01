@@ -556,6 +556,7 @@ class Accumulator(metrics_api.Meter):
 
     def unregister_observer(self, observer: metrics_api.Observer) -> None:
         with self.observers_lock:
+            self.instrumentation_names.remove(observer.name)
             self.observers.remove(observer)
 
     def register_view(self, view):
