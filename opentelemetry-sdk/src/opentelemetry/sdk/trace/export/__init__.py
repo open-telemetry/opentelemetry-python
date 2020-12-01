@@ -370,10 +370,10 @@ class ConsoleSpanExporter(SpanExporter):
 
     def __init__(
         self,
+        service_name=None,
         out: typing.IO = sys.stdout,
         formatter: typing.Callable[[Span], str] = lambda span: span.to_json()
         + os.linesep,
-        service_name=None,
     ):
         self.out = out
         self.formatter = formatter
