@@ -290,13 +290,14 @@ class ParentBased(Sampler):
         )
 
     def get_description(self):
-        return "ParentBased{root:%s,remoteParentSampled:%s,remoteParentNotSampled:%s," \
+        return (
+            "ParentBased{root:%s,remoteParentSampled:%s,remoteParentNotSampled:%s,"
             "localParentSampled:%s,localParentNotSampled:%s}".format(
-            self._root.get_description(),
-            self._remote_parent_sampled.get_description(),
-            self._remote_parent_not_sampled.get_description(),
-            self._local_parent_sampled.get_description(),
-            self._local_parent_not_sampled.get_description(),
+                self._root.get_description(),
+                self._remote_parent_sampled.get_description(),
+                self._remote_parent_not_sampled.get_description(),
+                self._local_parent_sampled.get_description(),
+                self._local_parent_not_sampled.get_description(),
         )
 
 

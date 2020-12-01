@@ -5,7 +5,7 @@
 - Add meter reference to observers
   ([#1425](https://github.com/open-telemetry/opentelemetry-python/pull/1425))
 - Add local/remote samplers to parent based sampler
-  ([#1439](https://github.com/open-telemetry/opentelemetry-python/pull/1439))
+  ([#1440](https://github.com/open-telemetry/opentelemetry-python/pull/1440))
 
 ## Version 0.16b0
 
