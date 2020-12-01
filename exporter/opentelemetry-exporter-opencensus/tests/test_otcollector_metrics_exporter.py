@@ -91,13 +91,13 @@ class TestCollectorMetricsExporter(unittest.TestCase):
     def test_get_collector_point(self):
         aggregator = aggregate.SumAggregator()
         int_counter = self._meter.create_counter(
-            "testName", "testDescription", "unit", int,
+            "testNameIntCounter", "testDescription", "unit", int,
         )
         float_counter = self._meter.create_counter(
-            "testName", "testDescription", "unit", float,
+            "testNameFloatCounter", "testDescription", "unit", float,
         )
         valuerecorder = self._meter.create_valuerecorder(
-            "testName", "testDescription", "unit", float,
+            "testNameValueRecorder", "testDescription", "unit", float,
         )
         result = metrics_exporter.get_collector_point(
             ExportRecord(
@@ -168,7 +168,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
 
     def test_translate_to_collector(self):
         test_metric = self._meter.create_counter(
-            "testname", "testdesc", "unit", int, self._labels.keys()
+            "testcollector", "testdesc", "unit", int, self._labels.keys()
         )
         aggregator = aggregate.SumAggregator()
         aggregator.update(123)
@@ -185,7 +185,9 @@ class TestCollectorMetricsExporter(unittest.TestCase):
         )
         self.assertEqual(len(output_metrics), 1)
         self.assertIsInstance(output_metrics[0], metrics_pb2.Metric)
-        self.assertEqual(output_metrics[0].metric_descriptor.name, "testname")
+        self.assertEqual(
+            output_metrics[0].metric_descriptor.name, "testcollector"
+        )
         self.assertEqual(
             output_metrics[0].metric_descriptor.description, "testdesc"
         )
