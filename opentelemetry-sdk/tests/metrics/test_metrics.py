@@ -272,6 +272,21 @@ class TestMeter(unittest.TestCase):
         meter.unregister_observer(observer)
         self.assertEqual(len(meter.observers), 0)
 
+    def test_unregister_and_reregister_observer(self):
+        meter = metrics.MeterProvider().get_meter(__name__)
+
+        callback = Mock()
+
+        observer = meter.register_valueobserver(
+            callback, "name", "desc", "unit", int, metrics.ValueObserver
+        )
+
+        meter.unregister_observer(observer)
+        self.assertEqual(len(meter.observers), 0)
+        observer = meter.register_valueobserver(
+            callback, "name", "desc", "unit", int, metrics.ValueObserver
+        )
+
 
 class TestMetric(unittest.TestCase):
     def test_bind(self):
