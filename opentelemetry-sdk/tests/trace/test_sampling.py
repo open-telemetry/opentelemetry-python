@@ -314,10 +314,11 @@ class TestSampler(unittest.TestCase):
     def exec_parent_based(self, parent_sampling_context):
         trace_state = trace.TraceState({"key": "value"})
         sampler = sampling.ParentBased(sampling.ALWAYS_ON)
+        # Check that the sampling decision matches the parent context if given
         with parent_sampling_context(
             self._create_parent_span(trace_flags=TO_DEFAULT)
         ) as context:
-            # Check that the sampling decision matches the parent context if given
+            # local, not sampled
             not_sampled_result = sampler.should_sample(
                 context,
                 0x7FFFFFFFFFFFFFFF,
@@ -332,8 +333,9 @@ class TestSampler(unittest.TestCase):
         with parent_sampling_context(
             self._create_parent_span(trace_flags=TO_SAMPLED)
         ) as context:
-            sampler2 = sampling.ParentBased(sampling.ALWAYS_OFF)
-            sampled_result = sampler2.should_sample(
+            sampler = sampling.ParentBased(sampling.ALWAYS_OFF)
+            # local, sampled
+            sampled_result = sampler.should_sample(
                 context,
                 0x8000000000000000,
                 "sampled parent, sampling off",
@@ -344,10 +346,42 @@ class TestSampler(unittest.TestCase):
             self.assertEqual(sampled_result.attributes, {"sampled": "true"})
             self.assertEqual(sampled_result.trace_state, trace_state)
 
-        # for root span follow decision of delegate sampler
+        with parent_sampling_context(
+            self._create_parent_span(trace_flags=TO_DEFAULT, is_remote=True)
+        ) as context:
+            sampler = sampling.ParentBased(sampling.ALWAYS_ON)
+            # remote, not sampled
+            not_sampled_result = sampler.should_sample(
+                context,
+                0x7FFFFFFFFFFFFFFF,
+                "unsampled parent, sampling on",
+                attributes={"sampled": "false"},
+                trace_state=trace_state,
+            )
+            self.assertFalse(not_sampled_result.decision.is_sampled())
+            self.assertEqual(not_sampled_result.attributes, {})
+            self.assertEqual(not_sampled_result.trace_state, trace_state)
+
+        with parent_sampling_context(
+            self._create_parent_span(trace_flags=TO_SAMPLED, is_remote=True)
+        ) as context:
+            sampler = sampling.ParentBased(sampling.ALWAYS_OFF)
+            # remote, sampled
+            sampled_result = sampler.should_sample(
+                context,
+                0x8000000000000000,
+                "sampled parent, sampling off",
+                attributes={"sampled": "true"},
+                trace_state=trace_state,
+            )
+            self.assertTrue(sampled_result.decision.is_sampled())
+            self.assertEqual(sampled_result.attributes, {"sampled": "true"})
+            self.assertEqual(sampled_result.trace_state, trace_state)
+
+        # for root span follow decision of root sampler
         with parent_sampling_context(trace.INVALID_SPAN) as context:
-            sampler3 = sampling.ParentBased(sampling.ALWAYS_OFF)
-            not_sampled_result = sampler3.should_sample(
+            sampler = sampling.ParentBased(sampling.ALWAYS_OFF)
+            not_sampled_result = sampler.should_sample(
                 context,
                 0x8000000000000000,
                 "parent, sampling off",
@@ -359,8 +393,8 @@ class TestSampler(unittest.TestCase):
             self.assertEqual(not_sampled_result.trace_state, trace_state)
 
         with parent_sampling_context(trace.INVALID_SPAN) as context:
-            sampler4 = sampling.ParentBased(sampling.ALWAYS_ON)
-            sampled_result = sampler4.should_sample(
+            sampler = sampling.ParentBased(sampling.ALWAYS_ON)
+            sampled_result = sampler.should_sample(
                 context,
                 0x8000000000000000,
                 "no parent, sampling on",

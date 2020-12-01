@@ -160,6 +160,13 @@ class StaticSampler(Sampler):
         return "AlwaysOnSampler"
 
 
+ALWAYS_OFF = StaticSampler(Decision.DROP)
+"""Sampler that never samples spans, regardless of the parent span's sampling decision."""
+
+ALWAYS_ON = StaticSampler(Decision.RECORD_AND_SAMPLE)
+"""Sampler that always samples spans, regardless of the parent span's sampling decision."""
+
+
 class TraceIdRatioBased(Sampler):
     """
     Sampler that makes sampling decisions probabalistically based on `rate`,
@@ -219,15 +226,32 @@ class TraceIdRatioBased(Sampler):
 class ParentBased(Sampler):
     """
     If a parent is set, follows the same sampling decision as the parent.
-    Otherwise, uses the delegate provided at initialization to make a
+    Otherwise, uses the root provided at initialization to make a
     decision.
 
     Args:
-        delegate: The delegate sampler to use if parent is not set.
+        root: Sampler called for spans with no parent (root spans).
+        remote_parent_sampled: Sampler called for a remote sampled parent.
+        remote_parent_not_sampled: Sampler called for a remote parent that is
+            not sampled.
+        local_parent_sampled: Sampler called for a local sampled parent.
+        local_parent_not_sampled: Sampler called for a local parent that is
+            not sampled.
     """
 
-    def __init__(self, delegate: Sampler):
-        self._delegate = delegate
+    def __init__(
+        self,
+        root: Sampler,
+        remote_parent_sampled: Sampler = ALWAYS_ON,
+        remote_parent_not_sampled: Sampler = ALWAYS_OFF,
+        local_parent_sampled: Sampler = ALWAYS_ON,
+        local_parent_not_sampled: Sampler = ALWAYS_OFF,
+    ):
+        self._root = root
+        self._remote_parent_sampled = remote_parent_sampled
+        self._remote_parent_not_sampled = remote_parent_not_sampled
+        self._local_parent_sampled = local_parent_sampled
+        self._local_parent_not_sampled = local_parent_not_sampled
 
     def should_sample(
         self,
@@ -241,15 +265,22 @@ class ParentBased(Sampler):
         parent_span_context = get_current_span(
             parent_context
         ).get_span_context()
-        # respect the sampling flag of the parent if present
+        # default to the root sampler
+        sampler = self._root
+        # respect the sampling and remote flag of the parent if present
         if parent_span_context is not None and parent_span_context.is_valid:
-            decision = Decision.RECORD_AND_SAMPLE
-            if not parent_span_context.trace_flags.sampled:
-                decision = Decision.DROP
-                attributes = None
-            return SamplingResult(decision, attributes, trace_state)
+            if parent_span_context.is_remote:
+                if parent_span_context.trace_flags.sampled:
+                    sampler = self._remote_parent_sampled
+                else:
+                    sampler = self._remote_parent_not_sampled
+            else:
+                if parent_span_context.trace_flags.sampled:
+                    sampler = self._local_parent_sampled
+                else:
+                    sampler = self._local_parent_not_sampled
 
-        return self._delegate.should_sample(
+        return sampler.should_sample(
             parent_context=parent_context,
             trace_id=trace_id,
             name=name,
@@ -259,14 +290,15 @@ class ParentBased(Sampler):
         )
 
     def get_description(self):
-        return "ParentBased{{{}}}".format(self._delegate.get_description())
+        return "ParentBased{root:%s,remoteParentSampled:%s,remoteParentNotSampled:%s," \
+            "localParentSampled:%s,localParentNotSampled:%s}".format(
+            self._root.get_description(),
+            self._remote_parent_sampled.get_description(),
+            self._remote_parent_not_sampled.get_description(),
+            self._local_parent_sampled.get_description(),
+            self._local_parent_not_sampled.get_description(),
+        )
 
-
-ALWAYS_OFF = StaticSampler(Decision.DROP)
-"""Sampler that never samples spans, regardless of the parent span's sampling decision."""
-
-ALWAYS_ON = StaticSampler(Decision.RECORD_AND_SAMPLE)
-"""Sampler that always samples spans, regardless of the parent span's sampling decision."""
 
 DEFAULT_OFF = ParentBased(ALWAYS_OFF)
 """Sampler that respects its parent span's sampling decision, but otherwise never samples."""
