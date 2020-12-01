@@ -373,10 +373,11 @@ class ConsoleSpanExporter(SpanExporter):
         out: typing.IO = sys.stdout,
         formatter: typing.Callable[[Span], str] = lambda span: span.to_json()
         + os.linesep,
-        **kwargs
+        service_name=None,
     ):
         self.out = out
         self.formatter = formatter
+        self.service_name = service_name
 
     def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         for span in spans:
