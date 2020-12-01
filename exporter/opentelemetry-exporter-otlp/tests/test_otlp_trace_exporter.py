@@ -190,6 +190,7 @@ class TestOTLPSpanExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
     @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
     @patch("opentelemetry.exporter.otlp.trace_exporter.OTLPSpanExporter._stub")
+    # pylint: disable=unused-argument
     def test_no_credentials_error(
         self, mock_ssl_channel, mock_secure, mock_stub
     ):
