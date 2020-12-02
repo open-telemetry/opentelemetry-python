@@ -15,7 +15,7 @@
 import atexit
 import logging
 import threading
-from typing import Dict, Sequence, Tuple, Type, TypeVar
+from typing import Dict, Sequence, Tuple, Type, TypeVar, Union
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.metrics.export import (
@@ -356,19 +356,47 @@ class Accumulator(metrics_api.Meter):
     ):
         self.instrumentation_info = instrumentation_info
         self.processor = Processor(source.stateful, source.resource)
-        self.metrics = set()
-        self.observers = set()
+        self.metrics = dict()
+        self.observers = dict()
         self.metrics_lock = threading.Lock()
         self.observers_lock = threading.Lock()
         self.view_manager = ViewManager()
-        self.instrument_names = set()
 
-    def _check_instrument_name(self, name: str):
-        if name in self.instrument_names:
-            raise ValueError(
-                "Multiple instruments can't registered by the same name"
-            )
-        self.instrument_names.add(name)
+    def _register_metric(
+        self,
+        instrument: Union[
+            metrics_api.Counter,
+            metrics_api.UpDownCounter,
+            metrics_api.ValueRecorder,
+        ],
+    ):
+        with self.metrics_lock:
+            name = instrument.name.strip().lower()
+            if name in self.metrics:
+                raise ValueError(
+                    "Multiple instruments can't be registered by the same name: ({})".format(
+                        name
+                    )
+                )
+            self.metrics[name] = instrument
+
+    def _register_observer(
+        self,
+        instrument: Union[
+            metrics_api.SumObserver,
+            metrics_api.UpDownSumObserver,
+            metrics_api.ValueObserver,
+        ],
+    ):
+        with self.observers_lock:
+            name = instrument.name.strip().lower()
+            if name in self.observers:
+                raise ValueError(
+                    "Multiple instruments can't be registered by the same name: ({})".format(
+                        name
+                    )
+                )
+            self.observers[name] = instrument
 
     def collect(self) -> None:
         """Collects all the metrics created with this `Meter` for export.
@@ -382,7 +410,7 @@ class Accumulator(metrics_api.Meter):
         self._collect_observers()
 
     def _collect_metrics(self) -> None:
-        for metric in self.metrics:
+        for metric in self.metrics.values():
             if not metric.enabled:
                 continue
             to_remove = []
@@ -406,7 +434,7 @@ class Accumulator(metrics_api.Meter):
 
     def _collect_observers(self) -> None:
         with self.observers_lock:
-            for observer in self.observers:
+            for observer in self.observers.values():
                 if not observer.enabled:
                     continue
 
@@ -437,12 +465,10 @@ class Accumulator(metrics_api.Meter):
         enabled: bool = True,
     ) -> metrics_api.Counter:
         """See `opentelemetry.metrics.Meter.create_counter`."""
-        self._check_instrument_name(name)
         counter = Counter(
             name, description, unit, value_type, self, enabled=enabled
         )
-        with self.metrics_lock:
-            self.metrics.add(counter)
+        self._register_metric(counter)
         return counter
 
     def create_updowncounter(
@@ -454,12 +480,10 @@ class Accumulator(metrics_api.Meter):
         enabled: bool = True,
     ) -> metrics_api.UpDownCounter:
         """See `opentelemetry.metrics.Meter.create_updowncounter`."""
-        self._check_instrument_name(name)
         counter = UpDownCounter(
             name, description, unit, value_type, self, enabled=enabled
         )
-        with self.metrics_lock:
-            self.metrics.add(counter)
+        self._register_metric(counter)
         return counter
 
     def create_valuerecorder(
@@ -471,12 +495,10 @@ class Accumulator(metrics_api.Meter):
         enabled: bool = True,
     ) -> metrics_api.ValueRecorder:
         """See `opentelemetry.metrics.Meter.create_valuerecorder`."""
-        self._check_instrument_name(name)
         recorder = ValueRecorder(
             name, description, unit, value_type, self, enabled=enabled
         )
-        with self.metrics_lock:
-            self.metrics.add(recorder)
+        self._register_metric(recorder)
         return recorder
 
     def register_sumobserver(
@@ -489,7 +511,6 @@ class Accumulator(metrics_api.Meter):
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> metrics_api.SumObserver:
-        self._check_instrument_name(name)
         ob = SumObserver(
             callback,
             name,
@@ -500,8 +521,7 @@ class Accumulator(metrics_api.Meter):
             label_keys,
             enabled,
         )
-        with self.observers_lock:
-            self.observers.add(ob)
+        self._register_observer(ob)
         return ob
 
     def register_updownsumobserver(
@@ -514,7 +534,6 @@ class Accumulator(metrics_api.Meter):
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> metrics_api.UpDownSumObserver:
-        self._check_instrument_name(name)
         ob = UpDownSumObserver(
             callback,
             name,
@@ -525,8 +544,7 @@ class Accumulator(metrics_api.Meter):
             label_keys,
             enabled,
         )
-        with self.observers_lock:
-            self.observers.add(ob)
+        self._register_observer(ob)
         return ob
 
     def register_valueobserver(
@@ -539,7 +557,6 @@ class Accumulator(metrics_api.Meter):
         label_keys: Sequence[str] = (),
         enabled: bool = True,
     ) -> metrics_api.ValueObserver:
-        self._check_instrument_name(name)
         ob = ValueObserver(
             callback,
             name,
@@ -550,14 +567,12 @@ class Accumulator(metrics_api.Meter):
             label_keys,
             enabled,
         )
-        with self.observers_lock:
-            self.observers.add(ob)
+        self._register_observer(ob)
         return ob
 
     def unregister_observer(self, observer: metrics_api.Observer) -> None:
         with self.observers_lock:
-            self.instrument_names.remove(observer.name)
-            self.observers.remove(observer)
+            self.observers.pop(observer.name, None)
 
     def register_view(self, view):
         self.view_manager.register_view(view)

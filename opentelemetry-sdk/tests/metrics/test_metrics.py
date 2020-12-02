@@ -118,11 +118,9 @@ class TestMeter(unittest.TestCase):
             self.assertIsInstance(observer, metrics_api.Observer)
             observer.observe(45, {})
 
-        observer = metrics.ValueObserver(
+        meter.register_valueobserver(
             callback, "name", "desc", "unit", int, (), True
         )
-
-        meter.observers.add(observer)
         meter.collect()
         self.assertTrue(processor_mock.process.called)
 
@@ -177,7 +175,7 @@ class TestMeter(unittest.TestCase):
         with self.assertRaises(ValueError) as ctx:
             _ = meter.create_counter("name", "desc", "unit", int,)
         self.assertTrue(
-            "Multiple instruments can't registered by the same name"
+            "Multiple instruments can't be registered by the same name: (name)"
             in str(ctx.exception)
         )
 
