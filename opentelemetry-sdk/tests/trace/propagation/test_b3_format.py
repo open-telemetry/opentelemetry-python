@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.propagation.b3_format as b3_format
@@ -337,3 +337,21 @@ class TestB3Format(unittest.TestCase):
 
         ctx = FORMAT.extract(CarrierGetter(), {})
         FORMAT.inject(setter, {}, ctx)
+
+    def test_fields(self):
+        """Make sure the fields attribute returns the fields used in inject"""
+
+        tracer = trace.TracerProvider().get_tracer("sdk_tracer_provider")
+
+        mock_set_in_carrier = Mock()
+
+        with tracer.start_as_current_span("parent"):
+            with tracer.start_as_current_span("child"):
+                FORMAT.inject(mock_set_in_carrier, {})
+
+        inject_fields = set()
+
+        for call in mock_set_in_carrier.mock_calls:
+            inject_fields.add(call[1][1])
+
+        self.assertEqual(FORMAT.fields, inject_fields)
