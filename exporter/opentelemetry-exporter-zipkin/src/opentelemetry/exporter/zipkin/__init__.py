@@ -371,11 +371,8 @@ class ZipkinSpanExporter(SpanExporter):
             tags[attribute_key] = value
         return tags
 
-    def _extract_tag_value_string_from_sequence(self, sequence):
-        if not sequence:
-            return None
-
-        if self.max_tag_value_length == 1:
+    def _extract_tag_value_string_from_sequence(self, sequence: Sequence):
+        if not sequence or self.max_tag_value_length == 1:
             return None
 
         tag_value_elements = []
@@ -384,29 +381,26 @@ class ZipkinSpanExporter(SpanExporter):
         )
         defined_max_tag_value_length = self.max_tag_value_length > 0
 
-        if isinstance(sequence, (list, tuple, range)):
-            for element in sequence:
-                if isinstance(element, (int, bool, float)):
-                    tag_value_element = str(element)
-                elif isinstance(element, str):
-                    tag_value_element = element
-                else:
-                    return None
+        for element in sequence:
+            if isinstance(element, (int, bool, float)):
+                tag_value_element = str(element)
+            elif isinstance(element, str):
+                tag_value_element = element
+            else:
+                return None
 
-                if defined_max_tag_value_length:
+            if defined_max_tag_value_length:
+                running_string_length += (
+                    len(tag_value_element) + 2
+                )  # +2 accounts for surrounding quotes
+                if tag_value_elements:
                     running_string_length += (
-                        len(tag_value_element) + 2
-                    )  # +2 accounts for surrounding quotes
-                    if tag_value_elements:
-                        running_string_length += (
-                            2  # accounts for ', ' connector
-                        )
-                    if running_string_length > self.max_tag_value_length:
-                        break
+                        2  # accounts for ', ' connector
+                    )
+                if running_string_length > self.max_tag_value_length:
+                    break
 
-                tag_value_elements.append(tag_value_element)
-        else:
-            return None
+            tag_value_elements.append(tag_value_element)
 
         return json.dumps(tag_value_elements)
 
