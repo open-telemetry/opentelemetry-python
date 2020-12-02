@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import typing
 import unittest
+from unittest.mock import Mock, patch
 
 from opentelemetry import baggage
 from opentelemetry.baggage.propagation import BaggagePropagator
@@ -142,3 +142,18 @@ class TestBaggagePropagation(unittest.TestCase):
         self.assertIn("key1=True", output)
         self.assertIn("key2=123", output)
         self.assertIn("key3=123.567", output)
+
+    @patch("opentelemetry.baggage.propagation.baggage")
+    @patch("opentelemetry.baggage.propagation._format_baggage")
+    def test_fields(self, mock_format_baggage, mock_baggage):
+
+        mock_set_in_carrier = Mock()
+
+        self.propagator.inject(mock_set_in_carrier, {})
+
+        inject_fields = set()
+
+        for mock_call in mock_set_in_carrier.mock_calls:
+            inject_fields.add(mock_call[1][1])
+
+        self.assertEqual(inject_fields, self.propagator.fields)
