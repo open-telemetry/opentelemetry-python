@@ -311,6 +311,7 @@ class TestSampler(unittest.TestCase):
             almost_almost_always_on.bound, 0xFFFFFFFFFFFFFFFF,
         )
 
+    # pylint:disable=too-many-statements
     def exec_parent_based(self, parent_sampling_context):
         trace_state = trace.TraceState({"key": "value"})
         sampler = sampling.ParentBased(sampling.ALWAYS_ON)
