@@ -27,7 +27,7 @@ A `StaticSampler` always returns the same sampling result regardless of the cond
 
 A `TraceIdRatioBased` sampler makes a random sampling result based on the sampling probability given.
 
-If the span being sampled has a parent, `ParentBased` will respect the parent span's sampling result. Otherwise, it returns the sampling result from the given delegate sampler.
+If the span being sampled has a parent, `ParentBased` will respect the parent delegate sampler. Otherwise, it returns the sampling result from the given root sampler.
 
 Currently, sampling results are always made during the creation of the span. However, this might not always be the case in the future (see `OTEP #115 <https://github.com/open-telemetry/oteps/pull/115>`_).
 
@@ -225,7 +225,7 @@ class TraceIdRatioBased(Sampler):
 
 class ParentBased(Sampler):
     """
-    If a parent is set, follows the same sampling decision as the parent.
+    If a parent is set, applies the respective delegate sampler.
     Otherwise, uses the root provided at initialization to make a
     decision.
 
