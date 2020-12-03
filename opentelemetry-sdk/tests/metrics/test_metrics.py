@@ -208,7 +208,7 @@ class TestMeter(unittest.TestCase):
         )
 
         self.assertIsInstance(observer, metrics.SumObserver)
-        self.assertEqual(len(meter.observers), 1)
+        self.assertEqual(len(meter.instruments), 1)
 
         self.assertEqual(observer.callback, callback)
         self.assertEqual(observer.name, "name")
@@ -228,7 +228,7 @@ class TestMeter(unittest.TestCase):
         )
 
         self.assertIsInstance(observer, metrics.UpDownSumObserver)
-        self.assertEqual(len(meter.observers), 1)
+        self.assertEqual(len(meter.instruments), 1)
 
         self.assertEqual(observer.callback, callback)
         self.assertEqual(observer.name, "name")
@@ -248,7 +248,7 @@ class TestMeter(unittest.TestCase):
         )
 
         self.assertIsInstance(observer, metrics.ValueObserver)
-        self.assertEqual(len(meter.observers), 1)
+        self.assertEqual(len(meter.instruments), 1)
 
         self.assertEqual(observer.callback, callback)
         self.assertEqual(observer.name, "name")
@@ -268,7 +268,7 @@ class TestMeter(unittest.TestCase):
         )
 
         meter.unregister_observer(observer)
-        self.assertEqual(len(meter.observers), 0)
+        self.assertEqual(len(meter.instruments), 0)
 
     def test_unregister_and_reregister_observer(self):
         meter = metrics.MeterProvider().get_meter(__name__)
@@ -285,7 +285,7 @@ class TestMeter(unittest.TestCase):
         )
 
         meter.unregister_observer(observer)
-        self.assertEqual(len(meter.observers), 0)
+        self.assertEqual(len(meter.instruments), 0)
         observer = meter.register_valueobserver(
             callback, "name", "desc", "unit", int, metrics.ValueObserver
         )

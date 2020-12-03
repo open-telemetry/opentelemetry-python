@@ -15,7 +15,7 @@
 import atexit
 import logging
 import threading
-from typing import Dict, Sequence, Tuple, Type, TypeVar
+from typing import Dict, Sequence, Tuple, Type, TypeVar, Union
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry.sdk.metrics.export import (
@@ -356,33 +356,22 @@ class Accumulator(metrics_api.Meter):
     ):
         self.instrumentation_info = instrumentation_info
         self.processor = Processor(source.stateful, source.resource)
-        self.metrics = {}
-        self.observers = {}
-        self.metrics_lock = threading.Lock()
-        self.observers_lock = threading.Lock()
+        self.instruments = {}
+        self.instruments_lock = threading.Lock()
         self.view_manager = ViewManager()
 
-    def _register_metric(self, instrument: metrics_api.Metric):
+    def _register_instrument(
+        self, instrument: Union[metrics_api.Metric, metrics_api.Observer]
+    ):
         name = instrument.name.strip().lower()
-        with self.metrics_lock:
-            if name in self.metrics:
+        with self.instruments_lock:
+            if name in self.instruments:
                 raise ValueError(
                     "Multiple instruments can't be registered by the same name: ({})".format(
                         name
                     )
                 )
-            self.metrics[name] = instrument
-
-    def _register_observer(self, instrument: metrics_api.Observer):
-        name = instrument.name.strip().lower()
-        with self.observers_lock:
-            if name in self.observers:
-                raise ValueError(
-                    "Multiple instruments can't be registered by the same name: ({})".format(
-                        name
-                    )
-                )
-            self.observers[name] = instrument
+            self.instruments[name] = instrument
 
     def collect(self) -> None:
         """Collects all the metrics created with this `Meter` for export.
@@ -396,18 +385,21 @@ class Accumulator(metrics_api.Meter):
         self._collect_observers()
 
     def _collect_metrics(self) -> None:
-        for metric in self.metrics.values():
-            if not metric.enabled:
+        for instrument in self.instruments.values():
+            if (
+                not isinstance(instrument, metrics_api.Metric)
+                or not instrument.enabled
+            ):
                 continue
             to_remove = []
-            with metric.bound_instruments_lock:
+            with instrument.bound_instruments_lock:
                 for (
                     labels,
                     bound_instrument,
-                ) in metric.bound_instruments.items():
+                ) in instrument.bound_instruments.items():
                     for view_data in bound_instrument.view_datas:
                         accumulation = Accumulation(
-                            metric, view_data.labels, view_data.aggregator
+                            instrument, view_data.labels, view_data.aggregator
                         )
                         self.processor.process(accumulation)
 
@@ -416,19 +408,22 @@ class Accumulator(metrics_api.Meter):
 
             # Remove handles that were released
             for labels in to_remove:
-                del metric.bound_instruments[labels]
+                del instrument.bound_instruments[labels]
 
     def _collect_observers(self) -> None:
-        with self.observers_lock:
-            for observer in self.observers.values():
-                if not observer.enabled:
+        with self.instruments_lock:
+            for instrument in self.instruments.values():
+                if (
+                    not isinstance(instrument, metrics_api.Observer)
+                    or not instrument.enabled
+                ):
                     continue
 
-                if not observer.run():
+                if not instrument.run():
                     continue
 
-                for labels, aggregator in observer.aggregators.items():
-                    accumulation = Accumulation(observer, labels, aggregator)
+                for labels, aggregator in instrument.aggregators.items():
+                    accumulation = Accumulation(instrument, labels, aggregator)
                     self.processor.process(accumulation)
 
     def record_batch(
@@ -454,7 +449,7 @@ class Accumulator(metrics_api.Meter):
         counter = Counter(
             name, description, unit, value_type, self, enabled=enabled
         )
-        self._register_metric(counter)
+        self._register_instrument(counter)
         return counter
 
     def create_updowncounter(
@@ -469,7 +464,7 @@ class Accumulator(metrics_api.Meter):
         counter = UpDownCounter(
             name, description, unit, value_type, self, enabled=enabled
         )
-        self._register_metric(counter)
+        self._register_instrument(counter)
         return counter
 
     def create_valuerecorder(
@@ -484,7 +479,7 @@ class Accumulator(metrics_api.Meter):
         recorder = ValueRecorder(
             name, description, unit, value_type, self, enabled=enabled
         )
-        self._register_metric(recorder)
+        self._register_instrument(recorder)
         return recorder
 
     def register_sumobserver(
@@ -507,7 +502,7 @@ class Accumulator(metrics_api.Meter):
             label_keys,
             enabled,
         )
-        self._register_observer(ob)
+        self._register_instrument(ob)
         return ob
 
     def register_updownsumobserver(
@@ -530,7 +525,7 @@ class Accumulator(metrics_api.Meter):
             label_keys,
             enabled,
         )
-        self._register_observer(ob)
+        self._register_instrument(ob)
         return ob
 
     def register_valueobserver(
@@ -553,13 +548,13 @@ class Accumulator(metrics_api.Meter):
             label_keys,
             enabled,
         )
-        self._register_observer(ob)
+        self._register_instrument(ob)
         return ob
 
     def unregister_observer(self, observer: metrics_api.Observer) -> None:
         name = observer.name.strip().lower()
-        with self.observers_lock:
-            self.observers.pop(name)
+        with self.instruments_lock:
+            self.instruments.pop(name)
 
     def register_view(self, view):
         self.view_manager.register_view(view)
