@@ -65,3 +65,18 @@ class CompositeHTTPPropagator(textmap.TextMapPropagator):
         """
         for propagator in self._propagators:
             propagator.inject(set_in_carrier, carrier, context)
+
+    @property
+    def fields(self) -> typing.Set[str]:
+        """Returns a set with the fields set in `inject`.
+
+        See
+        `opentelemetry.trace.propagation.textmap.TextMapPropagator.fields`
+        """
+        composite_fields = set()
+
+        for propagator in self._propagators:
+            for field in propagator.fields:
+                composite_fields.add(field)
+
+        return composite_fields

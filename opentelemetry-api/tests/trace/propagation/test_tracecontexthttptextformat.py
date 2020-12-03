@@ -14,6 +14,7 @@
 
 import typing
 import unittest
+from unittest.mock import Mock, patch
 
 from opentelemetry import trace
 from opentelemetry.trace.propagation import tracecontext
@@ -232,7 +233,8 @@ class TestTraceContextFormat(unittest.TestCase):
                 carrier_getter,
                 {
                     "traceparent": [
-                        "00-12345678901234567890123456789012-1234567890123456-00"
+                        "00-12345678901234567890123456789012-"
+                        "1234567890123456-00"
                     ],
                     "tracestate": [tracestate_value],
                 },
@@ -248,3 +250,33 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertEqual(
             span.get_span_context().trace_state["foo-_*/bar"], "bar4"
         )
+
+    @patch("opentelemetry.trace.INVALID_SPAN_CONTEXT")
+    @patch("opentelemetry.trace.get_current_span")
+    def test_fields(self, mock_get_current_span, mock_invalid_span_context):
+
+        mock_get_current_span.configure_mock(
+            return_value=Mock(
+                **{
+                    "get_span_context.return_value": Mock(
+                        **{
+                            "trace_id": 1,
+                            "span_id": 2,
+                            "trace_flags": 3,
+                            "trace_state": {"a": "b"},
+                        }
+                    )
+                }
+            )
+        )
+
+        mock_set_in_carrier = Mock()
+
+        FORMAT.inject(mock_set_in_carrier, {})
+
+        inject_fields = set()
+
+        for mock_call in mock_set_in_carrier.mock_calls:
+            inject_fields.add(mock_call[1][1])
+
+        self.assertEqual(inject_fields, FORMAT.fields)
