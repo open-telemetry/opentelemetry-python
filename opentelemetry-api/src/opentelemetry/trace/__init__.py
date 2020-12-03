@@ -76,6 +76,7 @@ either implicit or explicit context propagation consistently throughout.
 
 import abc
 import enum
+import functools
 import typing
 from contextlib import contextmanager
 from logging import getLogger
@@ -408,7 +409,78 @@ class DefaultTracer(Tracer):
         yield
 
 
+class ProxyTracer(Tracer):
+    """Proxies all calls to current TracerProvider
+    """
+
+    def __init__(
+        self, get_current_tracer: typing.Callable[[], "Tracer"],
+    ) -> None:
+        self._get_current_tracer = get_current_tracer
+
+    def start_span(
+        self,
+        name: str,
+        context: typing.Optional[Context] = None,
+        kind: SpanKind = SpanKind.INTERNAL,
+        attributes: types.Attributes = None,
+        links: typing.Sequence[Link] = (),
+        start_time: typing.Optional[int] = None,
+        record_exception: bool = True,
+        set_status_on_exception: bool = True,
+    ) -> "Span":
+        return self._get_current_tracer().start_span(
+            name=name,
+            context=context,
+            kind=kind,
+            attributes=attributes,
+            links=links,
+            start_time=start_time,
+            record_exception=record_exception,
+            set_status_on_exception=set_status_on_exception,
+        )
+
+    @contextmanager  # type: ignore
+    def start_as_current_span(
+        self,
+        name: str,
+        context: typing.Optional[Context] = None,
+        kind: SpanKind = SpanKind.INTERNAL,
+        attributes: types.Attributes = None,
+        links: typing.Sequence[Link] = (),
+        start_time: typing.Optional[int] = None,
+        record_exception: bool = True,
+        set_status_on_exception: bool = True,
+    ) -> typing.Iterator["Span"]:
+        with self._get_current_tracer().start_as_current_span(
+            name=name,
+            context=context,
+            kind=kind,
+            attributes=attributes,
+            links=links,
+            start_time=start_time,
+            record_exception=record_exception,
+            set_status_on_exception=set_status_on_exception,
+        ) as span:
+            yield span
+
+    @contextmanager  # type: ignore
+    def use_span(
+        self, span: "Span", end_on_exit: bool = False,
+    ) -> typing.Iterator[None]:
+        with self._get_current_tracer().use_span(
+            span=span, end_on_exit=end_on_exit,
+        ) as context:
+            yield context
+
+
 _TRACER_PROVIDER = None
+
+
+@functools.lru_cache(maxsize=128)  # type: ignore
+def _get_current_tracer(*args: typing.Any, **kwargs: typing.Any) -> "Tracer":
+    tracer_provider = get_tracer_provider()
+    return tracer_provider.get_tracer(*args, **kwargs)  # type: ignore
 
 
 def get_tracer(
@@ -424,7 +496,14 @@ def get_tracer(
     If tracer_provider is ommited the current configured one is used.
     """
     if tracer_provider is None:
-        tracer_provider = get_tracer_provider()
+        return ProxyTracer(
+            functools.partial(
+                _get_current_tracer,
+                instrumenting_module_name=instrumenting_module_name,
+                instrumenting_library_version=instrumenting_library_version,
+            )
+        )
+
     return tracer_provider.get_tracer(
         instrumenting_module_name, instrumenting_library_version
     )
@@ -438,11 +517,8 @@ def set_tracer_provider(tracer_provider: TracerProvider) -> None:
     """
     global _TRACER_PROVIDER  # pylint: disable=global-statement
 
-    if _TRACER_PROVIDER is not None:
-        logger.warning("Overriding of current TracerProvider is not allowed")
-        return
-
     _TRACER_PROVIDER = tracer_provider
+    _get_current_tracer.cache_clear()  # pylint: disable=no-member
 
 
 def get_tracer_provider() -> TracerProvider:
