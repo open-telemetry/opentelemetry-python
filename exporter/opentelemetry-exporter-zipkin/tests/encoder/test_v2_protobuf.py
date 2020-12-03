@@ -24,6 +24,7 @@ from opentelemetry.trace import SpanKind, TraceFlags
 from .common_tests import CommonEncoderTestCases
 
 
+# pylint: disable=protected-access
 class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
     @staticmethod
     def get_encoder(*args, **kwargs) -> ProtobufEncoder:

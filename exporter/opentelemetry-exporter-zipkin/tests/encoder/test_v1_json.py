@@ -22,6 +22,7 @@ from opentelemetry.trace import TraceFlags
 from .common_tests import CommonEncoderTestCases
 
 
+# pylint: disable=protected-access
 class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
     @staticmethod
     def get_encoder(*args, **kwargs) -> JsonV1Encoder:
@@ -173,7 +174,7 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
             },
         ]
 
-        self.assertEqual_encoded_spans(
+        self.assert_equal_encoded_spans(
             json.dumps(expected_output),
             JsonV1Encoder().serialize(otel_spans, NodeEndpoint(service_name)),
         )
@@ -279,7 +280,7 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
             }
         ]
 
-        self.assertEqual_encoded_spans(
+        self.assert_equal_encoded_spans(
             json.dumps(expected_output),
             JsonV1Encoder(max_tag_value_length).serialize(
                 [otel_span], NodeEndpoint(service_name)
