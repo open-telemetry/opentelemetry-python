@@ -66,6 +66,14 @@ class TestB3Format(unittest.TestCase):
             ids_generator.generate_span_id()
         )
 
+    def setUp(self) -> None:
+        tracer_provider = trace.TracerProvider()
+        patcher = unittest.mock.patch.object(
+            trace_api, "get_tracer_provider", return_value=tracer_provider
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def test_extract_multi_header(self):
         """Test the extraction of B3 headers."""
         child, parent, new_carrier = get_child_parent_new_carrier(

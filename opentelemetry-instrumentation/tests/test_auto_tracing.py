@@ -20,10 +20,12 @@ from unittest.mock import patch
 from opentelemetry.configuration import Configuration
 from opentelemetry.instrumentation.auto_instrumentation import components
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.trace.ids_generator import RandomIdsGenerator
 
 
 class Provider:
-    def __init__(self, resource=None):
+    def __init__(self, resource=None, ids_generator=None):
+        self.ids_generator = ids_generator
         self.processor = None
         self.resource = resource
 
@@ -46,6 +48,23 @@ class Exporter:
 
 class OTLPExporter:
     pass
+
+
+class IdsGenerator:
+    pass
+
+
+class CustomIdsGenerator(IdsGenerator):
+    pass
+
+
+class IterEntryPoint:
+    def __init__(self, name, class_type):
+        self.name = name
+        self.class_type = class_type
+
+    def load(self):
+        return self.class_type
 
 
 class TestTraceInit(TestCase):
@@ -77,11 +96,12 @@ class TestTraceInit(TestCase):
     def test_trace_init_default(self):
         environ["OTEL_SERVICE_NAME"] = "my-test-service"
         Configuration._reset()
-        components.init_tracing({"zipkin": Exporter})
+        components.init_tracing({"zipkin": Exporter}, RandomIdsGenerator)
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, Provider)
+        self.assertIsInstance(provider.ids_generator, RandomIdsGenerator)
         self.assertIsInstance(provider.processor, Processor)
         self.assertIsInstance(provider.processor.exporter, Exporter)
         self.assertEqual(
@@ -91,11 +111,12 @@ class TestTraceInit(TestCase):
     def test_trace_init_otlp(self):
         environ["OTEL_SERVICE_NAME"] = "my-otlp-test-service"
         Configuration._reset()
-        components.init_tracing({"otlp": OTLPExporter})
+        components.init_tracing({"otlp": OTLPExporter}, RandomIdsGenerator)
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, Provider)
+        self.assertIsInstance(provider.ids_generator, RandomIdsGenerator)
         self.assertIsInstance(provider.processor, Processor)
         self.assertIsInstance(provider.processor.exporter, OTLPExporter)
         self.assertIsInstance(provider.resource, Resource)
@@ -104,3 +125,24 @@ class TestTraceInit(TestCase):
             "my-otlp-test-service",
         )
         del environ["OTEL_SERVICE_NAME"]
+
+    @patch.dict(environ, {"OTEL_IDS_GENERATOR": "custom_ids_generator"})
+    @patch(
+        "opentelemetry.instrumentation.auto_instrumentation.components.trace.IdsGenerator",
+        new=IdsGenerator,
+    )
+    @patch(
+        "opentelemetry.instrumentation.auto_instrumentation.components.iter_entry_points"
+    )
+    def test_trace_init_custom_ids_generator(self, mock_iter_entry_points):
+        mock_iter_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint("custom_ids_generator", CustomIdsGenerator)
+            ]
+        )
+        Configuration._reset()
+        ids_generator_name = components.get_ids_generator()
+        ids_generator = components.import_ids_generator(ids_generator_name)
+        components.init_tracing({}, ids_generator)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider.ids_generator, CustomIdsGenerator)
