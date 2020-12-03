@@ -152,6 +152,15 @@ class B3Format(TextMapPropagator):
             )
         set_in_carrier(carrier, self.SAMPLED_KEY, "1" if sampled else "0")
 
+    @property
+    def fields(self) -> typing.Set[str]:
+        return {
+            self.TRACE_ID_KEY,
+            self.SPAN_ID_KEY,
+            self.PARENT_SPAN_ID_KEY,
+            self.SAMPLED_KEY,
+        }
+
 
 def format_trace_id(trace_id: int) -> str:
     """Format the trace id according to b3 specification."""
