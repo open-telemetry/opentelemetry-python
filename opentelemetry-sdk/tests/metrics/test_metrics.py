@@ -173,7 +173,7 @@ class TestMeter(unittest.TestCase):
         self.assertIs(meter_provider.resource, resource)
         self.assertEqual(counter.meter, meter)
         with self.assertRaises(ValueError) as ctx:
-            _ = meter.create_counter("name", "desc", "unit", int,)
+            _ = meter.create_counter("naME", "desc", "unit", int,)
         self.assertTrue(
             "Multiple instruments can't be registered by the same name: (name)"
             in str(ctx.exception)
@@ -276,7 +276,12 @@ class TestMeter(unittest.TestCase):
         callback = Mock()
 
         observer = meter.register_valueobserver(
-            callback, "name", "desc", "unit", int, metrics.ValueObserver
+            callback,
+            "nameCaSEinSENsitive",
+            "desc",
+            "unit",
+            int,
+            metrics.ValueObserver,
         )
 
         meter.unregister_observer(observer)

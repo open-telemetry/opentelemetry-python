@@ -356,22 +356,15 @@ class Accumulator(metrics_api.Meter):
     ):
         self.instrumentation_info = instrumentation_info
         self.processor = Processor(source.stateful, source.resource)
-        self.metrics = dict()
-        self.observers = dict()
+        self.metrics = {}
+        self.observers = {}
         self.metrics_lock = threading.Lock()
         self.observers_lock = threading.Lock()
         self.view_manager = ViewManager()
 
-    def _register_metric(
-        self,
-        instrument: Union[
-            metrics_api.Counter,
-            metrics_api.UpDownCounter,
-            metrics_api.ValueRecorder,
-        ],
-    ):
+    def _register_metric(self, instrument: metrics_api.Metric):
+        name = instrument.name.strip().lower()
         with self.metrics_lock:
-            name = instrument.name.strip().lower()
             if name in self.metrics:
                 raise ValueError(
                     "Multiple instruments can't be registered by the same name: ({})".format(
@@ -380,16 +373,9 @@ class Accumulator(metrics_api.Meter):
                 )
             self.metrics[name] = instrument
 
-    def _register_observer(
-        self,
-        instrument: Union[
-            metrics_api.SumObserver,
-            metrics_api.UpDownSumObserver,
-            metrics_api.ValueObserver,
-        ],
-    ):
+    def _register_observer(self, instrument: metrics_api.Observer):
+        name = instrument.name.strip().lower()
         with self.observers_lock:
-            name = instrument.name.strip().lower()
             if name in self.observers:
                 raise ValueError(
                     "Multiple instruments can't be registered by the same name: ({})".format(
@@ -571,8 +557,9 @@ class Accumulator(metrics_api.Meter):
         return ob
 
     def unregister_observer(self, observer: metrics_api.Observer) -> None:
+        name = observer.name.strip().lower()
         with self.observers_lock:
-            self.observers.pop(observer.name, None)
+            self.observers.pop(name)
 
     def register_view(self, view):
         self.view_manager.register_view(view)
