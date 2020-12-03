@@ -6,6 +6,8 @@
   ([#1425](https://github.com/open-telemetry/opentelemetry-python/pull/1425))
 - Added support for Jaeger propagator
   ([#1219](https://github.com/open-telemetry/opentelemetry-python/pull/1219))
+- Add `fields` to propagators
+  ([#1374](https://github.com/open-telemetry/opentelemetry-python/pull/1374))
 
 ## Version 0.16b0
 
