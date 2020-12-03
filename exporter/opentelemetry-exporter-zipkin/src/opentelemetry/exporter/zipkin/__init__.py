@@ -351,10 +351,8 @@ class ZipkinSpanExporter(SpanExporter):
         if not tags_dict:
             return tags
         for attribute_key, attribute_value in tags_dict.items():
-            if isinstance(attribute_value, (int, bool, float)):
+            if isinstance(attribute_value, (int, bool, float, str)):
                 value = str(attribute_value)
-            elif isinstance(attribute_value, str):
-                value = attribute_value
             elif isinstance(attribute_value, Sequence):
                 value = self._extract_tag_value_string_from_sequence(
                     attribute_value
@@ -382,14 +380,12 @@ class ZipkinSpanExporter(SpanExporter):
         defined_max_tag_value_length = self.max_tag_value_length > 0
 
         for element in sequence:
-            if isinstance(element, (int, bool, float)):
+            if isinstance(element, (int, bool, float, str)):
                 tag_value_element = str(element)
-            elif isinstance(element, str):
-                tag_value_element = element
             elif element is None:
                 tag_value_element = None
             else:
-                return None
+                continue
 
             if defined_max_tag_value_length:
                 if tag_value_element is None:
