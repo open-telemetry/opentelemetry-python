@@ -49,7 +49,7 @@ class JsonV1Encoder(JsonEncoder, V1Encoder):
             encoded_span["annotations"] = encoded_annotations
 
         binary_annotations = self._extract_binary_annotations(
-                span, encoded_local_endpoint
+            span, encoded_local_endpoint
         )
         if binary_annotations:
             encoded_span["binaryAnnotations"] = binary_annotations
