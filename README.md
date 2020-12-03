@@ -53,7 +53,7 @@ Libraries that produce telemetry data should only depend on `opentelemetry-api`,
 and defer the choice of the SDK to the application developer. Applications may
 depend on `opentelemetry-sdk` or another package that implements the API.
 
-The API and SDK packages are available on the Python Package Index (PyPI). You can install them via `pip`:
+The API and SDK packages are available on the Python Package Index (PyPI). You can install them via `pip` with the following commands:
 
 ```sh
 pip install opentelemetry-api
@@ -89,7 +89,7 @@ pip install -e ./instrumentation/opentelemetry-instrumentation-{instrumentation}
 ## Documentation
 
 The online documentation is available at https://opentelemetry-python.readthedocs.io/.
-To access the documentation for the latest version, see
+To access the latest version of the documentation, see
 https://opentelemetry-python.readthedocs.io/en/latest/.
 
 ## Contributing
@@ -135,5 +135,5 @@ For project boards and milestones, see the following links:
 - [Project boards](https://github.com/open-telemetry/opentelemetry-python/projects)
 - [Milestones](https://github.com/open-telemetry/opentelemetry-python/milestones)
 
-We try to keep these accurate so they're the best place to go for questions about project status. The dates and features described in the issues
+We try to keep these links accurate, so they're the best place to go for questions about project status. The dates and features described in the issues
 and milestones are estimates and subject to change.
