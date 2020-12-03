@@ -465,16 +465,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
             '["a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a"]',
         )
         self.assertEqual(
-            tags["list2"],
-            '["a","a","a","a","a","a","a","a","a","a"]',
+            tags["list2"], '["a","a","a","a","a","a","a","a","a","a"]',
         )
         self.assertEqual(
             tags["list3"],
             '["2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2"]',
         )
         self.assertEqual(
-            tags["list4"],
-            '["2","2","2","2","2","2","2","2","2","2"]',
+            tags["list4"], '["2","2","2","2","2","2","2","2","2","2"]',
         )
         self.assertEqual(
             tags["list5"],
@@ -489,16 +487,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
             '["a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a"]',
         )
         self.assertEqual(
-            tags["tuple2"],
-            '["a","a","a","a","a","a","a","a","a","a"]',
+            tags["tuple2"], '["a","a","a","a","a","a","a","a","a","a"]',
         )
         self.assertEqual(
             tags["tuple3"],
             '["2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2"]',
         )
         self.assertEqual(
-            tags["tuple4"],
-            '["2","2","2","2","2","2","2","2","2","2"]',
+            tags["tuple4"], '["2","2","2","2","2","2","2","2","2","2"]',
         )
         self.assertEqual(
             tags["tuple5"],
@@ -513,16 +509,13 @@ class TestZipkinSpanExporter(unittest.TestCase):
             '["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24"]',
         )
         self.assertEqual(
-            tags["range2"],
-            '["0","1","2","3","4","5","6","7","8","9"]',
+            tags["range2"], '["0","1","2","3","4","5","6","7","8","9"]',
         )
         self.assertEqual(
-            tags["empty_list"],
-            '[]',
+            tags["empty_list"], "[]",
         )
         self.assertEqual(
-            tags["none_list"],
-            '["hello",null,"world"]',
+            tags["none_list"], '["hello",null,"world"]',
         )
 
         exporter = ZipkinSpanExporter(service_name, max_tag_value_length=2)
