@@ -47,6 +47,10 @@ class NOOPTextMapPropagator(TextMapPropagator):
     ) -> None:
         return None
 
+    @property
+    def fields(self):
+        return set()
+
 
 class MockTextMapPropagator(TextMapPropagator):
     """Mock propagator for testing purposes."""
@@ -89,3 +93,7 @@ class MockTextMapPropagator(TextMapPropagator):
         set_in_carrier(
             carrier, self.SPAN_ID_KEY, str(span.get_span_context().span_id)
         )
+
+    @property
+    def fields(self):
+        return {self.TRACE_ID_KEY, self.SPAN_ID_KEY}
