@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import collections
+import json
 import logging
 import os
 import sys
@@ -381,6 +382,8 @@ class ConsoleSpanExporter(SpanExporter):
 
     def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         for span in spans:
-            self.out.write(self.formatter(span))
+            span_json = json.loads(self.formatter(span))
+            span_json.update({"service_name": self.service_name})
+            self.out.write(json.dumps(span_json, indent=4))
         self.out.flush()
         return SpanExportResult.SUCCESS
