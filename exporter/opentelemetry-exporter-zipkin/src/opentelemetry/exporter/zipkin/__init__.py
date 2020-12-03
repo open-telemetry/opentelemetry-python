@@ -372,7 +372,7 @@ class ZipkinSpanExporter(SpanExporter):
         return tags
 
     def _extract_tag_value_string_from_sequence(self, sequence: Sequence):
-        if not sequence or self.max_tag_value_length == 1:
+        if self.max_tag_value_length == 1:
             return None
 
         tag_value_elements = []
@@ -386,23 +386,28 @@ class ZipkinSpanExporter(SpanExporter):
                 tag_value_element = str(element)
             elif isinstance(element, str):
                 tag_value_element = element
+            elif element is None:
+                tag_value_element = None
             else:
                 return None
 
             if defined_max_tag_value_length:
-                running_string_length += (
-                    len(tag_value_element) + 2
-                )  # +2 accounts for surrounding quotes
+                if tag_value_element is None:
+                    running_string_length += 4  # null with no quotes
+                else:
+                    # + 2 accounts for string quotation marks
+                    running_string_length += len(tag_value_element) + 2
+
                 if tag_value_elements:
-                    running_string_length += (
-                        2  # accounts for ', ' connector
-                    )
+                    # accounts for ',' item separator
+                    running_string_length += 1
+
                 if running_string_length > self.max_tag_value_length:
                     break
 
             tag_value_elements.append(tag_value_element)
 
-        return json.dumps(tag_value_elements)
+        return json.dumps(tag_value_elements, separators=(',', ':'))
 
     def _extract_tags_from_span(self, span: Span):
         tags = self._extract_tags_from_dict(getattr(span, "attributes", None))
