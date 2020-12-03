@@ -180,7 +180,7 @@ class Configuration:
             cls._instance._config_map.clear()  # pylint: disable=protected-access
             cls._instance = None
 
-    def traced_request_attrs(self, instrumentation: str) -> List[str]:
+    def _traced_request_attrs(self, instrumentation: str) -> List[str]:
         """Returns list of traced request attributes for instrumentation."""
         key = "{}_TRACED_REQUEST_ATTRS".format(instrumentation.upper())
         value = self._config_map.get(key, "")
@@ -190,7 +190,7 @@ class Configuration:
         )
         return request_attrs
 
-    def excluded_urls(self, instrumentation: str) -> ExcludeList:
+    def _excluded_urls(self, instrumentation: str) -> ExcludeList:
         key = "{}_EXCLUDED_URLS".format(instrumentation.upper())
         value = self._config_map.get(key, "")
 

@@ -154,7 +154,7 @@ class TestConfiguration(TestCase):
     )
     def test_traced_request_attrs(self) -> None:
         cfg = Configuration()
-        request_attrs = cfg.traced_request_attrs("webframework")
+        request_attrs = cfg._traced_request_attrs("webframework")
         self.assertEqual(len(request_attrs), 2)
         self.assertIn("content_type", request_attrs)
         self.assertIn("keep_alive", request_attrs)
@@ -168,7 +168,7 @@ class TestConfiguration(TestCase):
     )
     def test_excluded_urls(self) -> None:
         cfg = Configuration()
-        excluded_urls = cfg.excluded_urls("webframework")
+        excluded_urls = cfg._excluded_urls("webframework")
         self.assertTrue(excluded_urls.url_disabled("/healthzz"))
         self.assertTrue(excluded_urls.url_disabled("/path"))
         self.assertTrue(excluded_urls.url_disabled("/issues/123/view"))
