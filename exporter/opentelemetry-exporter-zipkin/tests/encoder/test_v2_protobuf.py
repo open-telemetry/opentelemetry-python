@@ -11,16 +11,17 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import json
 import ipaddress
+import json
 
-from .common_tests import CommonEncoderTestCases
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.zipkin.encoder.v2.protobuf import ProtobufEncoder
 from opentelemetry.exporter.zipkin.encoder.v2.protobuf.gen import zipkin_pb2
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk import trace
 from opentelemetry.trace import SpanKind, TraceFlags
+
+from .common_tests import CommonEncoderTestCases
 
 
 class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):

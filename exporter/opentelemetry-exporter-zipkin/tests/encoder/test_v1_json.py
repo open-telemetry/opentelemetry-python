@@ -13,12 +13,13 @@
 # limitations under the License.
 import json
 
-from .common_tests import CommonEncoderTestCases
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.zipkin.encoder.v1.json import JsonV1Encoder
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk import trace
 from opentelemetry.trace import TraceFlags
+
+from .common_tests import CommonEncoderTestCases
 
 
 class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):

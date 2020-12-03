@@ -13,9 +13,9 @@
 # limitations under the License.
 import abc
 import json
-from typing import List
-import unittest
 import sys
+import unittest
+from typing import List
 
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.zipkin.encoder import (

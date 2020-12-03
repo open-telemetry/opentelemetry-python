@@ -20,9 +20,9 @@ from unittest.mock import patch
 
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin import (
-    ZipkinSpanExporter,
     DEFAULT_ENDPOINT,
     DEFAULT_SERVICE_NAME,
+    ZipkinSpanExporter,
 )
 from opentelemetry.exporter.zipkin.encoder import Encoding
 from opentelemetry.exporter.zipkin.encoder.v2.json import JsonV2Encoder
