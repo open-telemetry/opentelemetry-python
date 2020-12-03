@@ -407,7 +407,7 @@ class ZipkinSpanExporter(SpanExporter):
 
             tag_value_elements.append(tag_value_element)
 
-        return json.dumps(tag_value_elements, separators=(',', ':'))
+        return json.dumps(tag_value_elements, separators=(",", ":"))
 
     def _extract_tags_from_span(self, span: Span):
         tags = self._extract_tags_from_dict(getattr(span, "attributes", None))
