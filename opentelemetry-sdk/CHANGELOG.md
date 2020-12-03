@@ -2,16 +2,30 @@
 
 ## Unreleased
 
-- Rename `MetricRecord` class to `ExportRecord`
-  ([#1367](https://github.com/open-telemetry/opentelemetry-python/pull/1367))
+- Add meter reference to observers
+  ([#1425](https://github.com/open-telemetry/opentelemetry-python/pull/1425))
+- Add `fields` to propagators
+  ([#1374](https://github.com/open-telemetry/opentelemetry-python/pull/1374))
+
+## Version 0.16b0
+
+Released 2020-11-25
+
+- Allow samplers to modify tracestate
+  ([#1319](https://github.com/open-telemetry/opentelemetry-python/pull/1319))
 - Add optional parameter to `record_exception` method
   ([#1314](https://github.com/open-telemetry/opentelemetry-python/pull/1314))
 - Update exception handling optional parameters, add escaped attribute to record_exception
   ([#1365](https://github.com/open-telemetry/opentelemetry-python/pull/1365))
+- Rename `MetricRecord` class to `ExportRecord`
+  ([#1367](https://github.com/open-telemetry/opentelemetry-python/pull/1367))
 - Rename Record in Metrics SDK to Accumulation
   ([#1373](https://github.com/open-telemetry/opentelemetry-python/pull/1373))
 - Rename Meter class to Accumulator in Metrics SDK
   ([#1372](https://github.com/open-telemetry/opentelemetry-python/pull/1372))
+- Fix `ParentBased` sampler for implicit parent spans. Fix also `trace_state` 
+  erasure for dropped spans or spans sampled by the `TraceIdRatioBased` sampler. 
+  ([#1394](https://github.com/open-telemetry/opentelemetry-python/pull/1394))
 
 ## Version 0.15b0
 

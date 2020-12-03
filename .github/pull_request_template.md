@@ -19,6 +19,25 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 
 - [ ] Test A
 
+# Does This PR Require a Contrib Repo Change?
+
+Answer the following question based on these examples of changes that would require a Contrib Repo Change:
+- [The OTel specification](https://github.com/open-telemetry/opentelemetry-specification) has changed which prompted this PR to update the method interfaces of `opentelemetry-api/` or `opentelemetry-sdk/`
+- The method interfaces of `opentelemetry-instrumentation/` have changed
+- The method interfaces of `test/util` have changed
+- Scripts in `scripts/` that were copied over to the Contrib repo have changed
+- Configuration files that were copied over to the Contrib repo have changed (when consistency between repositories is applicable) such as in
+    - `pyproject.toml`
+    - `isort.cfg`
+    - `.flake8`
+- When a new `.github/CODEOWNER` is added
+- Major changes to project information, such as in:
+    - `README.md`
+    - `CONTRIBUTING.md`
+
+- [ ] Yes. - Link to PR: 
+- [ ] No.
+
 # Checklist:
 
 - [ ] Followed the style guidelines of this project

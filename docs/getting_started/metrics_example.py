@@ -32,7 +32,6 @@ requests_counter = meter.create_counter(
     description="number of requests",
     unit="1",
     value_type=int,
-    label_keys=("environment",),
 )
 
 requests_counter.add(25, staging_labels)
