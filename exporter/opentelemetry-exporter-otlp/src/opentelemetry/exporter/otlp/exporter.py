@@ -208,11 +208,12 @@ class OTLPExporterMixin(
             credentials is None
             and Configuration().EXPORTER_OTLP_CERTIFICATE is None
         ):
-            raise ValueError("No credentials set in secure mode.")
-
-        credentials = credentials or _load_credential_from_file(
-            Configuration().EXPORTER_OTLP_CERTIFICATE
-        )
+            # use the default location chosen by gRPC runtime
+            credentials = ssl_channel_credentials()
+        else:
+            credentials = credentials or _load_credential_from_file(
+                Configuration().EXPORTER_OTLP_CERTIFICATE
+            )
         self._client = self._stub(
             secure_channel(
                 endpoint, credentials, compression=compression_algorithm
