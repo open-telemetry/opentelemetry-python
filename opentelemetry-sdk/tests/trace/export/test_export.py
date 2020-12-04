@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
+import json
 import threading
 import time
 import unittest
@@ -478,26 +478,33 @@ class TestConsoleSpanExporter(unittest.TestCase):
     def test_export(self):  # pylint: disable=no-self-use
         """Check that the console exporter prints spans."""
         exporter = export.ConsoleSpanExporter()
-
         # Mocking stdout interferes with debugging and test reporting, mock on
         # the exporter instance instead.
         span = trace._Span("span name", trace_api.INVALID_SPAN_CONTEXT)
         with mock.patch.object(exporter, "out") as mock_stdout:
             exporter.export([span])
-        mock_stdout.write.assert_called_once_with(span.to_json() + os.linesep)
+        span_json = json.loads(span.to_json())
+        span_json.update({"service_name": None})
+
+        mock_stdout.write.assert_called_once_with(
+            json.dumps(span_json, indent=4)
+        )
+
         self.assertEqual(mock_stdout.write.call_count, 1)
         self.assertEqual(mock_stdout.flush.call_count, 1)
 
     def test_export_custom(self):  # pylint: disable=no-self-use
         """Check that console exporter uses custom io, formatter."""
-        mock_span_str = mock.Mock(str)
 
         def formatter(span):  # pylint: disable=unused-argument
-            return mock_span_str
+            return json.dumps({"service_name": None}, indent=4)
 
         mock_stdout = mock.Mock()
         exporter = export.ConsoleSpanExporter(
             out=mock_stdout, formatter=formatter
         )
-        exporter.export([trace._Span("span name", mock.Mock())])
-        mock_stdout.write.assert_called_once_with(mock_span_str)
+        span = trace._Span("span name", mock.Mock())
+        exporter.export([span])
+        mock_stdout.write.assert_called_once_with(
+            json.dumps({"service_name": None}, indent=4)
+        )
