@@ -380,51 +380,40 @@ class Accumulator(metrics_api.Meter):
         each aggregator belonging to the metrics that were created with this
         meter instance.
         """
-
-        self._collect_metrics()
-        self._collect_observers()
-
-    def _collect_metrics(self) -> None:
-        for instrument in self.instruments.values():
-            if (
-                not isinstance(instrument, metrics_api.Metric)
-                or not instrument.enabled
-            ):
-                continue
-            to_remove = []
-            with instrument.bound_instruments_lock:
-                for (
-                    labels,
-                    bound_instrument,
-                ) in instrument.bound_instruments.items():
-                    for view_data in bound_instrument.view_datas:
-                        accumulation = Accumulation(
-                            instrument, view_data.labels, view_data.aggregator
-                        )
-                        self.processor.process(accumulation)
-
-                    if bound_instrument.ref_count() == 0:
-                        to_remove.append(labels)
-
-            # Remove handles that were released
-            for labels in to_remove:
-                del instrument.bound_instruments[labels]
-
-    def _collect_observers(self) -> None:
         with self.instruments_lock:
             for instrument in self.instruments.values():
-                if (
-                    not isinstance(instrument, metrics_api.Observer)
-                    or not instrument.enabled
-                ):
+                if not instrument.enabled:
                     continue
+                if isinstance(instrument, metrics_api.Metric):
+                    to_remove = []
+                    with instrument.bound_instruments_lock:
+                        for (
+                            labels,
+                            bound_instrument,
+                        ) in instrument.bound_instruments.items():
+                            for view_data in bound_instrument.view_datas:
+                                accumulation = Accumulation(
+                                    instrument,
+                                    view_data.labels,
+                                    view_data.aggregator,
+                                )
+                                self.processor.process(accumulation)
 
-                if not instrument.run():
-                    continue
+                            if bound_instrument.ref_count() == 0:
+                                to_remove.append(labels)
 
-                for labels, aggregator in instrument.aggregators.items():
-                    accumulation = Accumulation(instrument, labels, aggregator)
-                    self.processor.process(accumulation)
+                    # Remove handles that were released
+                    for labels in to_remove:
+                        del instrument.bound_instruments[labels]
+                elif isinstance(instrument, metrics_api.Observer):
+                    if not instrument.run():
+                        continue
+
+                    for labels, aggregator in instrument.aggregators.items():
+                        accumulation = Accumulation(
+                            instrument, labels, aggregator
+                        )
+                        self.processor.process(accumulation)
 
     def record_batch(
         self,
