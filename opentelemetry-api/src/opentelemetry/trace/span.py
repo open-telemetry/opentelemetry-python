@@ -175,8 +175,8 @@ class SpanContext(
         trace_id: int,
         span_id: int,
         is_remote: bool,
-        trace_flags: "TraceFlags" = DEFAULT_TRACE_OPTIONS,
-        trace_state: "TraceState" = DEFAULT_TRACE_STATE,
+        trace_flags: typing.Optional["TraceFlags"] = DEFAULT_TRACE_OPTIONS,
+        trace_state: typing.Optional["TraceState"] = DEFAULT_TRACE_STATE,
     ) -> "SpanContext":
         if trace_flags is None:
             trace_flags = DEFAULT_TRACE_OPTIONS
