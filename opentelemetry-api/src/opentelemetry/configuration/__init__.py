@@ -186,7 +186,7 @@ class Configuration:
         value = self._config_map.get(key, "")
 
         request_attrs = (
-            [attr.strip() for attr in value.split(",")] if value else []  # type: ignore
+            [attr.strip() for attr in str.split(value, ",")] if value else []  # type: ignore
         )
         return request_attrs
 
