@@ -187,9 +187,15 @@ class TestOTLPSpanExporter(TestCase):
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
 
-    def test_no_credentials_error(self):
-        with self.assertRaises(ValueError):
-            OTLPSpanExporter()
+    @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
+    @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
+    @patch("opentelemetry.exporter.otlp.trace_exporter.OTLPSpanExporter._stub")
+    # pylint: disable=unused-argument
+    def test_no_credentials_error(
+        self, mock_ssl_channel, mock_secure, mock_stub
+    ):
+        OTLPSpanExporter(insecure=False)
+        self.assertTrue(mock_ssl_channel.called)
 
     @patch("opentelemetry.exporter.otlp.exporter.expo")
     @patch("opentelemetry.exporter.otlp.exporter.sleep")
