@@ -13,9 +13,8 @@
 # limitations under the License.
 
 import unittest
-from unittest import mock
 
-from opentelemetry.util import ExcludeList
+from opentelemetry.configuration import ExcludeList
 
 
 class TestExcludeList(unittest.TestCase):
