@@ -358,7 +358,7 @@ s
 - Exporting to collector now works
   ([#508](https://github.com/open-telemetry/opentelemetry-python/pull/508))
 
-## [0.5b0] - 2020-03-16
+## [0.5b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.5.0) - 2020-03-16
 
 ### Added
 - Adding Correlation Context API/SDK and propagator
@@ -391,7 +391,7 @@ s
 - Implement observer instrument
   ([#425](https://github.com/open-telemetry/opentelemetry-python/pull/425))
 
-## [0.4a0] - 2020-02-21
+## [0.4a0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.4.0) - 2020-02-21
 
 ### Added
 - Added named Tracers
@@ -443,7 +443,7 @@ s
 - Remove monotonic and absolute metric instruments
   ([#410](https://github.com/open-telemetry/opentelemetry-python/pull/410))
 
-## [0.3a0] - 2019-12-11
+## [0.3a0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.3.0) - 2019-12-11
 
 ### Added
 - Add metrics exporters
@@ -459,7 +459,7 @@ s
 - Remove option to create unstarted spans from API
   ([#290](https://github.com/open-telemetry/opentelemetry-python/pull/290))
 
-## [0.2a0] - 2019-10-29
+## [0.2a0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.2.0) - 2019-10-29
 
 ### Added
 - W3C TraceContext fixes and compliance tests
@@ -474,7 +474,7 @@ s
 - Multiple context API changes
 - Multiple bugfixes and improvements
 
-## [0.1a0] - 2019-09-30
+## [0.1a0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.1.0) - 2019-09-30
 
 ### Added
 - Initial release api/sdk
