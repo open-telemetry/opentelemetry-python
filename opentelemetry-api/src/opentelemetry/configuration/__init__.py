@@ -93,12 +93,24 @@ the ``Configuration`` object is to implement a mechanism that allows the user
 to override this value instead of changing it.
 """
 
+import re
 from os import environ
-from re import fullmatch
-from typing import ClassVar, Dict, Optional, TypeVar, Union
+from typing import ClassVar, Dict, List, Optional, Sequence, TypeVar, Union
 
 ConfigValue = Union[str, bool, int, float]
 _T = TypeVar("_T", ConfigValue, Optional[ConfigValue])
+
+
+class ExcludeList:
+    """Class to exclude certain paths (given as a list of regexes) from tracing requests"""
+
+    def __init__(self, excluded_urls: Sequence[str]):
+        self._non_empty = len(excluded_urls) > 0
+        if self._non_empty:
+            self._regex = re.compile("|".join(excluded_urls))
+
+    def url_disabled(self, url: str) -> bool:
+        return bool(self._non_empty and re.search(self._regex, url))
 
 
 class Configuration:
@@ -113,7 +125,7 @@ class Configuration:
             instance = super().__new__(cls)
             for key, value_str in environ.items():
 
-                match = fullmatch(r"OTEL_(PYTHON_)?([A-Za-z_][\w_]*)", key)
+                match = re.fullmatch(r"OTEL_(PYTHON_)?([A-Za-z_][\w_]*)", key)
 
                 if match is not None:
 
@@ -167,3 +179,20 @@ class Configuration:
         if cls._instance:
             cls._instance._config_map.clear()  # pylint: disable=protected-access
             cls._instance = None
+
+    def _traced_request_attrs(self, instrumentation: str) -> List[str]:
+        """Returns list of traced request attributes for instrumentation."""
+        key = "{}_TRACED_REQUEST_ATTRS".format(instrumentation.upper())
+        value = self._config_map.get(key, "")
+
+        request_attrs = (
+            [attr.strip() for attr in str.split(value, ",")] if value else []  # type: ignore
+        )
+        return request_attrs
+
+    def _excluded_urls(self, instrumentation: str) -> ExcludeList:
+        key = "{}_EXCLUDED_URLS".format(instrumentation.upper())
+        value = self._config_map.get(key, "")
+
+        urls = str.split(value, ",") if value else []  # type: ignore
+        return ExcludeList(urls)

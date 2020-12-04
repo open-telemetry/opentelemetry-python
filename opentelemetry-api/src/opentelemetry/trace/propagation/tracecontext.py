@@ -132,6 +132,15 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
                 carrier, self._TRACESTATE_HEADER_NAME, tracestate_string
             )
 
+    @property
+    def fields(self) -> typing.Set[str]:
+        """Returns a set with the fields set in `inject`.
+
+        See
+        `opentelemetry.trace.propagation.textmap.TextMapPropagator.fields`
+        """
+        return {self._TRACEPARENT_HEADER_NAME, self._TRACESTATE_HEADER_NAME}
+
 
 def _parse_tracestate(header_list: typing.List[str]) -> trace.TraceState:
     """Parse one or more w3c tracestate header into a TraceState.
