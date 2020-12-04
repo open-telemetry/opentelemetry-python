@@ -6,6 +6,8 @@
   ([#1425](https://github.com/open-telemetry/opentelemetry-python/pull/1425))
 - Add `fields` to propagators
   ([#1374](https://github.com/open-telemetry/opentelemetry-python/pull/1374))
+- Add support for OTEL_SPAN_{ATTRIBUTE_COUNT_LIMIT,EVENT_COUNT_LIMIT,LINK_COUNT_LIMIT}
+  ([#1377](https://github.com/open-telemetry/opentelemetry-python/pull/1377))
 
 ## Version 0.16b0
 
