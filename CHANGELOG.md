@@ -4,17 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v0.16b1...HEAD)
 ### Added
 - Add `fields` to propagators
   ([#1374](https://github.com/open-telemetry/opentelemetry-python/pull/1374))
 
-## [0.16b1] - 2020-11-26
+## [0.16b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.16b1) - 2020-11-26
 ### Added
 - Add meter reference to observers
   ([#1425](https://github.com/open-telemetry/opentelemetry-python/pull/1425))
 
-## [0.16b0] - 2020-11-25
+## [0.16b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.16b0) - 2020-11-25
 ### Added
 - Add optional parameter to `record_exception` method
   ([#1314](https://github.com/open-telemetry/opentelemetry-python/pull/1314))
@@ -55,7 +55,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   erasure for dropped spans or spans sampled by the `TraceIdRatioBased` sampler. 
   ([#1394](https://github.com/open-telemetry/opentelemetry-python/pull/1394))
 
-## [0.15b0] -2020-11-02
+## [0.15b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.15b0) -2020-11-02
 
 ### Addeds
 - Add Env variables in OTLP exporter
@@ -84,7 +84,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Remove TracerProvider coupling from Tracer init
   ([#1295](https://github.com/open-telemetry/opentelemetry-python/pull/1295))
 
-## [0.14b0] - 2020-10-13
+## [0.14b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.14b0) - 2020-10-13
 
 ### Added
 - Add optional parameter to `record_exception` method
@@ -133,7 +133,7 @@ s
 - `start_as_current_span` and `use_span` can now optionally auto-record any exceptions raised inside the context manager.
   ([#1162](https://github.com/open-telemetry/opentelemetry-python/pull/1162))
 
-## [0.13b0] - 2020-09-17
+## [0.13b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.13b0) - 2020-09-17
 
 ### Added
 - Add instrumentation info to exported spans
@@ -189,7 +189,7 @@ s
 - Drop support for Python 3.4
   ([#1099](https://github.com/open-telemetry/opentelemetry-python/pull/1099))
 
-## [0.12b0] - 2020-08-14
+## [0.12b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.12.0) - 2020-08-14
 
 ### Added
 - Implement Views in metrics SDK
@@ -219,7 +219,7 @@ s
 - Update environment variable `OTEL_RESOURCE` to `OTEL_RESOURCE_ATTRIBUTES` as per
   the specification
 
-## 0.11b0
+## [0.11b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.11.0) - 2020-07-28
 
 ### Added
 - Add support for resources and resource detector
@@ -232,7 +232,7 @@ s
 - Update span exporter to use OpenTelemetry Proto v0.4.0
   ([#872](https://github.com/open-telemetry/opentelemetry-python/pull/889))
 
-## [0.10b0] - 2020-06-23
+## [0.10b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.10.0) - 2020-06-23
 
 ### Changed
 - Regenerate proto code and add pyi stubs
@@ -240,7 +240,7 @@ s
 - Rename CounterAggregator -> SumAggregator
   ([#816](https://github.com/open-telemetry/opentelemetry-python/pull/816))
 
-## [0.9b0] - 2020-06-10
+## [0.9b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.9.0) - 2020-06-10
 
 ### Added
 - Adding trace.get_current_span, Removing Tracer.get_current_span
@@ -264,7 +264,7 @@ s
 - Rename opentelemetry-auto-instrumentation to opentelemetry-instrumentation,
   and console script `opentelemetry-auto-instrumentation` to `opentelemetry-instrument`
 
-## [0.8b0] - 2020-05-27
+## [0.8b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.8.0) - 2020-05-27
 
 ### Added
 - Add a new bootstrap command that enables automatic instrument installations.
@@ -296,7 +296,7 @@ s
 - deep copy empty attributes
   ([#714](https://github.com/open-telemetry/opentelemetry-python/pull/714))
 
-## [0.7b1] - 2020-05-12
+## [0.7b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.7.1) - 2020-05-12
 
 ### Added
 - Add reset for the global configuration object, for testing purposes
@@ -339,7 +339,7 @@ s
 - bugfix: freezing span attribute sequences, reducing potential user errors
   ([#529](https://github.com/open-telemetry/opentelemetry-python/pull/529))
 
-## [0.6b0] - 2020-03-30
+## [0.6b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.6.0) - 2020-03-30
 
 ### Added
 - Add support for lazy events and links
