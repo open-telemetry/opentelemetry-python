@@ -20,6 +20,7 @@ import sys
 import threading
 import typing
 from enum import Enum
+from typing import Optional
 
 from opentelemetry.configuration import Configuration
 from opentelemetry.context import Context, attach, detach, set_value
@@ -371,7 +372,7 @@ class ConsoleSpanExporter(SpanExporter):
 
     def __init__(
         self,
-        service_name=None,
+        service_name: Optional[str] = None,
         out: typing.IO = sys.stdout,
         formatter: typing.Callable[[Span], str] = lambda span: span.to_json()
         + os.linesep,
