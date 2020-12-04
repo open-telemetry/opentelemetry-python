@@ -86,6 +86,9 @@ pip install -e ./opentelemetry-sdk
 pip install -e ./instrumentation/opentelemetry-instrumentation-{instrumentation}
 ```
 
+For additional exporter and instrumentation packages, see the 
+[`opentelemetry-python-contrib`](https://github.com/open-telemetry/opentelemetry-python-contrib) repository.
+
 ## Documentation
 
 The online documentation is available at https://opentelemetry-python.readthedocs.io/.
