@@ -30,9 +30,7 @@ class Getter(typing.Generic[TextMapPropagatorT]):
     """
 
     def get(
-        self,
-        carrier: TextMapPropagatorT,
-        key: str
+        self, carrier: TextMapPropagatorT, key: str
     ) -> typing.Optional[typing.List[str]]:
         """Function that can retrieve zero
         or more values from the carrier. In the case that
