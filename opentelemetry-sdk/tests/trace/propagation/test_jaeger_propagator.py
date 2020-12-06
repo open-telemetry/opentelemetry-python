@@ -13,12 +13,13 @@
 # limitations under the License.
 
 import unittest
+from unittest.mock import Mock
+
 import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.propagation.jaeger_propagator as jaeger
 import opentelemetry.trace as trace_api
 from opentelemetry import baggage
 from opentelemetry.trace.propagation.textmap import DictGetter
-from unittest.mock import Mock
 
 FORMAT = jaeger.JaegerPropagator()
 

@@ -113,9 +113,7 @@ class JaegerPropagator(TextMapPropagator):
 
     @property
     def fields(self) -> typing.Set[str]:
-      return {
-        self.TRACE_ID_KEY
-      }
+        return {self.TRACE_ID_KEY}
 
     def _extract_baggage(self, getter, carrier, context):
         baggage_keys = [
