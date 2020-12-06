@@ -13,12 +13,12 @@
 # limitations under the License.
 
 import unittest
-
 import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.propagation.jaeger_propagator as jaeger
 import opentelemetry.trace as trace_api
 from opentelemetry import baggage
 from opentelemetry.trace.propagation.textmap import DictGetter
+from unittest.mock import Mock
 
 FORMAT = jaeger.JaegerPropagator()
 
@@ -170,3 +170,14 @@ class TestJaegerPropagator(unittest.TestCase):
         span_context = trace_api.get_current_span(context).get_span_context()
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
         self.assertDictEqual(formatted_baggage, context["baggage"])
+
+    def test_fields(self):
+        tracer = trace.TracerProvider().get_tracer("sdk_tracer_provider")
+        mock_set_in_carrier = Mock()
+        with tracer.start_as_current_span("parent"):
+            with tracer.start_as_current_span("child"):
+                FORMAT.inject(mock_set_in_carrier, {})
+        inject_fields = set()
+        for call in mock_set_in_carrier.mock_calls:
+            inject_fields.add(call[1][1])
+        self.assertEqual(FORMAT.fields, inject_fields)

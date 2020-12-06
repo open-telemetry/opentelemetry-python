@@ -111,6 +111,12 @@ class JaegerPropagator(TextMapPropagator):
                 carrier, baggage_key, urllib.parse.quote(str(value))
             )
 
+    @property
+    def fields(self) -> typing.Set[str]:
+      return {
+        self.TRACE_ID_KEY
+      }
+
     def _extract_baggage(self, getter, carrier, context):
         baggage_keys = [
             key
