@@ -1,4 +1,3 @@
-# Copyright 2019, OpenCensus Authors
 # Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,5 +11,19 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
+import subprocess
+import sys
+import unittest
 
-__version__ = "0.17.dev0"
+
+class TestBasicMetricsExample(unittest.TestCase):
+    def test_basic_meter(self):
+        dirpath = os.path.dirname(os.path.realpath(__file__))
+        test_script = "{}/../metrics_example.py".format(dirpath)
+        output = subprocess.check_output(
+            (sys.executable, test_script)
+        ).decode()
+
+        self.assertIn('name="requests"', output)
+        self.assertIn('description="number of requests"', output)

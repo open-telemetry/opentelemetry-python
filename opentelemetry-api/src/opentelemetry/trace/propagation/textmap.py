@@ -129,3 +129,16 @@ class TextMapPropagator(abc.ABC):
                 context if not set.
 
         """
+
+    @property
+    @abc.abstractmethod
+    def fields(self) -> typing.Set[str]:
+        """
+        Gets the fields set in the carrier by the `inject` method.
+
+        If the carrier is reused, its fields that correspond with the ones
+        present in this attribute should be deleted before calling `inject`.
+
+        Returns:
+            A set with the fields set in `inject`.
+        """
