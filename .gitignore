@@ -16,7 +16,9 @@ var
 sdist
 develop-eggs
 .installed.cfg
+pyvenv.cfg
 lib
+share/
 lib64
 __pycache__
 venv*/
