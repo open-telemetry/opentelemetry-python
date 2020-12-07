@@ -433,10 +433,7 @@ def join_args(arglist):
 def install_args(args):
     clean_remainder_args(args.pipargs)
     if args.eager_upgrades:
-        args.pipargs += [
-            "--upgrade-strategy=eager",
-            "--use-deprecated=legacy-resolver",
-        ]
+        args.pipargs += ["--upgrade-strategy=eager"]
 
     if args.with_dev_deps:
         runsubprocess(
@@ -454,7 +451,7 @@ def install_args(args):
             + args.pipargs,
             check=True,
         )
-
+    print(args)
     allfmt = "-e 'file://{}" if args.editable else "'file://{}"
     # packages should provide an extra_requires that is named
     # 'test', to denote test dependencies.
