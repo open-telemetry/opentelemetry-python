@@ -65,15 +65,3 @@ def _load_meter_provider(provider: str) -> "MeterProvider":
 
 def _load_trace_provider(provider: str) -> "TracerProvider":
     return cast("TracerProvider", _load_provider(provider))
-
-
-class ExcludeList:
-    """Class to exclude certain paths (given as a list of regexes) from tracing requests"""
-
-    def __init__(self, excluded_urls: Sequence[str]):
-        self._non_empty = len(excluded_urls) > 0
-        if self._non_empty:
-            self._regex = re.compile("|".join(excluded_urls))
-
-    def url_disabled(self, url: str) -> bool:
-        return bool(self._non_empty and re.search(self._regex, url))
