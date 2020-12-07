@@ -57,7 +57,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.15b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.15b0) -2020-11-02
 
-### Addeds
+### Added
 - Add Env variables in OTLP exporter
   ([#1101](https://github.com/open-telemetry/opentelemetry-python/pull/1101))
 - Add support for Jaeger Span Exporter configuration by environment variables and<br/>
