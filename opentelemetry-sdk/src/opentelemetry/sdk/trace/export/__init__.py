@@ -383,8 +383,6 @@ class ConsoleSpanExporter(SpanExporter):
 
     def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         for span in spans:
-            span_json = json.loads(self.formatter(span))
-            span_json.update({"service_name": self.service_name})
-            self.out.write(json.dumps(span_json, indent=4))
+            self.out.write(self.formatter(span))
         self.out.flush()
         return SpanExportResult.SUCCESS

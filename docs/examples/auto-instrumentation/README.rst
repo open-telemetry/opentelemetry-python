@@ -141,9 +141,7 @@ similar to the following example:
             "telemetry.sdk.language": "python",
             "telemetry.sdk.name": "opentelemetry",
             "telemetry.sdk.version": "0.16b1"
-        },
-        "service_name": null
-    
+        }
     }
 
 Execute an automatically instrumented server
@@ -204,8 +202,7 @@ similar to the following example:
         "telemetry.sdk.name": "opentelemetry",
         "telemetry.sdk.version": "0.16b1",
         "service.name": ""
-    },
-    "service_name": ""
+        }
     }
 
 You can see that both outputs are the same because automatic instrumentation does
