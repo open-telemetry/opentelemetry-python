@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - `opentelemetry-exporter-zipkin` Updated zipkin exporter status code and error tag
   ([#1486](https://github.com/open-telemetry/opentelemetry-python/pull/1486))
+- Recreate span on every run of a `start_as_current_span`-decorated function
+  ([#1451](https://github.com/open-telemetry/opentelemetry-python/pull/1451))
 
 ## [0.16b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.16b1) - 2020-11-26
 ### Added
