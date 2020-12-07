@@ -433,7 +433,10 @@ def join_args(arglist):
 def install_args(args):
     clean_remainder_args(args.pipargs)
     if args.eager_upgrades:
-        args.pipargs += ["--upgrade-strategy=eager"]
+        args.pipargs += [
+            "--upgrade-strategy=eager",
+            "--use-deprecated=legacy-resolver",
+        ]
 
     if args.with_dev_deps:
         runsubprocess(
