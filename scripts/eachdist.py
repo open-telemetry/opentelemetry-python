@@ -451,7 +451,6 @@ def install_args(args):
             + args.pipargs,
             check=True,
         )
-    print(args)
     allfmt = "-e 'file://{}" if args.editable else "'file://{}"
     # packages should provide an extra_requires that is named
     # 'test', to denote test dependencies.
