@@ -72,7 +72,7 @@ class TestHTTPMetricRecorder(TestCase):
             "measures the duration of the outbound HTTP request",
         )
 
-    def test_ctor_types(self):
+    def test_ctor_type_client(self):
         meter = metrics_api.get_meter(__name__)
         recorder = HTTPMetricRecorder(meter, HTTPMetricType.CLIENT)
         self.assertEqual(recorder._http_type, HTTPMetricType.CLIENT)
@@ -81,6 +81,8 @@ class TestHTTPMetricRecorder(TestCase):
         )
         self.assertIsNone(recorder._server_duration)
 
+    def test_ctor_type_server(self):
+        meter = metrics_api.get_meter(__name__)
         recorder = HTTPMetricRecorder(meter, HTTPMetricType.SERVER)
         self.assertEqual(recorder._http_type, HTTPMetricType.SERVER)
         self.assertTrue(
@@ -88,6 +90,8 @@ class TestHTTPMetricRecorder(TestCase):
         )
         self.assertIsNone(recorder._client_duration)
 
+    def test_ctor_type_both(self):
+        meter = metrics_api.get_meter(__name__)
         recorder = HTTPMetricRecorder(meter, HTTPMetricType.BOTH)
         self.assertEqual(recorder._http_type, HTTPMetricType.BOTH)
         self.assertTrue(
