@@ -16,9 +16,9 @@
 This module serves as an example for a simple application using metrics.
 
 It shows:
-- How to configure a meter passing a sateful or stateless.
+- How to configure a meter passing a stateful or stateless.
 - How to configure an exporter and how to create a controller.
-- How to create some metrics intruments and how to capture data with them.
+- How to create some metrics instruments and how to capture data with them.
 - How to use views to specify aggregation types for each metric instrument.
 """
 import sys
