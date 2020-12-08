@@ -15,7 +15,7 @@
 import os
 import sys
 from logging import getLogger
-
+from opentelemetry.configuration import Configuration
 from pkg_resources import iter_entry_points
 
 from opentelemetry.instrumentation.auto_instrumentation.components import (
@@ -26,12 +26,18 @@ logger = getLogger(__file__)
 
 
 def auto_instrument():
-    for entry_point in iter_entry_points("opentelemetry_instrumentor"):
+    package_to_exclude = Configuration.get("DISABLED_INSTRUMENTATIONS", None)
+    if package_to_exclude:
+        package_to_exclude = package_to_exclude.split(",")
+        packages_to_instrument = [entry_point for entry_point in iter_entry_points("opentelemetry_instrumentor")
+        if entry_point.name not in package_to_exclude]
+
+    for package in packages_to_instrument:
         try:
-            entry_point.load()().instrument()  # type: ignore
-            logger.debug("Instrumented %s", entry_point.name)
+            package.load()().instrument()  # type: ignore
+            logger.debug("Instrumented %s", package.name)
         except Exception as exc:  # pylint: disable=broad-except
-            logger.exception("Instrumenting of %s failed", entry_point.name)
+            logger.exception("Instrumenting of %s failed", package.name)
             raise exc
 
 
