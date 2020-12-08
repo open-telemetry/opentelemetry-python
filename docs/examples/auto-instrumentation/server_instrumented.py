@@ -21,6 +21,7 @@ from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
+from opentelemetry.trace.propagation.textmap import DictGetter
 
 app = Flask(__name__)
 
@@ -36,9 +37,7 @@ trace.get_tracer_provider().add_span_processor(
 def server_request():
     with tracer.start_as_current_span(
         "server_request",
-        parent=propagators.extract(
-            lambda dict_, key: dict_.get(key, []), request.headers
-        )["current-span"],
+        context=propagators.extract(DictGetter(), request.headers),
         kind=trace.SpanKind.SERVER,
         attributes=collect_request_attributes(request.environ),
     ):
