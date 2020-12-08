@@ -4,6 +4,8 @@
 
 - Add `fields` to propagators
   ([#1374](https://github.com/open-telemetry/opentelemetry-python/pull/1374))
+- Return `None` for `DictGetter` if key not found
+  ([#1449](https://github.com/open-telemetry/opentelemetry-python/pull/1449))
 
 ## Version 0.16b0
 
