@@ -91,7 +91,10 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
         tracestate_headers = getter.get(carrier, self._TRACESTATE_HEADER_NAME)
-        tracestate = _parse_tracestate(tracestate_headers)
+        if tracestate_headers is None:
+            tracestate = None
+        else:
+            tracestate = _parse_tracestate(tracestate_headers)
 
         span_context = trace.SpanContext(
             trace_id=int(trace_id, 16),
