@@ -37,6 +37,7 @@ from typing import (
 
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
+from opentelemetry.configuration import Configuration
 from opentelemetry.sdk import util
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
@@ -49,9 +50,11 @@ from opentelemetry.util import time_ns, types
 
 logger = logging.getLogger(__name__)
 
-MAX_NUM_ATTRIBUTES = 1000
-MAX_NUM_EVENTS = 1000
-MAX_NUM_LINKS = 1000
+SPAN_ATTRIBUTE_COUNT_LIMIT = Configuration().get(
+    "SPAN_ATTRIBUTE_COUNT_LIMIT", 1000
+)
+SPAN_EVENT_COUNT_LIMIT = Configuration().get("SPAN_EVENT_COUNT_LIMIT", 1000)
+SPAN_LINK_COUNT_LIMIT = Configuration().get("SPAN_LINK_COUNT_LIMIT", 1000)
 VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
 
 
@@ -446,7 +449,7 @@ class Span(trace_api.Span):
             self.attributes = self._new_attributes()
         else:
             self.attributes = BoundedDict.from_map(
-                MAX_NUM_ATTRIBUTES, attributes
+                SPAN_ATTRIBUTE_COUNT_LIMIT, attributes
             )
 
         self.events = self._new_events()
@@ -462,7 +465,7 @@ class Span(trace_api.Span):
         if links is None:
             self.links = self._new_links()
         else:
-            self.links = BoundedList.from_seq(MAX_NUM_LINKS, links)
+            self.links = BoundedList.from_seq(SPAN_LINK_COUNT_LIMIT, links)
 
         self._end_time = None  # type: Optional[int]
         self._start_time = None  # type: Optional[int]
@@ -483,15 +486,15 @@ class Span(trace_api.Span):
 
     @staticmethod
     def _new_attributes():
-        return BoundedDict(MAX_NUM_ATTRIBUTES)
+        return BoundedDict(SPAN_ATTRIBUTE_COUNT_LIMIT)
 
     @staticmethod
     def _new_events():
-        return BoundedList(MAX_NUM_EVENTS)
+        return BoundedList(SPAN_EVENT_COUNT_LIMIT)
 
     @staticmethod
     def _new_links():
-        return BoundedList(MAX_NUM_LINKS)
+        return BoundedList(SPAN_LINK_COUNT_LIMIT)
 
     @staticmethod
     def _format_context(context):
