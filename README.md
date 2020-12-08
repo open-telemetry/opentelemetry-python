@@ -38,23 +38,22 @@
 
 ## OpenTelemetry Python
 
-The Python [OpenTelemetry](https://opentelemetry.io/) implementation.
+This page describes the Python [OpenTelemetry](https://opentelemetry.io/) implementation. OpenTelemetry is an observability framework for cloud-native software.
 
 ## Getting started
 
-OpenTelemetry's goal is to provide a single set of APIs to capture distributed traces and metrics from your application and send them to an observability platform. This project allows you to do just that for applications written in Python.
+The goal of OpenTelemetry is to provide a single set of APIs to capture distributed traces and metrics from your application and send them to an observability platform. This project lets you do just that for applications written in Python.
 
 This repository includes multiple installable packages. The `opentelemetry-api`
-package includes abstract classes and no-op implementations that comprise the OpenTelemetry API following
-[the
-specification](https://github.com/open-telemetry/opentelemetry-specification).
+package includes abstract classes and no-op implementations that comprise the OpenTelemetry API following the
+[OpenTelemetry specification](https://github.com/open-telemetry/opentelemetry-specification).
 The `opentelemetry-sdk` package is the reference implementation of the API.
 
 Libraries that produce telemetry data should only depend on `opentelemetry-api`,
 and defer the choice of the SDK to the application developer. Applications may
 depend on `opentelemetry-sdk` or another package that implements the API.
 
-The API and SDK packages are available on PyPI, and can installed via `pip`:
+The API and SDK packages are available on the Python Package Index (PyPI). You can install them via `pip` with the following commands:
 
 ```sh
 pip install opentelemetry-api
@@ -63,7 +62,7 @@ pip install opentelemetry-sdk
 
 The
 [`instrumentation/`](https://github.com/open-telemetry/opentelemetry-python/tree/master/instrumentation)
-directory includes OpenTelemetry instrumentation packages, which can be installed separately as:
+directory includes OpenTelemetry instrumentation packages. You can install the packages separately with the following command:
 
 ```sh
 pip install opentelemetry-instrumentation-{instrumentation}
@@ -71,14 +70,14 @@ pip install opentelemetry-instrumentation-{instrumentation}
 
 The
 [`exporter/`](https://github.com/open-telemetry/opentelemetry-python/tree/master/exporter)
-directory includes OpenTelemetry exporter packages, which can be installed separately as:
+directory includes OpenTelemetry exporter packages. You can install the packages separately with the following command:
 
 ```sh
 pip install opentelemetry-exporter-{exporter}
 ```
 
 To install the development versions of these packages instead, clone or fork
-this repo and do an [editable
+this repository and perform an [editable
 install](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs):
 
 ```sh
@@ -87,17 +86,20 @@ pip install -e ./opentelemetry-sdk
 pip install -e ./instrumentation/opentelemetry-instrumentation-{instrumentation}
 ```
 
+For additional exporter and instrumentation packages, see the 
+[`opentelemetry-python-contrib`](https://github.com/open-telemetry/opentelemetry-python-contrib) repository.
+
 ## Documentation
 
-The online documentation is available at https://opentelemetry-python.readthedocs.io/,
-if you want to access the documentation for the latest version use
+The online documentation is available at https://opentelemetry-python.readthedocs.io/.
+To access the latest version of the documentation, see
 https://opentelemetry-python.readthedocs.io/en/latest/.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md).
+For information about contributing to OpenTelemetry Python, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-We meet weekly on Thursday at 9AM PT. The meeting is subject to change depending on contributors' availability. Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=google.com_b79e3e90j7bbsa2n2p5an5lf60%40group.calendar.google.com) for specific dates.
+We meet weekly on Thursdays at 9AM PST. The meeting is subject to change depending on contributors' availability. Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=google.com_b79e3e90j7bbsa2n2p5an5lf60%40group.calendar.google.com) for specific dates.
 
 Meetings take place via [Zoom video conference](https://zoom.us/j/6729396170).
 
@@ -115,14 +117,14 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 - [Reiley Yang](https://github.com/reyang), Microsoft
 - [Yusuke Tsutsumi](https://github.com/toumorokoshi), Google
 
-*Find more about the approver role in [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#approver).*
+*For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#approver).*
 
 Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-telemetry/teams/python-maintainers)):
 
 - [Alex Boten](https://github.com/codeboten), Lightstep
 - [Leighton Chen](https://github.com/lzchen), Microsoft
 
-*Find more about the maintainer role in [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer).*
+*For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer).*
 
 ### Thanks to all the people who already contributed!
 
@@ -132,5 +134,9 @@ Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-t
 
 ## Project Status
 
-Project [boards](https://github.com/open-telemetry/opentelemetry-python/projects) and [milestones](https://github.com/open-telemetry/opentelemetry-python/milestones) can be found at the respective links. We try to keep these accurate and should be the best place to go for answers on project status. The dates and features described in issues
-and milestones are estimates, and subject to change.
+For project boards and milestones, see the following links: 
+- [Project boards](https://github.com/open-telemetry/opentelemetry-python/projects)
+- [Milestones](https://github.com/open-telemetry/opentelemetry-python/milestones)
+
+We try to keep these links accurate, so they're the best place to go for questions about project status. The dates and features described in the issues
+and milestones are estimates and subject to change.
