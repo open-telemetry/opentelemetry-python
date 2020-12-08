@@ -467,7 +467,7 @@ def install_args(args):
             args,
             (
                 "exec",
-                "python -m pip install {} " + join_args(args.pipargs),
+                "pip install {} " + join_args(args.pipargs),
                 "--all",
                 allfmt,
             ),
