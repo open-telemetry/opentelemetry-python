@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1377](https://github.com/open-telemetry/opentelemetry-python/pull/1377))
 - Return `None` for `DictGetter` if key not found
   ([#1449](https://github.com/open-telemetry/opentelemetry-python/pull/1449))
+- Added support for Jaeger propagator
+  ([#1219](https://github.com/open-telemetry/opentelemetry-python/pull/1219))
 
 ## [0.16b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.16b1) - 2020-11-26
 ### Added
