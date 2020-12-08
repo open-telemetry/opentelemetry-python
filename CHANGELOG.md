@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1374](https://github.com/open-telemetry/opentelemetry-python/pull/1374))
 - Add local/remote samplers to parent based sampler
   ([#1440](https://github.com/open-telemetry/opentelemetry-python/pull/1440))
+- Add support for OTEL_SPAN_{ATTRIBUTE_COUNT_LIMIT,EVENT_COUNT_LIMIT,LINK_COUNT_LIMIT}
+  ([#1377](https://github.com/open-telemetry/opentelemetry-python/pull/1377))
+- Return `None` for `DictGetter` if key not found
+  ([#1449](https://github.com/open-telemetry/opentelemetry-python/pull/1449))
 
 ## [0.16b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.16b1) - 2020-11-26
 ### Added
