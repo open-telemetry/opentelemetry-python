@@ -414,6 +414,8 @@ def execute_args(args):
             fmt_for_path(args.all, path) for path in targets
         )
         cmd = args.format.format(allstr)
+        print(cmd)
+        return
         _runcmd(cmd)
     else:
         for target in targets:
