@@ -101,7 +101,7 @@ def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
 
 
 def _extract_first_element(
-    items: typing.Iterable[textmap.TextMapPropagatorT],
+    items: typing.Optional[typing.Iterable[textmap.TextMapPropagatorT]],
 ) -> typing.Optional[textmap.TextMapPropagatorT]:
     if items is None:
         return None
