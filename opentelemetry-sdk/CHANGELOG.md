@@ -10,6 +10,8 @@
   ([#1374](https://github.com/open-telemetry/opentelemetry-python/pull/1374))
 - Added support for Jaeger propagator
   ([#1219](https://github.com/open-telemetry/opentelemetry-python/pull/1219))
+- Add support for OTEL_SPAN_{ATTRIBUTE_COUNT_LIMIT,EVENT_COUNT_LIMIT,LINK_COUNT_LIMIT}
+  ([#1377](https://github.com/open-telemetry/opentelemetry-python/pull/1377))
 
 ## Version 0.16b0
 
