@@ -386,7 +386,7 @@ def execute_args(args):
         args.allsep = DEFAULT_ALLSEP
 
     rootpath = find_projectroot()
-    targets = reversed(find_targets(args.mode, rootpath))
+    targets = find_targets(args.mode, rootpath)
     if not targets:
         sys.exit("Error: No targets selected (root: {})".format(rootpath))
 
