@@ -26,17 +26,17 @@ class TestDictGetter(unittest.TestCase):
 
     def test_get_str(self):
         getter = DictGetter()
-        carrier = {"test":"val"}
+        carrier = {"test": "val"}
         val = getter.get(carrier, "test")
         self.assertEqual(val, ["val"])
 
     def test_get_iter(self):
         getter = DictGetter()
-        carrier = {"test":["val"]}
+        carrier = {"test": ["val"]}
         val = getter.get(carrier, "test")
         self.assertEqual(val, ["val"])
 
     def test_keys(self):
         getter = DictGetter()
-        keys = getter.keys({"test":"val"})
+        keys = getter.keys({"test": "val"})
         self.assertEqual(keys, ["test"])
