@@ -444,7 +444,7 @@ def install_args(args):
                 "pip",
                 "install",
                 "--upgrade",
-                "pip",
+                "pip==20.2.4",
                 "setuptools",
                 "wheel",
             ]
