@@ -8,6 +8,8 @@
   ([#1440](https://github.com/open-telemetry/opentelemetry-python/pull/1440))
 - Add `fields` to propagators
   ([#1374](https://github.com/open-telemetry/opentelemetry-python/pull/1374))
+- Added support for Jaeger propagator
+  ([#1219](https://github.com/open-telemetry/opentelemetry-python/pull/1219))
 - Add support for OTEL_SPAN_{ATTRIBUTE_COUNT_LIMIT,EVENT_COUNT_LIMIT,LINK_COUNT_LIMIT}
   ([#1377](https://github.com/open-telemetry/opentelemetry-python/pull/1377))
 
@@ -27,8 +29,8 @@ Released 2020-11-25
   ([#1373](https://github.com/open-telemetry/opentelemetry-python/pull/1373))
 - Rename Meter class to Accumulator in Metrics SDK
   ([#1372](https://github.com/open-telemetry/opentelemetry-python/pull/1372))
-- Fix `ParentBased` sampler for implicit parent spans. Fix also `trace_state` 
-  erasure for dropped spans or spans sampled by the `TraceIdRatioBased` sampler. 
+- Fix `ParentBased` sampler for implicit parent spans. Fix also `trace_state`
+  erasure for dropped spans or spans sampled by the `TraceIdRatioBased` sampler.
   ([#1394](https://github.com/open-telemetry/opentelemetry-python/pull/1394))
 
 ## Version 0.15b0
