@@ -26,12 +26,20 @@ logger = getLogger(__file__)
 
 
 def auto_instrument():
-    package_to_exclude = Configuration.get("DISABLED_INSTRUMENTATIONS", None)
+    package_to_exclude = Configuration().get("DISABLED_INSTRUMENTATIONS", None)
     if package_to_exclude:
         package_to_exclude = package_to_exclude.split(",")
-        packages_to_instrument = [entry_point for entry_point in iter_entry_points("opentelemetry_instrumentor")
-        if entry_point.name not in package_to_exclude]
-
+        packages_to_instrument = [
+            entry_point
+            for entry_point in iter_entry_points("opentelemetry_instrumentor")
+            if entry_point.name not in package_to_exclude
+        ]
+    else:
+        packages_to_instrument = [
+            entry_point
+            for entry_point in iter_entry_points("opentelemetry_instrumentor")
+        ]
+        
     for package in packages_to_instrument:
         try:
             package.load()().instrument()  # type: ignore
