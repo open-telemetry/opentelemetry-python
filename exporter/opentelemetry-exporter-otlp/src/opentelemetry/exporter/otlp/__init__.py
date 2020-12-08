@@ -50,7 +50,7 @@ Additional details are available `in the specification
         "service.name": "service"
     })
 
-    trace.set_tracer_provider(TracerProvider(resource=resource)))
+    trace.set_tracer_provider(TracerProvider(resource=resource))
     tracer = trace.get_tracer(__name__)
 
     otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680", insecure=True)
