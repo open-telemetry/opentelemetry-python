@@ -15,9 +15,10 @@
 import os
 import sys
 from logging import getLogger
-from opentelemetry.configuration import Configuration
+
 from pkg_resources import iter_entry_points
 
+from opentelemetry.configuration import Configuration
 from opentelemetry.instrumentation.auto_instrumentation.components import (
     initialize_components,
 )
@@ -39,7 +40,7 @@ def auto_instrument():
             entry_point
             for entry_point in iter_entry_points("opentelemetry_instrumentor")
         ]
-        
+
     for package in packages_to_instrument:
         try:
             package.load()().instrument()  # type: ignore
