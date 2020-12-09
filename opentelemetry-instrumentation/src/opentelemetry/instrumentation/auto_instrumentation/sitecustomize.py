@@ -36,10 +36,10 @@ def auto_instrument():
             if entry_point.name not in package_to_exclude
         ]
     else:
-        packages_to_instrument = [
+        packages_to_instrument = (
             entry_point
             for entry_point in iter_entry_points("opentelemetry_instrumentor")
-        ]
+        )
 
     for package in packages_to_instrument:
         try:
