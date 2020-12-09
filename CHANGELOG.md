@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adding `opentelemetry-distro` package to add default configuration for
   span exporter to OTLP
   ([#1482](https://github.com/open-telemetry/opentelemetry-python/pull/1482))
+- Allow to override global `tracer_provider` after `tracer`s creation
 
 ### Changed
 - `opentelemetry-exporter-zipkin` Updated zipkin exporter status code and error tag
