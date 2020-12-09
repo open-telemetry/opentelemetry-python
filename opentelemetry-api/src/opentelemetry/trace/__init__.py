@@ -477,7 +477,7 @@ class ProxyTracer(Tracer):
 _TRACER_PROVIDER = None
 
 
-@functools.lru_cache(maxsize=128)  # type: ignore
+@functools.lru_cache(maxsize=None)  # type: ignore
 def _get_current_tracer(*args: typing.Any, **kwargs: typing.Any) -> "Tracer":
     tracer_provider = get_tracer_provider()
     return tracer_provider.get_tracer(*args, **kwargs)  # type: ignore
