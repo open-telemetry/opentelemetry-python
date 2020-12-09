@@ -87,6 +87,11 @@ class BaggagePropagator(textmap.TextMapPropagator):
         baggage_string = _format_baggage(baggage_entries)
         set_in_carrier(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
 
+    @property
+    def fields(self) -> typing.Set[str]:
+        """Returns a set with the fields set in `inject`."""
+        return {self._BAGGAGE_HEADER_NAME}
+
 
 def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
     return ",".join(
@@ -96,7 +101,7 @@ def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
 
 
 def _extract_first_element(
-    items: typing.Iterable[textmap.TextMapPropagatorT],
+    items: typing.Optional[typing.Iterable[textmap.TextMapPropagatorT]],
 ) -> typing.Optional[textmap.TextMapPropagatorT]:
     if items is None:
         return None

@@ -77,7 +77,7 @@ class Span(abc.ABC):
     @abc.abstractmethod
     def set_status(self, status: Status) -> None:
         """Sets the Status of the Span. If used, this will override the default
-        Span status, which is OK.
+        Span status.
         """
 
     @abc.abstractmethod
@@ -175,8 +175,8 @@ class SpanContext(
         trace_id: int,
         span_id: int,
         is_remote: bool,
-        trace_flags: "TraceFlags" = DEFAULT_TRACE_OPTIONS,
-        trace_state: "TraceState" = DEFAULT_TRACE_STATE,
+        trace_flags: typing.Optional["TraceFlags"] = DEFAULT_TRACE_OPTIONS,
+        trace_state: typing.Optional["TraceState"] = DEFAULT_TRACE_STATE,
     ) -> "SpanContext":
         if trace_flags is None:
             trace_flags = DEFAULT_TRACE_OPTIONS
