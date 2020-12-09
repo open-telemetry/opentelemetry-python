@@ -6,7 +6,7 @@ up when you explore the SDK.
 
 ## Versioning and Releasing
 
-The OTP Applications and OpenTelemetry Spec itself use semver v2.
+The OpenTelemetry Applications and OpenTelemetry Spec itself use semver v2.
 
 ## Goals
 
@@ -21,7 +21,7 @@ For example, libraries that are instrumented with `opentelemetry-api 1.0.1` will
 Public portions of the SDK (constructors, configuration, end-user interfaces) must remain backwards compatible.
 Internal interfaces are allowed to break.
 
-## OTP Applications
+## OpenTelemetry Applications
 
 ### Experimental API (`opentelemetry-api-experimental`)
 
