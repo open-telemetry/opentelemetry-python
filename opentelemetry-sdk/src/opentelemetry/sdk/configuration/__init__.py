@@ -14,11 +14,13 @@
 
 from logging import getLogger
 from typing import Sequence, Tuple
+from opentelemetry.instrumentation.configurator import BaseConfigurator
 
 from pkg_resources import iter_entry_points
 
 from opentelemetry import trace
 from opentelemetry.configuration import Configuration
+from opentelemetry.instrumentation.configurator import BaseConfigurator
 from opentelemetry.sdk.metrics.export import MetricsExporter
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
@@ -38,15 +40,15 @@ RANDOM_IDS_GENERATOR = "random"
 _DEFAULT_IDS_GENERATOR = RANDOM_IDS_GENERATOR
 
 
-def get_ids_generator() -> str:
+def _get_ids_generator() -> str:
     return Configuration().IDS_GENERATOR or _DEFAULT_IDS_GENERATOR
 
 
-def get_service_name() -> str:
+def _get_service_name() -> str:
     return Configuration().SERVICE_NAME or ""
 
 
-def get_exporter_names() -> Sequence[str]:
+def _get_exporter_names() -> Sequence[str]:
     exporter = Configuration().EXPORTER or _DEFAULT_EXPORTER
     if exporter.lower().strip() == "none":
         return []
@@ -62,10 +64,10 @@ def get_exporter_names() -> Sequence[str]:
     return names
 
 
-def init_tracing(
+def _init_tracing(
     exporters: Sequence[SpanExporter], ids_generator: trace.IdsGenerator
 ):
-    service_name = get_service_name()
+    service_name = _get_service_name()
     provider = TracerProvider(
         resource=Resource.create({"service.name": service_name}),
         ids_generator=ids_generator(),
@@ -85,12 +87,12 @@ def init_tracing(
         )
 
 
-def init_metrics(exporters: Sequence[MetricsExporter]):
+def _init_metrics(exporters: Sequence[MetricsExporter]):
     if exporters:
         logger.warning("automatic metric initialization is not supported yet.")
 
 
-def import_tracer_provider_config_components(
+def _import_tracer_provider_config_components(
     selected_components, entry_point_name
 ) -> Sequence[Tuple[str, object]]:
     component_entry_points = {
@@ -112,7 +114,7 @@ def import_tracer_provider_config_components(
     return component_impls
 
 
-def import_exporters(
+def _import_exporters(
     exporter_names: Sequence[str],
 ) -> Tuple[Sequence[SpanExporter], Sequence[MetricsExporter]]:
     trace_exporters, metric_exporters = {}, {}
@@ -120,7 +122,7 @@ def import_exporters(
     for (
         exporter_name,
         exporter_impl,
-    ) in import_tracer_provider_config_components(
+    ) in _import_tracer_provider_config_components(
         exporter_names, "opentelemetry_exporter"
     ):
         if issubclass(exporter_impl, SpanExporter):
@@ -136,11 +138,11 @@ def import_exporters(
     return trace_exporters, metric_exporters
 
 
-def import_ids_generator(ids_generator_name: str) -> trace.IdsGenerator:
+def _import_ids_generator(ids_generator_name: str) -> trace.IdsGenerator:
     # pylint: disable=unbalanced-tuple-unpacking
     [
         (ids_generator_name, ids_generator_impl)
-    ] = import_tracer_provider_config_components(
+    ] = _import_tracer_provider_config_components(
         [ids_generator_name.strip()], "opentelemetry_ids_generator"
     )
 
@@ -150,19 +152,19 @@ def import_ids_generator(ids_generator_name: str) -> trace.IdsGenerator:
     raise RuntimeError("{0} is not an IdsGenerator".format(ids_generator_name))
 
 
-def initialize_components():
-    exporter_names = get_exporter_names()
-    trace_exporters, metric_exporters = import_exporters(exporter_names)
-    ids_generator_name = get_ids_generator()
-    ids_generator = import_ids_generator(ids_generator_name)
-    init_tracing(trace_exporters, ids_generator)
+def _initialize_components():
+    exporter_names = _get_exporter_names()
+    trace_exporters, metric_exporters = _import_exporters(exporter_names)
+    ids_generator_name = _get_ids_generator()
+    ids_generator = _import_ids_generator(ids_generator_name)
+    _init_tracing(trace_exporters, ids_generator)
 
     # We don't support automatic initialization for metric yet but have added
     # some boilerplate in order to make sure current implementation does not
     # lock us out of supporting metrics later without major surgery.
-    init_metrics(metric_exporters)
+    _init_metrics(metric_exporters)
 
 
-class Configurator:
-    def configure(self):
-        initialize_components()
+class Configurator(BaseConfigurator):
+    def _configure(self):
+        _initialize_components()
