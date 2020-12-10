@@ -490,10 +490,8 @@ def get_tracer(
 ) -> "Tracer":
     """Returns a `Tracer` for use by the given instrumentation library.
 
-    This function is a convenience wrapper for
-    opentelemetry.trace.TracerProvider.get_tracer.
-
-    If tracer_provider is ommited the current configured one is used.
+    If tracer_provider is ommited it returns a ProxyTracer
+    which redirects calls to a current instrumentation library.
     """
     if tracer_provider is None:
         return ProxyTracer(
