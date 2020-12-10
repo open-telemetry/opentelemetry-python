@@ -19,9 +19,9 @@ from unittest.mock import patch
 
 from opentelemetry.configuration import Configuration
 from opentelemetry.sdk.configuration import (
-    get_ids_generator,
-    import_ids_generator,
-    init_tracing,
+    _get_ids_generator,
+    _import_ids_generator,
+    _init_tracing,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.trace.ids_generator import RandomIdsGenerator
@@ -99,7 +99,7 @@ class TestTraceInit(TestCase):
     def test_trace_init_default(self):
         environ["OTEL_SERVICE_NAME"] = "my-test-service"
         Configuration._reset()
-        init_tracing({"zipkin": Exporter}, RandomIdsGenerator)
+        _init_tracing({"zipkin": Exporter}, RandomIdsGenerator)
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
@@ -114,7 +114,7 @@ class TestTraceInit(TestCase):
     def test_trace_init_otlp(self):
         environ["OTEL_SERVICE_NAME"] = "my-otlp-test-service"
         Configuration._reset()
-        init_tracing({"otlp": OTLPExporter}, RandomIdsGenerator)
+        _init_tracing({"otlp": OTLPExporter}, RandomIdsGenerator)
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
@@ -141,8 +141,8 @@ class TestTraceInit(TestCase):
             ]
         )
         Configuration._reset()
-        ids_generator_name = get_ids_generator()
-        ids_generator = import_ids_generator(ids_generator_name)
-        init_tracing({}, ids_generator)
+        ids_generator_name = _get_ids_generator()
+        ids_generator = _import_ids_generator(ids_generator_name)
+        _init_tracing({}, ids_generator)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider.ids_generator, CustomIdsGenerator)
