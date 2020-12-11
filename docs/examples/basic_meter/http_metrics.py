@@ -19,7 +19,6 @@ related to instrumentations.
 import requests
 
 from opentelemetry import metrics
-from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import ConsoleMetricsExporter
 
@@ -29,12 +28,9 @@ metrics.set_meter_provider(MeterProvider())
 # Exporter to export metrics to the console
 exporter = ConsoleMetricsExporter()
 
-# Instrument the requests library
-RequestsInstrumentor().instrument()
-
 # Indicate to start collecting and exporting requests related metrics
 metrics.get_meter_provider().start_pipeline(
-    RequestsInstrumentor().meter, exporter, 5
+    metrics.get_meter_provider().get_meter("basic_meter_name"), exporter, 5
 )
 
 response = requests.get("http://example.com")

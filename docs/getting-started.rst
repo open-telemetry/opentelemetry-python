@@ -139,39 +139,6 @@ You can then visit the Jaeger UI, see your service under "services", and find yo
 
 .. image:: images/jaeger_trace.png
 
-Instrumentation example with Flask
-------------------------------------
-
-While the example in the previous section is great, it's very manual. The following are common actions you might want to track and include as part of your distributed tracing.
-
-* HTTP responses from web services
-* HTTP requests from clients
-* Database calls
-
-To track these common actions, OpenTelemetry has the concept of instrumentations. Instrumentations are packages designed to interface
-with a specific framework or library, such as Flask and psycopg2. You can find a list of the currently curated extension packages in the `Contrib repository <https://github.com/open-telemetry/opentelemetry-python-contrib/tree/master/instrumentation>`_.
-
-Instrument a basic Flask application that uses the requests library to send HTTP requests. First, install the instrumentation packages themselves:
-
-.. code-block:: sh
-
-    pip install opentelemetry-instrumentation-flask
-    pip install opentelemetry-instrumentation-requests
-
-
-The following small Flask application sends an HTTP request and also activates each instrumentation during its initialization:
-
-.. literalinclude:: getting_started/flask_example.py
-    :language: python
-    :lines: 15-
-
-
-Now run the script, hit the root URL (http://localhost:5000/) a few times, and watch your spans be emitted!
-
-.. code-block:: sh
-
-   python flask_example.py
-
 
 Configure Your HTTP propagator (b3, Baggage)
 -------------------------------------------------------
