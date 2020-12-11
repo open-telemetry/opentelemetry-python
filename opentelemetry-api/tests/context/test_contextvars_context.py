@@ -21,6 +21,7 @@ from .base_context import ContextTestCases
 
 try:
     import contextvars  # pylint: disable=unused-import
+
     from opentelemetry.context.contextvars_context import (
         ContextVarsRuntimeContext,
     )
