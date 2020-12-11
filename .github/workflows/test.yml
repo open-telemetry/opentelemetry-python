@@ -20,22 +20,23 @@ jobs:
       py36: 3.6
       py37: 3.7
       py38: 3.8
+      py39: 3.9
       pypy3: pypy3
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
-        python-version: [ py35, py36, py37, py38, pypy3 ]
+        python-version: [ py35, py36, py37, py38, py39, pypy3 ]
         package: ["instrumentation", "core", "exporter"]
         os: [ ubuntu-latest ]
         include:
-          - python-version: py38
+          - python-version: py39
             package: "tracecontext"
             os: ubuntu-latest
-          - python-version: py38
+          - python-version: py39
             package: "mypy"
             os: ubuntu-latest
-          - python-version: py38
+          - python-version: py39
             package: "mypyinstalled"
             os: ubuntu-latest
           # py35-instrumentation segfaults on 18.04 so we instead run on 20.04
@@ -85,7 +86,7 @@ jobs:
           repository: open-telemetry/opentelemetry-python-contrib
           ref: ${{ env.CONTRIB_REPO_SHA }}
           path: opentelemetry-python-contrib
-      - name: Set up Python 3.8
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
           python-version: 3.8
@@ -106,12 +107,13 @@ jobs:
       py36: 3.6
       py37: 3.7
       py38: 3.8
+      py39: 3.9
       pypy3: pypy3
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
-        python-version: [ py35, py36, py37, py38, pypy3 ]
+        python-version: [ py35, py36, py37, py38, py39, pypy3 ]
         package: ["instrumentation", "exporter"]
         os: [ ubuntu-latest ]
         include:
@@ -166,10 +168,10 @@ jobs:
         with:
           repository: open-telemetry/opentelemetry-python
           path: opentelemetry-python-core
-      - name: Set up Python 3.8
+      - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.8
+          python-version: 3.9
       - name: Install tox
         run: pip install -U tox
       - name: Cache tox environment
