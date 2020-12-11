@@ -20,7 +20,7 @@ from opentelemetry import metrics
 from opentelemetry.exporter.opencensus.metrics_exporter import (
     OpenCensusMetricsExporter,
 )
-from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics import MeterProvider
 
 exporter = OpenCensusMetricsExporter(
     service_name="basic-service", endpoint="localhost:55678"
@@ -35,7 +35,6 @@ requests_counter = meter.create_counter(
     description="number of requests",
     unit="1",
     value_type=int,
-    label_keys=("environment",),
 )
 
 staging_labels = {"environment": "staging"}
