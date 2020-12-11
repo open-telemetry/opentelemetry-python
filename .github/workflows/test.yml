@@ -84,7 +84,7 @@ jobs:
           fail-on-alert: true
           # Make a commit on `gh-pages` with benchmarks from previous step
           auto-push: ${{ github.ref == 'refs/heads/master' }}
-          gh-pages-branch: master
+          gh-pages-branch: gh-pages
           benchmark-data-dir-path: benchmarks
   misc:
     strategy:
