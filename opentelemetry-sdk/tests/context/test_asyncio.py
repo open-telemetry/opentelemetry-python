@@ -25,6 +25,7 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 
 try:
     import contextvars  # pylint: disable=unused-import
+
     from opentelemetry.context.contextvars_context import (
         ContextVarsRuntimeContext,
     )
