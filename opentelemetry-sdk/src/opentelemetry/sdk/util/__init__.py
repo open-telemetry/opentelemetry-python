@@ -17,12 +17,10 @@ from collections import OrderedDict, deque
 
 try:
     # pylint: disable=ungrouped-imports
-    from collections.abc import MutableMapping
-    from collections.abc import Sequence
+    from collections.abc import MutableMapping, Sequence
 except ImportError:
     # pylint: disable=no-name-in-module,ungrouped-imports
-    from collections import MutableMapping
-    from collections import Sequence
+    from collections import MutableMapping, Sequence
 
 
 def ns_to_iso_str(nanoseconds):
