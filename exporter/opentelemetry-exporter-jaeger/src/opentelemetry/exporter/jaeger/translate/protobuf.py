@@ -15,6 +15,16 @@ from opentelemetry.util import types
 # pylint: disable=no-member,too-many-locals
 
 
+def _trace_id_to_bytes(trace_id: int) -> bytes:
+    """Returns bytes representation of trace id."""
+    return trace_id.to_bytes(16, "big")
+
+
+def _span_id_to_bytes(span_id: int) -> bytes:
+    """Returns bytes representation of span id"""
+    return span_id.to_bytes(8, "big")
+
+
 def _get_string_key_value(
     key, value: types.AttributeValue
 ) -> model_pb2.KeyValue:
@@ -132,8 +142,8 @@ def _extract_refs(span: Span) -> Optional[Sequence[model_pb2.SpanRef]]:
         refs.append(
             model_pb2.SpanRef(
                 ref_type=model_pb2.SpanRefType.FOLLOWS_FROM,
-                trace_id=trace_id.to_bytes(16, "big"),
-                span_id=span_id.to_bytes(8, "big"),
+                trace_id=_trace_id_to_bytes(trace_id),
+                span_id=_span_id_to_bytes(span_id),
             )
         )
     return refs
@@ -223,8 +233,8 @@ def _to_jaeger(
     for span in spans:
         ctx = span.get_span_context()
         # pb2 span expects in byte format
-        trace_id = ctx.trace_id.to_bytes(16, "big")
-        span_id = ctx.span_id.to_bytes(8, "big")
+        trace_id = _trace_id_to_bytes(ctx.trace_id)
+        span_id = _span_id_to_bytes(ctx.span_id)
 
         start_time = _proto_timestamp_from_epoch_nanos(span.start_time)
         end_time = _proto_timestamp_from_epoch_nanos(span.end_time)
