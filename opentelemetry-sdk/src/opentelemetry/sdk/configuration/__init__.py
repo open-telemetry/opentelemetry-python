@@ -14,7 +14,6 @@
 
 from logging import getLogger
 from typing import Sequence, Tuple
-from opentelemetry.instrumentation.configurator import BaseConfigurator
 
 from pkg_resources import iter_entry_points
 
@@ -166,5 +165,5 @@ def _initialize_components():
 
 
 class Configurator(BaseConfigurator):
-    def _configure(self):
+    def _configure(self, **kwargs):
         _initialize_components()

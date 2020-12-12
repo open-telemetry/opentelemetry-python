@@ -26,7 +26,7 @@ _LOG = getLogger(__name__)
 class BaseConfigurator(ABC):
     """An ABC for configurators
 
-    Configurators are used to configure 
+    Configurators are used to configure
     SDKs (i.e. TracerProvider, MeterProvider, Processors...)
     to reduce the amount of manual configuration required.
     """
@@ -47,7 +47,7 @@ class BaseConfigurator(ABC):
 
     def configure(self, **kwargs):
         """Configure the SDK"""
-        pass
+        self._configure(**kwargs)
 
 
 __all__ = ["BaseConfigurator"]

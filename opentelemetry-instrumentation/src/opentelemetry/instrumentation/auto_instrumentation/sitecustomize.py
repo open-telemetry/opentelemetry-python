@@ -18,7 +18,6 @@ from logging import getLogger
 
 from pkg_resources import iter_entry_points
 
-
 logger = getLogger(__file__)
 
 
