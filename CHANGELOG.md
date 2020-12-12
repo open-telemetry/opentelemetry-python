@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v0.16b1...HEAD)
 
+- Add support for Python 3.9
+  ([#1441](https://github.com/open-telemetry/opentelemetry-python/pull/1441))
+
 ### Added
 - Added feature `auto-instrumentation should have a way to disable specific instrumentations`
   ([#1461](https://github.com/open-telemetry/opentelemetry-python/pull/1461))
