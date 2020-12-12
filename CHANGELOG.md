@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1441](https://github.com/open-telemetry/opentelemetry-python/pull/1441))
 
 ### Added
-- Added feature `auto-instrumentation should have a way to disable specific instrumentations`
+- Added the ability to disable instrumenting libraries specified by OTEL_PYTHON_DISABLED_INSTRUMENTATIONS env variable, when using opentelemetry-instrument command.
   ([#1461](https://github.com/open-telemetry/opentelemetry-python/pull/1461))
 - Add `fields` to propagators
   ([#1374](https://github.com/open-telemetry/opentelemetry-python/pull/1374))

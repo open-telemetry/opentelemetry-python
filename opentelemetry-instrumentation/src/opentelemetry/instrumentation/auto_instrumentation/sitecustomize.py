@@ -27,26 +27,23 @@ logger = getLogger(__file__)
 
 
 def auto_instrument():
-    package_to_exclude = Configuration().get("DISABLED_INSTRUMENTATIONS", None)
-    if package_to_exclude:
+    package_to_exclude = Configuration().get("DISABLED_INSTRUMENTATIONS", [])
+    if isinstance(package_to_exclude, str):
         package_to_exclude = package_to_exclude.split(",")
-        packages_to_instrument = [
-            entry_point
-            for entry_point in iter_entry_points("opentelemetry_instrumentor")
-            if entry_point.name not in package_to_exclude
-        ]
-    else:
-        packages_to_instrument = (
-            entry_point
-            for entry_point in iter_entry_points("opentelemetry_instrumentor")
-        )
+        # to handle users entering "requests , flask" or "requests, flask" with spaces
+        package_to_exclude = [x.strip() for x in package_to_exclude]
 
-    for package in packages_to_instrument:
+    for entry_point in iter_entry_points("opentelemetry_instrumentor"):
         try:
-            package.load()().instrument()  # type: ignore
-            logger.debug("Instrumented %s", package.name)
+            if entry_point.name in package_to_exclude:
+                logger.debug(
+                    "Instrumentation skipped for  %s", entry_point.name
+                )
+                continue
+            entry_point.load()().instrument()  # type: ignore
+            logger.debug("Instrumented %s", entry_point.name)
         except Exception as exc:  # pylint: disable=broad-except
-            logger.exception("Instrumenting of %s failed", package.name)
+            logger.exception("Instrumenting of %s failed", entry_point.name)
             raise exc
 
 
