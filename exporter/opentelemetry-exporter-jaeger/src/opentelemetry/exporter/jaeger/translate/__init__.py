@@ -28,6 +28,10 @@ def _nsec_to_sec_round(nsec: int) -> int:
     return (nsec + 500) // 10 ** 9
 
 
+def _nsec_to_nanos(nsec: int) -> int:
+    return int(nsec - _nsec_to_sec_round(nsec) * 1e9)
+
+
 def _convert_int_to_i64(val):
     """Convert integer to signed int64 (i64)"""
     if val > 0x7FFFFFFFFFFFFFFF:

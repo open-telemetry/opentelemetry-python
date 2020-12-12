@@ -58,6 +58,7 @@ API
 .. _Jaeger: https://www.jaegertracing.io/
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
 """
+# pylint: disable=protected-access
 
 import base64
 import logging
@@ -74,6 +75,7 @@ from thrift.protocol import TBinaryProtocol, TCompactProtocol
 from thrift.transport import THttpClient, TTransport
 
 import opentelemetry.exporter.jaeger.gen.model_pb2 as model_pb2
+import opentelemetry.exporter.jaeger.util as util
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger.gen.agent import Agent as agent
 from opentelemetry.exporter.jaeger.gen.collector_pb2 import PostSpansRequest
@@ -106,7 +108,8 @@ class JaegerSpanExporter(SpanExporter):
             when query for spans.
         agent_host_name: The host name of the Jaeger-Agent.
         agent_port: The port of the Jaeger-Agent.
-        collector_endpoint: The endpoint of the Jaeger-Collector HTTP/HTTPS Thrift.
+        collector_endpoint: The endpoint of the Jaeger-Collector
+            Thrift over HTTP/HTTPS or Protobuf via gRPC.
         username: The user name of the Basic Auth if authentication is
             required.
         password: The password of the Basic Auth if authentication is
@@ -160,9 +163,9 @@ class JaegerSpanExporter(SpanExporter):
         )
         self._collector = None
         self._grpc_client = None
-        self.insecure = insecure
-        self.credentials = credentials
-        self.transport_format = transport_format
+        self.insecure = util._get_insecure(insecure)
+        self.credentials = util._get_credentials(credentials)
+        self.transport_format = transport_format or TRANSPORT_FORMAT_THRIFT
 
     @property
     def agent_client(self) -> AgentClientUDP:
@@ -183,11 +186,8 @@ class JaegerSpanExporter(SpanExporter):
                     insecure_channel(self.collector_endpoint)
                 )
             else:
-                creds = self.credentials
-                if creds is None:
-                    creds = ssl_channel_credentials()
                 self._grpc_client = CollectorServiceStub(
-                    secure_channel(self.collector_endpoint, creds)
+                    secure_channel(self.collector_endpoint, self.credentials)
                 )
         return self._grpc_client
 
@@ -208,12 +208,13 @@ class JaegerSpanExporter(SpanExporter):
         )
         return self._collector
 
-    def export(self, spans):
+    def export(self, spans) -> SpanExportResult:
         if self.transport_format == TRANSPORT_FORMAT_PROTOBUF:
-            spans = protobuf._to_jaeger(spans)
-            batch = model_pb2.Batch(spans)
+            jaeger_spans = protobuf._to_jaeger(spans)
+            batch = model_pb2.Batch(spans=jaeger_spans)
             request = PostSpansRequest(batch=batch)
-            self._grpc_client.PostSpans(request)
+            if self.grpc_client is not None:
+                self.grpc_client.PostSpans(request)
         else:
             jaeger_spans = thrift._to_jaeger(spans)
             batch = jaeger.Batch(

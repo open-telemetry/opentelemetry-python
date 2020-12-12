@@ -8,6 +8,7 @@ from opentelemetry.exporter.jaeger.translate import (
     OTLP_JAEGER_SPAN_KIND,
     VERSION_KEY,
     _nsec_to_sec_round,
+    _nsec_to_nanos,
     _int_to_bytes,
 )
 from opentelemetry.sdk.trace import Span
@@ -164,7 +165,8 @@ def _extract_logs(span: Span) -> Optional[Sequence[model_pb2.Log]]:
             )
         )
         event_ts = Timestamp(
-            seconds=_nsec_to_sec_round(event.timestamp), nanos=event.timestamp
+            seconds=_nsec_to_sec_round(event.timestamp),
+            nanos=_nsec_to_nanos(event.timestamp),
         )
 
         logs.append(model_pb2.Log(timestamp=event_ts, fields=fields))
@@ -202,10 +204,12 @@ def _to_jaeger(spans: Sequence[Span]) -> Sequence[model_pb2.Span]:
         span_id = ctx.span_id
 
         start_time = Timestamp(
-            seconds=_nsec_to_sec_round(span.start_time), nanos=span.start_time
+            seconds=_nsec_to_sec_round(span.start_time),
+            nanos=_nsec_to_nanos(span.start_time),
         )
         end_time = Timestamp(
-            seconds=_nsec_to_sec_round(span.end_time), nanos=span.end_time
+            seconds=_nsec_to_sec_round(span.end_time),
+            nanos=_nsec_to_nanos(span.end_time),
         )
         duration = _duration_from_two_time_stamps(start_time, end_time)
 
@@ -215,6 +219,7 @@ def _to_jaeger(spans: Sequence[Span]) -> Sequence[model_pb2.Span]:
 
         flags = int(ctx.trace_flags)
 
+        # process = model_pb2.Process(service_name=svc_name)
         jaeger_span = model_pb2.Span(
             trace_id=_int_to_bytes(trace_id),
             span_id=_int_to_bytes(span_id),
@@ -225,6 +230,7 @@ def _to_jaeger(spans: Sequence[Span]) -> Sequence[model_pb2.Span]:
             duration=duration,
             tags=tags,
             logs=logs,
+            # process=process,
         )
         jaeger_spans.append(jaeger_span)
 
