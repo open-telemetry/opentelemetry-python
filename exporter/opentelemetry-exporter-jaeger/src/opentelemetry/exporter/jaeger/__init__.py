@@ -210,7 +210,7 @@ class JaegerSpanExporter(SpanExporter):
 
     def export(self, spans) -> SpanExportResult:
         if self.transport_format == TRANSPORT_FORMAT_PROTOBUF:
-            jaeger_spans = protobuf._to_jaeger(spans)
+            jaeger_spans = protobuf._to_jaeger(spans, self.service_name)
             batch = model_pb2.Batch(spans=jaeger_spans)
             request = PostSpansRequest(batch=batch)
             if self.grpc_client is not None:

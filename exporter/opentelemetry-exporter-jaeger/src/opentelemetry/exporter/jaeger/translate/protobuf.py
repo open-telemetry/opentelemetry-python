@@ -1,20 +1,18 @@
 from typing import Optional, Sequence
 
-import opentelemetry.exporter.jaeger.gen.model_pb2 as model_pb2
-from google.protobuf.timestamp_pb2 import Timestamp
 from google.protobuf.duration_pb2 import Duration
+from google.protobuf.timestamp_pb2 import Timestamp
+
+import opentelemetry.exporter.jaeger.gen.model_pb2 as model_pb2
 from opentelemetry.exporter.jaeger.translate import (
     NAME_KEY,
     OTLP_JAEGER_SPAN_KIND,
     VERSION_KEY,
-    _nsec_to_sec_round,
-    _nsec_to_nanos,
-    _int_to_bytes,
 )
 from opentelemetry.sdk.trace import Span
 from opentelemetry.util import types
 
-# pylint: disable=no-member
+# pylint: disable=no-member,too-many-locals
 
 
 def _get_string_key_value(
@@ -53,9 +51,7 @@ def _get_double_key_value(
     )
 
 
-def _get_binary_key_value(
-    key: str, value: types.AttributeValue
-) -> model_pb2.KeyValue:
+def _get_binary_key_value(key: str, value: bytes) -> model_pb2.KeyValue:
     """Returns jaeger double KeyValue."""
     return model_pb2.KeyValue(
         key=key, v_binary=value, v_type=model_pb2.ValueType.BINARY
@@ -66,21 +62,24 @@ def _translate_attribute(
     key: str, value: types.AttributeValue
 ) -> Optional[model_pb2.KeyValue]:
     """Convert the attributes to jaeger keyvalues."""
+    translated = None
     if isinstance(value, bool):
-        return _get_bool_key_value(key, value)
-    if isinstance(value, str):
-        return _get_string_key_value(key, value)
-    if isinstance(value, int):
-        return _get_long_key_value(key, value)
-    if isinstance(value, float):
-        return _get_double_key_value(key, value)
-    if isinstance(value, tuple):
-        return _get_string_key_value(key, str(value))
-    return None
+        translated = _get_bool_key_value(key, value)
+    elif isinstance(value, str):
+        translated = _get_string_key_value(key, value)
+    elif isinstance(value, int):
+        translated = _get_long_key_value(key, value)
+    elif isinstance(value, float):
+        translated = _get_double_key_value(key, value)
+    elif isinstance(value, bytes):
+        translated = _get_binary_key_value(key, value)
+    elif isinstance(value, tuple):
+        translated = _get_string_key_value(key, str(value))
+    return translated
 
 
 def _extract_key_values(span: Span) -> Sequence[model_pb2.KeyValue]:
-    """Extracts keyvalues from span and returns list of jaeger keyvalues.
+    """Extracts attributes from span and returns list of jaeger keyvalues.
 
     Args:
         span: span to extract keyvalues
@@ -133,8 +132,8 @@ def _extract_refs(span: Span) -> Optional[Sequence[model_pb2.SpanRef]]:
         refs.append(
             model_pb2.SpanRef(
                 ref_type=model_pb2.SpanRefType.FOLLOWS_FROM,
-                trace_id=_int_to_bytes(trace_id),
-                span_id=_int_to_bytes(span_id),
+                trace_id=trace_id.to_bytes(16, "big"),
+                span_id=span_id.to_bytes(8, "big"),
             )
         )
     return refs
@@ -164,14 +163,25 @@ def _extract_logs(span: Span) -> Optional[Sequence[model_pb2.Log]]:
                 v_str=event.name,
             )
         )
-        event_ts = Timestamp(
-            seconds=_nsec_to_sec_round(event.timestamp),
-            nanos=_nsec_to_nanos(event.timestamp),
-        )
-
+        event_ts = _proto_timestamp_from_epoch_nanos(event.timestamp)
         logs.append(model_pb2.Log(timestamp=event_ts, fields=fields))
 
     return logs
+
+
+def _extract_resource_tags(span: Span) -> Sequence[model_pb2.KeyValue]:
+    """Extracts resource attributes from span and returns
+    list of jaeger keyvalues.
+
+    Args:
+        span: span to extract keyvalues
+    """
+    tags = []
+    for key, value in span.resource.attributes.items():
+        tag = _translate_attribute(key, value)
+        if tag:
+            tags.append(tag)
+    return tags
 
 
 def _duration_from_two_time_stamps(
@@ -190,7 +200,19 @@ def _duration_from_two_time_stamps(
     return duration
 
 
-def _to_jaeger(spans: Sequence[Span]) -> Sequence[model_pb2.Span]:
+def _proto_timestamp_from_epoch_nanos(nsec: int) -> Timestamp:
+    """Create a Timestamp from the number of nanoseconds
+    elapsed from the epoch.
+    """
+    nsec_time = nsec / 1e9
+    seconds = int(nsec_time)
+    nanos = int((nsec_time - seconds) * 1e9)
+    return Timestamp(seconds=seconds, nanos=nanos)
+
+
+def _to_jaeger(
+    spans: Sequence[Span], svc_name: str
+) -> Sequence[model_pb2.Span]:
     """Translate the spans to Jaeger format.
 
     Args:
@@ -200,17 +222,12 @@ def _to_jaeger(spans: Sequence[Span]) -> Sequence[model_pb2.Span]:
 
     for span in spans:
         ctx = span.get_span_context()
-        trace_id = ctx.trace_id
-        span_id = ctx.span_id
+        # pb2 span expects in byte format
+        trace_id = ctx.trace_id.to_bytes(16, "big")
+        span_id = ctx.span_id.to_bytes(8, "big")
 
-        start_time = Timestamp(
-            seconds=_nsec_to_sec_round(span.start_time),
-            nanos=_nsec_to_nanos(span.start_time),
-        )
-        end_time = Timestamp(
-            seconds=_nsec_to_sec_round(span.end_time),
-            nanos=_nsec_to_nanos(span.end_time),
-        )
+        start_time = _proto_timestamp_from_epoch_nanos(span.start_time)
+        end_time = _proto_timestamp_from_epoch_nanos(span.end_time)
         duration = _duration_from_two_time_stamps(start_time, end_time)
 
         tags = _extract_key_values(span)
@@ -219,10 +236,12 @@ def _to_jaeger(spans: Sequence[Span]) -> Sequence[model_pb2.Span]:
 
         flags = int(ctx.trace_flags)
 
-        # process = model_pb2.Process(service_name=svc_name)
+        process = model_pb2.Process(
+            service_name=svc_name, tags=_extract_resource_tags(span)
+        )
         jaeger_span = model_pb2.Span(
-            trace_id=_int_to_bytes(trace_id),
-            span_id=_int_to_bytes(span_id),
+            trace_id=trace_id,
+            span_id=span_id,
             operation_name=span.name,
             references=refs,
             flags=flags,
@@ -230,7 +249,7 @@ def _to_jaeger(spans: Sequence[Span]) -> Sequence[model_pb2.Span]:
             duration=duration,
             tags=tags,
             logs=logs,
-            # process=process,
+            process=process,
         )
         jaeger_spans.append(jaeger_span)
 
