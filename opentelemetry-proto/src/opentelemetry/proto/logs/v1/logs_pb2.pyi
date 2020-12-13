@@ -10,6 +10,10 @@ from google.protobuf.internal.containers import (
     RepeatedCompositeFieldContainer as google___protobuf___internal___containers___RepeatedCompositeFieldContainer,
 )
 
+from google.protobuf.internal.enum_type_wrapper import (
+    _EnumTypeWrapper as google___protobuf___internal___enum_type_wrapper____EnumTypeWrapper,
+)
+
 from google.protobuf.message import (
     Message as google___protobuf___message___Message,
 )
@@ -26,45 +30,30 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
 
 from typing import (
     Iterable as typing___Iterable,
-    List as typing___List,
     NewType as typing___NewType,
     Optional as typing___Optional,
     Text as typing___Text,
-    Tuple as typing___Tuple,
-    Union as typing___Union,
     cast as typing___cast,
 )
 
-from typing_extensions import Literal as typing_extensions___Literal
+from typing_extensions import (
+    Literal as typing_extensions___Literal,
+)
+
 
 builtin___bool = bool
 builtin___bytes = bytes
 builtin___float = float
 builtin___int = int
-builtin___str = str
-if sys.version_info < (3,):
-    builtin___buffer = buffer
-    builtin___unicode = unicode
+
 
 DESCRIPTOR: google___protobuf___descriptor___FileDescriptor = ...
 
-SeverityNumberValue = typing___NewType("SeverityNumberValue", builtin___int)
+SeverityNumberValue = typing___NewType('SeverityNumberValue', builtin___int)
 type___SeverityNumberValue = SeverityNumberValue
-
-class SeverityNumber(object):
+SeverityNumber: _SeverityNumber
+class _SeverityNumber(google___protobuf___internal___enum_type_wrapper____EnumTypeWrapper[SeverityNumberValue]):
     DESCRIPTOR: google___protobuf___descriptor___EnumDescriptor = ...
-    @classmethod
-    def Name(cls, number: builtin___int) -> builtin___str: ...
-    @classmethod
-    def Value(cls, name: builtin___str) -> SeverityNumberValue: ...
-    @classmethod
-    def keys(cls) -> typing___List[builtin___str]: ...
-    @classmethod
-    def values(cls) -> typing___List[SeverityNumberValue]: ...
-    @classmethod
-    def items(
-        cls,
-    ) -> typing___List[typing___Tuple[builtin___str, SeverityNumberValue]]: ...
     SEVERITY_NUMBER_UNSPECIFIED = typing___cast(SeverityNumberValue, 0)
     SEVERITY_NUMBER_TRACE = typing___cast(SeverityNumberValue, 1)
     SEVERITY_NUMBER_TRACE2 = typing___cast(SeverityNumberValue, 2)
@@ -90,7 +79,6 @@ class SeverityNumber(object):
     SEVERITY_NUMBER_FATAL2 = typing___cast(SeverityNumberValue, 22)
     SEVERITY_NUMBER_FATAL3 = typing___cast(SeverityNumberValue, 23)
     SEVERITY_NUMBER_FATAL4 = typing___cast(SeverityNumberValue, 24)
-
 SEVERITY_NUMBER_UNSPECIFIED = typing___cast(SeverityNumberValue, 0)
 SEVERITY_NUMBER_TRACE = typing___cast(SeverityNumberValue, 1)
 SEVERITY_NUMBER_TRACE2 = typing___cast(SeverityNumberValue, 2)
@@ -118,127 +106,51 @@ SEVERITY_NUMBER_FATAL3 = typing___cast(SeverityNumberValue, 23)
 SEVERITY_NUMBER_FATAL4 = typing___cast(SeverityNumberValue, 24)
 type___SeverityNumber = SeverityNumber
 
-LogRecordFlagsValue = typing___NewType("LogRecordFlagsValue", builtin___int)
+LogRecordFlagsValue = typing___NewType('LogRecordFlagsValue', builtin___int)
 type___LogRecordFlagsValue = LogRecordFlagsValue
-
-class LogRecordFlags(object):
+LogRecordFlags: _LogRecordFlags
+class _LogRecordFlags(google___protobuf___internal___enum_type_wrapper____EnumTypeWrapper[LogRecordFlagsValue]):
     DESCRIPTOR: google___protobuf___descriptor___EnumDescriptor = ...
-    @classmethod
-    def Name(cls, number: builtin___int) -> builtin___str: ...
-    @classmethod
-    def Value(cls, name: builtin___str) -> LogRecordFlagsValue: ...
-    @classmethod
-    def keys(cls) -> typing___List[builtin___str]: ...
-    @classmethod
-    def values(cls) -> typing___List[LogRecordFlagsValue]: ...
-    @classmethod
-    def items(
-        cls,
-    ) -> typing___List[typing___Tuple[builtin___str, LogRecordFlagsValue]]: ...
     LOG_RECORD_FLAG_UNSPECIFIED = typing___cast(LogRecordFlagsValue, 0)
     LOG_RECORD_FLAG_TRACE_FLAGS_MASK = typing___cast(LogRecordFlagsValue, 255)
-
 LOG_RECORD_FLAG_UNSPECIFIED = typing___cast(LogRecordFlagsValue, 0)
 LOG_RECORD_FLAG_TRACE_FLAGS_MASK = typing___cast(LogRecordFlagsValue, 255)
 type___LogRecordFlags = LogRecordFlags
 
 class ResourceLogs(google___protobuf___message___Message):
     DESCRIPTOR: google___protobuf___descriptor___Descriptor = ...
-    @property
-    def resource(
-        self,
-    ) -> opentelemetry___proto___resource___v1___resource_pb2___Resource: ...
-    @property
-    def instrumentation_library_logs(
-        self,
-    ) -> google___protobuf___internal___containers___RepeatedCompositeFieldContainer[
-        type___InstrumentationLibraryLogs
-    ]: ...
-    def __init__(
-        self,
-        *,
-        resource: typing___Optional[
-            opentelemetry___proto___resource___v1___resource_pb2___Resource
-        ] = None,
-        instrumentation_library_logs: typing___Optional[
-            typing___Iterable[type___InstrumentationLibraryLogs]
-        ] = None,
-    ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> ResourceLogs: ...
-    else:
-        @classmethod
-        def FromString(
-            cls,
-            s: typing___Union[
-                builtin___bytes, builtin___buffer, builtin___unicode
-            ],
-        ) -> ResourceLogs: ...
-    def HasField(
-        self, field_name: typing_extensions___Literal["resource", b"resource"]
-    ) -> builtin___bool: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions___Literal[
-            "instrumentation_library_logs",
-            b"instrumentation_library_logs",
-            "resource",
-            b"resource",
-        ],
-    ) -> None: ...
 
+    @property
+    def resource(self) -> opentelemetry___proto___resource___v1___resource_pb2___Resource: ...
+
+    @property
+    def instrumentation_library_logs(self) -> google___protobuf___internal___containers___RepeatedCompositeFieldContainer[type___InstrumentationLibraryLogs]: ...
+
+    def __init__(self,
+        *,
+        resource : typing___Optional[opentelemetry___proto___resource___v1___resource_pb2___Resource] = None,
+        instrumentation_library_logs : typing___Optional[typing___Iterable[type___InstrumentationLibraryLogs]] = None,
+        ) -> None: ...
+    def HasField(self, field_name: typing_extensions___Literal[u"resource",b"resource"]) -> builtin___bool: ...
+    def ClearField(self, field_name: typing_extensions___Literal[u"instrumentation_library_logs",b"instrumentation_library_logs",u"resource",b"resource"]) -> None: ...
 type___ResourceLogs = ResourceLogs
 
 class InstrumentationLibraryLogs(google___protobuf___message___Message):
     DESCRIPTOR: google___protobuf___descriptor___Descriptor = ...
-    @property
-    def instrumentation_library(
-        self,
-    ) -> opentelemetry___proto___common___v1___common_pb2___InstrumentationLibrary: ...
-    @property
-    def logs(
-        self,
-    ) -> google___protobuf___internal___containers___RepeatedCompositeFieldContainer[
-        type___LogRecord
-    ]: ...
-    def __init__(
-        self,
-        *,
-        instrumentation_library: typing___Optional[
-            opentelemetry___proto___common___v1___common_pb2___InstrumentationLibrary
-        ] = None,
-        logs: typing___Optional[typing___Iterable[type___LogRecord]] = None,
-    ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(
-            cls, s: builtin___bytes
-        ) -> InstrumentationLibraryLogs: ...
-    else:
-        @classmethod
-        def FromString(
-            cls,
-            s: typing___Union[
-                builtin___bytes, builtin___buffer, builtin___unicode
-            ],
-        ) -> InstrumentationLibraryLogs: ...
-    def HasField(
-        self,
-        field_name: typing_extensions___Literal[
-            "instrumentation_library", b"instrumentation_library"
-        ],
-    ) -> builtin___bool: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions___Literal[
-            "instrumentation_library",
-            b"instrumentation_library",
-            "logs",
-            b"logs",
-        ],
-    ) -> None: ...
 
+    @property
+    def instrumentation_library(self) -> opentelemetry___proto___common___v1___common_pb2___InstrumentationLibrary: ...
+
+    @property
+    def logs(self) -> google___protobuf___internal___containers___RepeatedCompositeFieldContainer[type___LogRecord]: ...
+
+    def __init__(self,
+        *,
+        instrumentation_library : typing___Optional[opentelemetry___proto___common___v1___common_pb2___InstrumentationLibrary] = None,
+        logs : typing___Optional[typing___Iterable[type___LogRecord]] = None,
+        ) -> None: ...
+    def HasField(self, field_name: typing_extensions___Literal[u"instrumentation_library",b"instrumentation_library"]) -> builtin___bool: ...
+    def ClearField(self, field_name: typing_extensions___Literal[u"instrumentation_library",b"instrumentation_library",u"logs",b"logs"]) -> None: ...
 type___InstrumentationLibraryLogs = InstrumentationLibraryLogs
 
 class LogRecord(google___protobuf___message___Message):
@@ -251,74 +163,26 @@ class LogRecord(google___protobuf___message___Message):
     flags: builtin___int = ...
     trace_id: builtin___bytes = ...
     span_id: builtin___bytes = ...
-    @property
-    def body(
-        self,
-    ) -> opentelemetry___proto___common___v1___common_pb2___AnyValue: ...
-    @property
-    def attributes(
-        self,
-    ) -> google___protobuf___internal___containers___RepeatedCompositeFieldContainer[
-        opentelemetry___proto___common___v1___common_pb2___KeyValue
-    ]: ...
-    def __init__(
-        self,
-        *,
-        time_unix_nano: typing___Optional[builtin___int] = None,
-        severity_number: typing___Optional[type___SeverityNumberValue] = None,
-        severity_text: typing___Optional[typing___Text] = None,
-        name: typing___Optional[typing___Text] = None,
-        body: typing___Optional[
-            opentelemetry___proto___common___v1___common_pb2___AnyValue
-        ] = None,
-        attributes: typing___Optional[
-            typing___Iterable[
-                opentelemetry___proto___common___v1___common_pb2___KeyValue
-            ]
-        ] = None,
-        dropped_attributes_count: typing___Optional[builtin___int] = None,
-        flags: typing___Optional[builtin___int] = None,
-        trace_id: typing___Optional[builtin___bytes] = None,
-        span_id: typing___Optional[builtin___bytes] = None,
-    ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> LogRecord: ...
-    else:
-        @classmethod
-        def FromString(
-            cls,
-            s: typing___Union[
-                builtin___bytes, builtin___buffer, builtin___unicode
-            ],
-        ) -> LogRecord: ...
-    def HasField(
-        self, field_name: typing_extensions___Literal["body", b"body"]
-    ) -> builtin___bool: ...
-    def ClearField(
-        self,
-        field_name: typing_extensions___Literal[
-            "attributes",
-            b"attributes",
-            "body",
-            b"body",
-            "dropped_attributes_count",
-            b"dropped_attributes_count",
-            "flags",
-            b"flags",
-            "name",
-            b"name",
-            "severity_number",
-            b"severity_number",
-            "severity_text",
-            b"severity_text",
-            "span_id",
-            b"span_id",
-            "time_unix_nano",
-            b"time_unix_nano",
-            "trace_id",
-            b"trace_id",
-        ],
-    ) -> None: ...
 
+    @property
+    def body(self) -> opentelemetry___proto___common___v1___common_pb2___AnyValue: ...
+
+    @property
+    def attributes(self) -> google___protobuf___internal___containers___RepeatedCompositeFieldContainer[opentelemetry___proto___common___v1___common_pb2___KeyValue]: ...
+
+    def __init__(self,
+        *,
+        time_unix_nano : typing___Optional[builtin___int] = None,
+        severity_number : typing___Optional[type___SeverityNumberValue] = None,
+        severity_text : typing___Optional[typing___Text] = None,
+        name : typing___Optional[typing___Text] = None,
+        body : typing___Optional[opentelemetry___proto___common___v1___common_pb2___AnyValue] = None,
+        attributes : typing___Optional[typing___Iterable[opentelemetry___proto___common___v1___common_pb2___KeyValue]] = None,
+        dropped_attributes_count : typing___Optional[builtin___int] = None,
+        flags : typing___Optional[builtin___int] = None,
+        trace_id : typing___Optional[builtin___bytes] = None,
+        span_id : typing___Optional[builtin___bytes] = None,
+        ) -> None: ...
+    def HasField(self, field_name: typing_extensions___Literal[u"body",b"body"]) -> builtin___bool: ...
+    def ClearField(self, field_name: typing_extensions___Literal[u"attributes",b"attributes",u"body",b"body",u"dropped_attributes_count",b"dropped_attributes_count",u"flags",b"flags",u"name",b"name",u"severity_number",b"severity_number",u"severity_text",b"severity_text",u"span_id",b"span_id",u"time_unix_nano",b"time_unix_nano",u"trace_id",b"trace_id"]) -> None: ...
 type___LogRecord = LogRecord
