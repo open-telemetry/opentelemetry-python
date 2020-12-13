@@ -14,11 +14,8 @@
 
 import unittest
 
-from google.protobuf.timestamp_pb2 import Timestamp
-
 # pylint:disable=no-name-in-module
 # pylint:disable=import-error
-import opentelemetry.exporter.jaeger as jaeger_exporter
 import opentelemetry.exporter.jaeger.gen.model_pb2 as model_pb2
 import opentelemetry.exporter.jaeger.translate as translate
 from opentelemetry import trace as trace_api
@@ -26,10 +23,9 @@ from opentelemetry.configuration import Configuration
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCode
 
-# pylint:disable=protected-access
+
 class TestJaegerSpanExporter(unittest.TestCase):
     def setUp(self):
         # create and save span to be used in tests
@@ -49,10 +45,8 @@ class TestJaegerSpanExporter(unittest.TestCase):
         # pylint: disable=protected-access
         Configuration._reset()
 
-    # pylint: disable=too-many-locals,protected-access
+    # pylint: disable=too-many-locals
     def test_translate_to_jaeger(self):
-        # pylint: disable=invalid-name
-        self.maxDiff = None
 
         span_names = ("test1", "test2", "test3")
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
@@ -90,6 +84,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         }
 
         event_timestamp = base_time + 50 * 10 ** 6
+        # pylint:disable=protected-access
         event_timestamp_proto = translate.protobuf._proto_timestamp_from_epoch_nanos(
             event_timestamp
         )

@@ -1,6 +1,7 @@
 import logging
 
 from grpc import ssl_channel_credentials, ChannelCredentials
+
 from opentelemetry.configuration import Configuration
 
 logger = logging.getLogger(__name__)

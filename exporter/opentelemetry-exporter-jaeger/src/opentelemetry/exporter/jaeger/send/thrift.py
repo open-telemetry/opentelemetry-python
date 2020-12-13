@@ -2,10 +2,11 @@ import base64
 import logging
 import socket
 
-from opentelemetry.exporter.jaeger.gen.agent import Agent as agent
-from opentelemetry.exporter.jaeger.gen.jaeger import Collector as jaeger
 from thrift.protocol import TBinaryProtocol, TCompactProtocol
 from thrift.transport import THttpClient, TTransport
+
+from opentelemetry.exporter.jaeger.gen.agent import Agent as agent
+from opentelemetry.exporter.jaeger.gen.jaeger import Collector as jaeger
 
 UDP_PACKET_MAX_LENGTH = 65000
 
