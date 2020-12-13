@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v0.16b1...HEAD)
 
+- Add protobuf via gRPC exporting support for Jaeger
+  ([#1471](https://github.com/open-telemetry/opentelemetry-python/pull/1471))
+
 - Add support for Python 3.9
   ([#1441](https://github.com/open-telemetry/opentelemetry-python/pull/1441))
 
