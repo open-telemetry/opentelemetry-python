@@ -358,7 +358,7 @@ class TestOTLPSpanExporter(TestCase):
         )
 
     def test_span_status_translate_unset(self):
-        # pylint: disable=protected-access
+        # pylint: disable=protected-access,no-member
         unset = SDKStatus(status_code=SDKStatusCode.UNSET)
         ok = SDKStatus(status_code=SDKStatusCode.OK)
         error = SDKStatus(status_code=SDKStatusCode.ERROR)
