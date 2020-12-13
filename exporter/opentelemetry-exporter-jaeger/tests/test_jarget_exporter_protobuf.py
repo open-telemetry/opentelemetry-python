@@ -356,4 +356,8 @@ class TestJaegerSpanExporter(unittest.TestCase):
             spans[0].logs[0].fields, expected_spans[0].logs[0].fields
         )
 
+        # get rid of fields to be able to compare the whole spans
+        spans[0].logs[0].fields = None
+        expected_spans[0].logs[0].fields = None
+
         self.assertEqual(spans, expected_spans)
