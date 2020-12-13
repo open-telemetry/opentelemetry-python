@@ -274,7 +274,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "kind": span_kind,
                 "tags": {
                     "key_resource": "some_resource",
-                    "otel.status_code": "1",
+                    "otel.status_code": "0",
                 },
                 "annotations": None,
             },
@@ -289,7 +289,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "tags": {
                     "key_string": "hello_world",
                     "key_resource": "some_resource",
-                    "otel.status_code": "1",
+                    "otel.status_code": "0",
                 },
                 "annotations": None,
             },
@@ -304,7 +304,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "tags": {
                     "otel.instrumentation_library.name": "name",
                     "otel.instrumentation_library.version": "version",
-                    "otel.status_code": "1",
+                    "otel.status_code": "0",
                 },
                 "annotations": None,
             },
@@ -383,7 +383,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": duration // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": SPAN_KIND_MAP_JSON[SpanKind.INTERNAL],
-                "tags": {"otel.status_code": "1"},
+                "tags": {"otel.status_code": "0"},
                 "annotations": None,
                 "debug": True,
                 "parentId": "0aaaaaaaaaaaaaaa",
@@ -616,7 +616,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     kind=span_kind,
                     tags={
                         "key_resource": "some_resource",
-                        "otel.status_code": "1",
+                        "otel.status_code": "0",
                     },
                 ),
                 zipkin_pb2.Span(
@@ -632,7 +632,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     tags={
                         "key_string": "hello_world",
                         "key_resource": "some_resource",
-                        "otel.status_code": "1",
+                        "otel.status_code": "0",
                     },
                 ),
                 zipkin_pb2.Span(
@@ -648,7 +648,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     tags={
                         "otel.instrumentation_library.name": "name",
                         "otel.instrumentation_library.version": "version",
-                        "otel.status_code": "1",
+                        "otel.status_code": "0",
                     },
                 ),
             ],
