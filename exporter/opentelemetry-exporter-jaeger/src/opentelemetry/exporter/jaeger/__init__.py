@@ -87,7 +87,7 @@ from opentelemetry.exporter.jaeger.gen.collector_pb2 import PostSpansRequest
 from opentelemetry.exporter.jaeger.gen.collector_pb2_grpc import (
     CollectorServiceStub,
 )
-from opentelemetry.exporter.jaeger.gen.jaeger import Collector as jaeger
+from opentelemetry.exporter.jaeger.gen.jaeger import Collector as jaeger_thrift
 from opentelemetry.exporter.jaeger.send.thrift import AgentClientUDP, Collector
 from opentelemetry.exporter.jaeger.translate import thrift, protobuf
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
@@ -223,9 +223,9 @@ class JaegerSpanExporter(SpanExporter):
                 self.grpc_client.PostSpans(request)
         else:
             jaeger_spans = thrift._to_jaeger(spans)
-            batch = jaeger.Batch(
+            batch = jaeger_thrift.Batch(
                 spans=jaeger_spans,
-                process=jaeger.Process(serviceName=self.service_name),
+                process=jaeger_thrift.Process(serviceName=self.service_name),
             )
             if self.collector is not None:
                 self.collector.submit(batch)

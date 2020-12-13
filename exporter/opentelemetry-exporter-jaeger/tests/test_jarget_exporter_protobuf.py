@@ -1,4 +1,3 @@
-# Copyright 2018, OpenCensus Authors
 # Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -50,20 +49,6 @@ class TestJaegerSpanExporter(unittest.TestCase):
         # pylint: disable=protected-access
         Configuration._reset()
 
-    def test_nsec_to_usec_round(self):
-        # pylint: disable=protected-access
-        nsec_to_usec_round = jaeger_exporter.translate._nsec_to_usec_round
-
-        self.assertEqual(nsec_to_usec_round(5000), 5)
-        self.assertEqual(nsec_to_usec_round(5499), 5)
-        self.assertEqual(nsec_to_usec_round(5500), 6)
-
-    def test_all_otlp_span_kinds_are_mapped(self):
-        for kind in SpanKind:
-            self.assertIn(
-                kind, jaeger_exporter.translate.OTLP_JAEGER_SPAN_KIND
-            )
-
     # pylint: disable=too-many-locals,protected-access
     def test_translate_to_jaeger(self):
         # pylint: disable=invalid-name
@@ -75,7 +60,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         parent_id = 0x1111111111111111
         other_id = 0x2222222222222222
 
-        base_time = int(0.683647322 * (10 ** 9))  # in ns
+        base_time = 683647322 * 10 ** 9  # in ns
         start_times = (
             base_time,
             base_time + 150 * 10 ** 6,
