@@ -15,9 +15,11 @@
 
 """
 The **OpenTelemetry Jaeger Exporter** allows to export `OpenTelemetry`_ traces to `Jaeger`_.
-This exporter always send traces to the configured agent using Thrift compact protocol over UDP.
-An optional collector can be configured, in this case Thrift binary protocol over HTTP is used.
-gRPC is still not supported by this implementation.
+This exporter always sends traces to the configured agent using Thrift compact protocol over UDP.
+When it is not feasible to deploy Jaeger Agent next to the application, for example, when the
+application code is running as Lambda function, A collector can be configured to send spans
+with either Thrift over UDP or Protobuf via gRPC. If both agent and collector are configured,
+exporter sends traces only to collector to eliminate the duplicate entries.
 
 Usage
 -----
@@ -42,6 +44,9 @@ Usage
         # collector_endpoint='http://localhost:14268/api/traces?format=jaeger.thrift',
         # username=xxxx, # optional
         # password=xxxx, # optional
+        # insecure=xxxx, # optional
+        # credentials=xxxx # optional
+        # transport_format=xxxx # optional
     )
 
     # Create a BatchExportSpanProcessor and add the exporter to it
@@ -114,8 +119,9 @@ class JaegerSpanExporter(SpanExporter):
             required.
         password: The password of the Basic Auth if authentication is
             required.
-        insecure: Connection type
-        credentials: Credentials for server authentication
+        insecure: Connection type.
+        credentials: Credentials for server authentication.
+        transport_format: Transport format for exporting spans to collector.
     """
 
     def __init__(
