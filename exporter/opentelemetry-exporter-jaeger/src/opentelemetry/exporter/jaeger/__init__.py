@@ -79,8 +79,8 @@ from grpc import (
 from thrift.protocol import TBinaryProtocol, TCompactProtocol
 from thrift.transport import THttpClient, TTransport
 
-import opentelemetry.exporter.jaeger.gen.model_pb2 as model_pb2
-import opentelemetry.exporter.jaeger.util as util
+from opentelemetry.exporter.jaeger.gen import model_pb2
+from opentelemetry.exporter.jaeger import util
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger.gen.agent import Agent as agent
 from opentelemetry.exporter.jaeger.gen.collector_pb2 import PostSpansRequest

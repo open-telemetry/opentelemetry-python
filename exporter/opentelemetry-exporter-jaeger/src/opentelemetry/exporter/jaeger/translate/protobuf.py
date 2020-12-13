@@ -3,7 +3,7 @@ from typing import Optional, Sequence
 from google.protobuf.duration_pb2 import Duration
 from google.protobuf.timestamp_pb2 import Timestamp
 
-import opentelemetry.exporter.jaeger.gen.model_pb2 as model_pb2
+from opentelemetry.exporter.jaeger.gen import model_pb2
 from opentelemetry.exporter.jaeger.translate import (
     NAME_KEY,
     OTLP_JAEGER_SPAN_KIND,
