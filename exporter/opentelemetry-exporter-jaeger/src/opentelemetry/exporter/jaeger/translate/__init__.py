@@ -1,10 +1,4 @@
-from abc import ABC, abstractmethod
-from typing import Any, Sequence, Union, Optional
-
-from opentelemetry.exporter.jaeger.gen.jaeger import Collector as TCollector
-from opentelemetry.sdk.trace import Span
 from opentelemetry.trace import SpanKind
-from opentelemetry.util import types
 
 OTLP_JAEGER_SPAN_KIND = {
     SpanKind.CLIENT: "client",
