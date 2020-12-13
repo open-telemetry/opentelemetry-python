@@ -22,6 +22,14 @@ jaeger_exporter = jaeger.JaegerSpanExporter(
     # password=xxxx, # optional
 )
 
+# JaegerSpanExporter with gRPC
+# jaeger_exporter = jaeger.JaegerSpanExporter(
+#     service_name="my-helloworld-service",
+#     collector_endpoint="localhost:14250",
+#     insecure=True,
+#     transport_format="protobuf"
+# )
+
 # create a BatchExportSpanProcessor and add the exporter to it
 span_processor = BatchExportSpanProcessor(jaeger_exporter)
 
