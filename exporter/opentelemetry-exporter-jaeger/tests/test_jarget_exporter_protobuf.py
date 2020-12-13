@@ -79,11 +79,11 @@ class TestJaegerSpanExporter(unittest.TestCase):
         )
 
         event_attributes = OrderedDict(
-            {
-                "annotation_bool": True,
-                "annotation_string": "annotation_test",
-                "key_float": 0.3,
-            }
+            [
+                ("annotation_bool", True),
+                ("annotation_string", "annotation_test"),
+                ("key_float", 0.3),
+            ]
         )
 
         event_timestamp = base_time + 50 * 10 ** 6
