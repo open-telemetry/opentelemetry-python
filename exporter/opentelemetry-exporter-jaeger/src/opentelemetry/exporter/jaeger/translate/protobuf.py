@@ -25,36 +25,28 @@ def _span_id_to_bytes(span_id: int) -> bytes:
     return span_id.to_bytes(8, "big")
 
 
-def _get_string_key_value(
-    key, value: types.AttributeValue
-) -> model_pb2.KeyValue:
+def _get_string_key_value(key, value: str) -> model_pb2.KeyValue:
     """Returns jaeger string KeyValue."""
     return model_pb2.KeyValue(
         key=key, v_str=value, v_type=model_pb2.ValueType.STRING
     )
 
 
-def _get_bool_key_value(
-    key: str, value: types.AttributeValue
-) -> model_pb2.KeyValue:
+def _get_bool_key_value(key: str, value: bool) -> model_pb2.KeyValue:
     """Returns jaeger boolean KeyValue."""
     return model_pb2.KeyValue(
         key=key, v_bool=value, v_type=model_pb2.ValueType.BOOL
     )
 
 
-def _get_long_key_value(
-    key: str, value: types.AttributeValue
-) -> model_pb2.KeyValue:
+def _get_long_key_value(key: str, value: int) -> model_pb2.KeyValue:
     """Returns jaeger long KeyValue."""
     return model_pb2.KeyValue(
         key=key, v_int64=value, v_type=model_pb2.ValueType.INT64
     )
 
 
-def _get_double_key_value(
-    key: str, value: types.AttributeValue
-) -> model_pb2.KeyValue:
+def _get_double_key_value(key: str, value: float) -> model_pb2.KeyValue:
     """Returns jaeger double KeyValue."""
     return model_pb2.KeyValue(
         key=key, v_float64=value, v_type=model_pb2.ValueType.FLOAT64
@@ -81,8 +73,6 @@ def _translate_attribute(
         translated = _get_long_key_value(key, value)
     elif isinstance(value, float):
         translated = _get_double_key_value(key, value)
-    elif isinstance(value, bytes):
-        translated = _get_binary_key_value(key, value)
     elif isinstance(value, tuple):
         translated = _get_string_key_value(key, str(value))
     return translated
@@ -166,13 +156,7 @@ def _extract_logs(span: Span) -> Optional[Sequence[model_pb2.Log]]:
             if tag:
                 fields.append(tag)
 
-        fields.append(
-            model_pb2.KeyValue(
-                key="message",
-                v_type=model_pb2.ValueType.STRING,
-                v_str=event.name,
-            )
-        )
+        fields.append(_get_string_key_value(key="message", value=event.name,))
         event_ts = _proto_timestamp_from_epoch_nanos(event.timestamp)
         logs.append(model_pb2.Log(timestamp=event_ts, fields=fields))
 
@@ -197,7 +181,10 @@ def _extract_resource_tags(span: Span) -> Sequence[model_pb2.KeyValue]:
 def _duration_from_two_time_stamps(
     start: Timestamp, end: Timestamp
 ) -> Duration:
-    """Compute Duration from two Timestamps."""
+    """Compute Duration from two Timestamps.
+
+    See https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#duration
+    """
     duration = Duration(
         seconds=end.seconds - start.seconds, nanos=end.nanos - start.nanos,
     )
@@ -211,8 +198,9 @@ def _duration_from_two_time_stamps(
 
 
 def _proto_timestamp_from_epoch_nanos(nsec: int) -> Timestamp:
-    """Create a Timestamp from the number of nanoseconds
-    elapsed from the epoch.
+    """Create a Timestamp from the number of nanoseconds elapsed from the epoch.
+
+    See https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#timestamp
     """
     nsec_time = nsec / 1e9
     seconds = int(nsec_time)

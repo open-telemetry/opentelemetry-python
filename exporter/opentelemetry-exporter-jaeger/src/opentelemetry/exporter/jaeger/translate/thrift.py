@@ -12,22 +12,22 @@ from opentelemetry.sdk.trace import Span
 from opentelemetry.util import types
 
 
-def _get_string_tag(key, value: types.AttributeValue) -> TCollector.Tag:
+def _get_string_tag(key, value: str) -> TCollector.Tag:
     """Returns jaeger string tag."""
     return TCollector.Tag(key=key, vStr=value, vType=TCollector.TagType.STRING)
 
 
-def _get_bool_tag(key: str, value: types.AttributeValue) -> TCollector.Tag:
+def _get_bool_tag(key: str, value: bool) -> TCollector.Tag:
     """Returns jaeger boolean tag."""
     return TCollector.Tag(key=key, vBool=value, vType=TCollector.TagType.BOOL)
 
 
-def _get_long_tag(key: str, value: types.AttributeValue) -> TCollector.Tag:
+def _get_long_tag(key: str, value: int) -> TCollector.Tag:
     """Returns jaeger long tag."""
     return TCollector.Tag(key=key, vLong=value, vType=TCollector.TagType.LONG)
 
 
-def _get_double_tag(key: str, value: types.AttributeValue) -> TCollector.Tag:
+def _get_double_tag(key: str, value: float) -> TCollector.Tag:
     """Returns jaeger double tag."""
     return TCollector.Tag(
         key=key, vDouble=value, vType=TCollector.TagType.DOUBLE
