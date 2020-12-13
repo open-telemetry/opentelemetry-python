@@ -1,6 +1,6 @@
 import logging
 
-from grpc import ssl_channel_credentials, ChannelCredentials
+from grpc import ChannelCredentials, ssl_channel_credentials
 
 from opentelemetry.configuration import Configuration
 
