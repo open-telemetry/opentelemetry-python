@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 import os
-from unittest.mock import patch
+import unittest
 from collections import OrderedDict
+from unittest.mock import patch
 
 # pylint:disable=no-name-in-module
 # pylint:disable=import-error
@@ -28,6 +28,7 @@ from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import Status, StatusCode
+
 
 # pylint:disable=no-member
 class TestJaegerSpanExporter(unittest.TestCase):
