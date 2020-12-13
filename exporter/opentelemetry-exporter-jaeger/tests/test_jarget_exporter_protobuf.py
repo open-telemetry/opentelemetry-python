@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from collections import OrderedDict
 
 # pylint:disable=no-name-in-module
 # pylint:disable=import-error
@@ -77,11 +78,13 @@ class TestJaegerSpanExporter(unittest.TestCase):
             trace_id, other_id, is_remote=False
         )
 
-        event_attributes = {
-            "annotation_bool": True,
-            "annotation_string": "annotation_test",
-            "key_float": 0.3,
-        }
+        event_attributes = OrderedDict(
+            {
+                "annotation_bool": True,
+                "annotation_string": "annotation_test",
+                "key_float": 0.3,
+            }
+        )
 
         event_timestamp = base_time + 50 * 10 ** 6
         # pylint:disable=protected-access
@@ -350,9 +353,5 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self.assertCountEqual(
             spans[0].logs[0].fields, expected_spans[0].logs[0].fields
         )
-
-        # get rid of fields to be able to compare the whole spans
-        spans[0].logs[0].fields = None
-        expected_spans[0].logs[0].fields = None
 
         self.assertEqual(spans, expected_spans)

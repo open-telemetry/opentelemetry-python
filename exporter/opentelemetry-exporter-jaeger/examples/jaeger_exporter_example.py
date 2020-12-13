@@ -22,7 +22,6 @@ jaeger_exporter = jaeger.JaegerSpanExporter(
     # password=xxxx, # optional
 )
 
-
 # create a BatchExportSpanProcessor and add the exporter to it
 span_processor = BatchExportSpanProcessor(jaeger_exporter)
 

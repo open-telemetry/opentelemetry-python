@@ -18,7 +18,7 @@ The **OpenTelemetry Jaeger Exporter** allows to export `OpenTelemetry`_ traces t
 This exporter always sends traces to the configured agent using Thrift compact protocol over UDP.
 When it is not feasible to deploy Jaeger Agent next to the application, for example, when the
 application code is running as Lambda function, A collector can be configured to send spans
-with either Thrift over UDP or Protobuf via gRPC. If both agent and collector are configured,
+with either Thrift over HTTP or Protobuf via gRPC. If both agent and collector are configured,
 exporter sends traces only to collector to eliminate the duplicate entries.
 
 Usage
