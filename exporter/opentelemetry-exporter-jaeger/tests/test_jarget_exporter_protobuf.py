@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import unittest
+import os
+from unittest.mock import patch
 from collections import OrderedDict
 
 # pylint:disable=no-name-in-module
@@ -21,12 +23,13 @@ import opentelemetry.exporter.jaeger.gen.model_pb2 as model_pb2
 import opentelemetry.exporter.jaeger.translate as translate
 from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
+from opentelemetry.exporter.jaeger import JaegerSpanExporter
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import Status, StatusCode
 
-
+# pylint:disable=no-member
 class TestJaegerSpanExporter(unittest.TestCase):
     def setUp(self):
         # create and save span to be used in tests
@@ -45,6 +48,36 @@ class TestJaegerSpanExporter(unittest.TestCase):
     def tearDown(self):
         # pylint: disable=protected-access
         Configuration._reset()
+
+    def test_constructor_by_environment_variables(self):
+        """Test using Environment Variables."""
+        # pylint: disable=protected-access
+        Configuration._reset()
+        service = "my-opentelemetry-jaeger"
+
+        collector_endpoint = "localhost:14250"
+
+        env_patch = patch.dict(
+            "os.environ",
+            {
+                "OTEL_EXPORTER_JAEGER_ENDPOINT": collector_endpoint,
+                "OTEL_EXPORTER_JAEGER_CERTIFICATE": os.path.dirname(__file__)
+                + "/certs/cred.cert",
+            },
+        )
+
+        env_patch.start()
+
+        exporter = JaegerSpanExporter(
+            service_name=service, transport_format="protobuf"
+        )
+
+        self.assertEqual(exporter.service_name, service)
+        self.assertTrue(exporter.grpc_client is not None)
+        self.assertEqual(exporter.collector_endpoint, collector_endpoint)
+        self.assertIsNotNone(exporter.credentials)
+
+        env_patch.stop()
 
     # pylint: disable=too-many-locals
     def test_translate_to_jaeger(self):
@@ -350,8 +383,9 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         # events are complicated to compare because order of fields
         # (attributes) in otel is not important but in jeager it is
+        # pylint: disable=no-member
         self.assertCountEqual(
-            spans[0].logs[0].fields, expected_spans[0].logs[0].fields
+            spans[0].logs[0].fields, expected_spans[0].logs[0].fields,
         )
 
         self.assertEqual(spans, expected_spans)

@@ -183,7 +183,10 @@ class JaegerSpanExporter(SpanExporter):
 
     @property
     def grpc_client(self) -> Optional[CollectorServiceStub]:
-        if not self.collector_endpoint:
+        if (
+            not self.collector_endpoint
+            or self.transport_format != TRANSPORT_FORMAT_PROTOBUF
+        ):
             return None
 
         if self._grpc_client is None:
@@ -202,7 +205,10 @@ class JaegerSpanExporter(SpanExporter):
         if self._collector is not None:
             return self._collector
 
-        if self.collector_endpoint is None:
+        if (
+            self.collector_endpoint is None
+            or self.transport_format != TRANSPORT_FORMAT_THRIFT
+        ):
             return None
 
         auth = None

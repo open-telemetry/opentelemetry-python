@@ -20,8 +20,8 @@ def _get_insecure(param):
 
 def _load_credential_from_file(path) -> ChannelCredentials:
     try:
-        with open(path, "rb") as f:
-            credential = f.read()
+        with open(path, "rb") as creds_file:
+            credential = creds_file.read()
             return ssl_channel_credentials(credential)
     except FileNotFoundError:
         logger.exception("Failed to read credential file")

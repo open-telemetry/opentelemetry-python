@@ -188,6 +188,7 @@ def _duration_from_two_time_stamps(
     duration = Duration(
         seconds=end.seconds - start.seconds, nanos=end.nanos - start.nanos,
     )
+    # pylint: disable=chained-comparison
     if duration.seconds < 0 and duration.nanos > 0:
         duration.seconds += 1
         duration.nanos -= 1000000000

@@ -6,7 +6,7 @@ httpretty~=1.0
 mypy==0.790
 sphinx~=2.1
 sphinx-rtd-theme~=0.4
-sphinx-autodoc-typehints~=1.11.1
+sphinx-autodoc-typehints~=1.10.2
 pytest>=6.0
 pytest-cov>=2.8
 readme-renderer~=24.0
