@@ -123,8 +123,8 @@ def _get_resource_data(
 
 def _load_credential_from_file(filepath) -> ChannelCredentials:
     try:
-        with open(filepath, "rb") as f:
-            credential = f.read()
+        with open(filepath, "rb") as creds_file:
+            credential = creds_file.read()
             return ssl_channel_credentials(credential)
     except FileNotFoundError:
         logger.exception("Failed to read credential file")

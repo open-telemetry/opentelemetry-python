@@ -6,13 +6,13 @@ sphinx-autodoc-typehints~=1.11.1
 # doesn't work for pkg_resources.
 ./opentelemetry-api
 ./opentelemetry-sdk
-./opentelemetry-python-contrib/exporter/opentelemetry-exporter-datadog
-./opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-grpc
+-e "git+https://github.com/open-telemetry/opentelemetry-python-contrib.git#egg=opentelemetry-exporter-datadog&subdirectory=exporter/opentelemetry-exporter-datadog"
+-e "git+https://github.com/open-telemetry/opentelemetry-python-contrib.git#egg=opentelemetry-instrumentation-grpc&subdirectory=instrumentation/opentelemetry-instrumentation-grpc"
 ./opentelemetry-instrumentation
-./opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-requests
-./opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-wsgi
-./opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-django
-./opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-flask
+-e "git+https://github.com/open-telemetry/opentelemetry-python-contrib.git#egg=opentelemetry-instrumentation-requests&subdirectory=instrumentation/opentelemetry-instrumentation-requests"
+-e "git+https://github.com/open-telemetry/opentelemetry-python-contrib.git#egg=opentelemetry-instrumentation-wsgi&subdirectory=instrumentation/opentelemetry-instrumentation-wsgi"
+-e "git+https://github.com/open-telemetry/opentelemetry-python-contrib.git#egg=opentelemetry-instrumentation-django&subdirectory=instrumentation/opentelemetry-instrumentation-django"
+-e "git+https://github.com/open-telemetry/opentelemetry-python-contrib.git#egg=opentelemetry-instrumentation-flask&subdirectory=instrumentation/opentelemetry-instrumentation-flask"
 
 # Required by ext packages
 asgiref~=3.0
