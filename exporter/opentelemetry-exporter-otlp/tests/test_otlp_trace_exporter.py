@@ -347,14 +347,24 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(expected, self.exporter._translate_data([self.span]))
 
     def _check_translated_status(
-        self, translated: ExportTraceServiceRequest, expected: Status
+        self,
+        translated: ExportTraceServiceRequest,
+        code_expected: Status,
+        deprecated_code_expected: Status,
     ):
         self.assertEqual(
             translated.resource_spans[0]
             .instrumentation_library_spans[0]
             .spans[0]
             .status.code,
-            expected,
+            code_expected,
+        )
+        self.assertEqual(
+            translated.resource_spans[0]
+            .instrumentation_library_spans[0]
+            .spans[0]
+            .status.deprecated_code,
+            deprecated_code_expected,
         )
 
     def test_span_status_translate_unset(self):
@@ -372,11 +382,19 @@ class TestOTLPSpanExporter(TestCase):
             [_create_span_with_status(error)]
         )
         self._check_translated_status(
-            unset_translated, Status.STATUS_CODE_UNSET
+            unset_translated,
+            Status.STATUS_CODE_UNSET,
+            Status.DEPRECATED_STATUS_CODE_OK,
         )
-        self._check_translated_status(ok_translated, Status.STATUS_CODE_OK)
         self._check_translated_status(
-            error_translated, Status.STATUS_CODE_ERROR
+            ok_translated,
+            Status.STATUS_CODE_OK,
+            Status.DEPRECATED_STATUS_CODE_OK,
+        )
+        self._check_translated_status(
+            error_translated,
+            Status.STATUS_CODE_ERROR,
+            Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR,
         )
 
 
