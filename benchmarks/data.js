@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1607981434136,
+  "lastUpdate": 1607985585484,
   "repoUrl": "https://github.com/open-telemetry/opentelemetry-python",
   "entries": {
     "OpenTelemetry Python Benchmarks - Python 3.7 -": [
@@ -512,6 +512,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00006512957798268498",
             "extra": "mean: 95.25769017419772 usec\nrounds: 5048"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "enowell@amazon.com",
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "33fa7b99274d1a7d7d7cb52fb273b18cbb5107a0",
+          "message": "Remove unnecessary contrib pkgs from docs install (#1470)",
+          "timestamp": "2020-12-14T14:37:44-08:00",
+          "tree_id": "dc2d85da6f535236dd40bdaaed0b24e77784583a",
+          "url": "https://github.com/open-telemetry/opentelemetry-python/commit/33fa7b99274d1a7d7d7cb52fb273b18cbb5107a0"
+        },
+        "date": 1607985584576,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "opentelemetry-sdk/tests/performance/benchmarks/trace/test_benchmark_trace.py::test_simple_start_span",
+            "value": 22353.47378436993,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000015323682449549934",
+            "extra": "mean: 44.73577617717849 usec\nrounds: 1805"
+          },
+          {
+            "name": "opentelemetry-sdk/tests/performance/benchmarks/trace/test_benchmark_trace.py::test_simple_start_as_current_span",
+            "value": 15961.931593455236,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000016156827984624716",
+            "extra": "mean: 62.64905936635033 usec\nrounds: 5525"
           }
         ]
       }
