@@ -93,6 +93,14 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
 
 .. toctree::
     :maxdepth: 1
+    :caption: OpenTelemetry Python Performance
+    :name: performance-tests
+    :glob:
+
+    performance/**
+
+.. toctree::
+    :maxdepth: 1
     :caption: Examples
     :name: examples
     :glob:
