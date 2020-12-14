@@ -16,11 +16,15 @@
 import shutil
 import subprocess
 import unittest
+from importlib import reload
 from logging import ERROR, WARNING
 from typing import Optional
 from unittest import mock
 
+import pytest
+
 from opentelemetry import trace as trace_api
+from opentelemetry.configuration import Configuration
 from opentelemetry.context import Context
 from opentelemetry.sdk import resources, trace
 from opentelemetry.sdk.trace import Resource, sampling
@@ -1182,3 +1186,49 @@ class TestSpanProcessor(unittest.TestCase):
             + date_str
             + '", "attributes": {"key2": "value2"}}], "links": [], "resource": {}}',
         )
+
+
+class TestSpanLimits(unittest.TestCase):
+    def setUp(self):
+        # reset global state of configuration object
+        # pylint: disable=protected-access
+        Configuration._reset()
+
+    def tearDown(self):
+        # reset global state of configuration object
+        # pylint: disable=protected-access
+        Configuration._reset()
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            "OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT": "10",
+            "OTEL_SPAN_EVENT_COUNT_LIMIT": "20",
+            "OTEL_SPAN_LINK_COUNT_LIMIT": "30",
+        },
+    )
+    def test_span_environment_limits(self):
+        reload(trace)
+        tracer = new_tracer()
+        ids_generator = trace_api.RandomIdsGenerator()
+        some_links = [
+            trace_api.Link(
+                trace_api.SpanContext(
+                    trace_id=ids_generator.generate_trace_id(),
+                    span_id=ids_generator.generate_span_id(),
+                    is_remote=False,
+                )
+            )
+            for _ in range(100)
+        ]
+        with pytest.raises(ValueError):
+            with tracer.start_as_current_span("root", links=some_links):
+                pass
+
+        with tracer.start_as_current_span("root") as root:
+            for idx in range(100):
+                root.set_attribute("my_attribute_{}".format(idx), 0)
+                root.add_event("my_event_{}".format(idx))
+
+            self.assertEqual(len(root.attributes), 10)
+            self.assertEqual(len(root.events), 20)

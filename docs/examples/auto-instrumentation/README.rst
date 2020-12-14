@@ -37,9 +37,8 @@ Manually instrumented server
     def server_request():
         with tracer.start_as_current_span(
             "server_request",
-            parent=propagators.extract(
-                lambda dict_, key: dict_.get(key, []), request.headers
-            )["current-span"],
+            context=propagators.extract(DictGetter(), request.headers
+            ),
         ):
             print(request.args.get("param"))
             return "served"
@@ -137,7 +136,12 @@ similar to the following example:
             "http.flavor": "1.1"
         },
         "events": [],
-        "links": []
+        "links": [],
+        "resource": {
+            "telemetry.sdk.language": "python",
+            "telemetry.sdk.name": "opentelemetry",
+            "telemetry.sdk.version": "0.16b1"
+        }
     }
 
 Execute an automatically instrumented server
@@ -148,7 +152,7 @@ and run the following command instead:
 
 .. code:: sh
 
-    $ opentelemetry-instrument python server_uninstrumented.py
+    $ opentelemetry-instrument -e console_span,console_metrics python server_uninstrumented.py
 
 In the console where you previously executed ``client.py``, run the following
 command again:
@@ -192,7 +196,13 @@ similar to the following example:
             "http.status_code": 200
         },
         "events": [],
-        "links": []
+        "links": [],
+        "resource": {
+        "telemetry.sdk.language": "python",
+        "telemetry.sdk.name": "opentelemetry",
+        "telemetry.sdk.version": "0.16b1",
+        "service.name": ""
+        }
     }
 
 You can see that both outputs are the same because automatic instrumentation does

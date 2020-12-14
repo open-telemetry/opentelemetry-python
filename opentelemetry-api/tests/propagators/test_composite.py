@@ -26,6 +26,8 @@ def get_as_list(dict_object, key):
 def mock_inject(name, value="data"):
     def wrapped(setter, carrier=None, context=None):
         carrier[name] = value
+        setter({}, "inject_field_{}_0".format(name), None)
+        setter({}, "inject_field_{}_1".format(name), None)
 
     return wrapped
 
@@ -39,18 +41,27 @@ def mock_extract(name, value="context"):
     return wrapped
 
 
+def mock_fields(name):
+    return {"inject_field_{}_0".format(name), "inject_field_{}_1".format(name)}
+
+
 class TestCompositePropagator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         cls.mock_propagator_0 = Mock(
-            inject=mock_inject("mock-0"), extract=mock_extract("mock-0")
+            inject=mock_inject("mock-0"),
+            extract=mock_extract("mock-0"),
+            fields=mock_fields("mock-0"),
         )
         cls.mock_propagator_1 = Mock(
-            inject=mock_inject("mock-1"), extract=mock_extract("mock-1")
+            inject=mock_inject("mock-1"),
+            extract=mock_extract("mock-1"),
+            fields=mock_fields("mock-1"),
         )
         cls.mock_propagator_2 = Mock(
             inject=mock_inject("mock-0", value="data2"),
             extract=mock_extract("mock-0", value="context2"),
+            fields=mock_fields("mock-0"),
         )
 
     def test_no_propagators(self):
@@ -105,3 +116,23 @@ class TestCompositePropagator(unittest.TestCase):
             get_as_list, carrier=new_carrier, context={}
         )
         self.assertEqual(context, {"mock-0": "context2"})
+
+    def test_fields(self):
+        propagator = CompositeHTTPPropagator(
+            [
+                self.mock_propagator_0,
+                self.mock_propagator_1,
+                self.mock_propagator_2,
+            ]
+        )
+
+        mock_set_in_carrier = Mock()
+
+        propagator.inject(mock_set_in_carrier, {})
+
+        inject_fields = set()
+
+        for mock_call in mock_set_in_carrier.mock_calls:
+            inject_fields.add(mock_call[1][1])
+
+        self.assertEqual(inject_fields, propagator.fields)

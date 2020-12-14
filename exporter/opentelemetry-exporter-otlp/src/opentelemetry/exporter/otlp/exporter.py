@@ -123,8 +123,8 @@ def _get_resource_data(
 
 def _load_credential_from_file(filepath) -> ChannelCredentials:
     try:
-        with open(filepath, "rb") as f:
-            credential = f.read()
+        with open(filepath, "rb") as creds_file:
+            credential = creds_file.read()
             return ssl_channel_credentials(credential)
     except FileNotFoundError:
         logger.exception("Failed to read credential file")
@@ -208,11 +208,12 @@ class OTLPExporterMixin(
             credentials is None
             and Configuration().EXPORTER_OTLP_CERTIFICATE is None
         ):
-            raise ValueError("No credentials set in secure mode.")
-
-        credentials = credentials or _load_credential_from_file(
-            Configuration().EXPORTER_OTLP_CERTIFICATE
-        )
+            # use the default location chosen by gRPC runtime
+            credentials = ssl_channel_credentials()
+        else:
+            credentials = credentials or _load_credential_from_file(
+                Configuration().EXPORTER_OTLP_CERTIFICATE
+            )
         self._client = self._stub(
             secure_channel(
                 endpoint, credentials, compression=compression_algorithm

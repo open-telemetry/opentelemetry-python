@@ -91,7 +91,10 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
         tracestate_headers = getter.get(carrier, self._TRACESTATE_HEADER_NAME)
-        tracestate = _parse_tracestate(tracestate_headers)
+        if tracestate_headers is None:
+            tracestate = None
+        else:
+            tracestate = _parse_tracestate(tracestate_headers)
 
         span_context = trace.SpanContext(
             trace_id=int(trace_id, 16),
@@ -131,6 +134,15 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
             set_in_carrier(
                 carrier, self._TRACESTATE_HEADER_NAME, tracestate_string
             )
+
+    @property
+    def fields(self) -> typing.Set[str]:
+        """Returns a set with the fields set in `inject`.
+
+        See
+        `opentelemetry.trace.propagation.textmap.TextMapPropagator.fields`
+        """
+        return {self._TRACEPARENT_HEADER_NAME, self._TRACESTATE_HEADER_NAME}
 
 
 def _parse_tracestate(header_list: typing.List[str]) -> trace.TraceState:

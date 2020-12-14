@@ -41,6 +41,12 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self._test_span = trace._Span("test_span", context=context)
         self._test_span.start()
         self._test_span.end()
+        # pylint: disable=protected-access
+        Configuration._reset()
+
+    def tearDown(self):
+        # pylint: disable=protected-access
+        Configuration._reset()
 
     def test_constructor_default(self):
         """Test the default values assigned by constructor."""
@@ -141,8 +147,6 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self.assertTrue(exporter.collector.auth is None)
 
         environ_patcher.stop()
-
-        Configuration._reset()
 
     def test_nsec_to_usec_round(self):
         # pylint: disable=protected-access

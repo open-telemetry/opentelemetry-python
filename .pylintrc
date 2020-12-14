@@ -70,7 +70,11 @@ disable=missing-docstring,
       wrong-import-order, # Leave this up to isort
       bad-continuation, # Leave this up to black
       line-too-long, # Leave this up to black
-      exec-used
+      exec-used,
+      super-with-arguments, # temp-pylint-upgrade
+      isinstance-second-argument-not-valid-type, # temp-pylint-upgrade
+      raise-missing-from, # temp-pylint-upgrade 
+      unused-argument, # temp-pylint-upgrade 
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

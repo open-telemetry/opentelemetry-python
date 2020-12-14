@@ -118,11 +118,9 @@ class TestMeter(unittest.TestCase):
             self.assertIsInstance(observer, metrics_api.Observer)
             observer.observe(45, {})
 
-        observer = metrics.ValueObserver(
+        meter.register_valueobserver(
             callback, "name", "desc", "unit", int, (), True
         )
-
-        meter.observers.add(observer)
         meter.collect()
         self.assertTrue(processor_mock.process.called)
 
@@ -164,6 +162,23 @@ class TestMeter(unittest.TestCase):
         self.assertIs(meter_provider.resource, resource)
         self.assertEqual(counter.meter, meter)
 
+    def test_instrument_same_name_error(self):
+        resource = Mock(spec=resources.Resource)
+        meter_provider = metrics.MeterProvider(resource=resource)
+        meter = meter_provider.get_meter(__name__)
+        counter = meter.create_counter("name", "desc", "unit", int,)
+        self.assertIsInstance(counter, metrics.Counter)
+        self.assertEqual(counter.value_type, int)
+        self.assertEqual(counter.name, "name")
+        self.assertIs(meter_provider.resource, resource)
+        self.assertEqual(counter.meter, meter)
+        with self.assertRaises(ValueError) as ctx:
+            _ = meter.create_counter("naME", "desc", "unit", int,)
+        self.assertTrue(
+            "Multiple instruments can't be registered by the same name: (name)"
+            in str(ctx.exception)
+        )
+
     def test_create_updowncounter(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         updowncounter = meter.create_updowncounter(
@@ -193,7 +208,7 @@ class TestMeter(unittest.TestCase):
         )
 
         self.assertIsInstance(observer, metrics.SumObserver)
-        self.assertEqual(len(meter.observers), 1)
+        self.assertEqual(len(meter.instruments), 1)
 
         self.assertEqual(observer.callback, callback)
         self.assertEqual(observer.name, "name")
@@ -213,7 +228,7 @@ class TestMeter(unittest.TestCase):
         )
 
         self.assertIsInstance(observer, metrics.UpDownSumObserver)
-        self.assertEqual(len(meter.observers), 1)
+        self.assertEqual(len(meter.instruments), 1)
 
         self.assertEqual(observer.callback, callback)
         self.assertEqual(observer.name, "name")
@@ -233,7 +248,7 @@ class TestMeter(unittest.TestCase):
         )
 
         self.assertIsInstance(observer, metrics.ValueObserver)
-        self.assertEqual(len(meter.observers), 1)
+        self.assertEqual(len(meter.instruments), 1)
 
         self.assertEqual(observer.callback, callback)
         self.assertEqual(observer.name, "name")
@@ -253,7 +268,27 @@ class TestMeter(unittest.TestCase):
         )
 
         meter.unregister_observer(observer)
-        self.assertEqual(len(meter.observers), 0)
+        self.assertEqual(len(meter.instruments), 0)
+
+    def test_unregister_and_reregister_observer(self):
+        meter = metrics.MeterProvider().get_meter(__name__)
+
+        callback = Mock()
+
+        observer = meter.register_valueobserver(
+            callback,
+            "nameCaSEinSENsitive",
+            "desc",
+            "unit",
+            int,
+            metrics.ValueObserver,
+        )
+
+        meter.unregister_observer(observer)
+        self.assertEqual(len(meter.instruments), 0)
+        observer = meter.register_valueobserver(
+            callback, "name", "desc", "unit", int, metrics.ValueObserver
+        )
 
 
 class TestMetric(unittest.TestCase):

@@ -29,7 +29,9 @@ class Getter(typing.Generic[TextMapPropagatorT]):
 
     """
 
-    def get(self, carrier: TextMapPropagatorT, key: str) -> typing.List[str]:
+    def get(
+        self, carrier: TextMapPropagatorT, key: str
+    ) -> typing.Optional[typing.List[str]]:
         """Function that can retrieve zero
         or more values from the carrier. In the case that
         the value does not exist, returns an empty list.
@@ -38,8 +40,8 @@ class Getter(typing.Generic[TextMapPropagatorT]):
             carrier: An object which contains values that are used to
                     construct a Context.
             key: key of a field in carrier.
-        Returns: first value of the propagation key or an empty list if the
-                key doesn't exist.
+        Returns: first value of the propagation key or None if the key doesn't
+                exist.
         """
         raise NotImplementedError()
 
@@ -58,8 +60,10 @@ class Getter(typing.Generic[TextMapPropagatorT]):
 class DictGetter(Getter[typing.Dict[str, CarrierValT]]):
     def get(
         self, carrier: typing.Dict[str, CarrierValT], key: str
-    ) -> typing.List[str]:
-        val = carrier.get(key, [])
+    ) -> typing.Optional[typing.List[str]]:
+        val = carrier.get(key, None)
+        if val is None:
+            return None
         if isinstance(val, typing.Iterable) and not isinstance(val, str):
             return list(val)
         return [val]
@@ -128,4 +132,17 @@ class TextMapPropagator(abc.ABC):
             context: an optional Context to use. Defaults to current
                 context if not set.
 
+        """
+
+    @property
+    @abc.abstractmethod
+    def fields(self) -> typing.Set[str]:
+        """
+        Gets the fields set in the carrier by the `inject` method.
+
+        If the carrier is reused, its fields that correspond with the ones
+        present in this attribute should be deleted before calling `inject`.
+
+        Returns:
+            A set with the fields set in `inject`.
         """
