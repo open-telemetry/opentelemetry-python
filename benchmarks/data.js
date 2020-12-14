@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1607985585484,
+  "lastUpdate": 1607985591004,
   "repoUrl": "https://github.com/open-telemetry/opentelemetry-python",
   "entries": {
     "OpenTelemetry Python Benchmarks - Python 3.7 -": [
@@ -316,6 +316,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00002458223820275948",
             "extra": "mean: 54.604551789714684 usec\nrounds: 10417"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "enowell@amazon.com",
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "33fa7b99274d1a7d7d7cb52fb273b18cbb5107a0",
+          "message": "Remove unnecessary contrib pkgs from docs install (#1470)",
+          "timestamp": "2020-12-14T14:37:44-08:00",
+          "tree_id": "dc2d85da6f535236dd40bdaaed0b24e77784583a",
+          "url": "https://github.com/open-telemetry/opentelemetry-python/commit/33fa7b99274d1a7d7d7cb52fb273b18cbb5107a0"
+        },
+        "date": 1607985586910,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "opentelemetry-sdk/tests/performance/benchmarks/trace/test_benchmark_trace.py::test_simple_start_span",
+            "value": 32940.14775153187,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000011872705494909715",
+            "extra": "mean: 30.358090909094216 usec\nrounds: 4400"
+          },
+          {
+            "name": "opentelemetry-sdk/tests/performance/benchmarks/trace/test_benchmark_trace.py::test_simple_start_as_current_span",
+            "value": 24797.22483636775,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000017051469513210085",
+            "extra": "mean: 40.32709331785364 usec\nrounds: 6869"
           }
         ]
       }
