@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1607981430295,
+  "lastUpdate": 1607981434136,
   "repoUrl": "https://github.com/open-telemetry/opentelemetry-python",
   "entries": {
     "OpenTelemetry Python Benchmarks - Python 3.7 -": [
@@ -630,6 +630,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.00004711271823996293",
             "extra": "mean: 10.779872596010957 usec\nrounds: 156251"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "enowell@amazon.com",
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "47d6e95057c3a44faaea8562e2875e6d52f3fdab",
+          "message": "Do not try to comment on PR after benchmarks (#1478)",
+          "timestamp": "2020-12-14T13:28:12-08:00",
+          "tree_id": "dfe9ff194aba91d6064941b7f51b5d80926e69ed",
+          "url": "https://github.com/open-telemetry/opentelemetry-python/commit/47d6e95057c3a44faaea8562e2875e6d52f3fdab"
+        },
+        "date": 1607981429594,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "opentelemetry-sdk/tests/performance/benchmarks/trace/test_benchmark_trace.py::test_simple_start_span",
+            "value": 272240.72465309873,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000010490081868077968",
+            "extra": "mean: 3.6732197259401387 usec\nrounds: 175439"
+          },
+          {
+            "name": "opentelemetry-sdk/tests/performance/benchmarks/trace/test_benchmark_trace.py::test_simple_start_as_current_span",
+            "value": 193623.0184566152,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000006629451560943492",
+            "extra": "mean: 5.164675191881012 usec\nrounds: 121952"
           }
         ]
       }
