@@ -74,7 +74,7 @@ jobs:
         if: matrix.package == 'core'
         uses: rhysd/github-action-benchmark@v1
         with:
-          name: OpenTelemetry Python Benchmarks - Python ${{ env[matrix.python-version ]}} - ${{ matrix.package-group }}
+          name: OpenTelemetry Python Benchmarks - Python ${{ env[matrix.python-version ]}} - ${{ matrix.package }}
           tool: pytest
           output-file-path: output.json
           github-token: ${{ secrets.GITHUB_TOKEN }}
