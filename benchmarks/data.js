@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1607985603110,
+  "lastUpdate": 1607985610514,
   "repoUrl": "https://github.com/open-telemetry/opentelemetry-python",
   "entries": {
     "OpenTelemetry Python Benchmarks - Python 3.7 -": [
@@ -858,6 +858,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000006629451560943492",
             "extra": "mean: 5.164675191881012 usec\nrounds: 121952"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "enowell@amazon.com",
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "33fa7b99274d1a7d7d7cb52fb273b18cbb5107a0",
+          "message": "Remove unnecessary contrib pkgs from docs install (#1470)",
+          "timestamp": "2020-12-14T14:37:44-08:00",
+          "tree_id": "dc2d85da6f535236dd40bdaaed0b24e77784583a",
+          "url": "https://github.com/open-telemetry/opentelemetry-python/commit/33fa7b99274d1a7d7d7cb52fb273b18cbb5107a0"
+        },
+        "date": 1607985609500,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "opentelemetry-sdk/tests/performance/benchmarks/trace/test_benchmark_trace.py::test_simple_start_span",
+            "value": 236089.06142328822,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000011321937679810987",
+            "extra": "mean: 4.235689675630852 usec\nrounds: 175439"
+          },
+          {
+            "name": "opentelemetry-sdk/tests/performance/benchmarks/trace/test_benchmark_trace.py::test_simple_start_as_current_span",
+            "value": 173842.7135623381,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0000073256645649815",
+            "extra": "mean: 5.752326223563065 usec\nrounds: 120468"
           }
         ]
       }
