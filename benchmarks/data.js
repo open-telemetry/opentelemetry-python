@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1607985594498,
+  "lastUpdate": 1607985599214,
   "repoUrl": "https://github.com/open-telemetry/opentelemetry-python",
   "entries": {
     "OpenTelemetry Python Benchmarks - Python 3.7 -": [
@@ -510,6 +510,44 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.000013438538883301935",
             "extra": "mean: 41.6086541929916 usec\nrounds: 8097"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "enowell@amazon.com",
+            "name": "(Eliseo) Nathaniel Ruiz Nowell",
+            "username": "NathanielRN"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "33fa7b99274d1a7d7d7cb52fb273b18cbb5107a0",
+          "message": "Remove unnecessary contrib pkgs from docs install (#1470)",
+          "timestamp": "2020-12-14T14:37:44-08:00",
+          "tree_id": "dc2d85da6f535236dd40bdaaed0b24e77784583a",
+          "url": "https://github.com/open-telemetry/opentelemetry-python/commit/33fa7b99274d1a7d7d7cb52fb273b18cbb5107a0"
+        },
+        "date": 1607985594833,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "opentelemetry-sdk/tests/performance/benchmarks/trace/test_benchmark_trace.py::test_simple_start_span",
+            "value": 31652.032346073345,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000001110799617291866",
+            "extra": "mean: 31.593547898167014 usec\nrounds: 2902"
+          },
+          {
+            "name": "opentelemetry-sdk/tests/performance/benchmarks/trace/test_benchmark_trace.py::test_simple_start_as_current_span",
+            "value": 23979.555266608713,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000008541502646795288",
+            "extra": "mean: 41.702191257587245 usec\nrounds: 7801"
           }
         ]
       }
