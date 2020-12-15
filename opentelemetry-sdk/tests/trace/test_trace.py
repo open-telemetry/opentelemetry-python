@@ -426,7 +426,11 @@ class TestSpanCreation(unittest.TestCase):
         tracer = tracer_provider.get_tracer(__name__)
         span = tracer.start_span("root")
         # pylint: disable=protected-access
-        self.assertEqual(span.resource, resources._DEFAULT_RESOURCE)
+        self.assertIsInstance(span.resource, resources.Resource)
+        self.assertEqual(span.resource.attributes.get(resources.SERVICE_NAME), "unknown_service")
+        self.assertEqual(span.resource.attributes.get(resources.TELEMETRY_SDK_LANGUAGE), "python")
+        self.assertEqual(span.resource.attributes.get(resources.TELEMETRY_SDK_NAME), "opentelemetry")
+        self.assertEqual(span.resource.attributes.get(resources.TELEMETRY_SDK_VERSION),resources.OPENTELEMETRY_SDK_VERSION)
 
     def test_span_context_remote_flag(self):
         tracer = new_tracer()

@@ -44,6 +44,7 @@ class TestResources(unittest.TestCase):
             resources.TELEMETRY_SDK_NAME: "opentelemetry",
             resources.TELEMETRY_SDK_LANGUAGE: "python",
             resources.TELEMETRY_SDK_VERSION: resources.OPENTELEMETRY_SDK_VERSION,
+            resources.SERVICE_NAME: "unknown_service",
         }
 
         resource = resources.Resource.create(attributes)
@@ -62,10 +63,12 @@ class TestResources(unittest.TestCase):
         self.assertEqual(resource, resources._EMPTY_RESOURCE)
 
         resource = resources.Resource.create(None)
-        self.assertEqual(resource, resources._DEFAULT_RESOURCE)
+        self.assertEqual(resource, resources._DEFAULT_RESOURCE.merge(
+            resources.Resource({resources.SERVICE_NAME: "unknown_service"})))
 
         resource = resources.Resource.create({})
-        self.assertEqual(resource, resources._DEFAULT_RESOURCE)
+        self.assertEqual(resource, resources._DEFAULT_RESOURCE.merge(
+            resources.Resource({resources.SERVICE_NAME: "unknown_service"})))
 
     def test_resource_merge(self):
         left = resources.Resource({"service": "ui"})
@@ -103,6 +106,7 @@ class TestResources(unittest.TestCase):
             resources.TELEMETRY_SDK_NAME: "opentelemetry",
             resources.TELEMETRY_SDK_LANGUAGE: "python",
             resources.TELEMETRY_SDK_VERSION: resources.OPENTELEMETRY_SDK_VERSION,
+            resources.SERVICE_NAME: "unknown_service",
         }
 
         attributes_copy = attributes.copy()
@@ -116,6 +120,12 @@ class TestResources(unittest.TestCase):
 
         attributes["cost"] = 999.91
         self.assertEqual(resource.attributes, attributes_copy)
+
+    def test_service_name_using_process_name(self):
+        resource = resources.Resource.create(
+            {resources.PROCESS_EXECUTABLE_NAME: "test"})
+        self.assertEqual(resource.attributes.get(
+            resources.SERVICE_NAME), "unknown_service:test")
 
     def test_aggregated_resources_no_detectors(self):
         aggregated_resources = resources.get_aggregated_resources([])

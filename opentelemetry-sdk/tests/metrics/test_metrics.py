@@ -38,7 +38,11 @@ class TestMeterProvider(unittest.TestCase):
     def test_resource_empty(self):
         meter_provider = metrics.MeterProvider()
         # pylint: disable=protected-access
-        self.assertEqual(meter_provider.resource, resources._DEFAULT_RESOURCE)
+        self.assertIsInstance(meter_provider.resource, resources.Resource)
+        self.assertEqual(meter_provider.resource.attributes.get(resources.SERVICE_NAME), "unknown_service")
+        self.assertEqual(meter_provider.resource.attributes.get(resources.TELEMETRY_SDK_LANGUAGE), "python")
+        self.assertEqual(meter_provider.resource.attributes.get(resources.TELEMETRY_SDK_NAME), "opentelemetry")
+        self.assertEqual(meter_provider.resource.attributes.get(resources.TELEMETRY_SDK_VERSION),resources.OPENTELEMETRY_SDK_VERSION)
 
     def test_start_pipeline(self):
         exporter = Mock()
