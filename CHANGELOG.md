@@ -22,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1449](https://github.com/open-telemetry/opentelemetry-python/pull/1449))
 - Added support for Jaeger propagator
   ([#1219](https://github.com/open-telemetry/opentelemetry-python/pull/1219))
+- Remove dependency on SDK from `opentelemetry-instrumentation` package. The
+  `opentelemetry-sdk` package now registers an entrypoint `opentelemetry_configurator`
+  to allow `opentelemetry-instrument` to load the configuration for the SDK
+  ([#1420](https://github.com/open-telemetry/opentelemetry-python/pull/1420))
 
 ## [0.16b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.16b1) - 2020-11-26
 ### Added
