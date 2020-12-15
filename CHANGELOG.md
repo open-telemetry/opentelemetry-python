@@ -24,6 +24,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `opentelemetry-sdk` package now registers an entrypoint `opentelemetry_configurator`
   to allow `opentelemetry-instrument` to load the configuration for the SDK
   ([#1420](https://github.com/open-telemetry/opentelemetry-python/pull/1420))
+- Adding `opentelemetry-distro` package to add default configuration for
+  span exporter to OTLP
+  ([#1482](https://github.com/open-telemetry/opentelemetry-python/pull/1482))
 
 ## [0.16b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.16b1) - 2020-11-26
 ### Added
