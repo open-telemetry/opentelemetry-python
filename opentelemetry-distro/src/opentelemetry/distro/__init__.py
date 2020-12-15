@@ -25,4 +25,3 @@ class OpenTelemetryDistro(BaseDistro):
 
     def _configure(self, **kwargs):
         os.environ.setdefault("OTEL_EXPORTER", "otlp")
-        self._validate()

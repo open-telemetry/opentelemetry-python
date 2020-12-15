@@ -22,8 +22,15 @@ logger = getLogger(__file__)
 
 
 def _load_distros():
-    # will be implemented in a subsequent PR
-    pass
+    for entry_point in iter_entry_points("opentelemetry_distro"):
+        try:
+            entry_point.load()().configure()  # type: ignore
+            logger.debug("Distribution %s configured", entry_point.name)
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.exception(
+                "Distribution %s configuration failed", entry_point.name
+            )
+            raise exc
 
 
 def _load_instrumentors():
