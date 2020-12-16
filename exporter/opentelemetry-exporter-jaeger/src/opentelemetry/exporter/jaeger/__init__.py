@@ -69,6 +69,7 @@ from thrift.transport import THttpClient, TTransport
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger.gen.agent import Agent as agent
 from opentelemetry.exporter.jaeger.gen.jaeger import Collector as jaeger
+from opentelemetry.instrumentation.utils import status_code_to_str
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import StatusCode
@@ -231,12 +232,20 @@ def _translate_to_jaeger(spans: Span):
         tags = _extract_tags(span.attributes)
         tags.extend(_extract_tags(span.resource.attributes))
 
-        tags.extend(
-            [
-                _get_long_tag("status.code", status.status_code.value),
-                _get_string_tag("status.message", status.description),
-                _get_string_tag("span.kind", OTLP_JAEGER_SPAN_KIND[span.kind]),
-            ]
+        if status.status_code is not StatusCode.UNSET:
+            tags.append(
+                _get_string_tag(
+                    "otel.status_code", status_code_to_str(status.status_code)
+                )
+            )
+            if status.description is not None:
+                tags.append(
+                    _get_string_tag(
+                        "otel.status_description", status.description
+                    )
+                )
+        tags.append(
+            _get_string_tag("span.kind", OTLP_JAEGER_SPAN_KIND[span.kind]),
         )
 
         if span.instrumentation_info is not None:
