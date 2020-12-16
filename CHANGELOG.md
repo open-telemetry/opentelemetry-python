@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `opentelemetry-sdk` package now registers an entrypoint `opentelemetry_configurator`
   to allow `opentelemetry-instrument` to load the configuration for the SDK
   ([#1420](https://github.com/open-telemetry/opentelemetry-python/pull/1420))
+- `opentelemetry-exporter-zipkin` Add support for array attributes in Span and Resource exports
+  ([#1285](https://github.com/open-telemetry/opentelemetry-python/pull/1285))
 
 ## [0.16b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.16b1) - 2020-11-26
 ### Added
