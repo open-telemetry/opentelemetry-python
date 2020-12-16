@@ -20,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1449](https://github.com/open-telemetry/opentelemetry-python/pull/1449))
 - Added support for Jaeger propagator
   ([#1219](https://github.com/open-telemetry/opentelemetry-python/pull/1219))
+- Remove dependency on SDK from `opentelemetry-instrumentation` package. The
+  `opentelemetry-sdk` package now registers an entrypoint `opentelemetry_configurator`
+  to allow `opentelemetry-instrument` to load the configuration for the SDK
+  ([#1420](https://github.com/open-telemetry/opentelemetry-python/pull/1420))
 - `opentelemetry-exporter-zipkin` Add support for array attributes in Span and Resource exports
   ([#1285](https://github.com/open-telemetry/opentelemetry-python/pull/1285))
 
