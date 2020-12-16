@@ -39,7 +39,7 @@ def _load_instrumentors():
         try:
             if entry_point.name in package_to_exclude:
                 logger.debug(
-                    "Instrumentation skipped for  library %s", entry_point.name
+                    "Instrumentation skipped for library %s", entry_point.name
                 )
                 continue
             entry_point.load()().instrument()  # type: ignore
