@@ -80,7 +80,6 @@ import requests
 
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin.gen import zipkin_pb2
-from opentelemetry.instrumentation.utils import status_code_to_str
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Span, SpanContext, SpanKind
 from opentelemetry.trace.status import StatusCode
@@ -240,9 +239,9 @@ class ZipkinSpanExporter(SpanExporter):
                 ] = span.instrumentation_info.version
 
             if span.status.status_code is not StatusCode.UNSET:
-                zipkin_span["tags"]["otel.status_code"] = status_code_to_str(
-                    span.status.status_code
-                )
+                zipkin_span["tags"][
+                    "otel.status_code"
+                ] = span.status.status_code.name
                 if span.status.status_code is StatusCode.ERROR:
                     zipkin_span["tags"]["error"] = (
                         span.status.description or ""
@@ -321,11 +320,7 @@ class ZipkinSpanExporter(SpanExporter):
 
             if span.status.status_code is not StatusCode.UNSET:
                 pbuf_span.tags.update(
-                    {
-                        "otel.status_code": status_code_to_str(
-                            span.status.status_code
-                        )
-                    }
+                    {"otel.status_code": span.status.status_code.name}
                 )
                 if span.status.status_code is StatusCode.ERROR:
                     pbuf_span.tags.update(
