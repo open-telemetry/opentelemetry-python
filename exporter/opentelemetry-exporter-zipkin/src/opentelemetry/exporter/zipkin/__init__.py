@@ -80,10 +80,10 @@ import requests
 
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin.gen import zipkin_pb2
+from opentelemetry.instrumentation.utils import status_code_to_str
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Span, SpanContext, SpanKind
 from opentelemetry.trace.status import StatusCode
-from opentelemetry.instrumentation.utils import status_code_to_str
 
 TRANSPORT_FORMAT_JSON = "json"
 TRANSPORT_FORMAT_PROTOBUF = "protobuf"
