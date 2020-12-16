@@ -18,6 +18,12 @@ from wrapt import ObjectProxy
 
 from opentelemetry.trace.status import StatusCode
 
+CODE_TO_STR = {
+    StatusCode.UNSET: "UNSET",
+    StatusCode.OK: "OK",
+    StatusCode.ERROR: "ERROR",
+}
+
 
 def extract_attributes_from_object(
     obj: any, attributes: Sequence[str], existing: Dict[str, str] = None
@@ -81,3 +87,7 @@ def unwrap(obj, attr: str):
     func = getattr(obj, attr, None)
     if func and isinstance(func, ObjectProxy) and hasattr(func, "__wrapped__"):
         setattr(obj, attr, func.__wrapped__)
+
+
+def status_code_to_str(code: StatusCode) -> str:
+    return CODE_TO_STR[code]
