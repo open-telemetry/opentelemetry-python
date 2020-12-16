@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `opentelemetry-exporter-zipkin` Add support for array attributes in Span and Resource exports
   ([#1285](https://github.com/open-telemetry/opentelemetry-python/pull/1285))
 - Added `__repr__` for `DefaultSpan`, added `trace_flags` to `__repr__` of
-  `SpanContext` ([#????]()])
+  `SpanContext` ([#1485](https://github.com/open-telemetry/opentelemetry-python/pull/1485)])
 
 ## [0.16b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.16b1) - 2020-11-26
 ### Added
