@@ -233,9 +233,7 @@ def _translate_to_jaeger(spans: Span):
 
         if status.status_code is not StatusCode.UNSET:
             tags.append(
-                _get_string_tag(
-                    "otel.status_code", status.status_code.name
-                )
+                _get_string_tag("otel.status_code", status.status_code.name)
             )
             if status.description is not None:
                 tags.append(
