@@ -292,7 +292,7 @@ class DefaultSpan(Span):
     ) -> None:
         pass
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return "DefaultSpan({!r})".format(self._context)
 
 
