@@ -732,6 +732,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         otel_spans[1].resource = Resource(
             attributes={"key_resource": "some_resource"}
         )
+        otel_spans[1].set_status(Status(StatusCode.OK))
         otel_spans[1].end(end_time=end_times[1])
 
         otel_spans[2].start(start_time=start_times[2])
@@ -802,7 +803,10 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     duration=nsec_to_usec_round(durations[1]),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
-                    tags={"key_resource": "some_resource",},
+                    tags={
+                        "key_resource": "some_resource",
+                        "otel.status_code": "OK",
+                    },
                 ),
                 zipkin_pb2.Span(
                     trace_id=trace_id.to_bytes(
