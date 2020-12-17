@@ -30,14 +30,14 @@ class Samplers:
 
 @Samplers.register("always_on")
 class AlwaysOnSampler(sampling.StaticSampler):
-    def __init__(self, decision: sampling.Decision):
-        super().__init__(decision=decision)
+    def __init__(self):
+        super().__init__(decision=sampling.Decision.RECORD_AND_SAMPLE)
 
 
 @Samplers.register("always_off")
 class AlwaysOffSampler(sampling.StaticSampler):
-    def __init__(self, decision: sampling.Decision):
-        super().__init__(decision=decision)
+    def __init__(self):
+        super().__init__(decision=sampling.Decision.DROP)
 
 
 @Samplers.register("traceidratio")
