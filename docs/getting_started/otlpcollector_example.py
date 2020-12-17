@@ -59,7 +59,6 @@ requests_counter = meter.create_counter(
     description="number of requests",
     unit="1",
     value_type=int,
-    label_keys=("environment",),
 )
 # Labels are used to identify key-values that are associated with a specific
 # metric that you want to record. These are useful for pre-aggregation and can

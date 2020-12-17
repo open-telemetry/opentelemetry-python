@@ -142,7 +142,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
             client=mock_client, host_name=host_name
         )
         test_metric = self._meter.create_counter(
-            "testname", "testdesc", "unit", int, self._labels.keys(),
+            "testname", "testdesc", "unit", int,
         )
         record = ExportRecord(
             test_metric,
@@ -168,7 +168,7 @@ class TestCollectorMetricsExporter(unittest.TestCase):
 
     def test_translate_to_collector(self):
         test_metric = self._meter.create_counter(
-            "testcollector", "testdesc", "unit", int, self._labels.keys()
+            "testcollector", "testdesc", "unit", int,
         )
         aggregator = aggregate.SumAggregator()
         aggregator.update(123)
