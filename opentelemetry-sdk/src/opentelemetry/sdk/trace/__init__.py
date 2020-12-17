@@ -40,6 +40,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
 from opentelemetry.sdk import util
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import samplers
 from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
@@ -56,6 +57,7 @@ SPAN_ATTRIBUTE_COUNT_LIMIT = Configuration().get(
 SPAN_EVENT_COUNT_LIMIT = Configuration().get("SPAN_EVENT_COUNT_LIMIT", 1000)
 SPAN_LINK_COUNT_LIMIT = Configuration().get("SPAN_LINK_COUNT_LIMIT", 1000)
 VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
+TRACE_SAMPLER = samplers.get_from_env_or_default()
 
 
 class SpanProcessor:
@@ -885,7 +887,7 @@ class Tracer(trace_api.Tracer):
 class TracerProvider(trace_api.TracerProvider):
     def __init__(
         self,
-        sampler: sampling.Sampler = sampling.DEFAULT_ON,
+        sampler: sampling.Sampler = TRACE_SAMPLER,
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
         active_span_processor: Union[
