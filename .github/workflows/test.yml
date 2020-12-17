@@ -63,15 +63,15 @@ jobs:
       - name: run tox
         run: tox -f ${{ matrix.python-version }}-${{ matrix.package }} -- --benchmark-json=${{ env.RUN_MATRIX_COMBINATION }}-benchmark.json
       - name: Find and merge benchmarks
-        # TODO: Add at least one benchmark to every package type to remove this
-        if: matrix.package == 'core'
+        # TODO: Add at least one benchmark to the instrumentation package type to remove this
+        if: matrix.package != 'instrumentation'
         run: >-
           jq -s '.[0].benchmarks = ([.[].benchmarks] | add)
           | if .[0].benchmarks == null then null else .[0] end'
-          opentelemetry-*/tests/*${{ matrix.package }}*-benchmark.json > output.json
+          `find . -name '*${{ matrix.package }}*-benchmark.json'` > output.json
       - name: Report on benchmark results
-        # TODO: Add at least one benchmark to every package type to remove this
-        if: matrix.package == 'core'
+        # TODO: Add at least one benchmark to the instrumentation package type to remove this
+        if: matrix.package != 'instrumentation'
         uses: rhysd/github-action-benchmark@v1
         with:
           name: OpenTelemetry Python Benchmarks - Python ${{ env[matrix.python-version ]}} - ${{ matrix.package }}
