@@ -73,7 +73,7 @@ def get_from_env_or_default() -> sampling.Sampler:
     )
     kwargs = {}
     if trace_sampler in ["traceidratio", "parentbased_traceidratio"]:
-        rate = Configuration.get("OTEL_TRACE_SAMPLER_ARG")
+        rate = Configuration().get("OTEL_TRACE_SAMPLER_ARG")
         try:
             kwargs["rate"] = float(rate)
         except TypeError:
