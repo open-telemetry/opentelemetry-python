@@ -68,7 +68,7 @@ class ParentBasedTraceIdRatioSampler(sampling.ParentBased):
 def get_from_env_or_default() -> sampling.Sampler:
     trace_sampler = (
         Configuration()
-        .get("OTEL_TRACE_SAMPLER", "parentbased_always_on")
+        .get("TRACE_SAMPLER", "parentbased_always_on")
         .lower()
     )
     kwargs = {}
