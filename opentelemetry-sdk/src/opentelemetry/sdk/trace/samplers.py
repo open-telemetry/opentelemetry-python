@@ -67,18 +67,11 @@ class ParentBasedTraceIdRatioSampler(sampling.ParentBased):
 
 def get_from_env_or_default() -> sampling.Sampler:
     trace_sampler = (
-        Configuration()
-        .get("TRACE_SAMPLER", "parentbased_always_on")
-        .lower()
+        Configuration().get("TRACE_SAMPLER", "parentbased_always_on").lower()
     )
     kwargs = {}
     if trace_sampler in ["traceidratio", "parentbased_traceidratio"]:
-        rate = Configuration().get("OTEL_TRACE_SAMPLER_ARG")
-        try:
-            kwargs["rate"] = float(rate)
-        except TypeError:
-            # If OTEL_TRACE_SAMPLER_ARG is not set or unrecognized
-            # value is provided, set rate value to 1.0
-            kwargs["rate"] = 1.0
+        rate = Configuration().get("TRACE_SAMPLER_ARG", 1.0)
+        kwargs["rate"] = float(rate)
 
     return Samplers.get_sampler(trace_sampler, **kwargs)
