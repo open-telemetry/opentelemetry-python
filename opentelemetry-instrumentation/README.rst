@@ -82,6 +82,12 @@ The code in ``program.py`` needs to use one of the packages for which there is
 an OpenTelemetry integration. For a list of the available integrations please
 check `here <https://opentelemetry-python.readthedocs.io/en/stable/index.html#integrations>`_
 
+* ``OTEL_PYTHON_DISABLED_INSTRUMENTATIONS``
+
+If set by the user, opentelemetry-instrument will read this environment variable to disable specific instrumentations.
+e.g OTEL_PYTHON_DISABLED_INSTRUMENTATIONS = "requests,django"
+
+
 Examples
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
