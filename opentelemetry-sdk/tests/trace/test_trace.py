@@ -158,6 +158,12 @@ class TestTracerSampling(unittest.TestCase):
             trace_api.TraceFlags.SAMPLED,
         )
 
+    def test_default_sampler_type(self):
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, sampling.ParentBased)
+        # pylint: disable=protected-access
+        self.assertEqual(tracer_provider.sampler._root, sampling.ALWAYS_ON)
+
     def test_sampler_no_sampling(self):
         tracer_provider = trace.TracerProvider(sampling.ALWAYS_OFF)
         tracer = tracer_provider.get_tracer(__name__)
