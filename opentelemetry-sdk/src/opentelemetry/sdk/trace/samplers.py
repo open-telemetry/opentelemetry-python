@@ -7,7 +7,7 @@ from opentelemetry.sdk.trace import sampling
 _logger = getLogger(__name__)
 
 
-class Samplers:
+class _Samplers:
 
     registry = {}
 
@@ -28,38 +28,38 @@ class Samplers:
         return klass(**kwargs)
 
 
-@Samplers.register("always_on")
-class AlwaysOnSampler(sampling.StaticSampler):
+@_Samplers.register("always_on")
+class _AlwaysOnSampler(sampling.StaticSampler):
     def __init__(self):
         super().__init__(decision=sampling.Decision.RECORD_AND_SAMPLE)
 
 
-@Samplers.register("always_off")
-class AlwaysOffSampler(sampling.StaticSampler):
+@_Samplers.register("always_off")
+class _AlwaysOffSampler(sampling.StaticSampler):
     def __init__(self):
         super().__init__(decision=sampling.Decision.DROP)
 
 
-@Samplers.register("traceidratio")
-class TraceIdRatioBasedSampler(sampling.TraceIdRatioBased):
+@_Samplers.register("traceidratio")
+class _TraceIdRatioBasedSampler(sampling.TraceIdRatioBased):
     def __init__(self, rate: float):
         super().__init__(rate=rate)
 
 
-@Samplers.register("parentbased_always_on")
-class ParentBasedAlwaysOnSampler(sampling.ParentBased):
+@_Samplers.register("parentbased_always_on")
+class _ParentBasedAlwaysOnSampler(sampling.ParentBased):
     def __init__(self):
         super().__init__(root=sampling.ALWAYS_ON)
 
 
-@Samplers.register("parentbased_always_off")
-class ParentBasedAlwaysOffSampler(sampling.ParentBased):
+@_Samplers.register("parentbased_always_off")
+class _ParentBasedAlwaysOffSampler(sampling.ParentBased):
     def __init__(self):
         super().__init__(root=sampling.ALWAYS_OFF)
 
 
-@Samplers.register("parentbased_traceidratio")
-class ParentBasedTraceIdRatioSampler(sampling.ParentBased):
+@_Samplers.register("parentbased_traceidratio")
+class _ParentBasedTraceIdRatioSampler(sampling.ParentBased):
     def __init__(self, rate: float):
         root = sampling.TraceIdRatioBased(rate=rate)
         super().__init__(root=root)
@@ -74,4 +74,4 @@ def get_from_env_or_default() -> sampling.Sampler:
         rate = Configuration().get("TRACE_SAMPLER_ARG", 1.0)
         kwargs["rate"] = float(rate)
 
-    return Samplers.get_sampler(trace_sampler, **kwargs)
+    return _Samplers.get_sampler(trace_sampler, **kwargs)
