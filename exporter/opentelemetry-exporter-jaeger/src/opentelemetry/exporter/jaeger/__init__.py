@@ -15,11 +15,11 @@
 
 """
 The **OpenTelemetry Jaeger Exporter** allows to export `OpenTelemetry`_ traces to `Jaeger`_.
-This exporter always sends traces to the configured agent using Thrift compact protocol over UDP.
+This exporter always sends traces to the configured agent using the Thrift compact protocol over UDP.
 When it is not feasible to deploy Jaeger Agent next to the application, for example, when the
-application code is running as Lambda function, A collector can be configured to send spans
-with either Thrift over HTTP or Protobuf via gRPC. If both agent and collector are configured,
-exporter sends traces only to collector to eliminate the duplicate entries.
+application code is running as Lambda function, a collector can be configured to send spans
+using either Thrift over HTTP or Protobuf via gRPC. If both agent and collector are configured,
+the exporter sends traces only to the collector to eliminate the duplicate entries.
 
 Usage
 -----
@@ -44,9 +44,9 @@ Usage
         # collector_endpoint='http://localhost:14268/api/traces?format=jaeger.thrift',
         # username=xxxx, # optional
         # password=xxxx, # optional
-        # insecure=xxxx, # optional
-        # credentials=xxxx # optional
-        # transport_format=xxxx # optional
+        # insecure=True, # optional
+        # credentials=ChannelCredentials(...) # optional
+        # transport_format='protobuf' # optional
     )
 
     # Create a BatchExportSpanProcessor and add the exporter to it
@@ -113,13 +113,13 @@ class JaegerSpanExporter(SpanExporter):
             when query for spans.
         agent_host_name: The host name of the Jaeger-Agent.
         agent_port: The port of the Jaeger-Agent.
-        collector_endpoint: The endpoint of the Jaeger-Collector
+        collector_endpoint: The endpoint of the Jaeger collector that uses
             Thrift over HTTP/HTTPS or Protobuf via gRPC.
         username: The user name of the Basic Auth if authentication is
             required.
         password: The password of the Basic Auth if authentication is
             required.
-        insecure: Connection type.
+        insecure: True if collector has no encryption or authentication
         credentials: Credentials for server authentication.
         transport_format: Transport format for exporting spans to collector.
     """
@@ -184,7 +184,7 @@ class JaegerSpanExporter(SpanExporter):
     @property
     def grpc_client(self) -> Optional[CollectorServiceStub]:
         if (
-            not self.collector_endpoint
+            self.collector_endpoint is None
             or self.transport_format != TRANSPORT_FORMAT_PROTOBUF
         ):
             return None
