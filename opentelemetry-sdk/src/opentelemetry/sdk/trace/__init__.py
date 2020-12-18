@@ -40,8 +40,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
 from opentelemetry.sdk import util
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace import samplers
-from opentelemetry.sdk.trace import sampling
+from opentelemetry.sdk.trace import samplers, sampling
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
