@@ -27,7 +27,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
 from opentelemetry.context import Context
 from opentelemetry.sdk import resources, trace
-from opentelemetry.sdk.trace import Resource, samplers, sampling
+from opentelemetry.sdk.trace import Resource, sampling
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import StatusCode
