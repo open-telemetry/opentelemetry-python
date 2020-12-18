@@ -27,7 +27,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
 from opentelemetry.context import Context
 from opentelemetry.sdk import resources, trace
-from opentelemetry.sdk.trace import Resource, sampling
+from opentelemetry.sdk.trace import Resource, samplers, sampling
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import StatusCode
@@ -138,6 +138,15 @@ tracer_provider.add_span_processor(mock_processor)
 
 
 class TestTracerSampling(unittest.TestCase):
+    def setUp(self):
+        # pylint: disable=protected-access
+        Configuration._reset()
+
+    def tearDown(self):
+        # pylint: disable=protected-access
+        Configuration._reset()
+        reload(trace)
+
     def test_default_sampler(self):
         tracer = new_tracer()
 
@@ -183,6 +192,38 @@ class TestTracerSampling(unittest.TestCase):
             child_span.get_span_context().trace_flags,
             trace_api.TraceFlags.DEFAULT,
         )
+
+    @mock.patch.dict("os.environ", {"OTEL_TRACE_SAMPLER": "always_off"})
+    def test_sampler_with_env(self):
+        # pylint: disable=protected-access
+        Configuration._reset()
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, sampling.StaticSampler)
+        self.assertEqual(
+            tracer_provider.sampler._decision, sampling.Decision.DROP
+        )
+
+        tracer = tracer_provider.get_tracer(__name__)
+
+        root_span = tracer.start_span(name="root span", context=None)
+        # Should be no-op
+        self.assertIsInstance(root_span, trace_api.DefaultSpan)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            "OTEL_TRACE_SAMPLER": "parentbased_traceidratio",
+            "OTEL_TRACE_SAMPLER_ARG": "0.25",
+        },
+    )
+    def test_ratio_sampler_with_env(self):
+        # pylint: disable=protected-access
+        Configuration._reset()
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, sampling.ParentBased)
+        self.assertEqual(tracer_provider.sampler._root.rate, 0.25)
 
 
 class TestSpanCreation(unittest.TestCase):
