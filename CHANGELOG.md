@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1420](https://github.com/open-telemetry/opentelemetry-python/pull/1420))
 - `opentelemetry-exporter-zipkin` Add support for array attributes in Span and Resource exports
   ([#1285](https://github.com/open-telemetry/opentelemetry-python/pull/1285))
+- `opentelemetry-sdk` Add support for OTEL_TRACE_SAMPLER and OTEL_TRACE_SAMPLER_ARG env variables
+  ([#1496](https://github.com/open-telemetry/opentelemetry-python/pull/1496))
 
 ## [0.16b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.16b1) - 2020-11-26
 ### Added
