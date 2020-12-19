@@ -425,8 +425,25 @@ class TestZipkinSpanExporter(unittest.TestCase):
         span.start()
         span.resource = Resource({})
         # added here to preserve order
-        span.set_attribute("k1", "v" * 500)
-        span.set_attribute("k2", "v" * 50)
+        span.set_attribute("string1", "v" * 500)
+        span.set_attribute("string2", "v" * 50)
+        span.set_attribute("list1", ["a"] * 25)
+        span.set_attribute("list2", ["a"] * 10)
+        span.set_attribute("list3", [2] * 25)
+        span.set_attribute("list4", [2] * 10)
+        span.set_attribute("list5", [True] * 25)
+        span.set_attribute("list6", [True] * 10)
+        span.set_attribute("tuple1", ("a",) * 25)
+        span.set_attribute("tuple2", ("a",) * 10)
+        span.set_attribute("tuple3", (2,) * 25)
+        span.set_attribute("tuple4", (2,) * 10)
+        span.set_attribute("tuple5", (True,) * 25)
+        span.set_attribute("tuple6", (True,) * 10)
+        span.set_attribute("range1", range(0, 25))
+        span.set_attribute("range2", range(0, 10))
+        span.set_attribute("empty_list", [])
+        span.set_attribute("none_list", ["hello", None, "world"])
+
         span.set_status(Status(StatusCode.ERROR, "Example description"))
         span.end()
 
@@ -440,8 +457,66 @@ class TestZipkinSpanExporter(unittest.TestCase):
         _, kwargs = mock_post.call_args  # pylint: disable=E0633
 
         tags = json.loads(kwargs["data"])[0]["tags"]
-        self.assertEqual(len(tags["k1"]), 128)
-        self.assertEqual(len(tags["k2"]), 50)
+
+        self.assertEqual(len(tags["string1"]), 128)
+        self.assertEqual(len(tags["string2"]), 50)
+        self.assertEqual(
+            tags["list1"],
+            '["a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a"]',
+        )
+        self.assertEqual(
+            tags["list2"], '["a","a","a","a","a","a","a","a","a","a"]',
+        )
+        self.assertEqual(
+            tags["list3"],
+            '["2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2"]',
+        )
+        self.assertEqual(
+            tags["list4"], '["2","2","2","2","2","2","2","2","2","2"]',
+        )
+        self.assertEqual(
+            tags["list5"],
+            '["True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True"]',
+        )
+        self.assertEqual(
+            tags["list6"],
+            '["True","True","True","True","True","True","True","True","True","True"]',
+        )
+        self.assertEqual(
+            tags["tuple1"],
+            '["a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a"]',
+        )
+        self.assertEqual(
+            tags["tuple2"], '["a","a","a","a","a","a","a","a","a","a"]',
+        )
+        self.assertEqual(
+            tags["tuple3"],
+            '["2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2"]',
+        )
+        self.assertEqual(
+            tags["tuple4"], '["2","2","2","2","2","2","2","2","2","2"]',
+        )
+        self.assertEqual(
+            tags["tuple5"],
+            '["True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True"]',
+        )
+        self.assertEqual(
+            tags["tuple6"],
+            '["True","True","True","True","True","True","True","True","True","True"]',
+        )
+        self.assertEqual(
+            tags["range1"],
+            '["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24"]',
+        )
+        self.assertEqual(
+            tags["range2"], '["0","1","2","3","4","5","6","7","8","9"]',
+        )
+        self.assertEqual(
+            tags["empty_list"], "[]",
+        )
+        self.assertEqual(
+            tags["none_list"], '["hello",null,"world"]',
+        )
 
         exporter = ZipkinSpanExporter(service_name, max_tag_value_length=2)
         mock_post = MagicMock()
@@ -452,8 +527,126 @@ class TestZipkinSpanExporter(unittest.TestCase):
 
         _, kwargs = mock_post.call_args  # pylint: disable=E0633
         tags = json.loads(kwargs["data"])[0]["tags"]
-        self.assertEqual(len(tags["k1"]), 2)
-        self.assertEqual(len(tags["k2"]), 2)
+        self.assertEqual(len(tags["string1"]), 2)
+        self.assertEqual(len(tags["string2"]), 2)
+        self.assertEqual(tags["list1"], "[]")
+        self.assertEqual(tags["list2"], "[]")
+        self.assertEqual(tags["list3"], "[]")
+        self.assertEqual(tags["list4"], "[]")
+        self.assertEqual(tags["list5"], "[]")
+        self.assertEqual(tags["list6"], "[]")
+        self.assertEqual(tags["tuple1"], "[]")
+        self.assertEqual(tags["tuple2"], "[]")
+        self.assertEqual(tags["tuple3"], "[]")
+        self.assertEqual(tags["tuple4"], "[]")
+        self.assertEqual(tags["tuple5"], "[]")
+        self.assertEqual(tags["tuple6"], "[]")
+        self.assertEqual(tags["range1"], "[]")
+        self.assertEqual(tags["range2"], "[]")
+
+        exporter = ZipkinSpanExporter(service_name, max_tag_value_length=5)
+        mock_post = MagicMock()
+        with patch("requests.post", mock_post):
+            mock_post.return_value = MockResponse(200)
+            status = exporter.export([span])
+            self.assertEqual(SpanExportResult.SUCCESS, status)
+
+        _, kwargs = mock_post.call_args  # pylint: disable=E0633
+        tags = json.loads(kwargs["data"])[0]["tags"]
+        self.assertEqual(len(tags["string1"]), 5)
+        self.assertEqual(len(tags["string2"]), 5)
+        self.assertEqual(tags["list1"], '["a"]')
+        self.assertEqual(tags["list2"], '["a"]')
+        self.assertEqual(tags["list3"], '["2"]')
+        self.assertEqual(tags["list4"], '["2"]')
+        self.assertEqual(tags["list5"], "[]")
+        self.assertEqual(tags["list6"], "[]")
+        self.assertEqual(tags["tuple1"], '["a"]')
+        self.assertEqual(tags["tuple2"], '["a"]')
+        self.assertEqual(tags["tuple3"], '["2"]')
+        self.assertEqual(tags["tuple4"], '["2"]')
+        self.assertEqual(tags["tuple5"], "[]")
+        self.assertEqual(tags["tuple6"], "[]")
+        self.assertEqual(tags["range1"], '["0"]')
+        self.assertEqual(tags["range2"], '["0"]')
+
+        exporter = ZipkinSpanExporter(service_name, max_tag_value_length=9)
+        mock_post = MagicMock()
+        with patch("requests.post", mock_post):
+            mock_post.return_value = MockResponse(200)
+            status = exporter.export([span])
+            self.assertEqual(SpanExportResult.SUCCESS, status)
+
+        _, kwargs = mock_post.call_args  # pylint: disable=E0633
+        tags = json.loads(kwargs["data"])[0]["tags"]
+        self.assertEqual(len(tags["string1"]), 9)
+        self.assertEqual(len(tags["string2"]), 9)
+        self.assertEqual(tags["list1"], '["a","a"]')
+        self.assertEqual(tags["list2"], '["a","a"]')
+        self.assertEqual(tags["list3"], '["2","2"]')
+        self.assertEqual(tags["list4"], '["2","2"]')
+        self.assertEqual(tags["list5"], '["True"]')
+        self.assertEqual(tags["list6"], '["True"]')
+        self.assertEqual(tags["tuple1"], '["a","a"]')
+        self.assertEqual(tags["tuple2"], '["a","a"]')
+        self.assertEqual(tags["tuple3"], '["2","2"]')
+        self.assertEqual(tags["tuple4"], '["2","2"]')
+        self.assertEqual(tags["tuple5"], '["True"]')
+        self.assertEqual(tags["tuple6"], '["True"]')
+        self.assertEqual(tags["range1"], '["0","1"]')
+        self.assertEqual(tags["range2"], '["0","1"]')
+
+        exporter = ZipkinSpanExporter(service_name, max_tag_value_length=10)
+        mock_post = MagicMock()
+        with patch("requests.post", mock_post):
+            mock_post.return_value = MockResponse(200)
+            status = exporter.export([span])
+            self.assertEqual(SpanExportResult.SUCCESS, status)
+
+        _, kwargs = mock_post.call_args  # pylint: disable=E0633
+        tags = json.loads(kwargs["data"])[0]["tags"]
+        self.assertEqual(len(tags["string1"]), 10)
+        self.assertEqual(len(tags["string2"]), 10)
+        self.assertEqual(tags["list1"], '["a","a"]')
+        self.assertEqual(tags["list2"], '["a","a"]')
+        self.assertEqual(tags["list3"], '["2","2"]')
+        self.assertEqual(tags["list4"], '["2","2"]')
+        self.assertEqual(tags["list5"], '["True"]')
+        self.assertEqual(tags["list6"], '["True"]')
+        self.assertEqual(tags["tuple1"], '["a","a"]')
+        self.assertEqual(tags["tuple2"], '["a","a"]')
+        self.assertEqual(tags["tuple3"], '["2","2"]')
+        self.assertEqual(tags["tuple4"], '["2","2"]')
+        self.assertEqual(tags["tuple5"], '["True"]')
+        self.assertEqual(tags["tuple6"], '["True"]')
+        self.assertEqual(tags["range1"], '["0","1"]')
+        self.assertEqual(tags["range2"], '["0","1"]')
+
+        exporter = ZipkinSpanExporter(service_name, max_tag_value_length=11)
+        mock_post = MagicMock()
+        with patch("requests.post", mock_post):
+            mock_post.return_value = MockResponse(200)
+            status = exporter.export([span])
+            self.assertEqual(SpanExportResult.SUCCESS, status)
+
+        _, kwargs = mock_post.call_args  # pylint: disable=E0633
+        tags = json.loads(kwargs["data"])[0]["tags"]
+        self.assertEqual(len(tags["string1"]), 11)
+        self.assertEqual(len(tags["string2"]), 11)
+        self.assertEqual(tags["list1"], '["a","a"]')
+        self.assertEqual(tags["list2"], '["a","a"]')
+        self.assertEqual(tags["list3"], '["2","2"]')
+        self.assertEqual(tags["list4"], '["2","2"]')
+        self.assertEqual(tags["list5"], '["True"]')
+        self.assertEqual(tags["list6"], '["True"]')
+        self.assertEqual(tags["tuple1"], '["a","a"]')
+        self.assertEqual(tags["tuple2"], '["a","a"]')
+        self.assertEqual(tags["tuple3"], '["2","2"]')
+        self.assertEqual(tags["tuple4"], '["2","2"]')
+        self.assertEqual(tags["tuple5"], '["True"]')
+        self.assertEqual(tags["tuple6"], '["True"]')
+        self.assertEqual(tags["range1"], '["0","1"]')
+        self.assertEqual(tags["range2"], '["0","1"]')
 
     # pylint: disable=too-many-locals,too-many-statements
     def test_export_protobuf(self):
