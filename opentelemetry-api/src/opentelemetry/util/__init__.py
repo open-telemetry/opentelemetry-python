@@ -65,3 +65,16 @@ def _load_meter_provider(provider: str) -> "MeterProvider":
 
 def _load_trace_provider(provider: str) -> "TracerProvider":
     return cast("TracerProvider", _load_provider(provider))
+
+
+
+def _validate_tracestate_input(func):
+    def wrapper(self, *args, **kwargs):
+        invalid = False
+
+        if invalid:
+            logger.warning("Invalid values given")
+            return self
+        return func(self, *args, **kwargs)
+
+    return wrapper

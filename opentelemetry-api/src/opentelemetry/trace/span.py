@@ -1,4 +1,5 @@
 import abc
+import collections
 import logging
 import types as python_types
 import typing
@@ -135,7 +136,7 @@ class TraceFlags(int):
 DEFAULT_TRACE_OPTIONS = TraceFlags.get_default()
 
 
-class TraceState(typing.Dict[str, str]):
+class TraceState(collections.Mapping):
     """A list of key-value pairs representing vendor-specific trace info.
 
     Keys and values are strings of up to 256 printable US-ASCII characters.
@@ -145,6 +146,34 @@ class TraceState(typing.Dict[str, str]):
     .. _W3C Trace Context - Tracestate:
         https://www.w3.org/TR/trace-context/#tracestate-field
     """
+
+    def __init__(self, *args, **kwargs):
+        self._dict = collections.OrderedDict(*args, **kwargs)
+
+    def __getitem__(self, key: str) -> str:
+        return self._dict.get(key)
+
+    def __iter__(self):
+        return iter(self._dict)
+
+    def __len__(self):
+        return len(self._dict)
+
+    def add(self, key: str, value: str) -> "TraceState":
+        new = collections.OrderedDict([(key, value)])
+        new.update(self._dict)
+        return TraceState(new)
+
+    def update(self, key: str, value: str) -> "TraceState":
+        new = self._dict.copy()
+        new[key] = value
+        new.move_to_end(key, last=False)
+        return TraceState(new)
+
+    def delete(self, key: str) -> "TraceState":
+        new = self._dict.copy()
+        new.pop(key, None)
+        return TraceState(new)
 
     @classmethod
     def get_default(cls) -> "TraceState":
