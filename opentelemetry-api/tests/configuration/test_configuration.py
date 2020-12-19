@@ -13,6 +13,7 @@
 # limitations under the License.
 # pylint: disable-all
 
+from sys import platform
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -35,7 +36,7 @@ class TestConfiguration(TestCase):
         {
             "OTEL_PYTHON_METER_PROVIDER": "meter_provider",
             "OTEL_PYTHON_TRACER_PROVIDER": "tracer_provider",
-            "OTEL_OThER": "other",
+            "OTEL_OTHER" if platform == "windows" else "OTEL_OThER": "other",
             "OTEL_OTHER_7": "other_7",
             "OPENTELEMETRY_PTHON_TRACEX_PROVIDER": "tracex_provider",
         },

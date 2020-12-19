@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1420](https://github.com/open-telemetry/opentelemetry-python/pull/1420))
 - `opentelemetry-exporter-zipkin` Add support for array attributes in Span and Resource exports
   ([#1285](https://github.com/open-telemetry/opentelemetry-python/pull/1285))
+- Added `__repr__` for `DefaultSpan`, added `trace_flags` to `__repr__` of
+  `SpanContext` ([#1485](https://github.com/open-telemetry/opentelemetry-python/pull/1485)])
 ### Changed
 - `opentelemetry-exporter-jaeger` Updated Jaeger exporter status code tag
   ([#1488](https://github.com/open-telemetry/opentelemetry-python/pull/1488))
