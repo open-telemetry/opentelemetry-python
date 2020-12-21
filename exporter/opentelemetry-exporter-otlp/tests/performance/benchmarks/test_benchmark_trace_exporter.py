@@ -60,6 +60,13 @@ def test_simple_span_processor(benchmark):
     new=MockTraceServiceStub,
 )
 def test_batch_span_processor(benchmark):
+    """Runs benchmark tests using BatchExportSpanProcessor.
+
+    NOTE: One particular call by pytest-benchmark will be much more expensive since
+    the batch export thread will activate and consume a lot of CPU to process
+    all the spans. For this reason, focus on the average measurement. Do not
+    focus on the min/max measurements which will be misleading.
+    """
     tracer = get_tracer_with_processor(BatchExportSpanProcessor)
 
     def create_spans_to_be_exported():
