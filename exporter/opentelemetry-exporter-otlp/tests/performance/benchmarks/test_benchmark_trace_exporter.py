@@ -23,9 +23,9 @@ from opentelemetry.sdk.trace.export import (
 
 
 def get_tracer_with_processor(span_processor_class):
-    simple_span_processor = span_processor_class(OTLPSpanExporter())
+    span_processor = span_processor_class(OTLPSpanExporter())
     tracer = TracerProvider(
-        active_span_processor=simple_span_processor,
+        active_span_processor=span_processor,
         sampler=sampling.DEFAULT_ON,
     ).get_tracer("pipeline_benchmark_tracer")
     return tracer
@@ -62,7 +62,7 @@ def test_simple_span_processor(benchmark):
 def test_batch_span_processor(benchmark):
     """Runs benchmark tests using BatchExportSpanProcessor.
 
-    NOTE: One particular call by pytest-benchmark will be much more expensive since
+    One particular call by pytest-benchmark will be much more expensive since
     the batch export thread will activate and consume a lot of CPU to process
     all the spans. For this reason, focus on the average measurement. Do not
     focus on the min/max measurements which will be misleading.
