@@ -223,7 +223,7 @@ class TraceState(collections.Mapping):
     def from_header(cls, header_list: typing.List[str]) -> "TraceState":
         """Parses one or more w3c tracestate header into a TraceState.
         """
-        tracestate = cls()
+        pairs = collections.OrderedDict()
         value_count = 0
         for header in header_list:
             for member in re.split(_DELIMITER_PATTERN, header):
@@ -238,13 +238,13 @@ class TraceState(collections.Mapping):
                     )
                     return cls()
                 key, _eq, value = match.groups()
-                if key in tracestate:  # pylint:disable=E1135
+                if key in pairs:
                     return cls()
-                tracestate = tracestate.add(key, value)
+                pairs[key] = value
                 value_count += 1
                 if value_count > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
                     return cls()
-        return tracestate
+        return cls(pairs)
 
     @classmethod
     def get_default(cls) -> "TraceState":
