@@ -13,19 +13,13 @@
 # limitations under the License.
 
 import time
-from unittest import mock
+from unittest.mock import patch
 
 from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.trace import TracerProvider, sampling
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 
-
 SPANS_PER_SECOND = 10_000
-
-simple_span_processor = SimpleExportSpanProcessor(OTLPSpanExporter())
-tracer = TracerProvider(
-    active_span_processor=simple_span_processor, sampler=sampling.DEFAULT_ON,
-).get_tracer("resource_usage_tracer")
 
 
 class MockTraceServiceStub(object):
@@ -33,22 +27,20 @@ class MockTraceServiceStub(object):
         self.Export = lambda *args, **kwargs: None
 
 
-def test_simple_span_processor():
-    patch = mock.patch(
-        "opentelemetry.exporter.otlp.trace_exporter.OTLPSpanExporter._stub",
-        new=MockTraceServiceStub,
-    )
-    with patch:
-        for i in range(15):
-            print("STARTING NUMBER: ", i)
-            starttime = time.time()
-            while time.time() - starttime < 60:
-                print("Difference is: ", time.time() - starttime)
-                span = tracer.start_span("benchmarkedSpan")
-                print("Do span work")
-                span.end()
-                print("Finish span work")
-            time.sleep(60.0 - ((time.time() - starttime) % 60.0))
+old_stub = OTLPSpanExporter._stub
+OTLPSpanExporter._stub = MockTraceServiceStub
 
+simple_span_processor = SimpleExportSpanProcessor(OTLPSpanExporter())
+tracer = TracerProvider(
+    active_span_processor=simple_span_processor, sampler=sampling.DEFAULT_ON,
+).get_tracer("resource_usage_tracer")
 
-test_simple_span_processor()
+starttime = time.time()
+for _ in range(15):
+    for _ in range(SPANS_PER_SECOND):
+        span = tracer.start_span("benchmarkedSpan")
+        span.end()
+    duration = time.time() - starttime
+    time.sleep(1.0 - duration if duration < 1.0 else 0)
+
+OTLPSpanExporter._stub = old_stub
