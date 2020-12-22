@@ -94,7 +94,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
             span_id,
             is_remote=False,
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
-            trace_state=trace_api.TraceState({"testKey": "testValue"}),
+            trace_state=trace_api.TraceState({"testkey": "testvalue"}),
         )
         parent_span_context = trace_api.SpanContext(
             trace_id, parent_id, is_remote=False
@@ -200,9 +200,9 @@ class TestCollectorSpanExporter(unittest.TestCase):
         )
         self.assertEqual(output_spans[0].status.message, "test description")
         self.assertEqual(len(output_spans[0].tracestate.entries), 1)
-        self.assertEqual(output_spans[0].tracestate.entries[0].key, "testKey")
+        self.assertEqual(output_spans[0].tracestate.entries[0].key, "testkey")
         self.assertEqual(
-            output_spans[0].tracestate.entries[0].value, "testValue"
+            output_spans[0].tracestate.entries[0].value, "testvalue"
         )
 
         self.assertEqual(
