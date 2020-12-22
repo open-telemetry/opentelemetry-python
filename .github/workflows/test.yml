@@ -68,7 +68,7 @@ jobs:
           | if .[0].benchmarks == null then null else .[0] end'
           `find . -name '*${{ matrix.package }}*-benchmark.json'` > output.json
       - name: Report on benchmark results
-        if: [ `cat output.json` == null ]
+        if: `cat output.json` == null
         uses: rhysd/github-action-benchmark@v1
         with:
           name: OpenTelemetry Python Benchmarks - Python ${{ env[matrix.python-version ]}} - ${{ matrix.package }}
