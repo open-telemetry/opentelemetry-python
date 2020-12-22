@@ -60,13 +60,13 @@ _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS = 32
 def _is_valid_key(key: str) -> bool:
     if not isinstance(key, str):
         return False
-    return _KEY_PATTERN.match(key) is not None
+    return _KEY_PATTERN.fullmatch(key) is not None
 
 
 def _is_valid_value(value: str) -> bool:
     if not isinstance(value, str):
         return False
-    return _VALUE_PATTERN.match(value) is not None
+    return _VALUE_PATTERN.fullmatch(value) is not None
 
 
 def _is_valid_pair(key: str, value: str) -> bool:
