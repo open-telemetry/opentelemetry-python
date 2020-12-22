@@ -8,11 +8,11 @@ import typing
 from opentelemetry.trace.status import Status
 from opentelemetry.util import types
 from opentelemetry.util.tracestate import (
-    _is_valid_pair,
-    _validate_pair,
     _DELIMITER_PATTERN,
     _MEMBER_PATTERN,
     _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS,
+    _is_valid_pair,
+    _validate_pair,
 )
 
 _logger = logging.getLogger(__name__)
@@ -185,53 +185,44 @@ class TraceState(collections.Mapping):
 
     @_validate_pair
     def add(self, key: str, value: str) -> "TraceState":
+        """Adds a key-value pair to tracestate. The provided pair should
+        adhere to w3c tracestate identifiers format.
+        """
         if key in self._dict:
             _logger.warning("The provided key %s already exists.", key)
             return self
-        new = collections.OrderedDict([(key, value)])
-        new.update(self._dict)
-        return TraceState(new)
+        new_state = collections.OrderedDict([(key, value)])
+        new_state.update(self._dict)
+        return TraceState(new_state)
 
     @_validate_pair
     def update(self, key: str, value: str) -> "TraceState":
-        new = self._dict.copy()
-        new[key] = value
-        new.move_to_end(key, last=False)
-        return TraceState(new)
+        """Updates a key-value pair in tracestate. The provided pair should
+        adhere to w3c tracestate identifiers format.
+        """
+        new_state = self._dict.copy()
+        new_state[key] = value
+        new_state.move_to_end(key, last=False)
+        return TraceState(new_state)
 
     def delete(self, key: str) -> "TraceState":
+        """Deletes a key-value from tracestate.
+        """
         if key not in self._dict:
             _logger.warning("The provided key %s doesn't exist.", key)
             return self
-        new = self._dict.copy()
-        new.pop(key)
-        return TraceState(new)
+        new_state = self._dict.copy()
+        new_state.pop(key)
+        return TraceState(new_state)
 
     def to_header(self) -> str:
-        """Parse a w3c tracestate header from a TraceState.
-
-        Returns:
-            A string that adheres to the w3c tracestate
-            header format.
+        """Creates a w3c tracestate header from a TraceState.
         """
         return ",".join(key + "=" + value for key, value in self._dict.items())
 
     @classmethod
     def from_header(cls, header_list: typing.List[str]) -> "TraceState":
-        """Parse one or more w3c tracestate header into a TraceState.
-
-        Args:
-            string: the value of the tracestate header.
-
-        Returns:
-            A valid TraceState that contains values extracted from
-            the tracestate header.
-
-            If the format of one headers is illegal, all values will
-            be discarded and an empty tracestate will be returned.
-
-            If the number of keys is beyond the maximum, all values
-            will be discarded and an empty tracestate will be returned.
+        """Parses one or more w3c tracestate header into a TraceState.
         """
         tracestate = cls()
         value_count = 0
@@ -242,7 +233,7 @@ class TraceState(collections.Mapping):
                     continue
                 match = _MEMBER_PATTERN.fullmatch(member)
                 if not match:
-                    # TODO: log this?
+                    _logger.warning("Member doesn't match the w3c identifiers format %s", member)
                     return cls()
                 key, _eq, value = match.groups()
                 if key in tracestate:  # pylint:disable=E1135
