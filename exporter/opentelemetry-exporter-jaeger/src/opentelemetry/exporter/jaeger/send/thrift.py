@@ -14,6 +14,7 @@
 
 import base64
 import logging
+import math
 import socket
 
 from thrift.protocol import TBinaryProtocol, TCompactProtocol
@@ -36,6 +37,7 @@ class AgentClientUDP:
         port: The port of the Jaeger server.
         max_packet_size: Maximum size of UDP packet.
         client: Class for creating new client objects for agencies.
+        split_oversized_batches: Re-emit oversized batches in smaller chunks.
     """
 
     def __init__(
@@ -44,6 +46,7 @@ class AgentClientUDP:
         port,
         max_packet_size=UDP_PACKET_MAX_LENGTH,
         client=agent.Client,
+        split_oversized_batches=False,
     ):
         self.address = (host_name, port)
         self.max_packet_size = max_packet_size
@@ -51,6 +54,7 @@ class AgentClientUDP:
         self.client = client(
             iprot=TCompactProtocol.TCompactProtocol(trans=self.buffer)
         )
+        self.split_oversized_batches = split_oversized_batches
 
     def emit(self, batch: jaeger.Batch):
         """
@@ -66,11 +70,25 @@ class AgentClientUDP:
         self.client.emitBatch(batch)
         buff = self.buffer.getvalue()
         if len(buff) > self.max_packet_size:
-            logger.warning(
-                "Data exceeds the max UDP packet size; size %r, max %r",
-                len(buff),
-                self.max_packet_size,
-            )
+            if self.split_oversized_batches and len(batch.spans) > 1:
+                packets = math.ceil(len(buff) / self.max_packet_size)
+                div = math.ceil(len(batch.spans) / packets)
+                for packet in range(packets):
+                    start = packet * div
+                    end = (packet + 1) * div
+                    if start < len(batch.spans):
+                        self.emit(
+                            jaeger.Batch(
+                                process=batch.process,
+                                spans=batch.spans[start:end],
+                            )
+                        )
+            else:
+                logger.warning(
+                    "Data exceeds the max UDP packet size; size %r, max %r",
+                    len(buff),
+                    self.max_packet_size,
+                )
             return
 
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
