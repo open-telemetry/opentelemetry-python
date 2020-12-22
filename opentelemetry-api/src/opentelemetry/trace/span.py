@@ -16,7 +16,6 @@ from opentelemetry.util.tracestate import (
 )
 
 _logger = logging.getLogger(__name__)
-# pylint: disable=protected-access
 
 
 class Span(abc.ABC):
