@@ -232,7 +232,10 @@ class TraceState(collections.Mapping):
                     continue
                 match = _MEMBER_PATTERN.fullmatch(member)
                 if not match:
-                    _logger.warning("Member doesn't match the w3c identifiers format %s", member)
+                    _logger.warning(
+                        "Member doesn't match the w3c identifiers format %s",
+                        member,
+                    )
                     return cls()
                 key, _eq, value = match.groups()
                 if key in tracestate:  # pylint:disable=E1135
