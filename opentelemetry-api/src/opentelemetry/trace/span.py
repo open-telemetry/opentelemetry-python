@@ -182,6 +182,13 @@ class TraceState(collections.Mapping):
     def __len__(self):
         return len(self._dict)
 
+    def __repr__(self):
+        pairs = [
+            "{key=%s, value=%s}" % (key, value)
+            for key, value in self._dict.items()
+        ]
+        return str(pairs)
+
     @_validate_pair
     def add(self, key: str, value: str) -> "TraceState":
         """Adds a key-value pair to tracestate. The provided pair should
