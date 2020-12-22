@@ -19,6 +19,7 @@ from unittest.mock import Mock, patch
 from opentelemetry import trace
 from opentelemetry.trace.propagation import tracecontext
 from opentelemetry.trace.propagation.textmap import DictGetter
+from opentelemetry.trace.span import TraceState
 
 FORMAT = tracecontext.TraceContextTextMapPropagator()
 
@@ -263,7 +264,7 @@ class TestTraceContextFormat(unittest.TestCase):
                             "trace_id": 1,
                             "span_id": 2,
                             "trace_flags": 3,
-                            "trace_state": {"a": "b"},
+                            "trace_state": TraceState({"a": "b"}),
                         }
                     )
                 }

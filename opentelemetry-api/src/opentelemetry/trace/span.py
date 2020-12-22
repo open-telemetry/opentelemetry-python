@@ -1,13 +1,22 @@
 import abc
 import collections
 import logging
+import re
 import types as python_types
 import typing
 
 from opentelemetry.trace.status import Status
 from opentelemetry.util import types
+from opentelemetry.util.tracestate import (
+    _is_valid_pair,
+    _validate_pair,
+    _DELIMITER_PATTERN,
+    _MEMBER_PATTERN,
+    _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS,
+)
 
 _logger = logging.getLogger(__name__)
+# pylint: disable=protected-access
 
 
 class Span(abc.ABC):
@@ -148,10 +157,25 @@ class TraceState(collections.Mapping):
     """
 
     def __init__(self, *args, **kwargs):
-        self._dict = collections.OrderedDict(*args, **kwargs)
+        self._dict = collections.OrderedDict()
+        inp = collections.OrderedDict(*args, **kwargs)
+        if len(inp) > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
+            _logger.warning("There can't be more 32 key/value pairs.")
+            return
 
-    def __getitem__(self, key: str) -> str:
+        for key, value in inp.items():
+            if _is_valid_pair(key, value):
+                self._dict[key] = value
+            else:
+                _logger.warning(
+                    "Invalid key/value pair (%s, %s) found.", key, value
+                )
+
+    def __getitem__(self, key: str):
         return self._dict.get(key)
+
+    def __contains__(self, key: str):
+        return key in self._dict
 
     def __iter__(self):
         return iter(self._dict)
@@ -159,11 +183,16 @@ class TraceState(collections.Mapping):
     def __len__(self):
         return len(self._dict)
 
+    @_validate_pair
     def add(self, key: str, value: str) -> "TraceState":
+        if key in self._dict:
+            _logger.warning("The provided key %s already exists.", key)
+            return self
         new = collections.OrderedDict([(key, value)])
         new.update(self._dict)
         return TraceState(new)
 
+    @_validate_pair
     def update(self, key: str, value: str) -> "TraceState":
         new = self._dict.copy()
         new[key] = value
@@ -171,9 +200,58 @@ class TraceState(collections.Mapping):
         return TraceState(new)
 
     def delete(self, key: str) -> "TraceState":
+        if key not in self._dict:
+            _logger.warning("The provided key %s doesn't exist.", key)
+            return self
         new = self._dict.copy()
-        new.pop(key, None)
+        new.pop(key)
         return TraceState(new)
+
+    def to_header(self) -> str:
+        """Parse a w3c tracestate header from a TraceState.
+
+        Returns:
+            A string that adheres to the w3c tracestate
+            header format.
+        """
+        return ",".join(key + "=" + value for key, value in self._dict.items())
+
+    @classmethod
+    def from_header(cls, header_list: typing.List[str]) -> "TraceState":
+        """Parse one or more w3c tracestate header into a TraceState.
+
+        Args:
+            string: the value of the tracestate header.
+
+        Returns:
+            A valid TraceState that contains values extracted from
+            the tracestate header.
+
+            If the format of one headers is illegal, all values will
+            be discarded and an empty tracestate will be returned.
+
+            If the number of keys is beyond the maximum, all values
+            will be discarded and an empty tracestate will be returned.
+        """
+        tracestate = cls()
+        value_count = 0
+        for header in header_list:
+            for member in re.split(_DELIMITER_PATTERN, header):
+                # empty members are valid, but no need to process further.
+                if not member:
+                    continue
+                match = _MEMBER_PATTERN.fullmatch(member)
+                if not match:
+                    # TODO: log this?
+                    return cls()
+                key, _eq, value = match.groups()
+                if key in tracestate:  # pylint:disable=E1135
+                    return cls()
+                tracestate = tracestate.add(key, value)
+                value_count += 1
+                if value_count > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
+                    return cls()
+        return tracestate
 
     @classmethod
     def get_default(cls) -> "TraceState":
