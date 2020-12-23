@@ -74,7 +74,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         )
 
         self.assertEqual(exporter.service_name, service)
-        self.assertIsNotNone(exporter.grpc_client)
+        self.assertIsNotNone(exporter._collector_grpc_client)
         self.assertEqual(exporter.collector_endpoint, collector_endpoint)
         self.assertIsNotNone(exporter.credentials)
 

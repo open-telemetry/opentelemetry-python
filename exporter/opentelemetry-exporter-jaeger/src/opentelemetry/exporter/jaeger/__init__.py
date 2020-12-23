@@ -144,14 +144,14 @@ class JaegerSpanExporter(SpanExporter):
             env_variable=Configuration().EXPORTER_JAEGER_AGENT_HOST,
             default=DEFAULT_AGENT_HOST_NAME,
         )
-        self.agent_port = int(
-            _parameter_setter(
-                param=agent_port,
-                env_variable=Configuration().EXPORTER_JAEGER_AGENT_PORT,
-                default=DEFAULT_AGENT_PORT,
-            )
+        self.agent_port = _parameter_setter(
+            param=agent_port,
+            env_variable=Configuration().EXPORTER_JAEGER_AGENT_PORT,
+            default=DEFAULT_AGENT_PORT,
         )
-        self._agent_client = None
+        self._agent_client = AgentClientUDP(
+            host_name=self.agent_host_name, port=self.agent_port
+        )
         self.collector_endpoint = _parameter_setter(
             param=collector_endpoint,
             env_variable=Configuration().EXPORTER_JAEGER_ENDPOINT,
@@ -174,15 +174,7 @@ class JaegerSpanExporter(SpanExporter):
         self.transport_format = transport_format or TRANSPORT_FORMAT_THRIFT
 
     @property
-    def agent_client(self) -> AgentClientUDP:
-        if self._agent_client is None:
-            self._agent_client = AgentClientUDP(
-                host_name=self.agent_host_name, port=self.agent_port
-            )
-        return self._agent_client
-
-    @property
-    def grpc_client(self) -> Optional[CollectorServiceStub]:
+    def _collector_grpc_client(self) -> Optional[CollectorServiceStub]:
         if (
             self.collector_endpoint is None
             or self.transport_format != TRANSPORT_FORMAT_PROTOBUF
@@ -201,7 +193,7 @@ class JaegerSpanExporter(SpanExporter):
         return self._grpc_client
 
     @property
-    def collector(self) -> Optional[Collector]:
+    def _collector_http_client(self) -> Optional[Collector]:
         if self._collector is not None:
             return self._collector
 
@@ -225,18 +217,18 @@ class JaegerSpanExporter(SpanExporter):
             jaeger_spans = protobuf._to_jaeger(spans, self.service_name)
             batch = model_pb2.Batch(spans=jaeger_spans)
             request = PostSpansRequest(batch=batch)
-            if self.grpc_client is not None:
-                self.grpc_client.PostSpans(request)
+            if self._collector_grpc_client is not None:
+                self._collector_grpc_client.PostSpans(request)
         else:
             jaeger_spans = thrift._to_jaeger(spans)
             batch = jaeger_thrift.Batch(
                 spans=jaeger_spans,
                 process=jaeger_thrift.Process(serviceName=self.service_name),
             )
-            if self.collector is not None:
-                self.collector.submit(batch)
+            if self._collector_http_client is not None:
+                self._collector_http_client.submit(batch)
             else:
-                self.agent_client.emit(batch)
+                self._agent_client.emit(batch)
 
         return SpanExportResult.SUCCESS
 
