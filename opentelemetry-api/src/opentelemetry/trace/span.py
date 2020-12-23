@@ -12,7 +12,6 @@ from opentelemetry.util.tracestate import (
     _MEMBER_PATTERN,
     _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS,
     _is_valid_pair,
-    _validate_pair,
 )
 
 _logger = logging.getLogger(__name__)
@@ -155,7 +154,7 @@ class TraceState(collections.Mapping):
         https://www.w3.org/TR/trace-context/#tracestate-field
     """
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs) -> None:
         self._dict = collections.OrderedDict()
         inp = collections.OrderedDict(*args, **kwargs)
         if len(inp) > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
