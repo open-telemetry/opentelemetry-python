@@ -411,6 +411,104 @@ class Span(trace_api.Span):
             raise TypeError("Span must be instantiated via a tracer.")
         return super().__new__(cls)
 
+    def __init__(
+        self,
+        name: str,
+        context: trace_api.SpanContext,
+        parent: Optional[trace_api.SpanContext] = None,
+        sampler: Optional[sampling.Sampler] = None,
+        trace_config: None = None,  # TODO
+        resource: Resource = Resource.create({}),
+        attributes: types.Attributes = None,  # TODO
+        events: Sequence[Event] = None,  # TODO
+        links: Sequence[trace_api.Link] = (),
+        kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
+        span_processor: SpanProcessor = SpanProcessor(),
+        instrumentation_info: InstrumentationInfo = None,
+        record_exception: bool = True,
+        set_status_on_exception: bool = True,
+    ) -> None:
+
+        self._data = _ReadWriteSpan(
+            name,
+            context,
+            parent,
+            sampler,
+            trace_config,
+            resource,
+            attributes,
+            events,
+            links,
+            kind,
+            span_processor,
+            instrumentation_info,
+            record_exception,
+            set_status_on_exception,
+        )
+
+    @property
+    def start_time(self):
+        return self._data.start_time
+
+    @property
+    def end_time(self):
+        return self._data.end_time
+
+    def __repr__(self):
+        return '{}(name="{}", context={})'.format(
+            type(self).__name__, self._data.name, self._data.context
+        )
+
+    def to_json(self, indent=4):
+        return self._data.to_json()
+
+    def get_span_context(self):
+        return self._data.context
+
+    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
+        self._data.set_attribute(key, value)
+
+    def add_event(
+        self,
+        name: str,
+        attributes: types.Attributes = None,
+        timestamp: Optional[int] = None,
+    ) -> None:
+        self._data.add_event(name, attributes, timestamp)
+
+    def start(
+        self,
+        start_time: Optional[int] = None,
+        parent_context: Optional[context_api.Context] = None,
+    ) -> None:
+        self._data.start(start_time, parent_context)
+
+    def end(self, end_time: Optional[int] = None) -> None:
+        self._data.end(end_time)
+
+    @_check_span_ended
+    def update_name(self, name: str) -> None:
+        self._data.update_name(name)
+
+    def is_recording(self) -> bool:
+        return self._data.is_recording()
+
+    @_check_span_ended
+    def set_status(self, status: trace_api.Status) -> None:
+        self._data.set_status(status)
+
+    def record_exception(
+        self,
+        exception: Exception,
+        attributes: types.Attributes = None,
+        timestamp: Optional[int] = None,
+        escaped: bool = False,
+    ) -> None:
+        """Records an exception as a span event."""
+        self._data.record_exception(exception, attributes, timestamp, escaped)
+
+
+class _ReadWriteSpan(trace_api.Span):
     # pylint: disable=too-many-locals
     def __init__(
         self,
@@ -519,7 +617,9 @@ class Span(trace_api.Span):
             f_event = OrderedDict()
             f_event["name"] = event.name
             f_event["timestamp"] = util.ns_to_iso_str(event.timestamp)
-            f_event["attributes"] = Span._format_attributes(event.attributes)
+            f_event["attributes"] = _ReadWriteSpan._format_attributes(
+                event.attributes
+            )
             f_events.append(f_event)
         return f_events
 
@@ -528,8 +628,10 @@ class Span(trace_api.Span):
         f_links = []
         for link in links:
             f_link = OrderedDict()
-            f_link["context"] = Span._format_context(link.context)
-            f_link["attributes"] = Span._format_attributes(link.attributes)
+            f_link["context"] = _ReadWriteSpan._format_context(link.context)
+            f_link["attributes"] = _ReadWriteSpan._format_attributes(
+                link.attributes
+            )
             f_links.append(f_link)
         return f_links
 

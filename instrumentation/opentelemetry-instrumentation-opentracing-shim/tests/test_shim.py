@@ -404,9 +404,9 @@ class TestShim(TestCase):
         tags = {"foo": "bar"}
         with self.shim.start_active_span("TestSetTag", tags=tags) as scope:
             scope.span.set_tag("baz", "qux")
-
-            self.assertEqual(scope.span.unwrap().attributes["foo"], "bar")
-            self.assertEqual(scope.span.unwrap().attributes["baz"], "qux")
+            span = scope.span.unwrap()._data  # pylint: disable=protected-access
+            self.assertEqual(span.attributes["foo"], "bar")
+            self.assertEqual(span.attributes["baz"], "qux")
 
     def test_span_tracer(self):
         """Test the `tracer` property on `Span` objects."""
@@ -479,7 +479,7 @@ class TestShim(TestCase):
                 raise Exception
 
         # Verify exception details have been added to span.
-        self.assertEqual(scope.span.unwrap().attributes["error"], True)
+        self.assertEqual(scope.span.unwrap()._data.attributes["error"], True)  # pylint: disable=protected-access
 
     def test_inject_http_headers(self):
         """Test `inject()` method for Format.HTTP_HEADERS."""
