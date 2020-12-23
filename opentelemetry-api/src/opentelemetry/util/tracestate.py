@@ -71,22 +71,3 @@ def _is_valid_value(value: str) -> bool:
 
 def _is_valid_pair(key: str, value: str) -> bool:
     return _is_valid_key(key) and _is_valid_value(value)
-
-
-def _validate_pair(func):
-    def wrapper(self, *args, **kwargs):
-        key = kwargs.get("key") or args[0]
-        value = kwargs.get("value") or args[1]
-        valid_pair = _is_valid_pair(key, value)
-        if not valid_pair:
-            _logger.warning(
-                "Invalid key/value pair (%s, %s) found.", key, value
-            )
-            return self
-        if len(self) >= 32:
-            _logger.warning("There can't be more 32 key/value pairs.")
-            return self
-
-        return func(self, *args, **kwargs)
-
-    return wrapper

@@ -189,11 +189,20 @@ class TraceState(collections.Mapping):
         ]
         return str(pairs)
 
-    @_validate_pair
     def add(self, key: str, value: str) -> "TraceState":
         """Adds a key-value pair to tracestate. The provided pair should
         adhere to w3c tracestate identifiers format.
         """
+        if not _is_valid_pair(key, value):
+            _logger.warning(
+                "Invalid key/value pair (%s, %s) found.", key, value
+            )
+            return self
+        # There can be a maximum of 32 pairs
+        if len(self) >= 32:
+            _logger.warning("There can't be more 32 key/value pairs.")
+            return self
+        # Duplicate entries are not allowed
         if key in self._dict:
             _logger.warning("The provided key %s already exists.", key)
             return self
@@ -201,11 +210,15 @@ class TraceState(collections.Mapping):
         new_state.update(self._dict)
         return TraceState(new_state)
 
-    @_validate_pair
     def update(self, key: str, value: str) -> "TraceState":
         """Updates a key-value pair in tracestate. The provided pair should
         adhere to w3c tracestate identifiers format.
         """
+        if not _is_valid_pair(key, value):
+            _logger.warning(
+                "Invalid key/value pair (%s, %s) found.", key, value
+            )
+            return self
         new_state = self._dict.copy()
         new_state[key] = value
         new_state.move_to_end(key, last=False)
