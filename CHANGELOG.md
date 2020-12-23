@@ -31,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `__repr__` for `DefaultSpan`, added `trace_flags` to `__repr__` of
   `SpanContext` ([#1485](https://github.com/open-telemetry/opentelemetry-python/pull/1485)])
 ### Changed
+- `opentelemetry-exporter-zipkin` Updated zipkin exporter status code and error tag
+  ([#1486](https://github.com/open-telemetry/opentelemetry-python/pull/1486))
 - `opentelemetry-exporter-jaeger` Updated Jaeger exporter status code tag
   ([#1488](https://github.com/open-telemetry/opentelemetry-python/pull/1488))
 
