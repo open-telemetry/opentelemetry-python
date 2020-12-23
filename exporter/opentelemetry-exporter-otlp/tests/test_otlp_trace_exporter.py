@@ -367,7 +367,7 @@ class TestOTLPSpanExporter(TestCase):
             deprecated_code_expected,
         )
 
-    def test_span_status_translate_unset(self):
+    def test_span_status_translate(self):
         # pylint: disable=protected-access,no-member
         unset = SDKStatus(status_code=SDKStatusCode.UNSET)
         ok = SDKStatus(status_code=SDKStatusCode.OK)
