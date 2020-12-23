@@ -94,7 +94,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
             span_id,
             is_remote=False,
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
-            trace_state=trace_api.TraceState({"testkey": "testvalue"}),
+            trace_state=trace_api.TraceState([("testkey", "testvalue")]),
         )
         parent_span_context = trace_api.SpanContext(
             trace_id, parent_id, is_remote=False

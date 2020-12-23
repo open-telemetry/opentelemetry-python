@@ -143,7 +143,7 @@ class TraceFlags(int):
 DEFAULT_TRACE_OPTIONS = TraceFlags.get_default()
 
 
-class TraceState(collections.Mapping):
+class TraceState(typing.Mapping[str, str]):
     """A list of key-value pairs representing vendor-specific trace info.
 
     Keys and values are strings of up to 256 printable US-ASCII characters.
@@ -154,14 +154,20 @@ class TraceState(collections.Mapping):
         https://www.w3.org/TR/trace-context/#tracestate-field
     """
 
-    def __init__(self, *args, **kwargs) -> None:
+    def __init__(
+        self,
+        entries: typing.Optional[
+            typing.Sequence[typing.Tuple[str, str]]
+        ] = None,
+    ) -> None:
         self._dict = collections.OrderedDict()
-        inp = collections.OrderedDict(*args, **kwargs)
-        if len(inp) > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
+        if entries is None:
+            return
+        if len(entries) > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
             _logger.warning("There can't be more 32 key/value pairs.")
             return
 
-        for key, value in inp.items():
+        for key, value in entries:
             if _is_valid_pair(key, value):
                 self._dict[key] = value
             else:
@@ -169,19 +175,16 @@ class TraceState(collections.Mapping):
                     "Invalid key/value pair (%s, %s) found.", key, value
                 )
 
-    def __getitem__(self, key: str):
+    def __getitem__(self, key: str) -> typing.Optional[str]:  # type: ignore
         return self._dict.get(key)
 
-    def __contains__(self, key: str):
-        return key in self._dict
-
-    def __iter__(self):
+    def __iter__(self) -> typing.Iterator[str]:
         return iter(self._dict)
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self._dict)
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         pairs = [
             "{key=%s, value=%s}" % (key, value)
             for key, value in self._dict.items()
@@ -205,8 +208,7 @@ class TraceState(collections.Mapping):
         if key in self._dict:
             _logger.warning("The provided key %s already exists.", key)
             return self
-        new_state = collections.OrderedDict([(key, value)])
-        new_state.update(self._dict)
+        new_state = [(key, value)] + list(self._dict.items())
         return TraceState(new_state)
 
     def update(self, key: str, value: str) -> "TraceState":
@@ -218,9 +220,10 @@ class TraceState(collections.Mapping):
                 "Invalid key/value pair (%s, %s) found.", key, value
             )
             return self
-        new_state = self._dict.copy()
-        new_state[key] = value
-        new_state.move_to_end(key, last=False)
+        prev_state = self._dict.copy()
+        prev_state[key] = value
+        prev_state.move_to_end(key, last=False)
+        new_state = list(prev_state.items())
         return TraceState(new_state)
 
     def delete(self, key: str) -> "TraceState":
@@ -229,8 +232,9 @@ class TraceState(collections.Mapping):
         if key not in self._dict:
             _logger.warning("The provided key %s doesn't exist.", key)
             return self
-        new_state = self._dict.copy()
-        new_state.pop(key)
+        prev_state = self._dict.copy()
+        prev_state.pop(key)
+        new_state = list(prev_state.items())
         return TraceState(new_state)
 
     def to_header(self) -> str:
@@ -263,7 +267,7 @@ class TraceState(collections.Mapping):
                 value_count += 1
                 if value_count > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
                     return cls()
-        return cls(pairs)
+        return cls(list(pairs.items()))
 
     @classmethod
     def get_default(cls) -> "TraceState":
