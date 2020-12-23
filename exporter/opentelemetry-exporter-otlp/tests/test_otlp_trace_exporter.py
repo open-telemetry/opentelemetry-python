@@ -352,19 +352,18 @@ class TestOTLPSpanExporter(TestCase):
         code_expected: Status,
         deprecated_code_expected: Status,
     ):
-        self.assertEqual(
+        status = (
             translated.resource_spans[0]
             .instrumentation_library_spans[0]
             .spans[0]
-            .status.code,
-            code_expected,
+            .status
+        )
+
+        self.assertEqual(
+            status.code, code_expected,
         )
         self.assertEqual(
-            translated.resource_spans[0]
-            .instrumentation_library_spans[0]
-            .spans[0]
-            .status.deprecated_code,
-            deprecated_code_expected,
+            status.deprecated_code, deprecated_code_expected,
         )
 
     def test_span_status_translate(self):
