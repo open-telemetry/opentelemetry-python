@@ -28,7 +28,7 @@ The **OpenTelemetry Prometheus Exporter** allows export of `OpenTelemetry`_ metr
 
     from opentelemetry import metrics
     from opentelemetry.exporter.prometheus import PrometheusMetricsExporter
-    from opentelemetry.sdk.metrics import Counter, Meter
+    from opentelemetry.sdk.metrics import Meter
     from prometheus_client import start_http_server
 
     # Start Prometheus client
@@ -48,7 +48,6 @@ The **OpenTelemetry Prometheus Exporter** allows export of `OpenTelemetry`_ metr
         "number of requests",
         "requests",
         int,
-        ("environment",),
     )
 
     # Labels are used to identify key-values that are associated with a specific
