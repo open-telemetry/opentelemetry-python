@@ -171,7 +171,11 @@ class JaegerSpanExporter(SpanExporter):
         self._grpc_client = None
         self.insecure = util._get_insecure(insecure)
         self.credentials = util._get_credentials(credentials)
-        self.transport_format = transport_format or TRANSPORT_FORMAT_THRIFT
+        self.transport_format = (
+            transport_format.lower()
+            if transport_format
+            else TRANSPORT_FORMAT_THRIFT
+        )
 
     @property
     def _collector_grpc_client(self) -> Optional[CollectorServiceStub]:
