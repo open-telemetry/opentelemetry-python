@@ -92,7 +92,7 @@ class TestTraceContextFormat(unittest.TestCase):
         header_list = [",".join(entries)]
         state = TraceState.from_header(header_list)
         new_state = state.update("foo", "bar33")
-        entries = list(new_state.items())
-        foo_place = entries.index(("foo", "bar33"))
-        prev_first_place = entries.index(("1a-2f@foo", "bar1"))
+        entries = list(new_state.items()) # type: ignore
+        foo_place = entries.index(("foo", "bar33")) # type: ignore
+        prev_first_place = entries.index(("1a-2f@foo", "bar1")) # type: ignore
         self.assertLessEqual(foo_place, prev_first_place)
