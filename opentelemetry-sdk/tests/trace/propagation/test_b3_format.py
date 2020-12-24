@@ -19,6 +19,7 @@ import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.propagation.b3_format as b3_format
 import opentelemetry.trace as trace_api
 from opentelemetry.context import get_current
+from opentelemetry.sdk.trace import _ReadWriteSpan
 from opentelemetry.trace.propagation.textmap import DictGetter
 
 FORMAT = b3_format.B3Format()
@@ -32,8 +33,8 @@ def get_child_parent_new_carrier(old_carrier):
     ctx = FORMAT.extract(carrier_getter, old_carrier)
     parent_span_context = trace_api.get_current_span(ctx).get_span_context()
 
-    parent = trace._Span("parent", parent_span_context)
-    child = trace._Span(
+    parent = _ReadWriteSpan("parent", parent_span_context)
+    child = _ReadWriteSpan(
         "child",
         trace_api.SpanContext(
             parent_span_context.trace_id,

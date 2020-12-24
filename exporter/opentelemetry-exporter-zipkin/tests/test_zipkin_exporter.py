@@ -28,8 +28,7 @@ from opentelemetry.exporter.zipkin import (
     nsec_to_usec_round,
 )
 from opentelemetry.exporter.zipkin.gen import zipkin_pb2
-from opentelemetry.sdk import trace
-from opentelemetry.sdk.trace import Resource
+from opentelemetry.sdk.trace import _ReadWriteSpan, Event, Resource
 from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanKind, TraceFlags
@@ -51,7 +50,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
             is_remote=False,
         )
 
-        self._test_span = trace._Span("test_span", context=context)
+        self._test_span = _ReadWriteSpan("test_span", context=context)
         self._test_span.start()
         self._test_span.end()
 
@@ -166,7 +165,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         }
 
         event_timestamp = base_time + 50 * 10 ** 6
-        event = trace.Event(
+        event = Event(
             name="event0",
             timestamp=event_timestamp,
             attributes=event_attributes,
@@ -179,20 +178,20 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
 
         otel_spans = [
-            trace._Span(
+            _ReadWriteSpan(
                 name=span_names[0],
                 context=span_context,
                 parent=parent_span_context,
                 events=(event,),
                 links=(link,),
             ),
-            trace._Span(
+            _ReadWriteSpan(
                 name=span_names[1], context=parent_span_context, parent=None
             ),
-            trace._Span(
+            _ReadWriteSpan(
                 name=span_names[2], context=other_context, parent=None
             ),
-            trace._Span(
+            _ReadWriteSpan(
                 name=span_names[3], context=other_context, parent=None
             ),
         ]
@@ -354,7 +353,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
             trace_id, parent_id, is_remote=False
         )
 
-        otel_span = trace._Span(
+        otel_span = _ReadWriteSpan(
             name=span_names[0],
             context=span_context,
             parent=parent_span_context,
@@ -415,7 +414,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
         )
 
-        span = trace._Span(name="test-span", context=span_context,)
+        span = _ReadWriteSpan(name="test-span", context=span_context,)
 
         span.start()
         span.resource = Resource({})
@@ -686,7 +685,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         }
 
         event_timestamp = base_time + 50 * 10 ** 6
-        event = trace.Event(
+        event = Event(
             name="event0",
             timestamp=event_timestamp,
             attributes=event_attributes,
@@ -699,20 +698,20 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
 
         otel_spans = [
-            trace._Span(
+            _ReadWriteSpan(
                 name=span_names[0],
                 context=span_context,
                 parent=parent_span_context,
                 events=(event,),
                 links=(link,),
             ),
-            trace._Span(
+            _ReadWriteSpan(
                 name=span_names[1], context=parent_span_context, parent=None
             ),
-            trace._Span(
+            _ReadWriteSpan(
                 name=span_names[2], context=other_context, parent=None
             ),
-            trace._Span(
+            _ReadWriteSpan(
                 name=span_names[3], context=other_context, parent=None
             ),
         ]
@@ -871,7 +870,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
         )
 
-        span = trace._Span(name="test-span", context=span_context,)
+        span = _ReadWriteSpan(name="test-span", context=span_context,)
 
         span.start()
         span.resource = Resource({})

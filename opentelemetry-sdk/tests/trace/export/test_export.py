@@ -24,7 +24,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
 from opentelemetry.context import Context
 from opentelemetry.sdk import trace
-from opentelemetry.sdk.trace import export
+from opentelemetry.sdk.trace import _ReadWriteSpan, export
 
 
 class MySpanExporter(export.SpanExporter):
@@ -140,7 +140,7 @@ class TestSimpleExportSpanProcessor(unittest.TestCase):
 
 
 def _create_start_and_end_span(name, span_processor):
-    span = trace._Span(
+    span = _ReadWriteSpan(
         name,
         trace_api.SpanContext(
             0xDEADBEEF,
@@ -481,7 +481,7 @@ class TestConsoleSpanExporter(unittest.TestCase):
         exporter = export.ConsoleSpanExporter()
         # Mocking stdout interferes with debugging and test reporting, mock on
         # the exporter instance instead.
-        span = trace._Span("span name", trace_api.INVALID_SPAN_CONTEXT)
+        span = _ReadWriteSpan("span name", trace_api.INVALID_SPAN_CONTEXT)
         with mock.patch.object(exporter, "out") as mock_stdout:
             exporter.export([span])
         mock_stdout.write.assert_called_once_with(span.to_json() + os.linesep)
@@ -500,5 +500,5 @@ class TestConsoleSpanExporter(unittest.TestCase):
         exporter = export.ConsoleSpanExporter(
             out=mock_stdout, formatter=formatter
         )
-        exporter.export([trace._Span("span name", mock.Mock())])
+        exporter.export([_ReadWriteSpan("span name", mock.Mock())])
         mock_stdout.write.assert_called_once_with(mock_span_str)

@@ -22,8 +22,7 @@ import opentelemetry.exporter.jaeger as jaeger_exporter
 from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger.gen.jaeger import ttypes as jaeger
-from opentelemetry.sdk import trace
-from opentelemetry.sdk.trace import Resource
+from opentelemetry.sdk.trace import _ReadWriteSpan, Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCode
@@ -38,7 +37,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
             is_remote=False,
         )
 
-        self._test_span = trace._Span("test_span", context=context)
+        self._test_span = _ReadWriteSpan("test_span", context=context)
         self._test_span.start()
         self._test_span.end()
         # pylint: disable=protected-access
@@ -230,7 +229,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         ]
 
         otel_spans = [
-            trace._Span(
+            _ReadWriteSpan(
                 name=span_names[0],
                 context=span_context,
                 parent=parent_span_context,
@@ -238,10 +237,10 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 links=(link,),
                 kind=trace_api.SpanKind.CLIENT,
             ),
-            trace._Span(
+            _ReadWriteSpan(
                 name=span_names[1], context=parent_span_context, parent=None
             ),
-            trace._Span(
+            _ReadWriteSpan(
                 name=span_names[2], context=other_context, parent=None
             ),
         ]

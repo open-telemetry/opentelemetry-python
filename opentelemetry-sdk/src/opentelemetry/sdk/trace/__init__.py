@@ -385,11 +385,11 @@ def _check_span_ended(func):
     return wrapper
 
 
-class Span(trace_api.Span):
+class _ReadWriteSpan(trace_api.Span):
     """See `opentelemetry.trace.Span`.
 
-    Users should create `Span` objects via the `Tracer` instead of this
-    constructor.
+    Span implementation with ReadWrite access specific use cases.
+    This constructor should only be used internally.
 
     Args:
         name: The name of the operation this span represents
@@ -405,110 +405,6 @@ class Span(trace_api.Span):
         span_processor: `SpanProcessor` to invoke when starting and ending
             this `Span`.
     """
-
-    def __new__(cls, *args, **kwargs):
-        if cls is Span:
-            raise TypeError("Span must be instantiated via a tracer.")
-        return super().__new__(cls)
-
-    def __init__(
-        self,
-        name: str,
-        context: trace_api.SpanContext,
-        parent: Optional[trace_api.SpanContext] = None,
-        sampler: Optional[sampling.Sampler] = None,
-        trace_config: None = None,  # TODO
-        resource: Resource = Resource.create({}),
-        attributes: types.Attributes = None,  # TODO
-        events: Sequence[Event] = None,  # TODO
-        links: Sequence[trace_api.Link] = (),
-        kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-        span_processor: SpanProcessor = SpanProcessor(),
-        instrumentation_info: InstrumentationInfo = None,
-        record_exception: bool = True,
-        set_status_on_exception: bool = True,
-    ) -> None:
-
-        self._data = _ReadWriteSpan(
-            name,
-            context,
-            parent,
-            sampler,
-            trace_config,
-            resource,
-            attributes,
-            events,
-            links,
-            kind,
-            span_processor,
-            instrumentation_info,
-            record_exception,
-            set_status_on_exception,
-        )
-
-    @property
-    def start_time(self):
-        return self._data.start_time
-
-    @property
-    def end_time(self):
-        return self._data.end_time
-
-    def __repr__(self):
-        return '{}(name="{}", context={})'.format(
-            type(self).__name__, self._data.name, self._data.context
-        )
-
-    def to_json(self, indent=4):
-        return self._data.to_json()
-
-    def get_span_context(self):
-        return self._data.context
-
-    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
-        self._data.set_attribute(key, value)
-
-    def add_event(
-        self,
-        name: str,
-        attributes: types.Attributes = None,
-        timestamp: Optional[int] = None,
-    ) -> None:
-        self._data.add_event(name, attributes, timestamp)
-
-    def start(
-        self,
-        start_time: Optional[int] = None,
-        parent_context: Optional[context_api.Context] = None,
-    ) -> None:
-        self._data.start(start_time, parent_context)
-
-    def end(self, end_time: Optional[int] = None) -> None:
-        self._data.end(end_time)
-
-    @_check_span_ended
-    def update_name(self, name: str) -> None:
-        self._data.update_name(name)
-
-    def is_recording(self) -> bool:
-        return self._data.is_recording()
-
-    @_check_span_ended
-    def set_status(self, status: trace_api.Status) -> None:
-        self._data.set_status(status)
-
-    def record_exception(
-        self,
-        exception: Exception,
-        attributes: types.Attributes = None,
-        timestamp: Optional[int] = None,
-        escaped: bool = False,
-    ) -> None:
-        """Records an exception as a span event."""
-        self._data.record_exception(exception, attributes, timestamp, escaped)
-
-
-class _ReadWriteSpan(trace_api.Span):
     # pylint: disable=too-many-locals
     def __init__(
         self,
@@ -817,6 +713,89 @@ class _ReadWriteSpan(trace_api.Span):
         )
 
 
+class Span(trace_api.Span):
+    """See `opentelemetry.trace.Span`.
+
+    Users should create `Span` objects via the `Tracer` instead of this
+    constructor.
+
+    Args:
+        read_write_span: inherent _ReadWriteSpan contained within `Span` which is WriteOnly
+    """
+
+    def __new__(cls, *args, **kwargs):
+        if cls is Span:
+            raise TypeError("Span must be instantiated via a tracer.")
+        return super().__new__(cls)
+
+    def __init__(
+        self,
+        read_write_span: _ReadWriteSpan
+    ) -> None:
+        self._data = read_write_span
+
+    @property
+    def start_time(self):
+        return self._data.start_time
+
+    @property
+    def end_time(self):
+        return self._data.end_time
+
+    def __repr__(self):
+        return '{}(name="{}", context={})'.format(
+            type(self).__name__, self._data.name, self._data.context
+        )
+
+    def to_json(self, indent=4):
+        return self._data.to_json()
+
+    def get_span_context(self):
+        return self._data.context
+
+    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
+        self._data.set_attribute(key, value)
+
+    def add_event(
+        self,
+        name: str,
+        attributes: types.Attributes = None,
+        timestamp: Optional[int] = None,
+    ) -> None:
+        self._data.add_event(name, attributes, timestamp)
+
+    def start(
+        self,
+        start_time: Optional[int] = None,
+        parent_context: Optional[context_api.Context] = None,
+    ) -> None:
+        self._data.start(start_time, parent_context)
+
+    def end(self, end_time: Optional[int] = None) -> None:
+        self._data.end(end_time)
+
+    @_check_span_ended
+    def update_name(self, name: str) -> None:
+        self._data.update_name(name)
+
+    def is_recording(self) -> bool:
+        return self._data.is_recording()
+
+    @_check_span_ended
+    def set_status(self, status: trace_api.Status) -> None:
+        self._data.set_status(status)
+
+    def record_exception(
+        self,
+        exception: Exception,
+        attributes: types.Attributes = None,
+        timestamp: Optional[int] = None,
+        escaped: bool = False,
+    ) -> None:
+        """Records an exception as a span event."""
+        self._data.record_exception(exception, attributes, timestamp, escaped)
+
+
 class _Span(Span):
     """Protected implementation of `opentelemetry.trace.Span`.
 
@@ -925,20 +904,21 @@ class Tracer(trace_api.Tracer):
 
         # Only record if is_recording() is true
         if sampling_result.decision.is_recording():
-            # pylint:disable=protected-access
             span = _Span(
-                name=name,
-                context=span_context,
-                parent=parent_span_context,
-                sampler=self.sampler,
-                resource=self.resource,
-                attributes=sampling_result.attributes.copy(),
-                span_processor=self.span_processor,
-                kind=kind,
-                links=links,
-                instrumentation_info=self.instrumentation_info,
-                record_exception=record_exception,
-                set_status_on_exception=set_status_on_exception,
+                _ReadWriteSpan(
+                    name=name,
+                    context=span_context,
+                    parent=parent_span_context,
+                    sampler=self.sampler,
+                    resource=self.resource,
+                    attributes=sampling_result.attributes.copy(),
+                    span_processor=self.span_processor,
+                    kind=kind,
+                    links=links,
+                    instrumentation_info=self.instrumentation_info,
+                    record_exception=record_exception,
+                    set_status_on_exception=set_status_on_exception,
+                )
             )
             span.start(start_time=start_time, parent_context=context)
         else:

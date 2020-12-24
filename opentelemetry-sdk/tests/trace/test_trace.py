@@ -27,7 +27,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
 from opentelemetry.context import Context
 from opentelemetry.sdk import resources, trace
-from opentelemetry.sdk.trace import Resource, sampling
+from opentelemetry.sdk.trace import _ReadWriteSpan, Resource, sampling
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import StatusCode
@@ -297,7 +297,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_start_span_explicit(self):
         tracer = new_tracer()
 
-        other_parent = trace._Span(
+        other_parent = _ReadWriteSpan(
             "name",
             trace_api.SpanContext(
                 trace_id=0x000000000000000000000000DEADBEEF,
@@ -378,7 +378,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_start_as_current_span_explicit(self):
         tracer = new_tracer()
 
-        other_parent = trace._Span(
+        other_parent = _ReadWriteSpan(
             "name",
             trace_api.SpanContext(
                 trace_id=0x000000000000000000000000DEADBEEF,
@@ -447,7 +447,7 @@ class TestSpan(unittest.TestCase):
         self.tracer = new_tracer()
 
     def test_basic_span(self):
-        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = _ReadWriteSpan("name", mock.Mock(spec=trace_api.SpanContext))
         self.assertEqual(span.name, "name")
 
     def test_attributes(self):
@@ -726,7 +726,7 @@ class TestSpan(unittest.TestCase):
 
     def test_start_span(self):
         """Start twice, end a not started"""
-        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = _ReadWriteSpan("name", mock.Mock(spec=trace_api.SpanContext))
 
         # end not started span
         self.assertRaises(RuntimeError, span.end)
@@ -755,7 +755,7 @@ class TestSpan(unittest.TestCase):
     def test_start_accepts_context(self):
         # pylint: disable=no-self-use
         span_processor = mock.Mock(spec=trace.SpanProcessor)
-        span = trace._Span(
+        span = _ReadWriteSpan(
             "name",
             mock.Mock(spec=trace_api.SpanContext),
             span_processor=span_processor,
@@ -768,7 +768,7 @@ class TestSpan(unittest.TestCase):
 
     def test_span_override_start_and_end_time(self):
         """Span sending custom start_time and end_time values"""
-        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = _ReadWriteSpan("name", mock.Mock(spec=trace_api.SpanContext))
         start_time = 123
         span.start(start_time)
         self.assertEqual(start_time, span.start_time)
@@ -860,7 +860,7 @@ class TestSpan(unittest.TestCase):
         )
 
     def test_record_exception(self):
-        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = _ReadWriteSpan("name", mock.Mock(spec=trace_api.SpanContext))
         try:
             raise ValueError("invalid")
         except ValueError as err:
@@ -879,7 +879,7 @@ class TestSpan(unittest.TestCase):
         )
 
     def test_record_exception_with_attributes(self):
-        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = _ReadWriteSpan("name", mock.Mock(spec=trace_api.SpanContext))
         try:
             raise RuntimeError("error")
         except RuntimeError as err:
@@ -908,7 +908,7 @@ class TestSpan(unittest.TestCase):
         )
 
     def test_record_exception_escaped(self):
-        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = _ReadWriteSpan("name", mock.Mock(spec=trace_api.SpanContext))
         try:
             raise RuntimeError("error")
         except RuntimeError as err:
@@ -930,7 +930,7 @@ class TestSpan(unittest.TestCase):
         )
 
     def test_record_exception_with_timestamp(self):
-        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = _ReadWriteSpan("name", mock.Mock(spec=trace_api.SpanContext))
         try:
             raise RuntimeError("error")
         except RuntimeError as err:
@@ -953,7 +953,7 @@ class TestSpan(unittest.TestCase):
         )
 
     def test_record_exception_with_attributes_and_timestamp(self):
-        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = _ReadWriteSpan("name", mock.Mock(spec=trace_api.SpanContext))
         try:
             raise RuntimeError("error")
         except RuntimeError as err:
@@ -1138,7 +1138,7 @@ class TestSpanProcessor(unittest.TestCase):
             is_remote=False,
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
-        span = trace._Span("span-name", context)
+        span = _ReadWriteSpan("span-name", context)
         span.resource = Resource({})
 
         self.assertEqual(
@@ -1175,7 +1175,7 @@ class TestSpanProcessor(unittest.TestCase):
             is_remote=False,
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
-        span = trace._Span("span-name", context)
+        span = _ReadWriteSpan("span-name", context)
         span.resource = Resource({})
         span.set_attribute("key", "value")
         span.add_event("event", {"key2": "value2"}, 123)

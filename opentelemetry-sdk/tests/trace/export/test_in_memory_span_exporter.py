@@ -17,7 +17,7 @@ from unittest import mock
 
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import trace
-from opentelemetry.sdk.trace import export
+from opentelemetry.sdk.trace import _ReadWriteSpan, export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
@@ -61,7 +61,7 @@ class TestInMemorySpanExporter(unittest.TestCase):
         self.assertEqual(len(span_list), 3)
 
     def test_return_code(self):
-        span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
+        span = _ReadWriteSpan("name", mock.Mock(spec=trace_api.SpanContext))
         span_list = (span,)
         memory_exporter = InMemorySpanExporter()
 

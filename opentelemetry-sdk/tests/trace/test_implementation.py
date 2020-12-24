@@ -14,7 +14,7 @@
 
 import unittest
 
-from opentelemetry.sdk import trace
+from opentelemetry.sdk.trace import _ReadWriteSpan
 from opentelemetry.trace import INVALID_SPAN, INVALID_SPAN_CONTEXT
 
 
@@ -42,8 +42,8 @@ class TestTracerImplementation(unittest.TestCase):
     def test_span(self):
         with self.assertRaises(Exception):
             # pylint: disable=no-value-for-parameter
-            span = trace._Span()
+            span = _ReadWriteSpan()
 
-        span = trace._Span("name", INVALID_SPAN_CONTEXT)
+        span = _ReadWriteSpan("name", INVALID_SPAN_CONTEXT)
         self.assertEqual(span.get_span_context(), INVALID_SPAN_CONTEXT)
         self.assertIs(span.is_recording(), True)

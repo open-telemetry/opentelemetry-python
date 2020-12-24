@@ -16,6 +16,7 @@ import unittest
 from unittest.mock import Mock
 
 import opentelemetry.sdk.trace as trace
+from opentelemetry.sdk.trace import _ReadWriteSpan
 import opentelemetry.sdk.trace.propagation.jaeger_propagator as jaeger
 import opentelemetry.trace as trace_api
 from opentelemetry import baggage
@@ -35,8 +36,8 @@ def get_context_new_carrier(old_carrier, carrier_baggage=None):
             ctx = baggage.set_baggage(key, value, ctx)
     parent_span_context = trace_api.get_current_span(ctx).get_span_context()
 
-    parent = trace._Span("parent", parent_span_context)
-    child = trace._Span(
+    parent = _ReadWriteSpan("parent", parent_span_context)
+    child = _ReadWriteSpan(
         "child",
         trace_api.SpanContext(
             parent_span_context.trace_id,

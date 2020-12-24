@@ -25,7 +25,7 @@ from opentelemetry.exporter.opencensus.trace_exporter import (
     OpenCensusSpanExporter,
     translate_to_collector,
 )
-from opentelemetry.sdk import trace
+from opentelemetry.sdk.trace import _ReadWriteSpan, Event
 from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.trace import TraceFlags
 
@@ -108,7 +108,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
             "key_float": 0.3,
         }
         event_timestamp = base_time + 50 * 10 ** 6
-        event = trace.Event(
+        event = Event(
             name="event0",
             timestamp=event_timestamp,
             attributes=event_attributes,
@@ -120,7 +120,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         link_2 = trace_api.Link(
             context=parent_span_context, attributes=link_attributes
         )
-        span_1 = trace._Span(
+        span_1 = _ReadWriteSpan(
             name="test1",
             context=span_context,
             parent=parent_span_context,
@@ -128,13 +128,13 @@ class TestCollectorSpanExporter(unittest.TestCase):
             links=(link_1,),
             kind=trace_api.SpanKind.CLIENT,
         )
-        span_2 = trace._Span(
+        span_2 = _ReadWriteSpan(
             name="test2",
             context=parent_span_context,
             parent=None,
             kind=trace_api.SpanKind.SERVER,
         )
-        span_3 = trace._Span(
+        span_3 = _ReadWriteSpan(
             name="test3",
             context=other_context,
             links=(link_2,),
@@ -300,7 +300,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
         )
         otel_spans = [
-            trace._Span(
+            _ReadWriteSpan(
                 name="test1",
                 context=span_context,
                 kind=trace_api.SpanKind.CLIENT,
