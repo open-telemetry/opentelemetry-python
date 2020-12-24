@@ -273,6 +273,15 @@ class TraceState(typing.Mapping[str, str]):
     def get_default(cls) -> "TraceState":
         return cls()
 
+    def keys(self) -> typing.KeysView[str]:
+        return self._dict.keys()
+
+    def items(self) -> typing.ItemsView[str, str]:
+        return self._dict.items()
+
+    def values(self) -> typing.ValuesView[str]:
+        return self._dict.values()
+
 
 DEFAULT_TRACE_STATE = TraceState.get_default()
 
