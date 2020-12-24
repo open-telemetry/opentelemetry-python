@@ -360,11 +360,12 @@ class SpanContext(
 
     def __repr__(self) -> str:
         return (
-            "{}(trace_id={}, span_id={}, trace_state={!r}, is_remote={})"
+            "{}(trace_id={}, span_id={}, trace_flags=0x{:02x}, trace_state={!r}, is_remote={})"
         ).format(
             type(self).__name__,
             format_trace_id(self.trace_id),
             format_span_id(self.span_id),
+            self.trace_flags,
             self.trace_state,
             self.is_remote,
         )
@@ -413,6 +414,9 @@ class DefaultSpan(Span):
         escaped: bool = False,
     ) -> None:
         pass
+
+    def __repr__(self) -> str:
+        return "DefaultSpan({!r})".format(self._context)
 
 
 INVALID_SPAN_ID = 0x0000000000000000
