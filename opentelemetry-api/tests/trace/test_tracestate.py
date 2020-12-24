@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# pylint: disable=no-member
 
 import unittest
 
@@ -64,6 +65,7 @@ class TestTraceContextFormat(unittest.TestCase):
     def test_tracestate_delete_preserved(self):
         state = TraceState([("a", "1"), ("b", "2"), ("c", "3")])
         new_state = state.delete("b")
+        self.assertIsNone(new_state.get("b"))
         entries = list(new_state.items())
         a_place = entries.index(("a", "1"))
         c_place = entries.index(("c", "3"))
