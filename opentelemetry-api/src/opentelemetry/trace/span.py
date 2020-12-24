@@ -150,6 +150,9 @@ class TraceState(typing.Mapping[str, str]):
     Implementations should conform to the `W3C Trace Context - Tracestate`_
     spec, which describes additional restrictions on valid field values.
 
+    Args:
+        entries: An optional list of key-value pairs to initialize
+
     .. _W3C Trace Context - Tracestate:
         https://www.w3.org/TR/trace-context/#tracestate-field
     """
