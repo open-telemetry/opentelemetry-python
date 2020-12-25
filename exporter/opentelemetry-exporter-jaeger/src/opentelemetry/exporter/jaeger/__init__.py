@@ -96,6 +96,7 @@ from opentelemetry.trace.status import StatusCode
 
 DEFAULT_AGENT_HOST_NAME = "localhost"
 DEFAULT_AGENT_PORT = 6831
+DEFAULT_GRPC_COLLECTOR_ENDPOINT = "localhost:14250"
 
 UDP_PACKET_MAX_LENGTH = 65000
 
@@ -179,20 +180,19 @@ class JaegerSpanExporter(SpanExporter):
 
     @property
     def _collector_grpc_client(self) -> Optional[CollectorServiceStub]:
-        if (
-            self.collector_endpoint is None
-            or self.transport_format != TRANSPORT_FORMAT_PROTOBUF
-        ):
+        if self.transport_format != TRANSPORT_FORMAT_PROTOBUF:
             return None
+
+        endpoint = self.collector_endpoint or DEFAULT_GRPC_COLLECTOR_ENDPOINT
 
         if self._grpc_client is None:
             if self.insecure:
                 self._grpc_client = CollectorServiceStub(
-                    insecure_channel(self.collector_endpoint)
+                    insecure_channel(endpoint)
                 )
             else:
                 self._grpc_client = CollectorServiceStub(
-                    secure_channel(self.collector_endpoint, self.credentials)
+                    secure_channel(endpoint, self.credentials)
                 )
         return self._grpc_client
 
@@ -221,8 +221,7 @@ class JaegerSpanExporter(SpanExporter):
             jaeger_spans = protobuf._to_jaeger(spans, self.service_name)
             batch = model_pb2.Batch(spans=jaeger_spans)
             request = PostSpansRequest(batch=batch)
-            if self._collector_grpc_client is not None:
-                self._collector_grpc_client.PostSpans(request)
+            self._collector_grpc_client.PostSpans(request)
         else:
             jaeger_spans = thrift._to_jaeger(spans)
             batch = jaeger_thrift.Batch(
