@@ -20,10 +20,11 @@ from unittest.mock import patch
 # pylint:disable=no-name-in-module
 # pylint:disable=import-error
 import opentelemetry.exporter.jaeger.gen.model_pb2 as model_pb2
-import opentelemetry.exporter.jaeger.translate as translate
+import opentelemetry.exporter.jaeger.translate.protobuf as pb_translator
 from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger import JaegerSpanExporter
+from opentelemetry.exporter.jaeger.translate import Translate
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
@@ -122,7 +123,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         event_timestamp = base_time + 50 * 10 ** 6
         # pylint:disable=protected-access
-        event_timestamp_proto = translate.protobuf._proto_timestamp_from_epoch_nanos(
+        event_timestamp_proto = pb_translator._proto_timestamp_from_epoch_nanos(
             event_timestamp
         )
 
@@ -199,44 +200,45 @@ class TestJaegerSpanExporter(unittest.TestCase):
             name="name", version="version"
         )
 
+        translate = Translate(otel_spans)
         # pylint: disable=protected-access
-        spans = translate.protobuf._to_jaeger(otel_spans, "svc")
+        spans = translate._translate(pb_translator.ProtobufTranslator("svc"))
 
-        span1_start_time = translate.protobuf._proto_timestamp_from_epoch_nanos(
+        span1_start_time = pb_translator._proto_timestamp_from_epoch_nanos(
             start_times[0]
         )
-        span2_start_time = translate.protobuf._proto_timestamp_from_epoch_nanos(
+        span2_start_time = pb_translator._proto_timestamp_from_epoch_nanos(
             start_times[1]
         )
-        span3_start_time = translate.protobuf._proto_timestamp_from_epoch_nanos(
+        span3_start_time = pb_translator._proto_timestamp_from_epoch_nanos(
             start_times[2]
         )
 
-        span1_end_time = translate.protobuf._proto_timestamp_from_epoch_nanos(
+        span1_end_time = pb_translator._proto_timestamp_from_epoch_nanos(
             end_times[0]
         )
-        span2_end_time = translate.protobuf._proto_timestamp_from_epoch_nanos(
+        span2_end_time = pb_translator._proto_timestamp_from_epoch_nanos(
             end_times[1]
         )
-        span3_end_time = translate.protobuf._proto_timestamp_from_epoch_nanos(
+        span3_end_time = pb_translator._proto_timestamp_from_epoch_nanos(
             end_times[2]
         )
 
-        span1_duration = translate.protobuf._duration_from_two_time_stamps(
+        span1_duration = pb_translator._duration_from_two_time_stamps(
             span1_start_time, span1_end_time
         )
-        span2_duration = translate.protobuf._duration_from_two_time_stamps(
+        span2_duration = pb_translator._duration_from_two_time_stamps(
             span2_start_time, span2_end_time
         )
-        span3_duration = translate.protobuf._duration_from_two_time_stamps(
+        span3_duration = pb_translator._duration_from_two_time_stamps(
             span3_start_time, span3_end_time
         )
 
         expected_spans = [
             model_pb2.Span(
                 operation_name=span_names[0],
-                trace_id=translate.protobuf._trace_id_to_bytes(trace_id),
-                span_id=translate.protobuf._span_id_to_bytes(span_id),
+                trace_id=pb_translator._trace_id_to_bytes(trace_id),
+                span_id=pb_translator._span_id_to_bytes(span_id),
                 start_time=span1_start_time,
                 duration=span1_duration,
                 flags=0,
@@ -290,10 +292,8 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 references=[
                     model_pb2.SpanRef(
                         ref_type=model_pb2.SpanRefType.FOLLOWS_FROM,
-                        trace_id=translate.protobuf._trace_id_to_bytes(
-                            trace_id
-                        ),
-                        span_id=translate.protobuf._span_id_to_bytes(other_id),
+                        trace_id=pb_translator._trace_id_to_bytes(trace_id),
+                        span_id=pb_translator._span_id_to_bytes(other_id),
                     )
                 ],
                 logs=[
@@ -336,8 +336,8 @@ class TestJaegerSpanExporter(unittest.TestCase):
             ),
             model_pb2.Span(
                 operation_name=span_names[1],
-                trace_id=translate.protobuf._trace_id_to_bytes(trace_id),
-                span_id=translate.protobuf._span_id_to_bytes(parent_id),
+                trace_id=pb_translator._trace_id_to_bytes(trace_id),
+                span_id=pb_translator._span_id_to_bytes(parent_id),
                 start_time=span2_start_time,
                 duration=span2_duration,
                 flags=0,
@@ -346,8 +346,8 @@ class TestJaegerSpanExporter(unittest.TestCase):
             ),
             model_pb2.Span(
                 operation_name=span_names[2],
-                trace_id=translate.protobuf._trace_id_to_bytes(trace_id),
-                span_id=translate.protobuf._span_id_to_bytes(other_id),
+                trace_id=pb_translator._trace_id_to_bytes(trace_id),
+                span_id=pb_translator._span_id_to_bytes(other_id),
                 start_time=span3_start_time,
                 duration=span3_duration,
                 flags=0,

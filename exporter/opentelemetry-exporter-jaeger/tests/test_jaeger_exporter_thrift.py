@@ -22,6 +22,8 @@ import opentelemetry.exporter.jaeger as jaeger_exporter
 from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger.gen.jaeger import ttypes as jaeger
+from opentelemetry.exporter.jaeger.translate import Translate
+from opentelemetry.exporter.jaeger.translate.thrift import ThriftTranslator
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
@@ -275,8 +277,9 @@ class TestJaegerSpanExporter(unittest.TestCase):
             name="name", version="version"
         )
 
+        translate = Translate(otel_spans)
         # pylint: disable=protected-access
-        spans = jaeger_exporter.translate.thrift._to_jaeger(otel_spans)
+        spans = translate._translate(ThriftTranslator())
 
         expected_spans = [
             jaeger.Span(
@@ -456,12 +459,12 @@ class TestJaegerSpanExporter(unittest.TestCase):
             host_name="localhost", port=6354
         )
 
+        translate = Translate([self._test_span])
+        # pylint: disable=protected-access
+        spans = translate._translate(ThriftTranslator())
+
         batch = jaeger.Batch(
-            # pylint: disable=protected-access
-            spans=jaeger_exporter.translate.thrift._to_jaeger(
-                (self._test_span,)
-            ),
-            process=jaeger.Process(serviceName="xxx"),
+            spans=spans, process=jaeger.Process(serviceName="xxx"),
         )
 
         agent_client.emit(batch)

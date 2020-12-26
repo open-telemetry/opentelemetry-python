@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+# pylint: disable=no-self-use
 from typing import Optional, Sequence
 
 from opentelemetry.exporter.jaeger.gen.jaeger import Collector as TCollector
@@ -19,6 +19,7 @@ from opentelemetry.exporter.jaeger.translate import (
     NAME_KEY,
     OTLP_JAEGER_SPAN_KIND,
     VERSION_KEY,
+    Translator,
     _convert_int_to_i64,
     _nsec_to_usec_round,
 )
@@ -73,110 +74,8 @@ def _translate_attribute(
     return None
 
 
-def _extract_tags(span: Span) -> Sequence[TCollector.Tag]:
-    """Extracts tags from span and returns list of jaeger tags.
-
-    Args:
-        span: span to extract tags
-    """
-    translated = []
-    if span.attributes:
-        for key, value in span.attributes.items():
-            tag = _translate_attribute(key, value)
-            if tag:
-                translated.append(tag)
-    if span.resource.attributes:
-        for key, value in span.resource.attributes.items():
-            tag = _translate_attribute(key, value)
-            if tag:
-                translated.append(tag)
-
-    code = _get_long_tag("status.code", span.status.status_code.value)
-    message = _get_string_tag("status.message", span.status.description)
-    kind = _get_string_tag("span.kind", OTLP_JAEGER_SPAN_KIND[span.kind])
-    translated.extend([code, message, kind])
-
-    # Instrumentation info tags
-    if span.instrumentation_info:
-        name = _get_string_tag(NAME_KEY, span.instrumentation_info.name)
-        version = _get_string_tag(
-            VERSION_KEY, span.instrumentation_info.version
-        )
-        translated.extend([name, version])
-
-    # Make sure to add "error" tag if span status is not OK
-    if not span.status.is_ok:
-        translated.append(_get_bool_tag("error", True))
-
-    return translated
-
-
-def _extract_refs(span: Span) -> Optional[Sequence[TCollector.SpanRef]]:
-    """Returns jaeger span references if links exists, otherwise None.
-
-    Args:
-        span: span to extract refs
-    """
-    if not span.links:
-        return None
-
-    refs = []
-    for link in span.links:
-        trace_id = link.context.trace_id
-        span_id = link.context.span_id
-        refs.append(
-            TCollector.SpanRef(
-                refType=TCollector.SpanRefType.FOLLOWS_FROM,
-                traceIdHigh=_get_trace_id_high(trace_id),
-                traceIdLow=_get_trace_id_low(trace_id),
-                spanId=_convert_int_to_i64(span_id),
-            )
-        )
-    return refs
-
-
-def _extract_logs(span: Span) -> Optional[Sequence[TCollector.Log]]:
-    """Returns jaeger logs if events exists, otherwise None.
-
-    Args:
-        span: span to extract logs
-    """
-    if not span.events:
-        return None
-
-    logs = []
-    for event in span.events:
-        fields = []
-        for key, value in event.attributes.items():
-            tag = _translate_attribute(key, value)
-            if tag:
-                fields.append(tag)
-
-        fields.append(
-            TCollector.Tag(
-                key="message",
-                vType=TCollector.TagType.STRING,
-                vStr=event.name,
-            )
-        )
-
-        event_timestamp_us = _nsec_to_usec_round(event.timestamp)
-        logs.append(
-            TCollector.Log(timestamp=int(event_timestamp_us), fields=fields)
-        )
-
-    return logs
-
-
-def _to_jaeger(spans: Sequence[Span]) -> Sequence[TCollector.Span]:
-    """Translate the spans to Jaeger format.
-
-    Args:
-        spans: Tuple of spans to convert
-    """
-    jaeger_spans = []
-
-    for span in spans:
+class ThriftTranslator(Translator):
+    def _translate_span(self, span: Span) -> TCollector.Span:
         ctx = span.get_span_context()
         trace_id = ctx.trace_id
         span_id = ctx.span_id
@@ -186,16 +85,15 @@ def _to_jaeger(spans: Sequence[Span]) -> Sequence[TCollector.Span]:
 
         parent_id = span.parent.span_id if span.parent else 0
 
-        tags = _extract_tags(span)
-        refs = _extract_refs(span)
-        logs = _extract_logs(span)
+        tags = self._extract_tags(span)
+        refs = self._extract_refs(span)
+        logs = self._extract_logs(span)
 
         flags = int(ctx.trace_flags)
 
         jaeger_span = TCollector.Span(
             traceIdHigh=_get_trace_id_high(trace_id),
             traceIdLow=_get_trace_id_low(trace_id),
-            # generated code expects i64
             spanId=_convert_int_to_i64(span_id),
             operationName=span.name,
             startTime=start_time_us,
@@ -206,6 +104,91 @@ def _to_jaeger(spans: Sequence[Span]) -> Sequence[TCollector.Span]:
             flags=flags,
             parentSpanId=_convert_int_to_i64(parent_id),
         )
-        jaeger_spans.append(jaeger_span)
+        return jaeger_span
 
-    return jaeger_spans
+    def _extract_tags(self, span: Span) -> Sequence[TCollector.Tag]:
+
+        translated = []
+        if span.attributes:
+            for key, value in span.attributes.items():
+                tag = _translate_attribute(key, value)
+                if tag:
+                    translated.append(tag)
+        if span.resource.attributes:
+            for key, value in span.resource.attributes.items():
+                tag = _translate_attribute(key, value)
+                if tag:
+                    translated.append(tag)
+
+        code = _get_long_tag("status.code", span.status.status_code.value)
+        message = _get_string_tag("status.message", span.status.description)
+        kind = _get_string_tag("span.kind", OTLP_JAEGER_SPAN_KIND[span.kind])
+        translated.extend([code, message, kind])
+
+        # Instrumentation info tags
+        if span.instrumentation_info:
+            name = _get_string_tag(NAME_KEY, span.instrumentation_info.name)
+            version = _get_string_tag(
+                VERSION_KEY, span.instrumentation_info.version
+            )
+            translated.extend([name, version])
+
+        # Make sure to add "error" tag if span status is not OK
+        if not span.status.is_ok:
+            translated.append(_get_bool_tag("error", True))
+
+        return translated
+
+    def _extract_refs(
+        self, span: Span
+    ) -> Optional[Sequence[TCollector.SpanRef]]:
+        if not span.links:
+            return None
+
+        refs = []
+        for link in span.links:
+            trace_id = link.context.trace_id
+            span_id = link.context.span_id
+            refs.append(
+                TCollector.SpanRef(
+                    refType=TCollector.SpanRefType.FOLLOWS_FROM,
+                    traceIdHigh=_get_trace_id_high(trace_id),
+                    traceIdLow=_get_trace_id_low(trace_id),
+                    spanId=_convert_int_to_i64(span_id),
+                )
+            )
+        return refs
+
+    def _extract_logs(self, span: Span) -> Optional[Sequence[TCollector.Log]]:
+        """Returns jaeger logs if events exists, otherwise None.
+
+        Args:
+            span: span to extract logs
+        """
+        if not span.events:
+            return None
+
+        logs = []
+        for event in span.events:
+            fields = []
+            for key, value in event.attributes.items():
+                tag = _translate_attribute(key, value)
+                if tag:
+                    fields.append(tag)
+
+            fields.append(
+                TCollector.Tag(
+                    key="message",
+                    vType=TCollector.TagType.STRING,
+                    vStr=event.name,
+                )
+            )
+
+            event_timestamp_us = _nsec_to_usec_round(event.timestamp)
+            logs.append(
+                TCollector.Log(
+                    timestamp=int(event_timestamp_us), fields=fields
+                )
+            )
+
+        return logs

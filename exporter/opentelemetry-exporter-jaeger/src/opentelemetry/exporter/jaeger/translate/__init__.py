@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import abc
+
 from opentelemetry.trace import SpanKind
 
 OTLP_JAEGER_SPAN_KIND = {
@@ -36,3 +38,50 @@ def _convert_int_to_i64(val):
     if val > 0x7FFFFFFFFFFFFFFF:
         val -= 0x10000000000000000
     return val
+
+
+class Translator(abc.ABC):
+    @abc.abstractmethod
+    def _translate_span(self, span):
+        """Translates span to jaeger format.
+
+        Args:
+            span: span to translate
+        """
+
+    @abc.abstractmethod
+    def _extract_tags(self, span):
+        """Extracts tags from span and returns list of jaeger Tags.
+
+        Args:
+            span: span to extract tags
+        """
+
+    @abc.abstractmethod
+    def _extract_refs(self, span):
+        """Extracts references from span and returns list of jaeger SpanRefs.
+
+        Args:
+            span: span to extract references
+        """
+
+    @abc.abstractmethod
+    def _extract_logs(self, span):
+        """Extracts logs from span and returns list of jaeger Logs.
+
+        Args:
+            span: span to extract logs
+        """
+
+
+class Translate:
+    def __init__(self, spans):
+        self.spans = spans
+
+    def _translate(self, translator: Translator):
+        translated_spans = []
+        for span in self.spans:
+            # pylint: disable=protected-access
+            translated_span = translator._translate_span(span)
+            translated_spans.append(translated_span)
+        return translated_spans

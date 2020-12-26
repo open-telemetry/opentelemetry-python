@@ -89,7 +89,9 @@ from opentelemetry.exporter.jaeger.gen.collector_pb2_grpc import (
 )
 from opentelemetry.exporter.jaeger.gen.jaeger import Collector as jaeger_thrift
 from opentelemetry.exporter.jaeger.send.thrift import AgentClientUDP, Collector
-from opentelemetry.exporter.jaeger.translate import protobuf, thrift
+from opentelemetry.exporter.jaeger.translate import Translate
+from opentelemetry.exporter.jaeger.translate.protobuf import ProtobufTranslator
+from opentelemetry.exporter.jaeger.translate.thrift import ThriftTranslator
 from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import StatusCode
@@ -217,13 +219,16 @@ class JaegerSpanExporter(SpanExporter):
         return self._collector
 
     def export(self, spans) -> SpanExportResult:
+        translator = Translate(spans)
         if self.transport_format == TRANSPORT_FORMAT_PROTOBUF:
-            jaeger_spans = protobuf._to_jaeger(spans, self.service_name)
+            pb_translator = ProtobufTranslator(self.service_name)
+            jaeger_spans = translator._translate(pb_translator)
             batch = model_pb2.Batch(spans=jaeger_spans)
             request = PostSpansRequest(batch=batch)
             self._collector_grpc_client.PostSpans(request)
         else:
-            jaeger_spans = thrift._to_jaeger(spans)
+            thrift_translator = ThriftTranslator()
+            jaeger_spans = translator._translate(thrift_translator)
             batch = jaeger_thrift.Batch(
                 spans=jaeger_spans,
                 process=jaeger_thrift.Process(serviceName=self.service_name),
