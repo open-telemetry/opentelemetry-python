@@ -45,7 +45,7 @@ Usage
         # username=xxxx, # optional
         # password=xxxx, # optional
         # insecure=True, # optional
-        # credentials=grpc.ChannelCredentials(...) # optional
+        # credentials=xxx # optional channel creds
         # transport_format='protobuf' # optional
     )
 
