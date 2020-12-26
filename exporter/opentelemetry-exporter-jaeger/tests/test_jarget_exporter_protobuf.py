@@ -81,7 +81,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         env_patch.stop()
 
-    # pylint: disable=too-many-locals
+    # pylint: disable=too-many-locals,too-many-statements
     def test_translate_to_jaeger(self):
 
         span_names = ("test1", "test2", "test3")

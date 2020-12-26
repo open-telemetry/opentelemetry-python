@@ -137,9 +137,7 @@ class JaegerSpanExporter(SpanExporter):
         password: Optional[str] = None,
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
-        transport_format: Union[
-            TRANSPORT_FORMAT_THRIFT, TRANSPORT_FORMAT_PROTOBUF
-        ] = None,
+        transport_format: Optional[str] = None,
     ):
         self.service_name = service_name
         self.agent_host_name = _parameter_setter(
