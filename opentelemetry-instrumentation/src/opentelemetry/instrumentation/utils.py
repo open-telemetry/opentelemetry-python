@@ -40,7 +40,6 @@ def http_status_to_status_code(
     Args:
         status (int): HTTP status code
     """
-    # pylint:disable=too-many-branches,too-many-return-statements
     # See: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
     if status < 100:
         return StatusCode.ERROR
@@ -49,25 +48,6 @@ def http_status_to_status_code(
     if status <= 399:
         if allow_redirect:
             return StatusCode.UNSET
-        return StatusCode.ERROR
-    if status <= 499:
-        if status == 401:  # HTTPStatus.UNAUTHORIZED:
-            return StatusCode.ERROR
-        if status == 403:  # HTTPStatus.FORBIDDEN:
-            return StatusCode.ERROR
-        if status == 404:  # HTTPStatus.NOT_FOUND:
-            return StatusCode.ERROR
-        if status == 429:  # HTTPStatus.TOO_MANY_REQUESTS:
-            return StatusCode.ERROR
-        return StatusCode.ERROR
-    if status <= 599:
-        if status == 501:  # HTTPStatus.NOT_IMPLEMENTED:
-            return StatusCode.ERROR
-        if status == 503:  # HTTPStatus.SERVICE_UNAVAILABLE:
-            return StatusCode.ERROR
-        if status == 504:  # HTTPStatus.GATEWAY_TIMEOUT:
-            return StatusCode.ERROR
-        return StatusCode.ERROR
     return StatusCode.ERROR
 
 
