@@ -37,7 +37,7 @@ class _Samplers:
     def get_sampler(cls, name: str, **kwargs) -> sampling.Sampler:
         if name not in cls.registry:
             _logger.warning("Couldn't find sampler %s", name)
-            return None
+            name = "parentbased_always_on"
         klass = cls.registry[name]
         return klass(**kwargs)
 
