@@ -86,6 +86,7 @@ intersphinx_mapping = {
     "aiohttp": ("https://aiohttp.readthedocs.io/en/stable/", None),
     "wrapt": ("https://wrapt.readthedocs.io/en/latest/", None),
     "pymongo": ("https://pymongo.readthedocs.io/en/stable/", None),
+    "grpc": ("https://grpc.github.io/grpc/python/", None),
 }
 
 # http://www.sphinx-doc.org/en/master/config.html#confval-nitpicky

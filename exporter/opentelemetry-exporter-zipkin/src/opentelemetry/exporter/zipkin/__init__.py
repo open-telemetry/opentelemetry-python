@@ -82,6 +82,7 @@ from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin.gen import zipkin_pb2
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Span, SpanContext, SpanKind
+from opentelemetry.trace.status import StatusCode
 
 TRANSPORT_FORMAT_JSON = "json"
 TRANSPORT_FORMAT_PROTOBUF = "protobuf"
@@ -237,14 +238,14 @@ class ZipkinSpanExporter(SpanExporter):
                     "otel.instrumentation_library.version"
                 ] = span.instrumentation_info.version
 
-            if span.status is not None:
-                zipkin_span["tags"]["otel.status_code"] = str(
-                    span.status.status_code.value
-                )
-                if span.status.description is not None:
-                    zipkin_span["tags"][
-                        "otel.status_description"
-                    ] = span.status.description
+            if span.status.status_code is not StatusCode.UNSET:
+                zipkin_span["tags"][
+                    "otel.status_code"
+                ] = span.status.status_code.name
+                if span.status.status_code is StatusCode.ERROR:
+                    zipkin_span["tags"]["error"] = (
+                        span.status.description or ""
+                    )
 
             if context.trace_flags.sampled:
                 zipkin_span["debug"] = True
@@ -317,13 +318,13 @@ class ZipkinSpanExporter(SpanExporter):
                     }
                 )
 
-            if span.status is not None:
+            if span.status.status_code is not StatusCode.UNSET:
                 pbuf_span.tags.update(
-                    {"otel.status_code": str(span.status.status_code.value)}
+                    {"otel.status_code": span.status.status_code.name}
                 )
-                if span.status.description is not None:
+                if span.status.status_code is StatusCode.ERROR:
                     pbuf_span.tags.update(
-                        {"otel.status_description": span.status.description}
+                        {"error": span.status.description or ""}
                     )
 
             if context.trace_flags.sampled:
