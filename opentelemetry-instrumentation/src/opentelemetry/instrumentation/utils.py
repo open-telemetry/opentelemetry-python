@@ -45,9 +45,8 @@ def http_status_to_status_code(
         return StatusCode.ERROR
     if status <= 299:
         return StatusCode.UNSET
-    if status <= 399:
-        if allow_redirect:
-            return StatusCode.UNSET
+    if status <= 399 and allow_redirect:
+        return StatusCode.UNSET
     return StatusCode.ERROR
 
 
