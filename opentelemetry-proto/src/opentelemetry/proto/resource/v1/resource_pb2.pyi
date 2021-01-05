@@ -20,7 +20,6 @@ from opentelemetry.proto.common.v1.common_pb2 import (
 from typing import (
     Iterable as typing___Iterable,
     Optional as typing___Optional,
-    Union as typing___Union,
 )
 
 from typing_extensions import (
@@ -32,9 +31,6 @@ builtin___bool = bool
 builtin___bytes = bytes
 builtin___float = float
 builtin___int = int
-if sys.version_info < (3,):
-    builtin___buffer = buffer
-    builtin___unicode = unicode
 
 
 DESCRIPTOR: google___protobuf___descriptor___FileDescriptor = ...
@@ -51,11 +47,5 @@ class Resource(google___protobuf___message___Message):
         attributes : typing___Optional[typing___Iterable[opentelemetry___proto___common___v1___common_pb2___KeyValue]] = None,
         dropped_attributes_count : typing___Optional[builtin___int] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> Resource: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> Resource: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"attributes",b"attributes",u"dropped_attributes_count",b"dropped_attributes_count"]) -> None: ...
 type___Resource = Resource
