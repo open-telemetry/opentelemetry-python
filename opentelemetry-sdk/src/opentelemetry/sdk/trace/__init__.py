@@ -744,6 +744,7 @@ class Tracer(trace_api.Tracer):
         self.ids_generator = ids_generator
         self.instrumentation_info = instrumentation_info
 
+    @contextmanager
     def start_as_current_span(
         self,
         name: str,
@@ -765,7 +766,8 @@ class Tracer(trace_api.Tracer):
             record_exception=record_exception,
             set_status_on_exception=set_status_on_exception,
         )
-        return self.use_span(span, end_on_exit=True)
+        with self.use_span(span, end_on_exit=True) as span_context:
+            yield span_context
 
     def start_span(  # pylint: disable=too-many-locals
         self,

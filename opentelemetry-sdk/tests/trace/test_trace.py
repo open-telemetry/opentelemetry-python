@@ -461,6 +461,37 @@ class TestSpanCreation(unittest.TestCase):
             self.assertIs(trace_api.get_current_span(), root)
             self.assertIsNotNone(child.end_time)
 
+    def test_start_as_current_span_decorator(self):
+        tracer = new_tracer()
+
+        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+
+        @tracer.start_as_current_span("root")
+        def func():
+            root = trace_api.get_current_span()
+
+            with tracer.start_as_current_span("child") as child:
+                self.assertIs(trace_api.get_current_span(), child)
+                self.assertIs(child.parent, root.get_span_context())
+
+            # After exiting the child's scope the parent should become the
+            # current span again.
+            self.assertIs(trace_api.get_current_span(), root)
+            self.assertIsNotNone(child.end_time)
+
+            return root
+
+        root1 = func()
+
+        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+        self.assertIsNotNone(root1.end_time)
+
+        # Second call must create a new span
+        root2 = func()
+        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+        self.assertIsNotNone(root2.end_time)
+        self.assertIsNot(root1, root2)
+
     def test_explicit_span_resource(self):
         resource = resources.Resource.create({})
         tracer_provider = trace.TracerProvider(resource=resource)
