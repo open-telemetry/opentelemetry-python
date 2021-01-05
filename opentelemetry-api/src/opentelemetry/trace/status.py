@@ -22,11 +22,11 @@ logger = logging.getLogger(__name__)
 class StatusCode(enum.Enum):
     """Represents the canonical set of status codes of a finished Span."""
 
-    OK = 0
-    """The operation has been validated by an Application developer or Operator to have completed successfully."""
-
-    UNSET = 1
+    UNSET = 0
     """The default status."""
+
+    OK = 1
+    """The operation has been validated by an Application developer or Operator to have completed successfully."""
 
     ERROR = 2
     """The operation contains an error."""

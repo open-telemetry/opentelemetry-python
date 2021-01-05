@@ -11,6 +11,10 @@ from google.protobuf.internal.containers import (
     RepeatedScalarFieldContainer as google___protobuf___internal___containers___RepeatedScalarFieldContainer,
 )
 
+from google.protobuf.internal.enum_type_wrapper import (
+    _EnumTypeWrapper as google___protobuf___internal___enum_type_wrapper____EnumTypeWrapper,
+)
+
 from google.protobuf.message import (
     Message as google___protobuf___message___Message,
 )
@@ -26,12 +30,9 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
 
 from typing import (
     Iterable as typing___Iterable,
-    List as typing___List,
     NewType as typing___NewType,
     Optional as typing___Optional,
     Text as typing___Text,
-    Tuple as typing___Tuple,
-    Union as typing___Union,
     cast as typing___cast,
 )
 
@@ -44,28 +45,15 @@ builtin___bool = bool
 builtin___bytes = bytes
 builtin___float = float
 builtin___int = int
-builtin___str = str
-if sys.version_info < (3,):
-    builtin___buffer = buffer
-    builtin___unicode = unicode
 
 
 DESCRIPTOR: google___protobuf___descriptor___FileDescriptor = ...
 
 AggregationTemporalityValue = typing___NewType('AggregationTemporalityValue', builtin___int)
 type___AggregationTemporalityValue = AggregationTemporalityValue
-class AggregationTemporality(object):
+AggregationTemporality: _AggregationTemporality
+class _AggregationTemporality(google___protobuf___internal___enum_type_wrapper____EnumTypeWrapper[AggregationTemporalityValue]):
     DESCRIPTOR: google___protobuf___descriptor___EnumDescriptor = ...
-    @classmethod
-    def Name(cls, number: builtin___int) -> builtin___str: ...
-    @classmethod
-    def Value(cls, name: builtin___str) -> AggregationTemporalityValue: ...
-    @classmethod
-    def keys(cls) -> typing___List[builtin___str]: ...
-    @classmethod
-    def values(cls) -> typing___List[AggregationTemporalityValue]: ...
-    @classmethod
-    def items(cls) -> typing___List[typing___Tuple[builtin___str, AggregationTemporalityValue]]: ...
     AGGREGATION_TEMPORALITY_UNSPECIFIED = typing___cast(AggregationTemporalityValue, 0)
     AGGREGATION_TEMPORALITY_DELTA = typing___cast(AggregationTemporalityValue, 1)
     AGGREGATION_TEMPORALITY_CUMULATIVE = typing___cast(AggregationTemporalityValue, 2)
@@ -88,12 +76,6 @@ class ResourceMetrics(google___protobuf___message___Message):
         resource : typing___Optional[opentelemetry___proto___resource___v1___resource_pb2___Resource] = None,
         instrumentation_library_metrics : typing___Optional[typing___Iterable[type___InstrumentationLibraryMetrics]] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> ResourceMetrics: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> ResourceMetrics: ...
     def HasField(self, field_name: typing_extensions___Literal[u"resource",b"resource"]) -> builtin___bool: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"instrumentation_library_metrics",b"instrumentation_library_metrics",u"resource",b"resource"]) -> None: ...
 type___ResourceMetrics = ResourceMetrics
@@ -112,12 +94,6 @@ class InstrumentationLibraryMetrics(google___protobuf___message___Message):
         instrumentation_library : typing___Optional[opentelemetry___proto___common___v1___common_pb2___InstrumentationLibrary] = None,
         metrics : typing___Optional[typing___Iterable[type___Metric]] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> InstrumentationLibraryMetrics: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> InstrumentationLibraryMetrics: ...
     def HasField(self, field_name: typing_extensions___Literal[u"instrumentation_library",b"instrumentation_library"]) -> builtin___bool: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"instrumentation_library",b"instrumentation_library",u"metrics",b"metrics"]) -> None: ...
 type___InstrumentationLibraryMetrics = InstrumentationLibraryMetrics
@@ -158,12 +134,6 @@ class Metric(google___protobuf___message___Message):
         int_histogram : typing___Optional[type___IntHistogram] = None,
         double_histogram : typing___Optional[type___DoubleHistogram] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> Metric: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> Metric: ...
     def HasField(self, field_name: typing_extensions___Literal[u"data",b"data",u"double_gauge",b"double_gauge",u"double_histogram",b"double_histogram",u"double_sum",b"double_sum",u"int_gauge",b"int_gauge",u"int_histogram",b"int_histogram",u"int_sum",b"int_sum"]) -> builtin___bool: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"data",b"data",u"description",b"description",u"double_gauge",b"double_gauge",u"double_histogram",b"double_histogram",u"double_sum",b"double_sum",u"int_gauge",b"int_gauge",u"int_histogram",b"int_histogram",u"int_sum",b"int_sum",u"name",b"name",u"unit",b"unit"]) -> None: ...
     def WhichOneof(self, oneof_group: typing_extensions___Literal[u"data",b"data"]) -> typing_extensions___Literal["int_gauge","double_gauge","int_sum","double_sum","int_histogram","double_histogram"]: ...
@@ -179,12 +149,6 @@ class IntGauge(google___protobuf___message___Message):
         *,
         data_points : typing___Optional[typing___Iterable[type___IntDataPoint]] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> IntGauge: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> IntGauge: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"data_points",b"data_points"]) -> None: ...
 type___IntGauge = IntGauge
 
@@ -198,12 +162,6 @@ class DoubleGauge(google___protobuf___message___Message):
         *,
         data_points : typing___Optional[typing___Iterable[type___DoubleDataPoint]] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> DoubleGauge: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> DoubleGauge: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"data_points",b"data_points"]) -> None: ...
 type___DoubleGauge = DoubleGauge
 
@@ -221,12 +179,6 @@ class IntSum(google___protobuf___message___Message):
         aggregation_temporality : typing___Optional[type___AggregationTemporalityValue] = None,
         is_monotonic : typing___Optional[builtin___bool] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> IntSum: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> IntSum: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"aggregation_temporality",b"aggregation_temporality",u"data_points",b"data_points",u"is_monotonic",b"is_monotonic"]) -> None: ...
 type___IntSum = IntSum
 
@@ -244,12 +196,6 @@ class DoubleSum(google___protobuf___message___Message):
         aggregation_temporality : typing___Optional[type___AggregationTemporalityValue] = None,
         is_monotonic : typing___Optional[builtin___bool] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> DoubleSum: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> DoubleSum: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"aggregation_temporality",b"aggregation_temporality",u"data_points",b"data_points",u"is_monotonic",b"is_monotonic"]) -> None: ...
 type___DoubleSum = DoubleSum
 
@@ -265,12 +211,6 @@ class IntHistogram(google___protobuf___message___Message):
         data_points : typing___Optional[typing___Iterable[type___IntHistogramDataPoint]] = None,
         aggregation_temporality : typing___Optional[type___AggregationTemporalityValue] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> IntHistogram: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> IntHistogram: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"aggregation_temporality",b"aggregation_temporality",u"data_points",b"data_points"]) -> None: ...
 type___IntHistogram = IntHistogram
 
@@ -286,12 +226,6 @@ class DoubleHistogram(google___protobuf___message___Message):
         data_points : typing___Optional[typing___Iterable[type___DoubleHistogramDataPoint]] = None,
         aggregation_temporality : typing___Optional[type___AggregationTemporalityValue] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> DoubleHistogram: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> DoubleHistogram: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"aggregation_temporality",b"aggregation_temporality",u"data_points",b"data_points"]) -> None: ...
 type___DoubleHistogram = DoubleHistogram
 
@@ -315,12 +249,6 @@ class IntDataPoint(google___protobuf___message___Message):
         value : typing___Optional[builtin___int] = None,
         exemplars : typing___Optional[typing___Iterable[type___IntExemplar]] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> IntDataPoint: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> IntDataPoint: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"exemplars",b"exemplars",u"labels",b"labels",u"start_time_unix_nano",b"start_time_unix_nano",u"time_unix_nano",b"time_unix_nano",u"value",b"value"]) -> None: ...
 type___IntDataPoint = IntDataPoint
 
@@ -344,12 +272,6 @@ class DoubleDataPoint(google___protobuf___message___Message):
         value : typing___Optional[builtin___float] = None,
         exemplars : typing___Optional[typing___Iterable[type___DoubleExemplar]] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> DoubleDataPoint: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> DoubleDataPoint: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"exemplars",b"exemplars",u"labels",b"labels",u"start_time_unix_nano",b"start_time_unix_nano",u"time_unix_nano",b"time_unix_nano",u"value",b"value"]) -> None: ...
 type___DoubleDataPoint = DoubleDataPoint
 
@@ -379,12 +301,6 @@ class IntHistogramDataPoint(google___protobuf___message___Message):
         explicit_bounds : typing___Optional[typing___Iterable[builtin___float]] = None,
         exemplars : typing___Optional[typing___Iterable[type___IntExemplar]] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> IntHistogramDataPoint: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> IntHistogramDataPoint: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"bucket_counts",b"bucket_counts",u"count",b"count",u"exemplars",b"exemplars",u"explicit_bounds",b"explicit_bounds",u"labels",b"labels",u"start_time_unix_nano",b"start_time_unix_nano",u"sum",b"sum",u"time_unix_nano",b"time_unix_nano"]) -> None: ...
 type___IntHistogramDataPoint = IntHistogramDataPoint
 
@@ -414,12 +330,6 @@ class DoubleHistogramDataPoint(google___protobuf___message___Message):
         explicit_bounds : typing___Optional[typing___Iterable[builtin___float]] = None,
         exemplars : typing___Optional[typing___Iterable[type___DoubleExemplar]] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> DoubleHistogramDataPoint: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> DoubleHistogramDataPoint: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"bucket_counts",b"bucket_counts",u"count",b"count",u"exemplars",b"exemplars",u"explicit_bounds",b"explicit_bounds",u"labels",b"labels",u"start_time_unix_nano",b"start_time_unix_nano",u"sum",b"sum",u"time_unix_nano",b"time_unix_nano"]) -> None: ...
 type___DoubleHistogramDataPoint = DoubleHistogramDataPoint
 
@@ -441,12 +351,6 @@ class IntExemplar(google___protobuf___message___Message):
         span_id : typing___Optional[builtin___bytes] = None,
         trace_id : typing___Optional[builtin___bytes] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> IntExemplar: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> IntExemplar: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"filtered_labels",b"filtered_labels",u"span_id",b"span_id",u"time_unix_nano",b"time_unix_nano",u"trace_id",b"trace_id",u"value",b"value"]) -> None: ...
 type___IntExemplar = IntExemplar
 
@@ -468,11 +372,5 @@ class DoubleExemplar(google___protobuf___message___Message):
         span_id : typing___Optional[builtin___bytes] = None,
         trace_id : typing___Optional[builtin___bytes] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> DoubleExemplar: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> DoubleExemplar: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"filtered_labels",b"filtered_labels",u"span_id",b"span_id",u"time_unix_nano",b"time_unix_nano",u"trace_id",b"trace_id",u"value",b"value"]) -> None: ...
 type___DoubleExemplar = DoubleExemplar
