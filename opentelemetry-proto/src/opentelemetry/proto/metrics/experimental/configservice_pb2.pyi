@@ -21,7 +21,6 @@ from typing import (
     Iterable as typing___Iterable,
     Optional as typing___Optional,
     Text as typing___Text,
-    Union as typing___Union,
 )
 
 from typing_extensions import (
@@ -33,9 +32,6 @@ builtin___bool = bool
 builtin___bytes = bytes
 builtin___float = float
 builtin___int = int
-if sys.version_info < (3,):
-    builtin___buffer = buffer
-    builtin___unicode = unicode
 
 
 DESCRIPTOR: google___protobuf___descriptor___FileDescriptor = ...
@@ -52,12 +48,6 @@ class MetricConfigRequest(google___protobuf___message___Message):
         resource : typing___Optional[opentelemetry___proto___resource___v1___resource_pb2___Resource] = None,
         last_known_fingerprint : typing___Optional[builtin___bytes] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> MetricConfigRequest: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> MetricConfigRequest: ...
     def HasField(self, field_name: typing_extensions___Literal[u"resource",b"resource"]) -> builtin___bool: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"last_known_fingerprint",b"last_known_fingerprint",u"resource",b"resource"]) -> None: ...
 type___MetricConfigRequest = MetricConfigRequest
@@ -76,12 +66,6 @@ class MetricConfigResponse(google___protobuf___message___Message):
                 equals : typing___Optional[typing___Text] = None,
                 starts_with : typing___Optional[typing___Text] = None,
                 ) -> None: ...
-            if sys.version_info >= (3,):
-                @classmethod
-                def FromString(cls, s: builtin___bytes) -> MetricConfigResponse.Schedule.Pattern: ...
-            else:
-                @classmethod
-                def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> MetricConfigResponse.Schedule.Pattern: ...
             def HasField(self, field_name: typing_extensions___Literal[u"equals",b"equals",u"match",b"match",u"starts_with",b"starts_with"]) -> builtin___bool: ...
             def ClearField(self, field_name: typing_extensions___Literal[u"equals",b"equals",u"match",b"match",u"starts_with",b"starts_with"]) -> None: ...
             def WhichOneof(self, oneof_group: typing_extensions___Literal[u"match",b"match"]) -> typing_extensions___Literal["equals","starts_with"]: ...
@@ -101,12 +85,6 @@ class MetricConfigResponse(google___protobuf___message___Message):
             inclusion_patterns : typing___Optional[typing___Iterable[type___MetricConfigResponse.Schedule.Pattern]] = None,
             period_sec : typing___Optional[builtin___int] = None,
             ) -> None: ...
-        if sys.version_info >= (3,):
-            @classmethod
-            def FromString(cls, s: builtin___bytes) -> MetricConfigResponse.Schedule: ...
-        else:
-            @classmethod
-            def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> MetricConfigResponse.Schedule: ...
         def ClearField(self, field_name: typing_extensions___Literal[u"exclusion_patterns",b"exclusion_patterns",u"inclusion_patterns",b"inclusion_patterns",u"period_sec",b"period_sec"]) -> None: ...
     type___Schedule = Schedule
 
@@ -122,11 +100,5 @@ class MetricConfigResponse(google___protobuf___message___Message):
         schedules : typing___Optional[typing___Iterable[type___MetricConfigResponse.Schedule]] = None,
         suggested_wait_time_sec : typing___Optional[builtin___int] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> MetricConfigResponse: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> MetricConfigResponse: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"fingerprint",b"fingerprint",u"schedules",b"schedules",u"suggested_wait_time_sec",b"suggested_wait_time_sec"]) -> None: ...
 type___MetricConfigResponse = MetricConfigResponse

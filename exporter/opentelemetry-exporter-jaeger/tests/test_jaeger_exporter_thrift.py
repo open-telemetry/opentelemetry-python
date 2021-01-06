@@ -22,6 +22,8 @@ import opentelemetry.exporter.jaeger as jaeger_exporter
 from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger.gen.jaeger import ttypes as jaeger
+from opentelemetry.exporter.jaeger.translate import Translate
+from opentelemetry.exporter.jaeger.translate.thrift import ThriftTranslator
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
@@ -49,6 +51,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         Configuration._reset()
 
     def test_constructor_default(self):
+        # pylint: disable=protected-access
         """Test the default values assigned by constructor."""
         service_name = "my-service-name"
         agent_host_name = "localhost"
@@ -61,10 +64,11 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self.assertEqual(exporter.collector_endpoint, None)
         self.assertEqual(exporter.username, None)
         self.assertEqual(exporter.password, None)
-        self.assertTrue(exporter.collector is None)
-        self.assertTrue(exporter.agent_client is not None)
+        self.assertTrue(exporter._collector_http_client is None)
+        self.assertTrue(exporter._agent_client is not None)
 
     def test_constructor_explicit(self):
+        # pylint: disable=protected-access
         """Test the constructor passing all the options."""
         service = "my-opentelemetry-jaeger"
         collector_endpoint = "https://opentelemetry.io:15875"
@@ -88,20 +92,20 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self.assertEqual(exporter.service_name, service)
         self.assertEqual(exporter.agent_host_name, agent_host_name)
         self.assertEqual(exporter.agent_port, agent_port)
-        self.assertTrue(exporter.collector is not None)
-        self.assertEqual(exporter.collector.auth, auth)
+        self.assertTrue(exporter._collector_http_client is not None)
+        self.assertEqual(exporter._collector_http_client.auth, auth)
         # property should not construct new object
-        collector = exporter.collector
-        self.assertEqual(exporter.collector, collector)
+        collector = exporter._collector_http_client
+        self.assertEqual(exporter._collector_http_client, collector)
         # property should construct new object
-        # pylint: disable=protected-access
         exporter._collector = None
         exporter.username = None
         exporter.password = None
-        self.assertNotEqual(exporter.collector, collector)
-        self.assertTrue(exporter.collector.auth is None)
+        self.assertNotEqual(exporter._collector_http_client, collector)
+        self.assertTrue(exporter._collector_http_client.auth is None)
 
     def test_constructor_by_environment_variables(self):
+        #  pylint: disable=protected-access
         """Test the constructor using Environment Variables."""
         service = "my-opentelemetry-jaeger"
 
@@ -132,25 +136,24 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self.assertEqual(exporter.service_name, service)
         self.assertEqual(exporter.agent_host_name, agent_host_name)
         self.assertEqual(exporter.agent_port, int(agent_port))
-        self.assertTrue(exporter.collector is not None)
+        self.assertTrue(exporter._collector_http_client is not None)
         self.assertEqual(exporter.collector_endpoint, collector_endpoint)
-        self.assertEqual(exporter.collector.auth, auth)
+        self.assertEqual(exporter._collector_http_client.auth, auth)
         # property should not construct new object
-        collector = exporter.collector
-        self.assertEqual(exporter.collector, collector)
+        collector = exporter._collector_http_client
+        self.assertEqual(exporter._collector_http_client, collector)
         # property should construct new object
-        # pylint: disable=protected-access
         exporter._collector = None
         exporter.username = None
         exporter.password = None
-        self.assertNotEqual(exporter.collector, collector)
-        self.assertTrue(exporter.collector.auth is None)
+        self.assertNotEqual(exporter._collector_http_client, collector)
+        self.assertTrue(exporter._collector_http_client.auth is None)
 
         environ_patcher.stop()
 
     def test_nsec_to_usec_round(self):
         # pylint: disable=protected-access
-        nsec_to_usec_round = jaeger_exporter._nsec_to_usec_round
+        nsec_to_usec_round = jaeger_exporter.translate._nsec_to_usec_round
 
         self.assertEqual(nsec_to_usec_round(5000), 5)
         self.assertEqual(nsec_to_usec_round(5499), 5)
@@ -158,7 +161,9 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
     def test_all_otlp_span_kinds_are_mapped(self):
         for kind in SpanKind:
-            self.assertIn(kind, jaeger_exporter.OTLP_JAEGER_SPAN_KIND)
+            self.assertIn(
+                kind, jaeger_exporter.translate.OTLP_JAEGER_SPAN_KIND
+            )
 
     # pylint: disable=too-many-locals
     def test_translate_to_jaeger(self):
@@ -272,8 +277,9 @@ class TestJaegerSpanExporter(unittest.TestCase):
             name="name", version="version"
         )
 
+        translate = Translate(otel_spans)
         # pylint: disable=protected-access
-        spans = jaeger_exporter._translate_to_jaeger(otel_spans)
+        spans = translate._translate(ThriftTranslator())
 
         expected_spans = [
             jaeger.Span(
@@ -453,10 +459,12 @@ class TestJaegerSpanExporter(unittest.TestCase):
             host_name="localhost", port=6354
         )
 
+        translate = Translate([self._test_span])
+        # pylint: disable=protected-access
+        spans = translate._translate(ThriftTranslator())
+
         batch = jaeger.Batch(
-            # pylint: disable=protected-access
-            spans=jaeger_exporter._translate_to_jaeger((self._test_span,)),
-            process=jaeger.Process(serviceName="xxx"),
+            spans=spans, process=jaeger.Process(serviceName="xxx"),
         )
 
         agent_client.emit(batch)
