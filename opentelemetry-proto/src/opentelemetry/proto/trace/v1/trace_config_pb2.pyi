@@ -6,16 +6,17 @@ from google.protobuf.descriptor import (
     FileDescriptor as google___protobuf___descriptor___FileDescriptor,
 )
 
+from google.protobuf.internal.enum_type_wrapper import (
+    _EnumTypeWrapper as google___protobuf___internal___enum_type_wrapper____EnumTypeWrapper,
+)
+
 from google.protobuf.message import (
     Message as google___protobuf___message___Message,
 )
 
 from typing import (
-    List as typing___List,
     NewType as typing___NewType,
     Optional as typing___Optional,
-    Tuple as typing___Tuple,
-    Union as typing___Union,
     cast as typing___cast,
 )
 
@@ -28,10 +29,6 @@ builtin___bool = bool
 builtin___bytes = bytes
 builtin___float = float
 builtin___int = int
-builtin___str = str
-if sys.version_info < (3,):
-    builtin___buffer = buffer
-    builtin___unicode = unicode
 
 
 DESCRIPTOR: google___protobuf___descriptor___FileDescriptor = ...
@@ -48,7 +45,7 @@ class TraceConfig(google___protobuf___message___Message):
     def constant_sampler(self) -> type___ConstantSampler: ...
 
     @property
-    def probability_sampler(self) -> type___ProbabilitySampler: ...
+    def trace_id_ratio_based(self) -> type___TraceIdRatioBased: ...
 
     @property
     def rate_limiting_sampler(self) -> type___RateLimitingSampler: ...
@@ -56,7 +53,7 @@ class TraceConfig(google___protobuf___message___Message):
     def __init__(self,
         *,
         constant_sampler : typing___Optional[type___ConstantSampler] = None,
-        probability_sampler : typing___Optional[type___ProbabilitySampler] = None,
+        trace_id_ratio_based : typing___Optional[type___TraceIdRatioBased] = None,
         rate_limiting_sampler : typing___Optional[type___RateLimitingSampler] = None,
         max_number_of_attributes : typing___Optional[builtin___int] = None,
         max_number_of_timed_events : typing___Optional[builtin___int] = None,
@@ -64,33 +61,18 @@ class TraceConfig(google___protobuf___message___Message):
         max_number_of_links : typing___Optional[builtin___int] = None,
         max_number_of_attributes_per_link : typing___Optional[builtin___int] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> TraceConfig: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> TraceConfig: ...
-    def HasField(self, field_name: typing_extensions___Literal[u"constant_sampler",b"constant_sampler",u"probability_sampler",b"probability_sampler",u"rate_limiting_sampler",b"rate_limiting_sampler",u"sampler",b"sampler"]) -> builtin___bool: ...
-    def ClearField(self, field_name: typing_extensions___Literal[u"constant_sampler",b"constant_sampler",u"max_number_of_attributes",b"max_number_of_attributes",u"max_number_of_attributes_per_link",b"max_number_of_attributes_per_link",u"max_number_of_attributes_per_timed_event",b"max_number_of_attributes_per_timed_event",u"max_number_of_links",b"max_number_of_links",u"max_number_of_timed_events",b"max_number_of_timed_events",u"probability_sampler",b"probability_sampler",u"rate_limiting_sampler",b"rate_limiting_sampler",u"sampler",b"sampler"]) -> None: ...
-    def WhichOneof(self, oneof_group: typing_extensions___Literal[u"sampler",b"sampler"]) -> typing_extensions___Literal["constant_sampler","probability_sampler","rate_limiting_sampler"]: ...
+    def HasField(self, field_name: typing_extensions___Literal[u"constant_sampler",b"constant_sampler",u"rate_limiting_sampler",b"rate_limiting_sampler",u"sampler",b"sampler",u"trace_id_ratio_based",b"trace_id_ratio_based"]) -> builtin___bool: ...
+    def ClearField(self, field_name: typing_extensions___Literal[u"constant_sampler",b"constant_sampler",u"max_number_of_attributes",b"max_number_of_attributes",u"max_number_of_attributes_per_link",b"max_number_of_attributes_per_link",u"max_number_of_attributes_per_timed_event",b"max_number_of_attributes_per_timed_event",u"max_number_of_links",b"max_number_of_links",u"max_number_of_timed_events",b"max_number_of_timed_events",u"rate_limiting_sampler",b"rate_limiting_sampler",u"sampler",b"sampler",u"trace_id_ratio_based",b"trace_id_ratio_based"]) -> None: ...
+    def WhichOneof(self, oneof_group: typing_extensions___Literal[u"sampler",b"sampler"]) -> typing_extensions___Literal["constant_sampler","trace_id_ratio_based","rate_limiting_sampler"]: ...
 type___TraceConfig = TraceConfig
 
 class ConstantSampler(google___protobuf___message___Message):
     DESCRIPTOR: google___protobuf___descriptor___Descriptor = ...
     ConstantDecisionValue = typing___NewType('ConstantDecisionValue', builtin___int)
     type___ConstantDecisionValue = ConstantDecisionValue
-    class ConstantDecision(object):
+    ConstantDecision: _ConstantDecision
+    class _ConstantDecision(google___protobuf___internal___enum_type_wrapper____EnumTypeWrapper[ConstantSampler.ConstantDecisionValue]):
         DESCRIPTOR: google___protobuf___descriptor___EnumDescriptor = ...
-        @classmethod
-        def Name(cls, number: builtin___int) -> builtin___str: ...
-        @classmethod
-        def Value(cls, name: builtin___str) -> ConstantSampler.ConstantDecisionValue: ...
-        @classmethod
-        def keys(cls) -> typing___List[builtin___str]: ...
-        @classmethod
-        def values(cls) -> typing___List[ConstantSampler.ConstantDecisionValue]: ...
-        @classmethod
-        def items(cls) -> typing___List[typing___Tuple[builtin___str, ConstantSampler.ConstantDecisionValue]]: ...
         ALWAYS_OFF = typing___cast(ConstantSampler.ConstantDecisionValue, 0)
         ALWAYS_ON = typing___cast(ConstantSampler.ConstantDecisionValue, 1)
         ALWAYS_PARENT = typing___cast(ConstantSampler.ConstantDecisionValue, 2)
@@ -105,31 +87,19 @@ class ConstantSampler(google___protobuf___message___Message):
         *,
         decision : typing___Optional[type___ConstantSampler.ConstantDecisionValue] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> ConstantSampler: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> ConstantSampler: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"decision",b"decision"]) -> None: ...
 type___ConstantSampler = ConstantSampler
 
-class ProbabilitySampler(google___protobuf___message___Message):
+class TraceIdRatioBased(google___protobuf___message___Message):
     DESCRIPTOR: google___protobuf___descriptor___Descriptor = ...
-    samplingProbability: builtin___float = ...
+    samplingRatio: builtin___float = ...
 
     def __init__(self,
         *,
-        samplingProbability : typing___Optional[builtin___float] = None,
+        samplingRatio : typing___Optional[builtin___float] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> ProbabilitySampler: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> ProbabilitySampler: ...
-    def ClearField(self, field_name: typing_extensions___Literal[u"samplingProbability",b"samplingProbability"]) -> None: ...
-type___ProbabilitySampler = ProbabilitySampler
+    def ClearField(self, field_name: typing_extensions___Literal[u"samplingRatio",b"samplingRatio"]) -> None: ...
+type___TraceIdRatioBased = TraceIdRatioBased
 
 class RateLimitingSampler(google___protobuf___message___Message):
     DESCRIPTOR: google___protobuf___descriptor___Descriptor = ...
@@ -139,11 +109,5 @@ class RateLimitingSampler(google___protobuf___message___Message):
         *,
         qps : typing___Optional[builtin___int] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> RateLimitingSampler: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> RateLimitingSampler: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"qps",b"qps"]) -> None: ...
 type___RateLimitingSampler = RateLimitingSampler
