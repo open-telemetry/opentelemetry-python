@@ -97,14 +97,18 @@ Prev example but with environment vairables. Please make sure to set the env `OT
 """
 import abc
 import enum
+from logging import getLogger
 from types import MappingProxyType
 from typing import Optional, Sequence
 
-# pylint: disable=unused-import
+from opentelemetry.configuration import Configuration
 from opentelemetry.context import Context
 from opentelemetry.trace import Link, get_current_span
 from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
+
+
+_logger = getLogger(__name__)
 
 
 class Decision(enum.Enum):
@@ -342,3 +346,43 @@ DEFAULT_OFF = ParentBased(ALWAYS_OFF)
 
 DEFAULT_ON = ParentBased(ALWAYS_ON)
 """Sampler that respects its parent span's sampling decision, but otherwise always samples."""
+
+
+class ParentBasedTraceIdRatio(ParentBased):
+    """
+    Sampler that respects its parent span's sampling decision, but otherwise
+    samples probabalistically based on `rate`.
+    """
+
+    def __init__(self, rate: float):
+        root = TraceIdRatioBased(rate=rate)
+        super().__init__(root=root)
+
+
+_KNOWN_SAMPLERS = {
+    "always_on": ALWAYS_ON,
+    "always_off": ALWAYS_OFF,
+    "parentbased_always_on": DEFAULT_ON,
+    "parentbased_always_off": DEFAULT_OFF,
+    "traceidratio": TraceIdRatioBased,
+    "parentbased_traceidratio": ParentBasedTraceIdRatio,
+}
+
+
+def _get_from_env_or_default() -> Sampler:
+    trace_sampler = (
+        Configuration().get("TRACE_SAMPLER", "parentbased_always_on").lower()
+    )
+    if trace_sampler not in _KNOWN_SAMPLERS:
+        _logger.warning("Couldn't recognize sampler %s.", trace_sampler)
+        trace_sampler = "parentbased_always_on"
+
+    if trace_sampler in ("traceidratio", "parentbased_traceidratio"):
+        try:
+            rate = float(Configuration().TRACE_SAMPLER_ARG)
+        except ValueError:
+            _logger.warning("Could not convert TRACE_SAMPLER_ARG to float.")
+            rate = 1.0
+        return _KNOWN_SAMPLERS[trace_sampler](rate)
+
+    return _KNOWN_SAMPLERS[trace_sampler]
