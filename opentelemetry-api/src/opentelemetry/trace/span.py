@@ -169,6 +169,9 @@ class TraceState(typing.Mapping[str, str]):
 
         for key, value in entries:
             if _is_valid_pair(key, value):
+                if key in self._dict:
+                    _logger.warning("Duplicate key: %s found.", key)
+                    continue
                 self._dict[key] = value
             else:
                 _logger.warning(
@@ -194,6 +197,17 @@ class TraceState(typing.Mapping[str, str]):
     def add(self, key: str, value: str) -> "TraceState":
         """Adds a key-value pair to tracestate. The provided pair should
         adhere to w3c tracestate identifiers format.
+
+        Args:
+            key: A valid tracestate key to add
+            value: A valid tracestate value to add
+
+        Returns:
+            A new TraceState with the modifications applied.
+
+            If the provided key-value pair is invalid or results in tracestate
+            that violates tracecontext specification, they are discarded and
+            same tracestate will be returned.
         """
         if not _is_valid_pair(key, value):
             _logger.warning(
@@ -214,6 +228,17 @@ class TraceState(typing.Mapping[str, str]):
     def update(self, key: str, value: str) -> "TraceState":
         """Updates a key-value pair in tracestate. The provided pair should
         adhere to w3c tracestate identifiers format.
+
+        Args:
+            key: A valid tracestate key to update
+            value: A valid tracestate value to update for key
+
+        Returns:
+            A new TraceState with the modifications applied.
+
+            If the provided key-value pair is invalid or results in tracestate
+            that violates tracecontext specification, they are discarded and
+            same tracestate will be returned.
         """
         if not _is_valid_pair(key, value):
             _logger.warning(
@@ -228,6 +253,17 @@ class TraceState(typing.Mapping[str, str]):
 
     def delete(self, key: str) -> "TraceState":
         """Deletes a key-value from tracestate.
+
+        Args:
+            key: A valid tracestate key to remove key-value
+            pair from tracestate
+
+        Returns:
+            A new TraceState with the modifications applied.
+
+            If the provided key-value pair is invalid or results in tracestate
+            that violates tracecontext specification, they are discarded and
+            same tracestate will be returned.
         """
         if key not in self._dict:
             _logger.warning("The provided key %s doesn't exist.", key)
@@ -239,12 +275,29 @@ class TraceState(typing.Mapping[str, str]):
 
     def to_header(self) -> str:
         """Creates a w3c tracestate header from a TraceState.
+
+        Returns:
+            A string that adheres to the w3c tracestate
+            header format.
         """
         return ",".join(key + "=" + value for key, value in self._dict.items())
 
     @classmethod
     def from_header(cls, header_list: typing.List[str]) -> "TraceState":
         """Parses one or more w3c tracestate header into a TraceState.
+
+        Args:
+            header_list: one or more w3c tracestate headers.
+
+        Returns:
+            A valid TraceState that contains values extracted from
+            the tracestate header.
+
+            If the format of one headers is illegal, all values will
+            be discarded and an empty tracestate will be returned.
+
+            If the number of keys is beyond the maximum, all values
+            will be discarded and an empty tracestate will be returned.
         """
         pairs = collections.OrderedDict()
         value_count = 0
@@ -261,6 +314,7 @@ class TraceState(typing.Mapping[str, str]):
                     )
                     return cls()
                 key, _eq, value = match.groups()
+                # duplicate keys are not legal in header
                 if key in pairs:
                     return cls()
                 pairs[key] = value
