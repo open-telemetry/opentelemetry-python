@@ -20,7 +20,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='opentelemetry.proto.trace.v1',
   syntax='proto3',
   serialized_options=b'\n\037io.opentelemetry.proto.trace.v1B\nTraceProtoP\001Z=github.com/open-telemetry/opentelemetry-proto/gen/go/trace/v1',
-  serialized_pb=b'\n(opentelemetry/proto/trace/v1/trace.proto\x12\x1copentelemetry.proto.trace.v1\x1a*opentelemetry/proto/common/v1/common.proto\x1a.opentelemetry/proto/resource/v1/resource.proto\"\xae\x01\n\rResourceSpans\x12;\n\x08resource\x18\x01 \x01(\x0b\x32).opentelemetry.proto.resource.v1.Resource\x12`\n\x1dinstrumentation_library_spans\x18\x02 \x03(\x0b\x32\x39.opentelemetry.proto.trace.v1.InstrumentationLibrarySpans\"\xa8\x01\n\x1bInstrumentationLibrarySpans\x12V\n\x17instrumentation_library\x18\x01 \x01(\x0b\x32\x35.opentelemetry.proto.common.v1.InstrumentationLibrary\x12\x31\n\x05spans\x18\x02 \x03(\x0b\x32\".opentelemetry.proto.trace.v1.Span\"\xe6\x07\n\x04Span\x12\x10\n\x08trace_id\x18\x01 \x01(\x0c\x12\x0f\n\x07span_id\x18\x02 \x01(\x0c\x12\x13\n\x0btrace_state\x18\x03 \x01(\t\x12\x16\n\x0eparent_span_id\x18\x04 \x01(\x0c\x12\x0c\n\x04name\x18\x05 \x01(\t\x12\x39\n\x04kind\x18\x06 \x01(\x0e\x32+.opentelemetry.proto.trace.v1.Span.SpanKind\x12\x1c\n\x14start_time_unix_nano\x18\x07 \x01(\x06\x12\x1a\n\x12\x65nd_time_unix_nano\x18\x08 \x01(\x06\x12;\n\nattributes\x18\t \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\n \x01(\r\x12\x38\n\x06\x65vents\x18\x0b \x03(\x0b\x32(.opentelemetry.proto.trace.v1.Span.Event\x12\x1c\n\x14\x64ropped_events_count\x18\x0c \x01(\r\x12\x36\n\x05links\x18\r \x03(\x0b\x32\'.opentelemetry.proto.trace.v1.Span.Link\x12\x1b\n\x13\x64ropped_links_count\x18\x0e \x01(\r\x12\x34\n\x06status\x18\x0f \x01(\x0b\x32$.opentelemetry.proto.trace.v1.Status\x1a\x8c\x01\n\x05\x45vent\x12\x16\n\x0etime_unix_nano\x18\x01 \x01(\x06\x12\x0c\n\x04name\x18\x02 \x01(\t\x12;\n\nattributes\x18\x03 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\x04 \x01(\r\x1a\x9d\x01\n\x04Link\x12\x10\n\x08trace_id\x18\x01 \x01(\x0c\x12\x0f\n\x07span_id\x18\x02 \x01(\x0c\x12\x13\n\x0btrace_state\x18\x03 \x01(\t\x12;\n\nattributes\x18\x04 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\x05 \x01(\r\"\x99\x01\n\x08SpanKind\x12\x19\n\x15SPAN_KIND_UNSPECIFIED\x10\x00\x12\x16\n\x12SPAN_KIND_INTERNAL\x10\x01\x12\x14\n\x10SPAN_KIND_SERVER\x10\x02\x12\x14\n\x10SPAN_KIND_CLIENT\x10\x03\x12\x16\n\x12SPAN_KIND_PRODUCER\x10\x04\x12\x16\n\x12SPAN_KIND_CONSUMER\x10\x05\"\xf0\x04\n\x06Status\x12=\n\x04\x63ode\x18\x01 \x01(\x0e\x32/.opentelemetry.proto.trace.v1.Status.StatusCode\x12\x0f\n\x07message\x18\x02 \x01(\t\"\x95\x04\n\nStatusCode\x12\x12\n\x0eSTATUS_CODE_OK\x10\x00\x12\x19\n\x15STATUS_CODE_CANCELLED\x10\x01\x12\x1d\n\x19STATUS_CODE_UNKNOWN_ERROR\x10\x02\x12 \n\x1cSTATUS_CODE_INVALID_ARGUMENT\x10\x03\x12!\n\x1dSTATUS_CODE_DEADLINE_EXCEEDED\x10\x04\x12\x19\n\x15STATUS_CODE_NOT_FOUND\x10\x05\x12\x1e\n\x1aSTATUS_CODE_ALREADY_EXISTS\x10\x06\x12!\n\x1dSTATUS_CODE_PERMISSION_DENIED\x10\x07\x12\"\n\x1eSTATUS_CODE_RESOURCE_EXHAUSTED\x10\x08\x12#\n\x1fSTATUS_CODE_FAILED_PRECONDITION\x10\t\x12\x17\n\x13STATUS_CODE_ABORTED\x10\n\x12\x1c\n\x18STATUS_CODE_OUT_OF_RANGE\x10\x0b\x12\x1d\n\x19STATUS_CODE_UNIMPLEMENTED\x10\x0c\x12\x1e\n\x1aSTATUS_CODE_INTERNAL_ERROR\x10\r\x12\x1b\n\x17STATUS_CODE_UNAVAILABLE\x10\x0e\x12\x19\n\x15STATUS_CODE_DATA_LOSS\x10\x0f\x12\x1f\n\x1bSTATUS_CODE_UNAUTHENTICATED\x10\x10\x42n\n\x1fio.opentelemetry.proto.trace.v1B\nTraceProtoP\x01Z=github.com/open-telemetry/opentelemetry-proto/gen/go/trace/v1b\x06proto3'
+  serialized_pb=b'\n(opentelemetry/proto/trace/v1/trace.proto\x12\x1copentelemetry.proto.trace.v1\x1a*opentelemetry/proto/common/v1/common.proto\x1a.opentelemetry/proto/resource/v1/resource.proto\"\xae\x01\n\rResourceSpans\x12;\n\x08resource\x18\x01 \x01(\x0b\x32).opentelemetry.proto.resource.v1.Resource\x12`\n\x1dinstrumentation_library_spans\x18\x02 \x03(\x0b\x32\x39.opentelemetry.proto.trace.v1.InstrumentationLibrarySpans\"\xa8\x01\n\x1bInstrumentationLibrarySpans\x12V\n\x17instrumentation_library\x18\x01 \x01(\x0b\x32\x35.opentelemetry.proto.common.v1.InstrumentationLibrary\x12\x31\n\x05spans\x18\x02 \x03(\x0b\x32\".opentelemetry.proto.trace.v1.Span\"\xe6\x07\n\x04Span\x12\x10\n\x08trace_id\x18\x01 \x01(\x0c\x12\x0f\n\x07span_id\x18\x02 \x01(\x0c\x12\x13\n\x0btrace_state\x18\x03 \x01(\t\x12\x16\n\x0eparent_span_id\x18\x04 \x01(\x0c\x12\x0c\n\x04name\x18\x05 \x01(\t\x12\x39\n\x04kind\x18\x06 \x01(\x0e\x32+.opentelemetry.proto.trace.v1.Span.SpanKind\x12\x1c\n\x14start_time_unix_nano\x18\x07 \x01(\x06\x12\x1a\n\x12\x65nd_time_unix_nano\x18\x08 \x01(\x06\x12;\n\nattributes\x18\t \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\n \x01(\r\x12\x38\n\x06\x65vents\x18\x0b \x03(\x0b\x32(.opentelemetry.proto.trace.v1.Span.Event\x12\x1c\n\x14\x64ropped_events_count\x18\x0c \x01(\r\x12\x36\n\x05links\x18\r \x03(\x0b\x32\'.opentelemetry.proto.trace.v1.Span.Link\x12\x1b\n\x13\x64ropped_links_count\x18\x0e \x01(\r\x12\x34\n\x06status\x18\x0f \x01(\x0b\x32$.opentelemetry.proto.trace.v1.Status\x1a\x8c\x01\n\x05\x45vent\x12\x16\n\x0etime_unix_nano\x18\x01 \x01(\x06\x12\x0c\n\x04name\x18\x02 \x01(\t\x12;\n\nattributes\x18\x03 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\x04 \x01(\r\x1a\x9d\x01\n\x04Link\x12\x10\n\x08trace_id\x18\x01 \x01(\x0c\x12\x0f\n\x07span_id\x18\x02 \x01(\x0c\x12\x13\n\x0btrace_state\x18\x03 \x01(\t\x12;\n\nattributes\x18\x04 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\x05 \x01(\r\"\x99\x01\n\x08SpanKind\x12\x19\n\x15SPAN_KIND_UNSPECIFIED\x10\x00\x12\x16\n\x12SPAN_KIND_INTERNAL\x10\x01\x12\x14\n\x10SPAN_KIND_SERVER\x10\x02\x12\x14\n\x10SPAN_KIND_CLIENT\x10\x03\x12\x16\n\x12SPAN_KIND_PRODUCER\x10\x04\x12\x16\n\x12SPAN_KIND_CONSUMER\x10\x05\"\xdd\x07\n\x06Status\x12V\n\x0f\x64\x65precated_code\x18\x01 \x01(\x0e\x32\x39.opentelemetry.proto.trace.v1.Status.DeprecatedStatusCodeB\x02\x18\x01\x12\x0f\n\x07message\x18\x02 \x01(\t\x12=\n\x04\x63ode\x18\x03 \x01(\x0e\x32/.opentelemetry.proto.trace.v1.Status.StatusCode\"\xda\x05\n\x14\x44\x65precatedStatusCode\x12\x1d\n\x19\x44\x45PRECATED_STATUS_CODE_OK\x10\x00\x12$\n DEPRECATED_STATUS_CODE_CANCELLED\x10\x01\x12(\n$DEPRECATED_STATUS_CODE_UNKNOWN_ERROR\x10\x02\x12+\n\'DEPRECATED_STATUS_CODE_INVALID_ARGUMENT\x10\x03\x12,\n(DEPRECATED_STATUS_CODE_DEADLINE_EXCEEDED\x10\x04\x12$\n DEPRECATED_STATUS_CODE_NOT_FOUND\x10\x05\x12)\n%DEPRECATED_STATUS_CODE_ALREADY_EXISTS\x10\x06\x12,\n(DEPRECATED_STATUS_CODE_PERMISSION_DENIED\x10\x07\x12-\n)DEPRECATED_STATUS_CODE_RESOURCE_EXHAUSTED\x10\x08\x12.\n*DEPRECATED_STATUS_CODE_FAILED_PRECONDITION\x10\t\x12\"\n\x1e\x44\x45PRECATED_STATUS_CODE_ABORTED\x10\n\x12\'\n#DEPRECATED_STATUS_CODE_OUT_OF_RANGE\x10\x0b\x12(\n$DEPRECATED_STATUS_CODE_UNIMPLEMENTED\x10\x0c\x12)\n%DEPRECATED_STATUS_CODE_INTERNAL_ERROR\x10\r\x12&\n\"DEPRECATED_STATUS_CODE_UNAVAILABLE\x10\x0e\x12$\n DEPRECATED_STATUS_CODE_DATA_LOSS\x10\x0f\x12*\n&DEPRECATED_STATUS_CODE_UNAUTHENTICATED\x10\x10\"N\n\nStatusCode\x12\x15\n\x11STATUS_CODE_UNSET\x10\x00\x12\x12\n\x0eSTATUS_CODE_OK\x10\x01\x12\x15\n\x11STATUS_CODE_ERROR\x10\x02\x42n\n\x1fio.opentelemetry.proto.trace.v1B\nTraceProtoP\x01Z=github.com/open-telemetry/opentelemetry-proto/gen/go/trace/v1b\x06proto3'
   ,
   dependencies=[opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2.DESCRIPTOR,opentelemetry_dot_proto_dot_resource_dot_v1_dot_resource__pb2.DESCRIPTOR,])
 
@@ -64,6 +64,88 @@ _SPAN_SPANKIND = _descriptor.EnumDescriptor(
 )
 _sym_db.RegisterEnumDescriptor(_SPAN_SPANKIND)
 
+_STATUS_DEPRECATEDSTATUSCODE = _descriptor.EnumDescriptor(
+  name='DeprecatedStatusCode',
+  full_name='opentelemetry.proto.trace.v1.Status.DeprecatedStatusCode',
+  filename=None,
+  file=DESCRIPTOR,
+  values=[
+    _descriptor.EnumValueDescriptor(
+      name='DEPRECATED_STATUS_CODE_OK', index=0, number=0,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DEPRECATED_STATUS_CODE_CANCELLED', index=1, number=1,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DEPRECATED_STATUS_CODE_UNKNOWN_ERROR', index=2, number=2,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DEPRECATED_STATUS_CODE_INVALID_ARGUMENT', index=3, number=3,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DEPRECATED_STATUS_CODE_DEADLINE_EXCEEDED', index=4, number=4,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DEPRECATED_STATUS_CODE_NOT_FOUND', index=5, number=5,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DEPRECATED_STATUS_CODE_ALREADY_EXISTS', index=6, number=6,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DEPRECATED_STATUS_CODE_PERMISSION_DENIED', index=7, number=7,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DEPRECATED_STATUS_CODE_RESOURCE_EXHAUSTED', index=8, number=8,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DEPRECATED_STATUS_CODE_FAILED_PRECONDITION', index=9, number=9,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DEPRECATED_STATUS_CODE_ABORTED', index=10, number=10,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DEPRECATED_STATUS_CODE_OUT_OF_RANGE', index=11, number=11,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DEPRECATED_STATUS_CODE_UNIMPLEMENTED', index=12, number=12,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DEPRECATED_STATUS_CODE_INTERNAL_ERROR', index=13, number=13,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DEPRECATED_STATUS_CODE_UNAVAILABLE', index=14, number=14,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DEPRECATED_STATUS_CODE_DATA_LOSS', index=15, number=15,
+      serialized_options=None,
+      type=None),
+    _descriptor.EnumValueDescriptor(
+      name='DEPRECATED_STATUS_CODE_UNAUTHENTICATED', index=16, number=16,
+      serialized_options=None,
+      type=None),
+  ],
+  containing_type=None,
+  serialized_options=None,
+  serialized_start=1695,
+  serialized_end=2425,
+)
+_sym_db.RegisterEnumDescriptor(_STATUS_DEPRECATEDSTATUSCODE)
+
 _STATUS_STATUSCODE = _descriptor.EnumDescriptor(
   name='StatusCode',
   full_name='opentelemetry.proto.trace.v1.Status.StatusCode',
@@ -71,78 +153,22 @@ _STATUS_STATUSCODE = _descriptor.EnumDescriptor(
   file=DESCRIPTOR,
   values=[
     _descriptor.EnumValueDescriptor(
-      name='STATUS_CODE_OK', index=0, number=0,
+      name='STATUS_CODE_UNSET', index=0, number=0,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='STATUS_CODE_CANCELLED', index=1, number=1,
+      name='STATUS_CODE_OK', index=1, number=1,
       serialized_options=None,
       type=None),
     _descriptor.EnumValueDescriptor(
-      name='STATUS_CODE_UNKNOWN_ERROR', index=2, number=2,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='STATUS_CODE_INVALID_ARGUMENT', index=3, number=3,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='STATUS_CODE_DEADLINE_EXCEEDED', index=4, number=4,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='STATUS_CODE_NOT_FOUND', index=5, number=5,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='STATUS_CODE_ALREADY_EXISTS', index=6, number=6,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='STATUS_CODE_PERMISSION_DENIED', index=7, number=7,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='STATUS_CODE_RESOURCE_EXHAUSTED', index=8, number=8,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='STATUS_CODE_FAILED_PRECONDITION', index=9, number=9,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='STATUS_CODE_ABORTED', index=10, number=10,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='STATUS_CODE_OUT_OF_RANGE', index=11, number=11,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='STATUS_CODE_UNIMPLEMENTED', index=12, number=12,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='STATUS_CODE_INTERNAL_ERROR', index=13, number=13,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='STATUS_CODE_UNAVAILABLE', index=14, number=14,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='STATUS_CODE_DATA_LOSS', index=15, number=15,
-      serialized_options=None,
-      type=None),
-    _descriptor.EnumValueDescriptor(
-      name='STATUS_CODE_UNAUTHENTICATED', index=16, number=16,
+      name='STATUS_CODE_ERROR', index=2, number=2,
       serialized_options=None,
       type=None),
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1607,
-  serialized_end=2140,
+  serialized_start=2427,
+  serialized_end=2505,
 )
 _sym_db.RegisterEnumDescriptor(_STATUS_STATUSCODE)
 
@@ -470,16 +496,23 @@ _STATUS = _descriptor.Descriptor(
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='code', full_name='opentelemetry.proto.trace.v1.Status.code', index=0,
+      name='deprecated_code', full_name='opentelemetry.proto.trace.v1.Status.deprecated_code', index=0,
       number=1, type=14, cpp_type=8, label=1,
       has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
-      serialized_options=None, file=DESCRIPTOR),
+      serialized_options=b'\030\001', file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
       name='message', full_name='opentelemetry.proto.trace.v1.Status.message', index=1,
       number=2, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='code', full_name='opentelemetry.proto.trace.v1.Status.code', index=2,
+      number=3, type=14, cpp_type=8, label=1,
+      has_default_value=False, default_value=0,
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
@@ -488,6 +521,7 @@ _STATUS = _descriptor.Descriptor(
   ],
   nested_types=[],
   enum_types=[
+    _STATUS_DEPRECATEDSTATUSCODE,
     _STATUS_STATUSCODE,
   ],
   serialized_options=None,
@@ -497,7 +531,7 @@ _STATUS = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=1516,
-  serialized_end=2140,
+  serialized_end=2505,
 )
 
 _RESOURCESPANS.fields_by_name['resource'].message_type = opentelemetry_dot_proto_dot_resource_dot_v1_dot_resource__pb2._RESOURCE
@@ -514,7 +548,9 @@ _SPAN.fields_by_name['events'].message_type = _SPAN_EVENT
 _SPAN.fields_by_name['links'].message_type = _SPAN_LINK
 _SPAN.fields_by_name['status'].message_type = _STATUS
 _SPAN_SPANKIND.containing_type = _SPAN
+_STATUS.fields_by_name['deprecated_code'].enum_type = _STATUS_DEPRECATEDSTATUSCODE
 _STATUS.fields_by_name['code'].enum_type = _STATUS_STATUSCODE
+_STATUS_DEPRECATEDSTATUSCODE.containing_type = _STATUS
 _STATUS_STATUSCODE.containing_type = _STATUS
 DESCRIPTOR.message_types_by_name['ResourceSpans'] = _RESOURCESPANS
 DESCRIPTOR.message_types_by_name['InstrumentationLibrarySpans'] = _INSTRUMENTATIONLIBRARYSPANS
@@ -568,4 +604,5 @@ _sym_db.RegisterMessage(Status)
 
 
 DESCRIPTOR._options = None
+_STATUS.fields_by_name['deprecated_code']._options = None
 # @@protoc_insertion_point(module_scope)
