@@ -160,7 +160,7 @@ class TraceState(typing.Mapping[str, str]):
             typing.Sequence[typing.Tuple[str, str]]
         ] = None,
     ) -> None:
-        self._dict = OrderedDict() # type: OrderedDict[str, str]
+        self._dict = OrderedDict()  # type: OrderedDict[str, str]
         if entries is None:
             return
         if len(entries) > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
