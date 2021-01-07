@@ -17,7 +17,6 @@ from typing import (
     Iterable as typing___Iterable,
     Optional as typing___Optional,
     Text as typing___Text,
-    Union as typing___Union,
 )
 
 from typing_extensions import (
@@ -29,9 +28,6 @@ builtin___bool = bool
 builtin___bytes = bytes
 builtin___float = float
 builtin___int = int
-if sys.version_info < (3,):
-    builtin___buffer = buffer
-    builtin___unicode = unicode
 
 
 DESCRIPTOR: google___protobuf___descriptor___FileDescriptor = ...
@@ -58,12 +54,6 @@ class AnyValue(google___protobuf___message___Message):
         array_value : typing___Optional[type___ArrayValue] = None,
         kvlist_value : typing___Optional[type___KeyValueList] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> AnyValue: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> AnyValue: ...
     def HasField(self, field_name: typing_extensions___Literal[u"array_value",b"array_value",u"bool_value",b"bool_value",u"double_value",b"double_value",u"int_value",b"int_value",u"kvlist_value",b"kvlist_value",u"string_value",b"string_value",u"value",b"value"]) -> builtin___bool: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"array_value",b"array_value",u"bool_value",b"bool_value",u"double_value",b"double_value",u"int_value",b"int_value",u"kvlist_value",b"kvlist_value",u"string_value",b"string_value",u"value",b"value"]) -> None: ...
     def WhichOneof(self, oneof_group: typing_extensions___Literal[u"value",b"value"]) -> typing_extensions___Literal["string_value","bool_value","int_value","double_value","array_value","kvlist_value"]: ...
@@ -79,12 +69,6 @@ class ArrayValue(google___protobuf___message___Message):
         *,
         values : typing___Optional[typing___Iterable[type___AnyValue]] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> ArrayValue: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> ArrayValue: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"values",b"values"]) -> None: ...
 type___ArrayValue = ArrayValue
 
@@ -98,12 +82,6 @@ class KeyValueList(google___protobuf___message___Message):
         *,
         values : typing___Optional[typing___Iterable[type___KeyValue]] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> KeyValueList: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> KeyValueList: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"values",b"values"]) -> None: ...
 type___KeyValueList = KeyValueList
 
@@ -119,12 +97,6 @@ class KeyValue(google___protobuf___message___Message):
         key : typing___Optional[typing___Text] = None,
         value : typing___Optional[type___AnyValue] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> KeyValue: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> KeyValue: ...
     def HasField(self, field_name: typing_extensions___Literal[u"value",b"value"]) -> builtin___bool: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"key",b"key",u"value",b"value"]) -> None: ...
 type___KeyValue = KeyValue
@@ -139,12 +111,6 @@ class StringKeyValue(google___protobuf___message___Message):
         key : typing___Optional[typing___Text] = None,
         value : typing___Optional[typing___Text] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> StringKeyValue: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> StringKeyValue: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"key",b"key",u"value",b"value"]) -> None: ...
 type___StringKeyValue = StringKeyValue
 
@@ -158,11 +124,5 @@ class InstrumentationLibrary(google___protobuf___message___Message):
         name : typing___Optional[typing___Text] = None,
         version : typing___Optional[typing___Text] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> InstrumentationLibrary: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> InstrumentationLibrary: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"name",b"name",u"version",b"version"]) -> None: ...
 type___InstrumentationLibrary = InstrumentationLibrary
