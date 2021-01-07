@@ -139,7 +139,7 @@ class OTLPMetricsExporter(
         endpoint: Optional[str] = None,
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
-        headers: Optional[str] = None,
+        headers: Optional[Sequence] = None,
         timeout: Optional[int] = None,
     ):
         if insecure is None:

@@ -20,7 +20,6 @@ from opentelemetry.proto.logs.v1.logs_pb2 import (
 from typing import (
     Iterable as typing___Iterable,
     Optional as typing___Optional,
-    Union as typing___Union,
 )
 
 from typing_extensions import (
@@ -32,9 +31,6 @@ builtin___bool = bool
 builtin___bytes = bytes
 builtin___float = float
 builtin___int = int
-if sys.version_info < (3,):
-    builtin___buffer = buffer
-    builtin___unicode = unicode
 
 
 DESCRIPTOR: google___protobuf___descriptor___FileDescriptor = ...
@@ -49,12 +45,6 @@ class ExportLogsServiceRequest(google___protobuf___message___Message):
         *,
         resource_logs : typing___Optional[typing___Iterable[opentelemetry___proto___logs___v1___logs_pb2___ResourceLogs]] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> ExportLogsServiceRequest: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> ExportLogsServiceRequest: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"resource_logs",b"resource_logs"]) -> None: ...
 type___ExportLogsServiceRequest = ExportLogsServiceRequest
 
@@ -63,10 +53,4 @@ class ExportLogsServiceResponse(google___protobuf___message___Message):
 
     def __init__(self,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> ExportLogsServiceResponse: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> ExportLogsServiceResponse: ...
 type___ExportLogsServiceResponse = ExportLogsServiceResponse
