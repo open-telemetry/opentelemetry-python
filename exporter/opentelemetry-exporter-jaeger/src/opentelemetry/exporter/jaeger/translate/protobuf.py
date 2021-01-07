@@ -24,7 +24,7 @@ from opentelemetry.exporter.jaeger.translate import (
     VERSION_KEY,
     Translator,
 )
-from opentelemetry.sdk.trace import Span
+from opentelemetry.sdk.trace import Span, StatusCode
 from opentelemetry.util import types
 
 # pylint: disable=no-member,too-many-locals,no-self-use
@@ -190,16 +190,24 @@ class ProtobufTranslator(Translator):
                 if key_value:
                     translated.append(key_value)
 
-        code = _get_long_key_value(
-            "status.code", span.status.status_code.value
+        status = span.status
+        if status.status_code is not StatusCode.UNSET:
+            translated.append(
+                _get_string_key_value(
+                    "otel.status_code", status.status_code.name
+                )
+            )
+            if status.description is not None:
+                translated.append(
+                    _get_string_key_value(
+                        "otel.status_description", status.description
+                    )
+                )
+        translated.append(
+            _get_string_key_value(
+                "span.kind", OTLP_JAEGER_SPAN_KIND[span.kind]
+            )
         )
-        message = _get_string_key_value(
-            "status.message", span.status.description
-        )
-        kind = _get_string_key_value(
-            "span.kind", OTLP_JAEGER_SPAN_KIND[span.kind]
-        )
-        translated.extend([code, message, kind])
 
         # Instrumentation info KeyValues
         if span.instrumentation_info:
