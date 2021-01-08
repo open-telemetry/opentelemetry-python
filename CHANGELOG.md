@@ -47,6 +47,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `opentelemetry-exporter-jaeger` Updated Jaeger exporter status code tag
   ([#1488](https://github.com/open-telemetry/opentelemetry-python/pull/1488))
 
+### Removed
+- `opentelemetry-api` Remove ThreadLocalRuntimeContext since python3.4 is not supported.
+
 ## [0.16b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.16b1) - 2020-11-26
 ### Added
 - Add meter reference to observers
