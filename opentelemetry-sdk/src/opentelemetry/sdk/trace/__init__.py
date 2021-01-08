@@ -41,7 +41,7 @@ from opentelemetry.configuration import Configuration
 from opentelemetry.sdk import util
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
-from opentelemetry.sdk.trace.ids_generator import IdsGenerator
+from opentelemetry.sdk.trace.ids_generator import IdsGenerator, RandomIdsGenerator
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
@@ -900,7 +900,7 @@ class TracerProvider(trace_api.TracerProvider):
             active_span_processor or SynchronousMultiSpanProcessor()
         )
         if ids_generator is None:
-            self.ids_generator = trace_api.RandomIdsGenerator()
+            self.ids_generator = RandomIdsGenerator()
         else:
             self.ids_generator = ids_generator
         self.resource = resource

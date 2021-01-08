@@ -41,7 +41,7 @@ def get_context_new_carrier(old_carrier, carrier_baggage=None):
         "child",
         trace_api.SpanContext(
             parent_span_context.trace_id,
-            trace_api.RandomIdsGenerator().generate_span_id(),
+            ids_generator.RandomIdsGenerator().generate_span_id(),
             is_remote=False,
             trace_flags=parent_span_context.trace_flags,
             trace_state=parent_span_context.trace_state,
