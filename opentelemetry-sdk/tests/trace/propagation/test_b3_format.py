@@ -56,15 +56,15 @@ def get_child_parent_new_carrier(old_carrier):
 class TestB3Format(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        ids_generator = ids_generator.RandomIdsGenerator()
+        id_generator = ids_generator.RandomIdsGenerator()
         cls.serialized_trace_id = b3_format.format_trace_id(
-            ids_generator.generate_trace_id()
+            id_generator.generate_trace_id()
         )
         cls.serialized_span_id = b3_format.format_span_id(
-            ids_generator.generate_span_id()
+            id_generator.generate_span_id()
         )
         cls.serialized_parent_id = b3_format.format_span_id(
-            ids_generator.generate_span_id()
+            id_generator.generate_span_id()
         )
 
     def setUp(self) -> None:
