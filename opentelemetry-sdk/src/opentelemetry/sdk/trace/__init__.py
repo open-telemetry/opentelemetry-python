@@ -41,7 +41,10 @@ from opentelemetry.configuration import Configuration
 from opentelemetry.sdk import util
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
-from opentelemetry.sdk.trace.ids_generator import IdsGenerator, RandomIdsGenerator
+from opentelemetry.sdk.trace.ids_generator import (
+    IdsGenerator,
+    RandomIdsGenerator,
+)
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
