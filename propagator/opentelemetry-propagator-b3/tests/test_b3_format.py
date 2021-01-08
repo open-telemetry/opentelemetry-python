@@ -15,8 +15,8 @@
 import unittest
 from unittest.mock import Mock, patch
 
-import opentelemetry.sdk.trace as trace
 import opentelemetry.propagators.b3 as b3_format
+import opentelemetry.sdk.trace as trace
 import opentelemetry.trace as trace_api
 from opentelemetry.context import get_current
 from opentelemetry.trace.propagation.textmap import DictGetter
