@@ -24,7 +24,10 @@ from opentelemetry.sdk.configuration import (
     _init_tracing,
 )
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace.ids_generator import RandomIdsGenerator
+from opentelemetry.sdk.trace.ids_generator import (
+    IdsGenerator,
+    RandomIdsGenerator,
+)
 
 
 class Provider:
@@ -54,12 +57,12 @@ class OTLPExporter:
     pass
 
 
-class IdsGenerator:
-    pass
-
-
 class CustomIdsGenerator(IdsGenerator):
-    pass
+    def generate_span_id(self):
+        pass
+
+    def generate_trace_id(self):
+        pass
 
 
 class IterEntryPoint:
@@ -130,9 +133,6 @@ class TestTraceInit(TestCase):
         del environ["OTEL_SERVICE_NAME"]
 
     @patch.dict(environ, {"OTEL_IDS_GENERATOR": "custom_ids_generator"})
-    @patch(
-        "opentelemetry.sdk.configuration.trace.IdsGenerator", new=IdsGenerator,
-    )
     @patch("opentelemetry.sdk.configuration.iter_entry_points")
     def test_trace_init_custom_ids_generator(self, mock_iter_entry_points):
         mock_iter_entry_points.configure_mock(
