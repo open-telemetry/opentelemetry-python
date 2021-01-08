@@ -44,6 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `opentelemetry-exporter-otlp` Headers are now passed in as tuple as metadata, instead of a
   string, which was incorrect.
   ([#1507](https://github.com/open-telemetry/opentelemetry-python/pull/1507))
+- `opentelemetry-exporter-jaeger` Updated Jaeger exporter status code tag
+  ([#1488](https://github.com/open-telemetry/opentelemetry-python/pull/1488))
 - Fix TraceState to adhere to specs
   ([#1502](https://github.com/open-telemetry/opentelemetry-python/pull/1502))
 

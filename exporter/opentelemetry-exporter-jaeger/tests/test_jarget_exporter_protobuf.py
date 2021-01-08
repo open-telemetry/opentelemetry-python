@@ -141,16 +141,6 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         default_tags = [
             model_pb2.KeyValue(
-                key="status.code",
-                v_type=model_pb2.ValueType.INT64,
-                v_int64=StatusCode.UNSET.value,
-            ),
-            model_pb2.KeyValue(
-                key="status.message",
-                v_type=model_pb2.ValueType.STRING,
-                v_str=None,
-            ),
-            model_pb2.KeyValue(
                 key="span.kind",
                 v_type=model_pb2.ValueType.STRING,
                 v_str="internal",
@@ -269,12 +259,12 @@ class TestJaegerSpanExporter(unittest.TestCase):
                         v_str="some_resource",
                     ),
                     model_pb2.KeyValue(
-                        key="status.code",
-                        v_type=model_pb2.ValueType.INT64,
-                        v_int64=StatusCode.ERROR.value,
+                        key="otel.status_code",
+                        v_type=model_pb2.ValueType.STRING,
+                        v_str="ERROR",
                     ),
                     model_pb2.KeyValue(
-                        key="status.message",
+                        key="otel.status_description",
                         v_type=model_pb2.ValueType.STRING,
                         v_str="Example description",
                     ),
@@ -353,12 +343,12 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 flags=0,
                 tags=[
                     model_pb2.KeyValue(
-                        key="status.code",
-                        v_type=model_pb2.ValueType.INT64,
-                        v_int64=StatusCode.OK.value,
+                        key="otel.status_code",
+                        v_type=model_pb2.ValueType.STRING,
+                        v_str="OK",
                     ),
                     model_pb2.KeyValue(
-                        key="status.message",
+                        key="otel.status_description",
                         v_type=model_pb2.ValueType.STRING,
                         v_str="Example description",
                     ),
