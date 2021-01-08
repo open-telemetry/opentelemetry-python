@@ -24,7 +24,7 @@ from opentelemetry.sdk.configuration import (
     _init_tracing,
 )
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.trace.ids_generator import RandomIdsGenerator
+from opentelemetry.sdk.trace.ids_generator import RandomIdsGenerator
 
 
 class Provider:

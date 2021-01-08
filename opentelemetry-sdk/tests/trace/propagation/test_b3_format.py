@@ -16,6 +16,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 import opentelemetry.sdk.trace as trace
+import opentelemetry.sdk.trace.ids_generator as ids_generator
 import opentelemetry.sdk.trace.propagation.b3_format as b3_format
 import opentelemetry.trace as trace_api
 from opentelemetry.context import get_current
@@ -55,7 +56,7 @@ def get_child_parent_new_carrier(old_carrier):
 class TestB3Format(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        ids_generator = trace_api.RandomIdsGenerator()
+        ids_generator = ids_generator.RandomIdsGenerator()
         cls.serialized_trace_id = b3_format.format_trace_id(
             ids_generator.generate_trace_id()
         )

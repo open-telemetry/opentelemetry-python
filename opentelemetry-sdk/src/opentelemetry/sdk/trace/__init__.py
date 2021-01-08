@@ -41,6 +41,7 @@ from opentelemetry.configuration import Configuration
 from opentelemetry.sdk import util
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
+from opentelemetry.sdk.trace.ids_generator import IdsGenerator
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
@@ -733,7 +734,7 @@ class Tracer(trace_api.Tracer):
         span_processor: Union[
             SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor
         ],
-        ids_generator: trace_api.IdsGenerator,
+        ids_generator: IdsGenerator,
         instrumentation_info: InstrumentationInfo,
     ) -> None:
         self.sampler = sampler
@@ -893,7 +894,7 @@ class TracerProvider(trace_api.TracerProvider):
         active_span_processor: Union[
             SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor
         ] = None,
-        ids_generator: trace_api.IdsGenerator = None,
+        ids_generator: IdsGenerator = None,
     ):
         self._active_span_processor = (
             active_span_processor or SynchronousMultiSpanProcessor()
