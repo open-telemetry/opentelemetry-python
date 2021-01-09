@@ -160,7 +160,7 @@ class OTLPExporterMixin(
         endpoint = (
             endpoint
             or Configuration().EXPORTER_OTLP_ENDPOINT
-            or "localhost:55680"
+            or "localhost:4317"
         )
 
         if insecure is None:
