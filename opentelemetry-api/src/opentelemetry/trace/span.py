@@ -34,6 +34,17 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
+    def set_attributes(
+        self, attributes: typing.Dict[str, types.AttributeValue]
+    ) -> None:
+        """Sets Attributes.
+
+        Sets Attributes with the key and value passed as arguments dict.
+
+        Note: The behavior of `None` value attributes is undefined, and hence strongly discouraged.
+        """
+
+    @abc.abstractmethod
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         """Sets an Attribute.
 
@@ -264,6 +275,11 @@ class DefaultSpan(Span):
         return False
 
     def end(self, end_time: typing.Optional[int] = None) -> None:
+        pass
+
+    def set_attributes(
+        self, attributes: typing.Dict[str, types.AttributeValue]
+    ) -> None:
         pass
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
