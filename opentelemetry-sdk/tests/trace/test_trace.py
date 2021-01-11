@@ -445,6 +445,14 @@ class TestSpanCreation(unittest.TestCase):
         self.assertIsNotNone(root2.end_time)
         self.assertIsNot(root1, root2)
 
+    def test_start_as_current_span_no_end_on_exit(self):
+        tracer = new_tracer()
+
+        with tracer.start_as_current_span("root", end_on_exit=False) as root:
+            self.assertIsNone(root.end_time)
+
+        self.assertIsNone(root.end_time)
+
     def test_explicit_span_resource(self):
         resource = resources.Resource.create({})
         tracer_provider = trace.TracerProvider(resource=resource)
