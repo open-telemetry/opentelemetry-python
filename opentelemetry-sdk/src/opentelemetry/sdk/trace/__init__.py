@@ -656,13 +656,18 @@ class Span(trace_api.Span):
 
     @_check_span_ended
     def set_status(
-        self, status: Union[str, StatusCode, trace_api.Status]
+        self,
+        status: Union[str, StatusCode, trace_api.Status],
+        description: Optional[str] = None,
     ) -> None:
         if isinstance(status, str):
-            status = StatusCode[status]
+            try:
+                status = StatusCode[status]
+            except KeyError:
+                return
 
         if isinstance(status, StatusCode):
-            status = Status(status_code=status)
+            status = Status(status_code=status, description=description)
 
         self.status = status
 

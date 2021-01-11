@@ -76,7 +76,9 @@ class Span(abc.ABC):
 
     @abc.abstractmethod
     def set_status(
-        self, status: typing.Union[str, StatusCode, Status]
+        self,
+        status: typing.Union[str, StatusCode, Status],
+        description: typing.Optional[str] = None,
     ) -> None:
         """Sets the Status of the Span. If used, this will override the default
         Span status.
@@ -283,7 +285,9 @@ class DefaultSpan(Span):
         pass
 
     def set_status(
-        self, status: typing.Union[str, StatusCode, Status]
+        self,
+        status: typing.Union[str, StatusCode, Status],
+        description: typing.Optional[str] = None,
     ) -> None:
         pass
 
