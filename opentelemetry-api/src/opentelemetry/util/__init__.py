@@ -11,14 +11,13 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import re
+
 import time
 from logging import getLogger
-from typing import TYPE_CHECKING, Sequence, Union, cast
+from os import environ
+from typing import TYPE_CHECKING, Union, cast
 
 from pkg_resources import iter_entry_points
-
-from opentelemetry.configuration import Configuration
 
 if TYPE_CHECKING:
     from opentelemetry.metrics import MeterProvider
@@ -47,7 +46,7 @@ def _load_provider(provider: str) -> Provider:
                 "opentelemetry_{}".format(provider),
                 name=cast(
                     str,
-                    Configuration().get(
+                    environ.get(
                         provider.upper(), "default_{}".format(provider),
                     ),
                 ),

@@ -22,7 +22,6 @@ from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, StatusCode, server
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
@@ -160,11 +159,8 @@ class TestOTLPSpanExporter(TestCase):
         self.span.start()
         self.span.end()
 
-        Configuration._reset()  # pylint: disable=protected-access
-
     def tearDown(self):
         self.server.stop(None)
-        Configuration._reset()  # pylint: disable=protected-access
 
     @patch.dict(
         "os.environ",

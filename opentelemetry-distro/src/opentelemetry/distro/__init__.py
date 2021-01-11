@@ -14,12 +14,12 @@
 #
 import os
 from logging import getLogger
+from os import environ
 from typing import Sequence, Tuple
 
 from pkg_resources import iter_entry_points
 
 from opentelemetry import trace
-from opentelemetry.configuration import Configuration
 from opentelemetry.instrumentation.configurator import BaseConfigurator
 from opentelemetry.instrumentation.distro import BaseDistro
 from opentelemetry.sdk.metrics.export import MetricsExporter
@@ -43,15 +43,15 @@ _DEFAULT_IDS_GENERATOR = RANDOM_IDS_GENERATOR
 
 
 def _get_ids_generator() -> str:
-    return Configuration().IDS_GENERATOR or _DEFAULT_IDS_GENERATOR
+    return environ.get("OTEL_IDS_GENERATOR") or _DEFAULT_IDS_GENERATOR
 
 
 def _get_service_name() -> str:
-    return Configuration().SERVICE_NAME or ""
+    return environ.get("OTEL_SERVICE_NAME") or ""
 
 
 def _get_exporter_names() -> Sequence[str]:
-    exporter = Configuration().EXPORTER or EXPORTER_OTLP
+    exporter = environ.get("OTEL_EXPORTER") or _DEFAULT_EXPORTER
     if exporter.lower().strip() == "none":
         return []
 

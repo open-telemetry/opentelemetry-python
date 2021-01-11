@@ -24,7 +24,6 @@ from unittest import mock
 import pytest
 
 from opentelemetry import trace as trace_api
-from opentelemetry.configuration import Configuration
 from opentelemetry.context import Context
 from opentelemetry.sdk import resources, trace
 from opentelemetry.sdk.trace import Resource, sampling
@@ -1284,16 +1283,6 @@ class TestSpanProcessor(unittest.TestCase):
 
 
 class TestSpanLimits(unittest.TestCase):
-    def setUp(self):
-        # reset global state of configuration object
-        # pylint: disable=protected-access
-        Configuration._reset()
-
-    def tearDown(self):
-        # reset global state of configuration object
-        # pylint: disable=protected-access
-        Configuration._reset()
-
     @mock.patch.dict(
         "os.environ",
         {

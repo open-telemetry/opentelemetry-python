@@ -21,7 +21,6 @@ from logging import WARNING
 from unittest import mock
 
 from opentelemetry import trace as trace_api
-from opentelemetry.configuration import Configuration
 from opentelemetry.context import Context
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import export
@@ -155,11 +154,6 @@ def _create_start_and_end_span(name, span_processor):
 
 
 class TestBatchExportSpanProcessor(unittest.TestCase):
-    def tearDown(self) -> None:
-        # reset global state of configuration object
-        # pylint: disable=protected-access
-        Configuration._reset()
-
     @mock.patch.dict(
         "os.environ",
         {
