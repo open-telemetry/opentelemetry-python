@@ -20,7 +20,6 @@ from unittest import mock
 # pylint:disable=import-error
 import opentelemetry.exporter.jaeger as jaeger_exporter
 from opentelemetry import trace as trace_api
-from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger.gen.jaeger import ttypes as jaeger
 from opentelemetry.exporter.jaeger.translate import Translate
 from opentelemetry.exporter.jaeger.translate.thrift import ThriftTranslator
@@ -44,11 +43,6 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self._test_span.start()
         self._test_span.end()
         # pylint: disable=protected-access
-        Configuration._reset()
-
-    def tearDown(self):
-        # pylint: disable=protected-access
-        Configuration._reset()
 
     def test_constructor_default(self):
         # pylint: disable=protected-access

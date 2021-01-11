@@ -18,6 +18,7 @@ import enum
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
+from os import environ
 from time import sleep
 from typing import Any, Callable, Dict, Generic, List, Optional
 from typing import Sequence as TypingSequence
@@ -35,7 +36,6 @@ from grpc import (
     ssl_channel_credentials,
 )
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -159,23 +159,23 @@ class OTLPExporterMixin(
 
         endpoint = (
             endpoint
-            or Configuration().EXPORTER_OTLP_ENDPOINT
+            or environ.get("OTEL_EXPORTER_OTLP_ENDPOINT")
             or "localhost:4317"
         )
 
         if insecure is None:
-            insecure = Configuration().EXPORTER_OTLP_INSECURE
+            insecure = environ.get("OTEL_EXPORTER_OTLP_INSECURE")
         if insecure is None:
             insecure = False
 
-        self._headers = headers or Configuration().EXPORTER_OTLP_HEADERS
+        self._headers = headers or environ.get("OTEL_EXPORTER_OTLP_HEADERS")
         if isinstance(self._headers, str):
             self._headers = tuple(
                 tuple(item.split("=")) for item in self._headers.split(",")
             )
         self._timeout = (
             timeout
-            or Configuration().EXPORTER_OTLP_TIMEOUT
+            or int(environ.get("OTEL_EXPORTER_OTLP_TIMEOUT", 0))
             or 10  # default: 10 seconds
         )
         self._collector_span_kwargs = None
@@ -188,7 +188,9 @@ class OTLPExporterMixin(
         ):
             compression_algorithm = Compression.Gzip
         else:
-            compression_str = Configuration().EXPORTER_OTLP_INSECURE or None
+            compression_str = (
+                environ.get("OTLP_EXPORTER_OTLP_INSECURE") or None
+            )
             if compression_str is None:
                 compression_algorithm = Compression.NoCompression
             elif (
@@ -210,13 +212,13 @@ class OTLPExporterMixin(
         # secure mode
         if (
             credentials is None
-            and Configuration().EXPORTER_OTLP_CERTIFICATE is None
+            and environ.get("OTLP_EXPORTER_OTLP_CERTIFICATE") is None
         ):
             # use the default location chosen by gRPC runtime
             credentials = ssl_channel_credentials()
         else:
             credentials = credentials or _load_credential_from_file(
-                Configuration().EXPORTER_OTLP_CERTIFICATE
+                environ.get("OTLP_EXPORTER_OTLP_CERTIFICATE")
             )
         self._client = self._stub(
             secure_channel(

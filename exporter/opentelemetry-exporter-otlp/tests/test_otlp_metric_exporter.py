@@ -19,7 +19,6 @@ from unittest.mock import Mock, patch
 
 from grpc import ChannelCredentials
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.otlp.metrics_exporter import OTLPMetricsExporter
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
@@ -62,10 +61,6 @@ class TestOTLPMetricExporter(TestCase):
         self.meter = MeterProvider(resource=self.resource,).get_meter(
             "name", "version"
         )
-        Configuration._reset()  # pylint: disable=protected-access
-
-    def tearDown(self):
-        Configuration._reset()  # pylint: disable=protected-access
 
     @patch.dict(
         "os.environ",

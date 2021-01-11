@@ -17,7 +17,6 @@ from os import environ
 from unittest import TestCase
 from unittest.mock import patch
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.distro import (
     _get_ids_generator,
     _import_ids_generator,
@@ -100,7 +99,6 @@ class TestTraceInit(TestCase):
     # pylint: disable=protected-access
     def test_trace_init_default(self):
         environ["OTEL_SERVICE_NAME"] = "my-test-service"
-        Configuration._reset()
         _init_tracing({"zipkin": Exporter}, RandomIdsGenerator)
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
@@ -115,7 +113,6 @@ class TestTraceInit(TestCase):
 
     def test_trace_init_otlp(self):
         environ["OTEL_SERVICE_NAME"] = "my-otlp-test-service"
-        Configuration._reset()
         _init_tracing({"otlp": OTLPExporter}, RandomIdsGenerator)
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
@@ -140,7 +137,6 @@ class TestTraceInit(TestCase):
                 IterEntryPoint("custom_ids_generator", CustomIdsGenerator)
             ]
         )
-        Configuration._reset()
         ids_generator_name = _get_ids_generator()
         ids_generator = _import_ids_generator(ids_generator_name)
         _init_tracing({}, ids_generator)

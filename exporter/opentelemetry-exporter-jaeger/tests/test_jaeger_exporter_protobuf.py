@@ -22,7 +22,6 @@ from unittest.mock import patch
 import opentelemetry.exporter.jaeger.gen.model_pb2 as model_pb2
 import opentelemetry.exporter.jaeger.translate.protobuf as pb_translator
 from opentelemetry import trace as trace_api
-from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger import JaegerSpanExporter
 from opentelemetry.exporter.jaeger.translate import (
     NAME_KEY,
@@ -49,16 +48,10 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self._test_span.start()
         self._test_span.end()
         # pylint: disable=protected-access
-        Configuration._reset()
-
-    def tearDown(self):
-        # pylint: disable=protected-access
-        Configuration._reset()
 
     def test_constructor_by_environment_variables(self):
         """Test using Environment Variables."""
         # pylint: disable=protected-access
-        Configuration._reset()
         service = "my-opentelemetry-jaeger"
 
         collector_endpoint = "localhost:14250"
