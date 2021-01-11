@@ -3,7 +3,7 @@ import logging
 import types as python_types
 import typing
 
-from opentelemetry.trace.status import Status
+from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 
 _logger = logging.getLogger(__name__)
@@ -75,7 +75,9 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_status(self, status: Status) -> None:
+    def set_status(
+        self, status: typing.Union[str, StatusCode, Status]
+    ) -> None:
         """Sets the Status of the Span. If used, this will override the default
         Span status.
         """
@@ -280,7 +282,9 @@ class DefaultSpan(Span):
     def update_name(self, name: str) -> None:
         pass
 
-    def set_status(self, status: Status) -> None:
+    def set_status(
+        self, status: typing.Union[str, StatusCode, Status]
+    ) -> None:
         pass
 
     def record_exception(

@@ -755,6 +755,32 @@ class TestSpan(unittest.TestCase):
             root.update_name("toor")
             self.assertEqual(root.name, "toor")
 
+    def test_set_status(self):
+        span1 = self.tracer.start_span("span1")
+        status = trace_api.status.Status(
+            trace_api.status.StatusCode.ERROR, "Test description"
+        )
+        span1.set_status(status)
+
+        self.assertIs(span1.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span1.status.description, "Test description")
+
+        span2 = self.tracer.start_span("span2")
+        span2.set_status(trace_api.status.StatusCode.ERROR)
+
+        self.assertIs(span2.status.status_code, StatusCode.ERROR)
+        self.assertIsNone(span2.status.description)
+
+        span3 = self.tracer.start_span("span3")
+        span3.set_status("ERROR")
+
+        self.assertIs(span3.status.status_code, StatusCode.ERROR)
+        self.assertIsNone(span3.status.description)
+
+        span4 = self.tracer.start_span("span4")
+        with self.assertRaises(KeyError):
+            span4.set_status("Unknown")
+
     def test_start_span(self):
         """Start twice, end a not started"""
         span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))

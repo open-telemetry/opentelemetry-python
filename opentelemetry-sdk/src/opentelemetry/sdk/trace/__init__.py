@@ -655,7 +655,15 @@ class Span(trace_api.Span):
         return self._end_time is None
 
     @_check_span_ended
-    def set_status(self, status: trace_api.Status) -> None:
+    def set_status(
+        self, status: Union[str, StatusCode, trace_api.Status]
+    ) -> None:
+        if isinstance(status, str):
+            status = StatusCode[status]
+
+        if isinstance(status, StatusCode):
+            status = Status(status_code=status)
+
         self.status = status
 
     def __exit__(
