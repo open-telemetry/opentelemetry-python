@@ -18,16 +18,30 @@ from logging import getLogger
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry.instrumentation.auto_instrumentation.components import (
-    initialize_components,
-)
+from opentelemetry.configuration import Configuration
 
 logger = getLogger(__file__)
 
 
-def auto_instrument():
+def _load_distros():
+    # will be implemented in a subsequent PR
+    pass
+
+
+def _load_instrumentors():
+    package_to_exclude = Configuration().get("DISABLED_INSTRUMENTATIONS", [])
+    if isinstance(package_to_exclude, str):
+        package_to_exclude = package_to_exclude.split(",")
+        # to handle users entering "requests , flask" or "requests, flask" with spaces
+        package_to_exclude = [x.strip() for x in package_to_exclude]
+
     for entry_point in iter_entry_points("opentelemetry_instrumentor"):
         try:
+            if entry_point.name in package_to_exclude:
+                logger.debug(
+                    "Instrumentation skipped for library %s", entry_point.name
+                )
+                continue
             entry_point.load()().instrument()  # type: ignore
             logger.debug("Instrumented %s", entry_point.name)
         except Exception as exc:  # pylint: disable=broad-except
@@ -35,10 +49,29 @@ def auto_instrument():
             raise exc
 
 
+def _load_configurators():
+    configured = None
+    for entry_point in iter_entry_points("opentelemetry_configurator"):
+        if configured is not None:
+            logger.warning(
+                "Configuration of %s not loaded, %s already loaded",
+                entry_point.name,
+                configured,
+            )
+            continue
+        try:
+            entry_point.load()().configure()  # type: ignore
+            configured = entry_point.name
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.exception("Configuration of %s failed", entry_point.name)
+            raise exc
+
+
 def initialize():
     try:
-        initialize_components()
-        auto_instrument()
+        _load_distros()
+        _load_configurators()
+        _load_instrumentors()
     except Exception:  # pylint: disable=broad-except
         logger.exception("Failed to auto initialize opentelemetry")
 

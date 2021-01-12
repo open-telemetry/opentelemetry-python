@@ -21,8 +21,8 @@ from pkg_resources import iter_entry_points
 from opentelemetry.configuration import Configuration
 
 if TYPE_CHECKING:
-    from opentelemetry.trace import TracerProvider
     from opentelemetry.metrics import MeterProvider
+    from opentelemetry.trace import TracerProvider
 
 Provider = Union["TracerProvider", "MeterProvider"]
 
