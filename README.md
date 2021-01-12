@@ -97,6 +97,26 @@ pip install -e ./instrumentation/opentelemetry-instrumentation-{instrumentation}
 For additional exporter and instrumentation packages, see the 
 [`opentelemetry-python-contrib`](https://github.com/open-telemetry/opentelemetry-python-contrib) repository.
 
+## Running Performance Tests
+
+This section provides details on how to reproduce performance tests results on your own
+machine.
+
+### Resource Usage Tests
+
+1. Install scalene using the following command
+
+::
+
+    pip install -U scalene
+
+2. Run the `scalene` tests on any of the example Python programs
+
+::
+
+    scalene opentelemetry-<PACKAGE>/tests/performance/resource-usage/<PATH_TO_TEST>/profile_resource_usage_<NAME_OF_TEST>.py
+
+
 ## Documentation
 
 The online documentation is available at https://opentelemetry-python.readthedocs.io/.
