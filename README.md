@@ -76,6 +76,14 @@ directory includes OpenTelemetry exporter packages. You can install the packages
 pip install opentelemetry-exporter-{exporter}
 ```
 
+The
+[`propagator/`](https://github.com/open-telemetry/opentelemetry-python/tree/master/propagator)
+directory includes OpenTelemetry propagator packages. You can install the packages separately with the following command:
+
+```sh
+pip install opentelemetry-propagator-{propagator}
+```
+
 To install the development versions of these packages instead, clone or fork
 this repository and perform an [editable
 install](https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs):
