@@ -30,7 +30,7 @@ def test_extract_single_header(benchmark):
         FORMAT.extract,
         DictGetter(),
         {
-            FORMAT.SINGLE_HEADER_KEY: "bdb5b63237ed38aea578af665aa5aa60-00000000000000000c32d953d73ad225"
+            FORMAT.SINGLE_HEADER_KEY: "bdb5b63237ed38aea578af665aa5aa60-00000000000000000c32d953d73ad225-1-11fd79a30b0896cd285b396ae102dd76"
         },
     )
 
@@ -39,4 +39,13 @@ def test_inject_empty_context(benchmark):
     tracer = trace.TracerProvider().get_tracer("sdk_tracer_provider")
     with tracer.start_as_current_span("Root Span"):
         with tracer.start_as_current_span("Child Span"):
-            benchmark(FORMAT.inject, dict.__setitem__, {})
+            benchmark(
+                FORMAT.inject,
+                dict.__setitem__,
+                {
+                    FORMAT.TRACE_ID_KEY: "bdb5b63237ed38aea578af665aa5aa60",
+                    FORMAT.SPAN_ID_KEY: "00000000000000000c32d953d73ad225",
+                    FORMAT.PARENT_SPAN_ID_KEY: "11fd79a30b0896cd285b396ae102dd76",
+                    FORMAT.SAMPLED_KEY: "1",
+                },
+            )
