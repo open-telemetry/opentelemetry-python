@@ -255,8 +255,7 @@ class TraceState(typing.Mapping[str, str]):
         """Deletes a key-value from tracestate.
 
         Args:
-            key: A valid tracestate key to remove key-value
-            pair from tracestate
+            key: A valid tracestate key to remove key-value pair from tracestate
 
         Returns:
             A new TraceState with the modifications applied.
