@@ -13,15 +13,23 @@
 # limitations under the License.
 # type: ignore
 
+import os
+
 from unittest import TestCase
 
 from pkg_resources import DistributionNotFound, require
+from opentelemetry.distro import OpenTelemetryDistro
 
 
 class TestDistribution(TestCase):
-    def test_proto(self):
-
+    def test_package_available(self):
         try:
             require(["opentelemetry-distro"])
         except DistributionNotFound:
             self.fail("opentelemetry-distro not installed")
+
+    def test_default_configuration(self):
+        distro = OpenTelemetryDistro()
+        self.assertIsNone(os.environ.get("OTEL_EXPORTER"))
+        distro.configure()
+        self.assertEqual("otlp", os.environ.get("OTEL_EXPORTER"))
