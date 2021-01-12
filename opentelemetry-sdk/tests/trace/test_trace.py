@@ -28,6 +28,7 @@ from opentelemetry.configuration import Configuration
 from opentelemetry.context import Context
 from opentelemetry.sdk import resources, trace
 from opentelemetry.sdk.trace import Resource, sampling
+from opentelemetry.sdk.trace.ids_generator import RandomIdsGenerator
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import StatusCode
@@ -715,7 +716,7 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.events[3].attributes, {"attr2": (1, 2)})
 
     def test_links(self):
-        ids_generator = trace_api.RandomIdsGenerator()
+        ids_generator = RandomIdsGenerator()
         other_context1 = trace_api.SpanContext(
             trace_id=ids_generator.generate_trace_id(),
             span_id=ids_generator.generate_span_id(),
@@ -1241,7 +1242,7 @@ class TestSpanLimits(unittest.TestCase):
     def test_span_environment_limits(self):
         reload(trace)
         tracer = new_tracer()
-        ids_generator = trace_api.RandomIdsGenerator()
+        ids_generator = RandomIdsGenerator()
         some_links = [
             trace_api.Link(
                 trace_api.SpanContext(

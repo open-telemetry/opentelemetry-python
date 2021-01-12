@@ -16,6 +16,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 import opentelemetry.sdk.trace as trace
+import opentelemetry.sdk.trace.ids_generator as ids_generator
 import opentelemetry.sdk.trace.propagation.b3_format as b3_format
 import opentelemetry.trace as trace_api
 from opentelemetry.context import get_current
@@ -37,7 +38,7 @@ def get_child_parent_new_carrier(old_carrier):
         "child",
         trace_api.SpanContext(
             parent_span_context.trace_id,
-            trace_api.RandomIdsGenerator().generate_span_id(),
+            ids_generator.RandomIdsGenerator().generate_span_id(),
             is_remote=False,
             trace_flags=parent_span_context.trace_flags,
             trace_state=parent_span_context.trace_state,
@@ -55,15 +56,15 @@ def get_child_parent_new_carrier(old_carrier):
 class TestB3Format(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        ids_generator = trace_api.RandomIdsGenerator()
+        id_generator = ids_generator.RandomIdsGenerator()
         cls.serialized_trace_id = b3_format.format_trace_id(
-            ids_generator.generate_trace_id()
+            id_generator.generate_trace_id()
         )
         cls.serialized_span_id = b3_format.format_span_id(
-            ids_generator.generate_span_id()
+            id_generator.generate_span_id()
         )
         cls.serialized_parent_id = b3_format.format_span_id(
-            ids_generator.generate_span_id()
+            id_generator.generate_span_id()
         )
 
     def setUp(self) -> None:
@@ -255,10 +256,10 @@ class TestB3Format(unittest.TestCase):
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
 
     @patch(
-        "opentelemetry.sdk.trace.propagation.b3_format.trace.RandomIdsGenerator.generate_trace_id"
+        "opentelemetry.sdk.trace.ids_generator.RandomIdsGenerator.generate_trace_id"
     )
     @patch(
-        "opentelemetry.sdk.trace.propagation.b3_format.trace.RandomIdsGenerator.generate_span_id"
+        "opentelemetry.sdk.trace.ids_generator.RandomIdsGenerator.generate_span_id"
     )
     def test_invalid_trace_id(
         self, mock_generate_span_id, mock_generate_trace_id
@@ -281,10 +282,10 @@ class TestB3Format(unittest.TestCase):
         self.assertEqual(span_context.span_id, 2)
 
     @patch(
-        "opentelemetry.sdk.trace.propagation.b3_format.trace.RandomIdsGenerator.generate_trace_id"
+        "opentelemetry.sdk.trace.ids_generator.RandomIdsGenerator.generate_trace_id"
     )
     @patch(
-        "opentelemetry.sdk.trace.propagation.b3_format.trace.RandomIdsGenerator.generate_span_id"
+        "opentelemetry.sdk.trace.ids_generator.RandomIdsGenerator.generate_span_id"
     )
     def test_invalid_span_id(
         self, mock_generate_span_id, mock_generate_trace_id
