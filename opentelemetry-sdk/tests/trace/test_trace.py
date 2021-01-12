@@ -212,6 +212,7 @@ class TestTracerSampling(unittest.TestCase):
         },
     )
     def test_ratio_sampler_with_env(self):
+        # pylint: disable=protected-access
         reload(trace)
         tracer_provider = trace.TracerProvider()
         self.assertIsInstance(tracer_provider.sampler, sampling.ParentBased)
