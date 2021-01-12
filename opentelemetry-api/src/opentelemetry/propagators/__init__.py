@@ -133,7 +133,7 @@ try:
     for propagator in environ_propagators.split(","):
         propagators.append(  # type: ignore
             next(  # type: ignore
-                iter_entry_points("opentelemetry_propagator", propagator)  # type: ignore
+                iter_entry_points("opentelemetry_propagator", propagator)
             ).load()()
         )
 
