@@ -139,7 +139,6 @@ tracer_provider.add_span_processor(mock_processor)
 
 
 class TestTracerSampling(unittest.TestCase):
-
     def tearDown(self):
         reload(trace)
 

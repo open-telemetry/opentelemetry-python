@@ -65,12 +65,12 @@ The list of known values for ``OTEL_TRACE_SAMPLER`` are:
 
     * always_on - Sampler that always samples spans, regardless of the parent span's sampling decision.
     * always_off - Sampler that never samples spans, regardless of the parent span's sampling decision.
-    * traceidratio - Sampler that samples probabalistically based on `rate`.
+    * traceidratio - Sampler that samples probabalistically based on rate.
     * parentbased_always_on - (default) Sampler that respects its parent span's sampling decision, but otherwise always samples.
     * parentbased_always_off - Sampler that respects its parent span's sampling decision, but otherwise never samples.
-    * parentbased_traceidratio - Sampler that respects its parent span's sampling decision, but otherwise samples probabalistically based on `rate`.
+    * parentbased_traceidratio - Sampler that respects its parent span's sampling decision, but otherwise samples probabalistically based on rate.
 
-Sampling probability can be set with ``OTEL_TRACE_SAMPLER_ARG`` if the sampler is `traceidratio` or `parentbased_traceidratio`, when not provided `rate` will be set to 1.0 (maximum rate possible).
+Sampling probability can be set with ``OTEL_TRACE_SAMPLER_ARG`` if the sampler is traceidratio or parentbased_traceidratio, when not provided rate will be set to 1.0 (maximum rate possible).
 
 
 Prev example but with environment vairables. Please make sure to set the env ``OTEL_TRACE_SAMPLER=traceidratio`` and ``OTEL_TRACE_SAMPLER_ARG=0.001``.
@@ -370,9 +370,9 @@ _KNOWN_SAMPLERS = {
 
 
 def _get_from_env_or_default() -> Sampler:
-    trace_sampler = (
-        os.getenv("OTEL_TRACE_SAMPLER", "parentbased_always_on").lower()
-    )
+    trace_sampler = os.getenv(
+        "OTEL_TRACE_SAMPLER", "parentbased_always_on"
+    ).lower()
     if trace_sampler not in _KNOWN_SAMPLERS:
         _logger.warning("Couldn't recognize sampler %s.", trace_sampler)
         trace_sampler = "parentbased_always_on"
