@@ -97,12 +97,12 @@ Prev example but with environment vairables. Please make sure to set the env ``O
 """
 import abc
 import enum
+import os
 from logging import getLogger
 from types import MappingProxyType
 from typing import Optional, Sequence
 
 # pylint: disable=unused-import
-from opentelemetry.configuration import Configuration
 from opentelemetry.context import Context
 from opentelemetry.trace import Link, get_current_span
 from opentelemetry.trace.span import TraceState
@@ -371,7 +371,7 @@ _KNOWN_SAMPLERS = {
 
 def _get_from_env_or_default() -> Sampler:
     trace_sampler = (
-        Configuration().get("TRACE_SAMPLER", "parentbased_always_on").lower()
+        os.getenv("OTEL_TRACE_SAMPLER", "parentbased_always_on").lower()
     )
     if trace_sampler not in _KNOWN_SAMPLERS:
         _logger.warning("Couldn't recognize sampler %s.", trace_sampler)
@@ -379,7 +379,7 @@ def _get_from_env_or_default() -> Sampler:
 
     if trace_sampler in ("traceidratio", "parentbased_traceidratio"):
         try:
-            rate = float(Configuration().TRACE_SAMPLER_ARG)
+            rate = float(os.getenv("OTEL_TRACE_SAMPLER_ARG"))
         except ValueError:
             _logger.warning("Could not convert TRACE_SAMPLER_ARG to float.")
             rate = 1.0

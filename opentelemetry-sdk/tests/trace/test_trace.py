@@ -139,13 +139,8 @@ tracer_provider.add_span_processor(mock_processor)
 
 
 class TestTracerSampling(unittest.TestCase):
-    def setUp(self):
-        # pylint: disable=protected-access
-        Configuration._reset()
 
     def tearDown(self):
-        # pylint: disable=protected-access
-        Configuration._reset()
         reload(trace)
 
     def test_default_sampler(self):
@@ -197,7 +192,6 @@ class TestTracerSampling(unittest.TestCase):
     @mock.patch.dict("os.environ", {"OTEL_TRACE_SAMPLER": "always_off"})
     def test_sampler_with_env(self):
         # pylint: disable=protected-access
-        Configuration._reset()
         reload(trace)
         tracer_provider = trace.TracerProvider()
         self.assertIsInstance(tracer_provider.sampler, sampling.StaticSampler)
@@ -219,8 +213,6 @@ class TestTracerSampling(unittest.TestCase):
         },
     )
     def test_ratio_sampler_with_env(self):
-        # pylint: disable=protected-access
-        Configuration._reset()
         reload(trace)
         tracer_provider = trace.TracerProvider()
         self.assertIsInstance(tracer_provider.sampler, sampling.ParentBased)
