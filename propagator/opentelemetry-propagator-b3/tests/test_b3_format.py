@@ -15,7 +15,7 @@
 import unittest
 from unittest.mock import Mock, patch
 
-import opentelemetry.propagators.b3 as b3_format
+import opentelemetry.propagators.b3 as b3_format  # pylint: disable=no-name-in-module,import-error
 import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.ids_generator as ids_generator
 import opentelemetry.trace as trace_api
