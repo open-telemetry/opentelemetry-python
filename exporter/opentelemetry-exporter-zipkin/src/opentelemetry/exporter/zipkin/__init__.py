@@ -82,6 +82,7 @@ from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin.gen import zipkin_pb2
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Span, SpanContext, SpanKind
+from opentelemetry.trace.status import StatusCode
 
 TRANSPORT_FORMAT_JSON = "json"
 TRANSPORT_FORMAT_PROTOBUF = "protobuf"
@@ -237,14 +238,14 @@ class ZipkinSpanExporter(SpanExporter):
                     "otel.instrumentation_library.version"
                 ] = span.instrumentation_info.version
 
-            if span.status is not None:
-                zipkin_span["tags"]["otel.status_code"] = str(
-                    span.status.status_code.value
-                )
-                if span.status.description is not None:
-                    zipkin_span["tags"][
-                        "otel.status_description"
-                    ] = span.status.description
+            if span.status.status_code is not StatusCode.UNSET:
+                zipkin_span["tags"][
+                    "otel.status_code"
+                ] = span.status.status_code.name
+                if span.status.status_code is StatusCode.ERROR:
+                    zipkin_span["tags"]["error"] = (
+                        span.status.description or ""
+                    )
 
             if context.trace_flags.sampled:
                 zipkin_span["debug"] = True
@@ -317,13 +318,13 @@ class ZipkinSpanExporter(SpanExporter):
                     }
                 )
 
-            if span.status is not None:
+            if span.status.status_code is not StatusCode.UNSET:
                 pbuf_span.tags.update(
-                    {"otel.status_code": str(span.status.status_code.value)}
+                    {"otel.status_code": span.status.status_code.name}
                 )
-                if span.status.description is not None:
+                if span.status.status_code is StatusCode.ERROR:
                     pbuf_span.tags.update(
-                        {"otel.status_description": span.status.description}
+                        {"error": span.status.description or ""}
                     )
 
             if context.trace_flags.sampled:
@@ -351,10 +352,15 @@ class ZipkinSpanExporter(SpanExporter):
         if not tags_dict:
             return tags
         for attribute_key, attribute_value in tags_dict.items():
-            if isinstance(attribute_value, (int, bool, float)):
+            if isinstance(attribute_value, (int, bool, float, str)):
                 value = str(attribute_value)
-            elif isinstance(attribute_value, str):
-                value = attribute_value
+            elif isinstance(attribute_value, Sequence):
+                value = self._extract_tag_value_string_from_sequence(
+                    attribute_value
+                )
+                if not value:
+                    logger.warning("Could not serialize tag %s", attribute_key)
+                    continue
             else:
                 logger.warning("Could not serialize tag %s", attribute_key)
                 continue
@@ -363,6 +369,42 @@ class ZipkinSpanExporter(SpanExporter):
                 value = value[: self.max_tag_value_length]
             tags[attribute_key] = value
         return tags
+
+    def _extract_tag_value_string_from_sequence(self, sequence: Sequence):
+        if self.max_tag_value_length == 1:
+            return None
+
+        tag_value_elements = []
+        running_string_length = (
+            2  # accounts for array brackets in output string
+        )
+        defined_max_tag_value_length = self.max_tag_value_length > 0
+
+        for element in sequence:
+            if isinstance(element, (int, bool, float, str)):
+                tag_value_element = str(element)
+            elif element is None:
+                tag_value_element = None
+            else:
+                continue
+
+            if defined_max_tag_value_length:
+                if tag_value_element is None:
+                    running_string_length += 4  # null with no quotes
+                else:
+                    # + 2 accounts for string quotation marks
+                    running_string_length += len(tag_value_element) + 2
+
+                if tag_value_elements:
+                    # accounts for ',' item separator
+                    running_string_length += 1
+
+                if running_string_length > self.max_tag_value_length:
+                    break
+
+            tag_value_elements.append(tag_value_element)
+
+        return json.dumps(tag_value_elements, separators=(",", ":"))
 
     def _extract_tags_from_span(self, span: Span):
         tags = self._extract_tags_from_dict(getattr(span, "attributes", None))

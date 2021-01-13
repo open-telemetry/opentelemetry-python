@@ -28,6 +28,7 @@ from opentelemetry.configuration import Configuration
 from opentelemetry.context import Context
 from opentelemetry.sdk import resources, trace
 from opentelemetry.sdk.trace import Resource, sampling
+from opentelemetry.sdk.trace.ids_generator import RandomIdsGenerator
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import StatusCode
@@ -414,6 +415,37 @@ class TestSpanCreation(unittest.TestCase):
             self.assertIs(trace_api.get_current_span(), root)
             self.assertIsNotNone(child.end_time)
 
+    def test_start_as_current_span_decorator(self):
+        tracer = new_tracer()
+
+        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+
+        @tracer.start_as_current_span("root")
+        def func():
+            root = trace_api.get_current_span()
+
+            with tracer.start_as_current_span("child") as child:
+                self.assertIs(trace_api.get_current_span(), child)
+                self.assertIs(child.parent, root.get_span_context())
+
+            # After exiting the child's scope the parent should become the
+            # current span again.
+            self.assertIs(trace_api.get_current_span(), root)
+            self.assertIsNotNone(child.end_time)
+
+            return root
+
+        root1 = func()
+
+        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+        self.assertIsNotNone(root1.end_time)
+
+        # Second call must create a new span
+        root2 = func()
+        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+        self.assertIsNotNone(root2.end_time)
+        self.assertIsNot(root1, root2)
+
     def test_explicit_span_resource(self):
         resource = resources.Resource.create({})
         tracer_provider = trace.TracerProvider(resource=resource)
@@ -684,7 +716,7 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.events[3].attributes, {"attr2": (1, 2)})
 
     def test_links(self):
-        ids_generator = trace_api.RandomIdsGenerator()
+        ids_generator = RandomIdsGenerator()
         other_context1 = trace_api.SpanContext(
             trace_id=ids_generator.generate_trace_id(),
             span_id=ids_generator.generate_span_id(),
@@ -1210,7 +1242,7 @@ class TestSpanLimits(unittest.TestCase):
     def test_span_environment_limits(self):
         reload(trace)
         tracer = new_tracer()
-        ids_generator = trace_api.RandomIdsGenerator()
+        ids_generator = RandomIdsGenerator()
         some_links = [
             trace_api.Link(
                 trace_api.SpanContext(

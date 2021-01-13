@@ -18,7 +18,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='opentelemetry.proto.trace.v1',
   syntax='proto3',
   serialized_options=b'\n\037io.opentelemetry.proto.trace.v1B\020TraceConfigProtoP\001ZGgithub.com/open-telemetry/opentelemetry-proto/gen/go/collector/trace/v1',
-  serialized_pb=b'\n/opentelemetry/proto/trace/v1/trace_config.proto\x12\x1copentelemetry.proto.trace.v1\"\xc8\x03\n\x0bTraceConfig\x12I\n\x10\x63onstant_sampler\x18\x01 \x01(\x0b\x32-.opentelemetry.proto.trace.v1.ConstantSamplerH\x00\x12O\n\x13probability_sampler\x18\x02 \x01(\x0b\x32\x30.opentelemetry.proto.trace.v1.ProbabilitySamplerH\x00\x12R\n\x15rate_limiting_sampler\x18\x03 \x01(\x0b\x32\x31.opentelemetry.proto.trace.v1.RateLimitingSamplerH\x00\x12 \n\x18max_number_of_attributes\x18\x04 \x01(\x03\x12\"\n\x1amax_number_of_timed_events\x18\x05 \x01(\x03\x12\x30\n(max_number_of_attributes_per_timed_event\x18\x06 \x01(\x03\x12\x1b\n\x13max_number_of_links\x18\x07 \x01(\x03\x12)\n!max_number_of_attributes_per_link\x18\x08 \x01(\x03\x42\t\n\x07sampler\"\xa9\x01\n\x0f\x43onstantSampler\x12P\n\x08\x64\x65\x63ision\x18\x01 \x01(\x0e\x32>.opentelemetry.proto.trace.v1.ConstantSampler.ConstantDecision\"D\n\x10\x43onstantDecision\x12\x0e\n\nALWAYS_OFF\x10\x00\x12\r\n\tALWAYS_ON\x10\x01\x12\x11\n\rALWAYS_PARENT\x10\x02\"1\n\x12ProbabilitySampler\x12\x1b\n\x13samplingProbability\x18\x01 \x01(\x01\"\"\n\x13RateLimitingSampler\x12\x0b\n\x03qps\x18\x01 \x01(\x03\x42~\n\x1fio.opentelemetry.proto.trace.v1B\x10TraceConfigProtoP\x01ZGgithub.com/open-telemetry/opentelemetry-proto/gen/go/collector/trace/v1b\x06proto3'
+  serialized_pb=b'\n/opentelemetry/proto/trace/v1/trace_config.proto\x12\x1copentelemetry.proto.trace.v1\"\xc8\x03\n\x0bTraceConfig\x12I\n\x10\x63onstant_sampler\x18\x01 \x01(\x0b\x32-.opentelemetry.proto.trace.v1.ConstantSamplerH\x00\x12O\n\x14trace_id_ratio_based\x18\x02 \x01(\x0b\x32/.opentelemetry.proto.trace.v1.TraceIdRatioBasedH\x00\x12R\n\x15rate_limiting_sampler\x18\x03 \x01(\x0b\x32\x31.opentelemetry.proto.trace.v1.RateLimitingSamplerH\x00\x12 \n\x18max_number_of_attributes\x18\x04 \x01(\x03\x12\"\n\x1amax_number_of_timed_events\x18\x05 \x01(\x03\x12\x30\n(max_number_of_attributes_per_timed_event\x18\x06 \x01(\x03\x12\x1b\n\x13max_number_of_links\x18\x07 \x01(\x03\x12)\n!max_number_of_attributes_per_link\x18\x08 \x01(\x03\x42\t\n\x07sampler\"\xa9\x01\n\x0f\x43onstantSampler\x12P\n\x08\x64\x65\x63ision\x18\x01 \x01(\x0e\x32>.opentelemetry.proto.trace.v1.ConstantSampler.ConstantDecision\"D\n\x10\x43onstantDecision\x12\x0e\n\nALWAYS_OFF\x10\x00\x12\r\n\tALWAYS_ON\x10\x01\x12\x11\n\rALWAYS_PARENT\x10\x02\"*\n\x11TraceIdRatioBased\x12\x15\n\rsamplingRatio\x18\x01 \x01(\x01\"\"\n\x13RateLimitingSampler\x12\x0b\n\x03qps\x18\x01 \x01(\x03\x42~\n\x1fio.opentelemetry.proto.trace.v1B\x10TraceConfigProtoP\x01ZGgithub.com/open-telemetry/opentelemetry-proto/gen/go/collector/trace/v1b\x06proto3'
 )
 
 
@@ -65,7 +65,7 @@ _TRACECONFIG = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
     _descriptor.FieldDescriptor(
-      name='probability_sampler', full_name='opentelemetry.proto.trace.v1.TraceConfig.probability_sampler', index=1,
+      name='trace_id_ratio_based', full_name='opentelemetry.proto.trace.v1.TraceConfig.trace_id_ratio_based', index=1,
       number=2, type=11, cpp_type=10, label=1,
       has_default_value=False, default_value=None,
       message_type=None, enum_type=None, containing_type=None,
@@ -165,15 +165,15 @@ _CONSTANTSAMPLER = _descriptor.Descriptor(
 )
 
 
-_PROBABILITYSAMPLER = _descriptor.Descriptor(
-  name='ProbabilitySampler',
-  full_name='opentelemetry.proto.trace.v1.ProbabilitySampler',
+_TRACEIDRATIOBASED = _descriptor.Descriptor(
+  name='TraceIdRatioBased',
+  full_name='opentelemetry.proto.trace.v1.TraceIdRatioBased',
   filename=None,
   file=DESCRIPTOR,
   containing_type=None,
   fields=[
     _descriptor.FieldDescriptor(
-      name='samplingProbability', full_name='opentelemetry.proto.trace.v1.ProbabilitySampler.samplingProbability', index=0,
+      name='samplingRatio', full_name='opentelemetry.proto.trace.v1.TraceIdRatioBased.samplingRatio', index=0,
       number=1, type=1, cpp_type=5, label=1,
       has_default_value=False, default_value=float(0),
       message_type=None, enum_type=None, containing_type=None,
@@ -192,7 +192,7 @@ _PROBABILITYSAMPLER = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=712,
-  serialized_end=761,
+  serialized_end=754,
 )
 
 
@@ -222,19 +222,19 @@ _RATELIMITINGSAMPLER = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=763,
-  serialized_end=797,
+  serialized_start=756,
+  serialized_end=790,
 )
 
 _TRACECONFIG.fields_by_name['constant_sampler'].message_type = _CONSTANTSAMPLER
-_TRACECONFIG.fields_by_name['probability_sampler'].message_type = _PROBABILITYSAMPLER
+_TRACECONFIG.fields_by_name['trace_id_ratio_based'].message_type = _TRACEIDRATIOBASED
 _TRACECONFIG.fields_by_name['rate_limiting_sampler'].message_type = _RATELIMITINGSAMPLER
 _TRACECONFIG.oneofs_by_name['sampler'].fields.append(
   _TRACECONFIG.fields_by_name['constant_sampler'])
 _TRACECONFIG.fields_by_name['constant_sampler'].containing_oneof = _TRACECONFIG.oneofs_by_name['sampler']
 _TRACECONFIG.oneofs_by_name['sampler'].fields.append(
-  _TRACECONFIG.fields_by_name['probability_sampler'])
-_TRACECONFIG.fields_by_name['probability_sampler'].containing_oneof = _TRACECONFIG.oneofs_by_name['sampler']
+  _TRACECONFIG.fields_by_name['trace_id_ratio_based'])
+_TRACECONFIG.fields_by_name['trace_id_ratio_based'].containing_oneof = _TRACECONFIG.oneofs_by_name['sampler']
 _TRACECONFIG.oneofs_by_name['sampler'].fields.append(
   _TRACECONFIG.fields_by_name['rate_limiting_sampler'])
 _TRACECONFIG.fields_by_name['rate_limiting_sampler'].containing_oneof = _TRACECONFIG.oneofs_by_name['sampler']
@@ -242,7 +242,7 @@ _CONSTANTSAMPLER.fields_by_name['decision'].enum_type = _CONSTANTSAMPLER_CONSTAN
 _CONSTANTSAMPLER_CONSTANTDECISION.containing_type = _CONSTANTSAMPLER
 DESCRIPTOR.message_types_by_name['TraceConfig'] = _TRACECONFIG
 DESCRIPTOR.message_types_by_name['ConstantSampler'] = _CONSTANTSAMPLER
-DESCRIPTOR.message_types_by_name['ProbabilitySampler'] = _PROBABILITYSAMPLER
+DESCRIPTOR.message_types_by_name['TraceIdRatioBased'] = _TRACEIDRATIOBASED
 DESCRIPTOR.message_types_by_name['RateLimitingSampler'] = _RATELIMITINGSAMPLER
 _sym_db.RegisterFileDescriptor(DESCRIPTOR)
 
@@ -260,12 +260,12 @@ ConstantSampler = _reflection.GeneratedProtocolMessageType('ConstantSampler', (_
   })
 _sym_db.RegisterMessage(ConstantSampler)
 
-ProbabilitySampler = _reflection.GeneratedProtocolMessageType('ProbabilitySampler', (_message.Message,), {
-  'DESCRIPTOR' : _PROBABILITYSAMPLER,
+TraceIdRatioBased = _reflection.GeneratedProtocolMessageType('TraceIdRatioBased', (_message.Message,), {
+  'DESCRIPTOR' : _TRACEIDRATIOBASED,
   '__module__' : 'opentelemetry.proto.trace.v1.trace_config_pb2'
-  # @@protoc_insertion_point(class_scope:opentelemetry.proto.trace.v1.ProbabilitySampler)
+  # @@protoc_insertion_point(class_scope:opentelemetry.proto.trace.v1.TraceIdRatioBased)
   })
-_sym_db.RegisterMessage(ProbabilitySampler)
+_sym_db.RegisterMessage(TraceIdRatioBased)
 
 RateLimitingSampler = _reflection.GeneratedProtocolMessageType('RateLimitingSampler', (_message.Message,), {
   'DESCRIPTOR' : _RATELIMITINGSAMPLER,
