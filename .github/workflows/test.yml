@@ -80,6 +80,7 @@ jobs:
           max-items-in-chart: 100
           # Alert with a commit comment on possible performance regression
           alert-threshold: 200%
+          comment-always: true	
           fail-on-alert: true
           # Make a commit on `gh-pages` with benchmarks from previous step
           auto-push: ${{ github.ref == 'refs/heads/master' }}

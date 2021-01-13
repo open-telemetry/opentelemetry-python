@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 import opentelemetry.sdk.trace as trace
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
@@ -46,6 +47,7 @@ def test_simple_start_as_current_span(benchmark):
             "benchmarkedSpan",
             attributes={"long.attribute": -10000000001000000000},
         ) as span:
+            time.sleep(0.01)
             span.add_event("benchmarkEvent")
 
     benchmark(benchmark_start_as_current_span)
