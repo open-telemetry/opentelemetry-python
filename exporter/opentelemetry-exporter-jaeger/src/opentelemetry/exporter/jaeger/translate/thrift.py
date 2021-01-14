@@ -23,7 +23,7 @@ from opentelemetry.exporter.jaeger.translate import (
     _convert_int_to_i64,
     _nsec_to_usec_round,
 )
-from opentelemetry.sdk.trace import Span
+from opentelemetry.sdk.trace import Span, StatusCode
 from opentelemetry.util import types
 
 
@@ -120,10 +120,21 @@ class ThriftTranslator(Translator):
                 if tag:
                     translated.append(tag)
 
-        code = _get_long_tag("status.code", span.status.status_code.value)
-        message = _get_string_tag("status.message", span.status.description)
-        kind = _get_string_tag("span.kind", OTLP_JAEGER_SPAN_KIND[span.kind])
-        translated.extend([code, message, kind])
+        status = span.status
+        if status.status_code is not StatusCode.UNSET:
+            translated.append(
+                _get_string_tag("otel.status_code", status.status_code.name)
+            )
+            if status.description is not None:
+                translated.append(
+                    _get_string_tag(
+                        "otel.status_description", status.description
+                    )
+                )
+
+        translated.append(
+            _get_string_tag("span.kind", OTLP_JAEGER_SPAN_KIND[span.kind])
+        )
 
         # Instrumentation info tags
         if span.instrumentation_info:

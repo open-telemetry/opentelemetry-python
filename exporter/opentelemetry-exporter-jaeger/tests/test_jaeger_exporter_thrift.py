@@ -222,14 +222,6 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         default_tags = [
             jaeger.Tag(
-                key="status.code",
-                vType=jaeger.TagType.LONG,
-                vLong=StatusCode.UNSET.value,
-            ),
-            jaeger.Tag(
-                key="status.message", vType=jaeger.TagType.STRING, vStr=None
-            ),
-            jaeger.Tag(
                 key="span.kind", vType=jaeger.TagType.STRING, vStr="internal",
             ),
         ]
@@ -316,12 +308,12 @@ class TestJaegerSpanExporter(unittest.TestCase):
                         vStr="some_resource",
                     ),
                     jaeger.Tag(
-                        key="status.code",
-                        vType=jaeger.TagType.LONG,
-                        vLong=StatusCode.ERROR.value,
+                        key="otel.status_code",
+                        vType=jaeger.TagType.STRING,
+                        vStr="ERROR",
                     ),
                     jaeger.Tag(
-                        key="status.message",
+                        key="otel.status_description",
                         vType=jaeger.TagType.STRING,
                         vStr="Example description",
                     ),
@@ -392,12 +384,12 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 flags=0,
                 tags=[
                     jaeger.Tag(
-                        key="status.code",
-                        vType=jaeger.TagType.LONG,
-                        vLong=StatusCode.OK.value,
+                        key="otel.status_code",
+                        vType=jaeger.TagType.STRING,
+                        vStr="OK",
                     ),
                     jaeger.Tag(
-                        key="status.message",
+                        key="otel.status_description",
                         vType=jaeger.TagType.STRING,
                         vStr="Example description",
                     ),
