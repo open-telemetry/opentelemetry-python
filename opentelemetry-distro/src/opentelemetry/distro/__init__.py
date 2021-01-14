@@ -29,7 +29,7 @@ from opentelemetry.sdk.trace.export import (
     BatchExportSpanProcessor,
     SpanExporter,
 )
-
+from opentelemetry.sdk.trace.ids_generator import IdsGenerator
 
 logger = getLogger(__file__)
 
@@ -68,7 +68,7 @@ def _get_exporter_names() -> Sequence[str]:
 
 
 def _init_tracing(
-    exporters: Sequence[SpanExporter], ids_generator: trace.IdsGenerator
+    exporters: Sequence[SpanExporter], ids_generator: IdsGenerator
 ):
     service_name = _get_service_name()
     provider = TracerProvider(
@@ -136,7 +136,7 @@ def _import_exporters(
     return trace_exporters, metric_exporters
 
 
-def _import_ids_generator(ids_generator_name: str) -> trace.IdsGenerator:
+def _import_ids_generator(ids_generator_name: str) -> IdsGenerator:
     # pylint: disable=unbalanced-tuple-unpacking
     [
         (ids_generator_name, ids_generator_impl)
@@ -144,7 +144,7 @@ def _import_ids_generator(ids_generator_name: str) -> trace.IdsGenerator:
         [ids_generator_name.strip()], "opentelemetry_ids_generator"
     )
 
-    if issubclass(ids_generator_impl, trace.IdsGenerator):
+    if issubclass(ids_generator_impl, IdsGenerator):
         return ids_generator_impl
 
     raise RuntimeError("{0} is not an IdsGenerator".format(ids_generator_name))

@@ -14,10 +14,10 @@
 # type: ignore
 
 import os
-
 from unittest import TestCase
 
 from pkg_resources import DistributionNotFound, require
+
 from opentelemetry.distro import OpenTelemetryDistro
 
 
