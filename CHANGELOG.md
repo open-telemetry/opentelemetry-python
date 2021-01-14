@@ -8,10 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add support for OTLP v0.6.0
   ([#1472](https://github.com/open-telemetry/opentelemetry-python/pull/1472))
-
 - Add protobuf via gRPC exporting support for Jaeger
   ([#1471](https://github.com/open-telemetry/opentelemetry-python/pull/1471))
-
 - Add support for Python 3.9
   ([#1441](https://github.com/open-telemetry/opentelemetry-python/pull/1441))
 
@@ -37,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `__repr__` for `DefaultSpan`, added `trace_flags` to `__repr__` of
   `SpanContext` ([#1485](https://github.com/open-telemetry/opentelemetry-python/pull/1485)])
 - Added `end_on_exit` argument to `start_as_current_span`
+  ([#1519](https://github.com/open-telemetry/opentelemetry-python/pull/1519)])
+
 ### Changed
 - `opentelemetry-exporter-zipkin` Updated zipkin exporter status code and error tag
   ([#1486](https://github.com/open-telemetry/opentelemetry-python/pull/1486))
@@ -47,6 +47,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1507](https://github.com/open-telemetry/opentelemetry-python/pull/1507))
 - `opentelemetry-exporter-jaeger` Updated Jaeger exporter status code tag
   ([#1488](https://github.com/open-telemetry/opentelemetry-python/pull/1488))
+- `opentelemetry-api` `opentelemety-sdk` Moved `idsgenerator` into sdk
+  ([#1514](https://github.com/open-telemetry/opentelemetry-python/pull/1514))
+- `opentelemetry-sdk` The B3Format propagator has been moved into its own package: `opentelemetry-propagator-b3`
+  ([#1513](https://github.com/open-telemetry/opentelemetry-python/pull/1513))
+- Update default port for OTLP exporter from 55680 to 4317
+  ([#1516](https://github.com/open-telemetry/opentelemetry-python/pull/1516))
+
+### Removed
+- `opentelemetry-api` Remove ThreadLocalRuntimeContext since python3.4 is not supported.
 
 ## [0.16b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.16b1) - 2020-11-26
 ### Added

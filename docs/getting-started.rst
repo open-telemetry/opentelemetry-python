@@ -187,10 +187,16 @@ By default, ``opentelemetry-python`` is configured to use the `W3C Trace Context
 HTTP headers for HTTP requests, but you can configure it to leverage different propagators. Here's
 an example using Zipkin's `b3 propagation <https://github.com/openzipkin/b3-propagation>`_:
 
+.. code-block:: sh
+
+    pip install opentelemetry-propagator-b3
+
+Following the installation of the package containing the b3 propagator, configure the propagator as follows:
+
 .. code-block:: python
 
     from opentelemetry import propagators
-    from opentelemetry.sdk.trace.propagation.b3_format import B3Format
+    from opentelemetry.propagators.b3 import B3Format
 
     propagators.set_global_textmap(B3Format())
 
