@@ -73,7 +73,7 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
 
     api/api
     sdk/sdk
-    shim/instrumentation
+    shim/opentracing_shim/opentracing_shim
 
 .. toctree::
     :maxdepth: 2
