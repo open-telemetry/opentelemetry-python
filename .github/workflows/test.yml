@@ -28,7 +28,7 @@ jobs:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
         python-version: [ py35, py36, py37, py38, py39, pypy3 ]
-        package: ["instrumentation", "core", "exporter"]
+        package: ["instrumentation", "core", "exporter", "propagator"]
         os: [ ubuntu-latest ]
         include:
           # py35-instrumentation segfaults on 18.04 so we instead run on 20.04
