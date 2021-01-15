@@ -4,9 +4,9 @@ from rediscache import RedisCache
 
 from opentelemetry import trace
 from opentelemetry.exporter.jaeger import JaegerSpanExporter
-from opentelemetry.shim import opentracing_shim
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
+from opentelemetry.shim import opentracing_shim
 
 # Configure the tracer using the default implementation
 trace.set_tracer_provider(TracerProvider())

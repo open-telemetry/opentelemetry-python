@@ -42,7 +42,7 @@ shim_dirs = [
     if isdir(join(shim, f))
 ]
 
-sys.path[:0] = source_dirs + exp_dirs + shim
+sys.path[:0] = source_dirs + exp_dirs + shim_dirs
 
 # -- Project information -----------------------------------------------------
 
