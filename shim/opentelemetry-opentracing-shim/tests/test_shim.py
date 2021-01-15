@@ -22,13 +22,13 @@ from unittest.mock import Mock
 import opentracing
 
 from opentelemetry import propagators, trace
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.shim.opentracing_shim import (
     SpanContextShim,
     SpanShim,
     create_tracer,
     util,
 )
-from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.test.mock_textmap import (
     MockTextMapPropagator,
     NOOPTextMapPropagator,
