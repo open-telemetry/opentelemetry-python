@@ -1,8 +1,8 @@
 OpenTracing Shim Example
 ==========================
 
-This example shows how to use the :doc:`opentelemetry-instrumentation-opentracing-shim
-package <../../instrumentation/opentracing_shim/opentracing_shim>`
+This example shows how to use the :doc:`opentelemetry-opentracing-shim
+package <../../shim/opentracing_shim/opentracing_shim>`
 to interact with libraries instrumented with
 `opentracing-python <https://github.com/opentracing/opentracing-python>`_.
 
@@ -100,6 +100,6 @@ Useful links
 ------------
 
 - OpenTelemetry_
-- :doc:`../../instrumentation/opentracing_shim/opentracing_shim`
+- :doc:`../../shim/opentracing_shim/opentracing_shim`
 
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/

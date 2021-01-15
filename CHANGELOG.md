@@ -53,6 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1516](https://github.com/open-telemetry/opentelemetry-python/pull/1516))
 - `opentelemetry-exporter-zipkin` Update boolean attribute value transformation
   ([#1509](https://github.com/open-telemetry/opentelemetry-python/pull/1509))
+- Move opentelemetry-opentracing-shim out of instrumentation folder
+  ([#1441](https://github.com/open-telemetry/opentelemetry-python/pull/1441))
 
 ### Removed
 - `opentelemetry-api` Remove ThreadLocalRuntimeContext since python3.4 is not supported.

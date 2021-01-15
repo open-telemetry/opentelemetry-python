@@ -22,7 +22,7 @@ from unittest.mock import Mock
 import opentracing
 
 from opentelemetry import propagators, trace
-from opentelemetry.instrumentation.opentracing_shim import (
+from opentelemetry.shim.opentracing_shim import (
     SpanContextShim,
     SpanShim,
     create_tracer,
@@ -137,7 +137,7 @@ class TestShim(TestCase):
         with self.shim.start_active_span("TestSpan4", start_time=now) as scope:
             result = util.time_seconds_from_ns(scope.span.unwrap().start_time)
             # Tolerate inaccuracies of less than a microsecond. See Note:
-            # https://open-telemetry.github.io/opentelemetry-python/opentelemetry.instrumentation.opentracing_shim.html
+            # https://open-telemetry.github.io/opentelemetry-python/opentelemetry.shim.opentracing_shim.html
             # TODO: This seems to work consistently, but we should find out the
             # biggest possible loss of precision.
             self.assertAlmostEqual(result, now, places=6)
@@ -151,7 +151,7 @@ class TestShim(TestCase):
 
         end_time = util.time_seconds_from_ns(span.unwrap().end_time)
         # Tolerate inaccuracies of less than a microsecond. See Note:
-        # https://open-telemetry.github.io/opentelemetry-python/opentelemetry.instrumentation.opentracing_shim.html
+        # https://open-telemetry.github.io/opentelemetry-python/opentelemetry.shim.opentracing_shim.html
         # TODO: This seems to work consistently, but we should find out the
         # biggest possible loss of precision.
         self.assertAlmostEqual(end_time, now, places=6)
@@ -431,7 +431,7 @@ class TestShim(TestCase):
             )
             self.assertEqual(span.unwrap().events[1].attributes["foo"], "bar")
             # Tolerate inaccuracies of less than a microsecond. See Note:
-            # https://open-telemetry.github.io/opentelemetry-python/instrumentation/opentracing_shim/opentracing_shim.html
+            # https://open-telemetry.github.io/opentelemetry-python/shim/opentracing_shim/opentracing_shim.html
             # TODO: This seems to work consistently, but we should find out the
             # biggest possible loss of precision.
             self.assertAlmostEqual(result, now, places=6)

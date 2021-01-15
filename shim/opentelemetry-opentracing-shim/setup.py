@@ -20,7 +20,7 @@ VERSION_FILENAME = os.path.join(
     BASE_DIR,
     "src",
     "opentelemetry",
-    "instrumentation",
+    "shim",
     "opentracing_shim",
     "version.py",
 )
