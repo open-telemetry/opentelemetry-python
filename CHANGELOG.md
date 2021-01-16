@@ -49,6 +49,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1488](https://github.com/open-telemetry/opentelemetry-python/pull/1488))
 - `opentelemetry-api` `opentelemety-sdk` Moved `idsgenerator` into sdk
   ([#1514](https://github.com/open-telemetry/opentelemetry-python/pull/1514))
+- `opentelemetry-exporter-jaeger`, `opentelemetry-exporter-zipkin` Update InstrumentationInfo tag keys for Jaeger and Zipkin exporters
+  ([#1535](https://github.com/open-telemetry/opentelemetry-python/pull/1535))
 
 ### Removed
 - `opentelemetry-api` Remove ThreadLocalRuntimeContext since python3.4 is not supported.
