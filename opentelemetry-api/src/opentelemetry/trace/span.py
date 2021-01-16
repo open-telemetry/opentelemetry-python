@@ -164,7 +164,7 @@ class TraceState(typing.Mapping[str, str]):
         if entries is None:
             return
         if len(entries) > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
-            _logger.warning("There can't be more 32 key/value pairs.")
+            _logger.warning("There can't be more than {} key/value pairs.".format(_TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS))
             return
 
         for key, value in entries:
@@ -215,7 +215,7 @@ class TraceState(typing.Mapping[str, str]):
             )
             return self
         # There can be a maximum of 32 pairs
-        if len(self) >= 32:
+        if len(self) >= _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
             _logger.warning("There can't be more 32 key/value pairs.")
             return self
         # Duplicate entries are not allowed
