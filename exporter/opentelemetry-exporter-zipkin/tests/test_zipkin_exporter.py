@@ -245,7 +245,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "localEndpoint": local_endpoint,
                 "kind": span_kind,
                 "tags": {
-                    "key_bool": "False",
+                    "key_bool": "false",
                     "key_string": "hello_world",
                     "key_float": "111.22",
                     "otel.status_code": "ERROR",
@@ -470,11 +470,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
         self.assertEqual(
             tags["list5"],
-            '["True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True"]',
+            '["true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true"]',
         )
         self.assertEqual(
             tags["list6"],
-            '["True","True","True","True","True","True","True","True","True","True"]',
+            '["true","true","true","true","true","true","true","true","true","true"]',
         )
         self.assertEqual(
             tags["tuple1"],
@@ -492,11 +492,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
         self.assertEqual(
             tags["tuple5"],
-            '["True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True"]',
+            '["true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true"]',
         )
         self.assertEqual(
             tags["tuple6"],
-            '["True","True","True","True","True","True","True","True","True","True"]',
+            '["true","true","true","true","true","true","true","true","true","true"]',
         )
         self.assertEqual(
             tags["range1"],
@@ -579,14 +579,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
         self.assertEqual(tags["list2"], '["a","a"]')
         self.assertEqual(tags["list3"], '["2","2"]')
         self.assertEqual(tags["list4"], '["2","2"]')
-        self.assertEqual(tags["list5"], '["True"]')
-        self.assertEqual(tags["list6"], '["True"]')
+        self.assertEqual(tags["list5"], '["true"]')
+        self.assertEqual(tags["list6"], '["true"]')
         self.assertEqual(tags["tuple1"], '["a","a"]')
         self.assertEqual(tags["tuple2"], '["a","a"]')
         self.assertEqual(tags["tuple3"], '["2","2"]')
         self.assertEqual(tags["tuple4"], '["2","2"]')
-        self.assertEqual(tags["tuple5"], '["True"]')
-        self.assertEqual(tags["tuple6"], '["True"]')
+        self.assertEqual(tags["tuple5"], '["true"]')
+        self.assertEqual(tags["tuple6"], '["true"]')
         self.assertEqual(tags["range1"], '["0","1"]')
         self.assertEqual(tags["range2"], '["0","1"]')
 
@@ -605,14 +605,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
         self.assertEqual(tags["list2"], '["a","a"]')
         self.assertEqual(tags["list3"], '["2","2"]')
         self.assertEqual(tags["list4"], '["2","2"]')
-        self.assertEqual(tags["list5"], '["True"]')
-        self.assertEqual(tags["list6"], '["True"]')
+        self.assertEqual(tags["list5"], '["true"]')
+        self.assertEqual(tags["list6"], '["true"]')
         self.assertEqual(tags["tuple1"], '["a","a"]')
         self.assertEqual(tags["tuple2"], '["a","a"]')
         self.assertEqual(tags["tuple3"], '["2","2"]')
         self.assertEqual(tags["tuple4"], '["2","2"]')
-        self.assertEqual(tags["tuple5"], '["True"]')
-        self.assertEqual(tags["tuple6"], '["True"]')
+        self.assertEqual(tags["tuple5"], '["true"]')
+        self.assertEqual(tags["tuple6"], '["true"]')
         self.assertEqual(tags["range1"], '["0","1"]')
         self.assertEqual(tags["range2"], '["0","1"]')
 
@@ -631,14 +631,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
         self.assertEqual(tags["list2"], '["a","a"]')
         self.assertEqual(tags["list3"], '["2","2"]')
         self.assertEqual(tags["list4"], '["2","2"]')
-        self.assertEqual(tags["list5"], '["True"]')
-        self.assertEqual(tags["list6"], '["True"]')
+        self.assertEqual(tags["list5"], '["true"]')
+        self.assertEqual(tags["list6"], '["true"]')
         self.assertEqual(tags["tuple1"], '["a","a"]')
         self.assertEqual(tags["tuple2"], '["a","a"]')
         self.assertEqual(tags["tuple3"], '["2","2"]')
         self.assertEqual(tags["tuple4"], '["2","2"]')
-        self.assertEqual(tags["tuple5"], '["True"]')
-        self.assertEqual(tags["tuple6"], '["True"]')
+        self.assertEqual(tags["tuple5"], '["true"]')
+        self.assertEqual(tags["tuple6"], '["true"]')
         self.assertEqual(tags["range1"], '["0","1"]')
         self.assertEqual(tags["range2"], '["0","1"]')
 
@@ -767,7 +767,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     local_endpoint=local_endpoint,
                     kind=span_kind,
                     tags={
-                        "key_bool": "False",
+                        "key_bool": "false",
                         "key_string": "hello_world",
                         "key_float": "111.22",
                         "otel.status_code": "ERROR",
