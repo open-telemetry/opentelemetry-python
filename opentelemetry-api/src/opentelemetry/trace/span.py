@@ -164,7 +164,10 @@ class TraceState(typing.Mapping[str, str]):
         if entries is None:
             return
         if len(entries) > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
-            _logger.warning("There can't be more than {} key/value pairs.".format(_TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS))
+            _logger.warning(
+                "There can't be more than %s key/value pairs.",
+                _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS,
+            )
             return
 
         for key, value in entries:
@@ -299,7 +302,6 @@ class TraceState(typing.Mapping[str, str]):
             will be discarded and an empty tracestate will be returned.
         """
         pairs = OrderedDict()
-        value_count = 0
         for header in header_list:
             for member in re.split(_DELIMITER_PATTERN, header):
                 # empty members are valid, but no need to process further.
@@ -317,9 +319,6 @@ class TraceState(typing.Mapping[str, str]):
                 if key in pairs:
                     return cls()
                 pairs[key] = value
-                value_count += 1
-                if value_count > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
-                    return cls()
         return cls(list(pairs.items()))
 
     @classmethod
