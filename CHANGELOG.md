@@ -53,6 +53,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1516](https://github.com/open-telemetry/opentelemetry-python/pull/1516))
 - `opentelemetry-exporter-zipkin` Update boolean attribute value transformation
   ([#1509](https://github.com/open-telemetry/opentelemetry-python/pull/1509))
+- `opentelemetry-sdk` Remove rate property setter from TraceIdRatioBasedSampler
+  ([#1536](https://github.com/open-telemetry/opentelemetry-python/pull/1536))
 
 ### Removed
 - `opentelemetry-api` Remove ThreadLocalRuntimeContext since python3.4 is not supported.
