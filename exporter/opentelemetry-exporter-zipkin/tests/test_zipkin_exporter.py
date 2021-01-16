@@ -21,11 +21,11 @@ from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin import (
     NAME_KEY,
-    VERSION_KEY,
     SPAN_KIND_MAP_JSON,
     SPAN_KIND_MAP_PROTOBUF,
     TRANSPORT_FORMAT_JSON,
     TRANSPORT_FORMAT_PROTOBUF,
+    VERSION_KEY,
     ZipkinSpanExporter,
     nsec_to_usec_round,
 )
