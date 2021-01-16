@@ -299,7 +299,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": durations[3] // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": span_kind,
-                "tags": {NAME_KEY: "name", VERSION_KEY: "version",},
+                "tags": {NAME_KEY: "name", VERSION_KEY: "version"},
                 "annotations": None,
             },
         ]
@@ -832,7 +832,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     duration=nsec_to_usec_round(durations[3]),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
-                    tags={NAME_KEY: "name", VERSION_KEY: "version",},
+                    tags={NAME_KEY: "name", VERSION_KEY: "version"},
                 ),
             ],
         )
