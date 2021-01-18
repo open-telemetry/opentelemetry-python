@@ -22,7 +22,7 @@ FORMAT = b3_format.B3Format()
 
 
 @mock.patch(
-    "opentelemetry.sdk.trace.propagation.b3_format.trace.get_tracer_provider",
+    "opentelemetry.propagators.b3.trace.get_tracer_provider",
     new=trace.TracerProvider,
 )
 def test_extract_single_header(benchmark):
