@@ -14,8 +14,8 @@
 
 from unittest import mock
 
+import opentelemetry.propagators.b3 as b3_format
 import opentelemetry.sdk.trace as trace
-import opentelemetry.sdk.trace.propagation.b3_format as b3_format
 from opentelemetry.trace.propagation.textmap import DictGetter
 
 FORMAT = b3_format.B3Format()
