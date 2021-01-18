@@ -51,7 +51,7 @@ def _get_service_name() -> str:
 
 
 def _get_exporter_names() -> Sequence[str]:
-    exporter = environ.get("OTEL_EXPORTER") or _DEFAULT_EXPORTER
+    exporter = environ.get("OTEL_EXPORTER") or "EXPORTER_OTLP"
     if exporter.lower().strip() == "none":
         return []
 
