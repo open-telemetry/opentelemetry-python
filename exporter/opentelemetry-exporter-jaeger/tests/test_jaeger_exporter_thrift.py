@@ -399,12 +399,12 @@ class TestJaegerSpanExporter(unittest.TestCase):
                         vStr="internal",
                     ),
                     jaeger.Tag(
-                        key="otel.instrumentation_library.name",
+                        key=jaeger_exporter.translate.NAME_KEY,
                         vType=jaeger.TagType.STRING,
                         vStr="name",
                     ),
                     jaeger.Tag(
-                        key="otel.instrumentation_library.version",
+                        key=jaeger_exporter.translate.VERSION_KEY,
                         vType=jaeger.TagType.STRING,
                         vStr="version",
                     ),
