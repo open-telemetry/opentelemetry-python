@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1285](https://github.com/open-telemetry/opentelemetry-python/pull/1285))
 - Added `__repr__` for `DefaultSpan`, added `trace_flags` to `__repr__` of
   `SpanContext` ([#1485](https://github.com/open-telemetry/opentelemetry-python/pull/1485)])
+- `opentelemetry-sdk` Add support for OTEL_TRACE_SAMPLER and OTEL_TRACE_SAMPLER_ARG env variables
+  ([#1496](https://github.com/open-telemetry/opentelemetry-python/pull/1496))
 - Adding `opentelemetry-distro` package to add default configuration for
   span exporter to OTLP
   ([#1482](https://github.com/open-telemetry/opentelemetry-python/pull/1482))
