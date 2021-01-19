@@ -233,11 +233,6 @@ class TraceIdRatioBased(Sampler):
     def rate(self) -> float:
         return self._rate
 
-    @rate.setter
-    def rate(self, new_rate: float) -> None:
-        self._rate = new_rate
-        self._bound = self.get_bound_for_rate(self._rate)
-
     @property
     def bound(self) -> int:
         return self._bound
