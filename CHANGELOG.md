@@ -59,6 +59,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1533](https://github.com/open-telemetry/opentelemetry-python/pull/1533))
 - `opentelemetry-sdk` The JaegerPropagator has been moved into its own package: `opentelemetry-propagator-jaeger`
   ([#1525](https://github.com/open-telemetry/opentelemetry-python/pull/1525))
+- `opentelemetry-exporter-jaeger`, `opentelemetry-exporter-zipkin` Update InstrumentationInfo tag keys for Jaeger and Zipkin exporters
+  ([#1535](https://github.com/open-telemetry/opentelemetry-python/pull/1535))
 
 ### Removed
 - `opentelemetry-api` Remove ThreadLocalRuntimeContext since python3.4 is not supported.
