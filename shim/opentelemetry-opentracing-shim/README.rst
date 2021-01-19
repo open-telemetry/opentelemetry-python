@@ -16,5 +16,5 @@ Installation
 References
 ----------
 
-* `OpenTracing Shim for OpenTelemetry <https://opentelemetry-python.readthedocs.io/en/latest/instrumentation/opentracing_shim/opentracing_shim.html>`_
+* `OpenTracing Shim for OpenTelemetry <https://opentelemetry-python.readthedocs.io/en/latest/shim/opentracing_shim/opentracing_shim.html>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_

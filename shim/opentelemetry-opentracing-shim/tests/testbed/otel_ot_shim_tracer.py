@@ -1,4 +1,4 @@
-import opentelemetry.instrumentation.opentracing_shim as opentracingshim
+import opentelemetry.shim.opentracing_shim as opentracingshim
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (

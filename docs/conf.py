@@ -35,14 +35,14 @@ exp_dirs = [
     if isdir(join(exp, f))
 ]
 
-instr = "../instrumentation"
-instr_dirs = [
-    os.path.abspath("/".join(["../instrumentation", f, "src"]))
-    for f in listdir(instr)
-    if isdir(join(instr, f))
+shim = "../shim"
+shim_dirs = [
+    os.path.abspath("/".join(["../shim", f, "src"]))
+    for f in listdir(shim)
+    if isdir(join(shim, f))
 ]
 
-sys.path[:0] = source_dirs + exp_dirs + instr_dirs
+sys.path[:0] = source_dirs + exp_dirs + shim_dirs
 
 # -- Project information -----------------------------------------------------
 
