@@ -139,6 +139,9 @@ tracer_provider.add_span_processor(mock_processor)
 
 
 class TestTracerSampling(unittest.TestCase):
+    def tearDown(self):
+        reload(trace)
+
     def test_default_sampler(self):
         tracer = new_tracer()
 
@@ -159,6 +162,12 @@ class TestTracerSampling(unittest.TestCase):
             trace_api.TraceFlags.SAMPLED,
         )
 
+    def test_default_sampler_type(self):
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, sampling.ParentBased)
+        # pylint: disable=protected-access
+        self.assertEqual(tracer_provider.sampler._root, sampling.ALWAYS_ON)
+
     def test_sampler_no_sampling(self):
         tracer_provider = trace.TracerProvider(sampling.ALWAYS_OFF)
         tracer = tracer_provider.get_tracer(__name__)
@@ -178,6 +187,36 @@ class TestTracerSampling(unittest.TestCase):
             child_span.get_span_context().trace_flags,
             trace_api.TraceFlags.DEFAULT,
         )
+
+    @mock.patch.dict("os.environ", {"OTEL_TRACE_SAMPLER": "always_off"})
+    def test_sampler_with_env(self):
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, sampling.StaticSampler)
+        self.assertEqual(
+            tracer_provider.sampler._decision, sampling.Decision.DROP
+        )
+
+        tracer = tracer_provider.get_tracer(__name__)
+
+        root_span = tracer.start_span(name="root span", context=None)
+        # Should be no-op
+        self.assertIsInstance(root_span, trace_api.DefaultSpan)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            "OTEL_TRACE_SAMPLER": "parentbased_traceidratio",
+            "OTEL_TRACE_SAMPLER_ARG": "0.25",
+        },
+    )
+    def test_ratio_sampler_with_env(self):
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, sampling.ParentBased)
+        self.assertEqual(tracer_provider.sampler._root.rate, 0.25)
 
 
 class TestSpanCreation(unittest.TestCase):
