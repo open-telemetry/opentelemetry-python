@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+#
+import os
 from logging import getLogger
 from typing import Sequence, Tuple
 
@@ -20,6 +21,7 @@ from pkg_resources import iter_entry_points
 from opentelemetry import trace
 from opentelemetry.configuration import Configuration
 from opentelemetry.instrumentation.configurator import BaseConfigurator
+from opentelemetry.instrumentation.distro import BaseDistro
 from opentelemetry.sdk.metrics.export import MetricsExporter
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
@@ -31,10 +33,10 @@ from opentelemetry.sdk.trace.ids_generator import IdsGenerator
 
 logger = getLogger(__file__)
 
+
 EXPORTER_OTLP = "otlp"
 EXPORTER_OTLP_SPAN = "otlp_span"
 EXPORTER_OTLP_METRIC = "otlp_metric"
-_DEFAULT_EXPORTER = EXPORTER_OTLP
 
 RANDOM_IDS_GENERATOR = "random"
 _DEFAULT_IDS_GENERATOR = RANDOM_IDS_GENERATOR
@@ -49,7 +51,7 @@ def _get_service_name() -> str:
 
 
 def _get_exporter_names() -> Sequence[str]:
-    exporter = Configuration().EXPORTER or _DEFAULT_EXPORTER
+    exporter = Configuration().EXPORTER or EXPORTER_OTLP
     if exporter.lower().strip() == "none":
         return []
 
@@ -85,11 +87,6 @@ def _init_tracing(
         provider.add_span_processor(
             BatchExportSpanProcessor(exporter_class(**exporter_args))
         )
-
-
-def _init_metrics(exporters: Sequence[MetricsExporter]):
-    if exporters:
-        logger.warning("automatic metric initialization is not supported yet.")
 
 
 def _import_tracer_provider_config_components(
@@ -158,13 +155,27 @@ def _initialize_components():
     ids_generator_name = _get_ids_generator()
     ids_generator = _import_ids_generator(ids_generator_name)
     _init_tracing(trace_exporters, ids_generator)
-
     # We don't support automatic initialization for metric yet but have added
     # some boilerplate in order to make sure current implementation does not
     # lock us out of supporting metrics later without major surgery.
     _init_metrics(metric_exporters)
 
 
+def _init_metrics(exporters: Sequence[MetricsExporter]):
+    if exporters:
+        logger.warning("automatic metric initialization is not supported yet.")
+
+
 class Configurator(BaseConfigurator):
     def _configure(self, **kwargs):
         _initialize_components()
+
+
+class OpenTelemetryDistro(BaseDistro):
+    """
+    The OpenTelemetry provided Distro configures a default set of
+    configuration out of the box.
+    """
+
+    def _configure(self, **kwargs):
+        os.environ.setdefault("OTEL_EXPORTER", "otlp")
