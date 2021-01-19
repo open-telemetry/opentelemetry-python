@@ -37,7 +37,6 @@ logger = getLogger(__file__)
 EXPORTER_OTLP = "otlp"
 EXPORTER_OTLP_SPAN = "otlp_span"
 EXPORTER_OTLP_METRIC = "otlp_metric"
-_DEFAULT_EXPORTER = "none"
 
 RANDOM_IDS_GENERATOR = "random"
 _DEFAULT_IDS_GENERATOR = RANDOM_IDS_GENERATOR
@@ -52,7 +51,7 @@ def _get_service_name() -> str:
 
 
 def _get_exporter_names() -> Sequence[str]:
-    exporter = Configuration().EXPORTER or _DEFAULT_EXPORTER
+    exporter = Configuration().EXPORTER or EXPORTER_OTLP
     if exporter.lower().strip() == "none":
         return []
 
