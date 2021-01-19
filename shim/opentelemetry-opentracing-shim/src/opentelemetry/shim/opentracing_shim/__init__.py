@@ -30,7 +30,7 @@ following example::
 
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.instrumentation.opentracing_shim import create_tracer
+    from opentelemetry.shim.opentracing_shim import create_tracer
 
     # Define which OpenTelemetry Tracer provider implementation to use.
     trace.set_tracer_provider(TracerProvider())
@@ -102,8 +102,8 @@ from opentracing import (
 from opentelemetry import propagators
 from opentelemetry.baggage import get_baggage, set_baggage
 from opentelemetry.context import Context, attach, detach, get_value, set_value
-from opentelemetry.instrumentation.opentracing_shim import util
-from opentelemetry.instrumentation.opentracing_shim.version import __version__
+from opentelemetry.shim.opentracing_shim import util
+from opentelemetry.shim.opentracing_shim.version import __version__
 from opentelemetry.trace import INVALID_SPAN_CONTEXT, DefaultSpan, Link
 from opentelemetry.trace import SpanContext as OtelSpanContext
 from opentelemetry.trace import Tracer as OtelTracer
