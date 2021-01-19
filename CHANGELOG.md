@@ -64,6 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1525](https://github.com/open-telemetry/opentelemetry-python/pull/1525))
 - `opentelemetry-exporter-jaeger`, `opentelemetry-exporter-zipkin` Update InstrumentationInfo tag keys for Jaeger and Zipkin exporters
   ([#1535](https://github.com/open-telemetry/opentelemetry-python/pull/1535))
+- `opentelemetry-sdk` Remove rate property setter from TraceIdRatioBasedSampler
+  ([#1536](https://github.com/open-telemetry/opentelemetry-python/pull/1536))
 
 ### Removed
 - `opentelemetry-api` Remove ThreadLocalRuntimeContext since python3.4 is not supported.
