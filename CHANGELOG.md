@@ -34,6 +34,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1285](https://github.com/open-telemetry/opentelemetry-python/pull/1285))
 - Added `__repr__` for `DefaultSpan`, added `trace_flags` to `__repr__` of
   `SpanContext` ([#1485](https://github.com/open-telemetry/opentelemetry-python/pull/1485)])
+- `opentelemetry-sdk` Add support for OTEL_TRACE_SAMPLER and OTEL_TRACE_SAMPLER_ARG env variables
+  ([#1496](https://github.com/open-telemetry/opentelemetry-python/pull/1496))
+- Adding `opentelemetry-distro` package to add default configuration for
+  span exporter to OTLP
+  ([#1482](https://github.com/open-telemetry/opentelemetry-python/pull/1482))
 
 ### Changed
 - `opentelemetry-exporter-zipkin` Updated zipkin exporter status code and error tag
@@ -57,6 +62,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1533](https://github.com/open-telemetry/opentelemetry-python/pull/1533))
 - `opentelemetry-sdk` The JaegerPropagator has been moved into its own package: `opentelemetry-propagator-jaeger`
   ([#1525](https://github.com/open-telemetry/opentelemetry-python/pull/1525))
+- `opentelemetry-exporter-jaeger`, `opentelemetry-exporter-zipkin` Update InstrumentationInfo tag keys for Jaeger and Zipkin exporters
+  ([#1535](https://github.com/open-telemetry/opentelemetry-python/pull/1535))
 
 ### Removed
 - `opentelemetry-api` Remove ThreadLocalRuntimeContext since python3.4 is not supported.

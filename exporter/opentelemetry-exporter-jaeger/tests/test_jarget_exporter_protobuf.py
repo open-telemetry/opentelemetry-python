@@ -24,7 +24,11 @@ import opentelemetry.exporter.jaeger.translate.protobuf as pb_translator
 from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger import JaegerSpanExporter
-from opentelemetry.exporter.jaeger.translate import Translate
+from opentelemetry.exporter.jaeger.translate import (
+    NAME_KEY,
+    VERSION_KEY,
+    Translate,
+)
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
@@ -358,12 +362,12 @@ class TestJaegerSpanExporter(unittest.TestCase):
                         v_str="internal",
                     ),
                     model_pb2.KeyValue(
-                        key="otel.instrumentation_library.name",
+                        key=NAME_KEY,
                         v_type=model_pb2.ValueType.STRING,
                         v_str="name",
                     ),
                     model_pb2.KeyValue(
-                        key="otel.instrumentation_library.version",
+                        key=VERSION_KEY,
                         v_type=model_pb2.ValueType.STRING,
                         v_str="version",
                     ),
