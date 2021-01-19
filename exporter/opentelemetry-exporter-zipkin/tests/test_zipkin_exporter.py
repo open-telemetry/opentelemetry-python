@@ -20,10 +20,12 @@ from unittest.mock import MagicMock, patch
 from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin import (
+    NAME_KEY,
     SPAN_KIND_MAP_JSON,
     SPAN_KIND_MAP_PROTOBUF,
     TRANSPORT_FORMAT_JSON,
     TRANSPORT_FORMAT_PROTOBUF,
+    VERSION_KEY,
     ZipkinSpanExporter,
     nsec_to_usec_round,
 )
@@ -297,10 +299,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": durations[3] // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": span_kind,
-                "tags": {
-                    "otel.instrumentation_library.name": "name",
-                    "otel.instrumentation_library.version": "version",
-                },
+                "tags": {NAME_KEY: "name", VERSION_KEY: "version"},
                 "annotations": None,
             },
         ]
@@ -833,10 +832,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     duration=nsec_to_usec_round(durations[3]),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
-                    tags={
-                        "otel.instrumentation_library.name": "name",
-                        "otel.instrumentation_library.version": "version",
-                    },
+                    tags={NAME_KEY: "name", VERSION_KEY: "version"},
                 ),
             ],
         )
