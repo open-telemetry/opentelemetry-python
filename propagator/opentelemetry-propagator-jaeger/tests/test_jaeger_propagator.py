@@ -17,9 +17,11 @@ from unittest.mock import Mock
 
 import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.ids_generator as ids_generator
-import opentelemetry.sdk.trace.propagation.jaeger_propagator as jaeger
 import opentelemetry.trace as trace_api
 from opentelemetry import baggage
+from opentelemetry.propagators import (  # pylint: disable=no-name-in-module
+    jaeger,
+)
 from opentelemetry.trace.propagation.textmap import DictGetter
 
 FORMAT = jaeger.JaegerPropagator()

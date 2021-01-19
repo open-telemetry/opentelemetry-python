@@ -51,6 +51,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1513](https://github.com/open-telemetry/opentelemetry-python/pull/1513))
 - Update default port for OTLP exporter from 55680 to 4317
   ([#1516](https://github.com/open-telemetry/opentelemetry-python/pull/1516))
+- `opentelemetry-exporter-zipkin` Update boolean attribute value transformation
+  ([#1509](https://github.com/open-telemetry/opentelemetry-python/pull/1509))
+- `opentelemetry-sdk` The JaegerPropagator has been moved into its own package: `opentelemetry-propagator-jaeger`
+  ([#1525](https://github.com/open-telemetry/opentelemetry-python/pull/1525))
 
 ### Removed
 - `opentelemetry-api` Remove ThreadLocalRuntimeContext since python3.4 is not supported.
