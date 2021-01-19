@@ -60,6 +60,8 @@ SPAN_ATTRIBUTE_COUNT_LIMIT = Configuration().get(
 SPAN_EVENT_COUNT_LIMIT = Configuration().get("SPAN_EVENT_COUNT_LIMIT", 1000)
 SPAN_LINK_COUNT_LIMIT = Configuration().get("SPAN_LINK_COUNT_LIMIT", 1000)
 VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
+# pylint: disable=protected-access
+TRACE_SAMPLER = sampling._get_from_env_or_default()
 
 
 class SpanProcessor:
@@ -891,7 +893,7 @@ class Tracer(trace_api.Tracer):
 class TracerProvider(trace_api.TracerProvider):
     def __init__(
         self,
-        sampler: sampling.Sampler = sampling.DEFAULT_ON,
+        sampler: sampling.Sampler = TRACE_SAMPLER,
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
         active_span_processor: Union[
