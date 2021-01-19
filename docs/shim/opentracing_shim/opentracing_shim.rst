@@ -1,5 +1,5 @@
 OpenTracing Shim for OpenTelemetry
 ==================================
 
-.. automodule:: opentelemetry.instrumentation.opentracing_shim
+.. automodule:: opentelemetry.shim.opentracing_shim
    :no-show-inheritance:
