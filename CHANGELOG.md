@@ -36,6 +36,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `SpanContext` ([#1485](https://github.com/open-telemetry/opentelemetry-python/pull/1485)])
 - `opentelemetry-sdk` Add support for OTEL_TRACE_SAMPLER and OTEL_TRACE_SAMPLER_ARG env variables
   ([#1496](https://github.com/open-telemetry/opentelemetry-python/pull/1496))
+- Adding `opentelemetry-distro` package to add default configuration for
+  span exporter to OTLP
+  ([#1482](https://github.com/open-telemetry/opentelemetry-python/pull/1482))
 
 ### Changed
 - `opentelemetry-exporter-zipkin` Updated zipkin exporter status code and error tag

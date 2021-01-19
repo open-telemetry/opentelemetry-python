@@ -18,7 +18,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from opentelemetry.configuration import Configuration
-from opentelemetry.sdk.configuration import (
+from opentelemetry.distro import (
     _get_ids_generator,
     _import_ids_generator,
     _init_tracing,
@@ -78,11 +78,10 @@ class TestTraceInit(TestCase):
     def setUp(self):
         super()
         self.get_provider_patcher = patch(
-            "opentelemetry.sdk.configuration.TracerProvider", Provider,
+            "opentelemetry.distro.TracerProvider", Provider
         )
         self.get_processor_patcher = patch(
-            "opentelemetry.sdk.configuration.BatchExportSpanProcessor",
-            Processor,
+            "opentelemetry.distro.BatchExportSpanProcessor", Processor
         )
         self.set_provider_patcher = patch(
             "opentelemetry.trace.set_tracer_provider"
@@ -133,7 +132,8 @@ class TestTraceInit(TestCase):
         del environ["OTEL_SERVICE_NAME"]
 
     @patch.dict(environ, {"OTEL_IDS_GENERATOR": "custom_ids_generator"})
-    @patch("opentelemetry.sdk.configuration.iter_entry_points")
+    @patch("opentelemetry.distro.IdsGenerator", new=IdsGenerator)
+    @patch("opentelemetry.distro.iter_entry_points")
     def test_trace_init_custom_ids_generator(self, mock_iter_entry_points):
         mock_iter_entry_points.configure_mock(
             return_value=[
