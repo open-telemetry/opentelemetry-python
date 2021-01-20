@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest import mock
-
 import opentelemetry.propagators.b3 as b3_format
 import opentelemetry.sdk.trace as trace
 from opentelemetry.trace.propagation.textmap import DictGetter
@@ -21,16 +19,12 @@ from opentelemetry.trace.propagation.textmap import DictGetter
 FORMAT = b3_format.B3Format()
 
 
-@mock.patch(
-    "opentelemetry.propagators.b3.trace.get_tracer_provider",
-    new=trace.TracerProvider,
-)
 def test_extract_single_header(benchmark):
     benchmark(
         FORMAT.extract,
         DictGetter(),
         {
-            FORMAT.SINGLE_HEADER_KEY: "bdb5b63237ed38aea578af665aa5aa60-00000000000000000c32d953d73ad225-1-11fd79a30b0896cd285b396ae102dd76"
+            FORMAT.SINGLE_HEADER_KEY: "bdb5b63237ed38aea578af665aa5aa60-c32d953d73ad2251-1-11fd79a30b0896cd285b396ae102dd76"
         },
     )
 
