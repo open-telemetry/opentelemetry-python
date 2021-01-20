@@ -515,6 +515,10 @@ def set_tracer_provider(tracer_provider: TracerProvider) -> None:
     """
     global _TRACER_PROVIDER  # pylint: disable=global-statement
 
+    if _TRACER_PROVIDER is not None:
+        logger.warning("Overriding of current TracerProvider is not allowed")
+        return
+
     _TRACER_PROVIDER = tracer_provider
     _get_current_tracer.cache_clear()  # pylint: disable=no-member
 
@@ -524,7 +528,7 @@ def get_tracer_provider() -> TracerProvider:
     global _TRACER_PROVIDER  # pylint: disable=global-statement
 
     if _TRACER_PROVIDER is None:
-        _TRACER_PROVIDER = _load_trace_provider("tracer_provider")
+        return _load_trace_provider("tracer_provider")
 
     return _TRACER_PROVIDER
 

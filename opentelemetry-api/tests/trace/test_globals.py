@@ -5,35 +5,39 @@ from opentelemetry import context, trace
 
 
 class TestGlobals(unittest.TestCase):
-    def setUp(self):
-        self._patcher = patch("opentelemetry.trace._TRACER_PROVIDER")
-        self._mock_tracer_provider = self._patcher.start()
-
     def tearDown(self) -> None:
-        self._patcher.stop()
+        trace._TRACER_PROVIDER = None  # pylint: disable=protected-access
 
     def test_get_tracer(self):
         """trace.get_tracer should create a proxy to the global tracer provider."""
+        tracer_provider = (
+            trace._TRACER_PROVIDER
+        ) = MagicMock()  # pylint: disable=protected-access
+
         tracer = trace.get_tracer("foo", "var")
-        self._mock_tracer_provider.get_tracer.assert_not_called()
-        self.assertIsInstance(tracer, trace._ProxyTracer)
+
+        tracer_provider.get_tracer.assert_not_called()
+        self.assertIsInstance(
+            tracer, trace._ProxyTracer  # pylint: disable=protected-access
+        )
 
         tracer.start_span("one")
         tracer.start_span("two")
-        self._mock_tracer_provider.get_tracer.assert_called_once_with(
+        tracer_provider.get_tracer.assert_called_once_with(
             instrumenting_module_name="foo",
             instrumenting_library_version="var",
         )
 
+        tracer_provider.reset_mock()
         mock_provider = unittest.mock.Mock()
         trace.get_tracer("foo", "var", mock_provider)
+        tracer_provider.get_tracer.assert_not_called()
         mock_provider.get_tracer.assert_called_with("foo", "var")
 
     def test_set_tracer_provider(self):
         """trace.get_tracer should update global tracer provider."""
-        self.assertIs(
+        self.assertIsNone(
             trace._TRACER_PROVIDER,  # pylint: disable=protected-access
-            self._mock_tracer_provider,
         )
 
         tracer_provider1 = trace.DefaultTracerProvider()
@@ -47,42 +51,42 @@ class TestGlobals(unittest.TestCase):
         trace.set_tracer_provider(tracer_provider2)
         self.assertIs(
             trace._TRACER_PROVIDER,  # pylint: disable=protected-access
-            tracer_provider2,
+            tracer_provider1,
         )
 
     @patch("opentelemetry.trace._load_trace_provider")
     def test_get_tracer_provider(self, load_trace_provider_mock: "MagicMock"):  # type: ignore
         """trace.get_tracer should get or create a global tracer provider."""
-        load_trace_provider_mock.assert_not_called()
+
+        # Get before set
+        load_trace_provider_mock.return_value = trace.DefaultTracerProvider()
 
         tracer_provider = trace.get_tracer_provider()
-        self.assertIs(
-            trace._TRACER_PROVIDER,  # pylint: disable=protected-access
-            tracer_provider,
-        )
-        load_trace_provider_mock.assert_not_called()
-
-        trace._TRACER_PROVIDER = None  # pylint: disable=protected-access
-        tracer_provider1 = trace.get_tracer_provider()
-        self.assertIsNotNone(
+        self.assertIsNone(
             trace._TRACER_PROVIDER  # pylint: disable=protected-access
         )
+        self.assertIs(
+            tracer_provider, load_trace_provider_mock.return_value,
+        )
+        load_trace_provider_mock.assert_called_once_with("tracer_provider")
+        load_trace_provider_mock.reset_mock()
+
+        # Set
+        tracer_provider1 = trace.DefaultTracerProvider()
+        trace.set_tracer_provider(tracer_provider1)
         self.assertIs(
             trace._TRACER_PROVIDER,  # pylint: disable=protected-access
             tracer_provider1,
         )
-        load_trace_provider_mock.assert_called_once_with("tracer_provider")
 
+        # And get
         tracer_provider2 = trace.get_tracer_provider()
-        self.assertIsNotNone(
-            trace._TRACER_PROVIDER  # pylint: disable=protected-access
-        )
         self.assertIs(
             trace._TRACER_PROVIDER,  # pylint: disable=protected-access
             tracer_provider2,
         )
         self.assertIs(tracer_provider1, tracer_provider2)
-        load_trace_provider_mock.assert_called_once_with("tracer_provider")
+        load_trace_provider_mock.assert_not_called()
 
 
 class TestTracer(unittest.TestCase):
@@ -106,9 +110,6 @@ class TestTracer(unittest.TestCase):
 
 class TestProxyTracer(unittest.TestCase):
     def setUp(self):
-        self._patcher = patch("opentelemetry.trace._TRACER_PROVIDER")
-        self._patcher.start()
-
         self.proxy_tracer = trace.get_tracer("foo", "var")
         self.inner_tracer = MagicMock(wraps=trace.DefaultTracer())
 
@@ -116,8 +117,8 @@ class TestProxyTracer(unittest.TestCase):
         tracer_provider.get_tracer.return_value = self.inner_tracer
         trace.set_tracer_provider(tracer_provider)
 
-    def tearDown(self):
-        self._patcher.stop()
+    def tearDown(self) -> None:
+        trace._TRACER_PROVIDER = None  # pylint: disable=protected-access
 
     def test_start_span(self):
         """ProxyTracer should call `start_span` on a real `Tracer`

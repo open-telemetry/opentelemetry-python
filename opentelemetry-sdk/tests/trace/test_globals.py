@@ -14,4 +14,4 @@ class TestGlobals(unittest.TestCase):
 
         new_tracer_provider = TracerProvider()
         trace.set_tracer_provider(new_tracer_provider)
-        self.assertIs(new_tracer_provider, trace.get_tracer_provider())
+        self.assertIs(tracer_provider, trace.get_tracer_provider())
