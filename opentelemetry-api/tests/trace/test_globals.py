@@ -16,7 +16,7 @@ class TestGlobals(unittest.TestCase):
         """trace.get_tracer should create a proxy to the global tracer provider."""
         tracer = trace.get_tracer("foo", "var")
         self._mock_tracer_provider.get_tracer.assert_not_called()
-        self.assertIsInstance(tracer, trace.ProxyTracer)
+        self.assertIsInstance(tracer, trace._ProxyTracer)
 
         tracer.start_span("one")
         tracer.start_span("two")

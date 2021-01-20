@@ -409,7 +409,7 @@ class DefaultTracer(Tracer):
         yield
 
 
-class ProxyTracer(Tracer):
+class _ProxyTracer(Tracer):
     """Proxies all calls to current TracerProvider
     """
 
@@ -490,11 +490,11 @@ def get_tracer(
 ) -> "Tracer":
     """Returns a `Tracer` for use by the given instrumentation library.
 
-    If tracer_provider is ommited it returns a ProxyTracer
+    If tracer_provider is ommited it returns a _ProxyTracer
     which redirects calls to a current instrumentation library.
     """
     if tracer_provider is None:
-        return ProxyTracer(
+        return _ProxyTracer(
             functools.partial(
                 _get_current_tracer,
                 instrumenting_module_name=instrumenting_module_name,
