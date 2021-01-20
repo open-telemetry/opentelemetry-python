@@ -66,6 +66,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1535](https://github.com/open-telemetry/opentelemetry-python/pull/1535))
 - `opentelemetry-sdk` Remove rate property setter from TraceIdRatioBasedSampler
   ([#1536](https://github.com/open-telemetry/opentelemetry-python/pull/1536))
+- Fix TraceState to adhere to specs
+  ([#1502](https://github.com/open-telemetry/opentelemetry-python/pull/1502))
 
 ### Removed
 - `opentelemetry-api` Remove ThreadLocalRuntimeContext since python3.4 is not supported.
