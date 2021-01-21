@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v0.17b0...HEAD)
 
+### Added
+- Added `end_on_exit` argument to `start_as_current_span`
+  ([#1519](https://github.com/open-telemetry/opentelemetry-python/pull/1519)])
+
 ## [0.17b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.17b0) - 2021-01-20
 
 ### Added
