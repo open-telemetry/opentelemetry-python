@@ -107,6 +107,9 @@ SPAN_KIND_MAP_PROTOBUF = {
     SpanKind.CONSUMER: zipkin_pb2.Span.Kind.CONSUMER,
 }
 
+NAME_KEY = "otel.library.name"
+VERSION_KEY = "otel.library.version"
+
 SUCCESS_STATUS_CODES = (200, 202)
 
 logger = logging.getLogger(__name__)
@@ -231,11 +234,9 @@ class ZipkinSpanExporter(SpanExporter):
             }
 
             if span.instrumentation_info is not None:
+                zipkin_span["tags"][NAME_KEY] = span.instrumentation_info.name
                 zipkin_span["tags"][
-                    "otel.instrumentation_library.name"
-                ] = span.instrumentation_info.name
-                zipkin_span["tags"][
-                    "otel.instrumentation_library.version"
+                    VERSION_KEY
                 ] = span.instrumentation_info.version
 
             if span.status.status_code is not StatusCode.UNSET:
@@ -313,8 +314,8 @@ class ZipkinSpanExporter(SpanExporter):
             if span.instrumentation_info is not None:
                 pbuf_span.tags.update(
                     {
-                        "otel.instrumentation_library.name": span.instrumentation_info.name,
-                        "otel.instrumentation_library.version": span.instrumentation_info.version,
+                        NAME_KEY: span.instrumentation_info.name,
+                        VERSION_KEY: span.instrumentation_info.version,
                     }
                 )
 
