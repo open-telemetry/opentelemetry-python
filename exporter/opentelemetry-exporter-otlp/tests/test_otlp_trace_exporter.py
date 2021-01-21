@@ -116,7 +116,7 @@ class TestOTLPSpanExporter(TestCase):
 
         self.server = server(ThreadPoolExecutor(max_workers=10))
 
-        self.server.add_insecure_port("[::]:55680")
+        self.server.add_insecure_port("[::]:4317")
 
         self.server.start()
 
@@ -169,7 +169,7 @@ class TestOTLPSpanExporter(TestCase):
     @patch.dict(
         "os.environ",
         {
-            "OTEL_EXPORTER_OTLP_SPAN_ENDPOINT": "collector:55680",
+            "OTEL_EXPORTER_OTLP_SPAN_ENDPOINT": "collector:4317",
             "OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE": THIS_DIR
             + "/fixtures/test.cert",
             "OTEL_EXPORTER_OTLP_SPAN_HEADERS": "key1=value1,key2=value2",
@@ -183,7 +183,7 @@ class TestOTLPSpanExporter(TestCase):
         self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
         _, kwargs = mock_exporter_mixin.call_args_list[0]
 
-        self.assertEqual(kwargs["endpoint"], "collector:55680")
+        self.assertEqual(kwargs["endpoint"], "collector:4317")
         self.assertEqual(kwargs["headers"], "key1=value1,key2=value2")
         self.assertEqual(kwargs["timeout"], 10)
         self.assertIsNotNone(kwargs["credentials"])

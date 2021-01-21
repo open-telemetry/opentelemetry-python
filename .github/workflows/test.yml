@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: master
+  CONTRIB_REPO_SHA: a67a23d0a0a4dd7c3c06c7050c220fa3b3689a77
 
 jobs:
   build:
@@ -28,7 +28,7 @@ jobs:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
         python-version: [ py35, py36, py37, py38, py39, pypy3 ]
-        package: ["instrumentation", "core", "exporter"]
+        package: ["instrumentation", "core", "exporter", "propagator"]
         os: [ ubuntu-latest ]
         include:
           # py35-instrumentation segfaults on 18.04 so we instead run on 20.04
