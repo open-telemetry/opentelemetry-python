@@ -759,6 +759,7 @@ class Tracer(trace_api.Tracer):
         start_time: Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        end_on_exit: bool = True,
     ) -> Iterator[trace_api.Span]:
         span = self.start_span(
             name=name,
@@ -770,7 +771,7 @@ class Tracer(trace_api.Tracer):
             record_exception=record_exception,
             set_status_on_exception=set_status_on_exception,
         )
-        with self.use_span(span, end_on_exit=True) as span_context:
+        with self.use_span(span, end_on_exit=end_on_exit) as span_context:
             yield span_context
 
     def start_span(  # pylint: disable=too-many-locals
