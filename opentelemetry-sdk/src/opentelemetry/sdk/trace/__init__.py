@@ -26,6 +26,7 @@ from types import MappingProxyType, TracebackType
 from typing import (
     Any,
     Callable,
+    Dict,
     Iterator,
     MutableSequence,
     Optional,
@@ -582,29 +583,35 @@ class Span(trace_api.Span):
     def get_span_context(self):
         return self.context
 
-    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
-        if not _is_valid_attribute_value(value):
-            return
-
-        if not key:
-            logger.warning("invalid key (empty or null)")
-            return
-
+    def set_attributes(
+        self, attributes: Dict[str, types.AttributeValue]
+    ) -> None:
         with self._lock:
             if self.end_time is not None:
                 logger.warning("Setting attribute on ended span.")
                 return
 
-            # Freeze mutable sequences defensively
-            if isinstance(value, MutableSequence):
-                value = tuple(value)
-            if isinstance(value, bytes):
-                try:
-                    value = value.decode()
-                except ValueError:
-                    logger.warning("Byte attribute could not be decoded.")
-                    return
-            self.attributes[key] = value
+            for key, value in attributes.items():
+                if not _is_valid_attribute_value(value):
+                    continue
+
+                if not key:
+                    logger.warning("invalid key `%s` (empty or null)", key)
+                    continue
+
+                # Freeze mutable sequences defensively
+                if isinstance(value, MutableSequence):
+                    value = tuple(value)
+                if isinstance(value, bytes):
+                    try:
+                        value = value.decode()
+                    except ValueError:
+                        logger.warning("Byte attribute could not be decoded.")
+                        return
+                self.attributes[key] = value
+
+    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
+        return self.set_attributes({key: value})
 
     @_check_span_ended
     def _add_event(self, event: EventBase) -> None:

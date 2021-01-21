@@ -531,11 +531,14 @@ class TestSpan(unittest.TestCase):
 
     def test_attributes(self):
         with self.tracer.start_as_current_span("root") as root:
-            root.set_attribute("component", "http")
-            root.set_attribute("http.method", "GET")
-            root.set_attribute(
-                "http.url", "https://example.com:779/path/12/?q=d#123"
+            root.set_attributes(
+                {
+                    "component": "http",
+                    "http.method": "GET",
+                    "http.url": "https://example.com:779/path/12/?q=d#123",
+                }
             )
+
             root.set_attribute("http.status_code", 200)
             root.set_attribute("http.status_text", "OK")
             root.set_attribute("misc.pi", 3.14)
@@ -593,6 +596,10 @@ class TestSpan(unittest.TestCase):
 
     def test_invalid_attribute_values(self):
         with self.tracer.start_as_current_span("root") as root:
+            root.set_attributes(
+                {"correct-value": "foo", "non-primitive-data-type": dict()}
+            )
+
             root.set_attribute("non-primitive-data-type", dict())
             root.set_attribute(
                 "list-of-mixed-data-types-numeric-first",
@@ -609,7 +616,8 @@ class TestSpan(unittest.TestCase):
             root.set_attribute("", 123)
             root.set_attribute(None, 123)
 
-            self.assertEqual(len(root.attributes), 0)
+            self.assertEqual(len(root.attributes), 1)
+            self.assertEqual(root.attributes["correct-value"], "foo")
 
     def test_byte_type_attribute_value(self):
         with self.tracer.start_as_current_span("root") as root:
