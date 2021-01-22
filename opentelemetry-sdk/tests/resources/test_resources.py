@@ -88,7 +88,7 @@ class TestResources(unittest.TestCase):
         )
         self.assertEqual(
             left.merge(right),
-            resources.Resource({"service": "ui", "host": "service-host"}),
+            resources.Resource({"service": "not-ui", "host": "service-host"}),
         )
 
     def test_immutability(self):
@@ -133,7 +133,6 @@ class TestResources(unittest.TestCase):
             static_resource,
         )
 
-        # Static resource values should never be overwritten
         resource_detector = mock.Mock(spec=resources.ResourceDetector)
         resource_detector.detect.return_value = resources.Resource(
             {"static_key": "try_to_overwrite_existing_value", "key": "value"}
@@ -142,7 +141,12 @@ class TestResources(unittest.TestCase):
             resources.get_aggregated_resources(
                 [resource_detector], initial_resource=static_resource
             ),
-            resources.Resource({"static_key": "static_value", "key": "value"}),
+            resources.Resource(
+                {
+                    "static_key": "try_to_overwrite_existing_value",
+                    "key": "value",
+                }
+            ),
         )
 
     def test_aggregated_resources_multiple_detectors(self):
@@ -163,7 +167,6 @@ class TestResources(unittest.TestCase):
             }
         )
 
-        # New values should not overwrite existing values
         self.assertEqual(
             resources.get_aggregated_resources(
                 [resource_detector1, resource_detector2, resource_detector3]
@@ -171,8 +174,8 @@ class TestResources(unittest.TestCase):
             resources.Resource(
                 {
                     "key1": "value1",
-                    "key2": "value2",
-                    "key3": "value3",
+                    "key2": "try_to_overwrite_existing_value",
+                    "key3": "try_to_overwrite_existing_value",
                     "key4": "value4",
                 }
             ),
