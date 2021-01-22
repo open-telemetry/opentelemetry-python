@@ -38,6 +38,12 @@ from grpc import (
 
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_ENDPOINT,
+    OTEL_EXPORTER_OTLP_HEADERS,
+    OTEL_EXPORTER_OTLP_INSECURE,
+    OTEL_EXPORTER_OTLP_TIMEOUT,
+)
 from opentelemetry.sdk.resources import Resource as SDKResource
 
 logger = logging.getLogger(__name__)
@@ -159,23 +165,23 @@ class OTLPExporterMixin(
 
         endpoint = (
             endpoint
-            or environ.get("OTEL_EXPORTER_OTLP_ENDPOINT")
+            or environ.get(OTEL_EXPORTER_OTLP_ENDPOINT)
             or "localhost:4317"
         )
 
         if insecure is None:
-            insecure = environ.get("OTEL_EXPORTER_OTLP_INSECURE")
+            insecure = environ.get(OTEL_EXPORTER_OTLP_INSECURE)
         if insecure is None:
             insecure = False
 
-        self._headers = headers or environ.get("OTEL_EXPORTER_OTLP_HEADERS")
+        self._headers = headers or environ.get(OTEL_EXPORTER_OTLP_HEADERS)
         if isinstance(self._headers, str):
             self._headers = tuple(
                 tuple(item.split("=")) for item in self._headers.split(",")
             )
         self._timeout = (
             timeout
-            or int(environ.get("OTEL_EXPORTER_OTLP_TIMEOUT", 0))
+            or int(environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 0))
             or 10  # default: 10 seconds
         )
         self._collector_span_kwargs = None

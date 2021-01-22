@@ -44,6 +44,13 @@ from opentelemetry.proto.metrics.v1.metrics_pb2 import (
 )
 from opentelemetry.proto.metrics.v1.metrics_pb2 import Metric as OTLPMetric
 from opentelemetry.proto.metrics.v1.metrics_pb2 import ResourceMetrics
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRIC_ENDPOINT,
+    OTEL_EXPORTER_OTLP_METRIC_HEADERS,
+    OTEL_EXPORTER_OTLP_METRIC_INSECURE,
+    OTEL_EXPORTER_OTLP_METRIC_TIMEOUT,
+)
 from opentelemetry.sdk.metrics import (
     Counter,
     SumObserver,
@@ -143,18 +150,17 @@ class OTLPMetricsExporter(
         timeout: Optional[int] = None,
     ):
         if insecure is None:
-            insecure = environ.get("OTEL_EXPORTER_OTLP_METRIC_INSECURE")
+            insecure = environ.get(OTEL_EXPORTER_OTLP_METRIC_INSECURE)
 
         if (
             not insecure
-            and environ.get("OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE")
-            is not None
+            and environ.get(OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE) is not None
         ):
             credentials = credentials or _load_credential_from_file(
-                environ.get("OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE")
+                environ.get(OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE)
             )
 
-        environ_timeout = environ.get("OTEL_EXPORTER_OTLP_METRIC_TIMEOUT")
+        environ_timeout = environ.get(OTEL_EXPORTER_OTLP_METRIC_TIMEOUT)
         environ_timeout = (
             int(environ_timeout) if environ_timeout is not None else None
         )
@@ -162,11 +168,11 @@ class OTLPMetricsExporter(
         super().__init__(
             **{
                 "endpoint": endpoint
-                or environ.get("OTEL_EXPORTER_OTLP_METRIC_ENDPOINT"),
+                or environ.get(OTEL_EXPORTER_OTLP_METRIC_ENDPOINT),
                 "insecure": insecure,
                 "credentials": credentials,
                 "headers": headers
-                or environ.get("OTEL_EXPORTER_OTLP_METRIC_HEADERS"),
+                or environ.get(OTEL_EXPORTER_OTLP_METRIC_HEADERS),
                 "timeout": timeout or environ_timeout,
             }
         )

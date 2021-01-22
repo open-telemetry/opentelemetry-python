@@ -19,6 +19,10 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from opentelemetry.instrumentation import auto_instrumentation
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER,
+    OTEL_SERVICE_NAME,
+)
 
 
 class TestRun(TestCase):
@@ -107,18 +111,18 @@ class TestArgs(TestCase):
     def test_exporter(self, _):  # pylint: disable=no-self-use
         with patch("sys.argv", ["instrument", "2"]):
             auto_instrumentation.run()
-            self.assertIsNone(environ.get("OTEL_EXPORTER"))
+            self.assertIsNone(environ.get(OTEL_EXPORTER))
 
         with patch("sys.argv", ["instrument", "-e", "zipkin", "1", "2"]):
             auto_instrumentation.run()
-            self.assertEqual(environ.get("OTEL_EXPORTER"), "zipkin")
+            self.assertEqual(environ.get(OTEL_EXPORTER), "zipkin")
 
     @patch("opentelemetry.instrumentation.auto_instrumentation.execl")
     def test_service_name(self, _):  # pylint: disable=no-self-use
         with patch("sys.argv", ["instrument", "2"]):
             auto_instrumentation.run()
-            self.assertIsNone(environ.get("OTEL_SERVICE_NAME"))
+            self.assertIsNone(environ.get(OTEL_SERVICE_NAME))
 
         with patch("sys.argv", ["instrument", "-s", "my-service", "1", "2"]):
             auto_instrumentation.run()
-            self.assertEqual(environ.get("OTEL_SERVICE_NAME"), "my-service")
+            self.assertEqual(environ.get(OTEL_SERVICE_NAME), "my-service")

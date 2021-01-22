@@ -80,6 +80,10 @@ from urllib.parse import urlparse
 import requests
 
 from opentelemetry.exporter.zipkin.gen import zipkin_pb2
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_ZIPKIN_ENDPOINT,
+    OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT,
+)
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Span, SpanContext, SpanKind
 from opentelemetry.trace.status import StatusCode
@@ -143,7 +147,7 @@ class ZipkinSpanExporter(SpanExporter):
         self.service_name = service_name
         if url is None:
             self.url = (
-                environ.get("OTEL_EXPORTER_ZIPKIN_ENDPOINT") or DEFAULT_URL
+                environ.get(OTEL_EXPORTER_ZIPKIN_ENDPOINT) or DEFAULT_URL
             )
         else:
             self.url = url
@@ -157,7 +161,7 @@ class ZipkinSpanExporter(SpanExporter):
 
         if transport_format is None:
             self.transport_format = (
-                environ.get("OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT")
+                environ.get(OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT)
                 or TRANSPORT_FORMAT_JSON
             )
         else:

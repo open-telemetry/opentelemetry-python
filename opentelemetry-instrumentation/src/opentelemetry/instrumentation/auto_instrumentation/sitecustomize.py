@@ -18,6 +18,10 @@ from os import environ, path
 
 from pkg_resources import iter_entry_points
 
+from opentelemetry.environment_variables import (
+    OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
+)
+
 logger = getLogger(__file__)
 
 
@@ -34,9 +38,7 @@ def _load_distros():
 
 
 def _load_instrumentors():
-    package_to_exclude = environ.get(
-        "OTEL_PYTHON_DISABLED_INSTRUMENTATIONS", []
-    )
+    package_to_exclude = environ.get(OTEL_PYTHON_DISABLED_INSTRUMENTATIONS, [])
     if isinstance(package_to_exclude, str):
         package_to_exclude = package_to_exclude.split(",")
         # to handle users entering "requests , flask" or "requests, flask" with spaces

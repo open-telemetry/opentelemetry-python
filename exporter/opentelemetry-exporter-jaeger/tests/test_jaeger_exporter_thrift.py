@@ -24,6 +24,13 @@ from opentelemetry.exporter.jaeger.gen.jaeger import ttypes as jaeger
 from opentelemetry.exporter.jaeger.translate import Translate
 from opentelemetry.exporter.jaeger.translate.thrift import ThriftTranslator
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.environment_variable import (
+    OTEL_EXPORTER_JAEGER_AGENT_HOST,
+    OTEL_EXPORTER_JAEGER_AGENT_PORT,
+    OTEL_EXPORTER_JAEGER_ENDPOINT,
+    OTEL_EXPORTER_JAEGER_PASSWORD,
+    OTEL_EXPORTER_JAEGER_USER,
+)
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanKind
@@ -115,11 +122,11 @@ class TestJaegerSpanExporter(unittest.TestCase):
         environ_patcher = mock.patch.dict(
             "os.environ",
             {
-                "OTEL_EXPORTER_JAEGER_AGENT_HOST": agent_host_name,
-                "OTEL_EXPORTER_JAEGER_AGENT_PORT": agent_port,
-                "OTEL_EXPORTER_JAEGER_ENDPOINT": collector_endpoint,
-                "OTEL_EXPORTER_JAEGER_USER": username,
-                "OTEL_EXPORTER_JAEGER_PASSWORD": password,
+                OTEL_EXPORTER_JAEGER_AGENT_HOST: agent_host_name,
+                OTEL_EXPORTER_JAEGER_AGENT_PORT: agent_port,
+                OTEL_EXPORTER_JAEGER_ENDPOINT: collector_endpoint,
+                OTEL_EXPORTER_JAEGER_USER: username,
+                OTEL_EXPORTER_JAEGER_PASSWORD: password,
             },
         )
 

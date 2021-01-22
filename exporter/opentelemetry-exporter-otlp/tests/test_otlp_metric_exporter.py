@@ -40,6 +40,12 @@ from opentelemetry.proto.metrics.v1.metrics_pb2 import ResourceMetrics
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRIC_ENDPOINT,
+    OTEL_EXPORTER_OTLP_METRIC_HEADERS,
+    OTEL_EXPORTER_OTLP_METRIC_TIMEOUT,
+)
 from opentelemetry.sdk.metrics import (
     Counter,
     MeterProvider,
@@ -65,11 +71,11 @@ class TestOTLPMetricExporter(TestCase):
     @patch.dict(
         "os.environ",
         {
-            "OTEL_EXPORTER_OTLP_METRIC_ENDPOINT": "collector:4317",
-            "OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE": THIS_DIR
+            OTEL_EXPORTER_OTLP_METRIC_ENDPOINT: "collector:4317",
+            OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE: THIS_DIR
             + "/fixtures/test.cert",
-            "OTEL_EXPORTER_OTLP_METRIC_HEADERS": "key1=value1,key2=value2",
-            "OTEL_EXPORTER_OTLP_METRIC_TIMEOUT": "10",
+            OTEL_EXPORTER_OTLP_METRIC_HEADERS: "key1=value1,key2=value2",
+            OTEL_EXPORTER_OTLP_METRIC_TIMEOUT: "10",
         },
     )
     @patch("opentelemetry.exporter.otlp.exporter.OTLPExporterMixin.__init__")
@@ -99,7 +105,7 @@ class TestOTLPMetricExporter(TestCase):
 
     @patch.dict(
         "os.environ",
-        {"OTEL_EXPORTER_OTLP_METRIC_HEADERS": "key1=value1,key2=value2"},
+        {OTEL_EXPORTER_OTLP_METRIC_HEADERS: "key1=value1,key2=value2"},
     )
     @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
     @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
