@@ -27,7 +27,7 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
 .. _Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/sdk-environment-variables.md#zipkin-exporter
 
 .. envvar:: OTEL_EXPORTER_ZIPKIN_ENDPOINT
-.. envvar:: OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT
+.. envvar:: OTEL_PYTHON_EXPORTER_ZIPKIN_TRANSPORT_FORMAT
 
 .. code:: python
 
@@ -63,7 +63,7 @@ The exporter supports the following environment variables for configuration:
 :envvar:`OTEL_EXPORTER_ZIPKIN_ENDPOINT`: target to which the exporter will
 send data. This may include a path (e.g. http://example.com:9411/api/v2/spans).
 
-:envvar:`OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT`: transport interchange format
+:envvar:`OTEL_PYTHON_EXPORTER_ZIPKIN_TRANSPORT_FORMAT`: transport interchange format
 to use when sending data. Currently only Zipkin's v2 json and protobuf formats
 are supported, with v2 json being the default.
 
@@ -82,7 +82,7 @@ import requests
 from opentelemetry.exporter.zipkin.gen import zipkin_pb2
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_ZIPKIN_ENDPOINT,
-    OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT,
+    OTEL_PYTHON_EXPORTER_ZIPKIN_TRANSPORT_FORMAT,
 )
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Span, SpanContext, SpanKind
@@ -161,7 +161,7 @@ class ZipkinSpanExporter(SpanExporter):
 
         if transport_format is None:
             self.transport_format = (
-                environ.get(OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT)
+                environ.get(OTEL_PYTHON_EXPORTER_ZIPKIN_TRANSPORT_FORMAT)
                 or TRANSPORT_FORMAT_JSON
             )
         else:

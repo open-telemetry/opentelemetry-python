@@ -20,13 +20,13 @@ from typing import Sequence, Tuple
 from pkg_resources import iter_entry_points
 
 from opentelemetry import trace
+from opentelemetry.environment_variables import (
+    OTEL_PYTHON_EXPORTER,
+    OTEL_PYTHON_IDS_GENERATOR,
+    OTEL_PYTHON_SERVICE_NAME,
+)
 from opentelemetry.instrumentation.configurator import BaseConfigurator
 from opentelemetry.instrumentation.distro import BaseDistro
-from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER,
-    OTEL_IDS_GENERATOR,
-    OTEL_SERVICE_NAME,
-)
 from opentelemetry.sdk.metrics.export import MetricsExporter
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
@@ -48,15 +48,15 @@ _DEFAULT_IDS_GENERATOR = RANDOM_IDS_GENERATOR
 
 
 def _get_ids_generator() -> str:
-    return environ.get(OTEL_IDS_GENERATOR) or _DEFAULT_IDS_GENERATOR
+    return environ.get(OTEL_PYTHON_IDS_GENERATOR) or _DEFAULT_IDS_GENERATOR
 
 
 def _get_service_name() -> str:
-    return environ.get(OTEL_SERVICE_NAME) or ""
+    return environ.get(OTEL_PYTHON_SERVICE_NAME) or ""
 
 
 def _get_exporter_names() -> Sequence[str]:
-    exporter = environ.get(OTEL_EXPORTER) or "EXPORTER_OTLP"
+    exporter = environ.get(OTEL_PYTHON_EXPORTER) or "EXPORTER_OTLP"
     if exporter.lower().strip() == "none":
         return []
 
@@ -183,4 +183,4 @@ class OpenTelemetryDistro(BaseDistro):
     """
 
     def _configure(self, **kwargs):
-        os.environ.setdefault(OTEL_EXPORTER, "otlp")
+        os.environ.setdefault(OTEL_PYTHON_EXPORTER, "otlp")
