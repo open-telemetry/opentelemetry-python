@@ -23,10 +23,10 @@ from typing import Optional
 
 from opentelemetry.context import Context, attach, detach, set_value
 from opentelemetry.sdk.environment_variables import (
-    OTEL_BSP_EXPORT_TIMEOUT_MILLIS,
+    OTEL_BSP_EXPORT_TIMEOUT,
     OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
     OTEL_BSP_MAX_QUEUE_SIZE,
-    OTEL_BSP_SCHEDULE_DELAY_MILLIS,
+    OTEL_BSP_SCHEDULE_DELAY,
 )
 from opentelemetry.sdk.trace import Span, SpanProcessor
 from opentelemetry.util import time_ns
@@ -131,7 +131,7 @@ class BatchExportSpanProcessor(SpanProcessor):
 
         if schedule_delay_millis is None:
             schedule_delay_millis = int(
-                environ.get(OTEL_BSP_SCHEDULE_DELAY_MILLIS, 5000)
+                environ.get(OTEL_BSP_SCHEDULE_DELAY, 5000)
             )
 
         if max_export_batch_size is None:
@@ -141,7 +141,7 @@ class BatchExportSpanProcessor(SpanProcessor):
 
         if export_timeout_millis is None:
             export_timeout_millis = int(
-                environ.get(OTEL_BSP_EXPORT_TIMEOUT_MILLIS, 30000)
+                environ.get(OTEL_BSP_EXPORT_TIMEOUT, 30000)
             )
 
         if max_queue_size <= 0:

@@ -48,7 +48,7 @@ this can be overriden when needed.
 The command supports the following configuration options as CLI arguments and environment vars:
 
 
-* ``--exporter`` or ``OTEL_EXPORTER``
+* ``--exporter`` or ``OTEL_PYTHON_EXPORTER``
 
 Used to specify which trace exporter to use. Can be set to one or more
 of the well-known exporter names (see below).
@@ -69,11 +69,11 @@ Well known trace exporter names:
 
 ``otlp`` is an alias for ``otlp_span,otlp_metric``.
 
-* ``--service-name`` or ``OTEL_SERVICE_NAME``
+* ``--service-name`` or ``OTEL_PYTHON_SERVICE_NAME``
 
 When present the value is passed on to the relevant exporter initializer as ``service_name`` argument.
 
-* ``--ids-generator`` or ``OTEL_IDS_GENERATOR``
+* ``--ids-generator`` or ``OTEL_PYTHON_IDS_GENERATOR``
 
 Used to specify which IDs Generator to use for the global Tracer Provider. By default, it
 will use the random IDs generator.

@@ -41,8 +41,8 @@ from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
-    OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_PYTHON_EXPORTER_OTLP_INSECURE,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 
@@ -170,7 +170,7 @@ class OTLPExporterMixin(
         )
 
         if insecure is None:
-            insecure = environ.get(OTEL_EXPORTER_OTLP_INSECURE)
+            insecure = environ.get(OTEL_PYTHON_EXPORTER_OTLP_INSECURE)
         if insecure is None:
             insecure = False
 

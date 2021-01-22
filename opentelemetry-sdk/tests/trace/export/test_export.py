@@ -24,10 +24,10 @@ from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.environment_variables import (
-    OTEL_BSP_EXPORT_TIMEOUT_MILLIS,
+    OTEL_BSP_EXPORT_TIMEOUT,
     OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
     OTEL_BSP_MAX_QUEUE_SIZE,
-    OTEL_BSP_SCHEDULE_DELAY_MILLIS,
+    OTEL_BSP_SCHEDULE_DELAY,
 )
 from opentelemetry.sdk.trace import export
 
@@ -164,9 +164,9 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         "os.environ",
         {
             OTEL_BSP_MAX_QUEUE_SIZE: "10",
-            OTEL_BSP_SCHEDULE_DELAY_MILLIS: "2",
+            OTEL_BSP_SCHEDULE_DELAY: "2",
             OTEL_BSP_MAX_EXPORT_BATCH_SIZE: "3",
-            OTEL_BSP_EXPORT_TIMEOUT_MILLIS: "4",
+            OTEL_BSP_EXPORT_TIMEOUT: "4",
         },
     )
     def test_batch_span_processor_environment_variables(self):
