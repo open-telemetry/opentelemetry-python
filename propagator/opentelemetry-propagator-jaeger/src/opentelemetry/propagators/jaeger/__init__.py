@@ -45,9 +45,10 @@ class JaegerPropagator(TextMapPropagator):
 
         if context is None:
             context = get_current()
-        fields = _extract_first_element(
-            getter.get(carrier, self.TRACE_ID_KEY)
-        ).split(":")
+        header = getter.get(carrier, self.TRACE_ID_KEY)
+        if not header:
+            return trace.set_span_in_context(trace.INVALID_SPAN, context)
+        fields = _extract_first_element(header).split(":")
 
         context = self._extract_baggage(getter, carrier, context)
         if len(fields) != 4:
