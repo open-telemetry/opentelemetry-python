@@ -123,9 +123,7 @@ class Resource:
 
     def merge(self, other: "Resource") -> "Resource":
         merged_attributes = self.attributes
-        # pylint: disable=protected-access
-        for key, value in other._attributes.items():
-            merged_attributes[key] = value
+        merged_attributes.update(other.attributes)
         return Resource(merged_attributes)
 
     def __eq__(self, other: object) -> bool:
