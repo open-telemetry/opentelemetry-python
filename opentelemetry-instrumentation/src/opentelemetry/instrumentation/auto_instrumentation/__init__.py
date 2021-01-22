@@ -20,6 +20,12 @@ from os import environ, execl, getcwd
 from os.path import abspath, dirname, pathsep
 from shutil import which
 
+from opentelemetry.environment_variables import (
+    OTEL_EXPORTER,
+    OTEL_IDS_GENERATOR,
+    OTEL_SERVICE_NAME,
+)
+
 logger = getLogger(__file__)
 
 
@@ -79,11 +85,11 @@ def parse_args():
 
 def load_config_from_cli_args(args):
     if args.exporter:
-        environ["OTEL_EXPORTER"] = args.exporter
+        environ[OTEL_EXPORTER] = args.exporter
     if args.service_name:
-        environ["OTEL_SERVICE_NAME"] = args.service_name
+        environ[OTEL_SERVICE_NAME] = args.service_name
     if args.ids_generator:
-        environ["OTEL_IDS_GENERATOR"] = args.ids_generator
+        environ[OTEL_IDS_GENERATOR] = args.ids_generator
 
 
 def run() -> None:

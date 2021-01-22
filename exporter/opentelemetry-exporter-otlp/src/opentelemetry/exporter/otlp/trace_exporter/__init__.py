@@ -38,6 +38,13 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as CollectorSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_SPAN_ENDPOINT,
+    OTEL_EXPORTER_OTLP_SPAN_HEADERS,
+    OTEL_EXPORTER_OTLP_SPAN_INSECURE,
+    OTEL_EXPORTER_OTLP_SPAN_TIMEOUT,
+)
 from opentelemetry.sdk.trace import Span as SDKSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace.status import StatusCode
@@ -73,17 +80,17 @@ class OTLPSpanExporter(
         timeout: Optional[int] = None,
     ):
         if insecure is None:
-            insecure = environ.get("OTEL_EXPORTER_OTLP_SPAN_INSECURE")
+            insecure = environ.get(OTEL_EXPORTER_OTLP_SPAN_INSECURE)
 
         if (
             not insecure
-            and environ.get("OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE") is not None
+            and environ.get(OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE) is not None
         ):
             credentials = credentials or _load_credential_from_file(
-                environ.get("OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE")
+                environ.get(OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE)
             )
 
-        environ_timeout = environ.get("OTEL_EXPORTER_OTLP_SPAN_TIMEOUT")
+        environ_timeout = environ.get(OTEL_EXPORTER_OTLP_SPAN_TIMEOUT)
         environ_timeout = (
             int(environ_timeout) if environ_timeout is not None else None
         )
@@ -91,11 +98,11 @@ class OTLPSpanExporter(
         super().__init__(
             **{
                 "endpoint": endpoint
-                or environ.get("OTEL_EXPORTER_OTLP_SPAN_ENDPOINT"),
+                or environ.get(OTEL_EXPORTER_OTLP_SPAN_ENDPOINT),
                 "insecure": insecure,
                 "credentials": credentials,
                 "headers": headers
-                or environ.get("OTEL_EXPORTER_OTLP_SPAN_HEADERS"),
+                or environ.get(OTEL_EXPORTER_OTLP_SPAN_HEADERS),
                 "timeout": timeout or environ_timeout,
             }
         )

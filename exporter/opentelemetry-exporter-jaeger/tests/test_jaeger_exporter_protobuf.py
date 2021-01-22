@@ -29,6 +29,10 @@ from opentelemetry.exporter.jaeger.translate import (
     Translate,
 )
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_JAEGER_CERTIFICATE,
+    OTEL_EXPORTER_JAEGER_ENDPOINT,
+)
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import Status, StatusCode
@@ -59,8 +63,8 @@ class TestJaegerSpanExporter(unittest.TestCase):
         env_patch = patch.dict(
             "os.environ",
             {
-                "OTEL_EXPORTER_JAEGER_ENDPOINT": collector_endpoint,
-                "OTEL_EXPORTER_JAEGER_CERTIFICATE": os.path.dirname(__file__)
+                OTEL_EXPORTER_JAEGER_ENDPOINT: collector_endpoint,
+                OTEL_EXPORTER_JAEGER_CERTIFICATE: os.path.dirname(__file__)
                 + "/certs/cred.cert",
             },
         )

@@ -104,6 +104,10 @@ from typing import Optional, Sequence
 
 # pylint: disable=unused-import
 from opentelemetry.context import Context
+from opentelemetry.sdk.environment_variables import (
+    OTEL_TRACE_SAMPLER,
+    OTEL_TRACE_SAMPLER_ARG,
+)
 from opentelemetry.trace import Link, get_current_span
 from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
@@ -366,7 +370,7 @@ _KNOWN_SAMPLERS = {
 
 def _get_from_env_or_default() -> Sampler:
     trace_sampler = os.getenv(
-        "OTEL_TRACE_SAMPLER", "parentbased_always_on"
+        OTEL_TRACE_SAMPLER, "parentbased_always_on"
     ).lower()
     if trace_sampler not in _KNOWN_SAMPLERS:
         _logger.warning("Couldn't recognize sampler %s.", trace_sampler)
@@ -374,7 +378,7 @@ def _get_from_env_or_default() -> Sampler:
 
     if trace_sampler in ("traceidratio", "parentbased_traceidratio"):
         try:
-            rate = float(os.getenv("OTEL_TRACE_SAMPLER_ARG"))
+            rate = float(os.getenv(OTEL_TRACE_SAMPLER_ARG))
         except ValueError:
             _logger.warning("Could not convert TRACE_SAMPLER_ARG to float.")
             rate = 1.0

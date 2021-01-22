@@ -82,6 +82,13 @@ from opentelemetry.exporter.jaeger.send.thrift import AgentClientUDP, Collector
 from opentelemetry.exporter.jaeger.translate import Translate
 from opentelemetry.exporter.jaeger.translate.protobuf import ProtobufTranslator
 from opentelemetry.exporter.jaeger.translate.thrift import ThriftTranslator
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_JAEGER_AGENT_HOST,
+    OTEL_EXPORTER_JAEGER_AGENT_PORT,
+    OTEL_EXPORTER_JAEGER_ENDPOINT,
+    OTEL_EXPORTER_JAEGER_PASSWORD,
+    OTEL_EXPORTER_JAEGER_USER,
+)
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
 DEFAULT_AGENT_HOST_NAME = "localhost"
@@ -130,11 +137,11 @@ class JaegerSpanExporter(SpanExporter):
         self.service_name = service_name
         self.agent_host_name = _parameter_setter(
             param=agent_host_name,
-            env_variable=environ.get("OTEL_EXPORTER_JAEGER_AGENT_HOST"),
+            env_variable=environ.get(OTEL_EXPORTER_JAEGER_AGENT_HOST),
             default=DEFAULT_AGENT_HOST_NAME,
         )
 
-        environ_agent_port = environ.get("OTEL_EXPORTER_JAEGER_AGENT_PORT")
+        environ_agent_port = environ.get(OTEL_EXPORTER_JAEGER_AGENT_PORT)
         environ_agent_port = (
             int(environ_agent_port) if environ_agent_port is not None else None
         )
@@ -149,17 +156,17 @@ class JaegerSpanExporter(SpanExporter):
         )
         self.collector_endpoint = _parameter_setter(
             param=collector_endpoint,
-            env_variable=environ.get("OTEL_EXPORTER_JAEGER_ENDPOINT"),
+            env_variable=environ.get(OTEL_EXPORTER_JAEGER_ENDPOINT),
             default=None,
         )
         self.username = _parameter_setter(
             param=username,
-            env_variable=environ.get("OTEL_EXPORTER_JAEGER_USER"),
+            env_variable=environ.get(OTEL_EXPORTER_JAEGER_USER),
             default=None,
         )
         self.password = _parameter_setter(
             param=password,
-            env_variable=environ.get("OTEL_EXPORTER_JAEGER_PASSWORD"),
+            env_variable=environ.get(OTEL_EXPORTER_JAEGER_PASSWORD),
             default=None,
         )
         self._collector = None

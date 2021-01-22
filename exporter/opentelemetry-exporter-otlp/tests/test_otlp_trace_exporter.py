@@ -45,6 +45,12 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as OTLPSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_SPAN_ENDPOINT,
+    OTEL_EXPORTER_OTLP_SPAN_HEADERS,
+    OTEL_EXPORTER_OTLP_SPAN_TIMEOUT,
+)
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.trace import Status as SDKStatus
 from opentelemetry.sdk.trace import StatusCode as SDKStatusCode
@@ -165,11 +171,11 @@ class TestOTLPSpanExporter(TestCase):
     @patch.dict(
         "os.environ",
         {
-            "OTEL_EXPORTER_OTLP_SPAN_ENDPOINT": "collector:4317",
-            "OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE": THIS_DIR
+            OTEL_EXPORTER_OTLP_SPAN_ENDPOINT: "collector:4317",
+            OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE: THIS_DIR
             + "/fixtures/test.cert",
-            "OTEL_EXPORTER_OTLP_SPAN_HEADERS": "key1=value1,key2=value2",
-            "OTEL_EXPORTER_OTLP_SPAN_TIMEOUT": "10",
+            OTEL_EXPORTER_OTLP_SPAN_HEADERS: "key1=value1,key2=value2",
+            OTEL_EXPORTER_OTLP_SPAN_TIMEOUT: "10",
         },
     )
     @patch("opentelemetry.exporter.otlp.exporter.OTLPExporterMixin.__init__")
@@ -197,7 +203,7 @@ class TestOTLPSpanExporter(TestCase):
 
     @patch.dict(
         "os.environ",
-        {"OTEL_EXPORTER_OTLP_SPAN_HEADERS": "key1=value1,key2=value2"},
+        {OTEL_EXPORTER_OTLP_SPAN_HEADERS: "key1=value1,key2=value2"},
     )
     @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
     @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
