@@ -139,6 +139,9 @@ tracer_provider.add_span_processor(mock_processor)
 
 
 class TestTracerSampling(unittest.TestCase):
+    def tearDown(self):
+        reload(trace)
+
     def test_default_sampler(self):
         tracer = new_tracer()
 
@@ -159,6 +162,12 @@ class TestTracerSampling(unittest.TestCase):
             trace_api.TraceFlags.SAMPLED,
         )
 
+    def test_default_sampler_type(self):
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, sampling.ParentBased)
+        # pylint: disable=protected-access
+        self.assertEqual(tracer_provider.sampler._root, sampling.ALWAYS_ON)
+
     def test_sampler_no_sampling(self):
         tracer_provider = trace.TracerProvider(sampling.ALWAYS_OFF)
         tracer = tracer_provider.get_tracer(__name__)
@@ -178,6 +187,36 @@ class TestTracerSampling(unittest.TestCase):
             child_span.get_span_context().trace_flags,
             trace_api.TraceFlags.DEFAULT,
         )
+
+    @mock.patch.dict("os.environ", {"OTEL_TRACE_SAMPLER": "always_off"})
+    def test_sampler_with_env(self):
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, sampling.StaticSampler)
+        self.assertEqual(
+            tracer_provider.sampler._decision, sampling.Decision.DROP
+        )
+
+        tracer = tracer_provider.get_tracer(__name__)
+
+        root_span = tracer.start_span(name="root span", context=None)
+        # Should be no-op
+        self.assertIsInstance(root_span, trace_api.DefaultSpan)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            "OTEL_TRACE_SAMPLER": "parentbased_traceidratio",
+            "OTEL_TRACE_SAMPLER_ARG": "0.25",
+        },
+    )
+    def test_ratio_sampler_with_env(self):
+        # pylint: disable=protected-access
+        reload(trace)
+        tracer_provider = trace.TracerProvider()
+        self.assertIsInstance(tracer_provider.sampler, sampling.ParentBased)
+        self.assertEqual(tracer_provider.sampler._root.rate, 0.25)
 
 
 class TestSpanCreation(unittest.TestCase):
@@ -446,6 +485,14 @@ class TestSpanCreation(unittest.TestCase):
         self.assertIsNotNone(root2.end_time)
         self.assertIsNot(root1, root2)
 
+    def test_start_as_current_span_no_end_on_exit(self):
+        tracer = new_tracer()
+
+        with tracer.start_as_current_span("root", end_on_exit=False) as root:
+            self.assertIsNone(root.end_time)
+
+        self.assertIsNone(root.end_time)
+
     def test_explicit_span_resource(self):
         resource = resources.Resource.create({})
         tracer_provider = trace.TracerProvider(resource=resource)
@@ -484,11 +531,14 @@ class TestSpan(unittest.TestCase):
 
     def test_attributes(self):
         with self.tracer.start_as_current_span("root") as root:
-            root.set_attribute("component", "http")
-            root.set_attribute("http.method", "GET")
-            root.set_attribute(
-                "http.url", "https://example.com:779/path/12/?q=d#123"
+            root.set_attributes(
+                {
+                    "component": "http",
+                    "http.method": "GET",
+                    "http.url": "https://example.com:779/path/12/?q=d#123",
+                }
             )
+
             root.set_attribute("http.status_code", 200)
             root.set_attribute("http.status_text", "OK")
             root.set_attribute("misc.pi", 3.14)
@@ -546,6 +596,10 @@ class TestSpan(unittest.TestCase):
 
     def test_invalid_attribute_values(self):
         with self.tracer.start_as_current_span("root") as root:
+            root.set_attributes(
+                {"correct-value": "foo", "non-primitive-data-type": dict()}
+            )
+
             root.set_attribute("non-primitive-data-type", dict())
             root.set_attribute(
                 "list-of-mixed-data-types-numeric-first",
@@ -562,7 +616,8 @@ class TestSpan(unittest.TestCase):
             root.set_attribute("", 123)
             root.set_attribute(None, 123)
 
-            self.assertEqual(len(root.attributes), 0)
+            self.assertEqual(len(root.attributes), 1)
+            self.assertEqual(root.attributes["correct-value"], "foo")
 
     def test_byte_type_attribute_value(self):
         with self.tracer.start_as_current_span("root") as root:
@@ -1180,7 +1235,7 @@ class TestSpanProcessor(unittest.TestCase):
     "context": {
         "trace_id": "0x000000000000000000000000deadbeef",
         "span_id": "0x00000000deadbef0",
-        "trace_state": "{}"
+        "trace_state": "[]"
     },
     "kind": "SpanKind.INTERNAL",
     "parent_id": null,
@@ -1197,7 +1252,7 @@ class TestSpanProcessor(unittest.TestCase):
         )
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {}, "events": [], "links": [], "resource": {}}',
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "[]"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {}, "events": [], "links": [], "resource": {}}',
         )
 
     def test_attributes_to_json(self):
@@ -1214,7 +1269,7 @@ class TestSpanProcessor(unittest.TestCase):
         date_str = ns_to_iso_str(123)
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {"key": "value"}, "events": [{"name": "event", "timestamp": "'
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "[]"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {"key": "value"}, "events": [{"name": "event", "timestamp": "'
             + date_str
             + '", "attributes": {"key2": "value2"}}], "links": [], "resource": {}}',
         )

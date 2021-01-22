@@ -59,9 +59,46 @@ To use a sampler, pass it into the tracer provider constructor. For example:
     # created spans will now be sampled by the TraceIdRatioBased sampler
     with trace.get_tracer(__name__).start_as_current_span("Test Span"):
         ...
+
+The tracer sampler can also be configured via environment variables ``OTEL_TRACE_SAMPLER`` and ``OTEL_TRACE_SAMPLER_ARG`` (only if applicable).
+The list of known values for ``OTEL_TRACE_SAMPLER`` are:
+
+    * always_on - Sampler that always samples spans, regardless of the parent span's sampling decision.
+    * always_off - Sampler that never samples spans, regardless of the parent span's sampling decision.
+    * traceidratio - Sampler that samples probabalistically based on rate.
+    * parentbased_always_on - (default) Sampler that respects its parent span's sampling decision, but otherwise always samples.
+    * parentbased_always_off - Sampler that respects its parent span's sampling decision, but otherwise never samples.
+    * parentbased_traceidratio - Sampler that respects its parent span's sampling decision, but otherwise samples probabalistically based on rate.
+
+Sampling probability can be set with ``OTEL_TRACE_SAMPLER_ARG`` if the sampler is traceidratio or parentbased_traceidratio, when not provided rate will be set to 1.0 (maximum rate possible).
+
+
+Prev example but with environment vairables. Please make sure to set the env ``OTEL_TRACE_SAMPLER=traceidratio`` and ``OTEL_TRACE_SAMPLER_ARG=0.001``.
+
+.. code:: python
+
+    from opentelemetry import trace
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import (
+        ConsoleSpanExporter,
+        SimpleExportSpanProcessor,
+    )
+
+    trace.set_tracer_provider(TracerProvider())
+
+    # set up an exporter for sampled spans
+    trace.get_tracer_provider().add_span_processor(
+        SimpleExportSpanProcessor(ConsoleSpanExporter())
+    )
+
+    # created spans will now be sampled by the TraceIdRatioBased sampler with rate 1/1000.
+    with trace.get_tracer(__name__).start_as_current_span("Test Span"):
+        ...
 """
 import abc
 import enum
+import os
+from logging import getLogger
 from types import MappingProxyType
 from typing import Optional, Sequence
 
@@ -70,6 +107,8 @@ from opentelemetry.context import Context
 from opentelemetry.trace import Link, get_current_span
 from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
+
+_logger = getLogger(__name__)
 
 
 class Decision(enum.Enum):
@@ -194,11 +233,6 @@ class TraceIdRatioBased(Sampler):
     def rate(self) -> float:
         return self._rate
 
-    @rate.setter
-    def rate(self, new_rate: float) -> None:
-        self._rate = new_rate
-        self._bound = self.get_bound_for_rate(self._rate)
-
     @property
     def bound(self) -> int:
         return self._bound
@@ -307,3 +341,43 @@ DEFAULT_OFF = ParentBased(ALWAYS_OFF)
 
 DEFAULT_ON = ParentBased(ALWAYS_ON)
 """Sampler that respects its parent span's sampling decision, but otherwise always samples."""
+
+
+class ParentBasedTraceIdRatio(ParentBased):
+    """
+    Sampler that respects its parent span's sampling decision, but otherwise
+    samples probabalistically based on `rate`.
+    """
+
+    def __init__(self, rate: float):
+        root = TraceIdRatioBased(rate=rate)
+        super().__init__(root=root)
+
+
+_KNOWN_SAMPLERS = {
+    "always_on": ALWAYS_ON,
+    "always_off": ALWAYS_OFF,
+    "parentbased_always_on": DEFAULT_ON,
+    "parentbased_always_off": DEFAULT_OFF,
+    "traceidratio": TraceIdRatioBased,
+    "parentbased_traceidratio": ParentBasedTraceIdRatio,
+}
+
+
+def _get_from_env_or_default() -> Sampler:
+    trace_sampler = os.getenv(
+        "OTEL_TRACE_SAMPLER", "parentbased_always_on"
+    ).lower()
+    if trace_sampler not in _KNOWN_SAMPLERS:
+        _logger.warning("Couldn't recognize sampler %s.", trace_sampler)
+        trace_sampler = "parentbased_always_on"
+
+    if trace_sampler in ("traceidratio", "parentbased_traceidratio"):
+        try:
+            rate = float(os.getenv("OTEL_TRACE_SAMPLER_ARG"))
+        except ValueError:
+            _logger.warning("Could not convert TRACE_SAMPLER_ARG to float.")
+            rate = 1.0
+        return _KNOWN_SAMPLERS[trace_sampler](rate)
+
+    return _KNOWN_SAMPLERS[trace_sampler]

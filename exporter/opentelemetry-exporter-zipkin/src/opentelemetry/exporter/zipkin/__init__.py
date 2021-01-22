@@ -107,6 +107,9 @@ SPAN_KIND_MAP_PROTOBUF = {
     SpanKind.CONSUMER: zipkin_pb2.Span.Kind.CONSUMER,
 }
 
+NAME_KEY = "otel.library.name"
+VERSION_KEY = "otel.library.version"
+
 SUCCESS_STATUS_CODES = (200, 202)
 
 logger = logging.getLogger(__name__)
@@ -231,11 +234,9 @@ class ZipkinSpanExporter(SpanExporter):
             }
 
             if span.instrumentation_info is not None:
+                zipkin_span["tags"][NAME_KEY] = span.instrumentation_info.name
                 zipkin_span["tags"][
-                    "otel.instrumentation_library.name"
-                ] = span.instrumentation_info.name
-                zipkin_span["tags"][
-                    "otel.instrumentation_library.version"
+                    VERSION_KEY
                 ] = span.instrumentation_info.version
 
             if span.status.status_code is not StatusCode.UNSET:
@@ -313,8 +314,8 @@ class ZipkinSpanExporter(SpanExporter):
             if span.instrumentation_info is not None:
                 pbuf_span.tags.update(
                     {
-                        "otel.instrumentation_library.name": span.instrumentation_info.name,
-                        "otel.instrumentation_library.version": span.instrumentation_info.version,
+                        NAME_KEY: span.instrumentation_info.name,
+                        VERSION_KEY: span.instrumentation_info.version,
                     }
                 )
 
@@ -352,7 +353,9 @@ class ZipkinSpanExporter(SpanExporter):
         if not tags_dict:
             return tags
         for attribute_key, attribute_value in tags_dict.items():
-            if isinstance(attribute_value, (int, bool, float, str)):
+            if isinstance(attribute_value, bool):
+                value = str(attribute_value).lower()
+            elif isinstance(attribute_value, (int, float, str)):
                 value = str(attribute_value)
             elif isinstance(attribute_value, Sequence):
                 value = self._extract_tag_value_string_from_sequence(
@@ -381,7 +384,9 @@ class ZipkinSpanExporter(SpanExporter):
         defined_max_tag_value_length = self.max_tag_value_length > 0
 
         for element in sequence:
-            if isinstance(element, (int, bool, float, str)):
+            if isinstance(element, bool):
+                tag_value_element = str(element).lower()
+            elif isinstance(element, (int, float, str)):
                 tag_value_element = str(element)
             elif element is None:
                 tag_value_element = None
@@ -407,7 +412,7 @@ class ZipkinSpanExporter(SpanExporter):
         return json.dumps(tag_value_elements, separators=(",", ":"))
 
     def _extract_tags_from_span(self, span: Span):
-        tags = self._extract_tags_from_dict(getattr(span, "attributes", None))
+        tags = self._extract_tags_from_dict(span.attributes)
         if span.resource:
             tags.update(self._extract_tags_from_dict(span.resource.attributes))
         return tags
