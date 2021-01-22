@@ -1,10 +1,7 @@
-opentelemetry.environment_variables
-===================================
+opentelemetry.environment_variables package
+===========================================
 
-.. toctree::
-   :maxdepth: 1
+Module contents
+---------------
 
 .. automodule:: opentelemetry.environment_variables
-    :members:
-    :undoc-members:
-    :show-inheritance:
