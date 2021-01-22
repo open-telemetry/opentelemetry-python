@@ -24,7 +24,7 @@ from opentelemetry.exporter.jaeger.gen.jaeger import ttypes as jaeger
 from opentelemetry.exporter.jaeger.translate import Translate
 from opentelemetry.exporter.jaeger.translate.thrift import ThriftTranslator
 from opentelemetry.sdk import trace
-from opentelemetry.sdk.environment_variable import (
+from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_AGENT_HOST,
     OTEL_EXPORTER_JAEGER_AGENT_PORT,
     OTEL_EXPORTER_JAEGER_ENDPOINT,
