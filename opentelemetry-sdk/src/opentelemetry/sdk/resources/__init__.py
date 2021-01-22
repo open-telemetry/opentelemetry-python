@@ -125,8 +125,7 @@ class Resource:
         merged_attributes = self.attributes
         # pylint: disable=protected-access
         for key, value in other._attributes.items():
-            if key not in merged_attributes or merged_attributes[key] == "":
-                merged_attributes[key] = value
+            merged_attributes[key] = value
         return Resource(merged_attributes)
 
     def __eq__(self, other: object) -> bool:
