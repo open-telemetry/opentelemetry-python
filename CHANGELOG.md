@@ -75,6 +75,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1536](https://github.com/open-telemetry/opentelemetry-python/pull/1536))
 - Fix TraceState to adhere to specs
   ([#1502](https://github.com/open-telemetry/opentelemetry-python/pull/1502))
+- Update Resource `merge` key conflict precedence
+  ([#1544](https://github.com/open-telemetry/opentelemetry-python/pull/1544))
 
 ### Removed
 - `opentelemetry-api` Remove ThreadLocalRuntimeContext since python3.4 is not supported.
