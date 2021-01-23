@@ -198,6 +198,21 @@ class TestResources(unittest.TestCase):
             Exception, resources.get_aggregated_resources, [resource_detector],
         )
 
+    @mock.patch.dict(
+        os.environ,
+        {"OTEL_RESOURCE_ATTRIBUTES": "key1=env_value1,key2=env_value2"},
+    )
+    def test_env_priority(self):
+        resource_env = resources.Resource.create()
+        self.assertEqual(resource_env.attributes["key1"], "env_value1")
+        self.assertEqual(resource_env.attributes["key2"], "env_value2")
+
+        resource_env_override = resources.Resource.create(
+            {"key1": "value1", "key2": "value2"}
+        )
+        self.assertEqual(resource_env_override.attributes["key1"], "value1")
+        self.assertEqual(resource_env_override.attributes["key2"], "value2")
+
 
 class TestOTELResourceDetector(unittest.TestCase):
     def setUp(self) -> None:

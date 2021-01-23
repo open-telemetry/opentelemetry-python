@@ -102,16 +102,27 @@ OTEL_RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES"
 
 
 class Resource:
+    """A Resource is an immutable representation of the entity producing telemetry as Attributes.
+    """
+
     def __init__(self, attributes: Attributes):
         self._attributes = attributes.copy()
 
     @staticmethod
     def create(attributes: typing.Optional[Attributes] = None) -> "Resource":
+        """Creates a new `Resource` from attributes.
+
+        Args:
+            attributes: Optional zero or more key-value pairs.
+
+        Returns:
+            The newly-created Resource.
+        """
         if not attributes:
-            resource = _DEFAULT_RESOURCE
-        else:
-            resource = _DEFAULT_RESOURCE.merge(Resource(attributes))
-        return resource.merge(OTELResourceDetector().detect())
+            attributes = {}
+        return _DEFAULT_RESOURCE.merge(OTELResourceDetector().detect()).merge(
+            Resource(attributes)
+        )
 
     @staticmethod
     def create_empty() -> "Resource":
@@ -122,6 +133,17 @@ class Resource:
         return self._attributes.copy()
 
     def merge(self, other: "Resource") -> "Resource":
+        """Merges this resource and an updating resource into a new `Resource`.
+
+        If a key exists on both the old and updating resource, the value of the
+        updating resource will override the old resource value.
+
+        Args:
+            other: The other resource to be merged.
+
+        Returns:
+            The newly-created Resource.
+        """
         merged_attributes = self.attributes
         merged_attributes.update(other.attributes)
         return Resource(merged_attributes)
