@@ -485,6 +485,14 @@ class TestSpanCreation(unittest.TestCase):
         self.assertIsNotNone(root2.end_time)
         self.assertIsNot(root1, root2)
 
+    def test_start_as_current_span_no_end_on_exit(self):
+        tracer = new_tracer()
+
+        with tracer.start_as_current_span("root", end_on_exit=False) as root:
+            self.assertIsNone(root.end_time)
+
+        self.assertIsNone(root.end_time)
+
     def test_explicit_span_resource(self):
         resource = resources.Resource.create({})
         tracer_provider = trace.TracerProvider(resource=resource)
@@ -523,11 +531,14 @@ class TestSpan(unittest.TestCase):
 
     def test_attributes(self):
         with self.tracer.start_as_current_span("root") as root:
-            root.set_attribute("component", "http")
-            root.set_attribute("http.method", "GET")
-            root.set_attribute(
-                "http.url", "https://example.com:779/path/12/?q=d#123"
+            root.set_attributes(
+                {
+                    "component": "http",
+                    "http.method": "GET",
+                    "http.url": "https://example.com:779/path/12/?q=d#123",
+                }
             )
+
             root.set_attribute("http.status_code", 200)
             root.set_attribute("http.status_text", "OK")
             root.set_attribute("misc.pi", 3.14)
@@ -585,6 +596,10 @@ class TestSpan(unittest.TestCase):
 
     def test_invalid_attribute_values(self):
         with self.tracer.start_as_current_span("root") as root:
+            root.set_attributes(
+                {"correct-value": "foo", "non-primitive-data-type": dict()}
+            )
+
             root.set_attribute("non-primitive-data-type", dict())
             root.set_attribute(
                 "list-of-mixed-data-types-numeric-first",
@@ -601,7 +616,8 @@ class TestSpan(unittest.TestCase):
             root.set_attribute("", 123)
             root.set_attribute(None, 123)
 
-            self.assertEqual(len(root.attributes), 0)
+            self.assertEqual(len(root.attributes), 1)
+            self.assertEqual(root.attributes["correct-value"], "foo")
 
     def test_byte_type_attribute_value(self):
         with self.tracer.start_as_current_span("root") as root:
@@ -1219,7 +1235,7 @@ class TestSpanProcessor(unittest.TestCase):
     "context": {
         "trace_id": "0x000000000000000000000000deadbeef",
         "span_id": "0x00000000deadbef0",
-        "trace_state": "{}"
+        "trace_state": "[]"
     },
     "kind": "SpanKind.INTERNAL",
     "parent_id": null,
@@ -1236,7 +1252,7 @@ class TestSpanProcessor(unittest.TestCase):
         )
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {}, "events": [], "links": [], "resource": {}}',
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "[]"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {}, "events": [], "links": [], "resource": {}}',
         )
 
     def test_attributes_to_json(self):
@@ -1253,7 +1269,7 @@ class TestSpanProcessor(unittest.TestCase):
         date_str = ns_to_iso_str(123)
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "{}"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {"key": "value"}, "events": [{"name": "event", "timestamp": "'
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "[]"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {"key": "value"}, "events": [{"name": "event", "timestamp": "'
             + date_str
             + '", "attributes": {"key2": "value2"}}], "links": [], "resource": {}}',
         )

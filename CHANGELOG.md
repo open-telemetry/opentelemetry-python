@@ -4,16 +4,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v0.16b1...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v0.17b0...HEAD)
 
+### Added
+- Added `end_on_exit` argument to `start_as_current_span`
+  ([#1519](https://github.com/open-telemetry/opentelemetry-python/pull/1519)])
+- Add `Span.set_attributes` method to set multiple values with one call
+  ([#1520](https://github.com/open-telemetry/opentelemetry-python/pull/1520))
+
+## [0.17b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.17b0) - 2021-01-20
+
+### Added
 - Add support for OTLP v0.6.0
   ([#1472](https://github.com/open-telemetry/opentelemetry-python/pull/1472))
 - Add protobuf via gRPC exporting support for Jaeger
   ([#1471](https://github.com/open-telemetry/opentelemetry-python/pull/1471))
 - Add support for Python 3.9
   ([#1441](https://github.com/open-telemetry/opentelemetry-python/pull/1441))
-
-### Added
 - Added the ability to disable instrumenting libraries specified by OTEL_PYTHON_DISABLED_INSTRUMENTATIONS env variable, when using opentelemetry-instrument command.
   ([#1461](https://github.com/open-telemetry/opentelemetry-python/pull/1461))
 - Add `fields` to propagators
@@ -67,6 +74,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1535](https://github.com/open-telemetry/opentelemetry-python/pull/1535))
 - `opentelemetry-sdk` Remove rate property setter from TraceIdRatioBasedSampler
   ([#1536](https://github.com/open-telemetry/opentelemetry-python/pull/1536))
+- Fix TraceState to adhere to specs
+  ([#1502](https://github.com/open-telemetry/opentelemetry-python/pull/1502))
 
 ### Removed
 - `opentelemetry-api` Remove ThreadLocalRuntimeContext since python3.4 is not supported.
