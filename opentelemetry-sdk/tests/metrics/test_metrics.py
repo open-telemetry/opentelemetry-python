@@ -30,12 +30,12 @@ class TestMeterProvider(unittest.TestCase):
         meter = meter_provider.get_meter(__name__)
         self.assertIs(meter.processor.stateful, False)
 
-    def test_resource(self):
-        resource = resources.Resource.create({})
+    def test_resource_empty(self):
+        resource = resources.Resource.create_empty()
         meter_provider = metrics.MeterProvider(resource=resource)
         self.assertIs(meter_provider.resource, resource)
 
-    def test_resource_empty(self):
+    def test_resources(self):
         meter_provider = metrics.MeterProvider()
         # pylint: disable=protected-access
         self.assertIsInstance(meter_provider.resource, resources.Resource)
