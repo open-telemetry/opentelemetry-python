@@ -70,10 +70,10 @@ class TestOTLPMetricExporter(TestCase):
     @patch.dict(
         "os.environ",
         {
-            "OTEL_EXPORTER_OTLP_METRIC_ENDPOINT": "collector:55680",
+            "OTEL_EXPORTER_OTLP_METRIC_ENDPOINT": "collector:4317",
             "OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE": THIS_DIR
             + "/fixtures/test.cert",
-            "OTEL_EXPORTER_OTLP_METRIC_HEADERS": "key1:value1;key2:value2",
+            "OTEL_EXPORTER_OTLP_METRIC_HEADERS": "key1=value1,key2=value2",
             "OTEL_EXPORTER_OTLP_METRIC_TIMEOUT": "10",
         },
     )
@@ -84,8 +84,8 @@ class TestOTLPMetricExporter(TestCase):
         self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
         _, kwargs = mock_exporter_mixin.call_args_list[0]
 
-        self.assertEqual(kwargs["endpoint"], "collector:55680")
-        self.assertEqual(kwargs["headers"], "key1:value1;key2:value2")
+        self.assertEqual(kwargs["endpoint"], "collector:4317")
+        self.assertEqual(kwargs["headers"], "key1=value1,key2=value2")
         self.assertEqual(kwargs["timeout"], 10)
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
@@ -101,6 +101,35 @@ class TestOTLPMetricExporter(TestCase):
     ):
         OTLPMetricsExporter(insecure=False)
         self.assertTrue(mock_ssl_channel.called)
+
+    @patch.dict(
+        "os.environ",
+        {"OTEL_EXPORTER_OTLP_METRIC_HEADERS": "key1=value1,key2=value2"},
+    )
+    @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
+    @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
+    # pylint: disable=unused-argument
+    def test_otlp_headers_from_env(self, mock_ssl_channel, mock_secure):
+        exporter = OTLPMetricsExporter()
+        # pylint: disable=protected-access
+        self.assertEqual(
+            exporter._headers, (("key1", "value1"), ("key2", "value2")),
+        )
+        exporter = OTLPMetricsExporter(
+            headers=(("key3", "value3"), ("key4", "value4"))
+        )
+        # pylint: disable=protected-access
+        self.assertEqual(
+            exporter._headers, (("key3", "value3"), ("key4", "value4")),
+        )
+
+    @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
+    @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
+    # pylint: disable=unused-argument
+    def test_otlp_headers(self, mock_ssl_channel, mock_secure):
+        exporter = OTLPMetricsExporter()
+        # pylint: disable=protected-access
+        self.assertIsNone(exporter._headers, None)
 
     @patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
     def test_translate_counter_export_record(self, mock_time_ns):

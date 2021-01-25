@@ -26,6 +26,7 @@ from types import MappingProxyType, TracebackType
 from typing import (
     Any,
     Callable,
+    Dict,
     Iterator,
     MutableSequence,
     Optional,
@@ -41,6 +42,10 @@ from opentelemetry.configuration import Configuration
 from opentelemetry.sdk import util
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
+from opentelemetry.sdk.trace.ids_generator import (
+    IdsGenerator,
+    RandomIdsGenerator,
+)
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
@@ -56,6 +61,8 @@ SPAN_ATTRIBUTE_COUNT_LIMIT = Configuration().get(
 SPAN_EVENT_COUNT_LIMIT = Configuration().get("SPAN_EVENT_COUNT_LIMIT", 1000)
 SPAN_LINK_COUNT_LIMIT = Configuration().get("SPAN_LINK_COUNT_LIMIT", 1000)
 VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
+# pylint: disable=protected-access
+TRACE_SAMPLER = sampling._get_from_env_or_default()
 
 
 class SpanProcessor:
@@ -576,29 +583,35 @@ class Span(trace_api.Span):
     def get_span_context(self):
         return self.context
 
-    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
-        if not _is_valid_attribute_value(value):
-            return
-
-        if not key:
-            logger.warning("invalid key (empty or null)")
-            return
-
+    def set_attributes(
+        self, attributes: Dict[str, types.AttributeValue]
+    ) -> None:
         with self._lock:
             if self.end_time is not None:
                 logger.warning("Setting attribute on ended span.")
                 return
 
-            # Freeze mutable sequences defensively
-            if isinstance(value, MutableSequence):
-                value = tuple(value)
-            if isinstance(value, bytes):
-                try:
-                    value = value.decode()
-                except ValueError:
-                    logger.warning("Byte attribute could not be decoded.")
-                    return
-            self.attributes[key] = value
+            for key, value in attributes.items():
+                if not _is_valid_attribute_value(value):
+                    continue
+
+                if not key:
+                    logger.warning("invalid key `%s` (empty or null)", key)
+                    continue
+
+                # Freeze mutable sequences defensively
+                if isinstance(value, MutableSequence):
+                    value = tuple(value)
+                if isinstance(value, bytes):
+                    try:
+                        value = value.decode()
+                    except ValueError:
+                        logger.warning("Byte attribute could not be decoded.")
+                        return
+                self.attributes[key] = value
+
+    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
+        return self.set_attributes({key: value})
 
     @_check_span_ended
     def _add_event(self, event: EventBase) -> None:
@@ -733,7 +746,7 @@ class Tracer(trace_api.Tracer):
         span_processor: Union[
             SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor
         ],
-        ids_generator: trace_api.IdsGenerator,
+        ids_generator: IdsGenerator,
         instrumentation_info: InstrumentationInfo,
     ) -> None:
         self.sampler = sampler
@@ -742,6 +755,7 @@ class Tracer(trace_api.Tracer):
         self.ids_generator = ids_generator
         self.instrumentation_info = instrumentation_info
 
+    @contextmanager
     def start_as_current_span(
         self,
         name: str,
@@ -752,6 +766,7 @@ class Tracer(trace_api.Tracer):
         start_time: Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        end_on_exit: bool = True,
     ) -> Iterator[trace_api.Span]:
         span = self.start_span(
             name=name,
@@ -763,7 +778,8 @@ class Tracer(trace_api.Tracer):
             record_exception=record_exception,
             set_status_on_exception=set_status_on_exception,
         )
-        return self.use_span(span, end_on_exit=True)
+        with self.use_span(span, end_on_exit=end_on_exit) as span_context:
+            yield span_context
 
     def start_span(  # pylint: disable=too-many-locals
         self,
@@ -885,19 +901,19 @@ class Tracer(trace_api.Tracer):
 class TracerProvider(trace_api.TracerProvider):
     def __init__(
         self,
-        sampler: sampling.Sampler = sampling.DEFAULT_ON,
+        sampler: sampling.Sampler = TRACE_SAMPLER,
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
         active_span_processor: Union[
             SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor
         ] = None,
-        ids_generator: trace_api.IdsGenerator = None,
+        ids_generator: IdsGenerator = None,
     ):
         self._active_span_processor = (
             active_span_processor or SynchronousMultiSpanProcessor()
         )
         if ids_generator is None:
-            self.ids_generator = trace_api.RandomIdsGenerator()
+            self.ids_generator = RandomIdsGenerator()
         else:
             self.ids_generator = ids_generator
         self.resource = resource

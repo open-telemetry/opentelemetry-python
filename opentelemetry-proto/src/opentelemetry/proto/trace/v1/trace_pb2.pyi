@@ -10,6 +10,10 @@ from google.protobuf.internal.containers import (
     RepeatedCompositeFieldContainer as google___protobuf___internal___containers___RepeatedCompositeFieldContainer,
 )
 
+from google.protobuf.internal.enum_type_wrapper import (
+    _EnumTypeWrapper as google___protobuf___internal___enum_type_wrapper____EnumTypeWrapper,
+)
+
 from google.protobuf.message import (
     Message as google___protobuf___message___Message,
 )
@@ -25,12 +29,9 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
 
 from typing import (
     Iterable as typing___Iterable,
-    List as typing___List,
     NewType as typing___NewType,
     Optional as typing___Optional,
     Text as typing___Text,
-    Tuple as typing___Tuple,
-    Union as typing___Union,
     cast as typing___cast,
 )
 
@@ -43,10 +44,6 @@ builtin___bool = bool
 builtin___bytes = bytes
 builtin___float = float
 builtin___int = int
-builtin___str = str
-if sys.version_info < (3,):
-    builtin___buffer = buffer
-    builtin___unicode = unicode
 
 
 DESCRIPTOR: google___protobuf___descriptor___FileDescriptor = ...
@@ -65,12 +62,6 @@ class ResourceSpans(google___protobuf___message___Message):
         resource : typing___Optional[opentelemetry___proto___resource___v1___resource_pb2___Resource] = None,
         instrumentation_library_spans : typing___Optional[typing___Iterable[type___InstrumentationLibrarySpans]] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> ResourceSpans: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> ResourceSpans: ...
     def HasField(self, field_name: typing_extensions___Literal[u"resource",b"resource"]) -> builtin___bool: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"instrumentation_library_spans",b"instrumentation_library_spans",u"resource",b"resource"]) -> None: ...
 type___ResourceSpans = ResourceSpans
@@ -89,12 +80,6 @@ class InstrumentationLibrarySpans(google___protobuf___message___Message):
         instrumentation_library : typing___Optional[opentelemetry___proto___common___v1___common_pb2___InstrumentationLibrary] = None,
         spans : typing___Optional[typing___Iterable[type___Span]] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> InstrumentationLibrarySpans: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> InstrumentationLibrarySpans: ...
     def HasField(self, field_name: typing_extensions___Literal[u"instrumentation_library",b"instrumentation_library"]) -> builtin___bool: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"instrumentation_library",b"instrumentation_library",u"spans",b"spans"]) -> None: ...
 type___InstrumentationLibrarySpans = InstrumentationLibrarySpans
@@ -103,18 +88,9 @@ class Span(google___protobuf___message___Message):
     DESCRIPTOR: google___protobuf___descriptor___Descriptor = ...
     SpanKindValue = typing___NewType('SpanKindValue', builtin___int)
     type___SpanKindValue = SpanKindValue
-    class SpanKind(object):
+    SpanKind: _SpanKind
+    class _SpanKind(google___protobuf___internal___enum_type_wrapper____EnumTypeWrapper[Span.SpanKindValue]):
         DESCRIPTOR: google___protobuf___descriptor___EnumDescriptor = ...
-        @classmethod
-        def Name(cls, number: builtin___int) -> builtin___str: ...
-        @classmethod
-        def Value(cls, name: builtin___str) -> Span.SpanKindValue: ...
-        @classmethod
-        def keys(cls) -> typing___List[builtin___str]: ...
-        @classmethod
-        def values(cls) -> typing___List[Span.SpanKindValue]: ...
-        @classmethod
-        def items(cls) -> typing___List[typing___Tuple[builtin___str, Span.SpanKindValue]]: ...
         SPAN_KIND_UNSPECIFIED = typing___cast(Span.SpanKindValue, 0)
         SPAN_KIND_INTERNAL = typing___cast(Span.SpanKindValue, 1)
         SPAN_KIND_SERVER = typing___cast(Span.SpanKindValue, 2)
@@ -145,12 +121,6 @@ class Span(google___protobuf___message___Message):
             attributes : typing___Optional[typing___Iterable[opentelemetry___proto___common___v1___common_pb2___KeyValue]] = None,
             dropped_attributes_count : typing___Optional[builtin___int] = None,
             ) -> None: ...
-        if sys.version_info >= (3,):
-            @classmethod
-            def FromString(cls, s: builtin___bytes) -> Span.Event: ...
-        else:
-            @classmethod
-            def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> Span.Event: ...
         def ClearField(self, field_name: typing_extensions___Literal[u"attributes",b"attributes",u"dropped_attributes_count",b"dropped_attributes_count",u"name",b"name",u"time_unix_nano",b"time_unix_nano"]) -> None: ...
     type___Event = Event
 
@@ -172,12 +142,6 @@ class Span(google___protobuf___message___Message):
             attributes : typing___Optional[typing___Iterable[opentelemetry___proto___common___v1___common_pb2___KeyValue]] = None,
             dropped_attributes_count : typing___Optional[builtin___int] = None,
             ) -> None: ...
-        if sys.version_info >= (3,):
-            @classmethod
-            def FromString(cls, s: builtin___bytes) -> Span.Link: ...
-        else:
-            @classmethod
-            def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> Span.Link: ...
         def ClearField(self, field_name: typing_extensions___Literal[u"attributes",b"attributes",u"dropped_attributes_count",b"dropped_attributes_count",u"span_id",b"span_id",u"trace_id",b"trace_id",u"trace_state",b"trace_state"]) -> None: ...
     type___Link = Link
 
@@ -223,81 +187,75 @@ class Span(google___protobuf___message___Message):
         dropped_links_count : typing___Optional[builtin___int] = None,
         status : typing___Optional[type___Status] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> Span: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> Span: ...
     def HasField(self, field_name: typing_extensions___Literal[u"status",b"status"]) -> builtin___bool: ...
     def ClearField(self, field_name: typing_extensions___Literal[u"attributes",b"attributes",u"dropped_attributes_count",b"dropped_attributes_count",u"dropped_events_count",b"dropped_events_count",u"dropped_links_count",b"dropped_links_count",u"end_time_unix_nano",b"end_time_unix_nano",u"events",b"events",u"kind",b"kind",u"links",b"links",u"name",b"name",u"parent_span_id",b"parent_span_id",u"span_id",b"span_id",u"start_time_unix_nano",b"start_time_unix_nano",u"status",b"status",u"trace_id",b"trace_id",u"trace_state",b"trace_state"]) -> None: ...
 type___Span = Span
 
 class Status(google___protobuf___message___Message):
     DESCRIPTOR: google___protobuf___descriptor___Descriptor = ...
+    DeprecatedStatusCodeValue = typing___NewType('DeprecatedStatusCodeValue', builtin___int)
+    type___DeprecatedStatusCodeValue = DeprecatedStatusCodeValue
+    DeprecatedStatusCode: _DeprecatedStatusCode
+    class _DeprecatedStatusCode(google___protobuf___internal___enum_type_wrapper____EnumTypeWrapper[Status.DeprecatedStatusCodeValue]):
+        DESCRIPTOR: google___protobuf___descriptor___EnumDescriptor = ...
+        DEPRECATED_STATUS_CODE_OK = typing___cast(Status.DeprecatedStatusCodeValue, 0)
+        DEPRECATED_STATUS_CODE_CANCELLED = typing___cast(Status.DeprecatedStatusCodeValue, 1)
+        DEPRECATED_STATUS_CODE_UNKNOWN_ERROR = typing___cast(Status.DeprecatedStatusCodeValue, 2)
+        DEPRECATED_STATUS_CODE_INVALID_ARGUMENT = typing___cast(Status.DeprecatedStatusCodeValue, 3)
+        DEPRECATED_STATUS_CODE_DEADLINE_EXCEEDED = typing___cast(Status.DeprecatedStatusCodeValue, 4)
+        DEPRECATED_STATUS_CODE_NOT_FOUND = typing___cast(Status.DeprecatedStatusCodeValue, 5)
+        DEPRECATED_STATUS_CODE_ALREADY_EXISTS = typing___cast(Status.DeprecatedStatusCodeValue, 6)
+        DEPRECATED_STATUS_CODE_PERMISSION_DENIED = typing___cast(Status.DeprecatedStatusCodeValue, 7)
+        DEPRECATED_STATUS_CODE_RESOURCE_EXHAUSTED = typing___cast(Status.DeprecatedStatusCodeValue, 8)
+        DEPRECATED_STATUS_CODE_FAILED_PRECONDITION = typing___cast(Status.DeprecatedStatusCodeValue, 9)
+        DEPRECATED_STATUS_CODE_ABORTED = typing___cast(Status.DeprecatedStatusCodeValue, 10)
+        DEPRECATED_STATUS_CODE_OUT_OF_RANGE = typing___cast(Status.DeprecatedStatusCodeValue, 11)
+        DEPRECATED_STATUS_CODE_UNIMPLEMENTED = typing___cast(Status.DeprecatedStatusCodeValue, 12)
+        DEPRECATED_STATUS_CODE_INTERNAL_ERROR = typing___cast(Status.DeprecatedStatusCodeValue, 13)
+        DEPRECATED_STATUS_CODE_UNAVAILABLE = typing___cast(Status.DeprecatedStatusCodeValue, 14)
+        DEPRECATED_STATUS_CODE_DATA_LOSS = typing___cast(Status.DeprecatedStatusCodeValue, 15)
+        DEPRECATED_STATUS_CODE_UNAUTHENTICATED = typing___cast(Status.DeprecatedStatusCodeValue, 16)
+    DEPRECATED_STATUS_CODE_OK = typing___cast(Status.DeprecatedStatusCodeValue, 0)
+    DEPRECATED_STATUS_CODE_CANCELLED = typing___cast(Status.DeprecatedStatusCodeValue, 1)
+    DEPRECATED_STATUS_CODE_UNKNOWN_ERROR = typing___cast(Status.DeprecatedStatusCodeValue, 2)
+    DEPRECATED_STATUS_CODE_INVALID_ARGUMENT = typing___cast(Status.DeprecatedStatusCodeValue, 3)
+    DEPRECATED_STATUS_CODE_DEADLINE_EXCEEDED = typing___cast(Status.DeprecatedStatusCodeValue, 4)
+    DEPRECATED_STATUS_CODE_NOT_FOUND = typing___cast(Status.DeprecatedStatusCodeValue, 5)
+    DEPRECATED_STATUS_CODE_ALREADY_EXISTS = typing___cast(Status.DeprecatedStatusCodeValue, 6)
+    DEPRECATED_STATUS_CODE_PERMISSION_DENIED = typing___cast(Status.DeprecatedStatusCodeValue, 7)
+    DEPRECATED_STATUS_CODE_RESOURCE_EXHAUSTED = typing___cast(Status.DeprecatedStatusCodeValue, 8)
+    DEPRECATED_STATUS_CODE_FAILED_PRECONDITION = typing___cast(Status.DeprecatedStatusCodeValue, 9)
+    DEPRECATED_STATUS_CODE_ABORTED = typing___cast(Status.DeprecatedStatusCodeValue, 10)
+    DEPRECATED_STATUS_CODE_OUT_OF_RANGE = typing___cast(Status.DeprecatedStatusCodeValue, 11)
+    DEPRECATED_STATUS_CODE_UNIMPLEMENTED = typing___cast(Status.DeprecatedStatusCodeValue, 12)
+    DEPRECATED_STATUS_CODE_INTERNAL_ERROR = typing___cast(Status.DeprecatedStatusCodeValue, 13)
+    DEPRECATED_STATUS_CODE_UNAVAILABLE = typing___cast(Status.DeprecatedStatusCodeValue, 14)
+    DEPRECATED_STATUS_CODE_DATA_LOSS = typing___cast(Status.DeprecatedStatusCodeValue, 15)
+    DEPRECATED_STATUS_CODE_UNAUTHENTICATED = typing___cast(Status.DeprecatedStatusCodeValue, 16)
+    type___DeprecatedStatusCode = DeprecatedStatusCode
+
     StatusCodeValue = typing___NewType('StatusCodeValue', builtin___int)
     type___StatusCodeValue = StatusCodeValue
-    class StatusCode(object):
+    StatusCode: _StatusCode
+    class _StatusCode(google___protobuf___internal___enum_type_wrapper____EnumTypeWrapper[Status.StatusCodeValue]):
         DESCRIPTOR: google___protobuf___descriptor___EnumDescriptor = ...
-        @classmethod
-        def Name(cls, number: builtin___int) -> builtin___str: ...
-        @classmethod
-        def Value(cls, name: builtin___str) -> Status.StatusCodeValue: ...
-        @classmethod
-        def keys(cls) -> typing___List[builtin___str]: ...
-        @classmethod
-        def values(cls) -> typing___List[Status.StatusCodeValue]: ...
-        @classmethod
-        def items(cls) -> typing___List[typing___Tuple[builtin___str, Status.StatusCodeValue]]: ...
-        STATUS_CODE_OK = typing___cast(Status.StatusCodeValue, 0)
-        STATUS_CODE_CANCELLED = typing___cast(Status.StatusCodeValue, 1)
-        STATUS_CODE_UNKNOWN_ERROR = typing___cast(Status.StatusCodeValue, 2)
-        STATUS_CODE_INVALID_ARGUMENT = typing___cast(Status.StatusCodeValue, 3)
-        STATUS_CODE_DEADLINE_EXCEEDED = typing___cast(Status.StatusCodeValue, 4)
-        STATUS_CODE_NOT_FOUND = typing___cast(Status.StatusCodeValue, 5)
-        STATUS_CODE_ALREADY_EXISTS = typing___cast(Status.StatusCodeValue, 6)
-        STATUS_CODE_PERMISSION_DENIED = typing___cast(Status.StatusCodeValue, 7)
-        STATUS_CODE_RESOURCE_EXHAUSTED = typing___cast(Status.StatusCodeValue, 8)
-        STATUS_CODE_FAILED_PRECONDITION = typing___cast(Status.StatusCodeValue, 9)
-        STATUS_CODE_ABORTED = typing___cast(Status.StatusCodeValue, 10)
-        STATUS_CODE_OUT_OF_RANGE = typing___cast(Status.StatusCodeValue, 11)
-        STATUS_CODE_UNIMPLEMENTED = typing___cast(Status.StatusCodeValue, 12)
-        STATUS_CODE_INTERNAL_ERROR = typing___cast(Status.StatusCodeValue, 13)
-        STATUS_CODE_UNAVAILABLE = typing___cast(Status.StatusCodeValue, 14)
-        STATUS_CODE_DATA_LOSS = typing___cast(Status.StatusCodeValue, 15)
-        STATUS_CODE_UNAUTHENTICATED = typing___cast(Status.StatusCodeValue, 16)
-    STATUS_CODE_OK = typing___cast(Status.StatusCodeValue, 0)
-    STATUS_CODE_CANCELLED = typing___cast(Status.StatusCodeValue, 1)
-    STATUS_CODE_UNKNOWN_ERROR = typing___cast(Status.StatusCodeValue, 2)
-    STATUS_CODE_INVALID_ARGUMENT = typing___cast(Status.StatusCodeValue, 3)
-    STATUS_CODE_DEADLINE_EXCEEDED = typing___cast(Status.StatusCodeValue, 4)
-    STATUS_CODE_NOT_FOUND = typing___cast(Status.StatusCodeValue, 5)
-    STATUS_CODE_ALREADY_EXISTS = typing___cast(Status.StatusCodeValue, 6)
-    STATUS_CODE_PERMISSION_DENIED = typing___cast(Status.StatusCodeValue, 7)
-    STATUS_CODE_RESOURCE_EXHAUSTED = typing___cast(Status.StatusCodeValue, 8)
-    STATUS_CODE_FAILED_PRECONDITION = typing___cast(Status.StatusCodeValue, 9)
-    STATUS_CODE_ABORTED = typing___cast(Status.StatusCodeValue, 10)
-    STATUS_CODE_OUT_OF_RANGE = typing___cast(Status.StatusCodeValue, 11)
-    STATUS_CODE_UNIMPLEMENTED = typing___cast(Status.StatusCodeValue, 12)
-    STATUS_CODE_INTERNAL_ERROR = typing___cast(Status.StatusCodeValue, 13)
-    STATUS_CODE_UNAVAILABLE = typing___cast(Status.StatusCodeValue, 14)
-    STATUS_CODE_DATA_LOSS = typing___cast(Status.StatusCodeValue, 15)
-    STATUS_CODE_UNAUTHENTICATED = typing___cast(Status.StatusCodeValue, 16)
+        STATUS_CODE_UNSET = typing___cast(Status.StatusCodeValue, 0)
+        STATUS_CODE_OK = typing___cast(Status.StatusCodeValue, 1)
+        STATUS_CODE_ERROR = typing___cast(Status.StatusCodeValue, 2)
+    STATUS_CODE_UNSET = typing___cast(Status.StatusCodeValue, 0)
+    STATUS_CODE_OK = typing___cast(Status.StatusCodeValue, 1)
+    STATUS_CODE_ERROR = typing___cast(Status.StatusCodeValue, 2)
     type___StatusCode = StatusCode
 
-    code: type___Status.StatusCodeValue = ...
+    deprecated_code: type___Status.DeprecatedStatusCodeValue = ...
     message: typing___Text = ...
+    code: type___Status.StatusCodeValue = ...
 
     def __init__(self,
         *,
-        code : typing___Optional[type___Status.StatusCodeValue] = None,
+        deprecated_code : typing___Optional[type___Status.DeprecatedStatusCodeValue] = None,
         message : typing___Optional[typing___Text] = None,
+        code : typing___Optional[type___Status.StatusCodeValue] = None,
         ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> Status: ...
-    else:
-        @classmethod
-        def FromString(cls, s: typing___Union[builtin___bytes, builtin___buffer, builtin___unicode]) -> Status: ...
-    def ClearField(self, field_name: typing_extensions___Literal[u"code",b"code",u"message",b"message"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions___Literal[u"code",b"code",u"deprecated_code",b"deprecated_code",u"message",b"message"]) -> None: ...
 type___Status = Status

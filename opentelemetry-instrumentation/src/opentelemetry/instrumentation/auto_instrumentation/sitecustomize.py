@@ -18,17 +18,37 @@ from logging import getLogger
 
 from pkg_resources import iter_entry_points
 
+from opentelemetry.configuration import Configuration
+
 logger = getLogger(__file__)
 
 
 def _load_distros():
-    # will be implemented in a subsequent PR
-    pass
+    for entry_point in iter_entry_points("opentelemetry_distro"):
+        try:
+            entry_point.load()().configure()  # type: ignore
+            logger.debug("Distribution %s configured", entry_point.name)
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.exception(
+                "Distribution %s configuration failed", entry_point.name
+            )
+            raise exc
 
 
 def _load_instrumentors():
+    package_to_exclude = Configuration().get("DISABLED_INSTRUMENTATIONS", [])
+    if isinstance(package_to_exclude, str):
+        package_to_exclude = package_to_exclude.split(",")
+        # to handle users entering "requests , flask" or "requests, flask" with spaces
+        package_to_exclude = [x.strip() for x in package_to_exclude]
+
     for entry_point in iter_entry_points("opentelemetry_instrumentor"):
         try:
+            if entry_point.name in package_to_exclude:
+                logger.debug(
+                    "Instrumentation skipped for library %s", entry_point.name
+                )
+                continue
             entry_point.load()().instrument()  # type: ignore
             logger.debug("Instrumented %s", entry_point.name)
         except Exception as exc:  # pylint: disable=broad-except

@@ -20,10 +20,12 @@ from unittest.mock import MagicMock, patch
 from opentelemetry import trace as trace_api
 from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin import (
+    NAME_KEY,
     SPAN_KIND_MAP_JSON,
     SPAN_KIND_MAP_PROTOBUF,
     TRANSPORT_FORMAT_JSON,
     TRANSPORT_FORMAT_PROTOBUF,
+    VERSION_KEY,
     ZipkinSpanExporter,
     nsec_to_usec_round,
 )
@@ -243,11 +245,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "localEndpoint": local_endpoint,
                 "kind": span_kind,
                 "tags": {
-                    "key_bool": "False",
+                    "key_bool": "false",
                     "key_string": "hello_world",
                     "key_float": "111.22",
-                    "otel.status_code": "2",
-                    "otel.status_description": "Example description",
+                    "otel.status_code": "ERROR",
+                    "error": "Example description",
                 },
                 "debug": True,
                 "parentId": format(parent_id, "x"),
@@ -272,10 +274,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": durations[1] // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": span_kind,
-                "tags": {
-                    "key_resource": "some_resource",
-                    "otel.status_code": "1",
-                },
+                "tags": {"key_resource": "some_resource"},
                 "annotations": None,
             },
             {
@@ -289,7 +288,6 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "tags": {
                     "key_string": "hello_world",
                     "key_resource": "some_resource",
-                    "otel.status_code": "1",
                 },
                 "annotations": None,
             },
@@ -301,11 +299,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": durations[3] // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": span_kind,
-                "tags": {
-                    "otel.instrumentation_library.name": "name",
-                    "otel.instrumentation_library.version": "version",
-                    "otel.status_code": "1",
-                },
+                "tags": {NAME_KEY: "name", VERSION_KEY: "version"},
                 "annotations": None,
             },
         ]
@@ -383,7 +377,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": duration // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": SPAN_KIND_MAP_JSON[SpanKind.INTERNAL],
-                "tags": {"otel.status_code": "1"},
+                "tags": {},
                 "annotations": None,
                 "debug": True,
                 "parentId": "0aaaaaaaaaaaaaaa",
@@ -425,8 +419,25 @@ class TestZipkinSpanExporter(unittest.TestCase):
         span.start()
         span.resource = Resource({})
         # added here to preserve order
-        span.set_attribute("k1", "v" * 500)
-        span.set_attribute("k2", "v" * 50)
+        span.set_attribute("string1", "v" * 500)
+        span.set_attribute("string2", "v" * 50)
+        span.set_attribute("list1", ["a"] * 25)
+        span.set_attribute("list2", ["a"] * 10)
+        span.set_attribute("list3", [2] * 25)
+        span.set_attribute("list4", [2] * 10)
+        span.set_attribute("list5", [True] * 25)
+        span.set_attribute("list6", [True] * 10)
+        span.set_attribute("tuple1", ("a",) * 25)
+        span.set_attribute("tuple2", ("a",) * 10)
+        span.set_attribute("tuple3", (2,) * 25)
+        span.set_attribute("tuple4", (2,) * 10)
+        span.set_attribute("tuple5", (True,) * 25)
+        span.set_attribute("tuple6", (True,) * 10)
+        span.set_attribute("range1", range(0, 25))
+        span.set_attribute("range2", range(0, 10))
+        span.set_attribute("empty_list", [])
+        span.set_attribute("none_list", ["hello", None, "world"])
+
         span.set_status(Status(StatusCode.ERROR, "Example description"))
         span.end()
 
@@ -440,8 +451,66 @@ class TestZipkinSpanExporter(unittest.TestCase):
         _, kwargs = mock_post.call_args  # pylint: disable=E0633
 
         tags = json.loads(kwargs["data"])[0]["tags"]
-        self.assertEqual(len(tags["k1"]), 128)
-        self.assertEqual(len(tags["k2"]), 50)
+
+        self.assertEqual(len(tags["string1"]), 128)
+        self.assertEqual(len(tags["string2"]), 50)
+        self.assertEqual(
+            tags["list1"],
+            '["a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a"]',
+        )
+        self.assertEqual(
+            tags["list2"], '["a","a","a","a","a","a","a","a","a","a"]',
+        )
+        self.assertEqual(
+            tags["list3"],
+            '["2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2"]',
+        )
+        self.assertEqual(
+            tags["list4"], '["2","2","2","2","2","2","2","2","2","2"]',
+        )
+        self.assertEqual(
+            tags["list5"],
+            '["true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true"]',
+        )
+        self.assertEqual(
+            tags["list6"],
+            '["true","true","true","true","true","true","true","true","true","true"]',
+        )
+        self.assertEqual(
+            tags["tuple1"],
+            '["a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a"]',
+        )
+        self.assertEqual(
+            tags["tuple2"], '["a","a","a","a","a","a","a","a","a","a"]',
+        )
+        self.assertEqual(
+            tags["tuple3"],
+            '["2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2"]',
+        )
+        self.assertEqual(
+            tags["tuple4"], '["2","2","2","2","2","2","2","2","2","2"]',
+        )
+        self.assertEqual(
+            tags["tuple5"],
+            '["true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true"]',
+        )
+        self.assertEqual(
+            tags["tuple6"],
+            '["true","true","true","true","true","true","true","true","true","true"]',
+        )
+        self.assertEqual(
+            tags["range1"],
+            '["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24"]',
+        )
+        self.assertEqual(
+            tags["range2"], '["0","1","2","3","4","5","6","7","8","9"]',
+        )
+        self.assertEqual(
+            tags["empty_list"], "[]",
+        )
+        self.assertEqual(
+            tags["none_list"], '["hello",null,"world"]',
+        )
 
         exporter = ZipkinSpanExporter(service_name, max_tag_value_length=2)
         mock_post = MagicMock()
@@ -452,8 +521,126 @@ class TestZipkinSpanExporter(unittest.TestCase):
 
         _, kwargs = mock_post.call_args  # pylint: disable=E0633
         tags = json.loads(kwargs["data"])[0]["tags"]
-        self.assertEqual(len(tags["k1"]), 2)
-        self.assertEqual(len(tags["k2"]), 2)
+        self.assertEqual(len(tags["string1"]), 2)
+        self.assertEqual(len(tags["string2"]), 2)
+        self.assertEqual(tags["list1"], "[]")
+        self.assertEqual(tags["list2"], "[]")
+        self.assertEqual(tags["list3"], "[]")
+        self.assertEqual(tags["list4"], "[]")
+        self.assertEqual(tags["list5"], "[]")
+        self.assertEqual(tags["list6"], "[]")
+        self.assertEqual(tags["tuple1"], "[]")
+        self.assertEqual(tags["tuple2"], "[]")
+        self.assertEqual(tags["tuple3"], "[]")
+        self.assertEqual(tags["tuple4"], "[]")
+        self.assertEqual(tags["tuple5"], "[]")
+        self.assertEqual(tags["tuple6"], "[]")
+        self.assertEqual(tags["range1"], "[]")
+        self.assertEqual(tags["range2"], "[]")
+
+        exporter = ZipkinSpanExporter(service_name, max_tag_value_length=5)
+        mock_post = MagicMock()
+        with patch("requests.post", mock_post):
+            mock_post.return_value = MockResponse(200)
+            status = exporter.export([span])
+            self.assertEqual(SpanExportResult.SUCCESS, status)
+
+        _, kwargs = mock_post.call_args  # pylint: disable=E0633
+        tags = json.loads(kwargs["data"])[0]["tags"]
+        self.assertEqual(len(tags["string1"]), 5)
+        self.assertEqual(len(tags["string2"]), 5)
+        self.assertEqual(tags["list1"], '["a"]')
+        self.assertEqual(tags["list2"], '["a"]')
+        self.assertEqual(tags["list3"], '["2"]')
+        self.assertEqual(tags["list4"], '["2"]')
+        self.assertEqual(tags["list5"], "[]")
+        self.assertEqual(tags["list6"], "[]")
+        self.assertEqual(tags["tuple1"], '["a"]')
+        self.assertEqual(tags["tuple2"], '["a"]')
+        self.assertEqual(tags["tuple3"], '["2"]')
+        self.assertEqual(tags["tuple4"], '["2"]')
+        self.assertEqual(tags["tuple5"], "[]")
+        self.assertEqual(tags["tuple6"], "[]")
+        self.assertEqual(tags["range1"], '["0"]')
+        self.assertEqual(tags["range2"], '["0"]')
+
+        exporter = ZipkinSpanExporter(service_name, max_tag_value_length=9)
+        mock_post = MagicMock()
+        with patch("requests.post", mock_post):
+            mock_post.return_value = MockResponse(200)
+            status = exporter.export([span])
+            self.assertEqual(SpanExportResult.SUCCESS, status)
+
+        _, kwargs = mock_post.call_args  # pylint: disable=E0633
+        tags = json.loads(kwargs["data"])[0]["tags"]
+        self.assertEqual(len(tags["string1"]), 9)
+        self.assertEqual(len(tags["string2"]), 9)
+        self.assertEqual(tags["list1"], '["a","a"]')
+        self.assertEqual(tags["list2"], '["a","a"]')
+        self.assertEqual(tags["list3"], '["2","2"]')
+        self.assertEqual(tags["list4"], '["2","2"]')
+        self.assertEqual(tags["list5"], '["true"]')
+        self.assertEqual(tags["list6"], '["true"]')
+        self.assertEqual(tags["tuple1"], '["a","a"]')
+        self.assertEqual(tags["tuple2"], '["a","a"]')
+        self.assertEqual(tags["tuple3"], '["2","2"]')
+        self.assertEqual(tags["tuple4"], '["2","2"]')
+        self.assertEqual(tags["tuple5"], '["true"]')
+        self.assertEqual(tags["tuple6"], '["true"]')
+        self.assertEqual(tags["range1"], '["0","1"]')
+        self.assertEqual(tags["range2"], '["0","1"]')
+
+        exporter = ZipkinSpanExporter(service_name, max_tag_value_length=10)
+        mock_post = MagicMock()
+        with patch("requests.post", mock_post):
+            mock_post.return_value = MockResponse(200)
+            status = exporter.export([span])
+            self.assertEqual(SpanExportResult.SUCCESS, status)
+
+        _, kwargs = mock_post.call_args  # pylint: disable=E0633
+        tags = json.loads(kwargs["data"])[0]["tags"]
+        self.assertEqual(len(tags["string1"]), 10)
+        self.assertEqual(len(tags["string2"]), 10)
+        self.assertEqual(tags["list1"], '["a","a"]')
+        self.assertEqual(tags["list2"], '["a","a"]')
+        self.assertEqual(tags["list3"], '["2","2"]')
+        self.assertEqual(tags["list4"], '["2","2"]')
+        self.assertEqual(tags["list5"], '["true"]')
+        self.assertEqual(tags["list6"], '["true"]')
+        self.assertEqual(tags["tuple1"], '["a","a"]')
+        self.assertEqual(tags["tuple2"], '["a","a"]')
+        self.assertEqual(tags["tuple3"], '["2","2"]')
+        self.assertEqual(tags["tuple4"], '["2","2"]')
+        self.assertEqual(tags["tuple5"], '["true"]')
+        self.assertEqual(tags["tuple6"], '["true"]')
+        self.assertEqual(tags["range1"], '["0","1"]')
+        self.assertEqual(tags["range2"], '["0","1"]')
+
+        exporter = ZipkinSpanExporter(service_name, max_tag_value_length=11)
+        mock_post = MagicMock()
+        with patch("requests.post", mock_post):
+            mock_post.return_value = MockResponse(200)
+            status = exporter.export([span])
+            self.assertEqual(SpanExportResult.SUCCESS, status)
+
+        _, kwargs = mock_post.call_args  # pylint: disable=E0633
+        tags = json.loads(kwargs["data"])[0]["tags"]
+        self.assertEqual(len(tags["string1"]), 11)
+        self.assertEqual(len(tags["string2"]), 11)
+        self.assertEqual(tags["list1"], '["a","a"]')
+        self.assertEqual(tags["list2"], '["a","a"]')
+        self.assertEqual(tags["list3"], '["2","2"]')
+        self.assertEqual(tags["list4"], '["2","2"]')
+        self.assertEqual(tags["list5"], '["true"]')
+        self.assertEqual(tags["list6"], '["true"]')
+        self.assertEqual(tags["tuple1"], '["a","a"]')
+        self.assertEqual(tags["tuple2"], '["a","a"]')
+        self.assertEqual(tags["tuple3"], '["2","2"]')
+        self.assertEqual(tags["tuple4"], '["2","2"]')
+        self.assertEqual(tags["tuple5"], '["true"]')
+        self.assertEqual(tags["tuple6"], '["true"]')
+        self.assertEqual(tags["range1"], '["0","1"]')
+        self.assertEqual(tags["range2"], '["0","1"]')
 
     # pylint: disable=too-many-locals,too-many-statements
     def test_export_protobuf(self):
@@ -544,6 +731,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         otel_spans[1].resource = Resource(
             attributes={"key_resource": "some_resource"}
         )
+        otel_spans[1].set_status(Status(StatusCode.OK))
         otel_spans[1].end(end_time=end_times[1])
 
         otel_spans[2].start(start_time=start_times[2])
@@ -579,11 +767,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     local_endpoint=local_endpoint,
                     kind=span_kind,
                     tags={
-                        "key_bool": "False",
+                        "key_bool": "false",
                         "key_string": "hello_world",
                         "key_float": "111.22",
-                        "otel.status_code": "2",
-                        "otel.status_description": "Example description",
+                        "otel.status_code": "ERROR",
+                        "error": "Example description",
                     },
                     debug=True,
                     parent_id=ZipkinSpanExporter.format_pbuf_span_id(
@@ -616,7 +804,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     kind=span_kind,
                     tags={
                         "key_resource": "some_resource",
-                        "otel.status_code": "1",
+                        "otel.status_code": "OK",
                     },
                 ),
                 zipkin_pb2.Span(
@@ -632,7 +820,6 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     tags={
                         "key_string": "hello_world",
                         "key_resource": "some_resource",
-                        "otel.status_code": "1",
                     },
                 ),
                 zipkin_pb2.Span(
@@ -645,11 +832,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     duration=nsec_to_usec_round(durations[3]),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
-                    tags={
-                        "otel.instrumentation_library.name": "name",
-                        "otel.instrumentation_library.version": "version",
-                        "otel.status_code": "1",
-                    },
+                    tags={NAME_KEY: "name", VERSION_KEY: "version"},
                 ),
             ],
         )

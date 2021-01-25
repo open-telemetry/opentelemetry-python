@@ -1,10 +1,18 @@
 import abc
 import logging
+import re
 import types as python_types
 import typing
+from collections import OrderedDict
 
 from opentelemetry.trace.status import Status
 from opentelemetry.util import types
+from opentelemetry.util.tracestate import (
+    _DELIMITER_PATTERN,
+    _MEMBER_PATTERN,
+    _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS,
+    _is_valid_pair,
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -31,6 +39,17 @@ class Span(abc.ABC):
 
         Returns:
             A :class:`opentelemetry.trace.SpanContext` with a copy of this span's immutable state.
+        """
+
+    @abc.abstractmethod
+    def set_attributes(
+        self, attributes: typing.Dict[str, types.AttributeValue]
+    ) -> None:
+        """Sets Attributes.
+
+        Sets Attributes with the key and value passed as arguments dict.
+
+        Note: The behavior of `None` value attributes is undefined, and hence strongly discouraged.
         """
 
     @abc.abstractmethod
@@ -135,7 +154,7 @@ class TraceFlags(int):
 DEFAULT_TRACE_OPTIONS = TraceFlags.get_default()
 
 
-class TraceState(typing.Dict[str, str]):
+class TraceState(typing.Mapping[str, str]):
     """A list of key-value pairs representing vendor-specific trace info.
 
     Keys and values are strings of up to 256 printable US-ASCII characters.
@@ -146,9 +165,185 @@ class TraceState(typing.Dict[str, str]):
         https://www.w3.org/TR/trace-context/#tracestate-field
     """
 
+    def __init__(
+        self,
+        entries: typing.Optional[
+            typing.Sequence[typing.Tuple[str, str]]
+        ] = None,
+    ) -> None:
+        self._dict = OrderedDict()  # type: OrderedDict[str, str]
+        if entries is None:
+            return
+        if len(entries) > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
+            _logger.warning(
+                "There can't be more than %s key/value pairs.",
+                _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS,
+            )
+            return
+
+        for key, value in entries:
+            if _is_valid_pair(key, value):
+                if key in self._dict:
+                    _logger.warning("Duplicate key: %s found.", key)
+                    continue
+                self._dict[key] = value
+            else:
+                _logger.warning(
+                    "Invalid key/value pair (%s, %s) found.", key, value
+                )
+
+    def __getitem__(self, key: str) -> typing.Optional[str]:  # type: ignore
+        return self._dict.get(key)
+
+    def __iter__(self) -> typing.Iterator[str]:
+        return iter(self._dict)
+
+    def __len__(self) -> int:
+        return len(self._dict)
+
+    def __repr__(self) -> str:
+        pairs = [
+            "{key=%s, value=%s}" % (key, value)
+            for key, value in self._dict.items()
+        ]
+        return str(pairs)
+
+    def add(self, key: str, value: str) -> "TraceState":
+        """Adds a key-value pair to tracestate. The provided pair should
+        adhere to w3c tracestate identifiers format.
+
+        Args:
+            key: A valid tracestate key to add
+            value: A valid tracestate value to add
+
+        Returns:
+            A new TraceState with the modifications applied.
+
+            If the provided key-value pair is invalid or results in tracestate
+            that violates tracecontext specification, they are discarded and
+            same tracestate will be returned.
+        """
+        if not _is_valid_pair(key, value):
+            _logger.warning(
+                "Invalid key/value pair (%s, %s) found.", key, value
+            )
+            return self
+        # There can be a maximum of 32 pairs
+        if len(self) >= _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
+            _logger.warning("There can't be more 32 key/value pairs.")
+            return self
+        # Duplicate entries are not allowed
+        if key in self._dict:
+            _logger.warning("The provided key %s already exists.", key)
+            return self
+        new_state = [(key, value)] + list(self._dict.items())
+        return TraceState(new_state)
+
+    def update(self, key: str, value: str) -> "TraceState":
+        """Updates a key-value pair in tracestate. The provided pair should
+        adhere to w3c tracestate identifiers format.
+
+        Args:
+            key: A valid tracestate key to update
+            value: A valid tracestate value to update for key
+
+        Returns:
+            A new TraceState with the modifications applied.
+
+            If the provided key-value pair is invalid or results in tracestate
+            that violates tracecontext specification, they are discarded and
+            same tracestate will be returned.
+        """
+        if not _is_valid_pair(key, value):
+            _logger.warning(
+                "Invalid key/value pair (%s, %s) found.", key, value
+            )
+            return self
+        prev_state = self._dict.copy()
+        prev_state[key] = value
+        prev_state.move_to_end(key, last=False)
+        new_state = list(prev_state.items())
+        return TraceState(new_state)
+
+    def delete(self, key: str) -> "TraceState":
+        """Deletes a key-value from tracestate.
+
+        Args:
+            key: A valid tracestate key to remove key-value pair from tracestate
+
+        Returns:
+            A new TraceState with the modifications applied.
+
+            If the provided key-value pair is invalid or results in tracestate
+            that violates tracecontext specification, they are discarded and
+            same tracestate will be returned.
+        """
+        if key not in self._dict:
+            _logger.warning("The provided key %s doesn't exist.", key)
+            return self
+        prev_state = self._dict.copy()
+        prev_state.pop(key)
+        new_state = list(prev_state.items())
+        return TraceState(new_state)
+
+    def to_header(self) -> str:
+        """Creates a w3c tracestate header from a TraceState.
+
+        Returns:
+            A string that adheres to the w3c tracestate
+            header format.
+        """
+        return ",".join(key + "=" + value for key, value in self._dict.items())
+
+    @classmethod
+    def from_header(cls, header_list: typing.List[str]) -> "TraceState":
+        """Parses one or more w3c tracestate header into a TraceState.
+
+        Args:
+            header_list: one or more w3c tracestate headers.
+
+        Returns:
+            A valid TraceState that contains values extracted from
+            the tracestate header.
+
+            If the format of one headers is illegal, all values will
+            be discarded and an empty tracestate will be returned.
+
+            If the number of keys is beyond the maximum, all values
+            will be discarded and an empty tracestate will be returned.
+        """
+        pairs = OrderedDict()
+        for header in header_list:
+            for member in re.split(_DELIMITER_PATTERN, header):
+                # empty members are valid, but no need to process further.
+                if not member:
+                    continue
+                match = _MEMBER_PATTERN.fullmatch(member)
+                if not match:
+                    _logger.warning(
+                        "Member doesn't match the w3c identifiers format %s",
+                        member,
+                    )
+                    return cls()
+                key, _eq, value = match.groups()
+                # duplicate keys are not legal in header
+                if key in pairs:
+                    return cls()
+                pairs[key] = value
+        return cls(list(pairs.items()))
+
     @classmethod
     def get_default(cls) -> "TraceState":
         return cls()
+
+    def keys(self) -> typing.KeysView[str]:
+        return self._dict.keys()
+
+    def items(self) -> typing.ItemsView[str, str]:
+        return self._dict.items()
+
+    def values(self) -> typing.ValuesView[str]:
+        return self._dict.values()
 
 
 DEFAULT_TRACE_STATE = TraceState.get_default()
@@ -237,11 +432,12 @@ class SpanContext(
 
     def __repr__(self) -> str:
         return (
-            "{}(trace_id={}, span_id={}, trace_state={!r}, is_remote={})"
+            "{}(trace_id={}, span_id={}, trace_flags=0x{:02x}, trace_state={!r}, is_remote={})"
         ).format(
             type(self).__name__,
             format_trace_id(self.trace_id),
             format_span_id(self.span_id),
+            self.trace_flags,
             self.trace_state,
             self.is_remote,
         )
@@ -263,6 +459,11 @@ class DefaultSpan(Span):
         return False
 
     def end(self, end_time: typing.Optional[int] = None) -> None:
+        pass
+
+    def set_attributes(
+        self, attributes: typing.Dict[str, types.AttributeValue]
+    ) -> None:
         pass
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
@@ -290,6 +491,9 @@ class DefaultSpan(Span):
         escaped: bool = False,
     ) -> None:
         pass
+
+    def __repr__(self) -> str:
+        return "DefaultSpan({!r})".format(self._context)
 
 
 INVALID_SPAN_ID = 0x0000000000000000

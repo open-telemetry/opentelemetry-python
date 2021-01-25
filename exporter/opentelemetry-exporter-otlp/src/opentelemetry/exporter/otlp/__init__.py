@@ -53,7 +53,7 @@ Additional details are available `in the specification
     trace.set_tracer_provider(TracerProvider(resource=resource))
     tracer = trace.get_tracer(__name__)
 
-    otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680", insecure=True)
+    otlp_exporter = OTLPSpanExporter(endpoint="localhost:4317", insecure=True)
 
     span_processor = BatchExportSpanProcessor(otlp_exporter)
 

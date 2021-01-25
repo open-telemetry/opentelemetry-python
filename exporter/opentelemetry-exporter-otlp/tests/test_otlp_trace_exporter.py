@@ -47,6 +47,8 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as OTLPSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
 from opentelemetry.sdk.resources import Resource as SDKResource
+from opentelemetry.sdk.trace import Status as SDKStatus
+from opentelemetry.sdk.trace import StatusCode as SDKStatusCode
 from opentelemetry.sdk.trace import TracerProvider, _Span
 from opentelemetry.sdk.trace.export import (
     SimpleExportSpanProcessor,
@@ -114,7 +116,7 @@ class TestOTLPSpanExporter(TestCase):
 
         self.server = server(ThreadPoolExecutor(max_workers=10))
 
-        self.server.add_insecure_port("[::]:55680")
+        self.server.add_insecure_port("[::]:4317")
 
         self.server.start()
 
@@ -167,10 +169,10 @@ class TestOTLPSpanExporter(TestCase):
     @patch.dict(
         "os.environ",
         {
-            "OTEL_EXPORTER_OTLP_SPAN_ENDPOINT": "collector:55680",
+            "OTEL_EXPORTER_OTLP_SPAN_ENDPOINT": "collector:4317",
             "OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE": THIS_DIR
             + "/fixtures/test.cert",
-            "OTEL_EXPORTER_OTLP_SPAN_HEADERS": "key1:value1;key2:value2",
+            "OTEL_EXPORTER_OTLP_SPAN_HEADERS": "key1=value1,key2=value2",
             "OTEL_EXPORTER_OTLP_SPAN_TIMEOUT": "10",
         },
     )
@@ -181,8 +183,8 @@ class TestOTLPSpanExporter(TestCase):
         self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
         _, kwargs = mock_exporter_mixin.call_args_list[0]
 
-        self.assertEqual(kwargs["endpoint"], "collector:55680")
-        self.assertEqual(kwargs["headers"], "key1:value1;key2:value2")
+        self.assertEqual(kwargs["endpoint"], "collector:4317")
+        self.assertEqual(kwargs["headers"], "key1=value1,key2=value2")
         self.assertEqual(kwargs["timeout"], 10)
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
@@ -196,6 +198,35 @@ class TestOTLPSpanExporter(TestCase):
     ):
         OTLPSpanExporter(insecure=False)
         self.assertTrue(mock_ssl_channel.called)
+
+    @patch.dict(
+        "os.environ",
+        {"OTEL_EXPORTER_OTLP_SPAN_HEADERS": "key1=value1,key2=value2"},
+    )
+    @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
+    @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
+    # pylint: disable=unused-argument
+    def test_otlp_headers_from_env(self, mock_ssl_channel, mock_secure):
+        exporter = OTLPSpanExporter()
+        # pylint: disable=protected-access
+        self.assertEqual(
+            exporter._headers, (("key1", "value1"), ("key2", "value2"))
+        )
+        exporter = OTLPSpanExporter(
+            headers=(("key3", "value3"), ("key4", "value4"))
+        )
+        # pylint: disable=protected-access
+        self.assertEqual(
+            exporter._headers, (("key3", "value3"), ("key4", "value4"))
+        )
+
+    @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
+    @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
+    # pylint: disable=unused-argument
+    def test_otlp_headers(self, mock_ssl_channel, mock_secure):
+        exporter = OTLPSpanExporter()
+        # pylint: disable=protected-access
+        self.assertIsNone(exporter._headers, None)
 
     @patch("opentelemetry.exporter.otlp.exporter.expo")
     @patch("opentelemetry.exporter.otlp.exporter.sleep")
@@ -343,3 +374,72 @@ class TestOTLPSpanExporter(TestCase):
 
         # pylint: disable=protected-access
         self.assertEqual(expected, self.exporter._translate_data([self.span]))
+
+    def _check_translated_status(
+        self,
+        translated: ExportTraceServiceRequest,
+        code_expected: Status,
+        deprecated_code_expected: Status,
+    ):
+        status = (
+            translated.resource_spans[0]
+            .instrumentation_library_spans[0]
+            .spans[0]
+            .status
+        )
+
+        self.assertEqual(
+            status.code, code_expected,
+        )
+        self.assertEqual(
+            status.deprecated_code, deprecated_code_expected,
+        )
+
+    def test_span_status_translate(self):
+        # pylint: disable=protected-access,no-member
+        unset = SDKStatus(status_code=SDKStatusCode.UNSET)
+        ok = SDKStatus(status_code=SDKStatusCode.OK)
+        error = SDKStatus(status_code=SDKStatusCode.ERROR)
+        unset_translated = self.exporter._translate_data(
+            [_create_span_with_status(unset)]
+        )
+        ok_translated = self.exporter._translate_data(
+            [_create_span_with_status(ok)]
+        )
+        error_translated = self.exporter._translate_data(
+            [_create_span_with_status(error)]
+        )
+        self._check_translated_status(
+            unset_translated,
+            Status.STATUS_CODE_UNSET,
+            Status.DEPRECATED_STATUS_CODE_OK,
+        )
+        self._check_translated_status(
+            ok_translated,
+            Status.STATUS_CODE_OK,
+            Status.DEPRECATED_STATUS_CODE_OK,
+        )
+        self._check_translated_status(
+            error_translated,
+            Status.STATUS_CODE_ERROR,
+            Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR,
+        )
+
+
+def _create_span_with_status(status: SDKStatus):
+    span = _Span(
+        "a",
+        context=Mock(
+            **{
+                "trace_state": OrderedDict([("a", "b"), ("c", "d")]),
+                "span_id": 10217189687419569865,
+                "trace_id": 67545097771067222548457157018666467027,
+            }
+        ),
+        parent=Mock(**{"span_id": 12345}),
+        instrumentation_info=InstrumentationInfo(
+            name="name", version="version"
+        ),
+    )
+    span.set_status(status)
+    return span

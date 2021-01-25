@@ -10,6 +10,10 @@ from google.protobuf.internal.containers import (
     RepeatedCompositeFieldContainer as google___protobuf___internal___containers___RepeatedCompositeFieldContainer,
 )
 
+from google.protobuf.internal.enum_type_wrapper import (
+    _EnumTypeWrapper as google___protobuf___internal___enum_type_wrapper____EnumTypeWrapper,
+)
+
 from google.protobuf.message import (
     Message as google___protobuf___message___Message,
 )
@@ -26,12 +30,9 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
 
 from typing import (
     Iterable as typing___Iterable,
-    List as typing___List,
     NewType as typing___NewType,
     Optional as typing___Optional,
     Text as typing___Text,
-    Tuple as typing___Tuple,
-    Union as typing___Union,
     cast as typing___cast,
 )
 
@@ -41,30 +42,19 @@ builtin___bool = bool
 builtin___bytes = bytes
 builtin___float = float
 builtin___int = int
-builtin___str = str
-if sys.version_info < (3,):
-    builtin___buffer = buffer
-    builtin___unicode = unicode
 
 DESCRIPTOR: google___protobuf___descriptor___FileDescriptor = ...
 
 SeverityNumberValue = typing___NewType("SeverityNumberValue", builtin___int)
 type___SeverityNumberValue = SeverityNumberValue
+SeverityNumber: _SeverityNumber
 
-class SeverityNumber(object):
+class _SeverityNumber(
+    google___protobuf___internal___enum_type_wrapper____EnumTypeWrapper[
+        SeverityNumberValue
+    ]
+):
     DESCRIPTOR: google___protobuf___descriptor___EnumDescriptor = ...
-    @classmethod
-    def Name(cls, number: builtin___int) -> builtin___str: ...
-    @classmethod
-    def Value(cls, name: builtin___str) -> SeverityNumberValue: ...
-    @classmethod
-    def keys(cls) -> typing___List[builtin___str]: ...
-    @classmethod
-    def values(cls) -> typing___List[SeverityNumberValue]: ...
-    @classmethod
-    def items(
-        cls,
-    ) -> typing___List[typing___Tuple[builtin___str, SeverityNumberValue]]: ...
     SEVERITY_NUMBER_UNSPECIFIED = typing___cast(SeverityNumberValue, 0)
     SEVERITY_NUMBER_TRACE = typing___cast(SeverityNumberValue, 1)
     SEVERITY_NUMBER_TRACE2 = typing___cast(SeverityNumberValue, 2)
@@ -120,21 +110,14 @@ type___SeverityNumber = SeverityNumber
 
 LogRecordFlagsValue = typing___NewType("LogRecordFlagsValue", builtin___int)
 type___LogRecordFlagsValue = LogRecordFlagsValue
+LogRecordFlags: _LogRecordFlags
 
-class LogRecordFlags(object):
+class _LogRecordFlags(
+    google___protobuf___internal___enum_type_wrapper____EnumTypeWrapper[
+        LogRecordFlagsValue
+    ]
+):
     DESCRIPTOR: google___protobuf___descriptor___EnumDescriptor = ...
-    @classmethod
-    def Name(cls, number: builtin___int) -> builtin___str: ...
-    @classmethod
-    def Value(cls, name: builtin___str) -> LogRecordFlagsValue: ...
-    @classmethod
-    def keys(cls) -> typing___List[builtin___str]: ...
-    @classmethod
-    def values(cls) -> typing___List[LogRecordFlagsValue]: ...
-    @classmethod
-    def items(
-        cls,
-    ) -> typing___List[typing___Tuple[builtin___str, LogRecordFlagsValue]]: ...
     LOG_RECORD_FLAG_UNSPECIFIED = typing___cast(LogRecordFlagsValue, 0)
     LOG_RECORD_FLAG_TRACE_FLAGS_MASK = typing___cast(LogRecordFlagsValue, 255)
 
@@ -164,17 +147,6 @@ class ResourceLogs(google___protobuf___message___Message):
             typing___Iterable[type___InstrumentationLibraryLogs]
         ] = None,
     ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> ResourceLogs: ...
-    else:
-        @classmethod
-        def FromString(
-            cls,
-            s: typing___Union[
-                builtin___bytes, builtin___buffer, builtin___unicode
-            ],
-        ) -> ResourceLogs: ...
     def HasField(
         self, field_name: typing_extensions___Literal["resource", b"resource"]
     ) -> builtin___bool: ...
@@ -210,19 +182,6 @@ class InstrumentationLibraryLogs(google___protobuf___message___Message):
         ] = None,
         logs: typing___Optional[typing___Iterable[type___LogRecord]] = None,
     ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(
-            cls, s: builtin___bytes
-        ) -> InstrumentationLibraryLogs: ...
-    else:
-        @classmethod
-        def FromString(
-            cls,
-            s: typing___Union[
-                builtin___bytes, builtin___buffer, builtin___unicode
-            ],
-        ) -> InstrumentationLibraryLogs: ...
     def HasField(
         self,
         field_name: typing_extensions___Literal[
@@ -281,17 +240,6 @@ class LogRecord(google___protobuf___message___Message):
         trace_id: typing___Optional[builtin___bytes] = None,
         span_id: typing___Optional[builtin___bytes] = None,
     ) -> None: ...
-    if sys.version_info >= (3,):
-        @classmethod
-        def FromString(cls, s: builtin___bytes) -> LogRecord: ...
-    else:
-        @classmethod
-        def FromString(
-            cls,
-            s: typing___Union[
-                builtin___bytes, builtin___buffer, builtin___unicode
-            ],
-        ) -> LogRecord: ...
     def HasField(
         self, field_name: typing_extensions___Literal["body", b"body"]
     ) -> builtin___bool: ...
