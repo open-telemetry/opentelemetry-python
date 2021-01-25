@@ -18,6 +18,7 @@ Installation
 
     pip install opentelemetry-api
     pip install opentelemetry-sdk
+    pip install opentelemetry-tools-google-cloud
 
 Run the Example
 ---------------
