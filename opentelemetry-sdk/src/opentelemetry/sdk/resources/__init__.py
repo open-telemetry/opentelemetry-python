@@ -165,15 +165,16 @@ class Resource:
         else:
             resource = _DEFAULT_RESOURCE.merge(Resource(attributes))
         resource = resource.merge(OTELResourceDetector().detect())
-        if not resource.attributes.get(
-                SERVICE_NAME, None):
+        if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
             process_executable_name = resource.attributes.get(
-                PROCESS_EXECUTABLE_NAME, None)
+                PROCESS_EXECUTABLE_NAME, None
+            )
             if process_executable_name:
                 default_service_name += ":" + process_executable_name
             resource = resource.merge(
-                Resource({SERVICE_NAME: default_service_name}))
+                Resource({SERVICE_NAME: default_service_name})
+            )
         return resource
 
     @staticmethod

@@ -63,12 +63,20 @@ class TestResources(unittest.TestCase):
         self.assertEqual(resource, resources._EMPTY_RESOURCE)
 
         resource = resources.Resource.create(None)
-        self.assertEqual(resource, resources._DEFAULT_RESOURCE.merge(
-            resources.Resource({resources.SERVICE_NAME: "unknown_service"})))
+        self.assertEqual(
+            resource,
+            resources._DEFAULT_RESOURCE.merge(
+                resources.Resource({resources.SERVICE_NAME: "unknown_service"})
+            ),
+        )
 
         resource = resources.Resource.create({})
-        self.assertEqual(resource, resources._DEFAULT_RESOURCE.merge(
-            resources.Resource({resources.SERVICE_NAME: "unknown_service"})))
+        self.assertEqual(
+            resource,
+            resources._DEFAULT_RESOURCE.merge(
+                resources.Resource({resources.SERVICE_NAME: "unknown_service"})
+            ),
+        )
 
     def test_resource_merge(self):
         left = resources.Resource({"service": "ui"})
@@ -123,9 +131,12 @@ class TestResources(unittest.TestCase):
 
     def test_service_name_using_process_name(self):
         resource = resources.Resource.create(
-            {resources.PROCESS_EXECUTABLE_NAME: "test"})
-        self.assertEqual(resource.attributes.get(
-            resources.SERVICE_NAME), "unknown_service:test")
+            {resources.PROCESS_EXECUTABLE_NAME: "test"}
+        )
+        self.assertEqual(
+            resource.attributes.get(resources.SERVICE_NAME),
+            "unknown_service:test",
+        )
 
     def test_aggregated_resources_no_detectors(self):
         aggregated_resources = resources.get_aggregated_resources([])
@@ -202,7 +213,7 @@ class TestResources(unittest.TestCase):
         resource_detector.detect.side_effect = Exception()
         resource_detector.raise_on_error = True
         self.assertRaises(
-            Exception, resources.get_aggregated_resources, [resource_detector],
+            Exception, resources.get_aggregated_resources, [resource_detector]
         )
 
 
