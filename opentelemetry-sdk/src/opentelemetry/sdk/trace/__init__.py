@@ -427,8 +427,8 @@ class Span(trace_api.Span):
         sampler: Optional[sampling.Sampler] = None,
         trace_config: None = None,  # TODO
         resource: Resource = Resource.create({}),
-        attributes: types.Attributes = None,  # TODO
-        events: Sequence[Event] = None,  # TODO
+        attributes: types.Attributes = None,
+        events: Sequence[Event] = None,
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         span_processor: SpanProcessor = SpanProcessor(),
@@ -899,6 +899,9 @@ class Tracer(trace_api.Tracer):
 
 
 class TracerProvider(trace_api.TracerProvider):
+    """See `opentelemetry.trace.TracerProvider`.
+    """
+
     def __init__(
         self,
         sampler: sampling.Sampler = TRACE_SAMPLER,
