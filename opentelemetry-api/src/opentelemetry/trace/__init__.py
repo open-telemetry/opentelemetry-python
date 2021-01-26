@@ -337,7 +337,7 @@ class Tracer(abc.ABC):
                 in a with/context manager. Defines wether the span status will
                 be automatically set to ERROR when an uncaught exception is
                 raised in the span with block. The span status won't be set by
-                this mechanism if it was previously set manually.\
+                this mechanism if it was previously set manually.
             end_on_exit: Whether to end the span automatically when leaving the
                 context manager.
 

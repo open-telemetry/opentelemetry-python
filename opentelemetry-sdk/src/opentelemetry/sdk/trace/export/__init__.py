@@ -39,7 +39,7 @@ class SpanExporter:
     """Interface for exporting spans.
 
     Interface to be implemented by services that want to export spans recorded
-    in its own format.
+    in their own format.
 
     To export data this MUST be registered to the :class`opentelemetry.sdk.trace.Tracer` using a
     `SimpleExportSpanProcessor` or a `BatchExportSpanProcessor`.
