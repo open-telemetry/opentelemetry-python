@@ -360,9 +360,9 @@ class SpanContext(
     Args:
         trace_id: The ID of the trace that this span belongs to.
         span_id: This span's ID.
+        is_remote: True if propagated from a remote parent.
         trace_flags: Trace options to propagate.
         trace_state: Tracing-system-specific info to propagate.
-        is_remote: True if propagated from a remote parent.
     """
 
     def __new__(
