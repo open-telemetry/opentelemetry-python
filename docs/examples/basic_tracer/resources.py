@@ -13,17 +13,16 @@
 # limitations under the License.
 
 from opentelemetry import trace
-from opentelemetry.sdk.resources import get_aggregated_resources
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
-from opentelemetry.tools.resource_detector import GoogleCloudResourceDetector
 
-resources = get_aggregated_resources([GoogleCloudResourceDetector()])
+resource = Resource.create({"service.name": "basic_service"})
 
-trace.set_tracer_provider(TracerProvider(resource=resources))
+trace.set_tracer_provider(TracerProvider(resource=resource))
 
 trace.get_tracer_provider().add_span_processor(
     SimpleExportSpanProcessor(ConsoleSpanExporter())
