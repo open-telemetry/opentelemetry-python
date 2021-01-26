@@ -338,6 +338,8 @@ class Tracer(abc.ABC):
                 be automatically set to ERROR when an uncaught exception is
                 raised in the span with block. The span status won't be set by
                 this mechanism if it was previously set manually.
+            end_on_exit: Whether to end the span automatically when leaving the
+                context manager.
 
         Yields:
             The newly-created span.
@@ -423,7 +425,7 @@ def get_tracer(
     This function is a convenience wrapper for
     opentelemetry.trace.TracerProvider.get_tracer.
 
-    If tracer_provider is ommited the current configured one is used.
+    If tracer_provider is omitted the current configured one is used.
     """
     if tracer_provider is None:
         tracer_provider = get_tracer_provider()
