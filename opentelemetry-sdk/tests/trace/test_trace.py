@@ -511,7 +511,23 @@ class TestSpanCreation(unittest.TestCase):
         tracer = tracer_provider.get_tracer(__name__)
         span = tracer.start_span("root")
         # pylint: disable=protected-access
-        self.assertEqual(span.resource, resources._DEFAULT_RESOURCE)
+        self.assertIsInstance(span.resource, resources.Resource)
+        self.assertEqual(
+            span.resource.attributes.get(resources.SERVICE_NAME),
+            "unknown_service",
+        )
+        self.assertEqual(
+            span.resource.attributes.get(resources.TELEMETRY_SDK_LANGUAGE),
+            "python",
+        )
+        self.assertEqual(
+            span.resource.attributes.get(resources.TELEMETRY_SDK_NAME),
+            "opentelemetry",
+        )
+        self.assertEqual(
+            span.resource.attributes.get(resources.TELEMETRY_SDK_VERSION),
+            resources.OPENTELEMETRY_SDK_VERSION,
+        )
 
     def test_span_context_remote_flag(self):
         tracer = new_tracer()
@@ -841,7 +857,7 @@ class TestSpan(unittest.TestCase):
         )
         span.set_status(new_status)
         self.assertIs(
-            span.status.status_code, trace_api.status.StatusCode.ERROR,
+            span.status.status_code, trace_api.status.StatusCode.ERROR
         )
         self.assertIs(span.status.description, "Test description")
 
@@ -936,7 +952,7 @@ class TestSpan(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 with context as root:
                     root.set_status(
-                        trace_api.status.Status(StatusCode.OK, "OK",)
+                        trace_api.status.Status(StatusCode.OK, "OK")
                     )
                     raise AssertionError("unknown")
 
@@ -993,11 +1009,9 @@ class TestSpan(unittest.TestCase):
             "RuntimeError: error",
             exception_event.attributes["exception.stacktrace"],
         )
-        self.assertIn(
-            "has_additional_attributes", exception_event.attributes,
-        )
+        self.assertIn("has_additional_attributes", exception_event.attributes)
         self.assertEqual(
-            True, exception_event.attributes["has_additional_attributes"],
+            True, exception_event.attributes["has_additional_attributes"]
         )
 
     def test_record_exception_escaped(self):
@@ -1041,9 +1055,7 @@ class TestSpan(unittest.TestCase):
             "RuntimeError: error",
             exception_event.attributes["exception.stacktrace"],
         )
-        self.assertEqual(
-            1604238587112021089, exception_event.timestamp,
-        )
+        self.assertEqual(1604238587112021089, exception_event.timestamp)
 
     def test_record_exception_with_attributes_and_timestamp(self):
         span = trace._Span("name", mock.Mock(spec=trace_api.SpanContext))
@@ -1065,15 +1077,11 @@ class TestSpan(unittest.TestCase):
             "RuntimeError: error",
             exception_event.attributes["exception.stacktrace"],
         )
-        self.assertIn(
-            "has_additional_attributes", exception_event.attributes,
-        )
+        self.assertIn("has_additional_attributes", exception_event.attributes)
         self.assertEqual(
-            True, exception_event.attributes["has_additional_attributes"],
+            True, exception_event.attributes["has_additional_attributes"]
         )
-        self.assertEqual(
-            1604238587112021089, exception_event.timestamp,
-        )
+        self.assertEqual(1604238587112021089, exception_event.timestamp)
 
     def test_record_exception_context_manager(self):
         try:

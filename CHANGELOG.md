@@ -6,11 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v0.17b0...HEAD)
 
+=======
 ### Added
 - Added `end_on_exit` argument to `start_as_current_span`
   ([#1519](https://github.com/open-telemetry/opentelemetry-python/pull/1519)])
 - Add `Span.set_attributes` method to set multiple values with one call
   ([#1520](https://github.com/open-telemetry/opentelemetry-python/pull/1520))
+- Make sure Resources follow semantic conventions
+  ([#1480](https://github.com/open-telemetry/opentelemetry-python/pull/1480))
+
+## [0.17b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.17b0) - 2021-01-20
+
+### Added
 - Add support for OTLP v0.6.0
   ([#1472](https://github.com/open-telemetry/opentelemetry-python/pull/1472))
 - Add protobuf via gRPC exporting support for Jaeger

@@ -30,15 +30,37 @@ class TestMeterProvider(unittest.TestCase):
         meter = meter_provider.get_meter(__name__)
         self.assertIs(meter.processor.stateful, False)
 
-    def test_resource(self):
-        resource = resources.Resource.create({})
+    def test_resource_empty(self):
+        resource = resources.Resource.create_empty()
         meter_provider = metrics.MeterProvider(resource=resource)
         self.assertIs(meter_provider.resource, resource)
 
-    def test_resource_empty(self):
+    def test_resources(self):
         meter_provider = metrics.MeterProvider()
         # pylint: disable=protected-access
-        self.assertEqual(meter_provider.resource, resources._DEFAULT_RESOURCE)
+        self.assertIsInstance(meter_provider.resource, resources.Resource)
+        self.assertEqual(
+            meter_provider.resource.attributes.get(resources.SERVICE_NAME),
+            "unknown_service",
+        )
+        self.assertEqual(
+            meter_provider.resource.attributes.get(
+                resources.TELEMETRY_SDK_LANGUAGE
+            ),
+            "python",
+        )
+        self.assertEqual(
+            meter_provider.resource.attributes.get(
+                resources.TELEMETRY_SDK_NAME
+            ),
+            "opentelemetry",
+        )
+        self.assertEqual(
+            meter_provider.resource.attributes.get(
+                resources.TELEMETRY_SDK_VERSION
+            ),
+            resources.OPENTELEMETRY_SDK_VERSION,
+        )
 
     def test_start_pipeline(self):
         exporter = Mock()
@@ -74,7 +96,7 @@ class TestMeter(unittest.TestCase):
         meter = metrics.MeterProvider().get_meter(__name__)
         processor_mock = Mock()
         meter.processor = processor_mock
-        counter = meter.create_counter("name", "desc", "unit", float,)
+        counter = meter.create_counter("name", "desc", "unit", float)
         labels = {"key1": "value1"}
         meter.register_view(View(counter, SumAggregator))
         counter.add(1.0, labels)
@@ -155,7 +177,7 @@ class TestMeter(unittest.TestCase):
         resource = Mock(spec=resources.Resource)
         meter_provider = metrics.MeterProvider(resource=resource)
         meter = meter_provider.get_meter(__name__)
-        counter = meter.create_counter("name", "desc", "unit", int,)
+        counter = meter.create_counter("name", "desc", "unit", int)
         self.assertIsInstance(counter, metrics.Counter)
         self.assertEqual(counter.value_type, int)
         self.assertEqual(counter.name, "name")
@@ -166,14 +188,14 @@ class TestMeter(unittest.TestCase):
         resource = Mock(spec=resources.Resource)
         meter_provider = metrics.MeterProvider(resource=resource)
         meter = meter_provider.get_meter(__name__)
-        counter = meter.create_counter("name", "desc", "unit", int,)
+        counter = meter.create_counter("name", "desc", "unit", int)
         self.assertIsInstance(counter, metrics.Counter)
         self.assertEqual(counter.value_type, int)
         self.assertEqual(counter.name, "name")
         self.assertIs(meter_provider.resource, resource)
         self.assertEqual(counter.meter, meter)
         with self.assertRaises(ValueError) as ctx:
-            _ = meter.create_counter("naME", "desc", "unit", int,)
+            _ = meter.create_counter("naME", "desc", "unit", int)
         self.assertTrue(
             "Multiple instruments can't be registered by the same name: (name)"
             in str(ctx.exception)
@@ -182,7 +204,7 @@ class TestMeter(unittest.TestCase):
     def test_create_updowncounter(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         updowncounter = meter.create_updowncounter(
-            "name", "desc", "unit", float,
+            "name", "desc", "unit", float
         )
         self.assertIsInstance(updowncounter, metrics.UpDownCounter)
         self.assertEqual(updowncounter.value_type, float)
@@ -191,7 +213,7 @@ class TestMeter(unittest.TestCase):
     def test_create_valuerecorder(self):
         meter = metrics.MeterProvider().get_meter(__name__)
         valuerecorder = meter.create_valuerecorder(
-            "name", "desc", "unit", float,
+            "name", "desc", "unit", float
         )
         self.assertIsInstance(valuerecorder, metrics.ValueRecorder)
         self.assertEqual(valuerecorder.value_type, float)
@@ -204,7 +226,7 @@ class TestMeter(unittest.TestCase):
         callback = Mock()
 
         observer = meter.register_sumobserver(
-            callback, "name", "desc", "unit", int,
+            callback, "name", "desc", "unit", int
         )
 
         self.assertIsInstance(observer, metrics.SumObserver)
@@ -224,7 +246,7 @@ class TestMeter(unittest.TestCase):
         callback = Mock()
 
         observer = meter.register_updownsumobserver(
-            callback, "name", "desc", "unit", int,
+            callback, "name", "desc", "unit", int
         )
 
         self.assertIsInstance(observer, metrics.UpDownSumObserver)
@@ -244,7 +266,7 @@ class TestMeter(unittest.TestCase):
         callback = Mock()
 
         observer = meter.register_valueobserver(
-            callback, "name", "desc", "unit", int,
+            callback, "name", "desc", "unit", int
         )
 
         self.assertIsInstance(observer, metrics.ValueObserver)
