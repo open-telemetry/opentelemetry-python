@@ -173,9 +173,9 @@ class Resource:
         """
         if not attributes:
             attributes = {}
-        resource = _DEFAULT_RESOURCE.merge(OTELResourceDetector().detect()).merge(
-            Resource(attributes)
-        )
+        resource = _DEFAULT_RESOURCE.merge(
+            OTELResourceDetector().detect()
+        ).merge(Resource(attributes))
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
             process_executable_name = resource.attributes.get(
