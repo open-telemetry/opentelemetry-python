@@ -56,6 +56,8 @@ git tag stable
 git push origin stable
 ```
 
+To validate this worked, ensure the stable build has run successfully: https://readthedocs.org/projects/opentelemetry-python/builds/. If the build has not run automatically, it can be manually trigger via the readthedocs interface.
+
 ## Update master
 
 Ensure the version and changelog updates have been applied to master.
