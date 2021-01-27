@@ -14,10 +14,7 @@
 import ipaddress
 import json
 
-from opentelemetry.exporter.zipkin.encoder import (
-    NAME_KEY,
-    VERSION_KEY,
-)
+from opentelemetry.exporter.zipkin.encoder import NAME_KEY, VERSION_KEY
 from opentelemetry.exporter.zipkin.encoder.v2.protobuf import ProtobufEncoder
 from opentelemetry.exporter.zipkin.encoder.v2.protobuf.gen import zipkin_pb2
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
