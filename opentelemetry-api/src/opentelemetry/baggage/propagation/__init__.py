@@ -22,6 +22,9 @@ from opentelemetry.trace.propagation import textmap
 
 
 class BaggagePropagator(textmap.TextMapPropagator):
+    """Extracts and injects Baggage which is used to annotate telemetry.
+    """
+
     MAX_HEADER_LENGTH = 8192
     MAX_PAIR_LENGTH = 4096
     MAX_PAIRS = 180
