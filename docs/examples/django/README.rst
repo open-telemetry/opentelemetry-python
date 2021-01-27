@@ -80,7 +80,6 @@ output similar to this one:
             "status_code": "OK"
         },
         "attributes": {
-            "component": "http",
             "http.method": "GET",
             "http.server_name": "localhost",
             "http.scheme": "http",

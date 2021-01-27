@@ -549,7 +549,6 @@ class TestSpan(unittest.TestCase):
         with self.tracer.start_as_current_span("root") as root:
             root.set_attributes(
                 {
-                    "component": "http",
                     "http.method": "GET",
                     "http.url": "https://example.com:779/path/12/?q=d#123",
                 }
@@ -570,8 +569,7 @@ class TestSpan(unittest.TestCase):
             list_of_numerics = [123, 314, 0]
             root.set_attribute("list-of-numerics", list_of_numerics)
 
-            self.assertEqual(len(root.attributes), 10)
-            self.assertEqual(root.attributes["component"], "http")
+            self.assertEqual(len(root.attributes), 9)
             self.assertEqual(root.attributes["http.method"], "GET")
             self.assertEqual(
                 root.attributes["http.url"],
@@ -900,7 +898,7 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(end_time0, root.end_time)
 
         with self.assertLogs(level=WARNING):
-            root.set_attribute("component", "http")
+            root.set_attribute("http.method", "GET")
         self.assertEqual(len(root.attributes), 0)
 
         with self.assertLogs(level=WARNING):

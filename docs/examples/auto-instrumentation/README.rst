@@ -124,7 +124,6 @@ similar to the following example:
             "status_code": "OK"
         },
         "attributes": {
-            "component": "http",
             "http.method": "GET",
             "http.server_name": "127.0.0.1",
             "http.scheme": "http",
@@ -181,7 +180,6 @@ similar to the following example:
             "status_code": "OK"
         },
         "attributes": {
-            "component": "http",
             "http.method": "GET",
             "http.server_name": "127.0.0.1",
             "http.scheme": "http",
