@@ -23,7 +23,7 @@ from opentelemetry.trace import Span, SpanContext, SpanKind
 
 
 # pylint: disable=W0223
-class V1Encoder(Encoder, abc.ABC):
+class V1Encoder(Encoder):
     def _extract_binary_annotations(
         self, span: Span, encoded_local_endpoint: Dict
     ) -> List[Dict]:

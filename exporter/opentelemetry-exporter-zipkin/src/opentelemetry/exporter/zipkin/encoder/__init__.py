@@ -229,7 +229,7 @@ class Encoder(abc.ABC):
         return (nsec + 500) // 10 ** 3
 
 
-class JsonEncoder(Encoder, abc.ABC):
+class JsonEncoder(Encoder):
     @staticmethod
     def content_type():
         return "application/json"
