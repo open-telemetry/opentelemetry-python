@@ -14,6 +14,10 @@
 import json
 
 from opentelemetry import trace as trace_api
+from opentelemetry.exporter.zipkin.encoder import (
+    NAME_KEY,
+    VERSION_KEY,
+)
 from opentelemetry.exporter.zipkin.encoder.v1.json import JsonV1Encoder
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk import trace
@@ -67,7 +71,7 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                 "binaryAnnotations": [
                     {
                         "key": "key_bool",
-                        "value": "False",
+                        "value": "false",
                         "endpoint": local_endpoint,
                     },
                     {
@@ -82,12 +86,7 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                     },
                     {
                         "key": "otel.status_code",
-                        "value": "2",
-                        "endpoint": local_endpoint,
-                    },
-                    {
-                        "key": "otel.status_description",
-                        "value": "Example description",
+                        "value": "OK",
                         "endpoint": local_endpoint,
                     },
                 ],
@@ -113,7 +112,12 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                     },
                     {
                         "key": "otel.status_code",
-                        "value": "1",
+                        "value": "ERROR",
+                        "endpoint": local_endpoint,
+                    },
+                    {
+                        "key": "error",
+                        "value": "Example description",
                         "endpoint": local_endpoint,
                     },
                 ],
@@ -138,11 +142,6 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                         "value": "some_resource",
                         "endpoint": local_endpoint,
                     },
-                    {
-                        "key": "otel.status_code",
-                        "value": "1",
-                        "endpoint": local_endpoint,
-                    },
                 ],
             },
             {
@@ -156,18 +155,13 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                 - (otel_spans[3].start_time // 10 ** 3),
                 "binaryAnnotations": [
                     {
-                        "key": "otel.instrumentation_library.name",
+                        "key": NAME_KEY,
                         "value": "name",
                         "endpoint": local_endpoint,
                     },
                     {
-                        "key": "otel.instrumentation_library.version",
+                        "key": VERSION_KEY,
                         "value": "version",
-                        "endpoint": local_endpoint,
-                    },
-                    {
-                        "key": "otel.status_code",
-                        "value": "1",
                         "endpoint": local_endpoint,
                     },
                 ],
@@ -209,13 +203,6 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                 "name": service_name,
                 "timestamp": JsonV1Encoder._nsec_to_usec_round(start_time),
                 "duration": JsonV1Encoder._nsec_to_usec_round(duration),
-                "binaryAnnotations": [
-                    {
-                        "key": "otel.status_code",
-                        "value": "1",
-                        "endpoint": {"serviceName": service_name},
-                    },
-                ],
                 "debug": True,
                 "parentId": format(parent_id, "016x"),
             }
@@ -227,55 +214,35 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
         )
 
     def _test_encode_max_tag_length(self, max_tag_value_length: int):
-        service_name = "test-service"
-        trace_id = 0x0E0C63257DE34C926F9EFCD03927272E
-        span_id = 0x04BF92DEEFC58C92
-        start_time = 683647322 * 10 ** 9  # in ns
-        duration = 50 * 10 ** 6
-        end_time = start_time + duration
-        tag1_value = "v" * 500
-        tag2_value = "v" * 50
-
-        otel_span = trace._Span(
-            name=service_name,
-            context=trace_api.SpanContext(
-                trace_id,
-                span_id,
-                is_remote=False,
-                trace_flags=TraceFlags(TraceFlags.SAMPLED),
-            ),
+        otel_span, expected_tag_output = self.get_data_for_max_tag_length_test(
+            max_tag_value_length
         )
-        otel_span.start(start_time=start_time)
-        otel_span.resource = trace.Resource({})
-        otel_span.set_attribute("k1", tag1_value)
-        otel_span.set_attribute("k2", tag2_value)
-        otel_span.end(end_time=end_time)
+        service_name = otel_span.name
 
-        local_endpoint = {"serviceName": service_name}
+        binary_annotations = []
+        for tag_key, tag_expected_value in expected_tag_output.items():
+            binary_annotations.append(
+                {
+                    "key": tag_key,
+                    "value": tag_expected_value,
+                    "endpoint": {"serviceName": service_name},
+                }
+            )
+
         expected_output = [
             {
-                "traceId": JsonV1Encoder._encode_trace_id(trace_id),
-                "id": JsonV1Encoder._encode_span_id(span_id),
+                "traceId": JsonV1Encoder._encode_trace_id(
+                    otel_span.context.trace_id
+                ),
+                "id": JsonV1Encoder._encode_span_id(otel_span.context.span_id),
                 "name": service_name,
-                "timestamp": JsonV1Encoder._nsec_to_usec_round(start_time),
-                "duration": JsonV1Encoder._nsec_to_usec_round(duration),
-                "binaryAnnotations": [
-                    {
-                        "key": "k1",
-                        "value": tag1_value[:max_tag_value_length],
-                        "endpoint": local_endpoint,
-                    },
-                    {
-                        "key": "k2",
-                        "value": tag2_value[:max_tag_value_length],
-                        "endpoint": local_endpoint,
-                    },
-                    {
-                        "key": "otel.status_code",
-                        "value": "1",
-                        "endpoint": local_endpoint,
-                    },
-                ],
+                "timestamp": JsonV1Encoder._nsec_to_usec_round(
+                    otel_span.start_time
+                ),
+                "duration": JsonV1Encoder._nsec_to_usec_round(
+                    otel_span.end_time - otel_span.start_time
+                ),
+                "binaryAnnotations": binary_annotations,
                 "debug": True,
             }
         ]

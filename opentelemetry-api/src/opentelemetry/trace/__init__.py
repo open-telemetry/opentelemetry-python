@@ -81,7 +81,6 @@ from contextlib import contextmanager
 from logging import getLogger
 
 from opentelemetry.context.context import Context
-from opentelemetry.trace.ids_generator import IdsGenerator, RandomIdsGenerator
 from opentelemetry.trace.propagation import (
     get_current_span,
     set_span_in_context,
@@ -291,6 +290,7 @@ class Tracer(abc.ABC):
         start_time: typing.Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        end_on_exit: bool = True,
     ) -> typing.Iterator["Span"]:
         """Context manager for creating a new span and set it
         as the current span in this tracer's context.
@@ -397,6 +397,7 @@ class DefaultTracer(Tracer):
         start_time: typing.Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        end_on_exit: bool = True,
     ) -> typing.Iterator["Span"]:
         # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN
@@ -459,7 +460,6 @@ def get_tracer_provider() -> TracerProvider:
 __all__ = [
     "DEFAULT_TRACE_OPTIONS",
     "DEFAULT_TRACE_STATE",
-    "IdsGenerator",
     "INVALID_SPAN",
     "INVALID_SPAN_CONTEXT",
     "INVALID_SPAN_ID",
@@ -469,7 +469,6 @@ __all__ = [
     "DefaultTracerProvider",
     "Link",
     "LinkBase",
-    "RandomIdsGenerator",
     "Span",
     "SpanContext",
     "SpanKind",

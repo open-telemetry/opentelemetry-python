@@ -11,18 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
 import datetime
 import threading
 from collections import OrderedDict, deque
-
-try:
-    # pylint: disable=ungrouped-imports
-    from collections.abc import MutableMapping
-    from collections.abc import Sequence
-except ImportError:
-    # pylint: disable=no-name-in-module,ungrouped-imports
-    from collections import MutableMapping
-    from collections import Sequence
+from collections.abc import MutableMapping, Sequence
 
 
 def ns_to_iso_str(nanoseconds):

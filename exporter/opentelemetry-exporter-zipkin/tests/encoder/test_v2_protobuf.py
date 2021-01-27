@@ -14,12 +14,14 @@
 import ipaddress
 import json
 
-from opentelemetry import trace as trace_api
+from opentelemetry.exporter.zipkin.encoder import (
+    NAME_KEY,
+    VERSION_KEY,
+)
 from opentelemetry.exporter.zipkin.encoder.v2.protobuf import ProtobufEncoder
 from opentelemetry.exporter.zipkin.encoder.v2.protobuf.gen import zipkin_pb2
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
-from opentelemetry.sdk import trace
-from opentelemetry.trace import SpanKind, TraceFlags
+from opentelemetry.trace import SpanKind
 
 from .common_tests import CommonEncoderTestCases
 
@@ -98,11 +100,10 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
                     local_endpoint=local_endpoint,
                     kind=span_kind,
                     tags={
-                        "key_bool": "False",
+                        "key_bool": "false",
                         "key_string": "hello_world",
                         "key_float": "111.22",
-                        "otel.status_code": "2",
-                        "otel.status_description": "Example description",
+                        "otel.status_code": "OK",
                     },
                     debug=True,
                     parent_id=ProtobufEncoder._encode_span_id(
@@ -143,7 +144,8 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
                     kind=span_kind,
                     tags={
                         "key_resource": "some_resource",
-                        "otel.status_code": "1",
+                        "otel.status_code": "ERROR",
+                        "error": "Example description",
                     },
                     debug=False,
                 ),
@@ -166,7 +168,6 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
                     tags={
                         "key_string": "hello_world",
                         "key_resource": "some_resource",
-                        "otel.status_code": "1",
                     },
                     debug=False,
                 ),
@@ -186,11 +187,7 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
                     ),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
-                    tags={
-                        "otel.instrumentation_library.name": "name",
-                        "otel.instrumentation_library.version": "version",
-                        "otel.status_code": "1",
-                    },
+                    tags={NAME_KEY: "name", VERSION_KEY: "version",},
                     debug=False,
                 ),
             ],
@@ -203,47 +200,32 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
         self.assertEqual(actual_output, expected_output)
 
     def _test_encode_max_tag_length(self, max_tag_value_length: int):
-        service_name = "test-service"
-        trace_id = 0x0E0C63257DE34C926F9EFCD03927272E
-        span_id = 0x04BF92DEEFC58C92
-        start_time = 683647322 * 10 ** 9  # in ns
-        duration = 50 * 10 ** 6
-        end_time = start_time + duration
-        tag1_value = "v" * 500
-        tag2_value = "v" * 50
-
-        otel_span = trace._Span(
-            name=service_name,
-            context=trace_api.SpanContext(
-                trace_id,
-                span_id,
-                is_remote=False,
-                trace_flags=TraceFlags(TraceFlags.SAMPLED),
-            ),
+        otel_span, expected_tag_output = self.get_data_for_max_tag_length_test(
+            max_tag_value_length
         )
-        otel_span.start(start_time=start_time)
-        otel_span.resource = trace.Resource({})
-        otel_span.set_attribute("k1", tag1_value)
-        otel_span.set_attribute("k2", tag2_value)
-        otel_span.end(end_time=end_time)
+        service_name = otel_span.name
 
         expected_output = zipkin_pb2.ListOfSpans(
             spans=[
                 zipkin_pb2.Span(
-                    trace_id=ProtobufEncoder._encode_trace_id(trace_id),
-                    id=ProtobufEncoder._encode_span_id(span_id),
+                    trace_id=ProtobufEncoder._encode_trace_id(
+                        otel_span.context.trace_id
+                    ),
+                    id=ProtobufEncoder._encode_span_id(
+                        otel_span.context.span_id
+                    ),
                     name=service_name,
-                    timestamp=ProtobufEncoder._nsec_to_usec_round(start_time),
-                    duration=ProtobufEncoder._nsec_to_usec_round(duration),
+                    timestamp=ProtobufEncoder._nsec_to_usec_round(
+                        otel_span.start_time
+                    ),
+                    duration=ProtobufEncoder._nsec_to_usec_round(
+                        otel_span.end_time - otel_span.start_time
+                    ),
                     local_endpoint=zipkin_pb2.Endpoint(
                         service_name=service_name
                     ),
                     kind=ProtobufEncoder.SPAN_KIND_MAP[SpanKind.INTERNAL],
-                    tags={
-                        "k1": tag1_value[:max_tag_value_length],
-                        "k2": tag2_value[:max_tag_value_length],
-                        "otel.status_code": "1",
-                    },
+                    tags=expected_tag_output,
                     annotations=None,
                     debug=True,
                 )

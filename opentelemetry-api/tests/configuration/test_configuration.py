@@ -13,6 +13,7 @@
 # limitations under the License.
 # pylint: disable-all
 
+from sys import platform
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -35,7 +36,7 @@ class TestConfiguration(TestCase):
         {
             "OTEL_PYTHON_METER_PROVIDER": "meter_provider",
             "OTEL_PYTHON_TRACER_PROVIDER": "tracer_provider",
-            "OTEL_OThER": "other",
+            "OTEL_OTHER" if platform == "windows" else "OTEL_OThER": "other",
             "OTEL_OTHER_7": "other_7",
             "OPENTELEMETRY_PTHON_TRACEX_PROVIDER": "tracex_provider",
         },
@@ -145,3 +146,32 @@ class TestConfiguration(TestCase):
         self.assertEqual(
             Configuration().NON_FLOAT, "-12z3.123"
         )  # pylint: disable=no-member
+
+    @patch.dict(
+        "os.environ",  # type: ignore
+        {
+            "OTEL_PYTHON_WEBFRAMEWORK_TRACED_REQUEST_ATTRS": "content_type,keep_alive",
+        },
+    )
+    def test_traced_request_attrs(self) -> None:
+        cfg = Configuration()
+        request_attrs = cfg._traced_request_attrs("webframework")
+        self.assertEqual(len(request_attrs), 2)
+        self.assertIn("content_type", request_attrs)
+        self.assertIn("keep_alive", request_attrs)
+        self.assertNotIn("authorization", request_attrs)
+
+    @patch.dict(
+        "os.environ",  # type: ignore
+        {
+            "OTEL_PYTHON_WEBFRAMEWORK_EXCLUDED_URLS": "/healthzz,path,/issues/.*/view",
+        },
+    )
+    def test_excluded_urls(self) -> None:
+        cfg = Configuration()
+        excluded_urls = cfg._excluded_urls("webframework")
+        self.assertTrue(excluded_urls.url_disabled("/healthzz"))
+        self.assertTrue(excluded_urls.url_disabled("/path"))
+        self.assertTrue(excluded_urls.url_disabled("/issues/123/view"))
+        self.assertFalse(excluded_urls.url_disabled("/issues"))
+        self.assertFalse(excluded_urls.url_disabled("/hello"))

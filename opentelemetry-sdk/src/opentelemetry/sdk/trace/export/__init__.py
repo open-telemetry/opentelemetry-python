@@ -13,12 +13,14 @@
 # limitations under the License.
 
 import collections
+import json
 import logging
 import os
 import sys
 import threading
 import typing
 from enum import Enum
+from typing import Optional
 
 from opentelemetry.configuration import Configuration
 from opentelemetry.context import Context, attach, detach, set_value
@@ -370,12 +372,14 @@ class ConsoleSpanExporter(SpanExporter):
 
     def __init__(
         self,
+        service_name: Optional[str] = None,
         out: typing.IO = sys.stdout,
         formatter: typing.Callable[[Span], str] = lambda span: span.to_json()
         + os.linesep,
     ):
         self.out = out
         self.formatter = formatter
+        self.service_name = service_name
 
     def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
         for span in spans:

@@ -73,7 +73,6 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
 
     api/api
     sdk/sdk
-    instrumentation/instrumentation
 
 .. toctree::
     :maxdepth: 2
@@ -85,11 +84,19 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
 
 .. toctree::
     :maxdepth: 2
-    :caption: OpenTelemetry Instrumentations
-    :name: Instrumentations
+    :caption: OpenTelemetry Shims
+    :name: Shims
     :glob:
 
-    instrumentation/**
+    shim/**
+
+.. toctree::
+    :maxdepth: 1
+    :caption: OpenTelemetry Python Performance
+    :name: performance-tests
+    :glob:
+
+    performance/**
 
 .. toctree::
     :maxdepth: 1

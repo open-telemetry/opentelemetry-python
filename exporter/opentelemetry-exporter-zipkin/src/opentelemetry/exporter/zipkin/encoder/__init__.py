@@ -26,10 +26,13 @@ from typing import Any, Dict, List, Optional, Sequence, TypeVar
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk.trace import Event
 from opentelemetry.trace import Span, SpanContext
+from opentelemetry.trace.status import StatusCode
 
 EncodedLocalEndpointT = TypeVar("EncodedLocalEndpointT")
 
 DEFAULT_MAX_TAG_VALUE_LENGTH = 128
+NAME_KEY = "otel.library.name"
+VERSION_KEY = "otel.library.version"
 
 logger = logging.getLogger(__name__)
 
@@ -119,10 +122,17 @@ class Encoder(abc.ABC):
         if not tags_dict:
             return tags
         for attribute_key, attribute_value in tags_dict.items():
-            if isinstance(attribute_value, (int, bool, float)):
+            if isinstance(attribute_value, bool):
+                value = str(attribute_value).lower()
+            elif isinstance(attribute_value, (int, float, str)):
                 value = str(attribute_value)
-            elif isinstance(attribute_value, str):
-                value = attribute_value
+            elif isinstance(attribute_value, Sequence):
+                value = self._extract_tag_value_string_from_sequence(
+                    attribute_value
+                )
+                if not value:
+                    logger.warning("Could not serialize tag %s", attribute_key)
+                    continue
             else:
                 logger.warning("Could not serialize tag %s", attribute_key)
                 continue
@@ -132,25 +142,59 @@ class Encoder(abc.ABC):
             tags[attribute_key] = value
         return tags
 
+    def _extract_tag_value_string_from_sequence(self, sequence: Sequence):
+        if self.max_tag_value_length == 1:
+            return None
+
+        tag_value_elements = []
+        running_string_length = (
+            2  # accounts for array brackets in output string
+        )
+        defined_max_tag_value_length = self.max_tag_value_length > 0
+
+        for element in sequence:
+            if isinstance(element, bool):
+                tag_value_element = str(element).lower()
+            elif isinstance(element, (int, float, str)):
+                tag_value_element = str(element)
+            elif element is None:
+                tag_value_element = None
+            else:
+                continue
+
+            if defined_max_tag_value_length:
+                if tag_value_element is None:
+                    running_string_length += 4  # null with no quotes
+                else:
+                    # + 2 accounts for string quotation marks
+                    running_string_length += len(tag_value_element) + 2
+
+                if tag_value_elements:
+                    # accounts for ',' item separator
+                    running_string_length += 1
+
+                if running_string_length > self.max_tag_value_length:
+                    break
+
+            tag_value_elements.append(tag_value_element)
+
+        return json.dumps(tag_value_elements, separators=(",", ":"))
+
     def _extract_tags_from_span(self, span: Span) -> Dict[str, str]:
-        tags = self._extract_tags_from_dict(getattr(span, "attributes", None))
+        tags = self._extract_tags_from_dict(span.attributes)
         if span.resource:
             tags.update(self._extract_tags_from_dict(span.resource.attributes))
         if span.instrumentation_info is not None:
             tags.update(
                 {
-                    "otel.instrumentation_library.name": span.instrumentation_info.name,
-                    "otel.instrumentation_library.version": span.instrumentation_info.version,
+                    NAME_KEY: span.instrumentation_info.name,
+                    VERSION_KEY: span.instrumentation_info.version,
                 }
             )
-        if span.status is not None:
-            tags.update(
-                {"otel.status_code": str(span.status.status_code.value)}
-            )
-            if span.status.description is not None:
-                tags.update(
-                    {"otel.status_description": span.status.description}
-                )
+        if span.status.status_code is not StatusCode.UNSET:
+            tags.update({"otel.status_code": span.status.status_code.name})
+            if span.status.status_code is StatusCode.ERROR:
+                tags.update({"error": span.status.description or ""})
         return tags
 
     def _extract_annotations_from_events(

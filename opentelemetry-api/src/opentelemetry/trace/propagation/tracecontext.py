@@ -18,31 +18,7 @@ import typing
 import opentelemetry.trace as trace
 from opentelemetry.context.context import Context
 from opentelemetry.trace.propagation import textmap
-
-#    Keys and values are strings of up to 256 printable US-ASCII characters.
-#    Implementations should conform to the `W3C Trace Context - Tracestate`_
-#    spec, which describes additional restrictions on valid field values.
-#
-#    .. _W3C Trace Context - Tracestate:
-#        https://www.w3.org/TR/trace-context/#tracestate-field
-
-_KEY_WITHOUT_VENDOR_FORMAT = r"[a-z][_0-9a-z\-\*\/]{0,255}"
-_KEY_WITH_VENDOR_FORMAT = (
-    r"[a-z0-9][_0-9a-z\-\*\/]{0,240}@[a-z][_0-9a-z\-\*\/]{0,13}"
-)
-
-_KEY_FORMAT = _KEY_WITHOUT_VENDOR_FORMAT + "|" + _KEY_WITH_VENDOR_FORMAT
-_VALUE_FORMAT = (
-    r"[\x20-\x2b\x2d-\x3c\x3e-\x7e]{0,255}[\x21-\x2b\x2d-\x3c\x3e-\x7e]"
-)
-
-_DELIMITER_FORMAT = "[ \t]*,[ \t]*"
-_MEMBER_FORMAT = "({})(=)({})[ \t]*".format(_KEY_FORMAT, _VALUE_FORMAT)
-
-_DELIMITER_FORMAT_RE = re.compile(_DELIMITER_FORMAT)
-_MEMBER_FORMAT_RE = re.compile(_MEMBER_FORMAT)
-
-_TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS = 32
+from opentelemetry.trace.span import TraceState
 
 
 class TraceContextTextMapPropagator(textmap.TextMapPropagator):
@@ -91,7 +67,10 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
         tracestate_headers = getter.get(carrier, self._TRACESTATE_HEADER_NAME)
-        tracestate = _parse_tracestate(tracestate_headers)
+        if tracestate_headers is None:
+            tracestate = None
+        else:
+            tracestate = TraceState.from_header(tracestate_headers)
 
         span_context = trace.SpanContext(
             trace_id=int(trace_id, 16),
@@ -127,7 +106,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
             carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string
         )
         if span_context.trace_state:
-            tracestate_string = _format_tracestate(span_context.trace_state)
+            tracestate_string = span_context.trace_state.to_header()
             set_in_carrier(
                 carrier, self._TRACESTATE_HEADER_NAME, tracestate_string
             )
@@ -140,57 +119,3 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         `opentelemetry.trace.propagation.textmap.TextMapPropagator.fields`
         """
         return {self._TRACEPARENT_HEADER_NAME, self._TRACESTATE_HEADER_NAME}
-
-
-def _parse_tracestate(header_list: typing.List[str]) -> trace.TraceState:
-    """Parse one or more w3c tracestate header into a TraceState.
-
-    Args:
-        string: the value of the tracestate header.
-
-    Returns:
-        A valid TraceState that contains values extracted from
-        the tracestate header.
-
-        If the format of one headers is illegal, all values will
-        be discarded and an empty tracestate will be returned.
-
-        If the number of keys is beyond the maximum, all values
-        will be discarded and an empty tracestate will be returned.
-    """
-    tracestate = trace.TraceState()
-    value_count = 0
-    for header in header_list:
-        for member in re.split(_DELIMITER_FORMAT_RE, header):
-            # empty members are valid, but no need to process further.
-            if not member:
-                continue
-            match = _MEMBER_FORMAT_RE.fullmatch(member)
-            if not match:
-                # TODO: log this?
-                return trace.TraceState()
-            key, _eq, value = match.groups()
-            if key in tracestate:  # pylint:disable=E1135
-                # duplicate keys are not legal in
-                # the header, so we will remove
-                return trace.TraceState()
-            # typing.Dict's update is not recognized by pylint:
-            # https://github.com/PyCQA/pylint/issues/2420
-            tracestate[key] = value  # pylint:disable=E1137
-            value_count += 1
-            if value_count > _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS:
-                return trace.TraceState()
-    return tracestate
-
-
-def _format_tracestate(tracestate: trace.TraceState) -> str:
-    """Parse a w3c tracestate header into a TraceState.
-
-    Args:
-        tracestate: the tracestate header to write
-
-    Returns:
-        A string that adheres to the w3c tracestate
-        header format.
-    """
-    return ",".join(key + "=" + value for key, value in tracestate.items())

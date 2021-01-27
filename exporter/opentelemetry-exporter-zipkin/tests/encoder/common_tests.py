@@ -15,7 +15,7 @@ import abc
 import json
 import sys
 import unittest
-from typing import List
+from typing import Dict, List
 
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.zipkin.encoder import (
@@ -61,11 +61,23 @@ class CommonEncoderTestCases:
         def _test_encode_max_tag_length(self, max_tag_value_length: int):
             pass
 
-        def test_encode_max_tag_length_128(self):
-            self._test_encode_max_tag_length(128)
-
         def test_encode_max_tag_length_2(self):
             self._test_encode_max_tag_length(2)
+
+        def test_encode_max_tag_length_5(self):
+            self._test_encode_max_tag_length(5)
+
+        def test_encode_max_tag_length_9(self):
+            self._test_encode_max_tag_length(9)
+
+        def test_encode_max_tag_length_10(self):
+            self._test_encode_max_tag_length(10)
+
+        def test_encode_max_tag_length_11(self):
+            self._test_encode_max_tag_length(11)
+
+        def test_encode_max_tag_length_128(self):
+            self._test_encode_max_tag_length(128)
 
         def test_constructor_default(self):
             encoder = self.get_encoder()
@@ -151,6 +163,170 @@ class CommonEncoderTestCases:
             )
 
         @staticmethod
+        def get_data_for_max_tag_length_test(
+            max_tag_length: int,
+        ) -> (trace._Span, Dict):
+            start_time = 683647322 * 10 ** 9  # in ns
+            duration = 50 * 10 ** 6
+            end_time = start_time + duration
+
+            span = trace._Span(
+                name="test-service",
+                context=trace_api.SpanContext(
+                    0x0E0C63257DE34C926F9EFCD03927272E,
+                    0x04BF92DEEFC58C92,
+                    is_remote=False,
+                    trace_flags=TraceFlags(TraceFlags.SAMPLED),
+                ),
+            )
+            span.start(start_time=start_time)
+            span.resource = trace.Resource({})
+            span.set_attribute("string1", "v" * 500)
+            span.set_attribute("string2", "v" * 50)
+            span.set_attribute("list1", ["a"] * 25)
+            span.set_attribute("list2", ["a"] * 10)
+            span.set_attribute("list3", [2] * 25)
+            span.set_attribute("list4", [2] * 10)
+            span.set_attribute("list5", [True] * 25)
+            span.set_attribute("list6", [True] * 10)
+            span.set_attribute("tuple1", ("a",) * 25)
+            span.set_attribute("tuple2", ("a",) * 10)
+            span.set_attribute("tuple3", (2,) * 25)
+            span.set_attribute("tuple4", (2,) * 10)
+            span.set_attribute("tuple5", (True,) * 25)
+            span.set_attribute("tuple6", (True,) * 10)
+            span.set_attribute("range1", range(0, 25))
+            span.set_attribute("range2", range(0, 10))
+            span.set_attribute("empty_list", [])
+            span.set_attribute("none_list", ["hello", None, "world"])
+            span.end(end_time=end_time)
+
+            expected_outputs = {
+                2: {
+                    "string1": "vv",
+                    "string2": "vv",
+                    "list1": "[]",
+                    "list2": "[]",
+                    "list3": "[]",
+                    "list4": "[]",
+                    "list5": "[]",
+                    "list6": "[]",
+                    "tuple1": "[]",
+                    "tuple2": "[]",
+                    "tuple3": "[]",
+                    "tuple4": "[]",
+                    "tuple5": "[]",
+                    "tuple6": "[]",
+                    "range1": "[]",
+                    "range2": "[]",
+                    "empty_list": "[]",
+                    "none_list": "[]",
+                },
+                5: {
+                    "string1": "vvvvv",
+                    "string2": "vvvvv",
+                    "list1": '["a"]',
+                    "list2": '["a"]',
+                    "list3": '["2"]',
+                    "list4": '["2"]',
+                    "list5": "[]",
+                    "list6": "[]",
+                    "tuple1": '["a"]',
+                    "tuple2": '["a"]',
+                    "tuple3": '["2"]',
+                    "tuple4": '["2"]',
+                    "tuple5": "[]",
+                    "tuple6": "[]",
+                    "range1": '["0"]',
+                    "range2": '["0"]',
+                    "empty_list": "[]",
+                    "none_list": "[]",
+                },
+                9: {
+                    "string1": "vvvvvvvvv",
+                    "string2": "vvvvvvvvv",
+                    "list1": '["a","a"]',
+                    "list2": '["a","a"]',
+                    "list3": '["2","2"]',
+                    "list4": '["2","2"]',
+                    "list5": '["true"]',
+                    "list6": '["true"]',
+                    "tuple1": '["a","a"]',
+                    "tuple2": '["a","a"]',
+                    "tuple3": '["2","2"]',
+                    "tuple4": '["2","2"]',
+                    "tuple5": '["true"]',
+                    "tuple6": '["true"]',
+                    "range1": '["0","1"]',
+                    "range2": '["0","1"]',
+                    "empty_list": "[]",
+                    "none_list": '["hello"]',
+                },
+                10: {
+                    "string1": "vvvvvvvvvv",
+                    "string2": "vvvvvvvvvv",
+                    "list1": '["a","a"]',
+                    "list2": '["a","a"]',
+                    "list3": '["2","2"]',
+                    "list4": '["2","2"]',
+                    "list5": '["true"]',
+                    "list6": '["true"]',
+                    "tuple1": '["a","a"]',
+                    "tuple2": '["a","a"]',
+                    "tuple3": '["2","2"]',
+                    "tuple4": '["2","2"]',
+                    "tuple5": '["true"]',
+                    "tuple6": '["true"]',
+                    "range1": '["0","1"]',
+                    "range2": '["0","1"]',
+                    "empty_list": "[]",
+                    "none_list": '["hello"]',
+                },
+                11: {
+                    "string1": "vvvvvvvvvvv",
+                    "string2": "vvvvvvvvvvv",
+                    "list1": '["a","a"]',
+                    "list2": '["a","a"]',
+                    "list3": '["2","2"]',
+                    "list4": '["2","2"]',
+                    "list5": '["true"]',
+                    "list6": '["true"]',
+                    "tuple1": '["a","a"]',
+                    "tuple2": '["a","a"]',
+                    "tuple3": '["2","2"]',
+                    "tuple4": '["2","2"]',
+                    "tuple5": '["true"]',
+                    "tuple6": '["true"]',
+                    "range1": '["0","1"]',
+                    "range2": '["0","1"]',
+                    "empty_list": "[]",
+                    "none_list": '["hello"]',
+                },
+                128: {
+                    "string1": "v" * 128,
+                    "string2": "v" * 50,
+                    "list1": '["a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a"]',
+                    "list2": '["a","a","a","a","a","a","a","a","a","a"]',
+                    "list3": '["2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2"]',
+                    "list4": '["2","2","2","2","2","2","2","2","2","2"]',
+                    "list5": '["true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true"]',
+                    "list6": '["true","true","true","true","true","true","true","true","true","true"]',
+                    "tuple1": '["a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a","a"]',
+                    "tuple2": '["a","a","a","a","a","a","a","a","a","a"]',
+                    "tuple3": '["2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2","2"]',
+                    "tuple4": '["2","2","2","2","2","2","2","2","2","2"]',
+                    "tuple5": '["true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true"]',
+                    "tuple6": '["true","true","true","true","true","true","true","true","true","true"]',
+                    "range1": '["0","1","2","3","4","5","6","7","8","9","10","11","12","13","14","15","16","17","18","19","20","21","22","23","24"]',
+                    "range2": '["0","1","2","3","4","5","6","7","8","9"]',
+                    "empty_list": "[]",
+                    "none_list": '["hello",null,"world"]',
+                },
+            }
+
+            return span, expected_outputs[max_tag_length]
+
+        @staticmethod
         def get_exhaustive_otel_span_list() -> List[trace._Span]:
             trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
 
@@ -208,7 +384,7 @@ class CommonEncoderTestCases:
             span1.set_attribute("key_bool", False)
             span1.set_attribute("key_string", "hello_world")
             span1.set_attribute("key_float", 111.22)
-            span1.set_status(Status(StatusCode.ERROR, "Example description"))
+            span1.set_status(Status(StatusCode.OK))
             span1.end(end_time=end_times[0])
 
             span2 = trace._Span(
@@ -218,6 +394,7 @@ class CommonEncoderTestCases:
             span2.resource = trace.Resource(
                 attributes={"key_resource": "some_resource"}
             )
+            span2.set_status(Status(StatusCode.ERROR, "Example description"))
             span2.end(end_time=end_times[1])
 
             span3 = trace._Span(

@@ -123,8 +123,8 @@ def _get_resource_data(
 
 def _load_credential_from_file(filepath) -> ChannelCredentials:
     try:
-        with open(filepath, "rb") as f:
-            credential = f.read()
+        with open(filepath, "rb") as creds_file:
+            credential = creds_file.read()
             return ssl_channel_credentials(credential)
     except FileNotFoundError:
         logger.exception("Failed to read credential file")
@@ -151,7 +151,7 @@ class OTLPExporterMixin(
         endpoint: Optional[str] = None,
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
-        headers: Optional[str] = None,
+        headers: Optional[Sequence] = None,
         timeout: Optional[int] = None,
         compression: str = None,
     ):
@@ -160,7 +160,7 @@ class OTLPExporterMixin(
         endpoint = (
             endpoint
             or Configuration().EXPORTER_OTLP_ENDPOINT
-            or "localhost:55680"
+            or "localhost:4317"
         )
 
         if insecure is None:
@@ -169,6 +169,10 @@ class OTLPExporterMixin(
             insecure = False
 
         self._headers = headers or Configuration().EXPORTER_OTLP_HEADERS
+        if isinstance(self._headers, str):
+            self._headers = tuple(
+                tuple(item.split("=")) for item in self._headers.split(",")
+            )
         self._timeout = (
             timeout
             or Configuration().EXPORTER_OTLP_TIMEOUT
