@@ -184,7 +184,7 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
                     ),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
-                    tags={NAME_KEY: "name", VERSION_KEY: "version",},
+                    tags={NAME_KEY: "name", VERSION_KEY: "version"},
                     debug=False,
                 ),
             ],

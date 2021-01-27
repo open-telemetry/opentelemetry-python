@@ -121,7 +121,7 @@ class TestV2JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                 - (otel_spans[3].start_time // 10 ** 3),
                 "localEndpoint": local_endpoint,
                 "kind": span_kind,
-                "tags": {NAME_KEY: "name", VERSION_KEY: "version",},
+                "tags": {NAME_KEY: "name", VERSION_KEY: "version"},
             },
         ]
 
@@ -167,7 +167,7 @@ class TestV2JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
             }
         ]
 
-        self.assertEqual(
+        self.assert_equal_encoded_spans(
             json.dumps(expected_output),
             JsonV2Encoder().serialize([otel_span], NodeEndpoint(service_name)),
         )
