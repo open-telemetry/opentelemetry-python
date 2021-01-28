@@ -83,6 +83,13 @@ class TestJaegerPropagator(unittest.TestCase):
         self.assertEqual(span_context.trace_id, self.trace_id)
         self.assertEqual(span_context.span_id, self.span_id)
 
+    def test_missing_carrier(self):
+        old_carrier = {}
+        ctx = FORMAT.extract(carrier_getter, old_carrier)
+        span_context = trace_api.get_current_span(ctx).get_span_context()
+        self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
+        self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
+
     def test_trace_id(self):
         old_carrier = {FORMAT.TRACE_ID_KEY: self.serialized_uber_trace_id}
         _, new_carrier = get_context_new_carrier(old_carrier)
