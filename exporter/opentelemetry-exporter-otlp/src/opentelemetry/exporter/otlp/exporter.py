@@ -39,12 +39,11 @@ from grpc import (
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_PYTHON_EXPORTER_OTLP_INSECURE,
-    OTEL_EXPORTER_OTLP_CERTIFICATE
-
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 

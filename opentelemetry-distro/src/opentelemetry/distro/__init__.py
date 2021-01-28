@@ -60,7 +60,7 @@ def _get_exporter_names() -> Sequence[str]:
     trace_exporters = environ.get(OTEL_TRACE_EXPORTER)
     metrics_exporters = environ.get(OTEL_METRICS_EXPORTER)
 
-    exporters = {}
+    exporters = set()
 
     if (
         trace_exporters is not None
