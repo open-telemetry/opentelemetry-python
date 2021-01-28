@@ -204,5 +204,5 @@ class OpenTelemetryDistro(BaseDistro):
     """
 
     def _configure(self, **kwargs):
-        os.environ.setdefault(OTEL_TRACE_EXPORTER, "otel_span")
-        os.environ.setdefault(OTEL_METRICS_EXPORTER, "otel_metric")
+        os.environ.setdefault(OTEL_TRACE_EXPORTER, "otlp_span")
+        os.environ.setdefault(OTEL_METRICS_EXPORTER, "otlp_metric")
