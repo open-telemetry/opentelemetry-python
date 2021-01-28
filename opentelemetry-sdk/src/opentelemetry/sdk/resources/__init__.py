@@ -155,16 +155,27 @@ OTEL_RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES"
 
 
 class Resource:
+    """A Resource is an immutable representation of the entity producing telemetry as Attributes.
+    """
+
     def __init__(self, attributes: Attributes):
         self._attributes = attributes.copy()
 
     @staticmethod
     def create(attributes: typing.Optional[Attributes] = None) -> "Resource":
+        """Creates a new `Resource` from attributes.
+
+        Args:
+            attributes: Optional zero or more key-value pairs.
+
+        Returns:
+            The newly-created Resource.
+        """
         if not attributes:
-            resource = _DEFAULT_RESOURCE
-        else:
-            resource = _DEFAULT_RESOURCE.merge(Resource(attributes))
-        resource = resource.merge(OTELResourceDetector().detect())
+            attributes = {}
+        resource = _DEFAULT_RESOURCE.merge(
+            OTELResourceDetector().detect()
+        ).merge(Resource(attributes))
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
             process_executable_name = resource.attributes.get(
@@ -186,11 +197,19 @@ class Resource:
         return self._attributes.copy()
 
     def merge(self, other: "Resource") -> "Resource":
+        """Merges this resource and an updating resource into a new `Resource`.
+
+        If a key exists on both the old and updating resource, the value of the
+        updating resource will override the old resource value.
+
+        Args:
+            other: The other resource to be merged.
+
+        Returns:
+            The newly-created Resource.
+        """
         merged_attributes = self.attributes
-        # pylint: disable=protected-access
-        for key, value in other._attributes.items():
-            if key not in merged_attributes or merged_attributes[key] == "":
-                merged_attributes[key] = value
+        merged_attributes.update(other.attributes)
         return Resource(merged_attributes)
 
     def __eq__(self, other: object) -> bool:
