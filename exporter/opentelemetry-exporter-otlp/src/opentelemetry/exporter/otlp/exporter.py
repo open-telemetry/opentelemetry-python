@@ -43,6 +43,8 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_PYTHON_EXPORTER_OTLP_INSECURE,
+    OTEL_EXPORTER_OTLP_CERTIFICATE
+
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 
@@ -194,9 +196,7 @@ class OTLPExporterMixin(
         ):
             compression_algorithm = Compression.Gzip
         else:
-            compression_str = (
-                environ.get("OTLP_EXPORTER_OTLP_INSECURE") or None
-            )
+            compression_str = environ.get(OTEL_PYTHON_EXPORTER_OTLP_INSECURE)
             if compression_str is None:
                 compression_algorithm = Compression.NoCompression
             elif (
@@ -218,13 +218,13 @@ class OTLPExporterMixin(
         # secure mode
         if (
             credentials is None
-            and environ.get("OTLP_EXPORTER_OTLP_CERTIFICATE") is None
+            and environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE) is None
         ):
             # use the default location chosen by gRPC runtime
             credentials = ssl_channel_credentials()
         else:
             credentials = credentials or _load_credential_from_file(
-                environ.get("OTLP_EXPORTER_OTLP_CERTIFICATE")
+                environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE)
             )
         self._client = self._stub(
             secure_channel(
