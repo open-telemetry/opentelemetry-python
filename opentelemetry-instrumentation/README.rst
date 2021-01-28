@@ -48,10 +48,11 @@ this can be overriden when needed.
 The command supports the following configuration options as CLI arguments and environment vars:
 
 
-* ``--exporter`` or ``OTEL_PYTHON_EXPORTER``
+* ``--trace-exporter`` or ``OTEL_TRACE_EXPORTER``
+* ``--metrics-exporter`` or ``OTEL_METRICS_EXPORTER``
 
-Used to specify which trace exporter to use. Can be set to one or more
-of the well-known exporter names (see below).
+Used to specify which trace or metrics exporter to use. Can be set to one or
+more of the well-known exporter names (see below).
 
     - Defaults to `otlp`.
     - Can be set to `none` to disable automatic tracer initialization. 

@@ -21,9 +21,10 @@ from pkg_resources import iter_entry_points
 
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
-    OTEL_PYTHON_EXPORTER,
+    OTEL_METRICS_EXPORTER,
     OTEL_PYTHON_IDS_GENERATOR,
     OTEL_PYTHON_SERVICE_NAME,
+    OTEL_TRACE_EXPORTER,
 )
 from opentelemetry.instrumentation.configurator import BaseConfigurator
 from opentelemetry.instrumentation.distro import BaseDistro
@@ -48,27 +49,47 @@ _DEFAULT_IDS_GENERATOR = RANDOM_IDS_GENERATOR
 
 
 def _get_ids_generator() -> str:
-    return environ.get(OTEL_PYTHON_IDS_GENERATOR) or _DEFAULT_IDS_GENERATOR
+    return environ.get(OTEL_PYTHON_IDS_GENERATOR, _DEFAULT_IDS_GENERATOR)
 
 
 def _get_service_name() -> str:
-    return environ.get(OTEL_PYTHON_SERVICE_NAME) or ""
+    return environ.get(OTEL_PYTHON_SERVICE_NAME, "")
 
 
 def _get_exporter_names() -> Sequence[str]:
-    exporter = environ.get(OTEL_PYTHON_EXPORTER) or "EXPORTER_OTLP"
-    if exporter.lower().strip() == "none":
-        return []
+    trace_exporters = environ.get(OTEL_TRACE_EXPORTER)
+    metrics_exporters = environ.get(OTEL_METRICS_EXPORTER)
 
-    names = []
-    for exp in exporter.split(","):
-        name = exp.strip()
-        if name == EXPORTER_OTLP:
-            names.append(EXPORTER_OTLP_SPAN)
-            names.append(EXPORTER_OTLP_METRIC)
-        else:
-            names.append(name)
-    return names
+    exporters = {}
+
+    if (
+        trace_exporters is not None
+        or trace_exporters.lower().strip() != "none"
+    ):
+        exporters.update(
+            {
+                trace_exporter.strip()
+                for trace_exporter in trace_exporters.split(",")
+            }
+        )
+
+    if (
+        metrics_exporters is not None
+        or metrics_exporters.lower().strip() != "none"
+    ):
+        exporters.update(
+            {
+                metrics_exporter.strip()
+                for metrics_exporter in metrics_exporters.split(",")
+            }
+        )
+
+    if EXPORTER_OTLP in exporters:
+        exporters.pop(EXPORTER_OTLP)
+        exporters.add(EXPORTER_OTLP_SPAN)
+        exporters.add(EXPORTER_OTLP_METRIC)
+
+    return list(exporters)
 
 
 def _init_tracing(
@@ -183,4 +204,5 @@ class OpenTelemetryDistro(BaseDistro):
     """
 
     def _configure(self, **kwargs):
-        os.environ.setdefault(OTEL_PYTHON_EXPORTER, "otlp")
+        os.environ.setdefault(OTEL_TRACE_EXPORTER, "otel_span")
+        os.environ.setdefault(OTEL_METRICS_EXPORTER, "otel_metric")
