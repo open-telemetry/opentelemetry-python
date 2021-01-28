@@ -38,8 +38,8 @@ class SpanExportResult(Enum):
 class SpanExporter:
     """Interface for exporting spans.
 
-    Interface to be implemented by services that want to export recorded in
-    its own format.
+    Interface to be implemented by services that want to export spans recorded
+    in their own format.
 
     To export data this MUST be registered to the :class`opentelemetry.sdk.trace.Tracer` using a
     `SimpleExportSpanProcessor` or a `BatchExportSpanProcessor`.

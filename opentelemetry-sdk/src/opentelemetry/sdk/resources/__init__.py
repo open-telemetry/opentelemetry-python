@@ -32,15 +32,15 @@ exporter, which can send on this information as it sees fit.
 
 .. code-block:: python
 
-    metrics.set_meter_provider(
-        MeterProvider(
+    trace.set_tracer_provider(
+        TracerProvider(
             resource=Resource.create({
                 "service.name": "shoppingcart",
                 "service.instance.id": "instance-12",
             }),
         ),
     )
-    print(metrics.get_meter_provider().resource.attributes)
+    print(trace.get_tracer_provider().resource.attributes)
 
     {'telemetry.sdk.language': 'python',
     'telemetry.sdk.name': 'opentelemetry',
