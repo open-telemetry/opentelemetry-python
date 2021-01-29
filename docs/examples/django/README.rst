@@ -110,4 +110,4 @@ References
 
 * `Django <https://djangoproject.com/>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
-* `OpenTelemetry Django extension <https://github.com/open-telemetry/opentelemetry-python-contib/tree/master/instrumentation/opentelemetry-instrumentation-django>`_
+* `OpenTelemetry Django extension <https://github.com/open-telemetry/opentelemetry-python-contib/tree/main/instrumentation/opentelemetry-instrumentation-django>`_

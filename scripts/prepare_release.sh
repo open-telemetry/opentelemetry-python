@@ -22,9 +22,9 @@ if [[ ! "${VERSION}" =~ ^([0-9])(\.*[0-9]{1,5}[a-b]*){1,3}$ ]]; then
 fi
 
 # create the release branch
-git fetch origin master
-git checkout master
-git reset --hard origin/master
+git fetch origin main
+git checkout main
+git reset --hard origin/main
 git checkout -b release/${VERSION}
 git push origin release/${VERSION}
 
