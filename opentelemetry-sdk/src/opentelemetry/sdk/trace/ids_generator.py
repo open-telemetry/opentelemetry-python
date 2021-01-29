@@ -33,7 +33,7 @@ class IdsGenerator(abc.ABC):
         uniformly random. Samplers like the `TraceIdRatioBased` sampler rely on
         this randomness to make sampling decisions.
 
-        See `the specification on TraceIdRatioBased <https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/sdk.md#traceidratiobased>`_.
+        See `the specification on TraceIdRatioBased <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#traceidratiobased>`_.
 
         Returns:
             A 128-bit int for use as a trace ID

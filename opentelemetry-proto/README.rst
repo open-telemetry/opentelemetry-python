@@ -32,4 +32,4 @@ References
 
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
 * `OpenTelemetry Proto <https://github.com/open-telemetry/opentelemetry-proto>`_
-* `proto_codegen.sh script <https://github.com/open-telemetry/opentelemetry-python/blob/master/scripts/proto_codegen.sh>`_
+* `proto_codegen.sh script <https://github.com/open-telemetry/opentelemetry-python/blob/main/scripts/proto_codegen.sh>`_

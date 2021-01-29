@@ -11,7 +11,7 @@ The example is based on a previous OpenTracing example that
 you can find
 `here <https://github.com/yurishkuro/opentracing-tutorial/tree/master/python>`__.
 
-The source files for these examples are available `here <https://github.com/open-telemetry/opentelemetry-python/tree/master/docs/examples/auto-instrumentation>`__.
+The source files for these examples are available `here <https://github.com/open-telemetry/opentelemetry-python/tree/main/docs/examples/auto-instrumentation>`__.
 
 This example uses two different scripts. The main difference between them is
 whether or not they're instrumented manually:
