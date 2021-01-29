@@ -32,8 +32,8 @@ In addition, there are several extension packages which can be installed separat
 These are for exporter and instrumentation packages respectively.
 Some packages can be found in :scm_web:`instrumentation <instrumentation/>` and :scm_web:`exporter <exporter/>`
 directory of the repository. The remaining packages can be found at the 
-`Contrib repo instrumentation <https://github.com/open-telemetry/opentelemetry-python-contrib/tree/master/instrumentation>`_
-and `Contrib repo exporter <https://github.com/open-telemetry/opentelemetry-python-contrib/tree/master/exporter>`_ directories.
+`Contrib repo instrumentation <https://github.com/open-telemetry/opentelemetry-python-contrib/tree/main/instrumentation>`_
+and `Contrib repo exporter <https://github.com/open-telemetry/opentelemetry-python-contrib/tree/main/exporter>`_ directories.
 
 Extensions
 ----------

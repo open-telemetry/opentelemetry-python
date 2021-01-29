@@ -65,7 +65,7 @@ Example::
 
 
 .. _Propagation API Specification:
-    https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/context/api-propagators.md
+    https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/api-propagators.md
 """
 
 import typing
@@ -86,7 +86,7 @@ def extract(
     carrier: textmap.TextMapPropagatorT,
     context: typing.Optional[Context] = None,
 ) -> Context:
-    """ Uses the configured propagator to extract a Context from the carrier.
+    """Uses the configured propagator to extract a Context from the carrier.
 
     Args:
         getter: an object which contains a get function that can retrieve zero
@@ -107,7 +107,7 @@ def inject(
     carrier: textmap.TextMapPropagatorT,
     context: typing.Optional[Context] = None,
 ) -> None:
-    """ Uses the configured propagator to inject a Context into the carrier.
+    """Uses the configured propagator to inject a Context into the carrier.
 
     Args:
         set_in_carrier: A setter function that can set values
@@ -146,6 +146,8 @@ def get_global_textmap() -> textmap.TextMapPropagator:
     return _HTTP_TEXT_FORMAT
 
 
-def set_global_textmap(http_text_format: textmap.TextMapPropagator,) -> None:
+def set_global_textmap(
+    http_text_format: textmap.TextMapPropagator,
+) -> None:
     global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement
     _HTTP_TEXT_FORMAT = http_text_format  # type: ignore

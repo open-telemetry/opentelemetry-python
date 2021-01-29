@@ -20,7 +20,7 @@ from opentelemetry.trace.status import StatusCode
 
 
 class TestUtils(TestBase):
-    # See https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
+    # See https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#status
     def test_http_status_to_status_code(self):
         for status_code, expected in (
             (HTTPStatus.OK, StatusCode.UNSET),
@@ -31,12 +31,24 @@ class TestUtils(TestBase):
             (HTTPStatus.UNAUTHORIZED, StatusCode.ERROR),
             (HTTPStatus.FORBIDDEN, StatusCode.ERROR),
             (HTTPStatus.NOT_FOUND, StatusCode.ERROR),
-            (HTTPStatus.UNPROCESSABLE_ENTITY, StatusCode.ERROR,),
-            (HTTPStatus.TOO_MANY_REQUESTS, StatusCode.ERROR,),
+            (
+                HTTPStatus.UNPROCESSABLE_ENTITY,
+                StatusCode.ERROR,
+            ),
+            (
+                HTTPStatus.TOO_MANY_REQUESTS,
+                StatusCode.ERROR,
+            ),
             (HTTPStatus.NOT_IMPLEMENTED, StatusCode.ERROR),
             (HTTPStatus.SERVICE_UNAVAILABLE, StatusCode.ERROR),
-            (HTTPStatus.GATEWAY_TIMEOUT, StatusCode.ERROR,),
-            (HTTPStatus.HTTP_VERSION_NOT_SUPPORTED, StatusCode.ERROR,),
+            (
+                HTTPStatus.GATEWAY_TIMEOUT,
+                StatusCode.ERROR,
+            ),
+            (
+                HTTPStatus.HTTP_VERSION_NOT_SUPPORTED,
+                StatusCode.ERROR,
+            ),
             (600, StatusCode.ERROR),
             (99, StatusCode.ERROR),
         ):

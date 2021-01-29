@@ -24,7 +24,7 @@ This exporter always send traces to the configured Zipkin collector using HTTP.
 
 .. _Zipkin: https://zipkin.io/
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
-.. _Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/sdk-environment-variables.md#zipkin-exporter
+.. _Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/sdk-environment-variables.md#zipkin-exporter
 
 .. envvar:: OTEL_EXPORTER_ZIPKIN_ENDPOINT
 .. envvar:: OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT
@@ -279,7 +279,9 @@ class ZipkinSpanExporter(SpanExporter):
         for span in spans:
             context = span.get_span_context()
             trace_id = context.trace_id.to_bytes(
-                length=16, byteorder="big", signed=False,
+                length=16,
+                byteorder="big",
+                signed=False,
             )
             span_id = self.format_pbuf_span_id(context.span_id)
 

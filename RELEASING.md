@@ -7,7 +7,7 @@ Release Process:
 * [Open a Pull Request](#open-a-pull-request)
 * [Create a Release](#Create-a-Release)
 * [Move stable tag](#Move-stable-tag)
-* [Update master](#Update-master)
+* [Update main](#Update-main)
 * [Check PyPI](#Check-PyPI)
 * [Troubleshooting](#troubleshooting)
 
@@ -16,7 +16,7 @@ Release Process:
 
 ## Create a new branch
 The following script does the following:
-- update master locally
+- update main locally
 - creates a new release branch `release/<version>`
 - updates version and changelog files
 - commits the change to a new branch `release/<version>-auto`
@@ -39,7 +39,7 @@ The PR should be opened from the `release/<version>-auto` branch created as part
 
 ## Check PyPI
 
-This should be handled automatically on release by the [publish action](https://github.com/open-telemetry/opentelemetry-python/blob/master/.github/workflows/publish.yml).
+This should be handled automatically on release by the [publish action](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/publish.yml).
 
  - Check the [action logs](https://github.com/open-telemetry/opentelemetry-python/actions?query=workflow%3APublish) to make sure packages have been uploaded to PyPI
 - Check the release history (e.g. https://pypi.org/project/opentelemetry-api/#history) on PyPI
@@ -58,18 +58,18 @@ git push origin stable
 
 To validate this worked, ensure the stable build has run successfully: https://readthedocs.org/projects/opentelemetry-python/builds/. If the build has not run automatically, it can be manually trigger via the readthedocs interface.
 
-## Update master
+## Update main
 
-Ensure the version and changelog updates have been applied to master.
+Ensure the version and changelog updates have been applied to main.
 
 ```bash
-# checkout a new branch from master
-git checkout -b v0.7b0-master-update
+# checkout a new branch from main
+git checkout -b v0.7b0-main-update
 # cherry pick the change from the release branch
 git cherry-pick $(git log -n 1 origin/release/0.7b0 --format="%H")
 # update the version number, make it a "dev" greater than release number, e.g. 0.8.dev0
 perl -i -p -e 's/0.7b0/0.8.dev0/' $(git grep -l "0.7b0" | grep -vi CHANGELOG)
-# open a PR targeting master see #331
+# open a PR targeting main see #331
 git commit -m
 ```
 

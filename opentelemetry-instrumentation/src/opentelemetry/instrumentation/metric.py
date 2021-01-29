@@ -52,7 +52,9 @@ class HTTPMetricRecorder(MetricRecorder):
     """Metric recorder for http instrumentations. Tracks duration."""
 
     def __init__(
-        self, meter: Optional[metrics.Meter], http_type: HTTPMetricType,
+        self,
+        meter: Optional[metrics.Meter],
+        http_type: HTTPMetricType,
     ):
         super().__init__(meter)
         self._http_type = http_type
@@ -75,7 +77,7 @@ class HTTPMetricRecorder(MetricRecorder):
                 )
 
     # Conventions for recording duration can be found at:
-    # https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/metrics/semantic_conventions/http-metrics.md
+    # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/semantic_conventions/http-metrics.md
     @contextmanager
     def record_client_duration(self, labels: Dict[str, str]):
         start_time = time()

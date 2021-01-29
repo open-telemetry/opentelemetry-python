@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-For general information about sampling, see `the specification <https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/sdk.md#sampling>`_.
+For general information about sampling, see `the specification <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#sampling>`_.
 
 OpenTelemetry provides two types of samplers:
 
@@ -324,15 +324,12 @@ class ParentBased(Sampler):
         )
 
     def get_description(self):
-        return (
-            "ParentBased{{root:{},remoteParentSampled:{},remoteParentNotSampled:{},"
-            "localParentSampled:{},localParentNotSampled:{}}}".format(
-                self._root.get_description(),
-                self._remote_parent_sampled.get_description(),
-                self._remote_parent_not_sampled.get_description(),
-                self._local_parent_sampled.get_description(),
-                self._local_parent_not_sampled.get_description(),
-            )
+        return "ParentBased{{root:{},remoteParentSampled:{},remoteParentNotSampled:{}," "localParentSampled:{},localParentNotSampled:{}}}".format(
+            self._root.get_description(),
+            self._remote_parent_sampled.get_description(),
+            self._remote_parent_not_sampled.get_description(),
+            self._local_parent_sampled.get_description(),
+            self._local_parent_not_sampled.get_description(),
         )
 
 

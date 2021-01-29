@@ -3,7 +3,7 @@ Getting Started with OpenTelemetry Python
 
 This guide walks you through instrumenting a Python application with ``opentelemetry-python``.
 
-For more elaborate examples, see `examples <https://github.com/open-telemetry/opentelemetry-python/tree/master/docs/examples/>`_. 
+For more elaborate examples, see `examples <https://github.com/open-telemetry/opentelemetry-python/tree/main/docs/examples/>`_. 
 
 Hello world: emit a trace to your console
 ---------------------------------------------
@@ -149,7 +149,7 @@ While the example in the previous section is great, it's very manual. The follow
 * Database calls
 
 To track these common actions, OpenTelemetry has the concept of instrumentations. Instrumentations are packages designed to interface
-with a specific framework or library, such as Flask and psycopg2. You can find a list of the currently curated extension packages in the `Contrib repository <https://github.com/open-telemetry/opentelemetry-python-contrib/tree/master/instrumentation>`_.
+with a specific framework or library, such as Flask and psycopg2. You can find a list of the currently curated extension packages in the `Contrib repository <https://github.com/open-telemetry/opentelemetry-python-contrib/tree/main/instrumentation>`_.
 
 Instrument a basic Flask application that uses the requests library to send HTTP requests. First, install the instrumentation packages themselves:
 
@@ -180,7 +180,7 @@ A major feature of distributed tracing is the ability to correlate a trace acros
 multiple services. However, those services need to propagate information about a
 trace from one service to the other.
 
-To enable this propagation, OpenTelemetry has the concept of `propagators <https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/context/api-propagators.md>`_,
+To enable this propagation, OpenTelemetry has the concept of `propagators <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/api-propagators.md>`_,
 which provide a common method to encode and decode span information from a request and response, respectively.
 
 By default, ``opentelemetry-python`` is configured to use the `W3C Trace Context <https://www.w3.org/TR/trace-context/>`_
