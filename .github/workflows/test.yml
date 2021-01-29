@@ -109,7 +109,7 @@ jobs:
         run: pip install -U tox
       - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
-        uses: actions/cache@v1
+        uses: actions/cache@v2
         with:
           path: .tox
           key: tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
