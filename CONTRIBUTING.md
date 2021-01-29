@@ -194,5 +194,5 @@ For a deeper discussion, see: https://github.com/open-telemetry/opentelemetry-sp
 * docstrings should adhere to the [Google Python Style
   Guide](http://google.github.io/styleguide/pyguide.html#38-comments-and-docstrings)
   as specified with the [napolean
-  extension](http://www.sphinx-doc.org/en/main/usage/extensions/napoleon.html#google-vs-numpy)
+  extension](http://www.sphinx-doc.org/en/master/usage/extensions/napoleon.html#google-vs-numpy)
   extension in [Sphinx](http://www.sphinx-doc.org/en/master/index.html).
