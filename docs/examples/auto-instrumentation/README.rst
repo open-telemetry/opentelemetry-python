@@ -9,7 +9,7 @@ Overview
 This example demonstrates how to use auto-instrumentation in OpenTelemetry.
 The example is based on a previous OpenTracing example that
 you can find
-`here <https://github.com/yurishkuro/opentracing-tutorial/tree/main/python>`__.
+`here <https://github.com/yurishkuro/opentracing-tutorial/tree/master/python>`__.
 
 The source files for these examples are available `here <https://github.com/open-telemetry/opentelemetry-python/tree/main/docs/examples/auto-instrumentation>`__.
 
