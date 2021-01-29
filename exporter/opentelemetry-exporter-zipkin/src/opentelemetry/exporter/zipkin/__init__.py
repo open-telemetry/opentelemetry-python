@@ -279,9 +279,7 @@ class ZipkinSpanExporter(SpanExporter):
         for span in spans:
             context = span.get_span_context()
             trace_id = context.trace_id.to_bytes(
-                length=16,
-                byteorder="big",
-                signed=False,
+                length=16, byteorder="big", signed=False,
             )
             span_id = self.format_pbuf_span_id(context.span_id)
 

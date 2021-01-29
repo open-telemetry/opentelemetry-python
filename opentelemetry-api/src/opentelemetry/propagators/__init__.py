@@ -146,8 +146,6 @@ def get_global_textmap() -> textmap.TextMapPropagator:
     return _HTTP_TEXT_FORMAT
 
 
-def set_global_textmap(
-    http_text_format: textmap.TextMapPropagator,
-) -> None:
+def set_global_textmap(http_text_format: textmap.TextMapPropagator,) -> None:
     global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement
     _HTTP_TEXT_FORMAT = http_text_format  # type: ignore
