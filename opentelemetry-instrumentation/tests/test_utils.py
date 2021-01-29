@@ -20,7 +20,7 @@ from opentelemetry.trace.status import StatusCode
 
 
 class TestUtils(TestBase):
-    # See https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
+    # See https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#status
     def test_http_status_to_status_code(self):
         for status_code, expected in (
             (HTTPStatus.OK, StatusCode.UNSET),

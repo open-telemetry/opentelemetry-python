@@ -25,7 +25,7 @@ of the instrumenting library and (optionally) a version.
 See the `metrics api`_ spec for terminology and context clarification.
 
 .. _metrics api:
-    https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/metrics/api.md
+    https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/api.md
 """
 import abc
 from logging import getLogger
