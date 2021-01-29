@@ -42,8 +42,8 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE,
     OTEL_EXPORTER_OTLP_SPAN_ENDPOINT,
     OTEL_EXPORTER_OTLP_SPAN_HEADERS,
+    OTEL_EXPORTER_OTLP_SPAN_INSECURE,
     OTEL_EXPORTER_OTLP_SPAN_TIMEOUT,
-    OTEL_PYTHON_EXPORTER_OTLP_SPAN_INSECURE,
 )
 from opentelemetry.sdk.trace import Span as SDKSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
@@ -80,7 +80,7 @@ class OTLPSpanExporter(
         timeout: Optional[int] = None,
     ):
         if insecure is None:
-            insecure = environ.get(OTEL_PYTHON_EXPORTER_OTLP_SPAN_INSECURE)
+            insecure = environ.get(OTEL_EXPORTER_OTLP_SPAN_INSECURE)
 
         if (
             not insecure

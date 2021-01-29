@@ -32,7 +32,7 @@ from opentelemetry.exporter.zipkin.gen import zipkin_pb2
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_ZIPKIN_ENDPOINT,
-    OTEL_PYTHON_EXPORTER_ZIPKIN_TRANSPORT_FORMAT,
+    OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT,
 )
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.trace.export import SpanExportResult
@@ -63,15 +63,15 @@ class TestZipkinSpanExporter(unittest.TestCase):
     def tearDown(self):
         if OTEL_EXPORTER_ZIPKIN_ENDPOINT in os.environ:
             del os.environ[OTEL_EXPORTER_ZIPKIN_ENDPOINT]
-        if OTEL_PYTHON_EXPORTER_ZIPKIN_TRANSPORT_FORMAT in os.environ:
-            del os.environ[OTEL_PYTHON_EXPORTER_ZIPKIN_TRANSPORT_FORMAT]
+        if OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT in os.environ:
+            del os.environ[OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT]
 
     def test_constructor_env_var(self):
         """Test the default values assigned by constructor."""
         url = "https://foo:9911/path"
         os.environ[OTEL_EXPORTER_ZIPKIN_ENDPOINT] = url
         os.environ[
-            OTEL_PYTHON_EXPORTER_ZIPKIN_TRANSPORT_FORMAT
+            OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT
         ] = TRANSPORT_FORMAT_PROTOBUF
         service_name = "my-service-name"
         port = 9911

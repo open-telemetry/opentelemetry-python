@@ -42,8 +42,8 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
+    OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
-    OTEL_PYTHON_EXPORTER_OTLP_INSECURE,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 
@@ -171,7 +171,7 @@ class OTLPExporterMixin(
         )
 
         if insecure is None:
-            insecure = environ.get(OTEL_PYTHON_EXPORTER_OTLP_INSECURE)
+            insecure = environ.get(OTEL_EXPORTER_OTLP_INSECURE)
         if insecure is None:
             insecure = False
 
@@ -195,7 +195,7 @@ class OTLPExporterMixin(
         ):
             compression_algorithm = Compression.Gzip
         else:
-            compression_str = environ.get(OTEL_PYTHON_EXPORTER_OTLP_INSECURE)
+            compression_str = environ.get(OTEL_EXPORTER_OTLP_INSECURE)
             if compression_str is None:
                 compression_algorithm = Compression.NoCompression
             elif (

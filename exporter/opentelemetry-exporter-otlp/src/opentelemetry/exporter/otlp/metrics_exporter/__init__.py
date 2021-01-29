@@ -48,8 +48,8 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE,
     OTEL_EXPORTER_OTLP_METRIC_ENDPOINT,
     OTEL_EXPORTER_OTLP_METRIC_HEADERS,
+    OTEL_EXPORTER_OTLP_METRIC_INSECURE,
     OTEL_EXPORTER_OTLP_METRIC_TIMEOUT,
-    OTEL_PYTHON_EXPORTER_OTLP_METRIC_INSECURE,
 )
 from opentelemetry.sdk.metrics import (
     Counter,
@@ -150,7 +150,7 @@ class OTLPMetricsExporter(
         timeout: Optional[int] = None,
     ):
         if insecure is None:
-            insecure = environ.get(OTEL_PYTHON_EXPORTER_OTLP_METRIC_INSECURE)
+            insecure = environ.get(OTEL_EXPORTER_OTLP_METRIC_INSECURE)
 
         if (
             not insecure
