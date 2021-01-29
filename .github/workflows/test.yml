@@ -6,7 +6,7 @@ on:
     - 'release/*'
   pull_request:
 env:
-  # Set variable to 'master' if your change will not affect Contrib.
+  # Set variable to 'main' if your change will not affect Contrib.
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
@@ -82,7 +82,7 @@ jobs:
           alert-threshold: 200%
           fail-on-alert: true
           # Make a commit on `gh-pages` with benchmarks from previous step
-          auto-push: ${{ github.ref == 'refs/heads/master' }}
+          auto-push: ${{ github.ref == 'refs/heads/main' }}
           gh-pages-branch: gh-pages
           benchmark-data-dir-path: benchmarks
   misc:

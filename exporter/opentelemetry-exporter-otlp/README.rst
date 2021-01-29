@@ -22,4 +22,4 @@ References
 * `OpenTelemetry Collector Exporter <https://opentelemetry-python.readthedocs.io/en/latest/exporter/otlp/otlp.html>`_
 * `OpenTelemetry Collector <https://github.com/open-telemetry/opentelemetry-collector/>`_
 * `OpenTelemetry <https://opentelemetry.io/>`_
-* `OpenTelemetry Protocol Specification <https://github.com/open-telemetry/oteps/blob/master/text/0035-opentelemetry-protocol.md>`_
+* `OpenTelemetry Protocol Specification <https://github.com/open-telemetry/oteps/blob/main/text/0035-opentelemetry-protocol.md>`_

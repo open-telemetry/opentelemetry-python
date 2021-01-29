@@ -13,10 +13,10 @@
   <a href="https://github.com/open-telemetry/opentelemetry-python/releases">
     <img alt="GitHub release (latest by date including pre-releases)" src="https://img.shields.io/github/v/release/open-telemetry/opentelemetry-python?include_prereleases&style=for-the-badge">
   </a>
-  <a href="https://codecov.io/gh/open-telemetry/opentelemetry-python/branch/master/">
+  <a href="https://codecov.io/gh/open-telemetry/opentelemetry-python/branch/main/">
     <img alt="Codecov Status" src="https://img.shields.io/codecov/c/github/open-telemetry/opentelemetry-python?style=for-the-badge">
   </a>
-  <a href="https://github.com/open-telemetry/opentelemetry-python/blob/master/LICENSE">
+  <a href="https://github.com/open-telemetry/opentelemetry-python/blob/main/LICENSE">
     <img alt="license" src="https://img.shields.io/badge/license-Apache_2.0-green.svg?style=for-the-badge">
   </a>
   <br/>
@@ -61,7 +61,7 @@ pip install opentelemetry-sdk
 ```
 
 The
-[`instrumentation/`](https://github.com/open-telemetry/opentelemetry-python/tree/master/instrumentation)
+[`instrumentation/`](https://github.com/open-telemetry/opentelemetry-python/tree/main/instrumentation)
 directory includes OpenTelemetry instrumentation packages. You can install the packages separately with the following command:
 
 ```sh
@@ -69,7 +69,7 @@ pip install opentelemetry-instrumentation-{instrumentation}
 ```
 
 The
-[`exporter/`](https://github.com/open-telemetry/opentelemetry-python/tree/master/exporter)
+[`exporter/`](https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter)
 directory includes OpenTelemetry exporter packages. You can install the packages separately with the following command:
 
 ```sh
@@ -77,7 +77,7 @@ pip install opentelemetry-exporter-{exporter}
 ```
 
 The
-[`propagator/`](https://github.com/open-telemetry/opentelemetry-python/tree/master/propagator)
+[`propagator/`](https://github.com/open-telemetry/opentelemetry-python/tree/main/propagator)
 directory includes OpenTelemetry propagator packages. You can install the packages separately with the following command:
 
 ```sh
@@ -145,14 +145,14 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 - [Reiley Yang](https://github.com/reyang), Microsoft
 - [Yusuke Tsutsumi](https://github.com/toumorokoshi), Google
 
-*For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#approver).*
+*For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver).*
 
 Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-telemetry/teams/python-maintainers)):
 
 - [Alex Boten](https://github.com/codeboten), Lightstep
 - [Leighton Chen](https://github.com/lzchen), Microsoft
 
-*For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer).*
+*For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer).*
 
 ### Thanks to all the people who already contributed!
 
