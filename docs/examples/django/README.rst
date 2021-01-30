@@ -80,7 +80,6 @@ output similar to this one:
             "status_code": "OK"
         },
         "attributes": {
-            "component": "http",
             "http.method": "GET",
             "http.server_name": "localhost",
             "http.scheme": "http",
@@ -111,4 +110,4 @@ References
 
 * `Django <https://djangoproject.com/>`_
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
-* `OpenTelemetry Django extension <https://github.com/open-telemetry/opentelemetry-python-contib/tree/master/instrumentation/opentelemetry-instrumentation-django>`_
+* `OpenTelemetry Django extension <https://github.com/open-telemetry/opentelemetry-python-contib/tree/main/instrumentation/opentelemetry-instrumentation-django>`_

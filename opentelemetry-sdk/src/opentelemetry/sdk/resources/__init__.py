@@ -14,7 +14,7 @@
 
 """
 This package implements `OpenTelemetry Resources
-<https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/sdk.md#resource-sdk>`_:
+<https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/sdk.md#resource-sdk>`_:
 
     *A Resource is an immutable representation of the entity producing
     telemetry. For example, a process producing telemetry that is running in
@@ -49,7 +49,7 @@ exporter, which can send on this information as it sees fit.
     'service.instance.id': 'instance-12'}
 
 Note that the OpenTelemetry project documents certain `"standard attributes"
-<https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/semantic_conventions/README.md>`_
+<https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md>`_
 that have prescribed semantic meanings, for example ``service.name`` in the
 above example.
 
@@ -61,7 +61,7 @@ attributes to be passed to the SDK at process invocation. The attributes from
 `Resource.create`, meaning :envvar:`OTEL_RESOURCE_ATTRIBUTES` takes *lower*
 priority. Attributes should be in the format ``key1=value1,key2=value2``.
 Additional details are available `in the specification
-<https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/sdk.md#specifying-resource-information-via-an-environment-variable>`_.
+<https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/sdk.md#specifying-resource-information-via-an-environment-variable>`_.
 
 .. code-block:: console
 
@@ -156,8 +156,7 @@ OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
 
 
 class Resource:
-    """A Resource is an immutable representation of the entity producing telemetry as Attributes.
-    """
+    """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
 
     def __init__(self, attributes: Attributes):
         self._attributes = attributes.copy()
@@ -261,7 +260,7 @@ def get_aggregated_resources(
     initial_resource: typing.Optional[Resource] = None,
     timeout=5,
 ) -> "Resource":
-    """ Retrieves resources from detectors in the order that they were passed
+    """Retrieves resources from detectors in the order that they were passed
 
     :param detectors: List of resources in order of priority
     :param initial_resource: Static resource. This has highest priority
