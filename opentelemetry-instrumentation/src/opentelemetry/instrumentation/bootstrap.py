@@ -35,7 +35,6 @@ logger = getLogger(__file__)
 instrumentations = {
     "aiohttp-client": "opentelemetry-instrumentation-aiohttp-client>=0.15b0",
     "aiopg": "opentelemetry-instrumentation-aiopg>=0.15b0",
-    "asgi": "opentelemetry-instrumentation-asgi>=0.11b0",
     "asyncpg": "opentelemetry-instrumentation-asyncpg>=0.11b0",
     "boto": "opentelemetry-instrumentation-boto>=0.11b0",
     "botocore": "opentelemetry-instrumentation-botocore>=0.11b0",
@@ -61,14 +60,12 @@ instrumentations = {
     "sqlite3": "opentelemetry-instrumentation-sqlite3>=0.11b0",
     "starlette": "opentelemetry-instrumentation-starlette>=0.11b0",
     "tornado": "opentelemetry-instrumentation-tornado>=0.13b0",
-    "wsgi": "opentelemetry-instrumentation-wsgi>=0.8b0",
 }
 
 # relevant instrumentors and tracers to uninstall and check for conflicts for target libraries
 libraries = {
     "aiohttp-client": ("opentelemetry-instrumentation-aiohttp-client",),
     "aiopg": ("opentelemetry-instrumentation-aiopg",),
-    "asgi": ("opentelemetry-instrumentation-asgi",),
     "asyncpg": ("opentelemetry-instrumentation-asyncpg",),
     "boto": ("opentelemetry-instrumentation-boto",),
     "botocore": ("opentelemetry-instrumentation-botocore",),
@@ -94,7 +91,6 @@ libraries = {
     "sqlite3": ("opentelemetry-instrumentation-sqlite3",),
     "starlette": ("opentelemetry-instrumentation-starlette",),
     "tornado": ("opentelemetry-instrumentation-tornado",),
-    "wsgi": ("opentelemetry-instrumentation-wsgi",),
 }
 
 

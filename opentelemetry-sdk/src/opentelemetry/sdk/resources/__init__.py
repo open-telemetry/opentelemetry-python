@@ -86,6 +86,8 @@ from json import dumps
 
 import pkg_resources
 
+from opentelemetry.sdk.environment_variables import OTEL_RESOURCE_ATTRIBUTES
+
 LabelValue = typing.Union[str, bool, int, float]
 Attributes = typing.Dict[str, LabelValue]
 logger = logging.getLogger(__name__)
@@ -151,7 +153,6 @@ TELEMETRY_SDK_LANGUAGE = "telemetry.sdk.language"
 OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
     "opentelemetry-sdk"
 ).version
-OTEL_RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES"
 
 
 class Resource:

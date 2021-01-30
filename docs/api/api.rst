@@ -7,7 +7,7 @@ OpenTelemetry Python API
     :maxdepth: 1
 
     baggage
-    configuration
     context
     metrics
     trace
+    environment_variables

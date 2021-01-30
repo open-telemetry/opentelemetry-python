@@ -22,7 +22,6 @@ from unittest.mock import patch
 import opentelemetry.exporter.jaeger.gen.model_pb2 as model_pb2
 import opentelemetry.exporter.jaeger.translate.protobuf as pb_translator
 from opentelemetry import trace as trace_api
-from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger import JaegerSpanExporter
 from opentelemetry.exporter.jaeger.translate import (
     NAME_KEY,
@@ -30,6 +29,10 @@ from opentelemetry.exporter.jaeger.translate import (
     Translate,
 )
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_JAEGER_CERTIFICATE,
+    OTEL_EXPORTER_JAEGER_ENDPOINT,
+)
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import Status, StatusCode
@@ -49,16 +52,10 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self._test_span.start()
         self._test_span.end()
         # pylint: disable=protected-access
-        Configuration._reset()
-
-    def tearDown(self):
-        # pylint: disable=protected-access
-        Configuration._reset()
 
     def test_constructor_by_environment_variables(self):
         """Test using Environment Variables."""
         # pylint: disable=protected-access
-        Configuration._reset()
         service = "my-opentelemetry-jaeger"
 
         collector_endpoint = "localhost:14250"
@@ -66,8 +63,8 @@ class TestJaegerSpanExporter(unittest.TestCase):
         env_patch = patch.dict(
             "os.environ",
             {
-                "OTEL_EXPORTER_JAEGER_ENDPOINT": collector_endpoint,
-                "OTEL_EXPORTER_JAEGER_CERTIFICATE": os.path.dirname(__file__)
+                OTEL_EXPORTER_JAEGER_ENDPOINT: collector_endpoint,
+                OTEL_EXPORTER_JAEGER_CERTIFICATE: os.path.dirname(__file__)
                 + "/certs/cred.cert",
             },
         )

@@ -70,11 +70,12 @@ Example::
 
 import typing
 from logging import getLogger
+from os import environ
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.context.context import Context
+from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.propagators import composite
 from opentelemetry.trace.propagation import textmap
 
@@ -125,13 +126,15 @@ try:
 
     propagators = []
 
-    for propagator in (  # type: ignore
-        Configuration().get("PROPAGATORS", "tracecontext,baggage").split(",")  # type: ignore
-    ):
+    # Single use variable here to hack black and make lint pass
+    environ_propagators = environ.get(
+        OTEL_PROPAGATORS, "tracecontext,baggage",
+    )
 
+    for propagator in environ_propagators.split(","):
         propagators.append(  # type: ignore
             next(  # type: ignore
-                iter_entry_points("opentelemetry_propagator", propagator)  # type: ignore
+                iter_entry_points("opentelemetry_propagator", propagator)
             ).load()()
         )
 

@@ -15,11 +15,11 @@
 """OTLP Metrics Exporter"""
 
 import logging
+from os import environ
 from typing import List, Optional, Sequence, Type, TypeVar
 
 from grpc import ChannelCredentials
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
     _get_resource_data,
@@ -44,6 +44,13 @@ from opentelemetry.proto.metrics.v1.metrics_pb2 import (
 )
 from opentelemetry.proto.metrics.v1.metrics_pb2 import Metric as OTLPMetric
 from opentelemetry.proto.metrics.v1.metrics_pb2 import ResourceMetrics
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRIC_ENDPOINT,
+    OTEL_EXPORTER_OTLP_METRIC_HEADERS,
+    OTEL_EXPORTER_OTLP_METRIC_INSECURE,
+    OTEL_EXPORTER_OTLP_METRIC_TIMEOUT,
+)
 from opentelemetry.sdk.metrics import (
     Counter,
     SumObserver,
@@ -143,26 +150,30 @@ class OTLPMetricsExporter(
         timeout: Optional[int] = None,
     ):
         if insecure is None:
-            insecure = Configuration().EXPORTER_OTLP_METRIC_INSECURE
+            insecure = environ.get(OTEL_EXPORTER_OTLP_METRIC_INSECURE)
 
         if (
             not insecure
-            and Configuration().EXPORTER_OTLP_METRIC_CERTIFICATE is not None
+            and environ.get(OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE) is not None
         ):
             credentials = credentials or _load_credential_from_file(
-                Configuration().EXPORTER_OTLP_METRIC_CERTIFICATE
+                environ.get(OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE)
             )
+
+        environ_timeout = environ.get(OTEL_EXPORTER_OTLP_METRIC_TIMEOUT)
+        environ_timeout = (
+            int(environ_timeout) if environ_timeout is not None else None
+        )
 
         super().__init__(
             **{
                 "endpoint": endpoint
-                or Configuration().EXPORTER_OTLP_METRIC_ENDPOINT,
+                or environ.get(OTEL_EXPORTER_OTLP_METRIC_ENDPOINT),
                 "insecure": insecure,
                 "credentials": credentials,
                 "headers": headers
-                or Configuration().EXPORTER_OTLP_METRIC_HEADERS,
-                "timeout": timeout
-                or Configuration().EXPORTER_OTLP_METRIC_TIMEOUT,
+                or environ.get(OTEL_EXPORTER_OTLP_METRIC_HEADERS),
+                "timeout": timeout or environ_timeout,
             }
         )
 

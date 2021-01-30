@@ -12,16 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import environ
-
-from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
-
-
-def pytest_sessionstart(session):
-    # pylint: disable=unused-argument
-    environ[OTEL_PYTHON_CONTEXT] = "contextvars_context"
-
-
-def pytest_sessionfinish(session):
-    # pylint: disable=unused-argument
-    environ.pop(OTEL_PYTHON_CONTEXT)
+OTEL_PROPAGATORS = "OTEL_PROPAGATORS"
+OTEL_PYTHON_CONTEXT = "OTEL_PYTHON_CONTEXT"
+OTEL_PYTHON_DISABLED_INSTRUMENTATIONS = "OTEL_PYTHON_DISABLED_INSTRUMENTATIONS"
+OTEL_PYTHON_IDS_GENERATOR = "OTEL_PYTHON_IDS_GENERATOR"
+OTEL_PYTHON_SERVICE_NAME = "OTEL_PYTHON_SERVICE_NAME"
+OTEL_TRACE_EXPORTER = "OTEL_TRACE_EXPORTER"
+OTEL_METRICS_EXPORTER = "OTEL_METRICS_EXPORTER"

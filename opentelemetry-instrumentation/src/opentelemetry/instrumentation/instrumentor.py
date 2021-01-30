@@ -58,19 +58,11 @@ class BaseInstrumentor(ABC):
         """Instrument the library
 
         This method will be called without any optional arguments by the
-        ``opentelemetry-instrument`` command. The configuration of
-        the instrumentation when done in this way should be done by previously
-        setting the configuration (using environment variables or any other
-        mechanism) that will be used later by the code in the ``instrument``
-        implementation via the global ``Configuration`` object.
-
-        The ``instrument`` methods ``kwargs`` should default to values from the
-        ``Configuration`` object.
+        ``opentelemetry-instrument`` command.
 
         This means that calling this method directly without passing any
         optional values should do the very same thing that the
-        ``opentelemetry-instrument`` command does. This approach is
-        followed because the ``Configuration`` object is immutable.
+        ``opentelemetry-instrument`` command does.
         """
 
         if not self._is_instrumented:
