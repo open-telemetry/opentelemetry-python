@@ -25,7 +25,7 @@ import requests
 
 from opentelemetry import trace
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
-from opentelemetry.instrumentation.wsgi import OpenTelemetryMiddleware
+from opentelemetry.util.http.wsgi import OpenTelemetryMiddleware
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
