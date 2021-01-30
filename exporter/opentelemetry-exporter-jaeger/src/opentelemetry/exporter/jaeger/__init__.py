@@ -65,24 +65,14 @@ API
 """
 # pylint: disable=protected-access
 
-import base64
 import logging
-import socket
-from typing import Optional, Union
+from os import environ
+from typing import Optional
 
-from grpc import (
-    ChannelCredentials,
-    insecure_channel,
-    secure_channel,
-    ssl_channel_credentials,
-)
-from thrift.protocol import TBinaryProtocol, TCompactProtocol
-from thrift.transport import THttpClient, TTransport
+from grpc import ChannelCredentials, insecure_channel, secure_channel
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger import util
 from opentelemetry.exporter.jaeger.gen import model_pb2
-from opentelemetry.exporter.jaeger.gen.agent import Agent as agent
 from opentelemetry.exporter.jaeger.gen.collector_pb2 import PostSpansRequest
 from opentelemetry.exporter.jaeger.gen.collector_pb2_grpc import (
     CollectorServiceStub,
@@ -92,9 +82,14 @@ from opentelemetry.exporter.jaeger.send.thrift import AgentClientUDP, Collector
 from opentelemetry.exporter.jaeger.translate import Translate
 from opentelemetry.exporter.jaeger.translate.protobuf import ProtobufTranslator
 from opentelemetry.exporter.jaeger.translate.thrift import ThriftTranslator
-from opentelemetry.sdk.trace.export import Span, SpanExporter, SpanExportResult
-from opentelemetry.trace import SpanKind
-from opentelemetry.trace.status import StatusCode
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_JAEGER_AGENT_HOST,
+    OTEL_EXPORTER_JAEGER_AGENT_PORT,
+    OTEL_EXPORTER_JAEGER_ENDPOINT,
+    OTEL_EXPORTER_JAEGER_PASSWORD,
+    OTEL_EXPORTER_JAEGER_USER,
+)
+from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
 DEFAULT_AGENT_HOST_NAME = "localhost"
 DEFAULT_AGENT_PORT = 6831
@@ -142,12 +137,18 @@ class JaegerSpanExporter(SpanExporter):
         self.service_name = service_name
         self.agent_host_name = _parameter_setter(
             param=agent_host_name,
-            env_variable=Configuration().EXPORTER_JAEGER_AGENT_HOST,
+            env_variable=environ.get(OTEL_EXPORTER_JAEGER_AGENT_HOST),
             default=DEFAULT_AGENT_HOST_NAME,
         )
+
+        environ_agent_port = environ.get(OTEL_EXPORTER_JAEGER_AGENT_PORT)
+        environ_agent_port = (
+            int(environ_agent_port) if environ_agent_port is not None else None
+        )
+
         self.agent_port = _parameter_setter(
             param=agent_port,
-            env_variable=Configuration().EXPORTER_JAEGER_AGENT_PORT,
+            env_variable=environ_agent_port,
             default=DEFAULT_AGENT_PORT,
         )
         self._agent_client = AgentClientUDP(
@@ -155,17 +156,17 @@ class JaegerSpanExporter(SpanExporter):
         )
         self.collector_endpoint = _parameter_setter(
             param=collector_endpoint,
-            env_variable=Configuration().EXPORTER_JAEGER_ENDPOINT,
+            env_variable=environ.get(OTEL_EXPORTER_JAEGER_ENDPOINT),
             default=None,
         )
         self.username = _parameter_setter(
             param=username,
-            env_variable=Configuration().EXPORTER_JAEGER_USER,
+            env_variable=environ.get(OTEL_EXPORTER_JAEGER_USER),
             default=None,
         )
         self.password = _parameter_setter(
             param=password,
-            env_variable=Configuration().EXPORTER_JAEGER_PASSWORD,
+            env_variable=environ.get(OTEL_EXPORTER_JAEGER_PASSWORD),
             default=None,
         )
         self._collector = None
