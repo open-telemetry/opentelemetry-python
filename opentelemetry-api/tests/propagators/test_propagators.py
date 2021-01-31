@@ -18,7 +18,7 @@ from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from opentelemetry.baggage.propagation import BaggagePropagator
-from opentelemetry.configuration import Configuration
+from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.trace.propagation.tracecontext import (
     TraceContextTextMapPropagator,
 )
@@ -44,15 +44,12 @@ class TestPropagators(TestCase):
 
         reload(opentelemetry.propagators)
 
-    @patch.dict(environ, {"OTEL_PROPAGATORS": "a,b,c"})
+    @patch.dict(environ, {OTEL_PROPAGATORS: "a,b,c"})
     @patch("opentelemetry.propagators.composite.CompositeHTTPPropagator")
     @patch("pkg_resources.iter_entry_points")
     def test_non_default_propagators(
         self, mock_iter_entry_points, mock_compositehttppropagator
     ):
-
-        Configuration._reset()
-
         def iter_entry_points_mock(_, propagator):
             return iter(
                 [

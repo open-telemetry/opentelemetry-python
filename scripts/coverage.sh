@@ -36,7 +36,7 @@ cov instrumentation/opentelemetry-instrumentation-flask
 cov instrumentation/opentelemetry-instrumentation-requests
 cov exporter/opentelemetry-exporter-jaeger
 cov instrumentation/opentelemetry-instrumentation-opentracing-shim
-cov instrumentation/opentelemetry-instrumentation-wsgi
+cov util/opentelemetry-util-http
 cov exporter/opentelemetry-exporter-zipkin
 
 # aiohttp is only supported on Python 3.5+.

@@ -17,11 +17,14 @@ from os import environ
 from unittest import TestCase
 from unittest.mock import patch
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.distro import (
     _get_ids_generator,
     _import_ids_generator,
     _init_tracing,
+)
+from opentelemetry.environment_variables import (
+    OTEL_PYTHON_IDS_GENERATOR,
+    OTEL_PYTHON_SERVICE_NAME,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace.ids_generator import (
@@ -99,8 +102,7 @@ class TestTraceInit(TestCase):
 
     # pylint: disable=protected-access
     def test_trace_init_default(self):
-        environ["OTEL_SERVICE_NAME"] = "my-test-service"
-        Configuration._reset()
+        environ[OTEL_PYTHON_SERVICE_NAME] = "my-test-service"
         _init_tracing({"zipkin": Exporter}, RandomIdsGenerator)
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
@@ -114,8 +116,7 @@ class TestTraceInit(TestCase):
         )
 
     def test_trace_init_otlp(self):
-        environ["OTEL_SERVICE_NAME"] = "my-otlp-test-service"
-        Configuration._reset()
+        environ[OTEL_PYTHON_SERVICE_NAME] = "my-otlp-test-service"
         _init_tracing({"otlp": OTLPExporter}, RandomIdsGenerator)
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
@@ -129,9 +130,9 @@ class TestTraceInit(TestCase):
             provider.resource.attributes.get("service.name"),
             "my-otlp-test-service",
         )
-        del environ["OTEL_SERVICE_NAME"]
+        del environ[OTEL_PYTHON_SERVICE_NAME]
 
-    @patch.dict(environ, {"OTEL_IDS_GENERATOR": "custom_ids_generator"})
+    @patch.dict(environ, {OTEL_PYTHON_IDS_GENERATOR: "custom_ids_generator"})
     @patch("opentelemetry.distro.IdsGenerator", new=IdsGenerator)
     @patch("opentelemetry.distro.iter_entry_points")
     def test_trace_init_custom_ids_generator(self, mock_iter_entry_points):
@@ -140,7 +141,6 @@ class TestTraceInit(TestCase):
                 IterEntryPoint("custom_ids_generator", CustomIdsGenerator)
             ]
         )
-        Configuration._reset()
         ids_generator_name = _get_ids_generator()
         ids_generator = _import_ids_generator(ids_generator_name)
         _init_tracing({}, ids_generator)
