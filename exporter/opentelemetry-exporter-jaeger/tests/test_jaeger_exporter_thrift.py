@@ -250,7 +250,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         otel_spans[0].set_attribute("key_string", "hello_world")
         otel_spans[0].set_attribute("key_float", 111.22)
         otel_spans[0].set_attribute("key_tuple", ("tuple_element",))
-        otel_spans[0].resource = Resource(
+        otel_spans[0]._resource = Resource(  # pylint: disable=protected-member
             attributes={"key_resource": "some_resource"}
         )
         otel_spans[0].set_status(
@@ -259,11 +259,11 @@ class TestJaegerSpanExporter(unittest.TestCase):
         otel_spans[0].end(end_time=end_times[0])
 
         otel_spans[1].start(start_time=start_times[1])
-        otel_spans[1].resource = Resource({})
+        otel_spans[1]._resource = Resource({})  # pylint: disable=protected-member
         otel_spans[1].end(end_time=end_times[1])
 
         otel_spans[2].start(start_time=start_times[2])
-        otel_spans[2].resource = Resource({})
+        otel_spans[2]._resource = Resource({})  # pylint: disable=protected-member
         otel_spans[2].set_status(Status(StatusCode.OK, "Example description"))
         otel_spans[2].end(end_time=end_times[2])
         otel_spans[2].instrumentation_info = InstrumentationInfo(
