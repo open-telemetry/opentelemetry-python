@@ -24,7 +24,7 @@ from typing import Optional
 
 from opentelemetry.configuration import Configuration
 from opentelemetry.context import Context, attach, detach, set_value
-from opentelemetry.sdk.trace import Span, SpanProcessor
+from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
 from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
@@ -45,7 +45,9 @@ class SpanExporter:
     `SimpleExportSpanProcessor` or a `BatchExportSpanProcessor`.
     """
 
-    def export(self, spans: typing.Sequence[Span]) -> "SpanExportResult":
+    def export(
+        self, spans: typing.Sequence[ReadableSpan]
+    ) -> "SpanExportResult":
         """Exports a batch of telemetry data.
 
         Args:
@@ -77,7 +79,7 @@ class SimpleExportSpanProcessor(SpanProcessor):
     ) -> None:
         pass
 
-    def on_end(self, span: Span) -> None:
+    def on_end(self, span: ReadableSpan) -> None:
         if not span.context.trace_flags.sampled:
             return
         token = attach(set_value("suppress_instrumentation", True))
@@ -181,7 +183,7 @@ class BatchExportSpanProcessor(SpanProcessor):
     ) -> None:
         pass
 
-    def on_end(self, span: Span) -> None:
+    def on_end(self, span: ReadableSpan) -> None:
         if self.done:
             logger.warning("Already shutdown, dropping span.")
             return
@@ -325,7 +327,7 @@ class BatchExportSpanProcessor(SpanProcessor):
         return idx
 
     def _drain_queue(self):
-        """"Export all elements until queue is empty.
+        """Export all elements until queue is empty.
 
         Can only be called from the worker thread context because it invokes
         `export` that is not thread safe.
@@ -374,14 +376,16 @@ class ConsoleSpanExporter(SpanExporter):
         self,
         service_name: Optional[str] = None,
         out: typing.IO = sys.stdout,
-        formatter: typing.Callable[[Span], str] = lambda span: span.to_json()
+        formatter: typing.Callable[
+            [ReadableSpan], str
+        ] = lambda span: span.to_json()
         + os.linesep,
     ):
         self.out = out
         self.formatter = formatter
         self.service_name = service_name
 
-    def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
+    def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:
         for span in spans:
             self.out.write(self.formatter(span))
         self.out.flush()

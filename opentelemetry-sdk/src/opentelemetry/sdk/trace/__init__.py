@@ -89,7 +89,7 @@ class SpanProcessor:
             parent_context: The parent context of the span that just started.
         """
 
-    def on_end(self, span: "Span") -> None:
+    def on_end(self, span: "ReadableSpan") -> None:
         """Called when a :class:`opentelemetry.trace.Span` is ended.
 
         This method is called synchronously on the thread that ends the
@@ -100,8 +100,7 @@ class SpanProcessor:
         """
 
     def shutdown(self) -> None:
-        """Called when a :class:`opentelemetry.sdk.trace.Tracer` is shutdown.
-        """
+        """Called when a :class:`opentelemetry.sdk.trace.Tracer` is shutdown."""
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Export all ended spans to the configured Exporter that have not yet
@@ -143,7 +142,7 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
         for sp in self._span_processors:
             sp.on_start(span, parent_context=parent_context)
 
-    def on_end(self, span: "Span") -> None:
+    def on_end(self, span: "ReadableSpan") -> None:
         for sp in self._span_processors:
             sp.on_end(span)
 
@@ -228,7 +227,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             lambda sp: sp.on_start, span, parent_context=parent_context
         )
 
-    def on_end(self, span: "Span") -> None:
+    def on_end(self, span: "ReadableSpan") -> None:
         self._submit_and_await(lambda sp: sp.on_end, span)
 
     def shutdown(self) -> None:
@@ -381,7 +380,7 @@ def _check_span_ended(func):
     def wrapper(self, *args, **kwargs):
         already_ended = False
         with self._lock:  # pylint: disable=protected-access
-            if self.end_time is None:
+            if self._end_time is None:
                 func(self, *args, **kwargs)
             else:
                 already_ended = True
@@ -392,7 +391,58 @@ def _check_span_ended(func):
     return wrapper
 
 
-class Span(trace_api.Span):
+class ReadableSpan:
+    """Provides read-only access to span attributes"""
+
+    _name
+    _context
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def context(self):
+        return self._context
+
+    @property
+    def kind(self):
+        return self._kind
+
+    @property
+    def parent_id(self):
+        return self._parent_id
+
+    @property
+    def start_time(self):
+        return self._start_time
+
+    @property
+    def end_time(self):
+        return self._end_time
+
+    @property
+    def status(self):
+        return self._status
+
+    @property
+    def attributes(self):
+        return self._attributes
+
+    @property
+    def events(self):
+        return self._events
+
+    @property
+    def links(self):
+        return self._links
+
+    @property
+    def resource(self):
+        return self._resource
+
+
+class Span(trace_api.Span, ReadableSpan):
     """See `opentelemetry.trace.Span`.
 
     Users should create `Span` objects via the `Tracer` instead of this
@@ -437,29 +487,29 @@ class Span(trace_api.Span):
         set_status_on_exception: bool = True,
     ) -> None:
 
-        self.name = name
-        self.context = context
+        self._name = name
+        self._context = context
         self.parent = parent
         self.sampler = sampler
         self.trace_config = trace_config
-        self.resource = resource
-        self.kind = kind
+        self._resource = resource
+        self._kind = kind
         self._record_exception = record_exception
         self._set_status_on_exception = set_status_on_exception
 
         self.span_processor = span_processor
-        self.status = Status(StatusCode.UNSET)
+        self._status = Status(StatusCode.UNSET)
         self._lock = threading.Lock()
 
         _filter_attribute_values(attributes)
         if not attributes:
-            self.attributes = self._new_attributes()
+            self._attributes = self._new_attributes()
         else:
-            self.attributes = BoundedDict.from_map(
+            self._attributes = BoundedDict.from_map(
                 SPAN_ATTRIBUTE_COUNT_LIMIT, attributes
             )
 
-        self.events = self._new_events()
+        self._events = self._new_events()
         if events:
             for event in events:
                 _filter_attribute_values(event.attributes)
@@ -467,28 +517,20 @@ class Span(trace_api.Span):
                 event._attributes = _create_immutable_attributes(
                     event.attributes
                 )
-                self.events.append(event)
+                self._events.append(event)
 
         if links is None:
-            self.links = self._new_links()
+            self._links = self._new_links()
         else:
-            self.links = BoundedList.from_seq(SPAN_LINK_COUNT_LIMIT, links)
+            self._links = BoundedList.from_seq(SPAN_LINK_COUNT_LIMIT, links)
 
         self._end_time = None  # type: Optional[int]
         self._start_time = None  # type: Optional[int]
         self.instrumentation_info = instrumentation_info
 
-    @property
-    def start_time(self):
-        return self._start_time
-
-    @property
-    def end_time(self):
-        return self._end_time
-
     def __repr__(self):
         return '{}(name="{}", context={})'.format(
-            type(self).__name__, self.name, self.context
+            type(self).__name__, self._name, self._context
         )
 
     @staticmethod
@@ -550,44 +592,44 @@ class Span(trace_api.Span):
                 parent_id = trace_api.format_span_id(self.parent.span_id)
 
         start_time = None
-        if self.start_time:
-            start_time = util.ns_to_iso_str(self.start_time)
+        if self._start_time:
+            start_time = util.ns_to_iso_str(self._start_time)
 
         end_time = None
-        if self.end_time:
-            end_time = util.ns_to_iso_str(self.end_time)
+        if self._end_time:
+            end_time = util.ns_to_iso_str(self._end_time)
 
-        if self.status is not None:
+        if self._status is not None:
             status = OrderedDict()
-            status["status_code"] = str(self.status.status_code.name)
-            if self.status.description:
-                status["description"] = self.status.description
+            status["status_code"] = str(self._status.status_code.name)
+            if self._status.description:
+                status["description"] = self._status.description
 
         f_span = OrderedDict()
 
-        f_span["name"] = self.name
-        f_span["context"] = self._format_context(self.context)
+        f_span["name"] = self._name
+        f_span["context"] = self._format_context(self._context)
         f_span["kind"] = str(self.kind)
         f_span["parent_id"] = parent_id
         f_span["start_time"] = start_time
         f_span["end_time"] = end_time
-        if self.status is not None:
+        if self._status is not None:
             f_span["status"] = status
-        f_span["attributes"] = self._format_attributes(self.attributes)
-        f_span["events"] = self._format_events(self.events)
-        f_span["links"] = self._format_links(self.links)
-        f_span["resource"] = self.resource.attributes
+        f_span["attributes"] = self._format_attributes(self._attributes)
+        f_span["events"] = self._format_events(self._events)
+        f_span["links"] = self._format_links(self._links)
+        f_span["resource"] = self._resource.attributes
 
         return json.dumps(f_span, indent=indent)
 
     def get_span_context(self):
-        return self.context
+        return self._context
 
     def set_attributes(
         self, attributes: Dict[str, types.AttributeValue]
     ) -> None:
         with self._lock:
-            if self.end_time is not None:
+            if self._end_time is not None:
                 logger.warning("Setting attribute on ended span.")
                 return
 
@@ -608,14 +650,14 @@ class Span(trace_api.Span):
                     except ValueError:
                         logger.warning("Byte attribute could not be decoded.")
                         return
-                self.attributes[key] = value
+                self._attributes[key] = value
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         return self.set_attributes({key: value})
 
     @_check_span_ended
     def _add_event(self, event: EventBase) -> None:
-        self.events.append(event)
+        self._events.append(event)
 
     def add_event(
         self,
@@ -639,7 +681,7 @@ class Span(trace_api.Span):
         parent_context: Optional[context_api.Context] = None,
     ) -> None:
         with self._lock:
-            if self.start_time is not None:
+            if self._start_time is not None:
                 logger.warning("Calling start() on a started span.")
                 return
             self._start_time = (
@@ -650,9 +692,9 @@ class Span(trace_api.Span):
 
     def end(self, end_time: Optional[int] = None) -> None:
         with self._lock:
-            if self.start_time is None:
+            if self._start_time is None:
                 raise RuntimeError("Calling end() on a not started span.")
-            if self.end_time is not None:
+            if self._end_time is not None:
                 logger.warning("Calling end() on an ended span.")
                 return
 
@@ -662,14 +704,14 @@ class Span(trace_api.Span):
 
     @_check_span_ended
     def update_name(self, name: str) -> None:
-        self.name = name
+        self._name = name
 
     def is_recording(self) -> bool:
         return self._end_time is None
 
     @_check_span_ended
     def set_status(self, status: trace_api.Status) -> None:
-        self.status = status
+        self._status = status
 
     def __exit__(
         self,
@@ -686,7 +728,7 @@ class Span(trace_api.Span):
             # Records status if span is used as context manager
             # i.e. with tracer.start_span() as span:
             if (
-                self.status.status_code is StatusCode.UNSET
+                self._status.status_code is StatusCode.UNSET
                 and self._set_status_on_exception
             ):
                 self.set_status(
@@ -880,7 +922,7 @@ class Tracer(trace_api.Tracer):
                 # Records status if use_span is used
                 # i.e. with tracer.start_as_current_span() as span:
                 if (
-                    span.status.status_code is StatusCode.UNSET
+                    span._status.status_code is StatusCode.UNSET
                     and span._set_status_on_exception
                 ):
                     span.set_status(
