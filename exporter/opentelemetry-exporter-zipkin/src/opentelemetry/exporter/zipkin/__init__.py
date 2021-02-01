@@ -29,7 +29,6 @@ v2 json, v2 protobuf).
 
 .. envvar:: OTEL_EXPORTER_ZIPKIN_SERVICE_NAME
 .. envvar:: OTEL_EXPORTER_ZIPKIN_ENDPOINT
-.. envvar:: OTEL_EXPORTER_ZIPKIN_ENCODING
 
 .. code:: python
 
@@ -74,10 +73,6 @@ name from service discovery.
 exporter will send data. This may include a path (e.g.
 http://example.com:9411/api/v2/spans).
 
-:envvar:`OTEL_EXPORTER_ZIPKIN_ENCODING`: transport interchange format
-encoder to use when sending data. Refer to
-opentelemetry.exporter.zipkin.encoder.Encoding for supported options.
-
 API
 ---
 """
@@ -98,7 +93,6 @@ from opentelemetry.trace import Span
 
 DEFAULT_SERVICE_NAME = "unknown"
 DEFAULT_ENDPOINT = "http://localhost:9411/api/v2/spans"
-DEFAULT_ENCODING = Encoding.V2_JSON
 REQUESTS_SUCCESS_STATUS_CODES = (200, 202)
 
 logger = logging.getLogger(__name__)
@@ -109,7 +103,7 @@ class ZipkinSpanExporter(SpanExporter):
         self,
         service_name: Optional[str] = None,
         endpoint: Optional[str] = None,
-        encoding: Optional[Encoding] = None,
+        encoding: Optional[Encoding] = Encoding.V2_JSON,
         local_node_ipv4: IpInput = None,
         local_node_ipv6: IpInput = None,
         local_node_port: Optional[int] = None,
@@ -129,13 +123,6 @@ class ZipkinSpanExporter(SpanExporter):
                 Configuration().EXPORTER_ZIPKIN_ENDPOINT or DEFAULT_ENDPOINT
             )
         self.endpoint = endpoint
-
-        if encoding is None:
-            env_encoding = Configuration().EXPORTER_ZIPKIN_ENCODING
-            if env_encoding is not None:
-                encoding = Encoding(env_encoding)
-            else:
-                encoding = DEFAULT_ENCODING
 
         if encoding == Encoding.V1_JSON:
             self.encoder = JsonV1Encoder(max_tag_value_length)

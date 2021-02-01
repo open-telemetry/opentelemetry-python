@@ -43,8 +43,6 @@ class TestZipkinSpanExporter(unittest.TestCase):
             del os.environ["OTEL_EXPORTER_ZIPKIN_SERVICE_NAME"]
         if "OTEL_EXPORTER_ZIPKIN_ENDPOINT" in os.environ:
             del os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"]
-        if "OTEL_EXPORTER_ZIPKIN_ENCODING" in os.environ:
-            del os.environ["OTEL_EXPORTER_ZIPKIN_ENCODING"]
         Configuration()._reset()  # pylint: disable=protected-access
 
     def test_constructor_default(self):
@@ -61,15 +59,12 @@ class TestZipkinSpanExporter(unittest.TestCase):
     def test_constructor_env_vars(self):
         os_service_name = "os-env-service-name"
         os_endpoint = "https://foo:9911/path"
-        os_encoding = Encoding.V2_PROTOBUF
 
         os.environ["OTEL_EXPORTER_ZIPKIN_SERVICE_NAME"] = os_service_name
         os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = os_endpoint
-        os.environ["OTEL_EXPORTER_ZIPKIN_ENCODING"] = os_encoding.value
 
         exporter = ZipkinSpanExporter()
 
-        self.assertIsInstance(exporter.encoder, ProtobufEncoder)
         self.assertEqual(exporter.endpoint, os_endpoint)
         self.assertEqual(exporter.local_node.service_name, os_service_name)
         self.assertEqual(exporter.local_node.ipv4, None)
@@ -109,10 +104,8 @@ class TestZipkinSpanExporter(unittest.TestCase):
         """
         os_service_name = "os-env-service-name"
         os_endpoint = "https://os.env.param:9911/path"
-        os_encoding = Encoding.V1_JSON
         os.environ["OTEL_EXPORTER_ZIPKIN_SERVICE_NAME"] = os_service_name
         os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = os_endpoint
-        os.environ["OTEL_EXPORTER_ZIPKIN_ENCODING"] = os_encoding.value
 
         constructor_param_service_name = "exporter-param-service-name"
         constructor_param_endpoint = "https://constructor.param:9911/path"
