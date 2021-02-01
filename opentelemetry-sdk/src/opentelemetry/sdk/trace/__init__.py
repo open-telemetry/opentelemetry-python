@@ -394,9 +394,6 @@ def _check_span_ended(func):
 class ReadableSpan:
     """Provides read-only access to span attributes"""
 
-    _name
-    _context
-
     @property
     def name(self):
         return self._name
