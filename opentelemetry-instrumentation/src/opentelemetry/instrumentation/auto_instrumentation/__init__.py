@@ -20,6 +20,13 @@ from os import environ, execl, getcwd
 from os.path import abspath, dirname, pathsep
 from shutil import which
 
+from opentelemetry.environment_variables import (
+    OTEL_METRICS_EXPORTER,
+    OTEL_PYTHON_IDS_GENERATOR,
+    OTEL_PYTHON_SERVICE_NAME,
+    OTEL_TRACE_EXPORTER,
+)
+
 logger = getLogger(__file__)
 
 
@@ -32,18 +39,28 @@ def parse_args():
     )
 
     parser.add_argument(
-        "-e",
-        "--exporter",
+        "--metrics-exporter",
         required=False,
         help="""
-        Uses the specified exporter to export spans or metrics.
+        Uses the specified exporter to export metrics.
         Accepts multiple exporters as comma separated values.
 
         Examples:
 
-            -e=otlp
-            -e=otlp_span,prometheus
-            -e=jaeger,otlp_metric
+            --metrics-exporter=otlp_metric
+        """,
+    )
+
+    parser.add_argument(
+        "--trace-exporter",
+        required=False,
+        help="""
+        Uses the specified exporter to export spans.
+        Accepts multiple exporters as comma separated values.
+
+        Examples:
+
+            --trace-exporter=jaeger
         """,
     )
 
@@ -78,12 +95,14 @@ def parse_args():
 
 
 def load_config_from_cli_args(args):
-    if args.exporter:
-        environ["OTEL_EXPORTER"] = args.exporter
+    if args.metrics_exporter:
+        environ[OTEL_METRICS_EXPORTER] = args.metrics_exporter
+    if args.trace_exporter:
+        environ[OTEL_TRACE_EXPORTER] = args.trace_exporter
     if args.service_name:
-        environ["OTEL_SERVICE_NAME"] = args.service_name
+        environ[OTEL_PYTHON_SERVICE_NAME] = args.service_name
     if args.ids_generator:
-        environ["OTEL_IDS_GENERATOR"] = args.ids_generator
+        environ[OTEL_PYTHON_IDS_GENERATOR] = args.ids_generator
 
 
 def run() -> None:

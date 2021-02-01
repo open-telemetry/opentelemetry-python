@@ -21,6 +21,7 @@ from os import environ
 from pkg_resources import iter_entry_points
 
 from opentelemetry.context.context import Context, RuntimeContext
+from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
 
 logger = logging.getLogger(__name__)
 _RUNTIME_CONTEXT = None  # type: typing.Optional[RuntimeContext]
@@ -50,7 +51,7 @@ def _load_runtime_context(func: _F) -> _F:
                 default_context = "contextvars_context"
 
                 configured_context = environ.get(
-                    "OTEL_CONTEXT", default_context
+                    OTEL_PYTHON_CONTEXT, default_context
                 )  # type: str
                 try:
                     _RUNTIME_CONTEXT = next(
