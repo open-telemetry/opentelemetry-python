@@ -39,19 +39,6 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--metrics-exporter",
-        required=False,
-        help="""
-        Uses the specified exporter to export metrics.
-        Accepts multiple exporters as comma separated values.
-
-        Examples:
-
-            --metrics-exporter=otlp_metric
-        """,
-    )
-
-    parser.add_argument(
         "--trace-exporter",
         required=False,
         help="""
@@ -95,8 +82,6 @@ def parse_args():
 
 
 def load_config_from_cli_args(args):
-    if args.metrics_exporter:
-        environ[OTEL_METRICS_EXPORTER] = args.metrics_exporter
     if args.trace_exporter:
         environ[OTEL_TRACE_EXPORTER] = args.trace_exporter
     if args.service_name:

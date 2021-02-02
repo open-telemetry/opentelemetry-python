@@ -20,10 +20,9 @@ from typing import TYPE_CHECKING, Union, cast
 from pkg_resources import iter_entry_points
 
 if TYPE_CHECKING:
-    from opentelemetry.metrics import MeterProvider
     from opentelemetry.trace import TracerProvider
 
-Provider = Union["TracerProvider", "MeterProvider"]
+Provider = Union["TracerProvider"]
 
 logger = getLogger(__name__)
 
@@ -56,10 +55,6 @@ def _load_provider(provider: str) -> Provider:
     except Exception:  # pylint: disable=broad-except
         logger.error("Failed to load configured provider %s", provider)
         raise
-
-
-def _load_meter_provider(provider: str) -> "MeterProvider":
-    return cast("MeterProvider", _load_provider(provider))
 
 
 def _load_trace_provider(provider: str) -> "TracerProvider":
