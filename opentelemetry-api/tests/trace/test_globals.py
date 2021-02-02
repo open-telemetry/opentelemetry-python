@@ -56,7 +56,7 @@ class TestGlobals(unittest.TestCase):
 
     @patch("opentelemetry.trace._load_trace_provider")
     def test_get_tracer_provider(self, load_trace_provider_mock: "MagicMock"):  # type: ignore
-        """trace.get_tracer should get or create a global tracer provider."""
+        """trace.get_tracer_provider should get or create a global tracer provider."""
 
         # Get before set
         load_trace_provider_mock.return_value = trace.DefaultTracerProvider()
