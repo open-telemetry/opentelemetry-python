@@ -430,15 +430,15 @@ class ReadableSpan:
 
     @property
     def attributes(self) -> types.Attributes:
-        return self._attributes
+        return MappingProxyType(self._attributes)
 
     @property
     def events(self) -> Sequence[Event]:
-        return self._events
+        return MappingProxyType(self._events)
 
     @property
     def links(self) -> Sequence[trace_api.Link]:
-        return self._links
+        return MappingProxyType(self._links)
 
     @property
     def resource(self) -> Resource:
@@ -776,7 +776,8 @@ class Span(trace_api.Span, ReadableSpan):
 class _Span(Span):
     """Protected implementation of `opentelemetry.trace.Span`.
 
-    This constructor should only be used internally.
+    This constructor exists to prevent the instantiation of the `Span` class
+    by other mechanisms than through the `Tracer`.
     """
 
 
