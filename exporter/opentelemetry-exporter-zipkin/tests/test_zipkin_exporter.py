@@ -39,7 +39,6 @@ from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanKind, TraceFlags
 from opentelemetry.trace.status import Status, StatusCode
-from pkg_resources import resource_exists
 
 
 class MockResponse:
