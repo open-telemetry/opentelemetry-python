@@ -39,6 +39,7 @@ from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanKind, TraceFlags
 from opentelemetry.trace.status import Status, StatusCode
+from pkg_resources import resource_exists
 
 
 class MockResponse:
@@ -189,20 +190,33 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 parent=parent_span_context,
                 events=(event,),
                 links=(link,),
+                resource=Resource({}),
             ),
             trace._Span(
-                name=span_names[1], context=parent_span_context, parent=None
+                name=span_names[1],
+                context=parent_span_context,
+                parent=None,
+                resource=Resource(
+                    attributes={"key_resource": "some_resource"}
+                ),
             ),
             trace._Span(
-                name=span_names[2], context=other_context, parent=None
+                name=span_names[2],
+                context=other_context,
+                parent=None,
+                resource=Resource(
+                    attributes={"key_resource": "some_resource"}
+                ),
             ),
             trace._Span(
-                name=span_names[3], context=other_context, parent=None
+                name=span_names[3],
+                context=other_context,
+                parent=None,
+                resource=Resource({}),
             ),
         ]
 
         otel_spans[0].start(start_time=start_times[0])
-        otel_spans[0]._resource = Resource({})  # pylint: disable=protected-member
         # added here to preserve order
         otel_spans[0].set_attribute("key_bool", False)
         otel_spans[0].set_attribute("key_string", "hello_world")
@@ -213,20 +227,13 @@ class TestZipkinSpanExporter(unittest.TestCase):
         otel_spans[0].end(end_time=end_times[0])
 
         otel_spans[1].start(start_time=start_times[1])
-        otel_spans[1]._resource = Resource(  # pylint: disable=protected-member
-            attributes={"key_resource": "some_resource"}
-        )
         otel_spans[1].end(end_time=end_times[1])
 
         otel_spans[2].start(start_time=start_times[2])
         otel_spans[2].set_attribute("key_string", "hello_world")
-        otel_spans[2]._resource = Resource(  # pylint: disable=protected-member
-            attributes={"key_resource": "some_resource"}
-        )
         otel_spans[2].end(end_time=end_times[2])
 
         otel_spans[3].start(start_time=start_times[3])
-        otel_spans[3]._resource = Resource({})  # pylint: disable=protected-member
         otel_spans[3].end(end_time=end_times[3])
         otel_spans[3].instrumentation_info = InstrumentationInfo(
             name="name", version="version"
@@ -359,10 +366,10 @@ class TestZipkinSpanExporter(unittest.TestCase):
             name=span_names[0],
             context=span_context,
             parent=parent_span_context,
+            resource=Resource({}),
         )
 
         otel_span.start(start_time=start_time)
-        otel_span._resource = Resource({})  # pylint: disable=protected-member
         otel_span.end(end_time=end_time)
 
         service_name = "test-service"
@@ -416,10 +423,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
         )
 
-        span = trace._Span(name="test-span", context=span_context,)
+        span = trace._Span(
+            name="test-span", context=span_context, resource=Resource({})
+        )
 
         span.start()
-        span._resource = Resource({})  # pylint: disable=protected-member
         # added here to preserve order
         span.set_attribute("string1", "v" * 500)
         span.set_attribute("string2", "v" * 50)
@@ -704,22 +712,35 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 name=span_names[0],
                 context=span_context,
                 parent=parent_span_context,
+                resource=Resource({}),
                 events=(event,),
                 links=(link,),
             ),
             trace._Span(
-                name=span_names[1], context=parent_span_context, parent=None
+                name=span_names[1],
+                context=parent_span_context,
+                parent=None,
+                resource=Resource(
+                    attributes={"key_resource": "some_resource"}
+                ),
             ),
             trace._Span(
-                name=span_names[2], context=other_context, parent=None
+                name=span_names[2],
+                context=other_context,
+                parent=None,
+                resource=Resource(
+                    attributes={"key_resource": "some_resource"}
+                ),
             ),
             trace._Span(
-                name=span_names[3], context=other_context, parent=None
+                name=span_names[3],
+                context=other_context,
+                parent=None,
+                resource=Resource({}),
             ),
         ]
 
         otel_spans[0].start(start_time=start_times[0])
-        otel_spans[0]._resource = Resource({})  # pylint: disable=protected-member
         # added here to preserve order
         otel_spans[0].set_attribute("key_bool", False)
         otel_spans[0].set_attribute("key_string", "hello_world")
@@ -730,21 +751,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
         otel_spans[0].end(end_time=end_times[0])
 
         otel_spans[1].start(start_time=start_times[1])
-        otel_spans[1]._resource = Resource(  # pylint: disable=protected-member
-            attributes={"key_resource": "some_resource"}
-        )
         otel_spans[1].set_status(Status(StatusCode.OK))
         otel_spans[1].end(end_time=end_times[1])
 
         otel_spans[2].start(start_time=start_times[2])
         otel_spans[2].set_attribute("key_string", "hello_world")
-        otel_spans[2]._resource = Resource(  # pylint: disable=protected-member
-            attributes={"key_resource": "some_resource"}
-        )
         otel_spans[2].end(end_time=end_times[2])
 
         otel_spans[3].start(start_time=start_times[3])
-        otel_spans[3]._resource = Resource({})  # pylint: disable=protected-member
         otel_spans[3].end(end_time=end_times[3])
         otel_spans[3].instrumentation_info = InstrumentationInfo(
             name="name", version="version"
@@ -869,10 +883,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
         )
 
-        span = trace._Span(name="test-span", context=span_context,)
+        span = trace._Span(
+            name="test-span", context=span_context, resource=Resource({})
+        )
 
         span.start()
-        span.resource = Resource({})
         # added here to preserve order
         span.set_attribute("k1", "v" * 500)
         span.set_attribute("k2", "v" * 50)

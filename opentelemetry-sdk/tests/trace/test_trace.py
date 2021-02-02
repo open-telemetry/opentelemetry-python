@@ -1237,8 +1237,7 @@ class TestSpanProcessor(unittest.TestCase):
             is_remote=False,
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
-        span = trace._Span("span-name", context)
-        span._resource = Resource({})  # pylint: disable=protected-access
+        span = trace._Span("span-name", context, resource=Resource({}))
 
         self.assertEqual(
             span.to_json(),
@@ -1274,8 +1273,7 @@ class TestSpanProcessor(unittest.TestCase):
             is_remote=False,
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
-        span = trace._Span("span-name", context)
-        span._resource = Resource({})  # pylint: disable=protected-access
+        span = trace._Span("span-name", context, resource=Resource({}))
         span.set_attribute("key", "value")
         span.add_event("event", {"key2": "value2"}, 123)
         date_str = ns_to_iso_str(123)

@@ -401,47 +401,47 @@ class ReadableSpan:
     """Provides read-only access to span attributes"""
 
     @property
-    def name(self):
+    def name(self) -> str:
         return self._name
 
     @property
-    def context(self):
+    def context(self) -> trace_api.SpanContext:
         return self._context
 
     @property
-    def kind(self):
+    def kind(self) -> trace_api.SpanKind:
         return self._kind
 
     @property
-    def parent_id(self):
-        return self._parent_id
+    def parent(self) -> Optional[trace_api.SpanContext]:
+        return self._parent
 
     @property
-    def start_time(self):
+    def start_time(self) -> Optional[int]:
         return self._start_time
 
     @property
-    def end_time(self):
+    def end_time(self) -> Optional[int]:
         return self._end_time
 
     @property
-    def status(self):
+    def status(self) -> trace_api.Status:
         return self._status
 
     @property
-    def attributes(self):
+    def attributes(self) -> types.Attributes:
         return self._attributes
 
     @property
-    def events(self):
+    def events(self) -> Sequence[Event]:
         return self._events
 
     @property
-    def links(self):
+    def links(self) -> Sequence[trace_api.Link]:
         return self._links
 
     @property
-    def resource(self):
+    def resource(self) -> Resource:
         return self._resource
 
 
@@ -492,7 +492,7 @@ class Span(trace_api.Span, ReadableSpan):
 
         self._name = name
         self._context = context
-        self.parent = parent
+        self._parent = parent
         self.sampler = sampler
         self.trace_config = trace_config
         self._resource = resource

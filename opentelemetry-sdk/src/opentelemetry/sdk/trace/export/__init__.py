@@ -28,7 +28,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_MAX_QUEUE_SIZE,
     OTEL_BSP_SCHEDULE_DELAY,
 )
-from opentelemetry.sdk.trace import ReadableSpan,Span, SpanProcessor
+from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
 from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
@@ -380,7 +380,9 @@ class ConsoleSpanExporter(SpanExporter):
         self,
         service_name: Optional[str] = None,
         out: typing.IO = sys.stdout,
-        formatter: typing.Callable[[ReadableSpan], str] = lambda span: span.to_json()
+        formatter: typing.Callable[
+            [ReadableSpan], str
+        ] = lambda span: span.to_json()
         + linesep,
     ):
         self.out = out
