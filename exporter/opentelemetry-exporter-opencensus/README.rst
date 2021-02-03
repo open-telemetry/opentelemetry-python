@@ -6,7 +6,7 @@ OpenCensus Exporter
 .. |pypi| image:: https://badge.fury.io/py/opentelemetry-exporter-opencensus.svg
    :target: https://pypi.org/project/opentelemetry-exporter-opencensus/
 
-This library allows to export traces and metrics using OpenCensus.
+This library allows to export traces using OpenCensus.
 
 Installation
 ------------

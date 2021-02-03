@@ -38,4 +38,3 @@ class TestDistribution(TestCase):
         self.assertIsNone(os.environ.get(OTEL_METRICS_EXPORTER))
         distro.configure()
         self.assertEqual("otlp_span", os.environ.get(OTEL_TRACE_EXPORTER))
-        self.assertEqual("otlp_metric", os.environ.get(OTEL_METRICS_EXPORTER))
