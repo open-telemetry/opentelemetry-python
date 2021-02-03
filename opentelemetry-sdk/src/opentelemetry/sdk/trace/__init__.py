@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+# pylint: disable=too-many-lines
 import abc
 import atexit
 import concurrent.futures
@@ -153,8 +153,7 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
             sp.on_end(span)
 
     def shutdown(self) -> None:
-        """Sequentially shuts down all underlying span processors.
-        """
+        """Sequentially shuts down all underlying span processors."""
         for sp in self._span_processors:
             sp.shutdown()
 
@@ -400,12 +399,36 @@ def _check_span_ended(func):
 class ReadableSpan:
     """Provides read-only access to span attributes"""
 
+    def __init__(
+        self,
+        name: str = None,
+        context: trace_api.SpanContext = None,
+        parent: Optional[trace_api.SpanContext] = None,
+        resource: Resource = Resource.create({}),
+        attributes: types.Attributes = None,
+        events: Sequence[Event] = None,
+        links: Sequence[trace_api.Link] = (),
+        kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
+        status: Status = Status(StatusCode.UNSET),
+    ) -> None:
+        self._name = name
+        self._context = context
+        self._kind = kind
+        self._parent = parent
+        self._start_time = None  # type: Optional[int]
+        self._end_time = None  # type: Optional[int]
+        self._attributes = attributes
+        self._events = events
+        self._links = links
+        self._resource = resource
+        self._status = status
+
     @property
     def name(self) -> str:
         return self._name
 
     @property
-    def context(self) -> trace_api.SpanContext:
+    def context(self):
         return self._context
 
     @property
@@ -489,19 +512,18 @@ class Span(trace_api.Span, ReadableSpan):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> None:
-
-        self._name = name
-        self._context = context
-        self._parent = parent
+        super().__init__(
+            name=name,
+            context=context,
+            parent=parent,
+            kind=kind,
+            resource=resource,
+        )
         self.sampler = sampler
         self.trace_config = trace_config
-        self._resource = resource
-        self._kind = kind
         self._record_exception = record_exception
         self._set_status_on_exception = set_status_on_exception
-
         self.span_processor = span_processor
-        self._status = Status(StatusCode.UNSET)
         self._lock = threading.Lock()
 
         _filter_attribute_values(attributes)
@@ -526,9 +548,6 @@ class Span(trace_api.Span, ReadableSpan):
             self._links = self._new_links()
         else:
             self._links = BoundedList.from_seq(SPAN_LINK_COUNT_LIMIT, links)
-
-        self._end_time = None  # type: Optional[int]
-        self._start_time = None  # type: Optional[int]
         self.instrumentation_info = instrumentation_info
 
     def __repr__(self):
@@ -678,6 +697,19 @@ class Span(trace_api.Span, ReadableSpan):
             )
         )
 
+    def _readable_span(self) -> ReadableSpan:
+        return ReadableSpan(
+            name=self._name,
+            context=self._context,
+            parent=self._parent,
+            resource=self._resource,
+            attributes=self._attributes,
+            events=self._events,
+            links=self._links,
+            kind=self.kind,
+            status=self._status,
+        )
+
     def start(
         self,
         start_time: Optional[int] = None,
@@ -703,7 +735,7 @@ class Span(trace_api.Span, ReadableSpan):
 
             self._end_time = end_time if end_time is not None else time_ns()
 
-        self.span_processor.on_end(self)
+        self.span_processor.on_end(self._readable_span())
 
     @_check_span_ended
     def update_name(self, name: str) -> None:
@@ -782,8 +814,7 @@ class _Span(Span):
 
 
 class Tracer(trace_api.Tracer):
-    """See `opentelemetry.trace.Tracer`.
-    """
+    """See `opentelemetry.trace.Tracer`."""
 
     def __init__(
         self,
@@ -945,8 +976,7 @@ class Tracer(trace_api.Tracer):
 
 
 class TracerProvider(trace_api.TracerProvider):
-    """See `opentelemetry.trace.TracerProvider`.
-    """
+    """See `opentelemetry.trace.TracerProvider`."""
 
     def __init__(
         self,
