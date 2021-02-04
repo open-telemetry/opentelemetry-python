@@ -16,7 +16,7 @@
 class InstrumentationInfo:
     """Immutable information about an instrumentation library module.
 
-    See `opentelemetry.trace.TracerProvider.get_tracer for the meaning of these
+    See `opentelemetry.trace.TracerProvider.get_tracer` for the meaning of these
     properties.
     """
 
