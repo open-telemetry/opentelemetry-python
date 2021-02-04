@@ -17,7 +17,6 @@ import unittest
 from contextlib import contextmanager
 
 from opentelemetry import trace as trace_api
-
 from opentelemetry.sdk.trace import TracerProvider, export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
