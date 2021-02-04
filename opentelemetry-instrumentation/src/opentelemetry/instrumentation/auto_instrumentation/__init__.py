@@ -21,7 +21,6 @@ from os.path import abspath, dirname, pathsep
 from shutil import which
 
 from opentelemetry.environment_variables import (
-    OTEL_METRICS_EXPORTER,
     OTEL_PYTHON_IDS_GENERATOR,
     OTEL_PYTHON_SERVICE_NAME,
     OTEL_TRACE_EXPORTER,

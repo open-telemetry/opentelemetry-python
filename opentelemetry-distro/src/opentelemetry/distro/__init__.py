@@ -21,7 +21,6 @@ from pkg_resources import iter_entry_points
 
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
-    OTEL_METRICS_EXPORTER,
     OTEL_PYTHON_IDS_GENERATOR,
     OTEL_PYTHON_SERVICE_NAME,
     OTEL_TRACE_EXPORTER,
@@ -73,7 +72,6 @@ def _get_exporter_names() -> Sequence[str]:
     if EXPORTER_OTLP in exporters:
         exporters.pop(EXPORTER_OTLP)
         exporters.add(EXPORTER_OTLP_SPAN)
-        exporters.add(EXPORTER_OTLP_METRIC)
 
     return list(exporters)
 
