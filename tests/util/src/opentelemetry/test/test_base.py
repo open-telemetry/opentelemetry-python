@@ -34,7 +34,7 @@ class TestBase(unittest.TestCase):
         # current tracer provider.
         trace_api._TRACER_PROVIDER = None  # pylint: disable=protected-access
         trace_api.set_tracer_provider(cls.tracer_provider)
- 
+
     @classmethod
     def tearDownClass(cls):
         # This is done because set_tracer_provider cannot override the

@@ -138,9 +138,7 @@ def _import_exporters(
             trace_exporters[exporter_name] = exporter_impl
         else:
             raise RuntimeError(
-                "{0} is not a trace exporter".format(
-                    exporter_name
-                )
+                "{0} is not a trace exporter".format(exporter_name)
             )
     return trace_exporters
 
