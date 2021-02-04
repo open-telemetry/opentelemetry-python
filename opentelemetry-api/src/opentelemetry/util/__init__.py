@@ -63,7 +63,7 @@ def _load_provider(
 
 
 def _load_trace_provider(provider: str) -> "TracerProvider":
-    return cast(
+    return cast(  # type: ignore
         "TracerProvider",
         _load_provider(OTEL_PYTHON_TRACER_PROVIDER, provider),
-    )  # type: ignore
+    )
