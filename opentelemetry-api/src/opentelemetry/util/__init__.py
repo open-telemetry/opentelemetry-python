@@ -58,4 +58,4 @@ def _load_provider(provider: str) -> Provider:
 
 
 def _load_trace_provider(provider: str) -> "TracerProvider":
-    return cast("TracerProvider", _load_provider(provider)) # type: ignore
+    return cast("TracerProvider", _load_provider(provider))  # type: ignore
