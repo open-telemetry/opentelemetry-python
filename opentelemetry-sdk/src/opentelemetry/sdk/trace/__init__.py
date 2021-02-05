@@ -409,6 +409,7 @@ class ReadableSpan:
         events: Sequence[Event] = None,
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
+        instrumentation_info: InstrumentationInfo = None,
         status: Status = Status(StatusCode.UNSET),
         start_time: Optional[int] = None,
         end_time: Optional[int] = None,
@@ -416,6 +417,7 @@ class ReadableSpan:
         self._name = name
         self._context = context
         self._kind = kind
+        self._instrumentation_info = instrumentation_info
         self._parent = parent
         self._start_time = start_time
         self._end_time = end_time
@@ -428,6 +430,9 @@ class ReadableSpan:
     @property
     def name(self) -> str:
         return self._name
+
+    def get_span_context(self):
+        return self._context
 
     @property
     def context(self):
@@ -468,6 +473,10 @@ class ReadableSpan:
     @property
     def resource(self) -> Resource:
         return self._resource
+
+    @property
+    def instrumentation_info(self) -> InstrumentationInfo:
+        return self._instrumentation_info
 
     def to_json(self, indent=4):
         parent_id = None
@@ -597,6 +606,7 @@ class Span(trace_api.Span, ReadableSpan):
             parent=parent,
             kind=kind,
             resource=resource,
+            instrumentation_info=instrumentation_info,
         )
         self.sampler = sampler
         self.trace_config = trace_config
@@ -627,7 +637,6 @@ class Span(trace_api.Span, ReadableSpan):
             self._links = self._new_links()
         else:
             self._links = BoundedList.from_seq(SPAN_LINK_COUNT_LIMIT, links)
-        self.instrumentation_info = instrumentation_info
 
     def __repr__(self):
         return '{}(name="{}", context={})'.format(
@@ -712,6 +721,7 @@ class Span(trace_api.Span, ReadableSpan):
             status=self._status,
             start_time=self._start_time,
             end_time=self._end_time,
+            instrumentation_info=self._instrumentation_info,
         )
 
     def start(
