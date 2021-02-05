@@ -30,7 +30,7 @@ from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleExportSpanProcessor,
 )
-from opentelemetry.util.http.wsgi import OpenTelemetryMiddleware
+from opentelemetry.instrumentation.wsgi import OpenTelemetryMiddleware
 
 # FIXME This could likely be avoided by integrating this script into the
 # standard test running mechanisms.

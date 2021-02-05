@@ -21,7 +21,7 @@ from opentelemetry.sdk.trace.export import (
     SimpleExportSpanProcessor,
 )
 from opentelemetry.trace.propagation.textmap import DictGetter
-from opentelemetry.util.http.wsgi import collect_request_attributes
+from opentelemetry.instrumentation.wsgi import collect_request_attributes
 
 app = Flask(__name__)
 
