@@ -109,6 +109,10 @@ class TestExecl(TestCase):
 class TestArgs(TestCase):
     @patch("opentelemetry.instrumentation.auto_instrumentation.execl")
     def test_exporter(self, _):  # pylint: disable=no-self-use
+        with patch("sys.argv", ["instrument", "2"]):
+            auto_instrumentation.run()
+            self.assertIsNone(environ.get(OTEL_TRACE_EXPORTER))
+
         with patch(
             "sys.argv", ["instrument", "--trace-exporter", "jaeger", "1", "2"]
         ):

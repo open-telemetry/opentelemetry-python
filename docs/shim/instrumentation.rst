@@ -11,3 +11,5 @@ Submodules
 
 .. toctree::
     :maxdepth: 1
+
+    instrumentor

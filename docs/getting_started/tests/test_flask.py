@@ -23,7 +23,6 @@ from requests.packages.urllib3.util.retry import Retry
 
 
 class TestFlask(unittest.TestCase):
-    @unittest.skip("flaky test")
     def test_flask(self):
         dirpath = os.path.dirname(os.path.realpath(__file__))
         server_script = "{}/../flask_example.py".format(dirpath)
