@@ -61,14 +61,6 @@ pip install opentelemetry-sdk
 ```
 
 The
-[`instrumentation/`](https://github.com/open-telemetry/opentelemetry-python/tree/main/instrumentation)
-directory includes OpenTelemetry instrumentation packages. You can install the packages separately with the following command:
-
-```sh
-pip install opentelemetry-instrumentation-{instrumentation}
-```
-
-The
 [`exporter/`](https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter)
 directory includes OpenTelemetry exporter packages. You can install the packages separately with the following command:
 
@@ -106,15 +98,11 @@ machine.
 
 1. Install scalene using the following command
 
-::
-
-    pip install -U scalene
+`pip install scalene`
 
 2. Run the `scalene` tests on any of the example Python programs
 
-::
-
-    scalene opentelemetry-<PACKAGE>/tests/performance/resource-usage/<PATH_TO_TEST>/profile_resource_usage_<NAME_OF_TEST>.py
+`scalene opentelemetry-<PACKAGE>/tests/performance/resource-usage/<PATH_TO_TEST>/profile_resource_usage_<NAME_OF_TEST>.py`
 
 
 ## Documentation
