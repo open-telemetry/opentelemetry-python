@@ -6,6 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v0.17b0...HEAD)
 
+
 ### Changed
 - Tracer and Meter provider environment variables are now consistent with the rest
   ([#1571](https://github.com/open-telemetry/opentelemetry-python/pull/1571)])
