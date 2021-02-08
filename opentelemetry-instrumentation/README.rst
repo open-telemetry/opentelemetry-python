@@ -49,10 +49,9 @@ The command supports the following configuration options as CLI arguments and en
 
 
 * ``--trace-exporter`` or ``OTEL_TRACE_EXPORTER``
-* ``--metrics-exporter`` or ``OTEL_METRICS_EXPORTER``
 
-Used to specify which trace or metrics exporter to use. Can be set to one or
-more of the well-known exporter names (see below).
+Used to specify which trace exporter to use. Can be set to one or more of the well-known exporter
+names (see below).
 
     - Defaults to `otlp`.
     - Can be set to `none` to disable automatic tracer initialization. 
@@ -65,10 +64,9 @@ Well known trace exporter names:
     - opencensus
     - otlp
     - otlp_span
-    - otlp_metric
     - zipkin
 
-``otlp`` is an alias for ``otlp_span,otlp_metric``.
+``otlp`` is an alias for ``otlp_span``.
 
 * ``--service-name`` or ``OTEL_PYTHON_SERVICE_NAME``
 
