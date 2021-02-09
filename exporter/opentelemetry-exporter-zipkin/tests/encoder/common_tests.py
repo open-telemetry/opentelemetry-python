@@ -24,14 +24,23 @@ from opentelemetry.exporter.zipkin.encoder import (
 )
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import TraceFlags
 from opentelemetry.trace.status import Status, StatusCode
+
+TEST_SERVICE_NAME = "test_service"
 
 
 # pylint: disable=protected-access
 class CommonEncoderTestCases:
     class CommonEncoderTest(unittest.TestCase):
+        def setUp(self):
+            trace_api.set_tracer_provider(TracerProvider(
+                resource=Resource({SERVICE_NAME: TEST_SERVICE_NAME})
+            ))
+
         @staticmethod
         @abc.abstractmethod
         def get_encoder(*args, **kwargs) -> Encoder:
@@ -171,7 +180,7 @@ class CommonEncoderTestCases:
             end_time = start_time + duration
 
             span = trace._Span(
-                name="test-service",
+                name=TEST_SERVICE_NAME,
                 context=trace_api.SpanContext(
                     0x0E0C63257DE34C926F9EFCD03927272E,
                     0x04BF92DEEFC58C92,
@@ -436,25 +445,23 @@ class CommonEncoderTestCases:
                 )
 
         def test_encode_local_endpoint_default(self):
-            service_name = "test-service-name"
             self.assertEqual(
                 self.get_encoder_default()._encode_local_endpoint(
-                    NodeEndpoint(service_name)
+                    NodeEndpoint()
                 ),
-                {"serviceName": service_name},
+                {"serviceName": TEST_SERVICE_NAME},
             )
 
         def test_encode_local_endpoint_explicits(self):
-            service_name = "test-service-name"
             ipv4 = "192.168.0.1"
             ipv6 = "2001:db8::c001"
             port = 414120
             self.assertEqual(
                 self.get_encoder_default()._encode_local_endpoint(
-                    NodeEndpoint(service_name, ipv4, ipv6, port)
+                    NodeEndpoint(ipv4, ipv6, port)
                 ),
                 {
-                    "serviceName": service_name,
+                    "serviceName": TEST_SERVICE_NAME,
                     "ipv4": ipv4,
                     "ipv6": ipv6,
                     "port": port,

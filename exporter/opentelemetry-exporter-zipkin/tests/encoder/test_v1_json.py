@@ -20,7 +20,7 @@ from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk import trace
 from opentelemetry.trace import TraceFlags
 
-from .common_tests import CommonEncoderTestCases
+from .common_tests import TEST_SERVICE_NAME, CommonEncoderTestCases
 
 
 # pylint: disable=protected-access
@@ -31,8 +31,7 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
 
     def test_encode(self):
 
-        service_name = "test-service"
-        local_endpoint = {"serviceName": service_name}
+        local_endpoint = {"serviceName": TEST_SERVICE_NAME}
 
         otel_spans = self.get_exhaustive_otel_span_list()
         trace_id = JsonV1Encoder._encode_trace_id(
@@ -167,11 +166,10 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
 
         self.assert_equal_encoded_spans(
             json.dumps(expected_output),
-            JsonV1Encoder().serialize(otel_spans, NodeEndpoint(service_name)),
+            JsonV1Encoder().serialize(otel_spans, NodeEndpoint()),
         )
 
     def test_encode_id_zero_padding(self):
-        service_name = "test-service"
         trace_id = 0x0E0C63257DE34C926F9EFCD03927272E
         span_id = 0x04BF92DEEFC58C92
         parent_id = 0x0AAAAAAAAAAAAAAA
@@ -180,7 +178,7 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
         end_time = start_time + duration
 
         otel_span = trace._Span(
-            name=service_name,
+            name=TEST_SERVICE_NAME,
             context=trace_api.SpanContext(
                 trace_id,
                 span_id,
@@ -197,7 +195,7 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
             {
                 "traceId": format(trace_id, "032x"),
                 "id": format(span_id, "016x"),
-                "name": service_name,
+                "name": TEST_SERVICE_NAME,
                 "timestamp": JsonV1Encoder._nsec_to_usec_round(start_time),
                 "duration": JsonV1Encoder._nsec_to_usec_round(duration),
                 "debug": True,
@@ -207,7 +205,7 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
 
         self.assertEqual(
             json.dumps(expected_output),
-            JsonV1Encoder().serialize([otel_span], NodeEndpoint(service_name)),
+            JsonV1Encoder().serialize([otel_span], NodeEndpoint()),
         )
 
     def _test_encode_max_tag_length(self, max_tag_value_length: int):
@@ -247,6 +245,6 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
         self.assert_equal_encoded_spans(
             json.dumps(expected_output),
             JsonV1Encoder(max_tag_value_length).serialize(
-                [otel_span], NodeEndpoint(service_name)
+                [otel_span], NodeEndpoint()
             ),
         )

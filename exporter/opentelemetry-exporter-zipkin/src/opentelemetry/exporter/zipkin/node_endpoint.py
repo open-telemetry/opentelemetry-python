@@ -17,6 +17,9 @@
 import ipaddress
 from typing import Optional, Union
 
+from opentelemetry import trace
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+
 IpInput = Union[str, int, None]
 
 
@@ -24,10 +27,6 @@ class NodeEndpoint:
     """The network context of a node in the service graph.
 
     Args:
-        service_name: Lower-case label of this node in the service graph,
-          such as "favstar". None if unknown. This is a primary label for
-          trace lookup and aggregation, so it should be intuitive and
-          consistent. Many use a name from service discovery.
         ipv4: Primary IPv4 address associated with this connection.
         ipv6: Primary IPv6 address associated with this connection.
         port: Depending on context, this could be a listen port or the
@@ -36,15 +35,22 @@ class NodeEndpoint:
 
     def __init__(
         self,
-        service_name: str,  # technically optional but enforcing best practice
         ipv4: IpInput = None,
         ipv6: IpInput = None,
         port: Optional[int] = None,
     ):
-        self.service_name = service_name
         self.ipv4 = ipv4
         self.ipv6 = ipv6
         self.port = port
+
+        tracer_provider = trace.get_tracer_provider()
+
+        if hasattr(tracer_provider, "resource"):
+            resource = tracer_provider.resource
+        else:
+            resource = Resource.create()
+
+        self.service_name = resource.attributes[SERVICE_NAME]
 
     @property
     def ipv4(self) -> Optional[ipaddress.IPv4Address]:

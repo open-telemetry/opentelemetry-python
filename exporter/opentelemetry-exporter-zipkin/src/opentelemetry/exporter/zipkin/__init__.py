@@ -27,7 +27,6 @@ v2 json, v2 protobuf).
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
 .. _Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/sdk-environment-variables.md#zipkin-exporter
 
-.. envvar:: OTEL_EXPORTER_ZIPKIN_SERVICE_NAME
 .. envvar:: OTEL_EXPORTER_ZIPKIN_ENDPOINT
 
 .. code:: python
@@ -42,7 +41,6 @@ v2 json, v2 protobuf).
 
     # create an exporter
     zipkin_exporter = zipkin.ZipkinSpanExporter(
-        "my-helloworld-service"
         # optional:
         # endpoint="http://localhost:9411/api/v2/spans",
         # encoding=Encoding.PROTOBUF,
@@ -61,13 +59,7 @@ v2 json, v2 protobuf).
     with tracer.start_as_current_span("foo"):
         print("Hello world!")
 
-The exporter supports the following environment variables for configuration:
-
-:envvar:`OTEL_EXPORTER_ZIPKIN_SERVICE_NAME`: Label of the local node in the
-service graph, such as "favstar". Avoid names with variables or unique
-identifiers embedded. Defaults to "unknown". This is a primary label for trace
-lookup and aggregation, so it should be intuitive and consistent. Many use a
-name from service discovery.
+The exporter supports the following environment variable for configuration:
 
 :envvar:`OTEL_EXPORTER_ZIPKIN_ENDPOINT`: zipkin collector endpoint to which the
 exporter will send data. This may include a path (e.g.
@@ -91,7 +83,6 @@ from opentelemetry.exporter.zipkin.node_endpoint import IpInput, NodeEndpoint
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Span
 
-DEFAULT_SERVICE_NAME = "unknown"
 DEFAULT_ENDPOINT = "http://localhost:9411/api/v2/spans"
 REQUESTS_SUCCESS_STATUS_CODES = (200, 202)
 
@@ -101,7 +92,6 @@ logger = logging.getLogger(__name__)
 class ZipkinSpanExporter(SpanExporter):
     def __init__(
         self,
-        service_name: Optional[str] = None,
         endpoint: Optional[str] = None,
         encoding: Optional[Encoding] = Encoding.V2_JSON,
         local_node_ipv4: IpInput = None,
@@ -109,13 +99,8 @@ class ZipkinSpanExporter(SpanExporter):
         local_node_port: Optional[int] = None,
         max_tag_value_length: Optional[int] = None,
     ):
-        if service_name is None:
-            service_name = (
-                Configuration().EXPORTER_ZIPKIN_SERVICE_NAME
-                or DEFAULT_SERVICE_NAME
-            )
         self.local_node = NodeEndpoint(
-            service_name, local_node_ipv4, local_node_ipv6, local_node_port
+            local_node_ipv4, local_node_ipv6, local_node_port
         )
 
         if endpoint is None:

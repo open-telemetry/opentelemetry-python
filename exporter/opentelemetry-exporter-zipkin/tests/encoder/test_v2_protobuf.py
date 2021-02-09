@@ -20,7 +20,7 @@ from opentelemetry.exporter.zipkin.encoder.v2.protobuf.gen import zipkin_pb2
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.trace import SpanKind
 
-from .common_tests import CommonEncoderTestCases
+from .common_tests import TEST_SERVICE_NAME, CommonEncoderTestCases
 
 
 # pylint: disable=protected-access
@@ -44,25 +44,21 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
             )
 
     def test_encode_local_endpoint_default(self):
-        service_name = "test-service-name"
         self.assertEqual(
-            ProtobufEncoder()._encode_local_endpoint(
-                NodeEndpoint(service_name)
-            ),
-            zipkin_pb2.Endpoint(service_name=service_name),
+            ProtobufEncoder()._encode_local_endpoint(NodeEndpoint()),
+            zipkin_pb2.Endpoint(service_name=TEST_SERVICE_NAME),
         )
 
     def test_encode_local_endpoint_explicits(self):
-        service_name = "test-service-name"
         ipv4 = "192.168.0.1"
         ipv6 = "2001:db8::c001"
         port = 414120
         self.assertEqual(
             ProtobufEncoder()._encode_local_endpoint(
-                NodeEndpoint(service_name, ipv4, ipv6, port)
+                NodeEndpoint(ipv4, ipv6, port)
             ),
             zipkin_pb2.Endpoint(
-                service_name=service_name,
+                service_name=TEST_SERVICE_NAME,
                 ipv4=ipaddress.ip_address(ipv4).packed,
                 ipv6=ipaddress.ip_address(ipv6).packed,
                 port=port,
@@ -70,8 +66,7 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
         )
 
     def test_encode(self):
-        service_name = "test-service"
-        local_endpoint = zipkin_pb2.Endpoint(service_name=service_name)
+        local_endpoint = zipkin_pb2.Endpoint(service_name=TEST_SERVICE_NAME)
         span_kind = ProtobufEncoder.SPAN_KIND_MAP[SpanKind.INTERNAL]
 
         otel_spans = self.get_exhaustive_otel_span_list()
@@ -191,7 +186,7 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
         )
 
         actual_output = zipkin_pb2.ListOfSpans.FromString(
-            ProtobufEncoder().serialize(otel_spans, NodeEndpoint(service_name))
+            ProtobufEncoder().serialize(otel_spans, NodeEndpoint())
         )
 
         self.assertEqual(actual_output, expected_output)
@@ -231,7 +226,7 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
 
         actual_output = zipkin_pb2.ListOfSpans.FromString(
             ProtobufEncoder(max_tag_value_length).serialize(
-                [otel_span], NodeEndpoint(service_name)
+                [otel_span], NodeEndpoint()
             )
         )
 
