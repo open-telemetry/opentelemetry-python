@@ -17,11 +17,11 @@ from sys import argv
 from requests import get
 
 from opentelemetry import trace
-from opentelemetry.propagators.util import inject
 from opentelemetry.exporter.datadog import (
     DatadogExportSpanProcessor,
     DatadogSpanExporter,
 )
+from opentelemetry.propagators.util import inject
 from opentelemetry.sdk import resources
 from opentelemetry.sdk.trace import TracerProvider
 
