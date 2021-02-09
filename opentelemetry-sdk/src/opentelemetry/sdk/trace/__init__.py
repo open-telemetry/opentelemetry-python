@@ -608,11 +608,11 @@ class Span(trace_api.Span, ReadableSpan):
             resource=resource,
             instrumentation_info=instrumentation_info,
         )
-        self.sampler = sampler
-        self.trace_config = trace_config
+        self._sampler = sampler
+        self._trace_config = trace_config
         self._record_exception = record_exception
         self._set_status_on_exception = set_status_on_exception
-        self.span_processor = span_processor
+        self._span_processor = span_processor
         self._lock = threading.Lock()
 
         _filter_attribute_values(attributes)
@@ -737,7 +737,7 @@ class Span(trace_api.Span, ReadableSpan):
                 start_time if start_time is not None else time_ns()
             )
 
-        self.span_processor.on_start(self, parent_context=parent_context)
+        self._span_processor.on_start(self, parent_context=parent_context)
 
     def end(self, end_time: Optional[int] = None) -> None:
         with self._lock:
@@ -749,7 +749,7 @@ class Span(trace_api.Span, ReadableSpan):
 
             self._end_time = end_time if end_time is not None else time_ns()
 
-        self.span_processor.on_end(self._readable_span())
+        self._span_processor.on_end(self._readable_span())
 
     @_check_span_ended
     def update_name(self, name: str) -> None:

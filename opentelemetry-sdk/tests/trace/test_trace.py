@@ -289,10 +289,10 @@ class TestSpanCreation(unittest.TestCase):
 
         # pylint:disable=protected-access
         self.assertIs(
-            span1.span_processor, tracer_provider._active_span_processor
+            span1._span_processor, tracer_provider._active_span_processor
         )
         self.assertIs(
-            span2.span_processor, tracer_provider._active_span_processor
+            span2._span_processor, tracer_provider._active_span_processor
         )
 
     def test_start_span_implicit(self):
