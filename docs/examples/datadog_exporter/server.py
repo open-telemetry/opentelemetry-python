@@ -15,13 +15,13 @@
 from flask import Flask, request
 
 from opentelemetry import trace
+from opentelemetry.propagators.composite import CompositeHTTPPropagator
 from opentelemetry.exporter.datadog import (
     DatadogExportSpanProcessor,
     DatadogSpanExporter,
 )
 from opentelemetry.exporter.datadog.propagator import DatadogFormat
 from opentelemetry.propagate import get_global_textmap, set_global_textmap
-from opentelemetry.propagators.composite import CompositeHTTPPropagator
 from opentelemetry.sdk.trace import TracerProvider
 
 app = Flask(__name__)
