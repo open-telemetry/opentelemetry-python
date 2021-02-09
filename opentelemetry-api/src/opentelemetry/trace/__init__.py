@@ -138,7 +138,9 @@ class Link(LinkBase):
     def attributes(self) -> types.Attributes:
         return self._attributes
 
+
 _Links = typing.Optional[typing.Sequence[Link]]
+
 
 class SpanKind(enum.Enum):
     """Specifies additional details on how this span relates to its parent span.
