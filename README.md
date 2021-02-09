@@ -5,7 +5,7 @@
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
     <a href="https://opentelemetry-python.readthedocs.io/">API Documentation<a/>
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-    <a href="https://gitter.im/open-telemetry/opentelemetry-python">Getting In Touch (Gitter)<a/>
+    <a href="https://github.com/open-telemetry/opentelemetry-python/discussions">Getting In Touch (GitHub Discussions)<a/>
   </strong>
 </p>
 
@@ -119,7 +119,7 @@ We meet weekly on Thursdays at 9AM PST. The meeting is subject to change dependi
 
 Meetings take place via [Zoom video conference](https://zoom.us/j/6729396170). The passcode is _77777_.
 
-Meeting notes are available as a public [Google doc](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit). For edit access, get in touch on [Gitter](https://gitter.im/open-telemetry/opentelemetry-python).
+Meeting notes are available as a public [Google doc](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit). For edit access, get in touch on [GitHub Discussions](https://github.com/open-telemetry/opentelemetry-python/discussions).
 
 Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telemetry/teams/python-approvers)):
 
