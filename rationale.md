@@ -7,7 +7,7 @@ When creating a library, often times designs and decisions are made that get los
 This document describes the versioning and stability policy of components shipped from this repository, as per the [OpenTelemetry versioning and stability
 specification](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/versioning-and-stability.md).
 
-The OpenTelemetry Applications, the OpenTelemetry Spec itself and this repo follows [SemVer V2](https://semver.org/spec/v2.0.0.html) guidelines.
+The OpenTelemetry implementations, the OpenTelemetry Spec itself and this repo follows [SemVer V2](https://semver.org/spec/v2.0.0.html) guidelines.
 This means that, for any stable packages released from this repo, all public APIs will remain [backward
 compatible](https://github.com/dotnet/runtime/blob/main/docs/coding-guidelines/breaking-change-rules.md#breaking-change-rules),
 unless a major version bump occurs. This applies to the API, SDK, as well as Exporters, Instrumentation etc. shipped from this repo.
