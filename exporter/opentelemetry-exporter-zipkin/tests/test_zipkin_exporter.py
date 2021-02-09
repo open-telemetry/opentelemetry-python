@@ -212,6 +212,9 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 context=other_context,
                 parent=None,
                 resource=Resource({}),
+                instrumentation_info=InstrumentationInfo(
+                    name="name", version="version"
+                ),
             ),
         ]
 
@@ -234,9 +237,6 @@ class TestZipkinSpanExporter(unittest.TestCase):
 
         otel_spans[3].start(start_time=start_times[3])
         otel_spans[3].end(end_time=end_times[3])
-        otel_spans[3].instrumentation_info = InstrumentationInfo(
-            name="name", version="version"
-        )
 
         service_name = "test-service"
         local_endpoint = {"serviceName": service_name, "port": 9411}
@@ -736,6 +736,9 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 context=other_context,
                 parent=None,
                 resource=Resource({}),
+                instrumentation_info=InstrumentationInfo(
+                    name="name", version="version"
+                ),
             ),
         ]
 
@@ -759,9 +762,6 @@ class TestZipkinSpanExporter(unittest.TestCase):
 
         otel_spans[3].start(start_time=start_times[3])
         otel_spans[3].end(end_time=end_times[3])
-        otel_spans[3].instrumentation_info = InstrumentationInfo(
-            name="name", version="version"
-        )
 
         service_name = "test-service"
         local_endpoint = zipkin_pb2.Endpoint(
