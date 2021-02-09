@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import typing
 import unittest
 
 from opentelemetry import baggage, trace
-from opentelemetry.propagators import extract, inject
+from opentelemetry.propagators.util import extract, inject
 from opentelemetry.trace import get_current_span, set_span_in_context
 from opentelemetry.trace.propagation.textmap import DictGetter
 
