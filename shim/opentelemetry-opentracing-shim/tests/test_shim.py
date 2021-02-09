@@ -21,7 +21,10 @@ from unittest.mock import Mock
 
 import opentracing
 
-from opentelemetry import propagators, trace
+from opentelemetry import trace
+from opentelemetry.propagators.util import (
+    set_global_textmap, get_global_textmap
+)
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.shim.opentracing_shim import (
     SpanContextShim,
@@ -46,15 +49,15 @@ class TestShim(TestCase):
     @classmethod
     def setUpClass(cls):
         # Save current propagator to be restored on teardown.
-        cls._previous_propagator = propagators.get_global_textmap()
+        cls._previous_propagator = get_global_textmap()
 
         # Set mock propagator for testing.
-        propagators.set_global_textmap(MockTextMapPropagator())
+        set_global_textmap(MockTextMapPropagator())
 
     @classmethod
     def tearDownClass(cls):
         # Restore previous propagator.
-        propagators.set_global_textmap(cls._previous_propagator)
+        set_global_textmap(cls._previous_propagator)
 
     def test_shim_type(self):
         # Verify shim is an OpenTracing tracer.
@@ -542,15 +545,15 @@ class TestShim(TestCase):
         """In the case where the propagator cannot extract a
         SpanContext, extract should return and invalid span context.
         """
-        _old_propagator = propagators.get_global_textmap()
-        propagators.set_global_textmap(NOOPTextMapPropagator())
+        _old_propagator = get_global_textmap()
+        set_global_textmap(NOOPTextMapPropagator())
         try:
             carrier = {}
 
             ctx = self.shim.extract(opentracing.Format.HTTP_HEADERS, carrier)
             self.assertEqual(ctx.unwrap(), trace.INVALID_SPAN_CONTEXT)
         finally:
-            propagators.set_global_textmap(_old_propagator)
+            set_global_textmap(_old_propagator)
 
     def test_extract_text_map(self):
         """Test `extract()` method for Format.TEXT_MAP."""

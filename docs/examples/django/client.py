@@ -16,7 +16,8 @@ from sys import argv
 
 from requests import get
 
-from opentelemetry import propagators, trace
+from opentelemetry import trace
+from opentelemetry.propagators.util import inject
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
@@ -35,7 +36,7 @@ with tracer.start_as_current_span("client"):
 
     with tracer.start_as_current_span("client-server"):
         headers = {}
-        propagators.inject(dict.__setitem__, headers)
+        inject(dict.__setitem__, headers)
         requested = get(
             "http://localhost:8000",
             params={"param": argv[1]},
