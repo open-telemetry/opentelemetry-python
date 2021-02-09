@@ -13,6 +13,5 @@
 # limitations under the License.
 
 """
-The **OpenCensus Exporter** allows to export traces and metrics using
-OpenCensus.
+The **OpenCensus Exporter** allows to export traces using OpenCensus.
 """

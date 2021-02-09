@@ -21,14 +21,12 @@ from pkg_resources import iter_entry_points
 
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
-    OTEL_METRICS_EXPORTER,
     OTEL_PYTHON_IDS_GENERATOR,
     OTEL_PYTHON_SERVICE_NAME,
     OTEL_TRACE_EXPORTER,
 )
 from opentelemetry.instrumentation.configurator import BaseConfigurator
 from opentelemetry.instrumentation.distro import BaseDistro
-from opentelemetry.sdk.metrics.export import MetricsExporter
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
@@ -42,7 +40,6 @@ logger = getLogger(__file__)
 
 EXPORTER_OTLP = "otlp"
 EXPORTER_OTLP_SPAN = "otlp_span"
-EXPORTER_OTLP_METRIC = "otlp_metric"
 
 RANDOM_IDS_GENERATOR = "random"
 _DEFAULT_IDS_GENERATOR = RANDOM_IDS_GENERATOR
@@ -58,7 +55,6 @@ def _get_service_name() -> str:
 
 def _get_exporter_names() -> Sequence[str]:
     trace_exporters = environ.get(OTEL_TRACE_EXPORTER)
-    metrics_exporters = environ.get(OTEL_METRICS_EXPORTER)
 
     exporters = set()
 
@@ -73,21 +69,9 @@ def _get_exporter_names() -> Sequence[str]:
             }
         )
 
-    if (
-        metrics_exporters is not None
-        or metrics_exporters.lower().strip() != "none"
-    ):
-        exporters.update(
-            {
-                metrics_exporter.strip()
-                for metrics_exporter in metrics_exporters.split(",")
-            }
-        )
-
     if EXPORTER_OTLP in exporters:
         exporters.pop(EXPORTER_OTLP)
         exporters.add(EXPORTER_OTLP_SPAN)
-        exporters.add(EXPORTER_OTLP_METRIC)
 
     return list(exporters)
 
@@ -139,8 +123,8 @@ def _import_tracer_provider_config_components(
 
 def _import_exporters(
     exporter_names: Sequence[str],
-) -> Tuple[Sequence[SpanExporter], Sequence[MetricsExporter]]:
-    trace_exporters, metric_exporters = {}, {}
+) -> Sequence[SpanExporter]:
+    trace_exporters = {}
 
     for (
         exporter_name,
@@ -150,15 +134,11 @@ def _import_exporters(
     ):
         if issubclass(exporter_impl, SpanExporter):
             trace_exporters[exporter_name] = exporter_impl
-        elif issubclass(exporter_impl, MetricsExporter):
-            metric_exporters[exporter_name] = exporter_impl
         else:
             raise RuntimeError(
-                "{0} is neither a trace exporter nor a metric exporter".format(
-                    exporter_name
-                )
+                "{0} is not a trace exporter".format(exporter_name)
             )
-    return trace_exporters, metric_exporters
+    return trace_exporters
 
 
 def _import_ids_generator(ids_generator_name: str) -> IdsGenerator:
@@ -177,19 +157,10 @@ def _import_ids_generator(ids_generator_name: str) -> IdsGenerator:
 
 def _initialize_components():
     exporter_names = _get_exporter_names()
-    trace_exporters, metric_exporters = _import_exporters(exporter_names)
+    trace_exporters = _import_exporters(exporter_names)
     ids_generator_name = _get_ids_generator()
     ids_generator = _import_ids_generator(ids_generator_name)
     _init_tracing(trace_exporters, ids_generator)
-    # We don't support automatic initialization for metric yet but have added
-    # some boilerplate in order to make sure current implementation does not
-    # lock us out of supporting metrics later without major surgery.
-    _init_metrics(metric_exporters)
-
-
-def _init_metrics(exporters: Sequence[MetricsExporter]):
-    if exporters:
-        logger.warning("automatic metric initialization is not supported yet.")
 
 
 class Configurator(BaseConfigurator):
@@ -205,4 +176,3 @@ class OpenTelemetryDistro(BaseDistro):
 
     def _configure(self, **kwargs):
         os.environ.setdefault(OTEL_TRACE_EXPORTER, "otlp_span")
-        os.environ.setdefault(OTEL_METRICS_EXPORTER, "otlp_metric")
