@@ -1,22 +1,18 @@
 # OpenTelemetry Rationale
 
-When creating a library, often times designs and decisions are made that get lost over time. This
-document tries to collect information on design decisions to answer common questions that may come
-up when you explore the SDK.
+When creating a library, often times designs and decisions are made that get lost over time. This document tries to collect information on design decisions to answer common questions that may come up when you explore the SDK.
 
 ## Versioning and Releasing
 
-This document describes the versioning and stability policy of components
-shipped from this repository, as per the [OpenTelemetry versioning and stability
-specification](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/versioning-and-stability.md).
+This document describes the versioning and stability policy of components shipped from this repository, as per the [OpenTelemetry versioning and stability
+specification](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/versioning-and-stability.md).
 
 The OpenTelemetry Applications, the OpenTelemetry Spec itself and this repo follows [SemVer V2](https://semver.org/spec/v2.0.0.html) guidelines.
 This means that, for any stable packages released from this repo, all public APIs will remain [backward
-compatible](https://github.com/dotnet/runtime/blob/master/docs/coding-guidelines/breaking-change-rules.md#breaking-change-rules),
+compatible](https://github.com/dotnet/runtime/blob/main/docs/coding-guidelines/breaking-change-rules.md#breaking-change-rules),
 unless a major version bump occurs. This applies to the API, SDK, as well as Exporters, Instrumentation etc. shipped from this repo.
 
-For example, users can take a dependency on 1.0.0 version of any package, with
-the assurance that all future releases until 2.0.0 will be backward compatible.
+For example, users can take a dependency on 1.0.0 version of any package, with the assurance that all future releases until 2.0.0 will be backward compatible.
 
 ## Goals
 
@@ -32,8 +28,7 @@ Public portions of the SDK (constructors, configuration, end-user interfaces) mu
 
 ## Core components
 
-Core components refer to the set of components which are required as per the spec. This includes API, SDK, and exporters which are required by the
-specification. These exporters are OTLP, Jaeger, Zipkin, Console and InMemory.
+Core components refer to the set of components which are required as per the spec. This includes API, SDK, propagators (B3 and Jaeger) and exporters which are required by the specification. These exporters are OTLP, Jaeger and Zipkin.
 
 ## Mature or stable Signals
 
@@ -60,9 +55,9 @@ Purely for illustration purposes, not intended to represent actual releases:
 
 ##### Contains the following experimental packages
 
-- `opentelemetry-api` 0.x.y-b0
+- `opentelemetry-api` 1.x.y-b0
   - Contains the EXPERIMENTAL API for metrics plus other unstable features. There are no stability guarantees.
-- `opentelemetry-metrics` 0.x.y-b0
+- `opentelemetry-sdk` 1.x.y-b0
   - Contains the EXPERIMENTAL SDK for metrics plus other unstable features. There are no stability guarantees.
 
 #### V1.15.0 Release (with metrics)
@@ -74,7 +69,7 @@ Purely for illustration purposes, not intended to represent actual releases:
 
 ##### Contains the following experimental packages
 
-- `opentelemetry-api` 0.x.y-b0
+- `opentelemetry-api` 1.x.y-b0
   - Contains the EXPERIMENTAL API for logging plus other unstable features. There are no stability guarantees.
-- `opentelemetry-metrics` 0.x.y-b0
+- `opentelemetry-sdk` 1.x.y-b0
   - Contains the EXPERIMENTAL SDK for logging plus other unstable features. There are no stability guarantees.
