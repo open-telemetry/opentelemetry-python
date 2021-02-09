@@ -54,7 +54,9 @@ class Encoder(abc.ABC):
     """Base class for encoders that are used by the exporter.
 
     Args:
-        TODO
+        max_tag_value_length: maximum length of an exported tag value. Values
+          will be truncated to conform. Since values are serialized to a JSON
+          list string, max_tag_value_length is honored at the element boundary.
     """
 
     def __init__(self, max_tag_value_length: Optional[int] = None):
