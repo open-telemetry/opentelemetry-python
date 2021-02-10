@@ -59,10 +59,10 @@ class Encoder(abc.ABC):
           list string, max_tag_value_length is honored at the element boundary.
     """
 
-    def __init__(self, max_tag_value_length: Optional[int] = None):
-        self.max_tag_value_length = (
-            max_tag_value_length or DEFAULT_MAX_TAG_VALUE_LENGTH
-        )
+    def __init__(
+        self, max_tag_value_length: int = DEFAULT_MAX_TAG_VALUE_LENGTH
+    ):
+        self.max_tag_value_length = max_tag_value_length
 
     @staticmethod
     @abc.abstractmethod
