@@ -289,10 +289,10 @@ class TestSpanCreation(unittest.TestCase):
 
         # pylint:disable=protected-access
         self.assertIs(
-            span1.span_processor, tracer_provider._active_span_processor
+            span1._span_processor, tracer_provider._active_span_processor
         )
         self.assertIs(
-            span2.span_processor, tracer_provider._active_span_processor
+            span2._span_processor, tracer_provider._active_span_processor
         )
 
     def test_start_span_implicit(self):
@@ -1132,7 +1132,7 @@ class MySpanProcessor(trace.SpanProcessor):
     ) -> None:
         self.span_list.append(span_event_start_fmt(self.name, span.name))
 
-    def on_end(self, span: "trace.Span") -> None:
+    def on_end(self, span: "trace.ReadableSpan") -> None:
         self.span_list.append(span_event_end_fmt(self.name, span.name))
 
 
@@ -1237,8 +1237,7 @@ class TestSpanProcessor(unittest.TestCase):
             is_remote=False,
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
-        span = trace._Span("span-name", context)
-        span.resource = Resource({})
+        span = trace._Span("span-name", context, resource=Resource({}))
 
         self.assertEqual(
             span.to_json(),
@@ -1274,8 +1273,7 @@ class TestSpanProcessor(unittest.TestCase):
             is_remote=False,
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
-        span = trace._Span("span-name", context)
-        span.resource = Resource({})
+        span = trace._Span("span-name", context, resource=Resource({}))
         span.set_attribute("key", "value")
         span.add_event("event", {"key2": "value2"}, 123)
         date_str = ns_to_iso_str(123)

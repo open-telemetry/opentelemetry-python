@@ -139,6 +139,9 @@ class Link(LinkBase):
         return self._attributes
 
 
+_Links = typing.Optional[typing.Sequence[Link]]
+
+
 class SpanKind(enum.Enum):
     """Specifies additional details on how this span relates to its parent span.
 
@@ -231,7 +234,7 @@ class Tracer(abc.ABC):
         context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
-        links: typing.Sequence[Link] = (),
+        links: _Links = None,
         start_time: typing.Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
@@ -286,7 +289,7 @@ class Tracer(abc.ABC):
         context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
-        links: typing.Sequence[Link] = (),
+        links: _Links = None,
         start_time: typing.Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
@@ -380,7 +383,7 @@ class DefaultTracer(Tracer):
         context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
-        links: typing.Sequence[Link] = (),
+        links: _Links = None,
         start_time: typing.Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
@@ -395,7 +398,7 @@ class DefaultTracer(Tracer):
         context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
-        links: typing.Sequence[Link] = (),
+        links: _Links = None,
         start_time: typing.Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,

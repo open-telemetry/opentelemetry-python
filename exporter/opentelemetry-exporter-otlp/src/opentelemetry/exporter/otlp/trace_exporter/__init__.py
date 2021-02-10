@@ -45,7 +45,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_SPAN_INSECURE,
     OTEL_EXPORTER_OTLP_SPAN_TIMEOUT,
 )
-from opentelemetry.sdk.trace import Span as SDKSpan
+from opentelemetry.sdk.trace import Span as ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace.status import StatusCode
 
@@ -55,7 +55,9 @@ logger = logging.getLogger(__name__)
 # pylint: disable=no-member
 class OTLPSpanExporter(
     SpanExporter,
-    OTLPExporterMixin[SDKSpan, ExportTraceServiceRequest, SpanExportResult],
+    OTLPExporterMixin[
+        ReadableSpan, ExportTraceServiceRequest, SpanExportResult
+    ],
 ):
     # pylint: disable=unsubscriptable-object
     """OTLP span exporter
@@ -107,34 +109,34 @@ class OTLPSpanExporter(
             }
         )
 
-    def _translate_name(self, sdk_span: SDKSpan) -> None:
+    def _translate_name(self, sdk_span: ReadableSpan) -> None:
         self._collector_span_kwargs["name"] = sdk_span.name
 
-    def _translate_start_time(self, sdk_span: SDKSpan) -> None:
+    def _translate_start_time(self, sdk_span: ReadableSpan) -> None:
         self._collector_span_kwargs[
             "start_time_unix_nano"
         ] = sdk_span.start_time
 
-    def _translate_end_time(self, sdk_span: SDKSpan) -> None:
+    def _translate_end_time(self, sdk_span: ReadableSpan) -> None:
         self._collector_span_kwargs["end_time_unix_nano"] = sdk_span.end_time
 
-    def _translate_span_id(self, sdk_span: SDKSpan) -> None:
+    def _translate_span_id(self, sdk_span: ReadableSpan) -> None:
         self._collector_span_kwargs[
             "span_id"
         ] = sdk_span.context.span_id.to_bytes(8, "big")
 
-    def _translate_trace_id(self, sdk_span: SDKSpan) -> None:
+    def _translate_trace_id(self, sdk_span: ReadableSpan) -> None:
         self._collector_span_kwargs[
             "trace_id"
         ] = sdk_span.context.trace_id.to_bytes(16, "big")
 
-    def _translate_parent(self, sdk_span: SDKSpan) -> None:
+    def _translate_parent(self, sdk_span: ReadableSpan) -> None:
         if sdk_span.parent is not None:
             self._collector_span_kwargs[
                 "parent_span_id"
             ] = sdk_span.parent.span_id.to_bytes(8, "big")
 
-    def _translate_context_trace_state(self, sdk_span: SDKSpan) -> None:
+    def _translate_context_trace_state(self, sdk_span: ReadableSpan) -> None:
         if sdk_span.context.trace_state is not None:
             self._collector_span_kwargs["trace_state"] = ",".join(
                 [
@@ -143,7 +145,7 @@ class OTLPSpanExporter(
                 ]
             )
 
-    def _translate_attributes(self, sdk_span: SDKSpan) -> None:
+    def _translate_attributes(self, sdk_span: ReadableSpan) -> None:
         if sdk_span.attributes:
 
             self._collector_span_kwargs["attributes"] = []
@@ -157,7 +159,7 @@ class OTLPSpanExporter(
                 except Exception as error:  # pylint: disable=broad-except
                     logger.exception(error)
 
-    def _translate_events(self, sdk_span: SDKSpan) -> None:
+    def _translate_events(self, sdk_span: ReadableSpan) -> None:
         if sdk_span.events:
             self._collector_span_kwargs["events"] = []
 
@@ -181,7 +183,7 @@ class OTLPSpanExporter(
                     collector_span_event
                 )
 
-    def _translate_links(self, sdk_span: SDKSpan) -> None:
+    def _translate_links(self, sdk_span: ReadableSpan) -> None:
         if sdk_span.links:
             self._collector_span_kwargs["links"] = []
 
@@ -207,7 +209,7 @@ class OTLPSpanExporter(
                     collector_span_link
                 )
 
-    def _translate_status(self, sdk_span: SDKSpan) -> None:
+    def _translate_status(self, sdk_span: ReadableSpan) -> None:
         # pylint: disable=no-member
         if sdk_span.status is not None:
             deprecated_code = Status.DEPRECATED_STATUS_CODE_OK
@@ -220,7 +222,7 @@ class OTLPSpanExporter(
             )
 
     def _translate_data(
-        self, data: Sequence[SDKSpan]
+        self, data: Sequence[ReadableSpan]
     ) -> ExportTraceServiceRequest:
         # pylint: disable=attribute-defined-outside-init
 
@@ -279,5 +281,5 @@ class OTLPSpanExporter(
             )
         )
 
-    def export(self, spans: Sequence[SDKSpan]) -> SpanExportResult:
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         return self._export(spans)
