@@ -81,7 +81,7 @@ from opentelemetry.exporter.zipkin.encoder.v2.json import JsonV2Encoder
 from opentelemetry.exporter.zipkin.encoder.v2.protobuf import ProtobufEncoder
 from opentelemetry.exporter.zipkin.node_endpoint import IpInput, NodeEndpoint
 from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_ZIPKIN_ENDPOINT
+    OTEL_EXPORTER_ZIPKIN_ENDPOINT,
 )
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Span

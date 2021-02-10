@@ -28,7 +28,7 @@ from opentelemetry.exporter.zipkin.encoder.v2.protobuf import ProtobufEncoder
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry import trace
 from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_ZIPKIN_ENDPOINT
+    OTEL_EXPORTER_ZIPKIN_ENDPOINT,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
@@ -46,9 +46,11 @@ class MockResponse:
 class TestZipkinSpanExporter(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        trace.set_tracer_provider(TracerProvider(
-            resource=Resource({SERVICE_NAME: TEST_SERVICE_NAME})
-        ))
+        trace.set_tracer_provider(
+            TracerProvider(
+                resource=Resource({SERVICE_NAME: TEST_SERVICE_NAME})
+            )
+        )
 
     def tearDown(self):
         if OTEL_EXPORTER_ZIPKIN_ENDPOINT in os.environ:

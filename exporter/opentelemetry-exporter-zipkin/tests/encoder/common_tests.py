@@ -182,7 +182,7 @@ class CommonEncoderTestCases:
                     is_remote=False,
                     trace_flags=TraceFlags(TraceFlags.SAMPLED),
                 ),
-                resource=trace.Resource({})
+                resource=trace.Resource({}),
             )
             span.start(start_time=start_time)
             span.set_attribute("string1", "v" * 500)
@@ -381,7 +381,7 @@ class CommonEncoderTestCases:
                         context=other_context, attributes={"key_bool": True}
                     ),
                 ),
-                resource=trace.Resource({})
+                resource=trace.Resource({}),
             )
             span1.start(start_time=start_times[0])
             span1.set_attribute("key_bool", False)
@@ -421,7 +421,7 @@ class CommonEncoderTestCases:
                 resource=trace.Resource({}),
                 instrumentation_info=InstrumentationInfo(
                     name="name", version="version"
-                )
+                ),
             )
             span4.start(start_time=start_times[3])
             span4.end(end_time=end_times[3])
