@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: 24bab77d4d6070998d634a07f88aed6ea2378b25
+  CONTRIB_REPO_SHA: 99d6a2d7987d0f2cdde04319627c86fc0a465351
 
 jobs:
   build:
@@ -109,7 +109,7 @@ jobs:
         run: pip install -U tox
       - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
-        uses: actions/cache@v2
+        uses: actions/cache@v1
         with:
           path: .tox
           key: tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
