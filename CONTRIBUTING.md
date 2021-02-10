@@ -25,7 +25,7 @@ Please take a look at this list first, your contributions may belong in one of t
 
 # Find the right branch
 
-The default branch for this repo is `main`. Changes that pertain to components marked as `stable` in the [specifications](https://github.com/open-telemetry/opentelemetry-specification) go into this branch, which currently does not include `metrics`. Changes that pertain to `metrics` go into the `metrics` branch.
+The default branch for this repo is `main`. Changes that pertain to `metrics` go into the `metrics` branch. Any changes that pertain to components marked as `stable` in the [specifications](https://github.com/open-telemetry/opentelemetry-specification) or anything that is not `metrics` related go into this branch.
 
 ## Find a Buddy and get Started Quickly!
 
