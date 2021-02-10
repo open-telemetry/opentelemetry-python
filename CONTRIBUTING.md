@@ -23,6 +23,10 @@ Please take a look at this list first, your contributions may belong in one of t
    programmatic instrumentations that are now in the `ext` directory in the main OpenTelemetry repo. Please ask in the Gitter
    channel (see below) for guidance if you want to contribute with these instrumentations.
 
+# Find the right branch
+
+The default branch for this repo is `main`. Changes that pertain to `metrics` go into the `metrics` branch. Any changes that pertain to components marked as `stable` in the [specifications](https://github.com/open-telemetry/opentelemetry-specification) or anything that is not `metrics` related go into this branch.
+
 ## Find a Buddy and get Started Quickly!
 
 If you are looking for someone to help you find a starting point and be a resource for your first contribution, join our
