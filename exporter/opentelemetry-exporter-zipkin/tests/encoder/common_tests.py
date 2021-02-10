@@ -24,8 +24,6 @@ from opentelemetry.exporter.zipkin.encoder import (
 )
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk import trace
-from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import TraceFlags
 from opentelemetry.trace.status import Status, StatusCode

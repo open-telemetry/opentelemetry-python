@@ -30,7 +30,6 @@ class TestV2JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
         return JsonV2Encoder(*args, **kwargs)
 
     def test_encode(self):
-        service_name = "test-service"
         local_endpoint = {"serviceName": TEST_SERVICE_NAME}
         span_kind = JsonV2Encoder.SPAN_KIND_MAP[SpanKind.INTERNAL]
 
