@@ -25,7 +25,7 @@ v2 json, v2 protobuf).
 
 .. _Zipkin: https://zipkin.io/
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
-.. _Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/sdk-environment-variables.md#zipkin-exporter
+.. _Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/sdk-environment-variables.md#zipkin-exporter
 
 .. envvar:: OTEL_EXPORTER_ZIPKIN_ENDPOINT
 
@@ -39,7 +39,7 @@ v2 json, v2 protobuf).
     trace.set_tracer_provider(TracerProvider())
     tracer = trace.get_tracer(__name__)
 
-    # create an exporter
+    # create a ZipkinSpanExporter
     zipkin_exporter = zipkin.ZipkinSpanExporter(
         # optional:
         # endpoint="http://localhost:9411/api/v2/spans",
@@ -70,16 +70,19 @@ API
 """
 
 import logging
+from os import environ
 from typing import Optional, Sequence
 
 import requests
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin.encoder import Encoder, Encoding
 from opentelemetry.exporter.zipkin.encoder.v1.json import JsonV1Encoder
 from opentelemetry.exporter.zipkin.encoder.v2.json import JsonV2Encoder
 from opentelemetry.exporter.zipkin.encoder.v2.protobuf import ProtobufEncoder
 from opentelemetry.exporter.zipkin.node_endpoint import IpInput, NodeEndpoint
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_ZIPKIN_ENDPOINT
+)
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Span
 
@@ -105,7 +108,7 @@ class ZipkinSpanExporter(SpanExporter):
 
         if endpoint is None:
             endpoint = (
-                Configuration().EXPORTER_ZIPKIN_ENDPOINT or DEFAULT_ENDPOINT
+                environ.get(OTEL_EXPORTER_ZIPKIN_ENDPOINT) or DEFAULT_ENDPOINT
             )
         self.endpoint = endpoint
 

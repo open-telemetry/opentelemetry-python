@@ -20,11 +20,17 @@ from unittest import mock
 # pylint:disable=import-error
 import opentelemetry.exporter.jaeger as jaeger_exporter
 from opentelemetry import trace as trace_api
-from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger.gen.jaeger import ttypes as jaeger
 from opentelemetry.exporter.jaeger.translate import Translate
 from opentelemetry.exporter.jaeger.translate.thrift import ThriftTranslator
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_JAEGER_AGENT_HOST,
+    OTEL_EXPORTER_JAEGER_AGENT_PORT,
+    OTEL_EXPORTER_JAEGER_ENDPOINT,
+    OTEL_EXPORTER_JAEGER_PASSWORD,
+    OTEL_EXPORTER_JAEGER_USER,
+)
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanKind
@@ -44,11 +50,6 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self._test_span.start()
         self._test_span.end()
         # pylint: disable=protected-access
-        Configuration._reset()
-
-    def tearDown(self):
-        # pylint: disable=protected-access
-        Configuration._reset()
 
     def test_constructor_default(self):
         # pylint: disable=protected-access
@@ -121,11 +122,11 @@ class TestJaegerSpanExporter(unittest.TestCase):
         environ_patcher = mock.patch.dict(
             "os.environ",
             {
-                "OTEL_EXPORTER_JAEGER_AGENT_HOST": agent_host_name,
-                "OTEL_EXPORTER_JAEGER_AGENT_PORT": agent_port,
-                "OTEL_EXPORTER_JAEGER_ENDPOINT": collector_endpoint,
-                "OTEL_EXPORTER_JAEGER_USER": username,
-                "OTEL_EXPORTER_JAEGER_PASSWORD": password,
+                OTEL_EXPORTER_JAEGER_AGENT_HOST: agent_host_name,
+                OTEL_EXPORTER_JAEGER_AGENT_PORT: agent_port,
+                OTEL_EXPORTER_JAEGER_ENDPOINT: collector_endpoint,
+                OTEL_EXPORTER_JAEGER_USER: username,
+                OTEL_EXPORTER_JAEGER_PASSWORD: password,
             },
         )
 
@@ -234,12 +235,24 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 events=(event,),
                 links=(link,),
                 kind=trace_api.SpanKind.CLIENT,
+                resource=Resource(
+                    attributes={"key_resource": "some_resource"}
+                ),
             ),
             trace._Span(
-                name=span_names[1], context=parent_span_context, parent=None
+                name=span_names[1],
+                context=parent_span_context,
+                parent=None,
+                resource=Resource({}),
             ),
             trace._Span(
-                name=span_names[2], context=other_context, parent=None
+                name=span_names[2],
+                context=other_context,
+                parent=None,
+                resource=Resource({}),
+                instrumentation_info=InstrumentationInfo(
+                    name="name", version="version"
+                ),
             ),
         ]
 
@@ -249,25 +262,17 @@ class TestJaegerSpanExporter(unittest.TestCase):
         otel_spans[0].set_attribute("key_string", "hello_world")
         otel_spans[0].set_attribute("key_float", 111.22)
         otel_spans[0].set_attribute("key_tuple", ("tuple_element",))
-        otel_spans[0].resource = Resource(
-            attributes={"key_resource": "some_resource"}
-        )
         otel_spans[0].set_status(
             Status(StatusCode.ERROR, "Example description")
         )
         otel_spans[0].end(end_time=end_times[0])
 
         otel_spans[1].start(start_time=start_times[1])
-        otel_spans[1].resource = Resource({})
         otel_spans[1].end(end_time=end_times[1])
 
         otel_spans[2].start(start_time=start_times[2])
-        otel_spans[2].resource = Resource({})
         otel_spans[2].set_status(Status(StatusCode.OK, "Example description"))
         otel_spans[2].end(end_time=end_times[2])
-        otel_spans[2].instrumentation_info = InstrumentationInfo(
-            name="name", version="version"
-        )
 
         translate = Translate(otel_spans)
         # pylint: disable=protected-access

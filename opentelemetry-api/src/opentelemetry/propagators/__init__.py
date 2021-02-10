@@ -65,16 +65,17 @@ Example::
 
 
 .. _Propagation API Specification:
-    https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/context/api-propagators.md
+    https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/api-propagators.md
 """
 
 import typing
 from logging import getLogger
+from os import environ
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.context.context import Context
+from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.propagators import composite
 from opentelemetry.trace.propagation import textmap
 
@@ -86,7 +87,7 @@ def extract(
     carrier: textmap.TextMapPropagatorT,
     context: typing.Optional[Context] = None,
 ) -> Context:
-    """ Uses the configured propagator to extract a Context from the carrier.
+    """Uses the configured propagator to extract a Context from the carrier.
 
     Args:
         getter: an object which contains a get function that can retrieve zero
@@ -107,7 +108,7 @@ def inject(
     carrier: textmap.TextMapPropagatorT,
     context: typing.Optional[Context] = None,
 ) -> None:
-    """ Uses the configured propagator to inject a Context into the carrier.
+    """Uses the configured propagator to inject a Context into the carrier.
 
     Args:
         set_in_carrier: A setter function that can set values
@@ -125,13 +126,15 @@ try:
 
     propagators = []
 
-    for propagator in (  # type: ignore
-        Configuration().get("PROPAGATORS", "tracecontext,baggage").split(",")  # type: ignore
-    ):
+    # Single use variable here to hack black and make lint pass
+    environ_propagators = environ.get(
+        OTEL_PROPAGATORS, "tracecontext,baggage",
+    )
 
+    for propagator in environ_propagators.split(","):
         propagators.append(  # type: ignore
             next(  # type: ignore
-                iter_entry_points("opentelemetry_propagator", propagator)  # type: ignore
+                iter_entry_points("opentelemetry_propagator", propagator)
             ).load()()
         )
 

@@ -22,7 +22,6 @@ from unittest.mock import patch
 import opentelemetry.exporter.jaeger.gen.model_pb2 as model_pb2
 import opentelemetry.exporter.jaeger.translate.protobuf as pb_translator
 from opentelemetry import trace as trace_api
-from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.jaeger import JaegerSpanExporter
 from opentelemetry.exporter.jaeger.translate import (
     NAME_KEY,
@@ -30,6 +29,10 @@ from opentelemetry.exporter.jaeger.translate import (
     Translate,
 )
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_JAEGER_CERTIFICATE,
+    OTEL_EXPORTER_JAEGER_ENDPOINT,
+)
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import Status, StatusCode
@@ -49,16 +52,10 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self._test_span.start()
         self._test_span.end()
         # pylint: disable=protected-access
-        Configuration._reset()
-
-    def tearDown(self):
-        # pylint: disable=protected-access
-        Configuration._reset()
 
     def test_constructor_by_environment_variables(self):
         """Test using Environment Variables."""
         # pylint: disable=protected-access
-        Configuration._reset()
         service = "my-opentelemetry-jaeger"
 
         collector_endpoint = "localhost:14250"
@@ -66,8 +63,8 @@ class TestJaegerSpanExporter(unittest.TestCase):
         env_patch = patch.dict(
             "os.environ",
             {
-                "OTEL_EXPORTER_JAEGER_ENDPOINT": collector_endpoint,
-                "OTEL_EXPORTER_JAEGER_CERTIFICATE": os.path.dirname(__file__)
+                OTEL_EXPORTER_JAEGER_ENDPOINT: collector_endpoint,
+                OTEL_EXPORTER_JAEGER_CERTIFICATE: os.path.dirname(__file__)
                 + "/certs/cred.cert",
             },
         )
@@ -159,12 +156,24 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 events=(event,),
                 links=(link,),
                 kind=trace_api.SpanKind.CLIENT,
+                resource=Resource(
+                    attributes={"key_resource": "some_resource"}
+                ),
             ),
             trace._Span(
-                name=span_names[1], context=parent_span_context, parent=None
+                name=span_names[1],
+                context=parent_span_context,
+                parent=None,
+                resource=Resource({}),
             ),
             trace._Span(
-                name=span_names[2], context=other_context, parent=None
+                name=span_names[2],
+                context=other_context,
+                parent=None,
+                resource=Resource({}),
+                instrumentation_info=InstrumentationInfo(
+                    name="name", version="version"
+                ),
             ),
         ]
 
@@ -174,25 +183,17 @@ class TestJaegerSpanExporter(unittest.TestCase):
         otel_spans[0].set_attribute("key_string", "hello_world")
         otel_spans[0].set_attribute("key_float", 111.22)
         otel_spans[0].set_attribute("key_tuple", ("tuple_element",))
-        otel_spans[0].resource = Resource(
-            attributes={"key_resource": "some_resource"}
-        )
         otel_spans[0].set_status(
             Status(StatusCode.ERROR, "Example description")
         )
         otel_spans[0].end(end_time=end_times[0])
 
         otel_spans[1].start(start_time=start_times[1])
-        otel_spans[1].resource = Resource({})
         otel_spans[1].end(end_time=end_times[1])
 
         otel_spans[2].start(start_time=start_times[2])
-        otel_spans[2].resource = Resource({})
         otel_spans[2].set_status(Status(StatusCode.OK, "Example description"))
         otel_spans[2].end(end_time=end_times[2])
-        otel_spans[2].instrumentation_info = InstrumentationInfo(
-            name="name", version="version"
-        )
 
         translate = Translate(otel_spans)
         # pylint: disable=protected-access

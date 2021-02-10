@@ -8,10 +8,10 @@ See the [public meeting notes](https://docs.google.com/document/d/1CIMGoIOZ-c3-i
 for a summary description of past meetings. To request edit access, join the
 meeting or get in touch on [Gitter](https://gitter.im/open-telemetry/opentelemetry-python).
 
-See to the [community membership document](https://github.com/open-telemetry/community/blob/master/community-membership.md)
-on how to become a [**Member**](https://github.com/open-telemetry/community/blob/master/community-membership.md#member),
-[**Approver**](https://github.com/open-telemetry/community/blob/master/community-membership.md#approver)
-and [**Maintainer**](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer).
+See to the [community membership document](https://github.com/open-telemetry/community/blob/main/community-membership.md)
+on how to become a [**Member**](https://github.com/open-telemetry/community/blob/main/community-membership.md#member),
+[**Approver**](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver)
+and [**Maintainer**](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer).
 
 # Find your right repo
 
@@ -22,6 +22,10 @@ Please take a look at this list first, your contributions may belong in one of t
    libraries and frameworks. There is an ongoing effort to migrate into the Opentelemetry Contrib repo some of the existing
    programmatic instrumentations that are now in the `ext` directory in the main OpenTelemetry repo. Please ask in the Gitter
    channel (see below) for guidance if you want to contribute with these instrumentations.
+
+# Find the right branch
+
+The default branch for this repo is `main`. Changes that pertain to `metrics` go into the `metrics` branch. Any changes that pertain to components marked as `stable` in the [specifications](https://github.com/open-telemetry/opentelemetry-specification) or anything that is not `metrics` related go into this branch.
 
 ## Find a Buddy and get Started Quickly!
 
@@ -63,7 +67,7 @@ You can run:
 - `tox -e lint` to run lint checks on all code
 
 See
-[`tox.ini`](https://github.com/open-telemetry/opentelemetry-python/blob/master/tox.ini)
+[`tox.ini`](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini)
 for more detail on available tox commands.
 
 ### Benchmarks
@@ -144,7 +148,7 @@ to equal the commit SHA of the Core repo PR to pass tests
 equal the commit SHA of the Contrib repo PR to pass Contrib repo tests (a sanity
 check for the Maintainers & Approvers)
 4. Merge the Contrib repo
-5. Restore the Core repo PR `CONTRIB_REPO_SHA` to point to `master`
+5. Restore the Core repo PR `CONTRIB_REPO_SHA` to point to `main`
 6. Merge the Core repo PR
 
 ### How to Receive Comments
@@ -156,8 +160,8 @@ check for the Maintainers & Approvers)
 ### How to Get PRs Merged
 
 A PR is considered to be **ready to merge** when:
-* It has received two approvals from [Approvers](https://github.com/open-telemetry/community/blob/master/community-membership.md#approver)
-  / [Maintainers](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer)
+* It has received two approvals from [Approvers](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver)
+  / [Maintainers](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer)
   (at different companies).
 * Major feedbacks are resolved.
 * All tests are passing, including Contrib Repo tests which may require
@@ -174,7 +178,7 @@ Any Approver / Maintainer can merge the PR once it is **ready to merge**.
 As with other OpenTelemetry clients, opentelemetry-python follows the 
 [opentelemetry-specification](https://github.com/open-telemetry/opentelemetry-specification).
 
-It's especially valuable to read through the [library guidelines](https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/library-guidelines.md).
+It's especially valuable to read through the [library guidelines](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/library-guidelines.md).
 
 ### Focus on Capabilities, Not Structure Compliance
 

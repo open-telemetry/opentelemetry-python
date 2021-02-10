@@ -24,9 +24,15 @@ from unittest import mock
 import pytest
 
 from opentelemetry import trace as trace_api
-from opentelemetry.configuration import Configuration
 from opentelemetry.context import Context
 from opentelemetry.sdk import resources, trace
+from opentelemetry.sdk.environment_variables import (
+    OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+    OTEL_SPAN_EVENT_COUNT_LIMIT,
+    OTEL_SPAN_LINK_COUNT_LIMIT,
+    OTEL_TRACE_SAMPLER,
+    OTEL_TRACE_SAMPLER_ARG,
+)
 from opentelemetry.sdk.trace import Resource, sampling
 from opentelemetry.sdk.trace.ids_generator import RandomIdsGenerator
 from opentelemetry.sdk.util import ns_to_iso_str
@@ -188,7 +194,7 @@ class TestTracerSampling(unittest.TestCase):
             trace_api.TraceFlags.DEFAULT,
         )
 
-    @mock.patch.dict("os.environ", {"OTEL_TRACE_SAMPLER": "always_off"})
+    @mock.patch.dict("os.environ", {OTEL_TRACE_SAMPLER: "always_off"})
     def test_sampler_with_env(self):
         # pylint: disable=protected-access
         reload(trace)
@@ -207,8 +213,8 @@ class TestTracerSampling(unittest.TestCase):
     @mock.patch.dict(
         "os.environ",
         {
-            "OTEL_TRACE_SAMPLER": "parentbased_traceidratio",
-            "OTEL_TRACE_SAMPLER_ARG": "0.25",
+            OTEL_TRACE_SAMPLER: "parentbased_traceidratio",
+            OTEL_TRACE_SAMPLER_ARG: "0.25",
         },
     )
     def test_ratio_sampler_with_env(self):
@@ -283,10 +289,10 @@ class TestSpanCreation(unittest.TestCase):
 
         # pylint:disable=protected-access
         self.assertIs(
-            span1.span_processor, tracer_provider._active_span_processor
+            span1._span_processor, tracer_provider._active_span_processor
         )
         self.assertIs(
-            span2.span_processor, tracer_provider._active_span_processor
+            span2._span_processor, tracer_provider._active_span_processor
         )
 
     def test_start_span_implicit(self):
@@ -549,7 +555,6 @@ class TestSpan(unittest.TestCase):
         with self.tracer.start_as_current_span("root") as root:
             root.set_attributes(
                 {
-                    "component": "http",
                     "http.method": "GET",
                     "http.url": "https://example.com:779/path/12/?q=d#123",
                 }
@@ -570,8 +575,7 @@ class TestSpan(unittest.TestCase):
             list_of_numerics = [123, 314, 0]
             root.set_attribute("list-of-numerics", list_of_numerics)
 
-            self.assertEqual(len(root.attributes), 10)
-            self.assertEqual(root.attributes["component"], "http")
+            self.assertEqual(len(root.attributes), 9)
             self.assertEqual(root.attributes["http.method"], "GET")
             self.assertEqual(
                 root.attributes["http.url"],
@@ -900,7 +904,7 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(end_time0, root.end_time)
 
         with self.assertLogs(level=WARNING):
-            root.set_attribute("component", "http")
+            root.set_attribute("http.method", "GET")
         self.assertEqual(len(root.attributes), 0)
 
         with self.assertLogs(level=WARNING):
@@ -1128,7 +1132,7 @@ class MySpanProcessor(trace.SpanProcessor):
     ) -> None:
         self.span_list.append(span_event_start_fmt(self.name, span.name))
 
-    def on_end(self, span: "trace.Span") -> None:
+    def on_end(self, span: "trace.ReadableSpan") -> None:
         self.span_list.append(span_event_end_fmt(self.name, span.name))
 
 
@@ -1233,8 +1237,7 @@ class TestSpanProcessor(unittest.TestCase):
             is_remote=False,
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
-        span = trace._Span("span-name", context)
-        span.resource = Resource({})
+        span = trace._Span("span-name", context, resource=Resource({}))
 
         self.assertEqual(
             span.to_json(),
@@ -1270,8 +1273,7 @@ class TestSpanProcessor(unittest.TestCase):
             is_remote=False,
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
-        span = trace._Span("span-name", context)
-        span.resource = Resource({})
+        span = trace._Span("span-name", context, resource=Resource({}))
         span.set_attribute("key", "value")
         span.add_event("event", {"key2": "value2"}, 123)
         date_str = ns_to_iso_str(123)
@@ -1284,22 +1286,12 @@ class TestSpanProcessor(unittest.TestCase):
 
 
 class TestSpanLimits(unittest.TestCase):
-    def setUp(self):
-        # reset global state of configuration object
-        # pylint: disable=protected-access
-        Configuration._reset()
-
-    def tearDown(self):
-        # reset global state of configuration object
-        # pylint: disable=protected-access
-        Configuration._reset()
-
     @mock.patch.dict(
         "os.environ",
         {
-            "OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT": "10",
-            "OTEL_SPAN_EVENT_COUNT_LIMIT": "20",
-            "OTEL_SPAN_LINK_COUNT_LIMIT": "30",
+            OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT: "10",
+            OTEL_SPAN_EVENT_COUNT_LIMIT: "20",
+            OTEL_SPAN_LINK_COUNT_LIMIT: "30",
         },
     )
     def test_span_environment_limits(self):

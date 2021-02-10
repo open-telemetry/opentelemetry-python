@@ -14,7 +14,7 @@
 
 """
 This package implements `OpenTelemetry Resources
-<https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/sdk.md#resource-sdk>`_:
+<https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/sdk.md#resource-sdk>`_:
 
     *A Resource is an immutable representation of the entity producing
     telemetry. For example, a process producing telemetry that is running in
@@ -25,10 +25,9 @@ This package implements `OpenTelemetry Resources
 Resource objects are created with `Resource.create`, which accepts attributes
 (key-values). Resource attributes can also be passed at process invocation in
 the :envvar:`OTEL_RESOURCE_ATTRIBUTES` environment variable. You should
-register your resource with the `opentelemetry.sdk.metrics.MeterProvider` and
-`opentelemetry.sdk.trace.TracerProvider` by passing them into their
-constructors. The `Resource` passed to a provider is available to the
-exporter, which can send on this information as it sees fit.
+register your resource with the  `opentelemetry.sdk.trace.TracerProvider` by
+passing them into their constructors. The `Resource` passed to a provider is
+available to the exporter, which can send on this information as it sees fit.
 
 .. code-block:: python
 
@@ -49,7 +48,7 @@ exporter, which can send on this information as it sees fit.
     'service.instance.id': 'instance-12'}
 
 Note that the OpenTelemetry project documents certain `"standard attributes"
-<https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/semantic_conventions/README.md>`_
+<https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md>`_
 that have prescribed semantic meanings, for example ``service.name`` in the
 above example.
 
@@ -61,7 +60,7 @@ attributes to be passed to the SDK at process invocation. The attributes from
 `Resource.create`, meaning :envvar:`OTEL_RESOURCE_ATTRIBUTES` takes *lower*
 priority. Attributes should be in the format ``key1=value1,key2=value2``.
 Additional details are available `in the specification
-<https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/resource/sdk.md#specifying-resource-information-via-an-environment-variable>`_.
+<https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/sdk.md#specifying-resource-information-via-an-environment-variable>`_.
 
 .. code-block:: console
 
@@ -85,6 +84,8 @@ import typing
 from json import dumps
 
 import pkg_resources
+
+from opentelemetry.sdk.environment_variables import OTEL_RESOURCE_ATTRIBUTES
 
 LabelValue = typing.Union[str, bool, int, float]
 Attributes = typing.Dict[str, LabelValue]
@@ -151,20 +152,29 @@ TELEMETRY_SDK_LANGUAGE = "telemetry.sdk.language"
 OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
     "opentelemetry-sdk"
 ).version
-OTEL_RESOURCE_ATTRIBUTES = "OTEL_RESOURCE_ATTRIBUTES"
 
 
 class Resource:
+    """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
+
     def __init__(self, attributes: Attributes):
         self._attributes = attributes.copy()
 
     @staticmethod
     def create(attributes: typing.Optional[Attributes] = None) -> "Resource":
+        """Creates a new `Resource` from attributes.
+
+        Args:
+            attributes: Optional zero or more key-value pairs.
+
+        Returns:
+            The newly-created Resource.
+        """
         if not attributes:
-            resource = _DEFAULT_RESOURCE
-        else:
-            resource = _DEFAULT_RESOURCE.merge(Resource(attributes))
-        resource = resource.merge(OTELResourceDetector().detect())
+            attributes = {}
+        resource = _DEFAULT_RESOURCE.merge(
+            OTELResourceDetector().detect()
+        ).merge(Resource(attributes))
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
             process_executable_name = resource.attributes.get(
@@ -186,11 +196,19 @@ class Resource:
         return self._attributes.copy()
 
     def merge(self, other: "Resource") -> "Resource":
+        """Merges this resource and an updating resource into a new `Resource`.
+
+        If a key exists on both the old and updating resource, the value of the
+        updating resource will override the old resource value.
+
+        Args:
+            other: The other resource to be merged.
+
+        Returns:
+            The newly-created Resource.
+        """
         merged_attributes = self.attributes
-        # pylint: disable=protected-access
-        for key, value in other._attributes.items():
-            if key not in merged_attributes or merged_attributes[key] == "":
-                merged_attributes[key] = value
+        merged_attributes.update(other.attributes)
         return Resource(merged_attributes)
 
     def __eq__(self, other: object) -> bool:
@@ -241,7 +259,7 @@ def get_aggregated_resources(
     initial_resource: typing.Optional[Resource] = None,
     timeout=5,
 ) -> "Resource":
-    """ Retrieves resources from detectors in the order that they were passed
+    """Retrieves resources from detectors in the order that they were passed
 
     :param detectors: List of resources in order of priority
     :param initial_resource: Static resource. This has highest priority

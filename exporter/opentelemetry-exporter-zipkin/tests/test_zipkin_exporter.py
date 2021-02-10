@@ -18,7 +18,6 @@ import os
 import unittest
 from unittest.mock import patch
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin import (
     DEFAULT_ENDPOINT,
     ZipkinSpanExporter,
@@ -28,6 +27,9 @@ from opentelemetry.exporter.zipkin.encoder.v2.json import JsonV2Encoder
 from opentelemetry.exporter.zipkin.encoder.v2.protobuf import ProtobufEncoder
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry import trace
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_ZIPKIN_ENDPOINT
+)
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SpanExportResult
@@ -42,15 +44,15 @@ class MockResponse:
 
 
 class TestZipkinSpanExporter(unittest.TestCase):
-    def tearDown(self):
-        if "OTEL_EXPORTER_ZIPKIN_ENDPOINT" in os.environ:
-            del os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"]
-        Configuration()._reset()  # pylint: disable=protected-access
-
-    def setUp(self):
+    @classmethod
+    def setUpClass(cls):
         trace.set_tracer_provider(TracerProvider(
             resource=Resource({SERVICE_NAME: TEST_SERVICE_NAME})
         ))
+
+    def tearDown(self):
+        if OTEL_EXPORTER_ZIPKIN_ENDPOINT in os.environ:
+            del os.environ[OTEL_EXPORTER_ZIPKIN_ENDPOINT]
 
     def test_constructor_default(self):
         exporter = ZipkinSpanExporter()
@@ -63,7 +65,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
 
     def test_constructor_env_vars(self):
         os_endpoint = "https://foo:9911/path"
-        os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = os_endpoint
+        os.environ[OTEL_EXPORTER_ZIPKIN_ENDPOINT] = os_endpoint
 
         exporter = ZipkinSpanExporter()
 
@@ -93,7 +95,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         vars are set. Explicit params should take precedence.
         """
         os_endpoint = "https://os.env.param:9911/path"
-        os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = os_endpoint
+        os.environ[OTEL_EXPORTER_ZIPKIN_ENDPOINT] = os_endpoint
 
         constructor_param_endpoint = "https://constructor.param:9911/path"
         constructor_param_encoding = Encoding.V2_PROTOBUF

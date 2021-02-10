@@ -36,11 +36,6 @@ TEST_SERVICE_NAME = "test_service"
 # pylint: disable=protected-access
 class CommonEncoderTestCases:
     class CommonEncoderTest(unittest.TestCase):
-        def setUp(self):
-            trace_api.set_tracer_provider(TracerProvider(
-                resource=Resource({SERVICE_NAME: TEST_SERVICE_NAME})
-            ))
-
         @staticmethod
         @abc.abstractmethod
         def get_encoder(*args, **kwargs) -> Encoder:
@@ -187,9 +182,9 @@ class CommonEncoderTestCases:
                     is_remote=False,
                     trace_flags=TraceFlags(TraceFlags.SAMPLED),
                 ),
+                resource=trace.Resource({})
             )
             span.start(start_time=start_time)
-            span.resource = trace.Resource({})
             span.set_attribute("string1", "v" * 500)
             span.set_attribute("string2", "v" * 50)
             span.set_attribute("list1", ["a"] * 25)
@@ -386,10 +381,9 @@ class CommonEncoderTestCases:
                         context=other_context, attributes={"key_bool": True}
                     ),
                 ),
+                resource=trace.Resource({})
             )
             span1.start(start_time=start_times[0])
-            span1.resource = trace.Resource({})
-            # added here to preserve order
             span1.set_attribute("key_bool", False)
             span1.set_attribute("key_string", "hello_world")
             span1.set_attribute("key_float", 111.22)
@@ -397,34 +391,40 @@ class CommonEncoderTestCases:
             span1.end(end_time=end_times[0])
 
             span2 = trace._Span(
-                name="test-span-2", context=parent_span_context, parent=None
+                name="test-span-2",
+                context=parent_span_context,
+                parent=None,
+                resource=trace.Resource(
+                    attributes={"key_resource": "some_resource"}
+                ),
             )
             span2.start(start_time=start_times[1])
-            span2.resource = trace.Resource(
-                attributes={"key_resource": "some_resource"}
-            )
             span2.set_status(Status(StatusCode.ERROR, "Example description"))
             span2.end(end_time=end_times[1])
 
             span3 = trace._Span(
-                name="test-span-3", context=other_context, parent=None
+                name="test-span-3",
+                context=other_context,
+                parent=None,
+                resource=trace.Resource(
+                    attributes={"key_resource": "some_resource"}
+                ),
             )
             span3.start(start_time=start_times[2])
             span3.set_attribute("key_string", "hello_world")
-            span3.resource = trace.Resource(
-                attributes={"key_resource": "some_resource"}
-            )
             span3.end(end_time=end_times[2])
 
             span4 = trace._Span(
-                name="test-span-3", context=other_context, parent=None
+                name="test-span-3",
+                context=other_context,
+                parent=None,
+                resource=trace.Resource({}),
+                instrumentation_info=InstrumentationInfo(
+                    name="name", version="version"
+                )
             )
             span4.start(start_time=start_times[3])
-            span4.resource = trace.Resource({})
             span4.end(end_time=end_times[3])
-            span4.instrumentation_info = InstrumentationInfo(
-                name="name", version="version"
-            )
 
             return [span1, span2, span3, span4]
 

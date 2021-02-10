@@ -11,16 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import os
 
-import setuptools
-
-BASE_DIR = os.path.dirname(__file__)
-VERSION_FILENAME = os.path.join(
-    BASE_DIR, "src", "opentelemetry", "exporter", "prometheus", "version.py"
-)
-PACKAGE_INFO = {}
-with open(VERSION_FILENAME) as f:
-    exec(f.read(), PACKAGE_INFO)
-
-setuptools.setup(version=PACKAGE_INFO["__version__"])
+OTEL_PROPAGATORS = "OTEL_PROPAGATORS"
+OTEL_PYTHON_CONTEXT = "OTEL_PYTHON_CONTEXT"
+OTEL_PYTHON_DISABLED_INSTRUMENTATIONS = "OTEL_PYTHON_DISABLED_INSTRUMENTATIONS"
+OTEL_PYTHON_IDS_GENERATOR = "OTEL_PYTHON_IDS_GENERATOR"
+OTEL_PYTHON_SERVICE_NAME = "OTEL_PYTHON_SERVICE_NAME"
+OTEL_TRACE_EXPORTER = "OTEL_TRACE_EXPORTER"
+OTEL_PYTHON_TRACER_PROVIDER = "OTEL_PYTHON_TRACER_PROVIDER"
