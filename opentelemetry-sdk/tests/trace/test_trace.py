@@ -30,8 +30,8 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
     OTEL_SPAN_EVENT_COUNT_LIMIT,
     OTEL_SPAN_LINK_COUNT_LIMIT,
-    OTEL_TRACE_SAMPLER,
-    OTEL_TRACE_SAMPLER_ARG,
+    OTEL_TRACES_SAMPLER,
+    OTEL_TRACES_SAMPLER_ARG,
 )
 from opentelemetry.sdk.trace import Resource, sampling
 from opentelemetry.sdk.trace.ids_generator import RandomIdsGenerator
@@ -194,7 +194,7 @@ class TestTracerSampling(unittest.TestCase):
             trace_api.TraceFlags.DEFAULT,
         )
 
-    @mock.patch.dict("os.environ", {OTEL_TRACE_SAMPLER: "always_off"})
+    @mock.patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "always_off"})
     def test_sampler_with_env(self):
         # pylint: disable=protected-access
         reload(trace)
@@ -213,8 +213,8 @@ class TestTracerSampling(unittest.TestCase):
     @mock.patch.dict(
         "os.environ",
         {
-            OTEL_TRACE_SAMPLER: "parentbased_traceidratio",
-            OTEL_TRACE_SAMPLER_ARG: "0.25",
+            OTEL_TRACES_SAMPLER: "parentbased_traceidratio",
+            OTEL_TRACES_SAMPLER_ARG: "0.25",
         },
     )
     def test_ratio_sampler_with_env(self):
