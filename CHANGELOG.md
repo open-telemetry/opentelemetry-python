@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Tracer and Meter provider environment variables are now consistent with the rest
   ([#1571](https://github.com/open-telemetry/opentelemetry-python/pull/1571)])
+- Rename `TRACE_` to `TRACES_` for environment variables
+  ([#1571](https://github.com/open-telemetry/opentelemetry-python/pull/1571)])
 
 ### Added
 - Added `end_on_exit` argument to `start_as_current_span`
