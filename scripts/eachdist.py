@@ -552,19 +552,19 @@ def update_changelog(path, version, new_entry):
 
     if unreleased_changes:
         print("updating: {}".format(path))
-        text = re.sub("## \[Unreleased\].*", new_entry, text)
+        text = re.sub(r"## \[Unreleased\].*", new_entry, text)
         with open(path, "w") as changelog:
             changelog.write(text)
 
 
 def update_changelogs(version):
     today = datetime.now().strftime("%Y-%m-%d")
-    new_entry = """## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v{}...HEAD)
+    new_entry = """## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v{version}...HEAD)
 
-## [{}](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v{}) - {}
+## [{version}](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v{version}) - {today}
 
 """.format(
-        version, version, version, today
+        version=version, today=today
     )
     errors = False
     try:
