@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1571](https://github.com/open-telemetry/opentelemetry-python/pull/1571)])
 - Rename `TRACE_` to `TRACES_` for environment variables
   ([#1595](https://github.com/open-telemetry/opentelemetry-python/pull/1595)])
+- Limits for Span attributes, events and links have been updated to 128
+  ([1597](https://github.com/open-telemetry/opentelemetry-python/pull/1597)])
 
 ### Added
 - Added `end_on_exit` argument to `start_as_current_span`
