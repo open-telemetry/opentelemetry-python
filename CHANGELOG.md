@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1480](https://github.com/open-telemetry/opentelemetry-python/pull/1480))
 - Allow missing carrier headers to continue without raising AttributeError
   ([#1545](https://github.com/open-telemetry/opentelemetry-python/pull/1545))
+- Add urllib to opentelemetry-bootstrap target list
+  ([#1584])(https://github.com/open-telemetry/opentelemetry-python/pull/1584)
 
 ### Removed
 - Remove Configuration
