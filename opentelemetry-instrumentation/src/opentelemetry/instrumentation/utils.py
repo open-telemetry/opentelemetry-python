@@ -40,7 +40,7 @@ def http_status_to_status_code(
     Args:
         status (int): HTTP status code
     """
-    # See: https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/trace/semantic_conventions/http.md#status
+    # See: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/semantic_conventions/http.md#status
     if status < 100:
         return StatusCode.ERROR
     if status <= 299:

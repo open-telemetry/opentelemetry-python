@@ -11,20 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import re
+
 import time
 from logging import getLogger
-from typing import TYPE_CHECKING, Sequence, Union, cast
+from os import environ
+from typing import TYPE_CHECKING, Union, cast
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry.configuration import Configuration
+from opentelemetry.environment_variables import OTEL_PYTHON_TRACER_PROVIDER
 
 if TYPE_CHECKING:
-    from opentelemetry.metrics import MeterProvider
     from opentelemetry.trace import TracerProvider
 
-Provider = Union["TracerProvider", "MeterProvider"]
+Provider = Union["TracerProvider"]
 
 logger = getLogger(__name__)
 
@@ -40,15 +40,18 @@ except AttributeError:
         return int(time.time() * 1e9)
 
 
-def _load_provider(provider: str) -> Provider:
+def _load_provider(
+    provider_environment_variable: str, provider: str
+) -> Provider:
     try:
         entry_point = next(
             iter_entry_points(
                 "opentelemetry_{}".format(provider),
                 name=cast(
                     str,
-                    Configuration().get(
-                        provider.upper(), "default_{}".format(provider),
+                    environ.get(
+                        provider_environment_variable,
+                        "default_{}".format(provider),
                     ),
                 ),
             )
@@ -59,9 +62,8 @@ def _load_provider(provider: str) -> Provider:
         raise
 
 
-def _load_meter_provider(provider: str) -> "MeterProvider":
-    return cast("MeterProvider", _load_provider(provider))
-
-
 def _load_trace_provider(provider: str) -> "TracerProvider":
-    return cast("TracerProvider", _load_provider(provider))
+    return cast(  # type: ignore
+        "TracerProvider",
+        _load_provider(OTEL_PYTHON_TRACER_PROVIDER, provider),
+    )

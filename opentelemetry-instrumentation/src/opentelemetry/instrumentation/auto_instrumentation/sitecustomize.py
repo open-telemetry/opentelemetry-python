@@ -12,24 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 import sys
 from logging import getLogger
+from os import environ, path
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry.configuration import Configuration
+from opentelemetry.environment_variables import (
+    OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
+)
 
 logger = getLogger(__file__)
 
 
 def _load_distros():
-    # will be implemented in a subsequent PR
-    pass
+    for entry_point in iter_entry_points("opentelemetry_distro"):
+        try:
+            entry_point.load()().configure()  # type: ignore
+            logger.debug("Distribution %s configured", entry_point.name)
+        except Exception as exc:  # pylint: disable=broad-except
+            logger.exception(
+                "Distribution %s configuration failed", entry_point.name
+            )
+            raise exc
 
 
 def _load_instrumentors():
-    package_to_exclude = Configuration().get("DISABLED_INSTRUMENTATIONS", [])
+    package_to_exclude = environ.get(OTEL_PYTHON_DISABLED_INSTRUMENTATIONS, [])
     if isinstance(package_to_exclude, str):
         package_to_exclude = package_to_exclude.split(",")
         # to handle users entering "requests , flask" or "requests, flask" with spaces
@@ -78,7 +87,7 @@ def initialize():
 
 if (
     hasattr(sys, "argv")
-    and sys.argv[0].split(os.path.sep)[-1] == "celery"
+    and sys.argv[0].split(path.sep)[-1] == "celery"
     and "worker" in sys.argv[1:]
 ):
     from celery.signals import worker_process_init  # pylint:disable=E0401

@@ -22,7 +22,6 @@ from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, StatusCode, server
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
@@ -46,6 +45,12 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as OTLPSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_SPAN_ENDPOINT,
+    OTEL_EXPORTER_OTLP_SPAN_HEADERS,
+    OTEL_EXPORTER_OTLP_SPAN_TIMEOUT,
+)
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.trace import Status as SDKStatus
 from opentelemetry.sdk.trace import StatusCode as SDKStatusCode
@@ -116,7 +121,7 @@ class TestOTLPSpanExporter(TestCase):
 
         self.server = server(ThreadPoolExecutor(max_workers=10))
 
-        self.server.add_insecure_port("[::]:55680")
+        self.server.add_insecure_port("[::]:4317")
 
         self.server.start()
 
@@ -160,20 +165,17 @@ class TestOTLPSpanExporter(TestCase):
         self.span.start()
         self.span.end()
 
-        Configuration._reset()  # pylint: disable=protected-access
-
     def tearDown(self):
         self.server.stop(None)
-        Configuration._reset()  # pylint: disable=protected-access
 
     @patch.dict(
         "os.environ",
         {
-            "OTEL_EXPORTER_OTLP_SPAN_ENDPOINT": "collector:55680",
-            "OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE": THIS_DIR
+            OTEL_EXPORTER_OTLP_SPAN_ENDPOINT: "collector:4317",
+            OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE: THIS_DIR
             + "/fixtures/test.cert",
-            "OTEL_EXPORTER_OTLP_SPAN_HEADERS": "key1=value1,key2=value2",
-            "OTEL_EXPORTER_OTLP_SPAN_TIMEOUT": "10",
+            OTEL_EXPORTER_OTLP_SPAN_HEADERS: "key1=value1,key2=value2",
+            OTEL_EXPORTER_OTLP_SPAN_TIMEOUT: "10",
         },
     )
     @patch("opentelemetry.exporter.otlp.exporter.OTLPExporterMixin.__init__")
@@ -183,7 +185,7 @@ class TestOTLPSpanExporter(TestCase):
         self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
         _, kwargs = mock_exporter_mixin.call_args_list[0]
 
-        self.assertEqual(kwargs["endpoint"], "collector:55680")
+        self.assertEqual(kwargs["endpoint"], "collector:4317")
         self.assertEqual(kwargs["headers"], "key1=value1,key2=value2")
         self.assertEqual(kwargs["timeout"], 10)
         self.assertIsNotNone(kwargs["credentials"])
@@ -201,7 +203,7 @@ class TestOTLPSpanExporter(TestCase):
 
     @patch.dict(
         "os.environ",
-        {"OTEL_EXPORTER_OTLP_SPAN_HEADERS": "key1=value1,key2=value2"},
+        {OTEL_EXPORTER_OTLP_SPAN_HEADERS: "key1=value1,key2=value2"},
     )
     @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
     @patch("opentelemetry.exporter.otlp.exporter.secure_channel")

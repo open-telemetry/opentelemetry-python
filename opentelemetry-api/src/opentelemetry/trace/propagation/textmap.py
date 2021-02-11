@@ -25,8 +25,7 @@ Setter = typing.Callable[[TextMapPropagatorT, str, str], None]
 
 class Getter(typing.Generic[TextMapPropagatorT]):
     """This class implements a Getter that enables extracting propagated
-    fields from a carrier
-
+    fields from a carrier.
     """
 
     def get(
@@ -34,7 +33,7 @@ class Getter(typing.Generic[TextMapPropagatorT]):
     ) -> typing.Optional[typing.List[str]]:
         """Function that can retrieve zero
         or more values from the carrier. In the case that
-        the value does not exist, returns an empty list.
+        the value does not exist, returns None.
 
         Args:
             carrier: An object which contains values that are used to
@@ -61,6 +60,14 @@ class DictGetter(Getter[typing.Dict[str, CarrierValT]]):
     def get(
         self, carrier: typing.Dict[str, CarrierValT], key: str
     ) -> typing.Optional[typing.List[str]]:
+        """Getter implementation to retrieve a value from a dictionary.
+
+        Args:
+            carrier: dictionary in which header
+            key: the key used to get the value
+        Returns:
+            A list with a single string with the value if it exists, else None.
+        """
         val = carrier.get(key, None)
         if val is None:
             return None
@@ -69,6 +76,7 @@ class DictGetter(Getter[typing.Dict[str, CarrierValT]]):
         return [val]
 
     def keys(self, carrier: typing.Dict[str, CarrierValT]) -> typing.List[str]:
+        """Keys implementation that returns all keys from a dictionary."""
         return list(carrier.keys())
 
 

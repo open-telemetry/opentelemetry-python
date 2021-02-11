@@ -13,18 +13,22 @@
 # limitations under the License.
 
 import collections
-import json
 import logging
-import os
 import sys
 import threading
 import typing
 from enum import Enum
+from os import environ, linesep
 from typing import Optional
 
-from opentelemetry.configuration import Configuration
 from opentelemetry.context import Context, attach, detach, set_value
-from opentelemetry.sdk.trace import Span, SpanProcessor
+from opentelemetry.sdk.environment_variables import (
+    OTEL_BSP_EXPORT_TIMEOUT,
+    OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
+    OTEL_BSP_MAX_QUEUE_SIZE,
+    OTEL_BSP_SCHEDULE_DELAY,
+)
+from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
 from opentelemetry.util import time_ns
 
 logger = logging.getLogger(__name__)
@@ -38,14 +42,16 @@ class SpanExportResult(Enum):
 class SpanExporter:
     """Interface for exporting spans.
 
-    Interface to be implemented by services that want to export recorded in
-    its own format.
+    Interface to be implemented by services that want to export spans recorded
+    in their own format.
 
     To export data this MUST be registered to the :class`opentelemetry.sdk.trace.Tracer` using a
     `SimpleExportSpanProcessor` or a `BatchExportSpanProcessor`.
     """
 
-    def export(self, spans: typing.Sequence[Span]) -> "SpanExportResult":
+    def export(
+        self, spans: typing.Sequence[ReadableSpan]
+    ) -> "SpanExportResult":
         """Exports a batch of telemetry data.
 
         Args:
@@ -77,7 +83,7 @@ class SimpleExportSpanProcessor(SpanProcessor):
     ) -> None:
         pass
 
-    def on_end(self, span: Span) -> None:
+    def on_end(self, span: ReadableSpan) -> None:
         if not span.context.trace_flags.sampled:
             return
         token = attach(set_value("suppress_instrumentation", True))
@@ -123,21 +129,21 @@ class BatchExportSpanProcessor(SpanProcessor):
     ):
 
         if max_queue_size is None:
-            max_queue_size = Configuration().get("BSP_MAX_QUEUE_SIZE", 2048)
+            max_queue_size = int(environ.get(OTEL_BSP_MAX_QUEUE_SIZE, 2048))
 
         if schedule_delay_millis is None:
-            schedule_delay_millis = Configuration().get(
-                "BSP_SCHEDULE_DELAY_MILLIS", 5000
+            schedule_delay_millis = int(
+                environ.get(OTEL_BSP_SCHEDULE_DELAY, 5000)
             )
 
         if max_export_batch_size is None:
-            max_export_batch_size = Configuration().get(
-                "BSP_MAX_EXPORT_BATCH_SIZE", 512
+            max_export_batch_size = int(
+                environ.get(OTEL_BSP_MAX_EXPORT_BATCH_SIZE, 512)
             )
 
         if export_timeout_millis is None:
-            export_timeout_millis = Configuration().get(
-                "BSP_EXPORT_TIMEOUT_MILLIS", 30000
+            export_timeout_millis = int(
+                environ.get(OTEL_BSP_EXPORT_TIMEOUT, 30000)
             )
 
         if max_queue_size <= 0:
@@ -181,7 +187,7 @@ class BatchExportSpanProcessor(SpanProcessor):
     ) -> None:
         pass
 
-    def on_end(self, span: Span) -> None:
+    def on_end(self, span: ReadableSpan) -> None:
         if self.done:
             logger.warning("Already shutdown, dropping span.")
             return
@@ -325,7 +331,7 @@ class BatchExportSpanProcessor(SpanProcessor):
         return idx
 
     def _drain_queue(self):
-        """"Export all elements until queue is empty.
+        """Export all elements until queue is empty.
 
         Can only be called from the worker thread context because it invokes
         `export` that is not thread safe.
@@ -374,14 +380,16 @@ class ConsoleSpanExporter(SpanExporter):
         self,
         service_name: Optional[str] = None,
         out: typing.IO = sys.stdout,
-        formatter: typing.Callable[[Span], str] = lambda span: span.to_json()
-        + os.linesep,
+        formatter: typing.Callable[
+            [ReadableSpan], str
+        ] = lambda span: span.to_json()
+        + linesep,
     ):
         self.out = out
         self.formatter = formatter
         self.service_name = service_name
 
-    def export(self, spans: typing.Sequence[Span]) -> SpanExportResult:
+    def export(self, spans: typing.Sequence[ReadableSpan]) -> SpanExportResult:
         for span in spans:
             self.out.write(self.formatter(span))
         self.out.flush()

@@ -34,7 +34,7 @@ algorithms that are supported include gzip and no compression. The value should
 be in the format of a string "gzip" for gzip compression, and no value specified
 if no compression is the desired choice.
 Additional details are available `in the specification
-<https://github.com/open-telemetry/opentelemetry-specification/blob/master/specification/protocol/exporter.md#opentelemetry-protocol-exporter>`_.
+<https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md#opentelemetry-protocol-exporter>`_.
 
 .. code:: python
 
@@ -53,7 +53,7 @@ Additional details are available `in the specification
     trace.set_tracer_provider(TracerProvider(resource=resource))
     tracer = trace.get_tracer(__name__)
 
-    otlp_exporter = OTLPSpanExporter(endpoint="localhost:55680", insecure=True)
+    otlp_exporter = OTLPSpanExporter(endpoint="localhost:4317", insecure=True)
 
     span_processor = BatchExportSpanProcessor(otlp_exporter)
 

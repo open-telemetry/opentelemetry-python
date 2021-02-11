@@ -81,7 +81,6 @@ from contextlib import contextmanager
 from logging import getLogger
 
 from opentelemetry.context.context import Context
-from opentelemetry.trace.ids_generator import IdsGenerator, RandomIdsGenerator
 from opentelemetry.trace.propagation import (
     get_current_span,
     set_span_in_context,
@@ -138,6 +137,9 @@ class Link(LinkBase):
     @property
     def attributes(self) -> types.Attributes:
         return self._attributes
+
+
+_Links = typing.Optional[typing.Sequence[Link]]
 
 
 class SpanKind(enum.Enum):
@@ -232,7 +234,7 @@ class Tracer(abc.ABC):
         context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
-        links: typing.Sequence[Link] = (),
+        links: _Links = None,
         start_time: typing.Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
@@ -287,10 +289,11 @@ class Tracer(abc.ABC):
         context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
-        links: typing.Sequence[Link] = (),
+        links: _Links = None,
         start_time: typing.Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        end_on_exit: bool = True,
     ) -> typing.Iterator["Span"]:
         """Context manager for creating a new span and set it
         as the current span in this tracer's context.
@@ -338,6 +341,8 @@ class Tracer(abc.ABC):
                 be automatically set to ERROR when an uncaught exception is
                 raised in the span with block. The span status won't be set by
                 this mechanism if it was previously set manually.
+            end_on_exit: Whether to end the span automatically when leaving the
+                context manager.
 
         Yields:
             The newly-created span.
@@ -378,7 +383,7 @@ class DefaultTracer(Tracer):
         context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
-        links: typing.Sequence[Link] = (),
+        links: _Links = None,
         start_time: typing.Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
@@ -393,10 +398,11 @@ class DefaultTracer(Tracer):
         context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
-        links: typing.Sequence[Link] = (),
+        links: _Links = None,
         start_time: typing.Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        end_on_exit: bool = True,
     ) -> typing.Iterator["Span"]:
         # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN
@@ -422,7 +428,7 @@ def get_tracer(
     This function is a convenience wrapper for
     opentelemetry.trace.TracerProvider.get_tracer.
 
-    If tracer_provider is ommited the current configured one is used.
+    If tracer_provider is omitted the current configured one is used.
     """
     if tracer_provider is None:
         tracer_provider = get_tracer_provider()
@@ -459,7 +465,6 @@ def get_tracer_provider() -> TracerProvider:
 __all__ = [
     "DEFAULT_TRACE_OPTIONS",
     "DEFAULT_TRACE_STATE",
-    "IdsGenerator",
     "INVALID_SPAN",
     "INVALID_SPAN_CONTEXT",
     "INVALID_SPAN_ID",
@@ -469,7 +474,6 @@ __all__ = [
     "DefaultTracerProvider",
     "Link",
     "LinkBase",
-    "RandomIdsGenerator",
     "Span",
     "SpanContext",
     "SpanKind",

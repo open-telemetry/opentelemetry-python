@@ -24,8 +24,8 @@ OTLP_JAEGER_SPAN_KIND = {
     SpanKind.INTERNAL: "internal",
 }
 
-NAME_KEY = "otel.instrumentation_library.name"
-VERSION_KEY = "otel.instrumentation_library.version"
+NAME_KEY = "otel.library.name"
+VERSION_KEY = "otel.library.version"
 
 
 def _nsec_to_usec_round(nsec: int) -> int:

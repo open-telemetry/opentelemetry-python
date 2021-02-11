@@ -88,7 +88,7 @@ class TestSampler(unittest.TestCase):
         )
 
     def test_always_on(self):
-        trace_state = trace.TraceState({"key": "value"})
+        trace_state = trace.TraceState([("key", "value")])
         test_data = (TO_DEFAULT, TO_SAMPLED, None)
 
         for trace_flags in test_data:
@@ -109,7 +109,7 @@ class TestSampler(unittest.TestCase):
                 self.assertEqual(sample_result.trace_state, trace_state)
 
     def test_always_off(self):
-        trace_state = trace.TraceState({"key": "value"})
+        trace_state = trace.TraceState([("key", "value")])
         test_data = (TO_DEFAULT, TO_SAMPLED, None)
         for trace_flags in test_data:
             with self.subTest(trace_flags=trace_flags):
@@ -126,7 +126,7 @@ class TestSampler(unittest.TestCase):
                 self.assertEqual(sample_result.trace_state, trace_state)
 
     def test_default_on(self):
-        trace_state = trace.TraceState({"key": "value"})
+        trace_state = trace.TraceState([("key", "value")])
         context = self._create_parent(trace_flags=TO_DEFAULT)
         sample_result = sampling.DEFAULT_ON.should_sample(
             context,
@@ -163,7 +163,7 @@ class TestSampler(unittest.TestCase):
         self.assertEqual(sample_result.trace_state, trace_state)
 
     def test_default_off(self):
-        trace_state = trace.TraceState({"key": "value"})
+        trace_state = trace.TraceState([("key", "value")])
         context = self._create_parent(trace_flags=TO_DEFAULT)
         sample_result = sampling.DEFAULT_OFF.should_sample(
             context,
@@ -200,7 +200,7 @@ class TestSampler(unittest.TestCase):
         self.assertEqual(default_off.trace_state, trace_state)
 
     def test_probability_sampler(self):
-        trace_state = trace.TraceState({"key": "value"})
+        trace_state = trace.TraceState([("key", "value")])
         sampler = sampling.TraceIdRatioBased(0.5)
 
         # Check that we sample based on the trace ID if the parent context is
@@ -313,7 +313,7 @@ class TestSampler(unittest.TestCase):
 
     # pylint:disable=too-many-statements
     def exec_parent_based(self, parent_sampling_context):
-        trace_state = trace.TraceState({"key": "value"})
+        trace_state = trace.TraceState([("key", "value")])
         sampler = sampling.ParentBased(sampling.ALWAYS_ON)
         # Check that the sampling decision matches the parent context if given
         with parent_sampling_context(

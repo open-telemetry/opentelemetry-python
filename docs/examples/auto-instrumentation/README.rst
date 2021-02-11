@@ -11,7 +11,7 @@ The example is based on a previous OpenTracing example that
 you can find
 `here <https://github.com/yurishkuro/opentracing-tutorial/tree/master/python>`__.
 
-The source files for these examples are available `here <https://github.com/open-telemetry/opentelemetry-python/tree/master/docs/examples/auto-instrumentation>`__.
+The source files for these examples are available `here <https://github.com/open-telemetry/opentelemetry-python/tree/main/docs/examples/auto-instrumentation>`__.
 
 This example uses two different scripts. The main difference between them is
 whether or not they're instrumented manually:
@@ -124,7 +124,6 @@ similar to the following example:
             "status_code": "OK"
         },
         "attributes": {
-            "component": "http",
             "http.method": "GET",
             "http.server_name": "127.0.0.1",
             "http.scheme": "http",
@@ -152,7 +151,7 @@ and run the following command instead:
 
 .. code:: sh
 
-    $ opentelemetry-instrument -e console_span,console_metrics python server_uninstrumented.py
+    $ opentelemetry-instrument -e console_span python server_uninstrumented.py
 
 In the console where you previously executed ``client.py``, run the following
 command again:
@@ -181,7 +180,6 @@ similar to the following example:
             "status_code": "OK"
         },
         "attributes": {
-            "component": "http",
             "http.method": "GET",
             "http.server_name": "127.0.0.1",
             "http.scheme": "http",

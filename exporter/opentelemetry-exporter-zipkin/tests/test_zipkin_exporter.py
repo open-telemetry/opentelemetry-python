@@ -18,17 +18,22 @@ import unittest
 from unittest.mock import MagicMock, patch
 
 from opentelemetry import trace as trace_api
-from opentelemetry.configuration import Configuration
 from opentelemetry.exporter.zipkin import (
+    NAME_KEY,
     SPAN_KIND_MAP_JSON,
     SPAN_KIND_MAP_PROTOBUF,
     TRANSPORT_FORMAT_JSON,
     TRANSPORT_FORMAT_PROTOBUF,
+    VERSION_KEY,
     ZipkinSpanExporter,
     nsec_to_usec_round,
 )
 from opentelemetry.exporter.zipkin.gen import zipkin_pb2
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_ZIPKIN_ENDPOINT,
+    OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT,
+)
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
@@ -56,18 +61,17 @@ class TestZipkinSpanExporter(unittest.TestCase):
         self._test_span.end()
 
     def tearDown(self):
-        if "OTEL_EXPORTER_ZIPKIN_ENDPOINT" in os.environ:
-            del os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"]
-        if "OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT" in os.environ:
-            del os.environ["OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT"]
-        Configuration()._reset()  # pylint: disable=protected-access
+        if OTEL_EXPORTER_ZIPKIN_ENDPOINT in os.environ:
+            del os.environ[OTEL_EXPORTER_ZIPKIN_ENDPOINT]
+        if OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT in os.environ:
+            del os.environ[OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT]
 
     def test_constructor_env_var(self):
         """Test the default values assigned by constructor."""
         url = "https://foo:9911/path"
-        os.environ["OTEL_EXPORTER_ZIPKIN_ENDPOINT"] = url
+        os.environ[OTEL_EXPORTER_ZIPKIN_ENDPOINT] = url
         os.environ[
-            "OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT"
+            OTEL_EXPORTER_ZIPKIN_TRANSPORT_FORMAT
         ] = TRANSPORT_FORMAT_PROTOBUF
         service_name = "my-service-name"
         port = 9911
@@ -185,20 +189,36 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 parent=parent_span_context,
                 events=(event,),
                 links=(link,),
+                resource=Resource({}),
             ),
             trace._Span(
-                name=span_names[1], context=parent_span_context, parent=None
+                name=span_names[1],
+                context=parent_span_context,
+                parent=None,
+                resource=Resource(
+                    attributes={"key_resource": "some_resource"}
+                ),
             ),
             trace._Span(
-                name=span_names[2], context=other_context, parent=None
+                name=span_names[2],
+                context=other_context,
+                parent=None,
+                resource=Resource(
+                    attributes={"key_resource": "some_resource"}
+                ),
             ),
             trace._Span(
-                name=span_names[3], context=other_context, parent=None
+                name=span_names[3],
+                context=other_context,
+                parent=None,
+                resource=Resource({}),
+                instrumentation_info=InstrumentationInfo(
+                    name="name", version="version"
+                ),
             ),
         ]
 
         otel_spans[0].start(start_time=start_times[0])
-        otel_spans[0].resource = Resource({})
         # added here to preserve order
         otel_spans[0].set_attribute("key_bool", False)
         otel_spans[0].set_attribute("key_string", "hello_world")
@@ -209,24 +229,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
         otel_spans[0].end(end_time=end_times[0])
 
         otel_spans[1].start(start_time=start_times[1])
-        otel_spans[1].resource = Resource(
-            attributes={"key_resource": "some_resource"}
-        )
         otel_spans[1].end(end_time=end_times[1])
 
         otel_spans[2].start(start_time=start_times[2])
         otel_spans[2].set_attribute("key_string", "hello_world")
-        otel_spans[2].resource = Resource(
-            attributes={"key_resource": "some_resource"}
-        )
         otel_spans[2].end(end_time=end_times[2])
 
         otel_spans[3].start(start_time=start_times[3])
-        otel_spans[3].resource = Resource({})
         otel_spans[3].end(end_time=end_times[3])
-        otel_spans[3].instrumentation_info = InstrumentationInfo(
-            name="name", version="version"
-        )
 
         service_name = "test-service"
         local_endpoint = {"serviceName": service_name, "port": 9411}
@@ -243,7 +253,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "localEndpoint": local_endpoint,
                 "kind": span_kind,
                 "tags": {
-                    "key_bool": "False",
+                    "key_bool": "false",
                     "key_string": "hello_world",
                     "key_float": "111.22",
                     "otel.status_code": "ERROR",
@@ -297,10 +307,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 "duration": durations[3] // 10 ** 3,
                 "localEndpoint": local_endpoint,
                 "kind": span_kind,
-                "tags": {
-                    "otel.instrumentation_library.name": "name",
-                    "otel.instrumentation_library.version": "version",
-                },
+                "tags": {NAME_KEY: "name", VERSION_KEY: "version"},
                 "annotations": None,
             },
         ]
@@ -358,10 +365,10 @@ class TestZipkinSpanExporter(unittest.TestCase):
             name=span_names[0],
             context=span_context,
             parent=parent_span_context,
+            resource=Resource({}),
         )
 
         otel_span.start(start_time=start_time)
-        otel_span.resource = Resource({})
         otel_span.end(end_time=end_time)
 
         service_name = "test-service"
@@ -415,10 +422,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
         )
 
-        span = trace._Span(name="test-span", context=span_context,)
+        span = trace._Span(
+            name="test-span", context=span_context, resource=Resource({})
+        )
 
         span.start()
-        span.resource = Resource({})
         # added here to preserve order
         span.set_attribute("string1", "v" * 500)
         span.set_attribute("string2", "v" * 50)
@@ -471,11 +479,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
         self.assertEqual(
             tags["list5"],
-            '["True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True"]',
+            '["true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true"]',
         )
         self.assertEqual(
             tags["list6"],
-            '["True","True","True","True","True","True","True","True","True","True"]',
+            '["true","true","true","true","true","true","true","true","true","true"]',
         )
         self.assertEqual(
             tags["tuple1"],
@@ -493,11 +501,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
         )
         self.assertEqual(
             tags["tuple5"],
-            '["True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True","True"]',
+            '["true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true","true"]',
         )
         self.assertEqual(
             tags["tuple6"],
-            '["True","True","True","True","True","True","True","True","True","True"]',
+            '["true","true","true","true","true","true","true","true","true","true"]',
         )
         self.assertEqual(
             tags["range1"],
@@ -580,14 +588,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
         self.assertEqual(tags["list2"], '["a","a"]')
         self.assertEqual(tags["list3"], '["2","2"]')
         self.assertEqual(tags["list4"], '["2","2"]')
-        self.assertEqual(tags["list5"], '["True"]')
-        self.assertEqual(tags["list6"], '["True"]')
+        self.assertEqual(tags["list5"], '["true"]')
+        self.assertEqual(tags["list6"], '["true"]')
         self.assertEqual(tags["tuple1"], '["a","a"]')
         self.assertEqual(tags["tuple2"], '["a","a"]')
         self.assertEqual(tags["tuple3"], '["2","2"]')
         self.assertEqual(tags["tuple4"], '["2","2"]')
-        self.assertEqual(tags["tuple5"], '["True"]')
-        self.assertEqual(tags["tuple6"], '["True"]')
+        self.assertEqual(tags["tuple5"], '["true"]')
+        self.assertEqual(tags["tuple6"], '["true"]')
         self.assertEqual(tags["range1"], '["0","1"]')
         self.assertEqual(tags["range2"], '["0","1"]')
 
@@ -606,14 +614,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
         self.assertEqual(tags["list2"], '["a","a"]')
         self.assertEqual(tags["list3"], '["2","2"]')
         self.assertEqual(tags["list4"], '["2","2"]')
-        self.assertEqual(tags["list5"], '["True"]')
-        self.assertEqual(tags["list6"], '["True"]')
+        self.assertEqual(tags["list5"], '["true"]')
+        self.assertEqual(tags["list6"], '["true"]')
         self.assertEqual(tags["tuple1"], '["a","a"]')
         self.assertEqual(tags["tuple2"], '["a","a"]')
         self.assertEqual(tags["tuple3"], '["2","2"]')
         self.assertEqual(tags["tuple4"], '["2","2"]')
-        self.assertEqual(tags["tuple5"], '["True"]')
-        self.assertEqual(tags["tuple6"], '["True"]')
+        self.assertEqual(tags["tuple5"], '["true"]')
+        self.assertEqual(tags["tuple6"], '["true"]')
         self.assertEqual(tags["range1"], '["0","1"]')
         self.assertEqual(tags["range2"], '["0","1"]')
 
@@ -632,14 +640,14 @@ class TestZipkinSpanExporter(unittest.TestCase):
         self.assertEqual(tags["list2"], '["a","a"]')
         self.assertEqual(tags["list3"], '["2","2"]')
         self.assertEqual(tags["list4"], '["2","2"]')
-        self.assertEqual(tags["list5"], '["True"]')
-        self.assertEqual(tags["list6"], '["True"]')
+        self.assertEqual(tags["list5"], '["true"]')
+        self.assertEqual(tags["list6"], '["true"]')
         self.assertEqual(tags["tuple1"], '["a","a"]')
         self.assertEqual(tags["tuple2"], '["a","a"]')
         self.assertEqual(tags["tuple3"], '["2","2"]')
         self.assertEqual(tags["tuple4"], '["2","2"]')
-        self.assertEqual(tags["tuple5"], '["True"]')
-        self.assertEqual(tags["tuple6"], '["True"]')
+        self.assertEqual(tags["tuple5"], '["true"]')
+        self.assertEqual(tags["tuple6"], '["true"]')
         self.assertEqual(tags["range1"], '["0","1"]')
         self.assertEqual(tags["range2"], '["0","1"]')
 
@@ -703,22 +711,38 @@ class TestZipkinSpanExporter(unittest.TestCase):
                 name=span_names[0],
                 context=span_context,
                 parent=parent_span_context,
+                resource=Resource({}),
                 events=(event,),
                 links=(link,),
             ),
             trace._Span(
-                name=span_names[1], context=parent_span_context, parent=None
+                name=span_names[1],
+                context=parent_span_context,
+                parent=None,
+                resource=Resource(
+                    attributes={"key_resource": "some_resource"}
+                ),
             ),
             trace._Span(
-                name=span_names[2], context=other_context, parent=None
+                name=span_names[2],
+                context=other_context,
+                parent=None,
+                resource=Resource(
+                    attributes={"key_resource": "some_resource"}
+                ),
             ),
             trace._Span(
-                name=span_names[3], context=other_context, parent=None
+                name=span_names[3],
+                context=other_context,
+                parent=None,
+                resource=Resource({}),
+                instrumentation_info=InstrumentationInfo(
+                    name="name", version="version"
+                ),
             ),
         ]
 
         otel_spans[0].start(start_time=start_times[0])
-        otel_spans[0].resource = Resource({})
         # added here to preserve order
         otel_spans[0].set_attribute("key_bool", False)
         otel_spans[0].set_attribute("key_string", "hello_world")
@@ -729,25 +753,15 @@ class TestZipkinSpanExporter(unittest.TestCase):
         otel_spans[0].end(end_time=end_times[0])
 
         otel_spans[1].start(start_time=start_times[1])
-        otel_spans[1].resource = Resource(
-            attributes={"key_resource": "some_resource"}
-        )
         otel_spans[1].set_status(Status(StatusCode.OK))
         otel_spans[1].end(end_time=end_times[1])
 
         otel_spans[2].start(start_time=start_times[2])
         otel_spans[2].set_attribute("key_string", "hello_world")
-        otel_spans[2].resource = Resource(
-            attributes={"key_resource": "some_resource"}
-        )
         otel_spans[2].end(end_time=end_times[2])
 
         otel_spans[3].start(start_time=start_times[3])
-        otel_spans[3].resource = Resource({})
         otel_spans[3].end(end_time=end_times[3])
-        otel_spans[3].instrumentation_info = InstrumentationInfo(
-            name="name", version="version"
-        )
 
         service_name = "test-service"
         local_endpoint = zipkin_pb2.Endpoint(
@@ -768,7 +782,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     local_endpoint=local_endpoint,
                     kind=span_kind,
                     tags={
-                        "key_bool": "False",
+                        "key_bool": "false",
                         "key_string": "hello_world",
                         "key_float": "111.22",
                         "otel.status_code": "ERROR",
@@ -833,10 +847,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
                     duration=nsec_to_usec_round(durations[3]),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
-                    tags={
-                        "otel.instrumentation_library.name": "name",
-                        "otel.instrumentation_library.version": "version",
-                    },
+                    tags={NAME_KEY: "name", VERSION_KEY: "version"},
                 ),
             ],
         )
@@ -871,10 +882,11 @@ class TestZipkinSpanExporter(unittest.TestCase):
             trace_flags=TraceFlags(TraceFlags.SAMPLED),
         )
 
-        span = trace._Span(name="test-span", context=span_context,)
+        span = trace._Span(
+            name="test-span", context=span_context, resource=Resource({})
+        )
 
         span.start()
-        span.resource = Resource({})
         # added here to preserve order
         span.set_attribute("k1", "v" * 500)
         span.set_attribute("k2", "v" * 50)

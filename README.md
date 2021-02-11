@@ -5,7 +5,7 @@
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
     <a href="https://opentelemetry-python.readthedocs.io/">API Documentation<a/>
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-    <a href="https://gitter.im/open-telemetry/opentelemetry-python">Getting In Touch (Gitter)<a/>
+    <a href="https://github.com/open-telemetry/opentelemetry-python/discussions">Getting In Touch (GitHub Discussions)<a/>
   </strong>
 </p>
 
@@ -13,10 +13,10 @@
   <a href="https://github.com/open-telemetry/opentelemetry-python/releases">
     <img alt="GitHub release (latest by date including pre-releases)" src="https://img.shields.io/github/v/release/open-telemetry/opentelemetry-python?include_prereleases&style=for-the-badge">
   </a>
-  <a href="https://codecov.io/gh/open-telemetry/opentelemetry-python/branch/master/">
+  <a href="https://codecov.io/gh/open-telemetry/opentelemetry-python/branch/main/">
     <img alt="Codecov Status" src="https://img.shields.io/codecov/c/github/open-telemetry/opentelemetry-python?style=for-the-badge">
   </a>
-  <a href="https://github.com/open-telemetry/opentelemetry-python/blob/master/LICENSE">
+  <a href="https://github.com/open-telemetry/opentelemetry-python/blob/main/LICENSE">
     <img alt="license" src="https://img.shields.io/badge/license-Apache_2.0-green.svg?style=for-the-badge">
   </a>
   <br/>
@@ -61,19 +61,19 @@ pip install opentelemetry-sdk
 ```
 
 The
-[`instrumentation/`](https://github.com/open-telemetry/opentelemetry-python/tree/master/instrumentation)
-directory includes OpenTelemetry instrumentation packages. You can install the packages separately with the following command:
-
-```sh
-pip install opentelemetry-instrumentation-{instrumentation}
-```
-
-The
-[`exporter/`](https://github.com/open-telemetry/opentelemetry-python/tree/master/exporter)
+[`exporter/`](https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter)
 directory includes OpenTelemetry exporter packages. You can install the packages separately with the following command:
 
 ```sh
 pip install opentelemetry-exporter-{exporter}
+```
+
+The
+[`propagator/`](https://github.com/open-telemetry/opentelemetry-python/tree/main/propagator)
+directory includes OpenTelemetry propagator packages. You can install the packages separately with the following command:
+
+```sh
+pip install opentelemetry-propagator-{propagator}
 ```
 
 To install the development versions of these packages instead, clone or fork
@@ -89,6 +89,22 @@ pip install -e ./instrumentation/opentelemetry-instrumentation-{instrumentation}
 For additional exporter and instrumentation packages, see the 
 [`opentelemetry-python-contrib`](https://github.com/open-telemetry/opentelemetry-python-contrib) repository.
 
+## Running Performance Tests
+
+This section provides details on how to reproduce performance tests results on your own
+machine.
+
+### Resource Usage Tests
+
+1. Install scalene using the following command
+
+`pip install scalene`
+
+2. Run the `scalene` tests on any of the example Python programs
+
+`scalene opentelemetry-<PACKAGE>/tests/performance/resource-usage/<PATH_TO_TEST>/profile_resource_usage_<NAME_OF_TEST>.py`
+
+
 ## Documentation
 
 The online documentation is available at https://opentelemetry-python.readthedocs.io/.
@@ -101,9 +117,9 @@ For information about contributing to OpenTelemetry Python, see [CONTRIBUTING.md
 
 We meet weekly on Thursdays at 9AM PST. The meeting is subject to change depending on contributors' availability. Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=google.com_b79e3e90j7bbsa2n2p5an5lf60%40group.calendar.google.com) for specific dates.
 
-Meetings take place via [Zoom video conference](https://zoom.us/j/6729396170).
+Meetings take place via [Zoom video conference](https://zoom.us/j/6729396170). The passcode is _77777_.
 
-Meeting notes are available as a public [Google doc](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit). For edit access, get in touch on [Gitter](https://gitter.im/open-telemetry/opentelemetry-python).
+Meeting notes are available as a public [Google doc](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit). For edit access, get in touch on [GitHub Discussions](https://github.com/open-telemetry/opentelemetry-python/discussions).
 
 Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telemetry/teams/python-approvers)):
 
@@ -117,14 +133,14 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 - [Reiley Yang](https://github.com/reyang), Microsoft
 - [Yusuke Tsutsumi](https://github.com/toumorokoshi), Google
 
-*For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#approver).*
+*For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver).*
 
 Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-telemetry/teams/python-maintainers)):
 
 - [Alex Boten](https://github.com/codeboten), Lightstep
 - [Leighton Chen](https://github.com/lzchen), Microsoft
 
-*For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/master/community-membership.md#maintainer).*
+*For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer).*
 
 ### Thanks to all the people who already contributed!
 

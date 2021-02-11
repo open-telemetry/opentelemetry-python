@@ -22,14 +22,12 @@ if [[ ! "${VERSION}" =~ ^([0-9])(\.*[0-9]{1,5}[a-b]*){1,3}$ ]]; then
 fi
 
 # create the release branch
-git fetch origin master
-git checkout master
-git reset --hard origin/master
+git fetch origin main
+git checkout main
+git reset --hard origin/main
 git checkout -b release/${VERSION}
 git push origin release/${VERSION}
 
-# create a temporary branch to create a PR for updated version and changelogs
-git checkout -b release/${VERSION}-auto
 ./scripts/eachdist.py release --version ${VERSION}
 rc=$?
 if [ $rc != 0 ]; then
@@ -37,7 +35,7 @@ if [ $rc != 0 ]; then
     exit 0
 fi
 
-git add **/version.py **/setup.cfg **/CHANGELOG.md
+git add .
 
 git commit -m "updating changelogs and version to ${VERSION}"
 

@@ -4,18 +4,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v0.16b1...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v0.17b0...HEAD)
 
-- Add support for OTLP v0.6.0
-  ([#1472](https://github.com/open-telemetry/opentelemetry-python/pull/1472))
-
-- Add protobuf via gRPC exporting support for Jaeger
-  ([#1471](https://github.com/open-telemetry/opentelemetry-python/pull/1471))
-
-- Add support for Python 3.9
-  ([#1441](https://github.com/open-telemetry/opentelemetry-python/pull/1441))
+### Changed
+- Tracer and Meter provider environment variables are now consistent with the rest
+  ([#1571](https://github.com/open-telemetry/opentelemetry-python/pull/1571)])
+- Rename `TRACE_` to `TRACES_` for environment variables
+  ([#1595](https://github.com/open-telemetry/opentelemetry-python/pull/1595)])
+- Limits for Span attributes, events and links have been updated to 128
+  ([1597](https://github.com/open-telemetry/opentelemetry-python/pull/1597)])
 
 ### Added
+- Added `end_on_exit` argument to `start_as_current_span`
+  ([#1519](https://github.com/open-telemetry/opentelemetry-python/pull/1519)])
+- Add `Span.set_attributes` method to set multiple values with one call
+  ([#1520](https://github.com/open-telemetry/opentelemetry-python/pull/1520))
+- Make sure Resources follow semantic conventions
+  ([#1480](https://github.com/open-telemetry/opentelemetry-python/pull/1480))
+- Allow missing carrier headers to continue without raising AttributeError
+  ([#1545](https://github.com/open-telemetry/opentelemetry-python/pull/1545))
+- Add urllib to opentelemetry-bootstrap target list
+  ([#1584])(https://github.com/open-telemetry/opentelemetry-python/pull/1584)
+
+### Changed
+- Read-only Span attributes have been moved to ReadableSpan class
+  ([#1560](https://github.com/open-telemetry/opentelemetry-python/pull/1560))
+- `BatchExportSpanProcessor` flushes export queue when it reaches `max_export_batch_size`
+  ([#1521])(https://github.com/open-telemetry/opentelemetry-python/pull/1521)
+
+### Removed
+- Remove Configuration
+  ([#1523](https://github.com/open-telemetry/opentelemetry-python/pull/1523))
+- Remove Metrics as part of stable, marked as experimental
+  ([#1568](https://github.com/open-telemetry/opentelemetry-python/pull/1568))
+
+## [0.17b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.17b0) - 2021-01-20
+
+### Added
+- Add support for OTLP v0.6.0
+  ([#1472](https://github.com/open-telemetry/opentelemetry-python/pull/1472))
+- Add protobuf via gRPC exporting support for Jaeger
+  ([#1471](https://github.com/open-telemetry/opentelemetry-python/pull/1471))
+- Add support for Python 3.9
+  ([#1441](https://github.com/open-telemetry/opentelemetry-python/pull/1441))
 - Added the ability to disable instrumenting libraries specified by OTEL_PYTHON_DISABLED_INSTRUMENTATIONS env variable, when using opentelemetry-instrument command.
   ([#1461](https://github.com/open-telemetry/opentelemetry-python/pull/1461))
 - Add `fields` to propagators
@@ -36,6 +67,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1285](https://github.com/open-telemetry/opentelemetry-python/pull/1285))
 - Added `__repr__` for `DefaultSpan`, added `trace_flags` to `__repr__` of
   `SpanContext` ([#1485](https://github.com/open-telemetry/opentelemetry-python/pull/1485)])
+- `opentelemetry-sdk` Add support for OTEL_TRACE_SAMPLER and OTEL_TRACE_SAMPLER_ARG env variables
+  ([#1496](https://github.com/open-telemetry/opentelemetry-python/pull/1496))
+- Adding `opentelemetry-distro` package to add default configuration for
+  span exporter to OTLP
+  ([#1482](https://github.com/open-telemetry/opentelemetry-python/pull/1482))
+
 ### Changed
 - `opentelemetry-exporter-zipkin` Updated zipkin exporter status code and error tag
   ([#1486](https://github.com/open-telemetry/opentelemetry-python/pull/1486))
@@ -46,7 +83,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1507](https://github.com/open-telemetry/opentelemetry-python/pull/1507))
 - `opentelemetry-exporter-jaeger` Updated Jaeger exporter status code tag
   ([#1488](https://github.com/open-telemetry/opentelemetry-python/pull/1488))
-- `BatchExportSpanProcessor` flushes export queue when it reaches `max_export_batch_size`
+- `opentelemetry-api` `opentelemety-sdk` Moved `idsgenerator` into sdk
+  ([#1514](https://github.com/open-telemetry/opentelemetry-python/pull/1514))
+- `opentelemetry-sdk` The B3Format propagator has been moved into its own package: `opentelemetry-propagator-b3`
+  ([#1513](https://github.com/open-telemetry/opentelemetry-python/pull/1513))
+- Update default port for OTLP exporter from 55680 to 4317
+  ([#1516](https://github.com/open-telemetry/opentelemetry-python/pull/1516))
+- `opentelemetry-exporter-zipkin` Update boolean attribute value transformation
+  ([#1509](https://github.com/open-telemetry/opentelemetry-python/pull/1509))
+- Move opentelemetry-opentracing-shim out of instrumentation folder
+  ([#1533](https://github.com/open-telemetry/opentelemetry-python/pull/1533))
+- `opentelemetry-sdk` The JaegerPropagator has been moved into its own package: `opentelemetry-propagator-jaeger`
+  ([#1525](https://github.com/open-telemetry/opentelemetry-python/pull/1525))
+- `opentelemetry-exporter-jaeger`, `opentelemetry-exporter-zipkin` Update InstrumentationInfo tag keys for Jaeger and Zipkin exporters
+  ([#1535](https://github.com/open-telemetry/opentelemetry-python/pull/1535))
+- `opentelemetry-sdk` Remove rate property setter from TraceIdRatioBasedSampler
+  ([#1536](https://github.com/open-telemetry/opentelemetry-python/pull/1536))
+- Fix TraceState to adhere to specs
+  ([#1502](https://github.com/open-telemetry/opentelemetry-python/pull/1502))
+- Update Resource `merge` key conflict precedence
+  ([#1544](https://github.com/open-telemetry/opentelemetry-python/pull/1544))
+
+### Removed
+- `opentelemetry-api` Remove ThreadLocalRuntimeContext since python3.4 is not supported.
 
 ## [0.16b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.16b1) - 2020-11-26
 ### Added
