@@ -22,9 +22,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add urllib to opentelemetry-bootstrap target list
   ([#1584])(https://github.com/open-telemetry/opentelemetry-python/pull/1584)
 
+
+### Changed
+- Read-only Span attributes have been moved to ReadableSpan class
+  ([#1560](https://github.com/open-telemetry/opentelemetry-python/pull/1560))
+
 ### Removed
 - Remove Configuration
   ([#1523](https://github.com/open-telemetry/opentelemetry-python/pull/1523))
+- Remove Metrics as part of stable, marked as experimental
+  ([#1568](https://github.com/open-telemetry/opentelemetry-python/pull/1568))
 
 ## [0.17b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.17b0) - 2021-01-20
 

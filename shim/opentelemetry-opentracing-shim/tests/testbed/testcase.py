@@ -18,11 +18,11 @@ class OpenTelemetryTestCase(unittest.TestCase):
         self.assertIsNotNone(spanA.parent)
 
         ctxA = spanA.parent
-        if isinstance(spanA.parent, trace_api.Span):
+        if not isinstance(ctxA, trace_api.SpanContext):
             ctxA = spanA.parent.context
 
         ctxB = spanB
-        if isinstance(ctxB, trace_api.Span):
+        if not isinstance(ctxB, trace_api.SpanContext):
             ctxB = spanB.context
 
         return self.assertEqual(ctxA.span_id, ctxB.span_id)
@@ -33,11 +33,11 @@ class OpenTelemetryTestCase(unittest.TestCase):
             return
 
         ctxA = spanA.parent
-        if isinstance(spanA.parent, trace_api.Span):
+        if not isinstance(ctxA, trace_api.SpanContext):
             ctxA = spanA.parent.context
 
         ctxB = spanB
-        if isinstance(ctxB, trace_api.Span):
+        if not isinstance(ctxB, trace_api.SpanContext):
             ctxB = spanB.context
 
         self.assertNotEqual(ctxA.span_id, ctxB.span_id)
