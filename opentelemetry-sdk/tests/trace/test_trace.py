@@ -38,7 +38,7 @@ from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import StatusCode
-from opentelemetry.util.providers import time_ns
+from opentelemetry.util.time import time_ns
 
 
 def new_tracer() -> trace_api.Tracer:
