@@ -60,6 +60,7 @@ instrumentations = {
     "sqlite3": "opentelemetry-instrumentation-sqlite3>=0.11b0",
     "starlette": "opentelemetry-instrumentation-starlette>=0.11b0",
     "tornado": "opentelemetry-instrumentation-tornado>=0.13b0",
+    "urllib": "opentelemetry-instrumentation-urllib>=0.17b0",
 }
 
 # relevant instrumentors and tracers to uninstall and check for conflicts for target libraries
@@ -91,6 +92,7 @@ libraries = {
     "sqlite3": ("opentelemetry-instrumentation-sqlite3",),
     "starlette": ("opentelemetry-instrumentation-starlette",),
     "tornado": ("opentelemetry-instrumentation-tornado",),
+    "urllib": ("opentelemetry-instrumentation-urllib",),
 }
 
 
