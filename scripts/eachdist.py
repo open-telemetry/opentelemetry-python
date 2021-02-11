@@ -568,9 +568,7 @@ def update_changelogs(version):
     )
     errors = False
     try:
-        update_changelog(
-            "./CHANGELOG.md", version, new_entry
-        )
+        update_changelog("./CHANGELOG.md", version, new_entry)
     except Exception as err:  # pylint: disable=broad-except
         print(str(err))
         errors = True
