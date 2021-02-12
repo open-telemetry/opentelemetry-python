@@ -26,10 +26,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add urllib to opentelemetry-bootstrap target list
   ([#1584])(https://github.com/open-telemetry/opentelemetry-python/pull/1584)
 
-
 ### Changed
 - Read-only Span attributes have been moved to ReadableSpan class
   ([#1560](https://github.com/open-telemetry/opentelemetry-python/pull/1560))
+- `BatchExportSpanProcessor` flushes export queue when it reaches `max_export_batch_size`
+  ([#1521])(https://github.com/open-telemetry/opentelemetry-python/pull/1521)
 
 ### Removed
 - Remove Configuration
