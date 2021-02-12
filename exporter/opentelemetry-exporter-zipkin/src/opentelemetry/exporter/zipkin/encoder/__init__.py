@@ -216,7 +216,7 @@ class Encoder(abc.ABC):
             annotations.append(
                 {
                     "timestamp": self._nsec_to_usec_round(event.timestamp),
-                    "value": json.dumps({event.name: attrs}),
+                    "value": json.dumps({event.name: attrs}, sort_keys=True),
                 }
             )
         return annotations
