@@ -56,16 +56,17 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
 from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import Status, StatusCode
-from opentelemetry.util import time_ns, types
+from opentelemetry.util import types
+from opentelemetry.util.providers import time_ns
 
 logger = logging.getLogger(__name__)
 
 SPAN_ATTRIBUTE_COUNT_LIMIT = int(
-    environ.get(OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, 1000)
+    environ.get(OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, 128)
 )
 
-SPAN_EVENT_COUNT_LIMIT = int(environ.get(OTEL_SPAN_EVENT_COUNT_LIMIT, 1000))
-SPAN_LINK_COUNT_LIMIT = int(environ.get(OTEL_SPAN_LINK_COUNT_LIMIT, 1000))
+SPAN_EVENT_COUNT_LIMIT = int(environ.get(OTEL_SPAN_EVENT_COUNT_LIMIT, 128))
+SPAN_LINK_COUNT_LIMIT = int(environ.get(OTEL_SPAN_LINK_COUNT_LIMIT, 128))
 VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
 # pylint: disable=protected-access
 TRACE_SAMPLER = sampling._get_from_env_or_default()

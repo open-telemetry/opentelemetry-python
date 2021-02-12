@@ -533,13 +533,13 @@ def update_changelog(path, version, new_entry):
     try:
         with open(path) as changelog:
             text = changelog.read()
-            if "## Version {}".format(version) in text:
+            if "## [{}]".format(version) in text:
                 raise AttributeError(
                     "{} already contans version {}".format(path, version)
                 )
         with open(path) as changelog:
             for line in changelog:
-                if line.startswith("## Unreleased"):
+                if line.startswith("## [Unreleased]"):
                     unreleased_changes = False
                 elif line.startswith("## "):
                     break
@@ -552,26 +552,26 @@ def update_changelog(path, version, new_entry):
 
     if unreleased_changes:
         print("updating: {}".format(path))
-        text = re.sub("## Unreleased", new_entry, text)
+        text = re.sub(r"## \[Unreleased\].*", new_entry, text)
         with open(path, "w") as changelog:
             changelog.write(text)
 
 
-def update_changelogs(targets, version):
-    print("updating CHANGELOG")
+def update_changelogs(version):
     today = datetime.now().strftime("%Y-%m-%d")
-    new_entry = "## Unreleased\n\n## Version {}\n\nReleased {}".format(
-        version, today
+    new_entry = """## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v{version}...HEAD)
+
+## [{version}](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v{version}) - {today}
+
+""".format(
+        version=version, today=today
     )
     errors = False
-    for target in targets:
-        try:
-            update_changelog(
-                "{}/CHANGELOG.md".format(target), version, new_entry
-            )
-        except Exception as err:  # pylint: disable=broad-except
-            print(str(err))
-            errors = True
+    try:
+        update_changelog("./CHANGELOG.md", version, new_entry)
+    except Exception as err:  # pylint: disable=broad-except
+        print(str(err))
+        errors = True
 
     if errors:
         sys.exit(1)
@@ -637,7 +637,7 @@ def release_args(args):
     version = args.version
     update_dependencies(targets, version)
     update_version_files(targets, version)
-    update_changelogs(targets, version)
+    update_changelogs(version)
 
 
 def test_args(args):

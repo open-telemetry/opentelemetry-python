@@ -29,7 +29,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_SCHEDULE_DELAY,
 )
 from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
-from opentelemetry.util import time_ns
+from opentelemetry.util.providers import time_ns
 
 logger = logging.getLogger(__name__)
 
@@ -200,7 +200,7 @@ class BatchExportSpanProcessor(SpanProcessor):
 
         self.queue.appendleft(span)
 
-        if len(self.queue) >= self.max_queue_size // 2:
+        if len(self.queue) >= self.max_export_batch_size:
             with self.condition:
                 self.condition.notify()
 

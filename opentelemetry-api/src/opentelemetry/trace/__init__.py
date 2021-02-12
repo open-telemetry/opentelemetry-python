@@ -101,7 +101,8 @@ from opentelemetry.trace.span import (
     format_trace_id,
 )
 from opentelemetry.trace.status import Status
-from opentelemetry.util import _load_trace_provider, types
+from opentelemetry.util import types
+from opentelemetry.util.providers import _load_trace_provider
 
 logger = getLogger(__name__)
 
