@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
 import unittest
+from time import time, time_ns
 
 from opentelemetry.shim.opentracing_shim import util
-from opentelemetry.util.time import time_ns
 
 
 class TestUtil(unittest.TestCase):
@@ -39,7 +38,7 @@ class TestUtil(unittest.TestCase):
         self.assertEqual(res, util.DEFAULT_EVENT_NAME)
 
     def test_time_seconds_to_ns(self):
-        time_seconds = time.time()
+        time_seconds = time()
         result = util.time_seconds_to_ns(time_seconds)
 
         self.assertEqual(result, int(time_seconds * 1e9))

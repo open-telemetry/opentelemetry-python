@@ -23,6 +23,7 @@ import traceback
 from collections import OrderedDict
 from contextlib import contextmanager
 from os import environ
+from time import time_ns
 from types import MappingProxyType, TracebackType
 from typing import (
     Any,
@@ -54,7 +55,6 @@ from opentelemetry.trace import SpanContext
 from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
-from opentelemetry.util.time import time_ns
 
 logger = logging.getLogger(__name__)
 
