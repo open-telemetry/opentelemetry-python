@@ -15,6 +15,8 @@
 import sys
 from logging import getLogger
 from os import environ, path
+from os.path import abspath, dirname, pathsep
+from re import sub
 
 from pkg_resources import iter_entry_points
 
@@ -83,6 +85,12 @@ def initialize():
         _load_instrumentors()
     except Exception:  # pylint: disable=broad-except
         logger.exception("Failed to auto initialize opentelemetry")
+    finally:
+        environ["PYTHONPATH"] = sub(
+            r"{}{}?".format(dirname(abspath(__file__)), pathsep),
+            "",
+            environ["PYTHONPATH"],
+        )
 
 
 if (
