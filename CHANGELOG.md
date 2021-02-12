@@ -4,7 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v0.17b0...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.0.0rc1...HEAD)
+
+## [1.0.0rc1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.0.0rc1) - 2021-02-12
 
 ### Changed
 - Tracer and Meter provider environment variables are now consistent with the rest
@@ -23,7 +25,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1545](https://github.com/open-telemetry/opentelemetry-python/pull/1545))
 - Add urllib to opentelemetry-bootstrap target list
   ([#1584])(https://github.com/open-telemetry/opentelemetry-python/pull/1584)
-
 
 ### Changed
 - Read-only Span attributes have been moved to ReadableSpan class
