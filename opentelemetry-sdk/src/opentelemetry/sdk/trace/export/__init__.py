@@ -200,7 +200,7 @@ class BatchExportSpanProcessor(SpanProcessor):
 
         self.queue.appendleft(span)
 
-        if len(self.queue) >= self.max_queue_size // 2:
+        if len(self.queue) >= self.max_export_batch_size:
             with self.condition:
                 self.condition.notify()
 
