@@ -8,4 +8,6 @@ Run application
 ---------------
 .. code-block:: sh
 
-    gunicorn flask-app -c gunicorn.config.py
+    gunicorn app -c gunicorn.config.py
+
+Please make sure Jaeger is running locally and the default agent host and port are exposed.
