@@ -1,6 +1,7 @@
 import flask
 from flask import request
 from uwsgidecorators import postfork
+
 from opentelemetry import trace
 from opentelemetry.exporter.jaeger import JaegerSpanExporter
 from opentelemetry.instrumentation.flask import FlaskInstrumentor

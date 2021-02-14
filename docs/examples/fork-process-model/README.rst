@@ -20,6 +20,7 @@ Gunicorn post_fork hook
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
+
     def post_fork(server, worker):
         server.log.info("Worker spawned (pid: %s)", worker.pid)
         trace.set_tracer_provider(TracerProvider())

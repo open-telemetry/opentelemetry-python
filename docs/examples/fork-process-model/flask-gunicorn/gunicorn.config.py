@@ -3,7 +3,6 @@ from opentelemetry.exporter.jaeger import JaegerSpanExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
-
 bind = "127.0.0.1:8000"
 
 # Sample Worker processes

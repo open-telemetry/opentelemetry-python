@@ -5,7 +5,7 @@ Installation
     pip install -rrequirements.txt
 
 Run application
-----------------------
+---------------
 
 .. code-block:: sh
 
