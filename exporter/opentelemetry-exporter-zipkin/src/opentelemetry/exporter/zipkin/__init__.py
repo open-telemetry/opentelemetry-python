@@ -20,7 +20,7 @@ Usage
 
 The **OpenTelemetry Zipkin Exporter** allows exporting of `OpenTelemetry`_
 traces to `Zipkin`_. This exporter sends traces to the configured Zipkin
-collector endpoint using HTTP and supports multiple encodings (v1 json,
+collector endpoint using HTTP and supports multiple protocols (v1 json,
 v2 json, v2 protobuf).
 
 .. _Zipkin: https://zipkin.io/
@@ -41,9 +41,9 @@ v2 json, v2 protobuf).
 
     # create a ZipkinSpanExporter
     zipkin_exporter = zipkin.ZipkinSpanExporter(
+        # protocol=Protocol.V2_PROTOBUF
         # optional:
         # endpoint="http://localhost:9411/api/v2/spans",
-        # encoding=Encoding.PROTOBUF,
         # local_node_ipv4="192.168.0.1",
         # local_node_ipv6="2001:db8::c001",
         # local_node_port=31313,
@@ -75,7 +75,7 @@ from typing import Optional, Sequence
 
 import requests
 
-from opentelemetry.exporter.zipkin.encoder import Encoder, Encoding
+from opentelemetry.exporter.zipkin.encoder import Encoder, Protocol
 from opentelemetry.exporter.zipkin.encoder.v1.json import JsonV1Encoder
 from opentelemetry.exporter.zipkin.encoder.v2.json import JsonV2Encoder
 from opentelemetry.exporter.zipkin.encoder.v2.protobuf import ProtobufEncoder
@@ -95,7 +95,7 @@ logger = logging.getLogger(__name__)
 class ZipkinSpanExporter(SpanExporter):
     def __init__(
         self,
-        encoding: Encoding,
+        protocol: Protocol,
         endpoint: Optional[str] = None,
         local_node_ipv4: IpInput = None,
         local_node_ipv6: IpInput = None,
@@ -112,11 +112,11 @@ class ZipkinSpanExporter(SpanExporter):
             )
         self.endpoint = endpoint
 
-        if encoding == Encoding.V1_JSON:
+        if protocol == Protocol.V1_JSON:
             self.encoder = JsonV1Encoder(max_tag_value_length)
-        elif encoding == Encoding.V2_JSON:
+        elif protocol == Protocol.V2_JSON:
             self.encoder = JsonV2Encoder(max_tag_value_length)
-        elif encoding == Encoding.V2_PROTOBUF:
+        elif protocol == Protocol.V2_PROTOBUF:
             self.encoder = ProtobufEncoder(max_tag_value_length)
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:

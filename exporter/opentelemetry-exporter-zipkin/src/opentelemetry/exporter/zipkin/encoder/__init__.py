@@ -37,8 +37,8 @@ VERSION_KEY = "otel.library.version"
 logger = logging.getLogger(__name__)
 
 
-class Encoding(Enum):
-    """Enum of supported encoding formats.
+class Protocol(Enum):
+    """Enum of supported protocol formats.
 
     Values are human-readable strings so that they can be easily used by the
     OS environ var OTEL_EXPORTER_ZIPKIN_PROTOCOL (reserved for future usage).
