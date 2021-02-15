@@ -59,7 +59,8 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                                     "annotation_string": "annotation_test",
                                     "key_float": 0.3,
                                 }
-                            }
+                            },
+                            sort_keys=True,
                         ),
                         "endpoint": local_endpoint,
                     }
