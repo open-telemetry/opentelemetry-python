@@ -53,8 +53,8 @@ class TestZipkinSpanExporter(unittest.TestCase):
             del os.environ[OTEL_EXPORTER_ZIPKIN_ENDPOINT]
 
     def test_constructor_default(self):
-        exporter = ZipkinSpanExporter()
-        self.assertIsInstance(exporter.encoder, JsonV2Encoder)
+        exporter = ZipkinSpanExporter(Encoding.V2_PROTOBUF)
+        self.assertIsInstance(exporter.encoder, ProtobufEncoder)
         self.assertEqual(exporter.endpoint, DEFAULT_ENDPOINT)
         self.assertEqual(exporter.local_node.service_name, TEST_SERVICE_NAME)
         self.assertEqual(exporter.local_node.ipv4, None)
@@ -65,7 +65,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         os_endpoint = "https://foo:9911/path"
         os.environ[OTEL_EXPORTER_ZIPKIN_ENDPOINT] = os_endpoint
 
-        exporter = ZipkinSpanExporter()
+        exporter = ZipkinSpanExporter(Encoding.V2_PROTOBUF)
 
         self.assertEqual(exporter.endpoint, os_endpoint)
         self.assertEqual(exporter.local_node.service_name, TEST_SERVICE_NAME)
@@ -79,7 +79,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
         endpoint = "https://opentelemetry.io:15875/myapi/traces?format=zipkin"
         encoding = Encoding.V2_PROTOBUF
 
-        exporter = ZipkinSpanExporter(endpoint, encoding)
+        exporter = ZipkinSpanExporter(encoding, endpoint)
 
         self.assertIsInstance(exporter.encoder, ProtobufEncoder)
         self.assertEqual(exporter.endpoint, endpoint)
@@ -103,8 +103,8 @@ class TestZipkinSpanExporter(unittest.TestCase):
         max_tag_value_length = 56
 
         exporter = ZipkinSpanExporter(
-            constructor_param_endpoint,
             constructor_param_encoding,
+            constructor_param_endpoint,
             local_node_ipv4,
             local_node_ipv6,
             local_node_port,
@@ -126,7 +126,7 @@ class TestZipkinSpanExporter(unittest.TestCase):
     def test_invalid_response(self, mock_post):
         mock_post.return_value = MockResponse(404)
         spans = []
-        exporter = ZipkinSpanExporter(TEST_SERVICE_NAME)
+        exporter = ZipkinSpanExporter(Encoding.V2_PROTOBUF)
         status = exporter.export(spans)
         self.assertEqual(SpanExportResult.FAILURE, status)
 

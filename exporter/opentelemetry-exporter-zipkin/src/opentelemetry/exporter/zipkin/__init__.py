@@ -95,8 +95,8 @@ logger = logging.getLogger(__name__)
 class ZipkinSpanExporter(SpanExporter):
     def __init__(
         self,
+        encoding: Encoding,
         endpoint: Optional[str] = None,
-        encoding: Optional[Encoding] = Encoding.V2_JSON,
         local_node_ipv4: IpInput = None,
         local_node_ipv6: IpInput = None,
         local_node_port: Optional[int] = None,

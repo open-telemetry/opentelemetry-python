@@ -41,7 +41,7 @@ class Encoding(Enum):
     """Enum of supported encoding formats.
 
     Values are human-readable strings so that they can be easily used by the
-    OS environ var OTEL_EXPORTER_ZIPKIN_ENCODING.
+    OS environ var OTEL_EXPORTER_ZIPKIN_PROTOCOL (reserved for future usage).
     """
 
     V1_JSON = "v1_json"
