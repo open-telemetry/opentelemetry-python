@@ -26,11 +26,10 @@ with open(VERSION_FILENAME) as f:
 setuptools.setup(version=PACKAGE_INFO["__version__"],)
 
 sitecustomize_content = """import time
-print("SDFsdf")
-
+print("You are using 3.6!")
 
 def time_ns():
-    return time.time() * 1e9
+    return int(time.time() * 1e9)
 
 time.time_ns = time_ns
 """
