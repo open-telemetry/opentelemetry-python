@@ -22,10 +22,7 @@ from unittest.mock import Mock
 import opentracing
 
 from opentelemetry import trace
-from opentelemetry.propagate import (
-    get_global_textmap,
-    set_global_textmap,
-)
+from opentelemetry.propagate import get_global_textmap, set_global_textmap
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.shim.opentracing_shim import (
     SpanContextShim,

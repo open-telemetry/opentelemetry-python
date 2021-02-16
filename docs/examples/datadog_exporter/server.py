@@ -20,11 +20,8 @@ from opentelemetry.exporter.datadog import (
     DatadogSpanExporter,
 )
 from opentelemetry.exporter.datadog.propagator import DatadogFormat
+from opentelemetry.propagate import get_global_textmap, set_global_textmap
 from opentelemetry.propagators.composite import CompositeHTTPPropagator
-from opentelemetry.propagate import (
-    get_global_textmap,
-    set_global_textmap,
-)
 from opentelemetry.sdk.trace import TracerProvider
 
 app = Flask(__name__)
