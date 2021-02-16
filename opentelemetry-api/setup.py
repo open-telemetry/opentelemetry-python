@@ -12,14 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
 import setuptools
+from os.path import join, dirname
+from sys import version_info
+from distutils.sysconfig import get_python_lib
 
-BASE_DIR = os.path.dirname(__file__)
-VERSION_FILENAME = os.path.join(BASE_DIR, "src", "opentelemetry", "version.py")
+BASE_DIR = dirname(__file__)
+VERSION_FILENAME = join(BASE_DIR, "src", "opentelemetry", "version.py")
 PACKAGE_INFO = {}
 with open(VERSION_FILENAME) as f:
     exec(f.read(), PACKAGE_INFO)
 
 setuptools.setup(version=PACKAGE_INFO["__version__"],)
+
+sitecustomize_content = """import time
+print("SDFsdf")
+
+
+def time_ns():
+    return time.time() * 1e9
+
+time.time_ns = time_ns
+"""
+
+
+if version_info.minor == 6:
+    try:
+        with open(
+            join(get_python_lib(), "sitecustomize.py"),
+            "w"
+        ) as sitecustomize_file:
+
+            sitecustomize_file.write(sitecustomize_content)
+    except:
+        pass
