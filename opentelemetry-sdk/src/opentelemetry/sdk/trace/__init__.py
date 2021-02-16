@@ -121,6 +121,7 @@ class SpanProcessor:
             False if the timeout is exceeded, True otherwise.
         """
 
+
 # pylint: disable=no-member
 class SynchronousMultiSpanProcessor(SpanProcessor):
     """Implementation of class:`SpanProcessor` that forwards all received
