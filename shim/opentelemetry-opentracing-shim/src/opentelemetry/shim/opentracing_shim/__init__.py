@@ -99,9 +99,9 @@ from opentracing import (
     UnsupportedFormatException,
 )
 
-from opentelemetry import propagators
 from opentelemetry.baggage import get_baggage, set_baggage
 from opentelemetry.context import Context, attach, detach, get_value, set_value
+from opentelemetry.propagate import get_global_textmap
 from opentelemetry.shim.opentracing_shim import util
 from opentelemetry.shim.opentracing_shim.version import __version__
 from opentelemetry.trace import INVALID_SPAN_CONTEXT, DefaultSpan, Link
@@ -682,7 +682,7 @@ class TracerShim(Tracer):
         if format not in self._supported_formats:
             raise UnsupportedFormatException
 
-        propagator = propagators.get_global_textmap()
+        propagator = get_global_textmap()
 
         ctx = set_span_in_context(DefaultSpan(span_context.unwrap()))
         propagator.inject(type(carrier).__setitem__, carrier, context=ctx)
@@ -712,7 +712,7 @@ class TracerShim(Tracer):
         if format not in self._supported_formats:
             raise UnsupportedFormatException
 
-        propagator = propagators.get_global_textmap()
+        propagator = get_global_textmap()
         ctx = propagator.extract(self._carrier_getter, carrier)
         span = get_current_span(ctx)
         if span is not None:
