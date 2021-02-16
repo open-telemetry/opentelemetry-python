@@ -22,7 +22,7 @@ from unittest.mock import Mock
 import opentracing
 
 from opentelemetry import trace
-from opentelemetry.propagators.util import (
+from opentelemetry.propagate import (
     get_global_textmap,
     set_global_textmap,
 )

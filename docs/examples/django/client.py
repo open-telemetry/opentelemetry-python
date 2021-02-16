@@ -17,7 +17,7 @@ from sys import argv
 from requests import get
 
 from opentelemetry import trace
-from opentelemetry.propagators.util import inject
+from opentelemetry.propagate import inject
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,

@@ -16,7 +16,7 @@ from flask import Flask, request
 
 from opentelemetry import trace
 from opentelemetry.instrumentation.wsgi import collect_request_attributes
-from opentelemetry.propagators.util import extract
+from opentelemetry.propagate import extract
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,

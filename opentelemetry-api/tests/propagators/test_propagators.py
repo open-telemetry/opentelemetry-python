@@ -40,9 +40,9 @@ class TestPropagators(TestCase):
             **{"side_effect": test_propagators}
         )
 
-        import opentelemetry.propagators.util
+        import opentelemetry.propagate
 
-        reload(opentelemetry.propagators.util)
+        reload(opentelemetry.propagate)
 
     @patch.dict(environ, {OTEL_PROPAGATORS: "a,b,c"})
     @patch("opentelemetry.propagators.composite.CompositeHTTPPropagator")
@@ -75,6 +75,6 @@ class TestPropagators(TestCase):
             **{"side_effect": test_propagators}
         )
 
-        import opentelemetry.propagators.util
+        import opentelemetry.propagate
 
-        reload(opentelemetry.propagators.util)
+        reload(opentelemetry.propagate)

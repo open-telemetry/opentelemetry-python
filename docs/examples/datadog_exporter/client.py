@@ -21,7 +21,7 @@ from opentelemetry.exporter.datadog import (
     DatadogExportSpanProcessor,
     DatadogSpanExporter,
 )
-from opentelemetry.propagators.util import inject
+from opentelemetry.propagate import inject
 from opentelemetry.sdk import resources
 from opentelemetry.sdk.trace import TracerProvider
 
