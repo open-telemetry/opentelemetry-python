@@ -122,7 +122,6 @@ class SpanProcessor:
         """
 
 
-# pylint: disable=no-member
 class SynchronousMultiSpanProcessor(SpanProcessor):
     """Implementation of class:`SpanProcessor` that forwards all received
     events to a list of span processors sequentially.
