@@ -16,11 +16,12 @@ from sys import argv
 
 from requests import get
 
-from opentelemetry import propagators, trace
+from opentelemetry import trace
 from opentelemetry.exporter.datadog import (
     DatadogExportSpanProcessor,
     DatadogSpanExporter,
 )
+from opentelemetry.propagate import inject
 from opentelemetry.sdk import resources
 from opentelemetry.sdk.trace import TracerProvider
 
@@ -46,7 +47,7 @@ with tracer.start_as_current_span("client"):
 
     with tracer.start_as_current_span("client-server"):
         headers = {}
-        propagators.inject(dict.__setitem__, headers)
+        inject(dict.__setitem__, headers)
         requested = get(
             "http://localhost:8082/server_request",
             params={"param": argv[1]},
