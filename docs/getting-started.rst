@@ -195,10 +195,10 @@ Following the installation of the package containing the b3 propagator, configur
 
 .. code-block:: python
 
-    from opentelemetry import propagators
+    from opentelemetry.propagate import set_global_textmap
     from opentelemetry.propagators.b3 import B3Format
 
-    propagators.set_global_textmap(B3Format())
+    set_global_textmap(B3Format())
 
 Use the OpenTelemetry Collector for traces
 ------------------------------------------
