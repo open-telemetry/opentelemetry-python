@@ -4,15 +4,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v0.17b0...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.0.0rc1...HEAD)
+
+## [1.0.0rc1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.0.0rc1) - 2021-02-12
 
 ### Changed
-- Tracer and Meter provider environment variables are now consistent with the rest
+- Tracer provider environment variables are now consistent with the rest
   ([#1571](https://github.com/open-telemetry/opentelemetry-python/pull/1571)])
 - Rename `TRACE_` to `TRACES_` for environment variables
   ([#1595](https://github.com/open-telemetry/opentelemetry-python/pull/1595)])
 - Limits for Span attributes, events and links have been updated to 128
   ([1597](https://github.com/open-telemetry/opentelemetry-python/pull/1597)])
+- Read-only Span attributes have been moved to ReadableSpan class
+  ([#1560](https://github.com/open-telemetry/opentelemetry-python/pull/1560))
+- `BatchExportSpanProcessor` flushes export queue when it reaches `max_export_batch_size`
+  ([#1521])(https://github.com/open-telemetry/opentelemetry-python/pull/1521)
 
 ### Added
 - Added `end_on_exit` argument to `start_as_current_span`
@@ -23,14 +29,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1480](https://github.com/open-telemetry/opentelemetry-python/pull/1480))
 - Allow missing carrier headers to continue without raising AttributeError
   ([#1545](https://github.com/open-telemetry/opentelemetry-python/pull/1545))
-- Add urllib to opentelemetry-bootstrap target list
-  ([#1584])(https://github.com/open-telemetry/opentelemetry-python/pull/1584)
-
-### Changed
-- Read-only Span attributes have been moved to ReadableSpan class
-  ([#1560](https://github.com/open-telemetry/opentelemetry-python/pull/1560))
-- `BatchExportSpanProcessor` flushes export queue when it reaches `max_export_batch_size`
-  ([#1521])(https://github.com/open-telemetry/opentelemetry-python/pull/1521)
 
 ### Removed
 - Remove Configuration
