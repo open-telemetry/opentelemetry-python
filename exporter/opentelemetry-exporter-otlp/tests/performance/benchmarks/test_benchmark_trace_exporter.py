@@ -15,6 +15,7 @@
 from unittest.mock import patch
 
 from opentelemetry.exporter.otlp import OTLPSpanExporter
+from opentelemetry.exporter.otlp.util import Protocol
 from opentelemetry.sdk.trace import TracerProvider, sampling
 from opentelemetry.sdk.trace.export import (
     BatchExportSpanProcessor,
@@ -23,7 +24,7 @@ from opentelemetry.sdk.trace.export import (
 
 
 def get_tracer_with_processor(span_processor_class):
-    span_processor = span_processor_class(OTLPSpanExporter())
+    span_processor = span_processor_class(OTLPSpanExporter(Protocol.GRPC))
     tracer = TracerProvider(
         active_span_processor=span_processor, sampler=sampling.DEFAULT_ON,
     ).get_tracer("pipeline_benchmark_tracer")
