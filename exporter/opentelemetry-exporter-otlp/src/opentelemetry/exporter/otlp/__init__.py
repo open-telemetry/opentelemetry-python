@@ -174,7 +174,7 @@ class OTLPSpanExporter:
         if isinstance(self._sender, GrpcSender):
             send_result = self._sender.send(self._encoder.encode(sdk_spans))
         else:
-            send_result = self._sender.send(
+            send_result = self._sender.send(  # pylint: disable=too-many-function-args
                 self._encoder.serialize(sdk_spans),
                 self._encoder.content_type(),
             )

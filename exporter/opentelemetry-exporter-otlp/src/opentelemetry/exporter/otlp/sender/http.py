@@ -59,8 +59,8 @@ class HttpSender:
 
         if self._compression == Compression.GZIP:
             gzip_data = BytesIO()
-            with gzip.GzipFile(fileobj=gzip_data, mode="w") as f:
-                f.write(serialized_spans)
+            with gzip.GzipFile(fileobj=gzip_data, mode="w") as gzip_stream:
+                gzip_stream.write(serialized_spans)
             post_args["headers"]["Content-Encoding"] = "gzip"
             post_args["data"] = gzip_data.getvalue()
         elif self._compression == Compression.DEFLATE:

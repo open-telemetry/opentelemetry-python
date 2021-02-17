@@ -76,6 +76,7 @@ class GrpcSender:
                     timeout=self._timeout,
                 )
                 return True
+            # pylint: disable=no-member
             except RpcError as error:
 
                 if error.code() in [
@@ -94,7 +95,7 @@ class GrpcSender:
                         "google.rpc.retryinfo-bin"
                     )
                     if retry_info_bin is not None:
-                        retry_info = RetryInfo()
+                        retry_info = RetryInfo()  # pylint: disable=no-member
                         retry_info.ParseFromString(retry_info_bin)
                         delay = (
                             retry_info.retry_delay.seconds
