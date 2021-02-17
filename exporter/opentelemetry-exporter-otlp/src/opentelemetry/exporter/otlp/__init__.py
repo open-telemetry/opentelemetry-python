@@ -114,8 +114,6 @@ class OTLPSpanExporter:
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
-        super().__init__()
-
         endpoint = (
             endpoint
             or environ.get(OTEL_EXPORTER_OTLP_ENDPOINT)
