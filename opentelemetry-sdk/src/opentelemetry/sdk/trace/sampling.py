@@ -60,8 +60,8 @@ To use a sampler, pass it into the tracer provider constructor. For example:
     with trace.get_tracer(__name__).start_as_current_span("Test Span"):
         ...
 
-The tracer sampler can also be configured via environment variables ``OTEL_TRACE_SAMPLER`` and ``OTEL_TRACE_SAMPLER_ARG`` (only if applicable).
-The list of known values for ``OTEL_TRACE_SAMPLER`` are:
+The tracer sampler can also be configured via environment variables ``OTEL_TRACES_SAMPLER`` and ``OTEL_TRACES_SAMPLER_ARG`` (only if applicable).
+The list of known values for ``OTEL_TRACES_SAMPLER`` are:
 
     * always_on - Sampler that always samples spans, regardless of the parent span's sampling decision.
     * always_off - Sampler that never samples spans, regardless of the parent span's sampling decision.
@@ -70,10 +70,10 @@ The list of known values for ``OTEL_TRACE_SAMPLER`` are:
     * parentbased_always_off - Sampler that respects its parent span's sampling decision, but otherwise never samples.
     * parentbased_traceidratio - Sampler that respects its parent span's sampling decision, but otherwise samples probabalistically based on rate.
 
-Sampling probability can be set with ``OTEL_TRACE_SAMPLER_ARG`` if the sampler is traceidratio or parentbased_traceidratio, when not provided rate will be set to 1.0 (maximum rate possible).
+Sampling probability can be set with ``OTEL_TRACES_SAMPLER_ARG`` if the sampler is traceidratio or parentbased_traceidratio, when not provided rate will be set to 1.0 (maximum rate possible).
 
 
-Prev example but with environment vairables. Please make sure to set the env ``OTEL_TRACE_SAMPLER=traceidratio`` and ``OTEL_TRACE_SAMPLER_ARG=0.001``.
+Prev example but with environment vairables. Please make sure to set the env ``OTEL_TRACES_SAMPLER=traceidratio`` and ``OTEL_TRACES_SAMPLER_ARG=0.001``.
 
 .. code:: python
 
@@ -105,8 +105,8 @@ from typing import Optional, Sequence
 # pylint: disable=unused-import
 from opentelemetry.context import Context
 from opentelemetry.sdk.environment_variables import (
-    OTEL_TRACE_SAMPLER,
-    OTEL_TRACE_SAMPLER_ARG,
+    OTEL_TRACES_SAMPLER,
+    OTEL_TRACES_SAMPLER_ARG,
 )
 from opentelemetry.trace import Link, get_current_span
 from opentelemetry.trace.span import TraceState
@@ -370,7 +370,7 @@ _KNOWN_SAMPLERS = {
 
 def _get_from_env_or_default() -> Sampler:
     trace_sampler = os.getenv(
-        OTEL_TRACE_SAMPLER, "parentbased_always_on"
+        OTEL_TRACES_SAMPLER, "parentbased_always_on"
     ).lower()
     if trace_sampler not in _KNOWN_SAMPLERS:
         _logger.warning("Couldn't recognize sampler %s.", trace_sampler)
@@ -378,9 +378,9 @@ def _get_from_env_or_default() -> Sampler:
 
     if trace_sampler in ("traceidratio", "parentbased_traceidratio"):
         try:
-            rate = float(os.getenv(OTEL_TRACE_SAMPLER_ARG))
+            rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG))
         except ValueError:
-            _logger.warning("Could not convert TRACE_SAMPLER_ARG to float.")
+            _logger.warning("Could not convert TRACES_SAMPLER_ARG to float.")
             rate = 1.0
         return _KNOWN_SAMPLERS[trace_sampler](rate)
 

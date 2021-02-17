@@ -101,7 +101,8 @@ from opentelemetry.trace.span import (
     format_trace_id,
 )
 from opentelemetry.trace.status import Status
-from opentelemetry.util import _load_trace_provider, types
+from opentelemetry.util import types
+from opentelemetry.util.providers import _load_trace_provider
 
 logger = getLogger(__name__)
 
@@ -137,6 +138,9 @@ class Link(LinkBase):
     @property
     def attributes(self) -> types.Attributes:
         return self._attributes
+
+
+_Links = typing.Optional[typing.Sequence[Link]]
 
 
 class SpanKind(enum.Enum):
@@ -231,7 +235,7 @@ class Tracer(abc.ABC):
         context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
-        links: typing.Sequence[Link] = (),
+        links: _Links = None,
         start_time: typing.Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
@@ -286,7 +290,7 @@ class Tracer(abc.ABC):
         context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
-        links: typing.Sequence[Link] = (),
+        links: _Links = None,
         start_time: typing.Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
@@ -380,7 +384,7 @@ class DefaultTracer(Tracer):
         context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
-        links: typing.Sequence[Link] = (),
+        links: _Links = None,
         start_time: typing.Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
@@ -395,7 +399,7 @@ class DefaultTracer(Tracer):
         context: typing.Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
-        links: typing.Sequence[Link] = (),
+        links: _Links = None,
         start_time: typing.Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,

@@ -1,12 +1,18 @@
 # OpenTelemetry Rationale
 
-When creating a library, often times designs and decisions are made that get lost over time. This
-document tries to collect information on design decisions to answer common questions that may come
-up when you explore the SDK.
+When creating a library, often times designs and decisions are made that get lost over time. This document tries to collect information on design decisions to answer common questions that may come up when you explore the SDK.
 
 ## Versioning and Releasing
 
-The OpenTelemetry Applications and OpenTelemetry Spec itself use semver v2.
+This document describes the versioning and stability policy of components shipped from this repository, as per the [OpenTelemetry versioning and stability
+specification](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/versioning-and-stability.md).
+
+The OpenTelemetry implementations, the OpenTelemetry Spec itself and this repo follows [SemVer V2](https://semver.org/spec/v2.0.0.html) guidelines.
+This means that, for any stable packages released from this repo, all public APIs will remain [backward
+compatible](https://github.com/dotnet/runtime/blob/main/docs/coding-guidelines/breaking-change-rules.md#breaking-change-rules),
+unless a major version bump occurs. This applies to the API, SDK, as well as Exporters, Instrumentation etc. shipped from this repo.
+
+For example, users can take a dependency on 1.0.0 version of any package, with the assurance that all future releases until 2.0.0 will be backward compatible.
 
 ## Goals
 
@@ -18,16 +24,23 @@ For example, libraries that are instrumented with `opentelemetry-api 1.0.1` will
 
 ### SDK Stability:
 
-Public portions of the SDK (constructors, configuration, end-user interfaces) must remain backwards compatible.
-Internal interfaces are allowed to break.
+Public portions of the SDK (constructors, configuration, end-user interfaces) must remain backwards compatible. Internal interfaces are allowed to break.
 
-## Methods
+## Core components
 
-### Mature Signals
-API modules for mature (i.e. released) signals will be included in the `opentelemetry-api` module.
+Core components refer to the set of components which are required as per the spec. This includes API, SDK, propagators (B3 and Jaeger) and exporters which are required by the specification. These exporters are OTLP, Jaeger and Zipkin.
+
+## Mature or stable Signals
+
+Modules for mature (i.e. released) signals will be found in the latest versions of the corresponding packages of the core components. The version numbers of these will have no suffix appended, indicating they are stable. For example, the package `opentelemetry-api` v1.x.y will be considered stable.
+
+## Pre-releases
+
+Pre-release packages are denoted by appending identifiers such as -Alpha, -Beta, -RC etc. There are no API guarantees in pre-releases. Each release can contain breaking changes and functionality could be removed as well. In general, an RC pre-release is more stable than a Beta release, which is more stable than an Alpha release.
 
 ### Immature or experimental signals
-API modules for experimental signals will not be included in the `opentelemetry-api` module, and must be installed manually. API modules will remain at version v0.x.y to make it abundantly clear that depending on them is at your own risk. For example, the `opentelemetry-metrics-api` v0.x.y module will provide experimental access to the unfinished metrics API. NO STABILITY GUARANTEES ARE MADE.
+
+Modules for experimental signals will be released in a separate versions that will be marked as pre-releases, and must be installed manually. Modules will remain at version v0.x.y to make it abundantly clear that depending on them is at your own risk. For example, the `opentelemetry-api` v0.x.y-b0 module will provide experimental access to the latest features in development, which will include the experimental metrics signals. Notice the `b0` suffix which indicates that the release is still in beta, and therefore deemed to be in pre-release. NO STABILITY GUARANTEES ARE MADE.
 
 ## Examples
 
@@ -37,25 +50,26 @@ Purely for illustration purposes, not intended to represent actual releases:
 
 - `opentelemetry-api` 1.0.0
   - Contains APIs for tracing, baggage, propagators, context
-- `opentelemetry-tracing` 1.0.0
-  - Contains the tracing SDK
 - `opentelemetry-sdk` 1.0.0
   - Contains SDK components for tracing, baggage, propagators, and context
 
 ##### Contains the following experimental packages
 
-- `opentelemetry-api-metrics` 0.x.y
-  - Contains the EXPERIMENTAL API for metrics. There are no stability guarantees.
-- `opentelemetry-metrics` 0.x.y
-  - Contains the EXPERIMENTAL SDK for metrics. There are no stability guarantees.
+- `opentelemetry-api` 1.x.y-b0
+  - Contains the EXPERIMENTAL API for metrics plus other unstable features. There are no stability guarantees.
+- `opentelemetry-sdk` 1.x.y-b0
+  - Contains the EXPERIMENTAL SDK for metrics plus other unstable features. There are no stability guarantees.
 
 #### V1.15.0 Release (with metrics)
 
 - `opentelemetry-api` 1.15.0
   - Contains APIs for tracing, baggage, propagators, context, and metrics
-- `opentelemetry-tracing` 1.15.0
-  - Contains tracing SDK
-- `opentelemetry-metrics` 1.15.0
-  - Contains metrics SDK
 - `opentelemetry-sdk` 1.15.0
   - Contains SDK components for tracing, baggage, propagators, context and metrics
+
+##### Contains the following experimental packages
+
+- `opentelemetry-api` 1.x.y-b0
+  - Contains the EXPERIMENTAL API for logging plus other unstable features. There are no stability guarantees.
+- `opentelemetry-sdk` 1.x.y-b0
+  - Contains the EXPERIMENTAL SDK for logging plus other unstable features. There are no stability guarantees.
