@@ -86,7 +86,7 @@ from opentelemetry.sdk.trace.export import SpanExportResult
 logger = logging.getLogger(__name__)
 
 DEFAULT_COMPRESSION = Compression.NONE
-DEFAULT_ENDPOINT = "localhost:4317"
+DEFAULT_ENDPOINT = "https://localhost:4317"
 DEFAULT_INSECURE = False
 DEFAULT_TIMEOUT = 10  # seconds
 

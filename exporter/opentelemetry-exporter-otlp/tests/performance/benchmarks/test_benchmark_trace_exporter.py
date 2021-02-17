@@ -24,23 +24,25 @@ from opentelemetry.sdk.trace.export import (
 
 
 def get_tracer_with_processor(span_processor_class):
-    span_processor = span_processor_class(OTLPSpanExporter(Protocol.GRPC))
+    span_processor = span_processor_class(
+        OTLPSpanExporter(Protocol.HTTP_PROTOBUF)
+    )
     tracer = TracerProvider(
         active_span_processor=span_processor, sampler=sampling.DEFAULT_ON,
     ).get_tracer("pipeline_benchmark_tracer")
     return tracer
 
 
-class MockTraceServiceStub(object):
-    def __init__(self, channel):
-        self.Export = lambda *args, **kwargs: None
+def mocked_requests_post(*args, **kwargs):
+    class MockResponse:
+        def __init__(self):
+            self.status_code = 200
+
+    return MockResponse()
 
 
-@patch(
-    "opentelemetry.exporter.otlp.OTLPSpanExporter._stub",
-    new=MockTraceServiceStub,
-)
-def test_simple_span_processor(benchmark):
+@patch("requests.post", side_effect=mocked_requests_post)
+def test_simple_span_processor(mock_post, benchmark):
     tracer = get_tracer_with_processor(SimpleExportSpanProcessor)
 
     def create_spans_to_be_exported():
@@ -55,11 +57,8 @@ def test_simple_span_processor(benchmark):
     benchmark(create_spans_to_be_exported)
 
 
-@patch(
-    "opentelemetry.exporter.otlp.OTLPSpanExporter._stub",
-    new=MockTraceServiceStub,
-)
-def test_batch_span_processor(benchmark):
+@patch("requests.post", side_effect=mocked_requests_post)
+def test_batch_span_processor(mock_post, benchmark):
     """Runs benchmark tests using BatchExportSpanProcessor.
 
     One particular call by pytest-benchmark will be much more expensive since
