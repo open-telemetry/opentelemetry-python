@@ -62,5 +62,5 @@ if version_info.minor < 7:
         ) as sitecustomize_file:
 
             sitecustomize_file.write(sitecustomize_content)
-    except Exception:
+    except Exception:  # pylint: disable=broad-except
         _logger.exception("Unable to add time_ns to time")
