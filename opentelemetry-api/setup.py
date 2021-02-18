@@ -13,9 +13,9 @@
 # limitations under the License.
 
 from distutils.sysconfig import get_python_lib
+from logging import getLogger
 from os.path import dirname, join
 from sys import version_info
-from logging import getLogger
 
 import setuptools
 
