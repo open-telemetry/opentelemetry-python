@@ -12,11 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import setuptools
-from os.path import join, dirname
-from sys import version_info
 from distutils.sysconfig import get_python_lib
+from os.path import dirname, join
+from sys import version_info
+from logging import getLogger
 
+import setuptools
+
+_logger = getLogger(__name__)
 BASE_DIR = dirname(__file__)
 VERSION_FILENAME = join(BASE_DIR, "src", "opentelemetry", "version.py")
 PACKAGE_INFO = {}
@@ -24,6 +27,13 @@ with open(VERSION_FILENAME) as f:
     exec(f.read(), PACKAGE_INFO)
 
 setuptools.setup(version=PACKAGE_INFO["__version__"],)
+
+# FIXME The code below has been added to make it possible for the user to
+# import time_ns from time in Python < 3.7. The intention behind this is to
+# allow the user to import this function while we support this old Python
+# versions and to make it possible for the user to upgrade to 3.7 or newer
+# without having to change any application code. Remove the code below when
+# no Python versions older than 3.7 are supported.
 
 sitecustomize_content = """import time
 from logging import getLogger
@@ -48,10 +58,9 @@ getLogger(__name__).warning(
 if version_info.minor < 7:
     try:
         with open(
-            join(get_python_lib(), "sitecustomize.py"),
-            "w"
+            join(get_python_lib(), "sitecustomize.py"), "w"
         ) as sitecustomize_file:
 
             sitecustomize_file.write(sitecustomize_content)
     except:
-        pass
+        _logger.exception("Unable to add time_ns to time")
