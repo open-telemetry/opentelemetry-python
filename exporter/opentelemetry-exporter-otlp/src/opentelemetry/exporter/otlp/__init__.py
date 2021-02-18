@@ -81,7 +81,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
 from opentelemetry.sdk.trace import Span
-from opentelemetry.sdk.trace.export import SpanExportResult
+from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +91,7 @@ DEFAULT_INSECURE = False
 DEFAULT_TIMEOUT = 10  # seconds
 
 
-class OTLPSpanExporter:
+class OTLPSpanExporter(SpanExporter):
     """OTLP span exporter
 
     Args:
