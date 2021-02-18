@@ -2,12 +2,12 @@ Working With Fork Process Models
 ================================
 
 The `BatchExportSpanProcessor` is not fork-safe and doesn't work well with application servers
-(Gunicorn, uWSGI) which are based on pre-fork web server model. The `BatchExportSpanProcessor`
-spawns thread to run in the background to export spans to telemetry backend. During the fork, child
-process inherits the lock which is held by parent process and deadlock occurs. We can use fork hooks to
-get around this limitation of span processor.
+(Gunicorn, uWSGI) which are based on the pre-fork web server model. The `BatchExportSpanProcessor`
+spawns a thread to run in the background to export spans to the telemetry backend. During the fork, the child
+process inherits the lock which is held by the parent process and deadlock occurs. We can use fork hooks to
+get around this limitation of the span processor.
 
-Please see the http://bugs.python.org/issue6721 for the problems about Python locks in (multi)threaded
+Please see http://bugs.python.org/issue6721 for the problems about Python locks in (multi)threaded
 context with fork.
 
 Gunicorn post_fork hook
