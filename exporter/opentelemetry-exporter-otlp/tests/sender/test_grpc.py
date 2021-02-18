@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import unittest
 from unittest.mock import patch
 
@@ -34,6 +35,7 @@ class MockResponse:
         self.text = status_code
 
 
+# pylint: disable=protected-access
 class TestGrpcSender(unittest.TestCase):
     def test_constructor_defaults(self):
         sender = GrpcSender(
@@ -58,9 +60,11 @@ class TestGrpcSender(unittest.TestCase):
         self.assertEqual(sender._endpoint, "test.endpoint.com")
         self.assertEqual(sender._insecure, True)
         self.assertEqual(sender._certificate_file, CERTIFICATE_FILE)
-        self.assertEqual(sender._headers, [("key1", "val1"), ("key2", "val2")])
         self.assertEqual(sender._timeout, 33)
         self.assertEqual(sender._compression, Compression.Gzip)
+        self.assertCountEqual(
+            sender._headers, [("key1", "val1"), ("key2", "val2")]
+        )
 
     def test_constructor_invalid_cert_file(self):
         with self.assertLogs(level="ERROR") as cm:
@@ -84,11 +88,22 @@ class TestGrpcSender(unittest.TestCase):
         sender.send(export_request)
 
         stub_mock.assert_called_once_with(sender._channel)
-        stub_mock.return_value.Export.assert_called_once_with(
-            request=export_request,
-            metadata=[("key1", "val1"), ("key2", "val2")],
-            timeout=33,
-        )
+
+        if sys.version_info.major == 3 and sys.version_info.minor <= 5:
+            export_call_args = stub_mock.return_value.Export.call_args[1]
+            self.assertTrue(stub_mock.return_value.Export.called)
+            self.assertEqual(export_call_args["request"], export_request)
+            self.assertEqual(export_call_args["timeout"], 33)
+            self.assertCountEqual(
+                export_call_args["metadata"],
+                [("key1", "val1"), ("key2", "val2")],
+            )
+        else:
+            stub_mock.return_value.Export.assert_called_once_with(
+                request=export_request,
+                metadata=[("key1", "val1"), ("key2", "val2")],
+                timeout=33,
+            )
 
     @patch(
         "opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc.TraceServiceStub"
@@ -135,7 +150,7 @@ class TestGrpcSender(unittest.TestCase):
         sender.send(ExportTraceServiceRequest())
 
         self.assertEqual(stub_mock.return_value.Export.call_count, 2)
-        sleep_mock.assert_called_once()
+        self.assertTrue(sleep_mock.called)
 
     @patch("opentelemetry.exporter.otlp.sender.grpc.sleep")
     @patch(

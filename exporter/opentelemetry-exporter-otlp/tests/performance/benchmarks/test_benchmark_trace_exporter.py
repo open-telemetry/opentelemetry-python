@@ -47,10 +47,10 @@ def test_simple_span_processor(mock_post, benchmark):
 
     def create_spans_to_be_exported():
         span = tracer.start_span("benchmarkedSpan",)
-        for i in range(10):
+        for benchmark_span_id in range(10):
             span.set_attribute(
-                "benchmarkAttribute_{}".format(i),
-                "benchmarkAttrValue_{}".format(i),
+                "benchmarkAttribute_{}".format(benchmark_span_id),
+                "benchmarkAttrValue_{}".format(benchmark_span_id),
             )
         span.end()
 
@@ -70,10 +70,10 @@ def test_batch_span_processor(mock_post, benchmark):
 
     def create_spans_to_be_exported():
         span = tracer.start_span("benchmarkedSpan",)
-        for i in range(10):
+        for benchmark_span_id in range(10):
             span.set_attribute(
-                "benchmarkAttribute_{}".format(i),
-                "benchmarkAttrValue_{}".format(i),
+                "benchmarkAttribute_{}".format(benchmark_span_id),
+                "benchmarkAttrValue_{}".format(benchmark_span_id),
             )
         span.end()
 

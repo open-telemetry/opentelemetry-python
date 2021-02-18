@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import sys
 import unittest
 from typing import List, Tuple
 
@@ -56,12 +57,22 @@ from opentelemetry.trace.status import StatusCode as SDKStatusCode
 
 
 class TestProtobufEncoder(unittest.TestCase):
+    @unittest.skipIf(
+        sys.version_info.major == 3 and sys.version_info.minor <= 5,
+        "encode() uses hashes to aggregate output which makes the comparison"
+        "non-deterministic for py3.5.",
+    )
     def test_encode(self):
         otel_spans, expected_encoding = self.get_exhaustive_test_spans()
         self.assertEqual(
             ProtobufEncoder().encode(otel_spans), expected_encoding
         )
 
+    @unittest.skipIf(
+        sys.version_info.major == 3 and sys.version_info.minor <= 5,
+        "serialize() uses hashes to aggregate output which makes the "
+        "comparison non-deterministic for py3.5.",
+    )
     def test_serialize(self):
         otel_spans, expected_encoding = self.get_exhaustive_test_spans()
         self.assertEqual(
@@ -266,7 +277,7 @@ class TestProtobufEncoder(unittest.TestCase):
                                         )
                                     ],
                                     status=PB2Status(
-                                        deprecated_code=PB2Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR,
+                                        deprecated_code=PB2Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR,  # pylint: disable=no-member
                                         code=SDKStatusCode.ERROR.value,
                                         message="Example description",
                                     ),
@@ -371,7 +382,7 @@ class TestProtobufEncoder(unittest.TestCase):
         self.assertEqual(
             _encode_status(SDKStatus(status_code=SDKStatusCode.UNSET)),
             PB2Status(
-                deprecated_code=PB2Status.DEPRECATED_STATUS_CODE_OK,
+                deprecated_code=PB2Status.DEPRECATED_STATUS_CODE_OK,  # pylint: disable=no-member
                 code=SDKStatusCode.UNSET.value,
             ),
         )
@@ -379,7 +390,7 @@ class TestProtobufEncoder(unittest.TestCase):
         self.assertEqual(
             _encode_status(SDKStatus(status_code=SDKStatusCode.OK)),
             PB2Status(
-                deprecated_code=PB2Status.DEPRECATED_STATUS_CODE_OK,
+                deprecated_code=PB2Status.DEPRECATED_STATUS_CODE_OK,  # pylint: disable=no-member
                 code=SDKStatusCode.OK.value,
             ),
         )
@@ -387,7 +398,7 @@ class TestProtobufEncoder(unittest.TestCase):
         self.assertEqual(
             _encode_status(SDKStatus(status_code=SDKStatusCode.ERROR)),
             PB2Status(
-                deprecated_code=PB2Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR,
+                deprecated_code=PB2Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR,  # pylint: disable=no-member
                 code=SDKStatusCode.ERROR.value,
             ),
         )

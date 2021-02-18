@@ -19,7 +19,7 @@ from io import BytesIO
 from unittest.mock import patch
 
 from opentelemetry.exporter.otlp.sender.http import HttpSender
-from opentelemetry.exporter.otlp.util import Compression, Headers
+from opentelemetry.exporter.otlp.util import Compression
 
 
 class MockResponse:
@@ -28,6 +28,7 @@ class MockResponse:
         self.text = status_code
 
 
+# pylint: disable=protected-access
 class TestHttpSender(unittest.TestCase):
     def test_constructor_defaults(self):
         sender = HttpSender()
@@ -145,8 +146,8 @@ class TestHttpSender(unittest.TestCase):
         sender.send(serialized_bytes, "application/json")
 
         gzip_data = BytesIO()
-        with gzip.GzipFile(fileobj=gzip_data, mode="w") as f:
-            f.write(serialized_bytes)
+        with gzip.GzipFile(fileobj=gzip_data, mode="w") as gzip_stream:
+            gzip_stream.write(serialized_bytes)
 
         kwargs = mock_post.call_args[1]
         self.assertEqual(kwargs["headers"]["Content-Encoding"], "gzip")
