@@ -34,6 +34,8 @@ uWSGI postfork decorator
 
 .. code-block:: python
 
+    from uwsgidecorators import postfork
+
     from opentelemetry import trace
     from opentelemetry.exporter.jaeger import JaegerSpanExporter
     from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
