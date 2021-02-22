@@ -78,7 +78,6 @@ from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from enum import Enum
 from logging import getLogger
-from sys import version_info
 from typing import Iterator, Optional, Sequence, cast
 
 from opentelemetry import context as context_api
@@ -109,27 +108,6 @@ from opentelemetry.util import types
 from opentelemetry.util._providers import _load_provider
 
 logger = getLogger(__name__)
-
-
-if version_info.minor < 7:
-
-    logger.warning(
-        "Your current Python version does not support time measurements with"
-        " nanosecond precision. time_ns is being added as an attribute of the"
-        " time module to provide an uniform way of importing a timestamping"
-        " function from this module but it must not be relied on providing"
-        " actual nanosecond precision for timestamps. More information in "
-        " PEP 564. Please upgrade to Python  3.7 or newer."
-    )
-
-    import time
-
-    def time_ns() -> int:
-        # FIXME this approach can have precision problems as explained here:
-        # https://github.com/open-telemetry/opentelemetry-python/issues/1594
-        return int(time.time() * 1e9)
-
-    time.time_ns = time_ns
 
 
 class LinkBase(ABC):

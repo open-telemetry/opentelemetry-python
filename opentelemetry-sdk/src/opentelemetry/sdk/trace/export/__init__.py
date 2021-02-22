@@ -19,7 +19,6 @@ import threading
 import typing
 from enum import Enum
 from os import environ, linesep
-from time import time_ns
 from typing import Optional
 
 from opentelemetry.context import Context, attach, detach, set_value
@@ -30,6 +29,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_SCHEDULE_DELAY,
 )
 from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
+from opentelemetry.util._time import _time_ns
 
 logger = logging.getLogger(__name__)
 
@@ -231,9 +231,9 @@ class BatchSpanProcessor(SpanProcessor):
                         break
 
             # subtract the duration of this export call to the next timeout
-            start = time_ns()
+            start = _time_ns()
             self._export(flush_request)
-            end = time_ns()
+            end = _time_ns()
             duration = (end - start) / 1e9
             timeout = self.schedule_delay_millis / 1e3 - duration
 
