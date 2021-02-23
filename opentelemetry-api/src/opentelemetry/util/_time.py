@@ -16,7 +16,7 @@ from logging import getLogger
 from sys import version_info
 
 if version_info.minor < 7:
-    getLogger(__name__).warning(
+    getLogger(__name__).warning(  # pylint: disable=logging-not-lazy
         "You are using Python version 3.%s. This version does not include a "
         "function to get timestamps in nanoseconds. The _time_ns function in "
         "opentelemetry.util._time does not have the same resolution as the "
