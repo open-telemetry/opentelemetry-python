@@ -13,7 +13,8 @@
 # limitations under the License.
 
 from opentelemetry import trace
-from opentelemetry.exporter.jaeger import JaegerSpanExporter
+from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
@@ -37,7 +38,13 @@ access_log_format = (
 
 def post_fork(server, worker):
     server.log.info("Worker spawned (pid: %s)", worker.pid)
-    trace.set_tracer_provider(TracerProvider())
-    trace.get_tracer_provider().add_span_processor(
-        BatchExportSpanProcessor(JaegerSpanExporter(service_name="my-service"))
+
+    resource = Resource.create(attributes={"service.name": "api-service"})
+
+    trace.set_tracer_provider(TracerProvider(resource=resource))
+    # This uses insecure connection for the purpose of example. Please see the
+    # OTLP Exporter documentation for other options.
+    span_processor = BatchExportSpanProcessor(
+        OTLPSpanExporter(endpoint="localhost:4317", insecure=True)
     )
+    trace.get_tracer_provider().add_span_processor(span_processor)

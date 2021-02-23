@@ -7,7 +7,7 @@ itsdangerous==1.1.0
 Jinja2==2.11.3
 MarkupSafe==1.1.1
 opentelemetry-api==0.17b0
-opentelemetry-exporter-jaeger==0.17b0
+opentelemetry-exporter-otlp==0.17b0
 opentelemetry-instrumentation==0.17b0
 opentelemetry-instrumentation-flask==0.17b0
 opentelemetry-instrumentation-wsgi==0.17b0

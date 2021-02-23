@@ -17,24 +17,28 @@ from flask import request
 from uwsgidecorators import postfork
 
 from opentelemetry import trace
-from opentelemetry.exporter.jaeger import JaegerSpanExporter
+from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
-
-trace.set_tracer_provider(TracerProvider())
 
 application = flask.Flask(__name__)
 
 FlaskInstrumentor().instrument_app(application)
-tracer = trace.get_tracer(__name__)
 
 
 @postfork
-def set_span_processor():
-    trace.get_tracer_provider().add_span_processor(
-        BatchExportSpanProcessor(JaegerSpanExporter(service_name="my-service"))
+def init_tracing():
+    resource = Resource.create(attributes={"service.name": "api-service"})
+
+    trace.set_tracer_provider(TracerProvider(resource=resource))
+    # This uses insecure connection for the purpose of example. Please see the
+    # OTLP Exporter documentation for other options.
+    span_processor = BatchExportSpanProcessor(
+        OTLPSpanExporter(endpoint="localhost:4317", insecure=True)
     )
+    trace.get_tracer_provider().add_span_processor(span_processor)
 
 
 def fib_slow(n):
@@ -53,6 +57,7 @@ def fib_fast(n):
 
 @application.route("/fibonacci")
 def fibonacci():
+    tracer = trace.get_tracer(__name__)
     n = int(request.args.get("n", 1))
     with tracer.start_as_current_span("root"):
         with tracer.start_as_current_span("fib_slow") as slow_span:
@@ -64,7 +69,7 @@ def fibonacci():
             fast_span.set_attribute("n", n)
             fast_span.set_attribute("nth_fibonacci", ans)
 
-    return "Hello"
+    return "F({}) is: ({})".format(n, ans)
 
 
 if __name__ == "__main__":

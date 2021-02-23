@@ -16,17 +16,24 @@ Gunicorn post_fork hook
 .. code-block:: python
 
     from opentelemetry import trace
-    from opentelemetry.exporter.jaeger import JaegerSpanExporter
+    from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.resources import Resource
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
 
     def post_fork(server, worker):
         server.log.info("Worker spawned (pid: %s)", worker.pid)
-        trace.set_tracer_provider(TracerProvider())
-        trace.get_tracer_provider().add_span_processor(
-            BatchExportSpanProcessor(JaegerSpanExporter(service_name='my-service'))
+
+        resource = Resource.create(attributes={
+            "service.name": "api-service"
+        })
+
+        trace.set_tracer_provider(TracerProvider(resource=resource))
+        span_processor = BatchExportSpanProcessor(
+            OTLPSpanExporter(endpoint="localhost:4317")
         )
+        trace.get_tracer_provider().add_span_processor(span_processor)
 
 
 uWSGI postfork decorator
@@ -37,15 +44,23 @@ uWSGI postfork decorator
     from uwsgidecorators import postfork
 
     from opentelemetry import trace
-    from opentelemetry.exporter.jaeger import JaegerSpanExporter
+    from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.resources import Resource
+    from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
 
 
     @postfork
-    def set_span_processor():
-        trace.get_tracer_provider().add_span_processor(
-            BatchExportSpanProcessor(JaegerSpanExporter(service_name='my-service'))
+    def init_tracing():
+        resource = Resource.create(attributes={
+            "service.name": "api-service"
+        })
+
+        trace.set_tracer_provider(TracerProvider(resource=resource))
+        span_processor = BatchExportSpanProcessor(
+            OTLPSpanExporter(endpoint="localhost:4317")
         )
+        trace.get_tracer_provider().add_span_processor(span_processor)
 
 
 The source code for the examples with Flask app are available :scm_web:`here <docs/examples/fork-process-model/>`.
