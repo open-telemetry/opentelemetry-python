@@ -151,7 +151,7 @@ and run the following command instead:
 
 .. code:: sh
 
-    $ opentelemetry-instrument -e console_span python server_uninstrumented.py
+    $ opentelemetry-instrument -e console_span,console_metrics python server_uninstrumented.py
 
 In the console where you previously executed ``client.py``, run the following
 command again:

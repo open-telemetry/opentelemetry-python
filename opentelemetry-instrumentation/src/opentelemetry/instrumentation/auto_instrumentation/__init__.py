@@ -21,6 +21,7 @@ from os.path import abspath, dirname, pathsep
 from shutil import which
 
 from opentelemetry.environment_variables import (
+    OTEL_METRICS_EXPORTER,
     OTEL_PYTHON_IDS_GENERATOR,
     OTEL_PYTHON_SERVICE_NAME,
     OTEL_TRACE_EXPORTER,
@@ -35,6 +36,19 @@ def parse_args():
         opentelemetry-instrument automatically instruments a Python
         program and it's dependencies and then runs the program.
         """
+    )
+
+    parser.add_argument(
+        "--metrics-exporter",
+        required=False,
+        help="""
+        Uses the specified exporter to export metrics.
+        Accepts multiple exporters as comma separated values.
+
+        Examples:
+
+            --metrics-exporter=otlp_metric
+        """,
     )
 
     parser.add_argument(
@@ -81,6 +95,8 @@ def parse_args():
 
 
 def load_config_from_cli_args(args):
+    if args.metrics_exporter:
+        environ[OTEL_METRICS_EXPORTER] = args.metrics_exporter
     if args.trace_exporter:
         environ[OTEL_TRACE_EXPORTER] = args.trace_exporter
     if args.service_name:

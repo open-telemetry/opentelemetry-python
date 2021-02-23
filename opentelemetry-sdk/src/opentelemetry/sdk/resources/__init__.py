@@ -25,9 +25,10 @@ This package implements `OpenTelemetry Resources
 Resource objects are created with `Resource.create`, which accepts attributes
 (key-values). Resource attributes can also be passed at process invocation in
 the :envvar:`OTEL_RESOURCE_ATTRIBUTES` environment variable. You should
-register your resource with the  `opentelemetry.sdk.trace.TracerProvider` by
-passing them into their constructors. The `Resource` passed to a provider is
-available to the exporter, which can send on this information as it sees fit.
+register your resource with the `opentelemetry.sdk.metrics.MeterProvider` and
+`opentelemetry.sdk.trace.TracerProvider` by passing them into their
+constructors. The `Resource` passed to a provider is available to the
+exporter, which can send on this information as it sees fit.
 
 .. code-block:: python
 

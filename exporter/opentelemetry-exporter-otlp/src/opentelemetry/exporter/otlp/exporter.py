@@ -142,7 +142,7 @@ def _load_credential_from_file(filepath) -> ChannelCredentials:
 class OTLPExporterMixin(
     ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT]
 ):
-    """OTLP span exporter
+    """OTLP span/metric exporter
 
     Args:
         endpoint: OpenTelemetry Collector receiver endpoint

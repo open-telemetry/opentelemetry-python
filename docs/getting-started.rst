@@ -200,16 +200,84 @@ Following the installation of the package containing the b3 propagator, configur
 
     propagators.set_global_textmap(B3Format())
 
-Use the OpenTelemetry Collector for traces
-------------------------------------------
+
+Add metrics
+--------------
+
+Spans are a great way to get detailed information about what your application is doing, but
+what about a more aggregated perspective? OpenTelemetry provides support for metrics. Metrics are a time series
+of values that express things such as CPU utilization, request count for an HTTP server, or a
+business metric such as transactions.
+
+You can annotate all metrics with labels. Labels are additional qualifiers that describe what
+subdivision of the measurements the metric represents.
+
+The following example emits metrics to your console, similar to the trace example:
+
+.. literalinclude:: getting_started/metrics_example.py
+    :language: python
+    :lines: 15-
+
+The sleep functions cause the script to take a while, but it eventually yields the following output:
+
+.. code-block:: sh
+
+    $ python metrics_example.py
+    ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", labels="(('environment', 'staging'),)", value=25)
+    ConsoleMetricsExporter(data="Counter(name="requests", description="number of requests")", labels="(('environment', 'staging'),)", value=45)
+
+Use metrics with Prometheus
+------------------------------
+
+It's valuable to have a data store for metrics so you can visualize and query the data. A common solution is
+`Prometheus <https://prometheus.io/>`_, which provides a server to scrape and store time series data.
+
+Start by bringing up a Prometheus instance to scrape your application. Write the following configuration:
+
+.. code-block:: yaml
+
+    # /tmp/prometheus.yml
+    scrape_configs:
+    - job_name: 'my-app'
+      scrape_interval: 5s
+      static_configs:
+      - targets: ['localhost:8000']
+
+Then start a Docker container for the instance:
+
+.. code-block:: sh
+
+    # --net=host will not work properly outside of Linux.
+    docker run --net=host -v /tmp/prometheus.yml:/etc/prometheus/prometheus.yml prom/prometheus \
+        --log.level=debug --config.file=/etc/prometheus/prometheus.yml
+
+Install an exporter specific to Prometheus for your Python application: 
+
+.. code-block:: sh
+
+    pip install opentelemetry-exporter-prometheus
+
+
+Use that exporter instead of the `ConsoleMetricsExporter`:
+
+.. literalinclude:: getting_started/prometheus_example.py
+    :language: python
+    :lines: 15-
+
+The Prometheus server runs locally on port 8000. The instrumented code makes metrics available to Prometheus via the `PrometheusMetricsExporter`.
+Visit the Prometheus UI (http://localhost:9090) to view your metrics.
+
+
+Use the OpenTelemetry Collector for traces and metrics
+--------------------------------------------------------
 
 Although it's possible to directly export your telemetry data to specific backends, you might have more complex use cases such as the following:
 
 * A single telemetry sink shared by multiple services, to reduce overhead of switching exporters.
-* Aggregating traces across multiple services, running on multiple hosts.
+* Aggregaing metrics or traces across multiple services, running on multiple hosts.
 
 To enable a broad range of aggregation strategies, OpenTelemetry provides the `opentelemetry-collector <https://github.com/open-telemetry/opentelemetry-collector>`_.
-The Collector is a flexible application that can consume trace data and export to multiple other backends, including to another instance of the Collector.
+The Collector is a flexible application that can consume trace and metric data and export to multiple other backends, including to another instance of the Collector.
 
 Start the Collector locally to see how the Collector works in practice. Write the following file:
 
@@ -231,6 +299,9 @@ Start the Collector locally to see how the Collector works in practice. Write th
                 receivers: [opencensus]
                 exporters: [logging]
                 processors: [batch, queued_retry]
+            metrics:
+                receivers: [opencensus]
+                exporters: [logging]
 
 Then start the Docker container:
 
