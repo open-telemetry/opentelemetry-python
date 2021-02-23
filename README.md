@@ -40,6 +40,9 @@
 
 This page describes the Python [OpenTelemetry](https://opentelemetry.io/) implementation. OpenTelemetry is an observability framework for cloud-native software.
 
+## Requirements
+Unless otherwise noted, all published artifacts support Python 3.5 or higher. See CONTRIBUTING.md for additional instructions for building this project for development.
+
 ## Getting started
 
 The goal of OpenTelemetry is to provide a single set of APIs to capture distributed traces and metrics from your application and send them to an observability platform. This project lets you do just that for applications written in Python.
