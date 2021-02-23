@@ -24,7 +24,7 @@ from opentelemetry.environment_variables import (
     OTEL_METRICS_EXPORTER,
     OTEL_PYTHON_IDS_GENERATOR,
     OTEL_PYTHON_SERVICE_NAME,
-    OTEL_TRACE_EXPORTER,
+    OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.instrumentation.configurator import BaseConfigurator
 from opentelemetry.instrumentation.distro import BaseDistro
@@ -57,7 +57,7 @@ def _get_service_name() -> str:
 
 
 def _get_exporter_names() -> Sequence[str]:
-    trace_exporters = environ.get(OTEL_TRACE_EXPORTER)
+    trace_exporters = environ.get(OTEL_TRACES_EXPORTER)
     metrics_exporters = environ.get(OTEL_METRICS_EXPORTER)
 
     exporters = set()
@@ -204,5 +204,5 @@ class OpenTelemetryDistro(BaseDistro):
     """
 
     def _configure(self, **kwargs):
-        os.environ.setdefault(OTEL_TRACE_EXPORTER, "otlp_span")
         os.environ.setdefault(OTEL_METRICS_EXPORTER, "otlp_metric")
+        os.environ.setdefault(OTEL_TRACES_EXPORTER, "otlp_span")

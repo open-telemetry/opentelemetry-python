@@ -23,7 +23,7 @@ from opentelemetry.exporter.jaeger.translate import (
     _convert_int_to_i64,
     _nsec_to_usec_round,
 )
-from opentelemetry.sdk.trace import Span, StatusCode
+from opentelemetry.sdk.trace import ReadableSpan, StatusCode
 from opentelemetry.util import types
 
 
@@ -75,7 +75,7 @@ def _translate_attribute(
 
 
 class ThriftTranslator(Translator):
-    def _translate_span(self, span: Span) -> TCollector.Span:
+    def _translate_span(self, span: ReadableSpan) -> TCollector.Span:
         ctx = span.get_span_context()
         trace_id = ctx.trace_id
         span_id = ctx.span_id
@@ -106,7 +106,7 @@ class ThriftTranslator(Translator):
         )
         return jaeger_span
 
-    def _extract_tags(self, span: Span) -> Sequence[TCollector.Tag]:
+    def _extract_tags(self, span: ReadableSpan) -> Sequence[TCollector.Tag]:
 
         translated = []
         if span.attributes:
@@ -151,7 +151,7 @@ class ThriftTranslator(Translator):
         return translated
 
     def _extract_refs(
-        self, span: Span
+        self, span: ReadableSpan
     ) -> Optional[Sequence[TCollector.SpanRef]]:
         if not span.links:
             return None
@@ -170,7 +170,9 @@ class ThriftTranslator(Translator):
             )
         return refs
 
-    def _extract_logs(self, span: Span) -> Optional[Sequence[TCollector.Log]]:
+    def _extract_logs(
+        self, span: ReadableSpan
+    ) -> Optional[Sequence[TCollector.Log]]:
         """Returns jaeger logs if events exists, otherwise None.
 
         Args:

@@ -24,7 +24,7 @@ from opentelemetry.environment_variables import (
     OTEL_METRICS_EXPORTER,
     OTEL_PYTHON_IDS_GENERATOR,
     OTEL_PYTHON_SERVICE_NAME,
-    OTEL_TRACE_EXPORTER,
+    OTEL_TRACES_EXPORTER,
 )
 
 logger = getLogger(__file__)
@@ -98,7 +98,7 @@ def load_config_from_cli_args(args):
     if args.metrics_exporter:
         environ[OTEL_METRICS_EXPORTER] = args.metrics_exporter
     if args.trace_exporter:
-        environ[OTEL_TRACE_EXPORTER] = args.trace_exporter
+        environ[OTEL_TRACES_EXPORTER] = args.trace_exporter
     if args.service_name:
         environ[OTEL_PYTHON_SERVICE_NAME] = args.service_name
     if args.ids_generator:

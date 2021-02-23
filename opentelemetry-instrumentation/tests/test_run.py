@@ -21,7 +21,7 @@ from unittest.mock import patch
 from opentelemetry.environment_variables import (
     OTEL_METRICS_EXPORTER,
     OTEL_PYTHON_SERVICE_NAME,
-    OTEL_TRACE_EXPORTER,
+    OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.instrumentation import auto_instrumentation
 
@@ -112,13 +112,13 @@ class TestArgs(TestCase):
     def test_exporter(self, _):  # pylint: disable=no-self-use
         with patch("sys.argv", ["instrument", "2"]):
             auto_instrumentation.run()
-            self.assertIsNone(environ.get(OTEL_METRICS_EXPORTER))
+            self.assertIsNone(environ.get(OTEL_TRACES_EXPORTER))
 
         with patch(
             "sys.argv", ["instrument", "--trace-exporter", "jaeger", "1", "2"]
         ):
             auto_instrumentation.run()
-            self.assertEqual(environ.get(OTEL_TRACE_EXPORTER), "jaeger")
+            self.assertEqual(environ.get(OTEL_TRACES_EXPORTER), "jaeger")
 
     @patch("opentelemetry.instrumentation.auto_instrumentation.execl")
     def test_service_name(self, _):  # pylint: disable=no-self-use
