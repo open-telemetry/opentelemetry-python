@@ -21,11 +21,8 @@ if version_info.minor < 7:
         "function to get timestamps in nanoseconds. The _time_ns function in "
         "opentelemetry.util._time does not have the same resolution as the "
         "time_ns function included in the time package in Python 3.7 onwards. "
-        "This _time_ns function must not be used by any application code and "
-        "it will be removed once opentelemetry-api no longer supports any "
-        "Python version older than 3.7. Refer to PEP 546 for more "
-        "information. Please upgrade your Python version to 3.7 or "
-        "newer." % version_info.minor
+        "Refer to PEP 546 for more information. Please upgrade your Python "
+        "version to 3.7 or newer." % version_info.minor
     )
     from time import time
 
