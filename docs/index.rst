@@ -14,6 +14,10 @@ This documentation describes the :doc:`opentelemetry-api <api/api>`,
 **Please note** that this library is currently in _beta_, and shouldn't
 generally be used in production environments.
 
+Requirement
+-----------
+OpenTelemetry-Python supports Python 3.5 and higher.
+
 Installation
 ------------
 
