@@ -102,7 +102,7 @@ from opentelemetry.trace.span import (
     format_trace_id,
 )
 from opentelemetry.trace.status import Status
-from opentelemetry.types import Attributes
+from opentelemetry.util import types
 from opentelemetry.util._providers import _load_provider
 
 logger = getLogger(__name__)
@@ -118,7 +118,7 @@ class LinkBase(ABC):
 
     @property
     @abstractmethod
-    def attributes(self) -> Attributes:
+    def attributes(self) -> types.Attributes:
         pass
 
 
@@ -131,13 +131,13 @@ class Link(LinkBase):
     """
 
     def __init__(
-        self, context: "SpanContext", attributes: Attributes = None,
+        self, context: "SpanContext", attributes: types.Attributes = None,
     ) -> None:
         super().__init__(context)
         self._attributes = attributes
 
     @property
-    def attributes(self) -> Attributes:
+    def attributes(self) -> types.Attributes:
         return self._attributes
 
 
@@ -235,7 +235,7 @@ class Tracer(ABC):
         name: str,
         context: Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: Attributes = None,
+        attributes: types.Attributes = None,
         links: _Links = None,
         start_time: Optional[int] = None,
         record_exception: bool = True,
@@ -290,7 +290,7 @@ class Tracer(ABC):
         name: str,
         context: Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: Attributes = None,
+        attributes: types.Attributes = None,
         links: _Links = None,
         start_time: Optional[int] = None,
         record_exception: bool = True,
@@ -384,7 +384,7 @@ class DefaultTracer(Tracer):
         name: str,
         context: Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: Attributes = None,
+        attributes: types.Attributes = None,
         links: _Links = None,
         start_time: Optional[int] = None,
         record_exception: bool = True,
@@ -399,7 +399,7 @@ class DefaultTracer(Tracer):
         name: str,
         context: Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
-        attributes: Attributes = None,
+        attributes: types.Attributes = None,
         links: _Links = None,
         start_time: Optional[int] = None,
         record_exception: bool = True,

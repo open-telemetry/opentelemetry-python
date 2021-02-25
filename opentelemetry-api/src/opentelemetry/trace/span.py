@@ -6,7 +6,7 @@ import typing
 from collections import OrderedDict
 
 from opentelemetry.trace.status import Status
-from opentelemetry.types import Attributes, AttributeValue
+from opentelemetry.util import types
 
 # The key MUST begin with a lowercase letter or a digit,
 # and can only contain lowercase letters (a-z), digits (0-9),
@@ -82,7 +82,7 @@ class Span(abc.ABC):
 
     @abc.abstractmethod
     def set_attributes(
-        self, attributes: typing.Dict[str, AttributeValue]
+        self, attributes: typing.Dict[str, types.AttributeValue]
     ) -> None:
         """Sets Attributes.
 
@@ -92,7 +92,7 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_attribute(self, key: str, value: AttributeValue) -> None:
+    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         """Sets an Attribute.
 
         Sets a single Attribute with the key and value passed as arguments.
@@ -104,7 +104,7 @@ class Span(abc.ABC):
     def add_event(
         self,
         name: str,
-        attributes: Attributes = None,
+        attributes: types.Attributes = None,
         timestamp: typing.Optional[int] = None,
     ) -> None:
         """Adds an `Event`.
@@ -142,7 +142,7 @@ class Span(abc.ABC):
     def record_exception(
         self,
         exception: Exception,
-        attributes: Attributes = None,
+        attributes: types.Attributes = None,
         timestamp: typing.Optional[int] = None,
         escaped: bool = False,
     ) -> None:
@@ -501,17 +501,17 @@ class DefaultSpan(Span):
         pass
 
     def set_attributes(
-        self, attributes: typing.Dict[str, AttributeValue]
+        self, attributes: typing.Dict[str, types.AttributeValue]
     ) -> None:
         pass
 
-    def set_attribute(self, key: str, value: AttributeValue) -> None:
+    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
         pass
 
     def add_event(
         self,
         name: str,
-        attributes: Attributes = None,
+        attributes: types.Attributes = None,
         timestamp: typing.Optional[int] = None,
     ) -> None:
         pass
@@ -525,7 +525,7 @@ class DefaultSpan(Span):
     def record_exception(
         self,
         exception: Exception,
-        attributes: Attributes = None,
+        attributes: types.Attributes = None,
         timestamp: typing.Optional[int] = None,
         escaped: bool = False,
     ) -> None:
