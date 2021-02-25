@@ -25,7 +25,7 @@ from opentelemetry.exporter.jaeger.translate import (
     Translator,
 )
 from opentelemetry.sdk.trace import ReadableSpan, StatusCode
-from opentelemetry.util import types
+from opentelemetry.types import AttributeValue
 
 # pylint: disable=no-member,too-many-locals,no-self-use
 
@@ -76,7 +76,7 @@ def _get_binary_key_value(key: str, value: bytes) -> model_pb2.KeyValue:
 
 
 def _translate_attribute(
-    key: str, value: types.AttributeValue, max_length: Optional[int]
+    key: str, value: AttributeValue, max_length: Optional[int]
 ) -> Optional[model_pb2.KeyValue]:
     """Convert the attributes to jaeger keyvalues."""
     translated = None

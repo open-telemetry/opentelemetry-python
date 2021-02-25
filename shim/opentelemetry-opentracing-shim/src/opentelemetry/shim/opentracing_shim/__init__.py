@@ -113,7 +113,7 @@ from opentelemetry.trace import (
     set_span_in_context,
 )
 from opentelemetry.trace.propagation.textmap import DictGetter
-from opentelemetry.util.types import Attributes
+from opentelemetry.types import Attributes
 
 ValueT = TypeVar("ValueT", int, float, bool, str)
 logger = logging.getLogger(__name__)

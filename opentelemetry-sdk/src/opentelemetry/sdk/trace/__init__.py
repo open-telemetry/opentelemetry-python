@@ -53,7 +53,7 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
 from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import Status, StatusCode
-from opentelemetry.util import types
+from opentelemetry.typesl import Attributes, AttributeValue
 from opentelemetry.util.time import time_ns
 
 logger = logging.getLogger(__name__)
@@ -287,7 +287,7 @@ class EventBase(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def attributes(self) -> types.Attributes:
+    def attributes(self) -> Attributes:
         pass
 
 
@@ -304,21 +304,21 @@ class Event(EventBase):
     def __init__(
         self,
         name: str,
-        attributes: types.Attributes = None,
+        attributes: Attributes = None,
         timestamp: Optional[int] = None,
     ) -> None:
         super().__init__(name, timestamp)
         self._attributes = attributes
 
     @property
-    def attributes(self) -> types.Attributes:
+    def attributes(self) -> Attributes:
         return self._attributes
 
 
-def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
+def _is_valid_attribute_value(value: AttributeValue) -> bool:
     """Checks if attribute value is valid.
 
-    An attribute value is valid if it is one of the valid types.
+    An attribute value is valid if it is one of the valid types
     If the value is a sequence, it is only valid if all items in the sequence:
       - are of the same valid type or None
       - are not a sequence
@@ -367,7 +367,7 @@ def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
     return True
 
 
-def _filter_attribute_values(attributes: types.Attributes):
+def _filter_attribute_values(attributes: Attributes):
     if attributes:
         for attr_key, attr_value in list(attributes.items()):
             if _is_valid_attribute_value(attr_value):
@@ -405,7 +405,7 @@ class ReadableSpan:
         context: trace_api.SpanContext = None,
         parent: Optional[trace_api.SpanContext] = None,
         resource: Resource = Resource.create({}),
-        attributes: types.Attributes = None,
+        attributes: Attributes = None,
         events: Sequence[Event] = None,
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
@@ -459,7 +459,7 @@ class ReadableSpan:
         return self._status
 
     @property
-    def attributes(self) -> types.Attributes:
+    def attributes(self) -> Attributes:
         return MappingProxyType(self._attributes)
 
     @property
@@ -591,7 +591,7 @@ class Span(trace_api.Span, ReadableSpan):
         sampler: Optional[sampling.Sampler] = None,
         trace_config: None = None,  # TODO
         resource: Resource = Resource.create({}),
-        attributes: types.Attributes = None,
+        attributes: Attributes = None,
         events: Sequence[Event] = None,
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
@@ -658,9 +658,7 @@ class Span(trace_api.Span, ReadableSpan):
     def get_span_context(self):
         return self._context
 
-    def set_attributes(
-        self, attributes: Dict[str, types.AttributeValue]
-    ) -> None:
+    def set_attributes(self, attributes: Dict[str, AttributeValue]) -> None:
         with self._lock:
             if self._end_time is not None:
                 logger.warning("Setting attribute on ended span.")
@@ -685,7 +683,7 @@ class Span(trace_api.Span, ReadableSpan):
                         return
                 self._attributes[key] = value
 
-    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
+    def set_attribute(self, key: str, value: AttributeValue) -> None:
         return self.set_attributes({key: value})
 
     @_check_span_ended
@@ -695,7 +693,7 @@ class Span(trace_api.Span, ReadableSpan):
     def add_event(
         self,
         name: str,
-        attributes: types.Attributes = None,
+        attributes: Attributes = None,
         timestamp: Optional[int] = None,
     ) -> None:
         _filter_attribute_values(attributes)
@@ -794,7 +792,7 @@ class Span(trace_api.Span, ReadableSpan):
     def record_exception(
         self,
         exception: Exception,
-        attributes: types.Attributes = None,
+        attributes: Attributes = None,
         timestamp: Optional[int] = None,
         escaped: bool = False,
     ) -> None:
@@ -852,7 +850,7 @@ class Tracer(trace_api.Tracer):
         name: str,
         context: Optional[context_api.Context] = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-        attributes: types.Attributes = None,
+        attributes: Attributes = None,
         links: Sequence[trace_api.Link] = (),
         start_time: Optional[int] = None,
         record_exception: bool = True,
@@ -877,7 +875,7 @@ class Tracer(trace_api.Tracer):
         name: str,
         context: Optional[context_api.Context] = None,
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
-        attributes: types.Attributes = None,
+        attributes: Attributes = None,
         links: Sequence[trace_api.Link] = (),
         start_time: Optional[int] = None,
         record_exception: bool = True,

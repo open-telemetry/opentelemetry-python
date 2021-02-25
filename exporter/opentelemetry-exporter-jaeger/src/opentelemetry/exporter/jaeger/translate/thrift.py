@@ -24,7 +24,7 @@ from opentelemetry.exporter.jaeger.translate import (
     _nsec_to_usec_round,
 )
 from opentelemetry.sdk.trace import ReadableSpan, StatusCode
-from opentelemetry.util import types
+from opentelemetry.types import AttributeValue
 
 
 def _get_string_tag(key, value: str) -> TCollector.Tag:
@@ -58,7 +58,7 @@ def _get_trace_id_high(trace_id):
 
 
 def _translate_attribute(
-    key: str, value: types.AttributeValue, max_length: Optional[int]
+    key: str, value: AttributeValue, max_length: Optional[int]
 ) -> Optional[TCollector.Tag]:
     """Convert the attributes to jaeger tags."""
     if isinstance(value, bool):
