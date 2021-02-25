@@ -3,9 +3,9 @@ OpenTelemetry-Python
 
 The Python `OpenTelemetry <https://opentelemetry.io/>`_ client.
 
-.. image:: https://img.shields.io/gitter/room/opentelemetry/opentelemetry-python
-   :target: https://gitter.im/open-telemetry/opentelemetry-python
-   :alt: Gitter Chat
+.. image:: https://img.shields.io/badge/slack-chat-green.svg
+   :target: https://app.slack.com/client/T08PSQ7BQ/C01NP3BV26R
+   :alt: Slack Chat
 
 
 This documentation describes the :doc:`opentelemetry-api <api/api>`,

@@ -6,7 +6,7 @@ information on this and other language SIGs.
 
 See the [public meeting notes](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit)
 for a summary description of past meetings. To request edit access, join the
-meeting or get in touch on [Gitter](https://gitter.im/open-telemetry/opentelemetry-python).
+meeting or get in touch on [Slack](https://app.slack.com/client/T08PSQ7BQ/C01NP3BV26R).
 
 See to the [community membership document](https://github.com/open-telemetry/community/blob/main/community-membership.md)
 on how to become a [**Member**](https://github.com/open-telemetry/community/blob/main/community-membership.md#member),
@@ -20,7 +20,7 @@ Please take a look at this list first, your contributions may belong in one of t
 
 1. [OpenTelemetry Contrib](https://github.com/open-telemetry/opentelemetry-python-contrib): Instrumentations for third-party
    libraries and frameworks. There is an ongoing effort to migrate into the Opentelemetry Contrib repo some of the existing
-   programmatic instrumentations that are now in the `ext` directory in the main OpenTelemetry repo. Please ask in the Gitter
+   programmatic instrumentations that are now in the `ext` directory in the main OpenTelemetry repo. Please ask in the Slack
    channel (see below) for guidance if you want to contribute with these instrumentations.
 
 # Find the right branch
@@ -30,11 +30,14 @@ The default branch for this repo is `main`. Changes that pertain to `metrics` go
 ## Find a Buddy and get Started Quickly!
 
 If you are looking for someone to help you find a starting point and be a resource for your first contribution, join our
-Gitter and find a buddy!
+Slack and find a buddy!
 
-1. Join [Gitter.im](https://gitter.im) and join our [chat room](https://gitter.im/open-telemetry/opentelemetry-python).
+1. Join [Slack](https://slack.cncf.io/) and join our [channel](https://app.slack.com/client/T08PSQ7BQ/C01NP3BV26R).
 2. Post in the room with an introduction to yourself, what area you are interested in (check issues marked "Help Wanted"),
 and say you are looking for a buddy. We will match you with someone who has experience in that area.
+
+The Slack channel will be used for introductions and an entry point for external people to be triaged and redirected. For
+discussions, please open up an issue or a Github [Discussion](https://github.com/open-telemetry/opentelemetry-python/discussions).
 
 Your OpenTelemetry buddy is your resource to talk to directly on all aspects of contributing to OpenTelemetry: providing
 context, reviewing PRs, and helping those get merged. Buddies will not be available 24/7, but is committed to responding
