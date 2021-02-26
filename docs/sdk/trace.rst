@@ -7,7 +7,7 @@ Submodules
 .. toctree::
 
    trace.export
-   trace.ids_generator
+   trace.id_generator
    trace.sampling
    util.instrumentation
 

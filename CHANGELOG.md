@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `max_attr_value_length` support to Jaeger exporter
   ([#1633])(https://github.com/open-telemetry/opentelemetry-python/pull/1633)
 
+### Changed
+- Rename `IdsGenerator` to `IdGenerator`
+  ([#1651])(https://github.com/open-telemetry/opentelemetry-python/pull/1651)
+
 ## [0.18b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.18b0) - 2021-02-16
 
 ### Added
