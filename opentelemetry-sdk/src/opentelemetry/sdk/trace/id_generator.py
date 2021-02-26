@@ -41,7 +41,7 @@ class IdGenerator(abc.ABC):
 
 
 class RandomIdGenerator(IdGenerator):
-    """The default IDs generator for TracerProvider which randomly generates all
+    """The default ID generator for TracerProvider which randomly generates all
     bits when generating IDs.
     """
 

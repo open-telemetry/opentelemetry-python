@@ -27,10 +27,7 @@ from opentelemetry.environment_variables import (
     OTEL_PYTHON_SERVICE_NAME,
 )
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace.id_generator import (
-    IdGenerator,
-    RandomIdGenerator,
-)
+from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 
 
 class Provider:
