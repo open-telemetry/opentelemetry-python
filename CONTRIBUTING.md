@@ -6,7 +6,7 @@ information on this and other language SIGs.
 
 See the [public meeting notes](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit)
 for a summary description of past meetings. To request edit access, join the
-meeting or get in touch on [Slack](https://app.slack.com/client/T08PSQ7BQ/C01NP3BV26R).
+meeting or get in touch on [Slack](https://cloud-native.slack.com/archives/C01PD4HUVBL).
 
 See to the [community membership document](https://github.com/open-telemetry/community/blob/main/community-membership.md)
 on how to become a [**Member**](https://github.com/open-telemetry/community/blob/main/community-membership.md#member),
