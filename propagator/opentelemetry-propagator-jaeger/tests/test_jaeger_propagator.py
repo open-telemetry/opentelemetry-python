@@ -68,10 +68,10 @@ def _format_uber_trace_id(trace_id, span_id, parent_span_id, flags):
 class TestJaegerPropagator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        id_generator = id_generator.RandomIdGenerator()
-        cls.trace_id = id_generator.generate_trace_id()
-        cls.span_id = id_generator.generate_span_id()
-        cls.parent_span_id = id_generator.generate_span_id()
+        generator = id_generator.RandomIdGenerator()
+        cls.trace_id = generator.generate_trace_id()
+        cls.span_id = generator.generate_span_id()
+        cls.parent_span_id = generator.generate_span_id()
         cls.serialized_uber_trace_id = _format_uber_trace_id(
             cls.trace_id, cls.span_id, cls.parent_span_id, 11
         )
