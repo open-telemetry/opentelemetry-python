@@ -1,7 +1,7 @@
-opentelemetry.sdk.trace.ids_generator
+opentelemetry.sdk.trace.id_generator
 =====================================
 
-.. automodule:: opentelemetry.sdk.trace.ids_generator
+.. automodule:: opentelemetry.sdk.trace.id_generator
     :members:
     :undoc-members:
     :show-inheritance:

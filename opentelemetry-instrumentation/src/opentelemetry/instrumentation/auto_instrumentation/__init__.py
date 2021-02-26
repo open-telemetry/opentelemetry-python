@@ -85,8 +85,8 @@ def load_config_from_cli_args(args):
         environ[OTEL_TRACES_EXPORTER] = args.trace_exporter
     if args.service_name:
         environ[OTEL_PYTHON_SERVICE_NAME] = args.service_name
-    if args.ids_generator:
-        environ[OTEL_PYTHON_IDS_GENERATOR] = args.ids_generator
+    if args.id_generator:
+        environ[OTEL_PYTHON_IDS_GENERATOR] = args.id_generator
 
 
 def run() -> None:
