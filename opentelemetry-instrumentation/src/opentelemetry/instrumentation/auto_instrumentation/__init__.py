@@ -51,14 +51,14 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--ids-generator",
+        "--id-generator",
         required=False,
         help="""
         The IDs Generator to be used with the Tracer Provider.
 
         Examples:
 
-            --ids-generator=random
+            --id-generator=random
         """,
     )
 
