@@ -21,7 +21,7 @@ from pkg_resources import iter_entry_points
 
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
-    OTEL_PYTHON_IDS_GENERATOR,
+    OTEL_PYTHON_ID_GENERATOR,
     OTEL_PYTHON_SERVICE_NAME,
     OTEL_TRACES_EXPORTER,
 )
@@ -41,12 +41,12 @@ logger = getLogger(__file__)
 EXPORTER_OTLP = "otlp"
 EXPORTER_OTLP_SPAN = "otlp_span"
 
-RANDOM_IDS_GENERATOR = "random"
-_DEFAULT_IDS_GENERATOR = RANDOM_IDS_GENERATOR
+RANDOM_ID_GENERATOR = "random"
+_DEFAULT_ID_GENERATOR = RANDOM_ID_GENERATOR
 
 
 def _get_id_generator() -> str:
-    return environ.get(OTEL_PYTHON_IDS_GENERATOR, _DEFAULT_IDS_GENERATOR)
+    return environ.get(OTEL_PYTHON_ID_GENERATOR, _DEFAULT_ID_GENERATOR)
 
 
 def _get_service_name() -> str:

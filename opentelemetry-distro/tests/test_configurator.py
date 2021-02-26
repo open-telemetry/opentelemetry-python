@@ -23,7 +23,7 @@ from opentelemetry.distro import (
     _init_tracing,
 )
 from opentelemetry.environment_variables import (
-    OTEL_PYTHON_IDS_GENERATOR,
+    OTEL_PYTHON_ID_GENERATOR,
     OTEL_PYTHON_SERVICE_NAME,
 )
 from opentelemetry.sdk.resources import Resource
@@ -132,7 +132,7 @@ class TestTraceInit(TestCase):
         )
         del environ[OTEL_PYTHON_SERVICE_NAME]
 
-    @patch.dict(environ, {OTEL_PYTHON_IDS_GENERATOR: "custom_id_generator"})
+    @patch.dict(environ, {OTEL_PYTHON_ID_GENERATOR: "custom_id_generator"})
     @patch("opentelemetry.distro.IdGenerator", new=IdGenerator)
     @patch("opentelemetry.distro.iter_entry_points")
     def test_trace_init_custom_id_generator(self, mock_iter_entry_points):
