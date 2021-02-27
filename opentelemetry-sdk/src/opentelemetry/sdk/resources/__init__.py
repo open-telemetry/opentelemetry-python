@@ -188,7 +188,7 @@ class Resource:
         return resource
 
     @staticmethod
-    def create_empty() -> "Resource":
+    def get_empty() -> "Resource":
         return _EMPTY_RESOURCE
 
     @property
