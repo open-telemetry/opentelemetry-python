@@ -94,9 +94,9 @@ class B3Format(TextMapPropagator):
             self._trace_id_regex.fullmatch(trace_id) is None
             or self._span_id_regex.fullmatch(span_id) is None
         ):
-            ids_generator = trace.get_tracer_provider().ids_generator
-            trace_id = ids_generator.generate_trace_id()
-            span_id = ids_generator.generate_span_id()
+            id_generator = trace.get_tracer_provider().id_generator
+            trace_id = id_generator.generate_trace_id()
+            span_id = id_generator.generate_span_id()
             sampled = "0"
 
         else:

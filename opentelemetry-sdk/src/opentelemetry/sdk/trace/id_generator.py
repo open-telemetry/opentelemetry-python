@@ -16,7 +16,7 @@ import abc
 import random
 
 
-class IdsGenerator(abc.ABC):
+class IdGenerator(abc.ABC):
     @abc.abstractmethod
     def generate_span_id(self) -> int:
         """Get a new span ID.
@@ -40,8 +40,8 @@ class IdsGenerator(abc.ABC):
         """
 
 
-class RandomIdsGenerator(IdsGenerator):
-    """The default IDs generator for TracerProvider which randomly generates all
+class RandomIdGenerator(IdGenerator):
+    """The default ID generator for TracerProvider which randomly generates all
     bits when generating IDs.
     """
 
