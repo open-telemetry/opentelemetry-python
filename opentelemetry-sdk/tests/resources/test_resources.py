@@ -140,9 +140,7 @@ class TestResources(unittest.TestCase):
 
     def test_aggregated_resources_no_detectors(self):
         aggregated_resources = resources.get_aggregated_resources([])
-        self.assertEqual(
-            aggregated_resources, resources.Resource.get_empty()
-        )
+        self.assertEqual(aggregated_resources, resources.Resource.get_empty())
 
     def test_aggregated_resources_with_static_resource(self):
         static_resource = resources.Resource({"static_key": "static_value"})
