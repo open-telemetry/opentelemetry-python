@@ -84,7 +84,7 @@ class TestTraceInit(TestCase):
             "opentelemetry.distro.TracerProvider", Provider
         )
         self.get_processor_patcher = patch(
-            "opentelemetry.distro.BatchExportSpanProcessor", Processor
+            "opentelemetry.distro.BatchSpanProcessor", Processor
         )
         self.set_provider_patcher = patch(
             "opentelemetry.trace.set_tracer_provider"

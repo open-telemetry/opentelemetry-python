@@ -29,7 +29,7 @@ Usage
     from opentelemetry import trace
     from opentelemetry.exporter import jaeger
     from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
     trace.set_tracer_provider(TracerProvider())
     tracer = trace.get_tracer(__name__)
@@ -49,8 +49,8 @@ Usage
         # transport_format='protobuf' # optional
     )
 
-    # Create a BatchExportSpanProcessor and add the exporter to it
-    span_processor = BatchExportSpanProcessor(jaeger_exporter)
+    # Create a BatchSpanProcessor and add the exporter to it
+    span_processor = BatchSpanProcessor(jaeger_exporter)
 
     # add to the tracer
     trace.get_tracer_provider().add_span_processor(span_processor)
