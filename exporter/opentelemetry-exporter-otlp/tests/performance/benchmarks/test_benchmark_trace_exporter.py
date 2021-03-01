@@ -17,8 +17,8 @@ from unittest.mock import patch
 from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
 from opentelemetry.sdk.trace import TracerProvider, sampling
 from opentelemetry.sdk.trace.export import (
-    BatchExportSpanProcessor,
-    SimpleExportSpanProcessor,
+    BatchSpanProcessor,
+    SimpleSpanProcessor,
 )
 
 
@@ -40,7 +40,7 @@ class MockTraceServiceStub(object):
     new=MockTraceServiceStub,
 )
 def test_simple_span_processor(benchmark):
-    tracer = get_tracer_with_processor(SimpleExportSpanProcessor)
+    tracer = get_tracer_with_processor(SimpleSpanProcessor)
 
     def create_spans_to_be_exported():
         span = tracer.start_span("benchmarkedSpan",)
@@ -59,14 +59,14 @@ def test_simple_span_processor(benchmark):
     new=MockTraceServiceStub,
 )
 def test_batch_span_processor(benchmark):
-    """Runs benchmark tests using BatchExportSpanProcessor.
+    """Runs benchmark tests using BatchSpanProcessor.
 
     One particular call by pytest-benchmark will be much more expensive since
     the batch export thread will activate and consume a lot of CPU to process
     all the spans. For this reason, focus on the average measurement. Do not
     focus on the min/max measurements which will be misleading.
     """
-    tracer = get_tracer_with_processor(BatchExportSpanProcessor)
+    tracer = get_tracer_with_processor(BatchSpanProcessor)
 
     def create_spans_to_be_exported():
         span = tracer.start_span("benchmarkedSpan",)

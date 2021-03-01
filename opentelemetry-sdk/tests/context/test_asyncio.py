@@ -68,7 +68,7 @@ class TestAsyncio(unittest.TestCase):
         self.tracer_provider = trace.TracerProvider()
         self.tracer = self.tracer_provider.get_tracer(__name__)
         self.memory_exporter = InMemorySpanExporter()
-        span_processor = export.SimpleExportSpanProcessor(self.memory_exporter)
+        span_processor = export.SimpleSpanProcessor(self.memory_exporter)
         self.tracer_provider.add_span_processor(span_processor)
         self.loop = asyncio.get_event_loop()
 

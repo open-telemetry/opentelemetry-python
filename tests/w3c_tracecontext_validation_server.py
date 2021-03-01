@@ -29,7 +29,7 @@ from opentelemetry.instrumentation.wsgi import OpenTelemetryMiddleware
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
-    SimpleExportSpanProcessor,
+    SimpleSpanProcessor,
 )
 
 # FIXME This could likely be avoided by integrating this script into the
@@ -42,7 +42,7 @@ trace.set_tracer_provider(TracerProvider())
 RequestsInstrumentor().instrument()
 
 # SpanExporter receives the spans and send them to the target location.
-span_processor = SimpleExportSpanProcessor(ConsoleSpanExporter())
+span_processor = SimpleSpanProcessor(ConsoleSpanExporter())
 trace.get_tracer_provider().add_span_processor(span_processor)
 
 app = flask.Flask(__name__)

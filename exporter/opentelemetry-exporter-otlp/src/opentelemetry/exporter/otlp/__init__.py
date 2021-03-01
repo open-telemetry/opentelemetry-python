@@ -42,7 +42,7 @@ Additional details are available `in the specification
     from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.resources import Resource
     from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
     # Resource can be required for some backends, e.g. Jaeger
     # If resource wouldn't be set - traces wouldn't appears in Jaeger
@@ -55,7 +55,7 @@ Additional details are available `in the specification
 
     otlp_exporter = OTLPSpanExporter(endpoint="localhost:4317", insecure=True)
 
-    span_processor = BatchExportSpanProcessor(otlp_exporter)
+    span_processor = BatchSpanProcessor(otlp_exporter)
 
     trace.get_tracer_provider().add_span_processor(span_processor)
 

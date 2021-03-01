@@ -18,11 +18,11 @@ from opentelemetry.exporter.opencensus.trace_exporter import (
     OpenCensusSpanExporter,
 )
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.test.test_base import TestBase
 
 
-class ExportStatusSpanProcessor(SimpleExportSpanProcessor):
+class ExportStatusSpanProcessor(SimpleSpanProcessor):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.export_status = []

@@ -41,7 +41,7 @@ To use a sampler, pass it into the tracer provider constructor. For example:
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import (
         ConsoleSpanExporter,
-        SimpleExportSpanProcessor,
+        SimpleSpanProcessor,
     )
     from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
 
@@ -53,7 +53,7 @@ To use a sampler, pass it into the tracer provider constructor. For example:
 
     # set up an exporter for sampled spans
     trace.get_tracer_provider().add_span_processor(
-        SimpleExportSpanProcessor(ConsoleSpanExporter())
+        SimpleSpanProcessor(ConsoleSpanExporter())
     )
 
     # created spans will now be sampled by the TraceIdRatioBased sampler
@@ -81,14 +81,14 @@ Prev example but with environment vairables. Please make sure to set the env ``O
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import (
         ConsoleSpanExporter,
-        SimpleExportSpanProcessor,
+        SimpleSpanProcessor,
     )
 
     trace.set_tracer_provider(TracerProvider())
 
     # set up an exporter for sampled spans
     trace.get_tracer_provider().add_span_processor(
-        SimpleExportSpanProcessor(ConsoleSpanExporter())
+        SimpleSpanProcessor(ConsoleSpanExporter())
     )
 
     # created spans will now be sampled by the TraceIdRatioBased sampler with rate 1/1000.
