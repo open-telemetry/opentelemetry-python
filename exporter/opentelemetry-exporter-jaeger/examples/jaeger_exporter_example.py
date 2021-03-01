@@ -10,7 +10,6 @@ tracer = trace.get_tracer(__name__)
 
 # create a JaegerSpanExporter
 jaeger_exporter = jaeger.JaegerSpanExporter(
-    service_name="my-helloworld-service",
     # configure agent
     agent_host_name="localhost",
     agent_port=6831,
@@ -29,7 +28,6 @@ jaeger_exporter = jaeger.JaegerSpanExporter(
 # `EXPORTER_JAEGER_CERTIFICATE` with file containing creds.
 
 # jaeger_exporter = jaeger.JaegerSpanExporter(
-#     service_name="my-helloworld-service",
 #     collector_endpoint="localhost:14250",
 #     insecure=True,
 #     transport_format="protobuf",

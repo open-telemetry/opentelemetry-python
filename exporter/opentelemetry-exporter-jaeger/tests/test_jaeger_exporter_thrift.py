@@ -54,12 +54,12 @@ class TestJaegerSpanExporter(unittest.TestCase):
     def test_constructor_default(self):
         # pylint: disable=protected-access
         """Test the default values assigned by constructor."""
-        service_name = "my-service-name"
+        # service_name = "my-service-name"
         agent_host_name = "localhost"
         agent_port = 6831
-        exporter = jaeger_exporter.JaegerSpanExporter(service_name)
+        exporter = jaeger_exporter.JaegerSpanExporter()
 
-        self.assertEqual(exporter.service_name, service_name)
+        # self.assertEqual(exporter.service_name, service_name)
         self.assertEqual(exporter.agent_host_name, agent_host_name)
         self.assertEqual(exporter.agent_port, agent_port)
         self.assertEqual(exporter.collector_endpoint, None)
@@ -71,7 +71,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
     def test_constructor_explicit(self):
         # pylint: disable=protected-access
         """Test the constructor passing all the options."""
-        service = "my-opentelemetry-jaeger"
+        # service = "my-opentelemetry-jaeger"
         collector_endpoint = "https://opentelemetry.io:15875"
 
         agent_port = 14268
@@ -82,7 +82,6 @@ class TestJaegerSpanExporter(unittest.TestCase):
         auth = (username, password)
 
         exporter = jaeger_exporter.JaegerSpanExporter(
-            service_name=service,
             agent_host_name=agent_host_name,
             agent_port=agent_port,
             collector_endpoint=collector_endpoint,
@@ -90,7 +89,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
             password=password,
         )
 
-        self.assertEqual(exporter.service_name, service)
+        # self.assertEqual(exporter.service_name, service)
         self.assertEqual(exporter.agent_host_name, agent_host_name)
         self.assertEqual(exporter.agent_port, agent_port)
         self.assertTrue(exporter._collector_http_client is not None)
@@ -108,7 +107,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
     def test_constructor_by_environment_variables(self):
         #  pylint: disable=protected-access
         """Test the constructor using Environment Variables."""
-        service = "my-opentelemetry-jaeger"
+        # service = "my-opentelemetry-jaeger"
 
         agent_host_name = "opentelemetry.io"
         agent_port = "6831"
@@ -132,9 +131,9 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         environ_patcher.start()
 
-        exporter = jaeger_exporter.JaegerSpanExporter(service_name=service)
+        exporter = jaeger_exporter.JaegerSpanExporter()
 
-        self.assertEqual(exporter.service_name, service)
+        # self.assertEqual(exporter.service_name, service)
         self.assertEqual(exporter.agent_host_name, agent_host_name)
         self.assertEqual(exporter.agent_port, int(agent_port))
         self.assertTrue(exporter._collector_http_client is not None)
@@ -429,9 +428,13 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self.assertEqual(spans, expected_spans)
 
     def test_export(self):
+        
         """Test that agent and/or collector are invoked"""
+        from opentelemetry.sdk.trace import TracerProvider
+        trace_api.set_tracer_provider(TracerProvider())
+
         exporter = jaeger_exporter.JaegerSpanExporter(
-            "test_export", agent_host_name="localhost", agent_port=6318
+            agent_host_name="localhost", agent_port=6318
         )
 
         # just agent is configured now

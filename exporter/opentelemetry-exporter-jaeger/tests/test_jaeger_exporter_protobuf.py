@@ -56,7 +56,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
     def test_constructor_by_environment_variables(self):
         """Test using Environment Variables."""
         # pylint: disable=protected-access
-        service = "my-opentelemetry-jaeger"
+        # service = "my-opentelemetry-jaeger"
 
         collector_endpoint = "localhost:14250"
 
@@ -71,11 +71,8 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         env_patch.start()
 
-        exporter = JaegerSpanExporter(
-            service_name=service, transport_format="protobuf"
-        )
+        exporter = JaegerSpanExporter(transport_format="protobuf")
 
-        self.assertEqual(exporter.service_name, service)
         self.assertIsNotNone(exporter._collector_grpc_client)
         self.assertEqual(exporter.collector_endpoint, collector_endpoint)
         self.assertIsNotNone(exporter.credentials)
