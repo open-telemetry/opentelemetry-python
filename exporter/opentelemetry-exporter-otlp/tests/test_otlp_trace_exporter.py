@@ -114,9 +114,7 @@ class TestOTLPSpanExporter(TestCase):
     def setUp(self):
         tracer_provider = TracerProvider()
         self.exporter = OTLPSpanExporter(insecure=True)
-        tracer_provider.add_span_processor(
-            SimpleSpanProcessor(self.exporter)
-        )
+        tracer_provider.add_span_processor(SimpleSpanProcessor(self.exporter))
         self.tracer = tracer_provider.get_tracer(__name__)
 
         self.server = server(ThreadPoolExecutor(max_workers=10))

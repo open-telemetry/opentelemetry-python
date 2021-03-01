@@ -113,9 +113,7 @@ class TestSimpleSpanProcessor(unittest.TestCase):
         tracer = tracer_provider.get_tracer(__name__)
 
         exporter = MySpanExporter([])
-        span_processor = mock.Mock(
-            wraps=export.SimpleSpanProcessor(exporter)
-        )
+        span_processor = mock.Mock(wraps=export.SimpleSpanProcessor(exporter))
         tracer_provider.add_span_processor(span_processor)
 
         context = Context()
@@ -426,10 +424,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
 
         # negative max_queue_size
         self.assertRaises(
-            ValueError,
-            export.BatchSpanProcessor,
-            None,
-            max_queue_size=-500,
+            ValueError, export.BatchSpanProcessor, None, max_queue_size=-500,
         )
 
         # zero schedule_delay_millis
