@@ -58,19 +58,24 @@ def _get_trace_id_high(trace_id):
 
 
 def _translate_attribute(
-    key: str, value: types.AttributeValue
+    key: str, value: types.AttributeValue, max_length: Optional[int]
 ) -> Optional[TCollector.Tag]:
     """Convert the attributes to jaeger tags."""
     if isinstance(value, bool):
         return _get_bool_tag(key, value)
     if isinstance(value, str):
+        if max_length is not None:
+            value = value[:max_length]
         return _get_string_tag(key, value)
     if isinstance(value, int):
         return _get_long_tag(key, value)
     if isinstance(value, float):
         return _get_double_tag(key, value)
     if isinstance(value, tuple):
-        return _get_string_tag(key, str(value))
+        value = str(value)
+        if max_length is not None:
+            value = value[:max_length]
+        return _get_string_tag(key, value)
     return None
 
 
@@ -111,12 +116,16 @@ class ThriftTranslator(Translator):
         translated = []
         if span.attributes:
             for key, value in span.attributes.items():
-                tag = _translate_attribute(key, value)
+                tag = _translate_attribute(
+                    key, value, self._max_tag_value_length
+                )
                 if tag:
                     translated.append(tag)
         if span.resource.attributes:
             for key, value in span.resource.attributes.items():
-                tag = _translate_attribute(key, value)
+                tag = _translate_attribute(
+                    key, value, self._max_tag_value_length
+                )
                 if tag:
                     translated.append(tag)
 
@@ -185,7 +194,9 @@ class ThriftTranslator(Translator):
         for event in span.events:
             fields = []
             for key, value in event.attributes.items():
-                tag = _translate_attribute(key, value)
+                tag = _translate_attribute(
+                    key, value, self._max_tag_value_length
+                )
                 if tag:
                     fields.append(tag)
 
