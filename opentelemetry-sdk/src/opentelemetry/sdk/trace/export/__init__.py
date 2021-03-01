@@ -46,7 +46,7 @@ class SpanExporter:
     in their own format.
 
     To export data this MUST be registered to the :class`opentelemetry.sdk.trace.Tracer` using a
-    `SimpleExportSpanProcessor` or a `BatchExportSpanProcessor`.
+    `SimpleSpanProcessor` or a `BatchSpanProcessor`.
     """
 
     def export(
@@ -68,10 +68,10 @@ class SpanExporter:
         """
 
 
-class SimpleExportSpanProcessor(SpanProcessor):
+class SimpleSpanProcessor(SpanProcessor):
     """Simple SpanProcessor implementation.
 
-    SimpleExportSpanProcessor is an implementation of `SpanProcessor` that
+    SimpleSpanProcessor is an implementation of `SpanProcessor` that
     passes ended spans directly to the configured `SpanExporter`.
     """
 
@@ -103,7 +103,7 @@ class SimpleExportSpanProcessor(SpanProcessor):
 
 
 class _FlushRequest:
-    """Represents a request for the BatchExportSpanProcessor to flush spans."""
+    """Represents a request for the BatchSpanProcessor to flush spans."""
 
     __slots__ = ["event", "num_spans"]
 
@@ -112,10 +112,10 @@ class _FlushRequest:
         self.num_spans = 0
 
 
-class BatchExportSpanProcessor(SpanProcessor):
+class BatchSpanProcessor(SpanProcessor):
     """Batch span processor implementation.
 
-    BatchExportSpanProcessor is an implementation of `SpanProcessor` that
+    BatchSpanProcessor is an implementation of `SpanProcessor` that
     batches ended spans and pushes them to the configured `SpanExporter`.
     """
 

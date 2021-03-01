@@ -1,6 +1,6 @@
 import opentelemetry.shim.opentracing_shim as opentracingshim
 from opentelemetry.sdk import trace
-from opentelemetry.sdk.trace.export import SimpleExportSpanProcessor
+from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
@@ -17,7 +17,7 @@ class MockTracer(opentracingshim.TracerShim):
         oteltracer = tracer_provider.get_tracer(__name__)
         super(MockTracer, self).__init__(oteltracer)
         exporter = InMemorySpanExporter()
-        span_processor = SimpleExportSpanProcessor(exporter)
+        span_processor = SimpleSpanProcessor(exporter)
         tracer_provider.add_span_processor(span_processor)
 
         self.exporter = exporter
