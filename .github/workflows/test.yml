@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: 0153a64ea43e5c328441bd41a420894e94fd086f
+  CONTRIB_REPO_SHA: 8a367be397a77bd3b09226260f345abf885297b9
 
 jobs:
   build:
