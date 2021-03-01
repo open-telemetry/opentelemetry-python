@@ -76,24 +76,31 @@ def _get_binary_key_value(key: str, value: bytes) -> model_pb2.KeyValue:
 
 
 def _translate_attribute(
-    key: str, value: types.AttributeValue
+    key: str, value: types.AttributeValue, max_length: Optional[int]
 ) -> Optional[model_pb2.KeyValue]:
     """Convert the attributes to jaeger keyvalues."""
     translated = None
     if isinstance(value, bool):
         translated = _get_bool_key_value(key, value)
     elif isinstance(value, str):
+        if max_length is not None:
+            value = value[:max_length]
         translated = _get_string_key_value(key, value)
     elif isinstance(value, int):
         translated = _get_long_key_value(key, value)
     elif isinstance(value, float):
         translated = _get_double_key_value(key, value)
     elif isinstance(value, tuple):
-        translated = _get_string_key_value(key, str(value))
+        value = str(value)
+        if max_length is not None:
+            value = value[:max_length]
+        translated = _get_string_key_value(key, value)
     return translated
 
 
-def _extract_resource_tags(span: ReadableSpan) -> Sequence[model_pb2.KeyValue]:
+def _extract_resource_tags(
+    span: ReadableSpan, max_tag_value_length: Optional[int]
+) -> Sequence[model_pb2.KeyValue]:
     """Extracts resource attributes from span and returns
     list of jaeger keyvalues.
 
@@ -102,7 +109,7 @@ def _extract_resource_tags(span: ReadableSpan) -> Sequence[model_pb2.KeyValue]:
     """
     tags = []
     for key, value in span.resource.attributes.items():
-        tag = _translate_attribute(key, value)
+        tag = _translate_attribute(key, value, max_tag_value_length)
         if tag:
             tags.append(tag)
     return tags
@@ -140,7 +147,10 @@ def _proto_timestamp_from_epoch_nanos(nsec: int) -> Timestamp:
 
 
 class ProtobufTranslator(Translator):
-    def __init__(self, svc_name):
+    def __init__(
+        self, svc_name: str, max_tag_value_length: Optional[int] = None
+    ):
+        super().__init__(max_tag_value_length)
         self.svc_name = svc_name
 
     def _translate_span(self, span: ReadableSpan) -> model_pb2.Span:
@@ -161,7 +171,8 @@ class ProtobufTranslator(Translator):
         flags = int(ctx.trace_flags)
 
         process = model_pb2.Process(
-            service_name=self.svc_name, tags=_extract_resource_tags(span)
+            service_name=self.svc_name,
+            tags=_extract_resource_tags(span, self._max_tag_value_length),
         )
         jaeger_span = model_pb2.Span(
             trace_id=trace_id,
@@ -183,12 +194,16 @@ class ProtobufTranslator(Translator):
         translated = []
         if span.attributes:
             for key, value in span.attributes.items():
-                key_value = _translate_attribute(key, value)
+                key_value = _translate_attribute(
+                    key, value, self._max_tag_value_length
+                )
                 if key_value is not None:
                     translated.append(key_value)
         if span.resource.attributes:
             for key, value in span.resource.attributes.items():
-                key_value = _translate_attribute(key, value)
+                key_value = _translate_attribute(
+                    key, value, self._max_tag_value_length
+                )
                 if key_value:
                     translated.append(key_value)
 
@@ -256,7 +271,9 @@ class ProtobufTranslator(Translator):
         for event in span.events:
             fields = []
             for key, value in event.attributes.items():
-                tag = _translate_attribute(key, value)
+                tag = _translate_attribute(
+                    key, value, self._max_tag_value_length
+                )
                 if tag:
                     fields.append(tag)
 
