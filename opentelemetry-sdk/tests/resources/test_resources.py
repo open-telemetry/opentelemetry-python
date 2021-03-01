@@ -59,7 +59,7 @@ class TestResources(unittest.TestCase):
         self.assertEqual(resource.attributes, expected_with_envar)
         os.environ[resources.OTEL_RESOURCE_ATTRIBUTES] = ""
 
-        resource = resources.Resource.create_empty()
+        resource = resources.Resource.get_empty()
         self.assertEqual(resource, resources._EMPTY_RESOURCE)
 
         resource = resources.Resource.create(None)
@@ -140,9 +140,7 @@ class TestResources(unittest.TestCase):
 
     def test_aggregated_resources_no_detectors(self):
         aggregated_resources = resources.get_aggregated_resources([])
-        self.assertEqual(
-            aggregated_resources, resources.Resource.create_empty()
-        )
+        self.assertEqual(aggregated_resources, resources.Resource.get_empty())
 
     def test_aggregated_resources_with_static_resource(self):
         static_resource = resources.Resource({"static_key": "static_value"})
@@ -208,7 +206,7 @@ class TestResources(unittest.TestCase):
         resource_detector.raise_on_error = False
         self.assertEqual(
             resources.get_aggregated_resources([resource_detector]),
-            resources.Resource.create_empty(),
+            resources.Resource.get_empty(),
         )
 
     def test_resource_detector_raise_error(self):
@@ -245,7 +243,7 @@ class TestOTELResourceDetector(unittest.TestCase):
     def test_empty(self):
         detector = resources.OTELResourceDetector()
         os.environ[resources.OTEL_RESOURCE_ATTRIBUTES] = ""
-        self.assertEqual(detector.detect(), resources.Resource.create_empty())
+        self.assertEqual(detector.detect(), resources.Resource.get_empty())
 
     def test_one(self):
         detector = resources.OTELResourceDetector()
