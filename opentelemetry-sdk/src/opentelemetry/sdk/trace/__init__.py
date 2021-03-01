@@ -54,7 +54,7 @@ from opentelemetry.trace import SpanContext
 from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
-from opentelemetry.util.providers import time_ns
+from opentelemetry.util.time import time_ns
 
 logger = logging.getLogger(__name__)
 
