@@ -72,7 +72,7 @@ Well known trace exporter names:
 
 When present the value is passed on to the relevant exporter initializer as ``service_name`` argument.
 
-* ``--ids-generator`` or ``OTEL_PYTHON_IDS_GENERATOR``
+* ``--id-generator`` or ``OTEL_PYTHON_ID_GENERATOR``
 
 Used to specify which IDs Generator to use for the global Tracer Provider. By default, it
 will use the random IDs generator.

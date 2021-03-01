@@ -47,10 +47,7 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
-from opentelemetry.sdk.trace.ids_generator import (
-    IdsGenerator,
-    RandomIdsGenerator,
-)
+from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
@@ -840,13 +837,13 @@ class Tracer(trace_api.Tracer):
         span_processor: Union[
             SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor
         ],
-        ids_generator: IdsGenerator,
+        id_generator: IdGenerator,
         instrumentation_info: InstrumentationInfo,
     ) -> None:
         self.sampler = sampler
         self.resource = resource
         self.span_processor = span_processor
-        self.ids_generator = ids_generator
+        self.id_generator = id_generator
         self.instrumentation_info = instrumentation_info
 
     @contextmanager
@@ -901,7 +898,7 @@ class Tracer(trace_api.Tracer):
         # is_valid determines root span
         if parent_span_context is None or not parent_span_context.is_valid:
             parent_span_context = None
-            trace_id = self.ids_generator.generate_trace_id()
+            trace_id = self.id_generator.generate_trace_id()
             trace_flags = None
             trace_state = None
         else:
@@ -925,7 +922,7 @@ class Tracer(trace_api.Tracer):
         )
         span_context = trace_api.SpanContext(
             trace_id,
-            self.ids_generator.generate_span_id(),
+            self.id_generator.generate_span_id(),
             is_remote=False,
             trace_flags=trace_flags,
             trace_state=sampling_result.trace_state,
@@ -1003,20 +1000,24 @@ class TracerProvider(trace_api.TracerProvider):
         active_span_processor: Union[
             SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor
         ] = None,
-        ids_generator: IdsGenerator = None,
+        id_generator: IdGenerator = None,
     ):
         self._active_span_processor = (
             active_span_processor or SynchronousMultiSpanProcessor()
         )
-        if ids_generator is None:
-            self.ids_generator = RandomIdsGenerator()
+        if id_generator is None:
+            self.id_generator = RandomIdGenerator()
         else:
-            self.ids_generator = ids_generator
-        self.resource = resource
+            self.id_generator = id_generator
+        self._resource = resource
         self.sampler = sampler
         self._atexit_handler = None
         if shutdown_on_exit:
             self._atexit_handler = atexit.register(self.shutdown)
+
+    @property
+    def resource(self) -> Resource:
+        return self._resource
 
     def get_tracer(
         self,
@@ -1030,7 +1031,7 @@ class TracerProvider(trace_api.TracerProvider):
             self.sampler,
             self.resource,
             self._active_span_processor,
-            self.ids_generator,
+            self.id_generator,
             InstrumentationInfo(
                 instrumenting_module_name, instrumenting_library_version
             ),

@@ -21,7 +21,7 @@ from pkg_resources import iter_entry_points
 
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
-    OTEL_PYTHON_IDS_GENERATOR,
+    OTEL_PYTHON_ID_GENERATOR,
     OTEL_PYTHON_SERVICE_NAME,
     OTEL_TRACES_EXPORTER,
 )
@@ -33,7 +33,7 @@ from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
     SpanExporter,
 )
-from opentelemetry.sdk.trace.ids_generator import IdsGenerator
+from opentelemetry.sdk.trace.id_generator import IdGenerator
 
 logger = getLogger(__file__)
 
@@ -41,12 +41,12 @@ logger = getLogger(__file__)
 EXPORTER_OTLP = "otlp"
 EXPORTER_OTLP_SPAN = "otlp_span"
 
-RANDOM_IDS_GENERATOR = "random"
-_DEFAULT_IDS_GENERATOR = RANDOM_IDS_GENERATOR
+RANDOM_ID_GENERATOR = "random"
+_DEFAULT_ID_GENERATOR = RANDOM_ID_GENERATOR
 
 
-def _get_ids_generator() -> str:
-    return environ.get(OTEL_PYTHON_IDS_GENERATOR, _DEFAULT_IDS_GENERATOR)
+def _get_id_generator() -> str:
+    return environ.get(OTEL_PYTHON_ID_GENERATOR, _DEFAULT_ID_GENERATOR)
 
 
 def _get_service_name() -> str:
@@ -77,12 +77,12 @@ def _get_exporter_names() -> Sequence[str]:
 
 
 def _init_tracing(
-    exporters: Sequence[SpanExporter], ids_generator: IdsGenerator
+    exporters: Sequence[SpanExporter], id_generator: IdGenerator
 ):
     service_name = _get_service_name()
     provider = TracerProvider(
         resource=Resource.create({"service.name": service_name}),
-        ids_generator=ids_generator(),
+        id_generator=id_generator(),
     )
     trace.set_tracer_provider(provider)
 
@@ -141,26 +141,26 @@ def _import_exporters(
     return trace_exporters
 
 
-def _import_ids_generator(ids_generator_name: str) -> IdsGenerator:
+def _import_id_generator(id_generator_name: str) -> IdGenerator:
     # pylint: disable=unbalanced-tuple-unpacking
     [
-        (ids_generator_name, ids_generator_impl)
+        (id_generator_name, id_generator_impl)
     ] = _import_tracer_provider_config_components(
-        [ids_generator_name.strip()], "opentelemetry_ids_generator"
+        [id_generator_name.strip()], "opentelemetry_id_generator"
     )
 
-    if issubclass(ids_generator_impl, IdsGenerator):
-        return ids_generator_impl
+    if issubclass(id_generator_impl, IdGenerator):
+        return id_generator_impl
 
-    raise RuntimeError("{0} is not an IdsGenerator".format(ids_generator_name))
+    raise RuntimeError("{0} is not an IdGenerator".format(id_generator_name))
 
 
 def _initialize_components():
     exporter_names = _get_exporter_names()
     trace_exporters = _import_exporters(exporter_names)
-    ids_generator_name = _get_ids_generator()
-    ids_generator = _import_ids_generator(ids_generator_name)
-    _init_tracing(trace_exporters, ids_generator)
+    id_generator_name = _get_id_generator()
+    id_generator = _import_id_generator(id_generator_name)
+    _init_tracing(trace_exporters, id_generator)
 
 
 class Configurator(BaseConfigurator):
