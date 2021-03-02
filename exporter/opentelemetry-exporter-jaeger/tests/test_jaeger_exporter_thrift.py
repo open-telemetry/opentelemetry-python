@@ -67,6 +67,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self.assertEqual(exporter.password, None)
         self.assertTrue(exporter._collector_http_client is None)
         self.assertTrue(exporter._agent_client is not None)
+        self.assertIsNone(exporter._max_tag_value_length)
 
     def test_constructor_explicit(self):
         # pylint: disable=protected-access
@@ -87,6 +88,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
             collector_endpoint=collector_endpoint,
             username=username,
             password=password,
+            max_tag_value_length=42,
         )
 
         # self.assertEqual(exporter.service_name, service)
@@ -103,6 +105,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         exporter.password = None
         self.assertNotEqual(exporter._collector_http_client, collector)
         self.assertTrue(exporter._collector_http_client.auth is None)
+        self.assertEqual(exporter._max_tag_value_length, 42)
 
     def test_constructor_by_environment_variables(self):
         #  pylint: disable=protected-access
@@ -468,3 +471,55 @@ class TestJaegerSpanExporter(unittest.TestCase):
         )
 
         agent_client.emit(batch)
+
+    def test_max_tag_value_length(self):
+        span = trace._Span(
+            name="span",
+            resource=Resource(
+                attributes={
+                    "key_resource": "some_resource some_resource some_more_resource"
+                }
+            ),
+            context=trace_api.SpanContext(
+                trace_id=0x000000000000000000000000DEADBEEF,
+                span_id=0x00000000DEADBEF0,
+                is_remote=False,
+            ),
+        )
+
+        span.start()
+        span.set_attribute("key_bool", False)
+        span.set_attribute("key_string", "hello_world hello_world hello_world")
+        span.set_attribute("key_float", 111.22)
+        span.set_attribute("key_int", 1100)
+        span.set_attribute("key_tuple", ("tuple_element", "tuple_element2"))
+        span.end()
+
+        translate = Translate([span])
+
+        # does not truncate by default
+        # pylint: disable=protected-access
+        spans = translate._translate(ThriftTranslator())
+        tags_by_keys = {
+            tag.key: tag.vStr for tag in spans[0].tags if tag.vType == 0
+        }
+        self.assertEqual(
+            "hello_world hello_world hello_world", tags_by_keys["key_string"]
+        )
+        self.assertEqual(
+            "('tuple_element', 'tuple_element2')", tags_by_keys["key_tuple"]
+        )
+        self.assertEqual(
+            "some_resource some_resource some_more_resource",
+            tags_by_keys["key_resource"],
+        )
+
+        # truncates when max_tag_value_length is passed
+        # pylint: disable=protected-access
+        spans = translate._translate(ThriftTranslator(max_tag_value_length=5))
+        tags_by_keys = {
+            tag.key: tag.vStr for tag in spans[0].tags if tag.vType == 0
+        }
+        self.assertEqual("hello", tags_by_keys["key_string"])
+        self.assertEqual("('tup", tags_by_keys["key_tuple"])
+        self.assertEqual("some_", tags_by_keys["key_resource"])

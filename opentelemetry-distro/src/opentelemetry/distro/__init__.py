@@ -29,10 +29,7 @@ from opentelemetry.instrumentation.configurator import BaseConfigurator
 from opentelemetry.instrumentation.distro import BaseDistro
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import (
-    BatchExportSpanProcessor,
-    SpanExporter,
-)
+from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
 
 logger = getLogger(__file__)
@@ -95,7 +92,7 @@ def _init_tracing(
             exporter_args["service_name"] = service_name
 
         provider.add_span_processor(
-            BatchExportSpanProcessor(exporter_class(**exporter_args))
+            BatchSpanProcessor(exporter_class(**exporter_args))
         )
 
 

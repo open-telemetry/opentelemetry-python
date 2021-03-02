@@ -74,13 +74,14 @@ either implicit or explicit context propagation consistently throughout.
 """
 
 
-import abc
-import enum
-import typing
+from abc import ABC, abstractmethod
 from contextlib import contextmanager
+from enum import Enum
 from logging import getLogger
+from typing import Iterator, Optional, Sequence, cast
 
 from opentelemetry.context.context import Context
+from opentelemetry.environment_variables import OTEL_PYTHON_TRACER_PROVIDER
 from opentelemetry.trace.propagation import (
     get_current_span,
     set_span_in_context,
@@ -102,12 +103,12 @@ from opentelemetry.trace.span import (
 )
 from opentelemetry.trace.status import Status
 from opentelemetry.util import types
-from opentelemetry.util.providers import _load_trace_provider
+from opentelemetry.util._providers import _load_provider
 
 logger = getLogger(__name__)
 
 
-class LinkBase(abc.ABC):
+class LinkBase(ABC):
     def __init__(self, context: "SpanContext") -> None:
         self._context = context
 
@@ -116,7 +117,7 @@ class LinkBase(abc.ABC):
         return self._context
 
     @property
-    @abc.abstractmethod
+    @abstractmethod
     def attributes(self) -> types.Attributes:
         pass
 
@@ -140,10 +141,10 @@ class Link(LinkBase):
         return self._attributes
 
 
-_Links = typing.Optional[typing.Sequence[Link]]
+_Links = Optional[Sequence[Link]]
 
 
-class SpanKind(enum.Enum):
+class SpanKind(Enum):
     """Specifies additional details on how this span relates to its parent span.
 
     Note that this enumeration is experimental and likely to change. See
@@ -172,8 +173,8 @@ class SpanKind(enum.Enum):
     CONSUMER = 4
 
 
-class TracerProvider(abc.ABC):
-    @abc.abstractmethod
+class TracerProvider(ABC):
+    @abstractmethod
     def get_tracer(
         self,
         instrumenting_module_name: str,
@@ -217,7 +218,7 @@ class DefaultTracerProvider(TracerProvider):
         return DefaultTracer()
 
 
-class Tracer(abc.ABC):
+class Tracer(ABC):
     """Handles span creation and in-process context propagation.
 
     This class provides methods for manipulating the context, creating spans,
@@ -228,15 +229,15 @@ class Tracer(abc.ABC):
     # This is the default behavior when creating spans.
     CURRENT_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
 
-    @abc.abstractmethod
+    @abstractmethod
     def start_span(
         self,
         name: str,
-        context: typing.Optional[Context] = None,
+        context: Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: _Links = None,
-        start_time: typing.Optional[int] = None,
+        start_time: Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> "Span":
@@ -283,19 +284,19 @@ class Tracer(abc.ABC):
         """
 
     @contextmanager  # type: ignore
-    @abc.abstractmethod
+    @abstractmethod
     def start_as_current_span(
         self,
         name: str,
-        context: typing.Optional[Context] = None,
+        context: Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: _Links = None,
-        start_time: typing.Optional[int] = None,
+        start_time: Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
-    ) -> typing.Iterator["Span"]:
+    ) -> Iterator["Span"]:
         """Context manager for creating a new span and set it
         as the current span in this tracer's context.
 
@@ -350,10 +351,10 @@ class Tracer(abc.ABC):
         """
 
     @contextmanager  # type: ignore
-    @abc.abstractmethod
+    @abstractmethod
     def use_span(
         self, span: "Span", end_on_exit: bool = False,
-    ) -> typing.Iterator[None]:
+    ) -> Iterator[None]:
         """Context manager for setting the passed span as the
         current span in the context, as well as resetting the
         context back upon exiting the context manager.
@@ -381,11 +382,11 @@ class DefaultTracer(Tracer):
     def start_span(
         self,
         name: str,
-        context: typing.Optional[Context] = None,
+        context: Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: _Links = None,
-        start_time: typing.Optional[int] = None,
+        start_time: Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
     ) -> "Span":
@@ -396,22 +397,22 @@ class DefaultTracer(Tracer):
     def start_as_current_span(
         self,
         name: str,
-        context: typing.Optional[Context] = None,
+        context: Optional[Context] = None,
         kind: SpanKind = SpanKind.INTERNAL,
         attributes: types.Attributes = None,
         links: _Links = None,
-        start_time: typing.Optional[int] = None,
+        start_time: Optional[int] = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         end_on_exit: bool = True,
-    ) -> typing.Iterator["Span"]:
+    ) -> Iterator["Span"]:
         # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN
 
     @contextmanager  # type: ignore
     def use_span(
         self, span: "Span", end_on_exit: bool = False,
-    ) -> typing.Iterator[None]:
+    ) -> Iterator[None]:
         # pylint: disable=unused-argument,no-self-use
         yield
 
@@ -422,7 +423,7 @@ _TRACER_PROVIDER = None
 def get_tracer(
     instrumenting_module_name: str,
     instrumenting_library_version: str = "",
-    tracer_provider: typing.Optional[TracerProvider] = None,
+    tracer_provider: Optional[TracerProvider] = None,
 ) -> "Tracer":
     """Returns a `Tracer` for use by the given instrumentation library.
 
@@ -458,8 +459,10 @@ def get_tracer_provider() -> TracerProvider:
     global _TRACER_PROVIDER  # pylint: disable=global-statement
 
     if _TRACER_PROVIDER is None:
-        _TRACER_PROVIDER = _load_trace_provider("tracer_provider")
-
+        _TRACER_PROVIDER = cast(  # type: ignore
+            "TracerProvider",
+            _load_provider(OTEL_PYTHON_TRACER_PROVIDER, "tracer_provider"),
+        )
     return _TRACER_PROVIDER
 
 

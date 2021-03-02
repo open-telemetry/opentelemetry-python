@@ -29,7 +29,7 @@ Usage
     from opentelemetry import trace
     from opentelemetry.exporter import jaeger
     from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
     trace.set_tracer_provider(TracerProvider())
     tracer = trace.get_tracer(__name__)
@@ -46,10 +46,11 @@ Usage
         # insecure=True, # optional
         # credentials=xxx # optional channel creds
         # transport_format='protobuf' # optional
+        # max_tag_value_length=None # optional
     )
 
-    # Create a BatchExportSpanProcessor and add the exporter to it
-    span_processor = BatchExportSpanProcessor(jaeger_exporter)
+    # Create a BatchSpanProcessor and add the exporter to it
+    span_processor = BatchSpanProcessor(jaeger_exporter)
 
     # add to the tracer
     trace.get_tracer_provider().add_span_processor(span_processor)
@@ -119,6 +120,7 @@ class JaegerSpanExporter(SpanExporter):
         insecure: True if collector has no encryption or authentication
         credentials: Credentials for server authentication.
         transport_format: Transport format for exporting spans to collector.
+        max_tag_value_length: Max length string attribute values can have. Set to None to disable.
     """
 
     def __init__(
@@ -131,8 +133,9 @@ class JaegerSpanExporter(SpanExporter):
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
         transport_format: Optional[str] = None,
+        max_tag_value_length: Optional[int] = None,
     ):
-
+        self._max_tag_value_length = max_tag_value_length
         self.agent_host_name = _parameter_setter(
             param=agent_host_name,
             env_variable=environ.get(OTEL_EXPORTER_JAEGER_AGENT_HOST),
@@ -222,13 +225,13 @@ class JaegerSpanExporter(SpanExporter):
         svc_name = resource.attributes[SERVICE_NAME]
         translator = Translate(spans)
         if self.transport_format == TRANSPORT_FORMAT_PROTOBUF:
-            pb_translator = ProtobufTranslator(svc_name)
+            pb_translator = ProtobufTranslator(svc_name, self._max_tag_value_length)
             jaeger_spans = translator._translate(pb_translator)
             batch = model_pb2.Batch(spans=jaeger_spans)
             request = PostSpansRequest(batch=batch)
             self._collector_grpc_client.PostSpans(request)
         else:
-            thrift_translator = ThriftTranslator()
+            thrift_translator = ThriftTranslator(self._max_tag_value_length)
             jaeger_spans = translator._translate(thrift_translator)
             batch = jaeger_thrift.Batch(
                 spans=jaeger_spans,

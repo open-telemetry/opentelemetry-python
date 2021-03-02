@@ -382,3 +382,61 @@ class TestJaegerSpanExporter(unittest.TestCase):
         )
 
         self.assertEqual(spans, expected_spans)
+
+    def test_max_tag_value_length(self):
+        span = trace._Span(
+            name="span",
+            resource=Resource(
+                attributes={
+                    "key_resource": "some_resource some_resource some_more_resource"
+                }
+            ),
+            context=trace_api.SpanContext(
+                trace_id=0x000000000000000000000000DEADBEEF,
+                span_id=0x00000000DEADBEF0,
+                is_remote=False,
+            ),
+        )
+
+        span.start()
+        span.set_attribute("key_bool", False)
+        span.set_attribute("key_string", "hello_world hello_world hello_world")
+        span.set_attribute("key_float", 111.22)
+        span.set_attribute("key_int", 1100)
+        span.set_attribute("key_tuple", ("tuple_element", "tuple_element2"))
+        span.end()
+
+        translate = Translate([span])
+
+        # does not truncate by default
+        # pylint: disable=protected-access
+        spans = translate._translate(pb_translator.ProtobufTranslator("svc"))
+        tags_by_keys = {
+            tag.key: tag.v_str
+            for tag in spans[0].tags
+            if tag.v_type == model_pb2.ValueType.STRING
+        }
+        self.assertEqual(
+            "hello_world hello_world hello_world", tags_by_keys["key_string"]
+        )
+        self.assertEqual(
+            "('tuple_element', 'tuple_element2')", tags_by_keys["key_tuple"]
+        )
+        self.assertEqual(
+            "some_resource some_resource some_more_resource",
+            tags_by_keys["key_resource"],
+        )
+
+        # truncates when max_tag_value_length is passed
+        # pylint: disable=protected-access
+        spans = translate._translate(
+            pb_translator.ProtobufTranslator("svc", max_tag_value_length=5)
+        )
+        tags_by_keys = {
+            tag.key: tag.v_str
+            for tag in spans[0].tags
+            if tag.v_type == model_pb2.ValueType.STRING
+        }
+        self.assertEqual("hello", tags_by_keys["key_string"])
+        self.assertEqual("('tup", tags_by_keys["key_tuple"])
+        self.assertEqual("some_", tags_by_keys["key_resource"])
