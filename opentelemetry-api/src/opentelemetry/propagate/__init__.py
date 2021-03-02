@@ -128,8 +128,7 @@ try:
 
     # Single use variable here to hack black and make lint pass
     environ_propagators = environ.get(
-        OTEL_PROPAGATORS,
-        "tracecontext,baggage",
+        OTEL_PROPAGATORS, "tracecontext,baggage",
     )
 
     for propagator in environ_propagators.split(","):
@@ -150,8 +149,6 @@ def get_global_textmap() -> textmap.TextMapPropagator:
     return _HTTP_TEXT_FORMAT
 
 
-def set_global_textmap(
-    http_text_format: textmap.TextMapPropagator,
-) -> None:
+def set_global_textmap(http_text_format: textmap.TextMapPropagator,) -> None:
     global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement
     _HTTP_TEXT_FORMAT = http_text_format  # type: ignore
