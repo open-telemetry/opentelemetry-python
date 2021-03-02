@@ -126,7 +126,9 @@ tracer_provider.add_span_processor(mock_processor)
         class TestUseSpanException(Exception):
             pass
 
-        default_span = trace_api.NonRecordingSpan(trace_api.INVALID_SPAN_CONTEXT)
+        default_span = trace_api.NonRecordingSpan(
+            trace_api.INVALID_SPAN_CONTEXT
+        )
         tracer = new_tracer()
         with self.assertRaises(TestUseSpanException):
             with tracer.use_span(default_span):
