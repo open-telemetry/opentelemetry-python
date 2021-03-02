@@ -22,7 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1656])(https://github.com/open-telemetry/opentelemetry-python/pull/1656)
 - Rename `DefaultSpan` to `NonRecordingSpan`
   ([#1661])(https://github.com/open-telemetry/opentelemetry-python/pull/1661)
-
+- Rename `BaggagePropagator` to `W3CBaggagePropagator`
+  ([#1666])(https://github.com/open-telemetry/opentelemetry-python/pull/1666)
 ## [0.18b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.18b0) - 2021-02-16
 
 ### Added
