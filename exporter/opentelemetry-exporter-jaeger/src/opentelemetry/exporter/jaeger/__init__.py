@@ -36,7 +36,6 @@ Usage
 
     # create a JaegerSpanExporter
     jaeger_exporter = jaeger.JaegerSpanExporter(
-        service_name='my-helloworld-service',
         # configure agent
         agent_host_name='localhost',
         agent_port=6831,
@@ -71,6 +70,7 @@ from typing import Optional
 
 from grpc import ChannelCredentials, insecure_channel, secure_channel
 
+from opentelemetry import trace
 from opentelemetry.exporter.jaeger import util
 from opentelemetry.exporter.jaeger.gen import model_pb2
 from opentelemetry.exporter.jaeger.gen.collector_pb2 import PostSpansRequest
@@ -89,6 +89,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_PASSWORD,
     OTEL_EXPORTER_JAEGER_USER,
 )
+from opentelemetry.sdk.resources import SERVICE_NAME
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
 DEFAULT_AGENT_HOST_NAME = "localhost"
@@ -107,8 +108,6 @@ class JaegerSpanExporter(SpanExporter):
     """Jaeger span exporter for OpenTelemetry.
 
     Args:
-        service_name: Service that logged an annotation in a trace.Classifier
-            when query for spans.
         agent_host_name: The host name of the Jaeger-Agent.
         agent_port: The port of the Jaeger-Agent.
         collector_endpoint: The endpoint of the Jaeger collector that uses
@@ -124,7 +123,6 @@ class JaegerSpanExporter(SpanExporter):
 
     def __init__(
         self,
-        service_name: str,
         agent_host_name: Optional[str] = None,
         agent_port: Optional[int] = None,
         collector_endpoint: Optional[str] = None,
@@ -134,7 +132,7 @@ class JaegerSpanExporter(SpanExporter):
         credentials: Optional[ChannelCredentials] = None,
         transport_format: Optional[str] = None,
     ):
-        self.service_name = service_name
+
         self.agent_host_name = _parameter_setter(
             param=agent_host_name,
             env_variable=environ.get(OTEL_EXPORTER_JAEGER_AGENT_HOST),
@@ -218,9 +216,13 @@ class JaegerSpanExporter(SpanExporter):
         return self._collector
 
     def export(self, spans) -> SpanExportResult:
+
+        tracer_provider = trace.get_tracer_provider()
+        resource = tracer_provider.resource
+        svc_name = resource.attributes[SERVICE_NAME]
         translator = Translate(spans)
         if self.transport_format == TRANSPORT_FORMAT_PROTOBUF:
-            pb_translator = ProtobufTranslator(self.service_name)
+            pb_translator = ProtobufTranslator(svc_name)
             jaeger_spans = translator._translate(pb_translator)
             batch = model_pb2.Batch(spans=jaeger_spans)
             request = PostSpansRequest(batch=batch)
@@ -230,7 +232,7 @@ class JaegerSpanExporter(SpanExporter):
             jaeger_spans = translator._translate(thrift_translator)
             batch = jaeger_thrift.Batch(
                 spans=jaeger_spans,
-                process=jaeger_thrift.Process(serviceName=self.service_name),
+                process=jaeger_thrift.Process(serviceName=svc_name),
             )
             if self._collector_http_client is not None:
                 self._collector_http_client.submit(batch)

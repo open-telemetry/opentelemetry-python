@@ -31,7 +31,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_PASSWORD,
     OTEL_EXPORTER_JAEGER_USER,
 )
-from opentelemetry.sdk.trace import Resource
+from opentelemetry.sdk.trace import Resource, TracerProvider
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCode
@@ -428,9 +428,9 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self.assertEqual(spans, expected_spans)
 
     def test_export(self):
-        
+
         """Test that agent and/or collector are invoked"""
-        from opentelemetry.sdk.trace import TracerProvider
+
         trace_api.set_tracer_provider(TracerProvider())
 
         exporter = jaeger_exporter.JaegerSpanExporter(
