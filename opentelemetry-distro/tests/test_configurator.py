@@ -152,11 +152,9 @@ class TestTraceInit(TestCase):
 class TestExporterNames(TestCase):
     def test_otlp_exporter_overwrite(self):
         for exporter in [EXPORTER_OTLP, EXPORTER_OTLP_SPAN]:
-            environ[OTEL_TRACES_EXPORTER] = exporter
-            self.assertEqual(_get_exporter_names(), [EXPORTER_OTLP_SPAN])
-            del environ[OTEL_TRACES_EXPORTER]
+            with patch.dict(environ, {OTEL_TRACES_EXPORTER: exporter}):
+                self.assertEqual(_get_exporter_names(), [EXPORTER_OTLP_SPAN])
 
+    @patch.dict(environ, {OTEL_TRACES_EXPORTER: "jaeger,zipkin"})
     def test_multiple_exporters(self):
-        environ[OTEL_TRACES_EXPORTER] = "jaeger,zipkin"
         self.assertEqual(sorted(_get_exporter_names()), ["jaeger", "zipkin"])
-        del environ[OTEL_TRACES_EXPORTER]
