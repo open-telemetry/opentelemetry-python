@@ -31,6 +31,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_PASSWORD,
     OTEL_EXPORTER_JAEGER_USER,
 )
+from opentelemetry.sdk.resources import SERVICE_NAME
 from opentelemetry.sdk.trace import Resource, TracerProvider
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanKind
@@ -434,7 +435,9 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         """Test that agent and/or collector are invoked"""
 
-        trace_api.set_tracer_provider(TracerProvider())
+        trace_api.set_tracer_provider(
+            TracerProvider(Resource.create({SERVICE_NAME: "text_export"}))
+        )
 
         exporter = jaeger_exporter.JaegerSpanExporter(
             agent_host_name="localhost", agent_port=6318

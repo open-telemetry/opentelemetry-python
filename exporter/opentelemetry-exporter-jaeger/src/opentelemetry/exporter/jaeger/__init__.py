@@ -225,7 +225,9 @@ class JaegerSpanExporter(SpanExporter):
         svc_name = resource.attributes[SERVICE_NAME]
         translator = Translate(spans)
         if self.transport_format == TRANSPORT_FORMAT_PROTOBUF:
-            pb_translator = ProtobufTranslator(svc_name, self._max_tag_value_length)
+            pb_translator = ProtobufTranslator(
+                svc_name, self._max_tag_value_length
+            )
             jaeger_spans = translator._translate(pb_translator)
             batch = model_pb2.Batch(spans=jaeger_spans)
             request = PostSpansRequest(batch=batch)
