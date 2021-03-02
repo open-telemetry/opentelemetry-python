@@ -126,7 +126,9 @@ tracer_provider.add_span_processor(mock_processor)
         class TestUseSpanException(Exception):
             pass
 
-        default_span = trace_api.DefaultSpan(trace_api.INVALID_SPAN_CONTEXT)
+        default_span = trace_api.NonRecordingSpan(
+            trace_api.INVALID_SPAN_CONTEXT
+        )
         tracer = new_tracer()
         with self.assertRaises(TestUseSpanException):
             with tracer.use_span(default_span):
@@ -182,9 +184,9 @@ class TestTracerSampling(unittest.TestCase):
         # decides not to sampler
         root_span = tracer.start_span(name="root span", context=None)
         ctx = trace_api.set_span_in_context(root_span)
-        self.assertIsInstance(root_span, trace_api.DefaultSpan)
+        self.assertIsInstance(root_span, trace_api.NonRecordingSpan)
         child_span = tracer.start_span(name="child span", context=ctx)
-        self.assertIsInstance(child_span, trace_api.DefaultSpan)
+        self.assertIsInstance(child_span, trace_api.NonRecordingSpan)
         self.assertEqual(
             root_span.get_span_context().trace_flags,
             trace_api.TraceFlags.DEFAULT,
@@ -208,7 +210,7 @@ class TestTracerSampling(unittest.TestCase):
 
         root_span = tracer.start_span(name="root span", context=None)
         # Should be no-op
-        self.assertIsInstance(root_span, trace_api.DefaultSpan)
+        self.assertIsInstance(root_span, trace_api.NonRecordingSpan)
 
     @mock.patch.dict(
         "os.environ",

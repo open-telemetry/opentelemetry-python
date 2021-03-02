@@ -30,7 +30,7 @@ class TestTracer(unittest.TestCase):
         be retrievable via get_current_span
         """
         self.assertEqual(trace.get_current_span(), trace.INVALID_SPAN)
-        span = trace.DefaultSpan(trace.INVALID_SPAN_CONTEXT)
+        span = trace.NonRecordingSpan(trace.INVALID_SPAN_CONTEXT)
         ctx = trace.set_span_in_context(span)
         token = context.attach(ctx)
         try:

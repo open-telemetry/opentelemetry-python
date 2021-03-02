@@ -482,8 +482,8 @@ class SpanContext(
         )
 
 
-class DefaultSpan(Span):
-    """The default Span that is used when no Span implementation is available.
+class NonRecordingSpan(Span):
+    """The Span that is used when no Span implementation is available.
 
     All operations are no-op except context propagation.
     """
@@ -532,7 +532,7 @@ class DefaultSpan(Span):
         pass
 
     def __repr__(self) -> str:
-        return "DefaultSpan({!r})".format(self._context)
+        return "NonRecordingSpan({!r})".format(self._context)
 
 
 INVALID_SPAN_ID = 0x0000000000000000
@@ -544,7 +544,7 @@ INVALID_SPAN_CONTEXT = SpanContext(
     trace_flags=DEFAULT_TRACE_OPTIONS,
     trace_state=DEFAULT_TRACE_STATE,
 )
-INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
+INVALID_SPAN = NonRecordingSpan(INVALID_SPAN_CONTEXT)
 
 
 def format_trace_id(trace_id: int) -> str:

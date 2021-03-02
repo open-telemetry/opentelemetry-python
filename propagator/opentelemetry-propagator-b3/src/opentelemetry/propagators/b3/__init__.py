@@ -112,7 +112,7 @@ class B3Format(TextMapPropagator):
             options |= trace.TraceFlags.SAMPLED
 
         return trace.set_span_in_context(
-            trace.DefaultSpan(
+            trace.NonRecordingSpan(
                 trace.SpanContext(
                     # trace an span ids are encoded in hex, so must be converted
                     trace_id=trace_id,
