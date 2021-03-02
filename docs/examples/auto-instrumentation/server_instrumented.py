@@ -20,7 +20,7 @@ from opentelemetry.propagate import extract
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
-    SimpleExportSpanProcessor,
+    SimpleSpanProcessor,
 )
 from opentelemetry.trace.propagation.textmap import DictGetter
 
@@ -30,7 +30,7 @@ trace.set_tracer_provider(TracerProvider())
 tracer = trace.get_tracer_provider().get_tracer(__name__)
 
 trace.get_tracer_provider().add_span_processor(
-    SimpleExportSpanProcessor(ConsoleSpanExporter())
+    SimpleSpanProcessor(ConsoleSpanExporter())
 )
 
 

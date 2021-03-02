@@ -16,7 +16,7 @@ import time
 import unittest
 
 from opentelemetry.shim.opentracing_shim import util
-from opentelemetry.util.providers import time_ns
+from opentelemetry.util.time import time_ns
 
 
 class TestUtil(unittest.TestCase):

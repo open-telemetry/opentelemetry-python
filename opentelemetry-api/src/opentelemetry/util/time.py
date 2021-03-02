@@ -12,17 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import (
-    ConsoleSpanExporter,
-    SimpleSpanProcessor,
-)
+from sys import version_info
 
-trace.set_tracer_provider(TracerProvider())
-trace.get_tracer_provider().add_span_processor(
-    SimpleSpanProcessor(ConsoleSpanExporter())
-)
-tracer = trace.get_tracer(__name__)
-with tracer.start_as_current_span("foo"):
-    print("Hello world!")
+if version_info.minor < 7:
+    from time import time
+
+    def time_ns() -> int:
+        # FIXME this approach can have precision problems as explained here:
+        # https://github.com/open-telemetry/opentelemetry-python/issues/1594
+        return int(time() * 1e9)
+
+
+else:
+    from time import time_ns  # pylint: disable=unused-import

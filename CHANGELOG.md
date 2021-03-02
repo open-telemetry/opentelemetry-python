@@ -9,9 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Document how to work with fork process web server models(Gunicorn, uWSGI etc...)
   ([#1609](https://github.com/open-telemetry/opentelemetry-python/pull/1609))
+- Add `max_attr_value_length` support to Jaeger exporter
+  ([#1633])(https://github.com/open-telemetry/opentelemetry-python/pull/1633)
+
 ### Changed
 - Rename `IdsGenerator` to `IdGenerator`
   ([#1651])(https://github.com/open-telemetry/opentelemetry-python/pull/1651)
+- Make TracerProvider's resource attribute private
+  ([#1652])(https://github.com/open-telemetry/opentelemetry-python/pull/1652)
+- Rename Resource's `create_empty` to `get_empty`
+  ([#1653])(https://github.com/open-telemetry/opentelemetry-python/pull/1653)
+- Renamed `BatchExportSpanProcessor` to `BatchSpanProcessor` and `SimpleExportSpanProcessor` to
+  `SimpleSpanProcessor`
+  ([#1656])(https://github.com/open-telemetry/opentelemetry-python/pull/1656)
 
 ## [0.18b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.18b0) - 2021-02-16
 

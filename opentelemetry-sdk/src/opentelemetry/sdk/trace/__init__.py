@@ -54,7 +54,7 @@ from opentelemetry.trace import SpanContext
 from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
-from opentelemetry.util.providers import time_ns
+from opentelemetry.util.time import time_ns
 
 logger = logging.getLogger(__name__)
 
@@ -1009,11 +1009,15 @@ class TracerProvider(trace_api.TracerProvider):
             self.id_generator = RandomIdGenerator()
         else:
             self.id_generator = id_generator
-        self.resource = resource
+        self._resource = resource
         self.sampler = sampler
         self._atexit_handler = None
         if shutdown_on_exit:
             self._atexit_handler = atexit.register(self.shutdown)
+
+    @property
+    def resource(self) -> Resource:
+        return self._resource
 
     def get_tracer(
         self,

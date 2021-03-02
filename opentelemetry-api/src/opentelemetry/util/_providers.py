@@ -12,14 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
 from logging import getLogger
 from os import environ
 from typing import TYPE_CHECKING, Union, cast
 
 from pkg_resources import iter_entry_points
-
-from opentelemetry.environment_variables import OTEL_PYTHON_TRACER_PROVIDER
 
 if TYPE_CHECKING:
     from opentelemetry.trace import TracerProvider
@@ -27,17 +24,6 @@ if TYPE_CHECKING:
 Provider = Union["TracerProvider"]
 
 logger = getLogger(__name__)
-
-# Since we want API users to be able to provide timestamps,
-# this needs to be in the API.
-
-try:
-    time_ns = time.time_ns
-# Python versions < 3.7
-except AttributeError:
-
-    def time_ns() -> int:
-        return int(time.time() * 1e9)
 
 
 def _load_provider(
@@ -60,10 +46,3 @@ def _load_provider(
     except Exception:  # pylint: disable=broad-except
         logger.error("Failed to load configured provider %s", provider)
         raise
-
-
-def _load_trace_provider(provider: str) -> "TracerProvider":
-    return cast(  # type: ignore
-        "TracerProvider",
-        _load_provider(OTEL_PYTHON_TRACER_PROVIDER, provider),
-    )
