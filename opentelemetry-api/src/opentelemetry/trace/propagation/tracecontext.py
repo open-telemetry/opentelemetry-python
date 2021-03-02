@@ -17,7 +17,7 @@ import typing
 
 import opentelemetry.trace as trace
 from opentelemetry.context.context import Context
-from opentelemetry.propagate import textmap
+from opentelemetry.propagators import textmap
 from opentelemetry.trace.span import TraceState
 
 
