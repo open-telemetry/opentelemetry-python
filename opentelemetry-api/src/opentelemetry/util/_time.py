@@ -17,12 +17,12 @@ from sys import version_info
 
 if version_info.minor < 7:
     getLogger(__name__).warning(  # pylint: disable=logging-not-lazy
-        "You are using Python version 3.%s. This version does not include a "
-        "function to get timestamps in nanoseconds. The _time_ns function in "
+        "You are using Python 3.%s. This version does not include a function "
+        "to get timestamps in nanoseconds. The _time_ns function in "
         "opentelemetry.util._time does not have the same resolution as the "
         "time_ns function included in the time package in Python 3.7 onwards. "
-        "Refer to PEP 546 for more information. Please upgrade your Python "
-        "version to 3.7 or newer." % version_info.minor
+        "Please refer to PEP 546 for more information. Also, please upgrade "
+        "to Python 3.7 or newer." % version_info.minor
     )
     from time import time
 
