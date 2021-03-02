@@ -18,12 +18,12 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from opentelemetry.distro import (
+    EXPORTER_OTLP,
+    EXPORTER_OTLP_SPAN,
     _get_exporter_names,
     _get_id_generator,
     _import_id_generator,
     _init_tracing,
-    EXPORTER_OTLP,
-    EXPORTER_OTLP_SPAN,
 )
 from opentelemetry.environment_variables import (
     OTEL_PYTHON_ID_GENERATOR,
@@ -152,11 +152,11 @@ class TestTraceInit(TestCase):
 class TestExporterNames(TestCase):
     def test_otlp_exporter_overwrite(self):
         for exporter in [EXPORTER_OTLP, EXPORTER_OTLP_SPAN]:
-          environ[OTEL_TRACES_EXPORTER] = exporter
-          self.assertEqual(_get_exporter_names(), [EXPORTER_OTLP_SPAN])
-          del environ[OTEL_TRACES_EXPORTER]
+            environ[OTEL_TRACES_EXPORTER] = exporter
+            self.assertEqual(_get_exporter_names(), [EXPORTER_OTLP_SPAN])
+            del environ[OTEL_TRACES_EXPORTER]
 
     def test_multiple_exporters(self):
-      environ[OTEL_TRACES_EXPORTER] = "jaeger,zipkin"
-      self.assertEqual(sorted(_get_exporter_names()), ["jaeger", "zipkin"])
-      del environ[OTEL_TRACES_EXPORTER]
+        environ[OTEL_TRACES_EXPORTER] = "jaeger,zipkin"
+        self.assertEqual(sorted(_get_exporter_names()), ["jaeger", "zipkin"])
+        del environ[OTEL_TRACES_EXPORTER]
