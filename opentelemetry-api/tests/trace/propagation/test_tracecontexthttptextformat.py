@@ -68,7 +68,7 @@ class TestTraceContextFormat(unittest.TestCase):
         )
         self.assertTrue(span_context.is_remote)
         output = {}  # type:typing.Dict[str, str]
-        span = trace.DefaultSpan(span_context)
+        span = trace.NonRecordingSpan(span_context)
 
         ctx = trace.set_span_in_context(span)
         FORMAT.inject(dict.__setitem__, output, ctx)
@@ -149,7 +149,7 @@ class TestTraceContextFormat(unittest.TestCase):
         empty tracestate headers but SHOULD avoid sending them.
         """
         output = {}  # type:typing.Dict[str, str]
-        span = trace.DefaultSpan(
+        span = trace.NonRecordingSpan(
             trace.SpanContext(self.TRACE_ID, self.SPAN_ID, is_remote=False)
         )
         ctx = trace.set_span_in_context(span)

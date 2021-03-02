@@ -947,7 +947,7 @@ class Tracer(trace_api.Tracer):
             )
             span.start(start_time=start_time, parent_context=context)
         else:
-            span = trace_api.DefaultSpan(context=span_context)
+            span = trace_api.NonRecordingSpan(context=span_context)
         return span
 
     @contextmanager
