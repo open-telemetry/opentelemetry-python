@@ -61,7 +61,7 @@ class JaegerPropagator(TextMapPropagator):
         ):
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
-        span = trace.DefaultSpan(
+        span = trace.NonRecordingSpan(
             trace.SpanContext(
                 trace_id=int(trace_id, 16),
                 span_id=int(span_id, 16),

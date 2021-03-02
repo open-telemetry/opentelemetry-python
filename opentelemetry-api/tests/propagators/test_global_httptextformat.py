@@ -48,7 +48,7 @@ class TestDefaultGlobalPropagator(unittest.TestCase):
         self.assertEqual(span_context.trace_id, self.TRACE_ID)
         self.assertEqual(span_context.span_id, self.SPAN_ID)
 
-        span = trace.DefaultSpan(span_context)
+        span = trace.NonRecordingSpan(span_context)
         ctx = baggage.set_baggage("key3", "val3")
         ctx = baggage.set_baggage("key4", "val4", context=ctx)
         ctx = set_span_in_context(span, context=ctx)

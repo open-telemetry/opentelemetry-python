@@ -17,7 +17,7 @@ import unittest
 from opentelemetry import trace
 
 
-class TestDefaultSpan(unittest.TestCase):
+class TestNonRecordingSpan(unittest.TestCase):
     def test_ctor(self):
         context = trace.SpanContext(
             1,
@@ -26,7 +26,7 @@ class TestDefaultSpan(unittest.TestCase):
             trace_flags=trace.DEFAULT_TRACE_OPTIONS,
             trace_state=trace.DEFAULT_TRACE_STATE,
         )
-        span = trace.DefaultSpan(context)
+        span = trace.NonRecordingSpan(context)
         self.assertEqual(context, span.get_span_context())
 
     def test_invalid_span(self):

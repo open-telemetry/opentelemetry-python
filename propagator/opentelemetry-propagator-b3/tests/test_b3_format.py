@@ -327,7 +327,7 @@ class TestB3Format(unittest.TestCase):
 
     @staticmethod
     def test_default_span():
-        """Make sure propagator does not crash when working with DefaultSpan"""
+        """Make sure propagator does not crash when working with NonRecordingSpan"""
 
         class CarrierGetter(DictGetter):
             def get(self, carrier, key):
