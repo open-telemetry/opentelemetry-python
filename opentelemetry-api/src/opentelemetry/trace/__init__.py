@@ -22,7 +22,7 @@ manages span creation. Each operation in a trace is represented by a
 the operation.
 
 This module provides abstract (i.e. unimplemented) classes required for
-tracing, and a concrete no-op :class:`.DefaultSpan` that allows applications
+tracing, and a concrete no-op :class:`.NonRecordingSpan` that allows applications
 to use the API package alone without a supporting implementation.
 
 To get a tracer, you need to provide the package name from which you are
@@ -93,7 +93,7 @@ from opentelemetry.trace.span import (
     INVALID_SPAN_CONTEXT,
     INVALID_SPAN_ID,
     INVALID_TRACE_ID,
-    DefaultSpan,
+    NonRecordingSpan,
     Span,
     SpanContext,
     TraceFlags,
@@ -227,7 +227,7 @@ class Tracer(ABC):
 
     # Constant used to represent the current span being used as a parent.
     # This is the default behavior when creating spans.
-    CURRENT_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
+    CURRENT_SPAN = NonRecordingSpan(INVALID_SPAN_CONTEXT)
 
     @abstractmethod
     def start_span(
@@ -473,7 +473,7 @@ __all__ = [
     "INVALID_SPAN_CONTEXT",
     "INVALID_SPAN_ID",
     "INVALID_TRACE_ID",
-    "DefaultSpan",
+    "NonRecordingSpan",
     "DefaultTracer",
     "DefaultTracerProvider",
     "Link",

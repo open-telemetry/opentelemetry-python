@@ -80,7 +80,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
             trace_state=tracestate,
         )
         return trace.set_span_in_context(
-            trace.DefaultSpan(span_context), context
+            trace.NonRecordingSpan(span_context), context
         )
 
     def inject(

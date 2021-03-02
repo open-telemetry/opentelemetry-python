@@ -54,6 +54,6 @@ class TestAPIOnlyImplementation(unittest.TestCase):
             trace.Span()  # type:ignore
 
     def test_default_span(self):
-        span = trace.DefaultSpan(trace.INVALID_SPAN_CONTEXT)
+        span = trace.NonRecordingSpan(trace.INVALID_SPAN_CONTEXT)
         self.assertEqual(span.get_span_context(), trace.INVALID_SPAN_CONTEXT)
         self.assertIs(span.is_recording(), False)
