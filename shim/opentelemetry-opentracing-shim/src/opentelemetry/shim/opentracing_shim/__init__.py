@@ -104,7 +104,7 @@ from opentelemetry.context import Context, attach, detach, get_value, set_value
 from opentelemetry.propagate import get_global_textmap
 from opentelemetry.shim.opentracing_shim import util
 from opentelemetry.shim.opentracing_shim.version import __version__
-from opentelemetry.trace import INVALID_SPAN_CONTEXT, NonRecordingSpan, Link
+from opentelemetry.trace import INVALID_SPAN_CONTEXT, Link, NonRecordingSpan
 from opentelemetry.trace import SpanContext as OtelSpanContext
 from opentelemetry.trace import Tracer as OtelTracer
 from opentelemetry.trace import (
