@@ -76,8 +76,7 @@ from pkg_resources import iter_entry_points
 
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
-from opentelemetry.propagators import composite
-from opentelemetry.trace.propagation import textmap
+from opentelemetry.propagators import composite, textmap
 
 logger = getLogger(__name__)
 
