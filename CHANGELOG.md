@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Renamed `BatchExportSpanProcessor` to `BatchSpanProcessor` and `SimpleExportSpanProcessor` to
   `SimpleSpanProcessor`
   ([#1656])(https://github.com/open-telemetry/opentelemetry-python/pull/1656)
+- Rename `DefaultSpan` to `NonRecordingSpan`
+  ([#1651])(https://github.com/open-telemetry/opentelemetry-python/pull/1651)
 
 ## [0.18b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.18b0) - 2021-02-16
 

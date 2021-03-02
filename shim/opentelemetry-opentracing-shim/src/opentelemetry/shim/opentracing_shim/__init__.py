@@ -104,7 +104,7 @@ from opentelemetry.context import Context, attach, detach, get_value, set_value
 from opentelemetry.propagate import get_global_textmap
 from opentelemetry.shim.opentracing_shim import util
 from opentelemetry.shim.opentracing_shim.version import __version__
-from opentelemetry.trace import INVALID_SPAN_CONTEXT, DefaultSpan, Link
+from opentelemetry.trace import INVALID_SPAN_CONTEXT, NonRecordingSpan, Link
 from opentelemetry.trace import SpanContext as OtelSpanContext
 from opentelemetry.trace import Tracer as OtelTracer
 from opentelemetry.trace import (
@@ -633,7 +633,7 @@ class TracerShim(Tracer):
         # use a `None` parent, which triggers the creation of a new trace.
         parent = child_of.unwrap() if child_of else None
         if isinstance(parent, OtelSpanContext):
-            parent = DefaultSpan(parent)
+            parent = NonRecordingSpan(parent)
 
         parent_span_context = set_span_in_context(parent)
 
@@ -684,7 +684,7 @@ class TracerShim(Tracer):
 
         propagator = get_global_textmap()
 
-        ctx = set_span_in_context(DefaultSpan(span_context.unwrap()))
+        ctx = set_span_in_context(NonRecordingSpan(span_context.unwrap()))
         propagator.inject(type(carrier).__setitem__, carrier, context=ctx)
 
     def extract(self, format: object, carrier: object):
