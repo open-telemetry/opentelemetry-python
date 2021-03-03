@@ -206,7 +206,7 @@ class JaegerSpanExporter(SpanExporter):
 
     @property
     def _collector_grpc_client(self) -> Optional[CollectorServiceStub]:
-        if self.protocol != Protocol.GRPC:
+        if self.protocol is not Protocol.GRPC:
             return None
 
         endpoint = self.collector_endpoint or DEFAULT_GRPC_COLLECTOR_ENDPOINT
@@ -229,7 +229,7 @@ class JaegerSpanExporter(SpanExporter):
 
         if (
             self.collector_endpoint is None
-            or self.protocol != Protocol.THRIFT_HTTP
+            or self.protocol is not Protocol.THRIFT_HTTP
         ):
             return None
 
@@ -244,7 +244,7 @@ class JaegerSpanExporter(SpanExporter):
 
     def export(self, spans) -> SpanExportResult:
         translator = Translate(spans)
-        if self.protocol == Protocol.GRPC:
+        if self.protocol is Protocol.GRPC:
             pb_translator = ProtobufTranslator(
                 self.service_name, self._max_tag_value_length
             )
