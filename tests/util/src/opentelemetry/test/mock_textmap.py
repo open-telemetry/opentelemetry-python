@@ -16,7 +16,7 @@ import typing
 
 from opentelemetry import trace
 from opentelemetry.context import Context, get_current
-from opentelemetry.trace.propagation.textmap import (
+from opentelemetry.propagators.textmap import (
     Getter,
     Setter,
     TextMapPropagator,
@@ -71,7 +71,7 @@ class MockTextMapPropagator(TextMapPropagator):
             return trace.set_span_in_context(trace.INVALID_SPAN)
 
         return trace.set_span_in_context(
-            trace.DefaultSpan(
+            trace.NonRecordingSpan(
                 trace.SpanContext(
                     trace_id=int(trace_id_list[0]),
                     span_id=int(span_id_list[0]),

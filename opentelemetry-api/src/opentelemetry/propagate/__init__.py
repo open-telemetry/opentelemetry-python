@@ -25,7 +25,7 @@ would instantiate
 ``opentelemetry.propagators.composite.CompositeHTTPPropagator`` with 2
 propagators, one of type
 ``opentelemetry.trace.propagation.tracecontext.TraceContextTextMapPropagator``
-and other of type ``opentelemetry.baggage.propagation.BaggagePropagator``.
+and other of type ``opentelemetry.baggage.propagation.W3CBaggagePropagator``.
 Notice that these propagator classes are defined as
 ``opentelemetry_propagator`` entry points in the ``setup.cfg`` file of
 ``opentelemetry``.
@@ -76,8 +76,7 @@ from pkg_resources import iter_entry_points
 
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
-from opentelemetry.propagators import composite
-from opentelemetry.trace.propagation import textmap
+from opentelemetry.propagators import composite, textmap
 
 logger = getLogger(__name__)
 
