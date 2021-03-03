@@ -25,7 +25,7 @@ would instantiate
 ``opentelemetry.propagators.composite.CompositeHTTPPropagator`` with 2
 propagators, one of type
 ``opentelemetry.trace.propagation.tracecontext.TraceContextTextMapPropagator``
-and other of type ``opentelemetry.baggage.propagation.BaggagePropagator``.
+and other of type ``opentelemetry.baggage.propagation.W3CBaggagePropagator``.
 Notice that these propagator classes are defined as
 ``opentelemetry_propagator`` entry points in the ``setup.cfg`` file of
 ``opentelemetry``.

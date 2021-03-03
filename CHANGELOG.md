@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Moving `Getter`, `Setter` and `TextMapPropagator` out of `opentelemetry.trace.propagation` and
   into `opentelemetry.propagators`
   ([#1662])(https://github.com/open-telemetry/opentelemetry-python/pull/1662)
+- Rename `BaggagePropagator` to `W3CBaggagePropagator`
+  ([#1663])(https://github.com/open-telemetry/opentelemetry-python/pull/1663)
 - Rename `JaegerSpanExporter` to `JaegerExporter` and rename `ZipkinSpanExporter` to `ZipkinExporter`
   ([#1664])(https://github.com/open-telemetry/opentelemetry-python/pull/1664)
 
