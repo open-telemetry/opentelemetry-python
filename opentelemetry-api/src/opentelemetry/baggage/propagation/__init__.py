@@ -21,7 +21,7 @@ from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
 
 
-class BaggagePropagator(textmap.TextMapPropagator):
+class W3CBaggagePropagator(textmap.TextMapPropagator):
     """Extracts and injects Baggage which is used to annotate telemetry."""
 
     MAX_HEADER_LENGTH = 8192
