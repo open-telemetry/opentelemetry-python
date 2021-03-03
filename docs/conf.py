@@ -102,16 +102,10 @@ nitpick_ignore = [
     # with "class reference target not found: ObjectProxy".
     ("py:class", "ObjectProxy"),
     # TODO: Understand why sphinx is not able to find this local class
-    ("py:class", "opentelemetry.trace.propagation.textmap.TextMapPropagator",),
-    ("py:class", "opentelemetry.trace.propagation.textmap.DictGetter",),
-    (
-        "any",
-        "opentelemetry.trace.propagation.textmap.TextMapPropagator.extract",
-    ),
-    (
-        "any",
-        "opentelemetry.trace.propagation.textmap.TextMapPropagator.inject",
-    ),
+    ("py:class", "opentelemetry.propagators.textmap.TextMapPropagator",),
+    ("py:class", "opentelemetry.propagators.textmap.DictGetter",),
+    ("any", "opentelemetry.propagators.textmap.TextMapPropagator.extract",),
+    ("any", "opentelemetry.propagators.textmap.TextMapPropagator.inject",),
 ]
 
 # Add any paths that contain templates here, relative to this directory.
