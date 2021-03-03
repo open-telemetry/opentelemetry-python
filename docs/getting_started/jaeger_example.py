@@ -20,7 +20,9 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 trace.set_tracer_provider(
-    TracerProvider(resource=Resource.create({SERVICE_NAME: "my-helloworld-service"}))
+    TracerProvider(
+        resource=Resource.create({SERVICE_NAME: "my-helloworld-service"})
+    )
 )
 
 jaeger_exporter = jaeger.JaegerSpanExporter(

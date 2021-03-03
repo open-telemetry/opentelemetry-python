@@ -26,10 +26,10 @@ from opentelemetry.exporter.opencensus.trace_exporter import (
     translate_to_collector,
 )
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.trace import TraceFlags
-from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.resources import Resource, SERVICE_NAME
 
 
 # pylint: disable=no-member
@@ -41,7 +41,9 @@ class TestCollectorSpanExporter(unittest.TestCase):
             side_effect=mock_get_node,
         )
         trace_api.set_tracer_provider(
-            TracerProvider(resource=Resource.create({SERVICE_NAME: "testServiceName"}))
+            TracerProvider(
+                resource=Resource.create({SERVICE_NAME: "testServiceName"})
+            )
         )
 
         host_name = "testHostName"
@@ -49,9 +51,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         endpoint = "testEndpoint"
         with patch:
             exporter = OpenCensusSpanExporter(
-                host_name=host_name,
-                endpoint=endpoint,
-                client=client,
+                host_name=host_name, endpoint=endpoint, client=client,
             )
 
         self.assertIs(exporter.client, client)

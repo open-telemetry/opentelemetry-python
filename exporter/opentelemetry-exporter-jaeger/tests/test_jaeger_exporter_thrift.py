@@ -436,7 +436,9 @@ class TestJaegerSpanExporter(unittest.TestCase):
         """Test that agent and/or collector are invoked"""
 
         trace_api.set_tracer_provider(
-            TracerProvider(resource=Resource.create({SERVICE_NAME: "text_export"}))
+            TracerProvider(
+                resource=Resource.create({SERVICE_NAME: "text_export"})
+            )
         )
 
         exporter = jaeger_exporter.JaegerSpanExporter(

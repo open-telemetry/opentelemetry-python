@@ -25,10 +25,10 @@ from opencensus.proto.agent.trace.v1 import (
 from opencensus.proto.trace.v1 import trace_pb2
 
 import opentelemetry.exporter.opencensus.util as utils
-from opentelemetry.sdk.trace import ReadableSpan
-from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry import trace
 from opentelemetry.sdk.resources import SERVICE_NAME
+from opentelemetry.sdk.trace import ReadableSpan
+from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
 DEFAULT_ENDPOINT = "localhost:55678"
 
@@ -46,10 +46,7 @@ class OpenCensusSpanExporter(SpanExporter):
     """
 
     def __init__(
-        self,
-        endpoint=DEFAULT_ENDPOINT,
-        host_name=None,
-        client=None,
+        self, endpoint=DEFAULT_ENDPOINT, host_name=None, client=None,
     ):
         tracer_provider = trace.get_tracer_provider()
         resource = tracer_provider.resource

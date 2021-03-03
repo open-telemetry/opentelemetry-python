@@ -40,9 +40,7 @@ class TestOpenCensusSpanExporter(TestBase):
         trace.set_tracer_provider(TracerProvider())
         self.tracer = trace.get_tracer(__name__)
         self.span_processor = ExportStatusSpanProcessor(
-            OpenCensusSpanExporter(
-                service_name="basic-service", endpoint="localhost:55678"
-            )
+            OpenCensusSpanExporter(endpoint="localhost:55678")
         )
 
         trace.get_tracer_provider().add_span_processor(self.span_processor)
