@@ -18,7 +18,7 @@ import urllib.parse
 from opentelemetry import baggage
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
-from opentelemetry.trace.propagation import textmap
+from opentelemetry.propagators import textmap
 
 
 class W3CBaggagePropagator(textmap.TextMapPropagator):
@@ -38,7 +38,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         """Extract Baggage from the carrier.
 
         See
-        `opentelemetry.trace.propagation.textmap.TextMapPropagator.extract`
+        `opentelemetry.propagators.textmap.TextMapPropagator.extract`
         """
 
         if context is None:
@@ -80,7 +80,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         """Injects Baggage into the carrier.
 
         See
-        `opentelemetry.trace.propagation.textmap.TextMapPropagator.inject`
+        `opentelemetry.propagators.textmap.TextMapPropagator.inject`
         """
         baggage_entries = baggage.get_all(context=context)
         if not baggage_entries:

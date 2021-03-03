@@ -18,7 +18,7 @@ from unittest.mock import Mock, patch
 from opentelemetry import baggage
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.context import get_current
-from opentelemetry.trace.propagation.textmap import DictGetter
+from opentelemetry.propagators.textmap import DictGetter
 
 carrier_getter = DictGetter()
 
