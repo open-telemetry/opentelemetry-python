@@ -32,6 +32,7 @@ from opentelemetry.sdk import trace
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_CERTIFICATE,
     OTEL_EXPORTER_JAEGER_ENDPOINT,
+    OTEL_EXPORTER_JAEGER_PROTOCOL,
 )
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
@@ -60,27 +61,21 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         collector_endpoint = "localhost:14250"
 
-        env_patch = patch.dict(
+        with patch.dict(
             "os.environ",
             {
+                OTEL_EXPORTER_JAEGER_PROTOCOL: "grpc",
                 OTEL_EXPORTER_JAEGER_ENDPOINT: collector_endpoint,
                 OTEL_EXPORTER_JAEGER_CERTIFICATE: os.path.dirname(__file__)
                 + "/certs/cred.cert",
             },
-        )
+        ):
+            exporter = JaegerSpanExporter(service_name=service)
 
-        env_patch.start()
-
-        exporter = JaegerSpanExporter(
-            service_name=service, transport_format="protobuf"
-        )
-
-        self.assertEqual(exporter.service_name, service)
-        self.assertIsNotNone(exporter._collector_grpc_client)
-        self.assertEqual(exporter.collector_endpoint, collector_endpoint)
-        self.assertIsNotNone(exporter.credentials)
-
-        env_patch.stop()
+            self.assertEqual(exporter.service_name, service)
+            self.assertIsNotNone(exporter._collector_grpc_client)
+            self.assertEqual(exporter.collector_endpoint, collector_endpoint)
+            self.assertIsNotNone(exporter.credentials)
 
     # pylint: disable=too-many-locals,too-many-statements
     def test_translate_to_jaeger(self):

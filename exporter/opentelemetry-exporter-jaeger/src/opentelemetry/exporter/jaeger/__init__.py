@@ -18,8 +18,8 @@ The **OpenTelemetry Jaeger Exporter** allows to export `OpenTelemetry`_ traces t
 This exporter always sends traces to the configured agent using the Thrift compact protocol over UDP.
 When it is not feasible to deploy Jaeger Agent next to the application, for example, when the
 application code is running as Lambda function, a collector can be configured to send spans
-using either Thrift over HTTP or Protobuf via gRPC. If both agent and collector are configured,
-the exporter sends traces only to the collector to eliminate the duplicate entries.
+using either Thrift over HTTP or Protobuf via gRPC.
+
 
 Usage
 -----
@@ -28,6 +28,7 @@ Usage
 
     from opentelemetry import trace
     from opentelemetry.exporter import jaeger
+    from opentelemetry.exporter.jaeger.protocol import Protocol
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -40,13 +41,13 @@ Usage
         # configure agent
         agent_host_name='localhost',
         agent_port=6831,
-        # optional: configure also collector
+        # optional: configure collector
         # collector_endpoint='http://localhost:14268/api/traces?format=jaeger.thrift',
         # username=xxxx, # optional
         # password=xxxx, # optional
         # insecure=True, # optional
-        # credentials=xxx # optional channel creds
-        # transport_format='protobuf' # optional
+        # credentials=xxx, # optional channel creds
+        # protocol=Protocol.THRIFT, # optional
         # max_tag_value_length=None # optional
     )
 
@@ -58,6 +59,32 @@ Usage
 
     with tracer.start_as_current_span('foo'):
         print('Hello world!')
+
+The exporter supports the following environment variable for configuration:
+
+.. envvar:: OTEL_EXPORTER_JAEGER_AGENT_HOST
+
+Hostname of the Jaeger UDP agent.
+
+.. envvar:: OTEL_EXPORTER_JAEGER_AGENT_PORT
+
+Port of the Jaeger UDP agent.
+
+.. envvar:: OTEL_EXPORTER_JAEGER_ENDPOINT
+
+When using Thrift over HTTP or gRPC, the endpoint for Jaeger traces.
+
+.. envvar:: OTEL_EXPORTER_JAEGER_USER
+
+Username to be used for HTTP basic authentication.
+
+.. envvar:: OTEL_EXPORTER_JAEGER_PASSWORD
+
+Password to be used for HTTP basic authentication
+
+.. envvar:: OTEL_EXPORTER_JAEGER_PROTOCOL
+
+Protocol to use when exporting traces. Possible values: ``thrift``, ``grpc`` or ``thrift_http``.
 
 API
 ---
@@ -79,6 +106,7 @@ from opentelemetry.exporter.jaeger.gen.collector_pb2_grpc import (
     CollectorServiceStub,
 )
 from opentelemetry.exporter.jaeger.gen.jaeger import Collector as jaeger_thrift
+from opentelemetry.exporter.jaeger.protocol import Protocol
 from opentelemetry.exporter.jaeger.send.thrift import AgentClientUDP, Collector
 from opentelemetry.exporter.jaeger.translate import Translate
 from opentelemetry.exporter.jaeger.translate.protobuf import ProtobufTranslator
@@ -97,9 +125,6 @@ DEFAULT_AGENT_PORT = 6831
 DEFAULT_GRPC_COLLECTOR_ENDPOINT = "localhost:14250"
 
 UDP_PACKET_MAX_LENGTH = 65000
-
-TRANSPORT_FORMAT_THRIFT = "thrift"
-TRANSPORT_FORMAT_PROTOBUF = "protobuf"
 
 logger = logging.getLogger(__name__)
 
@@ -134,8 +159,8 @@ class JaegerSpanExporter(SpanExporter):
         password: Optional[str] = None,
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
-        transport_format: Optional[str] = None,
         max_tag_value_length: Optional[int] = None,
+        protocol: Optional[Protocol] = None,
     ):
         self.service_name = service_name
         self._max_tag_value_length = max_tag_value_length
@@ -177,15 +202,11 @@ class JaegerSpanExporter(SpanExporter):
         self._grpc_client = None
         self.insecure = util._get_insecure(insecure)
         self.credentials = util._get_credentials(credentials)
-        self.transport_format = (
-            transport_format.lower()
-            if transport_format
-            else TRANSPORT_FORMAT_THRIFT
-        )
+        self.protocol = util._get_protocol(protocol)
 
     @property
     def _collector_grpc_client(self) -> Optional[CollectorServiceStub]:
-        if self.transport_format != TRANSPORT_FORMAT_PROTOBUF:
+        if self.protocol != Protocol.GRPC:
             return None
 
         endpoint = self.collector_endpoint or DEFAULT_GRPC_COLLECTOR_ENDPOINT
@@ -208,7 +229,7 @@ class JaegerSpanExporter(SpanExporter):
 
         if (
             self.collector_endpoint is None
-            or self.transport_format != TRANSPORT_FORMAT_THRIFT
+            or self.protocol != Protocol.THRIFT_HTTP
         ):
             return None
 
@@ -223,7 +244,7 @@ class JaegerSpanExporter(SpanExporter):
 
     def export(self, spans) -> SpanExportResult:
         translator = Translate(spans)
-        if self.transport_format == TRANSPORT_FORMAT_PROTOBUF:
+        if self.protocol == Protocol.GRPC:
             pb_translator = ProtobufTranslator(
                 self.service_name, self._max_tag_value_length
             )

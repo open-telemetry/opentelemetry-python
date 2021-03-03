@@ -21,6 +21,7 @@ from unittest import mock
 import opentelemetry.exporter.jaeger as jaeger_exporter
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.jaeger.gen.jaeger import ttypes as jaeger
+from opentelemetry.exporter.jaeger.protocol import Protocol
 from opentelemetry.exporter.jaeger.translate import Translate
 from opentelemetry.exporter.jaeger.translate.thrift import ThriftTranslator
 from opentelemetry.sdk import trace
@@ -29,6 +30,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_AGENT_PORT,
     OTEL_EXPORTER_JAEGER_ENDPOINT,
     OTEL_EXPORTER_JAEGER_PASSWORD,
+    OTEL_EXPORTER_JAEGER_PROTOCOL,
     OTEL_EXPORTER_JAEGER_USER,
 )
 from opentelemetry.sdk.trace import Resource
@@ -68,6 +70,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self.assertTrue(exporter._collector_http_client is None)
         self.assertTrue(exporter._agent_client is not None)
         self.assertIsNone(exporter._max_tag_value_length)
+        self.assertEqual(exporter.protocol, Protocol.THRIFT)
 
     def test_constructor_explicit(self):
         # pylint: disable=protected-access
@@ -90,6 +93,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
             username=username,
             password=password,
             max_tag_value_length=42,
+            protocol=Protocol.THRIFT_HTTP,
         )
 
         self.assertEqual(exporter.service_name, service)
@@ -122,38 +126,34 @@ class TestJaegerSpanExporter(unittest.TestCase):
         password = "password"
         auth = (username, password)
 
-        environ_patcher = mock.patch.dict(
+        with mock.patch.dict(
             "os.environ",
             {
                 OTEL_EXPORTER_JAEGER_AGENT_HOST: agent_host_name,
                 OTEL_EXPORTER_JAEGER_AGENT_PORT: agent_port,
                 OTEL_EXPORTER_JAEGER_ENDPOINT: collector_endpoint,
+                OTEL_EXPORTER_JAEGER_PROTOCOL: "thrift_http",
                 OTEL_EXPORTER_JAEGER_USER: username,
                 OTEL_EXPORTER_JAEGER_PASSWORD: password,
             },
-        )
+        ):
+            exporter = jaeger_exporter.JaegerSpanExporter(service_name=service)
 
-        environ_patcher.start()
-
-        exporter = jaeger_exporter.JaegerSpanExporter(service_name=service)
-
-        self.assertEqual(exporter.service_name, service)
-        self.assertEqual(exporter.agent_host_name, agent_host_name)
-        self.assertEqual(exporter.agent_port, int(agent_port))
-        self.assertTrue(exporter._collector_http_client is not None)
-        self.assertEqual(exporter.collector_endpoint, collector_endpoint)
-        self.assertEqual(exporter._collector_http_client.auth, auth)
-        # property should not construct new object
-        collector = exporter._collector_http_client
-        self.assertEqual(exporter._collector_http_client, collector)
-        # property should construct new object
-        exporter._collector = None
-        exporter.username = None
-        exporter.password = None
-        self.assertNotEqual(exporter._collector_http_client, collector)
-        self.assertTrue(exporter._collector_http_client.auth is None)
-
-        environ_patcher.stop()
+            self.assertEqual(exporter.service_name, service)
+            self.assertEqual(exporter.agent_host_name, agent_host_name)
+            self.assertEqual(exporter.agent_port, int(agent_port))
+            self.assertTrue(exporter._collector_http_client is not None)
+            self.assertEqual(exporter.collector_endpoint, collector_endpoint)
+            self.assertEqual(exporter._collector_http_client.auth, auth)
+            # property should not construct new object
+            collector = exporter._collector_http_client
+            self.assertEqual(exporter._collector_http_client, collector)
+            # property should construct new object
+            exporter._collector = None
+            exporter.username = None
+            exporter.password = None
+            self.assertNotEqual(exporter._collector_http_client, collector)
+            self.assertTrue(exporter._collector_http_client.auth is None)
 
     def test_nsec_to_usec_round(self):
         # pylint: disable=protected-access

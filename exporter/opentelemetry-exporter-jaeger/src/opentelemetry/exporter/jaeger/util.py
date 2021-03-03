@@ -14,12 +14,15 @@
 
 import logging
 from os import environ
+from typing import Optional
 
 from grpc import ChannelCredentials, ssl_channel_credentials
 
+from opentelemetry.exporter.jaeger.protocol import Protocol
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_CERTIFICATE,
     OTEL_EXPORTER_JAEGER_INSECURE,
+    OTEL_EXPORTER_JAEGER_PROTOCOL,
 )
 
 logger = logging.getLogger(__name__)
@@ -53,3 +56,21 @@ def _get_credentials(param):
     if creds_env:
         return _load_credential_from_file(creds_env)
     return ssl_channel_credentials()
+
+
+def _get_protocol(protocol: Optional[Protocol]) -> Protocol:
+    if protocol is not None:
+        return protocol
+
+    env_protocol = environ.get(OTEL_EXPORTER_JAEGER_PROTOCOL)
+
+    if env_protocol is None:
+        return Protocol.THRIFT
+
+    protocols = {
+        "grpc": Protocol.GRPC,
+        "thrift": Protocol.THRIFT,
+        "thrift_http": Protocol.THRIFT_HTTP,
+    }
+
+    return protocols.get(env_protocol.strip().lower(), Protocol.THRIFT)
