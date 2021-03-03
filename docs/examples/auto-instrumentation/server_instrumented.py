@@ -17,12 +17,12 @@ from flask import Flask, request
 from opentelemetry import trace
 from opentelemetry.instrumentation.wsgi import collect_request_attributes
 from opentelemetry.propagate import extract
+from opentelemetry.propagators.textmap import DictGetter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleSpanProcessor,
 )
-from opentelemetry.trace.propagation.textmap import DictGetter
 
 app = Flask(__name__)
 

@@ -16,8 +16,8 @@ import unittest
 
 from opentelemetry import baggage, trace
 from opentelemetry.propagate import extract, inject
+from opentelemetry.propagators.textmap import DictGetter
 from opentelemetry.trace import get_current_span, set_span_in_context
-from opentelemetry.trace.propagation.textmap import DictGetter
 
 carrier_getter = DictGetter()
 

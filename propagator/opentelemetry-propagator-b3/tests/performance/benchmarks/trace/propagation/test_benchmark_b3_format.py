@@ -14,7 +14,7 @@
 
 import opentelemetry.propagators.b3 as b3_format
 import opentelemetry.sdk.trace as trace
-from opentelemetry.trace.propagation.textmap import DictGetter
+from opentelemetry.propagators.textmap import DictGetter
 
 FORMAT = b3_format.B3Format()
 
