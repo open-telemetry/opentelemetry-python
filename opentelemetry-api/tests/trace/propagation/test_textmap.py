@@ -14,7 +14,7 @@
 
 import unittest
 
-from opentelemetry.trace.propagation.textmap import DictGetter
+from opentelemetry.propagators.textmap import DictGetter
 
 
 class TestDictGetter(unittest.TestCase):

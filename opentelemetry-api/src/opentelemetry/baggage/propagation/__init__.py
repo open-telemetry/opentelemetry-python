@@ -18,12 +18,11 @@ import urllib.parse
 from opentelemetry import baggage
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
-from opentelemetry.trace.propagation import textmap
+from opentelemetry.propagators import textmap
 
 
 class BaggagePropagator(textmap.TextMapPropagator):
-    """Extracts and injects Baggage which is used to annotate telemetry.
-    """
+    """Extracts and injects Baggage which is used to annotate telemetry."""
 
     MAX_HEADER_LENGTH = 8192
     MAX_PAIR_LENGTH = 4096
@@ -39,7 +38,7 @@ class BaggagePropagator(textmap.TextMapPropagator):
         """Extract Baggage from the carrier.
 
         See
-        `opentelemetry.trace.propagation.textmap.TextMapPropagator.extract`
+        `opentelemetry.propagators.textmap.TextMapPropagator.extract`
         """
 
         if context is None:
@@ -81,7 +80,7 @@ class BaggagePropagator(textmap.TextMapPropagator):
         """Injects Baggage into the carrier.
 
         See
-        `opentelemetry.trace.propagation.textmap.TextMapPropagator.inject`
+        `opentelemetry.propagators.textmap.TextMapPropagator.inject`
         """
         baggage_entries = baggage.get_all(context=context)
         if not baggage_entries:
