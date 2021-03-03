@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1662])(https://github.com/open-telemetry/opentelemetry-python/pull/1662)
 - Rename `BaggagePropagator` to `W3CBaggagePropagator`
   ([#1663])(https://github.com/open-telemetry/opentelemetry-python/pull/1663)
+- Jaeger exporter: allow selecting gRPC and Thrift HTTP via env vars
+  ([#1666])(https://github.com/open-telemetry/opentelemetry-python/pull/1666)
 
 ## [0.18b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.18b0) - 2021-02-16
 
