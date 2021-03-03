@@ -22,7 +22,7 @@ from opentelemetry import baggage
 from opentelemetry.propagators import (  # pylint: disable=no-name-in-module
     jaeger,
 )
-from opentelemetry.trace.propagation.textmap import DictGetter
+from opentelemetry.propagators.textmap import DictGetter
 
 FORMAT = jaeger.JaegerPropagator()
 
