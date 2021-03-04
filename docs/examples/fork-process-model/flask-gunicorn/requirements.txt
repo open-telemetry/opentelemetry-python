@@ -9,8 +9,8 @@ MarkupSafe==1.1.1
 opentelemetry-api==0.18b0
 opentelemetry-exporter-otlp==0.18b0
 opentelemetry-instrumentation==0.18b0
-opentelemetry-instrumentation-flask==v0.18b1
-opentelemetry-instrumentation-wsgi==v0.18b1
+opentelemetry-instrumentation-flask==0.18b1
+opentelemetry-instrumentation-wsgi==0.18b1
 opentelemetry-sdk==0.18b0
 protobuf==3.14.0
 six==1.15.0
