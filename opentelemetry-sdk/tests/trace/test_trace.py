@@ -34,11 +34,11 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER_ARG,
 )
 from opentelemetry.sdk.trace import Resource, sampling
-from opentelemetry.sdk.trace.ids_generator import RandomIdsGenerator
+from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import StatusCode
-from opentelemetry.util.providers import time_ns
+from opentelemetry.util.time import time_ns
 
 
 def new_tracer() -> trace_api.Tracer:
@@ -126,7 +126,9 @@ tracer_provider.add_span_processor(mock_processor)
         class TestUseSpanException(Exception):
             pass
 
-        default_span = trace_api.DefaultSpan(trace_api.INVALID_SPAN_CONTEXT)
+        default_span = trace_api.NonRecordingSpan(
+            trace_api.INVALID_SPAN_CONTEXT
+        )
         tracer = new_tracer()
         with self.assertRaises(TestUseSpanException):
             with tracer.use_span(default_span):
@@ -182,9 +184,9 @@ class TestTracerSampling(unittest.TestCase):
         # decides not to sampler
         root_span = tracer.start_span(name="root span", context=None)
         ctx = trace_api.set_span_in_context(root_span)
-        self.assertIsInstance(root_span, trace_api.DefaultSpan)
+        self.assertIsInstance(root_span, trace_api.NonRecordingSpan)
         child_span = tracer.start_span(name="child span", context=ctx)
-        self.assertIsInstance(child_span, trace_api.DefaultSpan)
+        self.assertIsInstance(child_span, trace_api.NonRecordingSpan)
         self.assertEqual(
             root_span.get_span_context().trace_flags,
             trace_api.TraceFlags.DEFAULT,
@@ -208,7 +210,7 @@ class TestTracerSampling(unittest.TestCase):
 
         root_span = tracer.start_span(name="root span", context=None)
         # Should be no-op
-        self.assertIsInstance(root_span, trace_api.DefaultSpan)
+        self.assertIsInstance(root_span, trace_api.NonRecordingSpan)
 
     @mock.patch.dict(
         "os.environ",
@@ -791,15 +793,15 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.events[3].attributes, {"attr2": (1, 2)})
 
     def test_links(self):
-        ids_generator = RandomIdsGenerator()
+        id_generator = RandomIdGenerator()
         other_context1 = trace_api.SpanContext(
-            trace_id=ids_generator.generate_trace_id(),
-            span_id=ids_generator.generate_span_id(),
+            trace_id=id_generator.generate_trace_id(),
+            span_id=id_generator.generate_span_id(),
             is_remote=False,
         )
         other_context2 = trace_api.SpanContext(
-            trace_id=ids_generator.generate_trace_id(),
-            span_id=ids_generator.generate_span_id(),
+            trace_id=id_generator.generate_trace_id(),
+            span_id=id_generator.generate_span_id(),
             is_remote=False,
         )
 
@@ -1297,12 +1299,12 @@ class TestSpanLimits(unittest.TestCase):
     def test_span_environment_limits(self):
         reload(trace)
         tracer = new_tracer()
-        ids_generator = RandomIdsGenerator()
+        id_generator = RandomIdGenerator()
         some_links = [
             trace_api.Link(
                 trace_api.SpanContext(
-                    trace_id=ids_generator.generate_trace_id(),
-                    span_id=ids_generator.generate_span_id(),
+                    trace_id=id_generator.generate_trace_id(),
+                    span_id=id_generator.generate_span_id(),
                     is_remote=False,
                 )
             )

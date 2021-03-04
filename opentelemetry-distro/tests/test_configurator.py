@@ -18,24 +18,21 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from opentelemetry.distro import (
-    _get_ids_generator,
-    _import_ids_generator,
+    _get_id_generator,
+    _import_id_generator,
     _init_tracing,
 )
 from opentelemetry.environment_variables import (
-    OTEL_PYTHON_IDS_GENERATOR,
+    OTEL_PYTHON_ID_GENERATOR,
     OTEL_PYTHON_SERVICE_NAME,
 )
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.trace.ids_generator import (
-    IdsGenerator,
-    RandomIdsGenerator,
-)
+from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 
 
 class Provider:
-    def __init__(self, resource=None, ids_generator=None):
-        self.ids_generator = ids_generator
+    def __init__(self, resource=None, id_generator=None):
+        self.id_generator = id_generator
         self.processor = None
         self.resource = resource
 
@@ -60,7 +57,7 @@ class OTLPExporter:
     pass
 
 
-class CustomIdsGenerator(IdsGenerator):
+class CustomIdGenerator(IdGenerator):
     def generate_span_id(self):
         pass
 
@@ -84,7 +81,7 @@ class TestTraceInit(TestCase):
             "opentelemetry.distro.TracerProvider", Provider
         )
         self.get_processor_patcher = patch(
-            "opentelemetry.distro.BatchExportSpanProcessor", Processor
+            "opentelemetry.distro.BatchSpanProcessor", Processor
         )
         self.set_provider_patcher = patch(
             "opentelemetry.trace.set_tracer_provider"
@@ -103,12 +100,12 @@ class TestTraceInit(TestCase):
     # pylint: disable=protected-access
     def test_trace_init_default(self):
         environ[OTEL_PYTHON_SERVICE_NAME] = "my-test-service"
-        _init_tracing({"zipkin": Exporter}, RandomIdsGenerator)
+        _init_tracing({"zipkin": Exporter}, RandomIdGenerator)
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, Provider)
-        self.assertIsInstance(provider.ids_generator, RandomIdsGenerator)
+        self.assertIsInstance(provider.id_generator, RandomIdGenerator)
         self.assertIsInstance(provider.processor, Processor)
         self.assertIsInstance(provider.processor.exporter, Exporter)
         self.assertEqual(
@@ -117,12 +114,12 @@ class TestTraceInit(TestCase):
 
     def test_trace_init_otlp(self):
         environ[OTEL_PYTHON_SERVICE_NAME] = "my-otlp-test-service"
-        _init_tracing({"otlp": OTLPExporter}, RandomIdsGenerator)
+        _init_tracing({"otlp": OTLPExporter}, RandomIdGenerator)
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, Provider)
-        self.assertIsInstance(provider.ids_generator, RandomIdsGenerator)
+        self.assertIsInstance(provider.id_generator, RandomIdGenerator)
         self.assertIsInstance(provider.processor, Processor)
         self.assertIsInstance(provider.processor.exporter, OTLPExporter)
         self.assertIsInstance(provider.resource, Resource)
@@ -132,17 +129,17 @@ class TestTraceInit(TestCase):
         )
         del environ[OTEL_PYTHON_SERVICE_NAME]
 
-    @patch.dict(environ, {OTEL_PYTHON_IDS_GENERATOR: "custom_ids_generator"})
-    @patch("opentelemetry.distro.IdsGenerator", new=IdsGenerator)
+    @patch.dict(environ, {OTEL_PYTHON_ID_GENERATOR: "custom_id_generator"})
+    @patch("opentelemetry.distro.IdGenerator", new=IdGenerator)
     @patch("opentelemetry.distro.iter_entry_points")
-    def test_trace_init_custom_ids_generator(self, mock_iter_entry_points):
+    def test_trace_init_custom_id_generator(self, mock_iter_entry_points):
         mock_iter_entry_points.configure_mock(
             return_value=[
-                IterEntryPoint("custom_ids_generator", CustomIdsGenerator)
+                IterEntryPoint("custom_id_generator", CustomIdGenerator)
             ]
         )
-        ids_generator_name = _get_ids_generator()
-        ids_generator = _import_ids_generator(ids_generator_name)
-        _init_tracing({}, ids_generator)
+        id_generator_name = _get_id_generator()
+        id_generator = _import_id_generator(id_generator_name)
+        _init_tracing({}, id_generator)
         provider = self.set_provider_mock.call_args[0][0]
-        self.assertIsInstance(provider.ids_generator, CustomIdsGenerator)
+        self.assertIsInstance(provider.id_generator, CustomIdGenerator)

@@ -7,14 +7,53 @@ from collections import OrderedDict
 
 from opentelemetry.trace.status import Status
 from opentelemetry.util import types
-from opentelemetry.util.tracestate import (
-    _DELIMITER_PATTERN,
-    _MEMBER_PATTERN,
-    _TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS,
-    _is_valid_pair,
-)
 
+# The key MUST begin with a lowercase letter or a digit,
+# and can only contain lowercase letters (a-z), digits (0-9),
+# underscores (_), dashes (-), asterisks (*), and forward slashes (/).
+# For multi-tenant vendor scenarios, an at sign (@) can be used to
+# prefix the vendor name. Vendors SHOULD set the tenant ID
+# at the beginning of the key.
+
+# key = ( lcalpha ) 0*255( lcalpha / DIGIT / "_" / "-"/ "*" / "/" )
+# key = ( lcalpha / DIGIT ) 0*240( lcalpha / DIGIT / "_" / "-"/ "*" / "/" ) "@" lcalpha 0*13( lcalpha / DIGIT / "_" / "-"/ "*" / "/" )
+# lcalpha = %x61-7A ; a-z
+
+_KEY_FORMAT = (
+    r"[a-z][_0-9a-z\-\*\/]{0,255}|"
+    r"[a-z0-9][_0-9a-z\-\*\/]{0,240}@[a-z][_0-9a-z\-\*\/]{0,13}"
+)
+_KEY_PATTERN = re.compile(_KEY_FORMAT)
+
+# The value is an opaque string containing up to 256 printable
+# ASCII [RFC0020] characters (i.e., the range 0x20 to 0x7E)
+# except comma (,) and (=).
+# value    = 0*255(chr) nblk-chr
+# nblk-chr = %x21-2B / %x2D-3C / %x3E-7E
+# chr      = %x20 / nblk-chr
+
+_VALUE_FORMAT = (
+    r"[\x20-\x2b\x2d-\x3c\x3e-\x7e]{0,255}[\x21-\x2b\x2d-\x3c\x3e-\x7e]"
+)
+_VALUE_PATTERN = re.compile(_VALUE_FORMAT)
+
+
+_TRACECONTEXT_MAXIMUM_TRACESTATE_KEYS = 32
+_delimiter_pattern = re.compile(r"[ \t]*,[ \t]*")
+_member_pattern = re.compile(
+    "({})(=)({})[ \t]*".format(_KEY_FORMAT, _VALUE_FORMAT)
+)
 _logger = logging.getLogger(__name__)
+
+
+def _is_valid_pair(key: str, value: str) -> bool:
+
+    return (
+        isinstance(key, str)
+        and _KEY_PATTERN.fullmatch(key) is not None
+        and isinstance(value, str)
+        and _VALUE_PATTERN.fullmatch(value) is not None
+    )
 
 
 class Span(abc.ABC):
@@ -314,11 +353,11 @@ class TraceState(typing.Mapping[str, str]):
         """
         pairs = OrderedDict()
         for header in header_list:
-            for member in re.split(_DELIMITER_PATTERN, header):
+            for member in re.split(_delimiter_pattern, header):
                 # empty members are valid, but no need to process further.
                 if not member:
                     continue
-                match = _MEMBER_PATTERN.fullmatch(member)
+                match = _member_pattern.fullmatch(member)
                 if not match:
                     _logger.warning(
                         "Member doesn't match the w3c identifiers format %s",
@@ -443,8 +482,8 @@ class SpanContext(
         )
 
 
-class DefaultSpan(Span):
-    """The default Span that is used when no Span implementation is available.
+class NonRecordingSpan(Span):
+    """The Span that is used when no Span implementation is available.
 
     All operations are no-op except context propagation.
     """
@@ -493,7 +532,7 @@ class DefaultSpan(Span):
         pass
 
     def __repr__(self) -> str:
-        return "DefaultSpan({!r})".format(self._context)
+        return "NonRecordingSpan({!r})".format(self._context)
 
 
 INVALID_SPAN_ID = 0x0000000000000000
@@ -505,7 +544,7 @@ INVALID_SPAN_CONTEXT = SpanContext(
     trace_flags=DEFAULT_TRACE_OPTIONS,
     trace_state=DEFAULT_TRACE_STATE,
 )
-INVALID_SPAN = DefaultSpan(INVALID_SPAN_CONTEXT)
+INVALID_SPAN = NonRecordingSpan(INVALID_SPAN_CONTEXT)
 
 
 def format_trace_id(trace_id: int) -> str:

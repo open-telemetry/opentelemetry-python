@@ -12,10 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-OTEL_PROPAGATORS = "OTEL_PROPAGATORS"
-OTEL_PYTHON_CONTEXT = "OTEL_PYTHON_CONTEXT"
-OTEL_PYTHON_DISABLED_INSTRUMENTATIONS = "OTEL_PYTHON_DISABLED_INSTRUMENTATIONS"
-OTEL_PYTHON_ID_GENERATOR = "OTEL_PYTHON_ID_GENERATOR"
-OTEL_PYTHON_SERVICE_NAME = "OTEL_PYTHON_SERVICE_NAME"
-OTEL_TRACES_EXPORTER = "OTEL_TRACES_EXPORTER"
-OTEL_PYTHON_TRACER_PROVIDER = "OTEL_PYTHON_TRACER_PROVIDER"
+from sys import version_info
+
+if version_info.minor < 7:
+    from time import time
+
+    def time_ns() -> int:
+        # FIXME this approach can have precision problems as explained here:
+        # https://github.com/open-telemetry/opentelemetry-python/issues/1594
+        return int(time() * 1e9)
+
+
+else:
+    from time import time_ns  # pylint: disable=unused-import

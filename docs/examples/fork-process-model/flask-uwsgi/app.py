@@ -21,7 +21,7 @@ from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 application = flask.Flask(__name__)
 
@@ -35,7 +35,7 @@ def init_tracing():
     trace.set_tracer_provider(TracerProvider(resource=resource))
     # This uses insecure connection for the purpose of example. Please see the
     # OTLP Exporter documentation for other options.
-    span_processor = BatchExportSpanProcessor(
+    span_processor = BatchSpanProcessor(
         OTLPSpanExporter(endpoint="localhost:4317", insecure=True)
     )
     trace.get_tracer_provider().add_span_processor(span_processor)

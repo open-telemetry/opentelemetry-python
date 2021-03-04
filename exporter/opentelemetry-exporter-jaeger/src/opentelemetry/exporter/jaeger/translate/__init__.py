@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import abc
+from typing import Optional
 
 from opentelemetry.trace import SpanKind
 
@@ -41,6 +42,9 @@ def _convert_int_to_i64(val):
 
 
 class Translator(abc.ABC):
+    def __init__(self, max_tag_value_length: Optional[int] = None):
+        self._max_tag_value_length = max_tag_value_length
+
     @abc.abstractmethod
     def _translate_span(self, span):
         """Translates span to jaeger format.

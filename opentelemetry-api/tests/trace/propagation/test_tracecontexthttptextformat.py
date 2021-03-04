@@ -17,8 +17,8 @@ import unittest
 from unittest.mock import Mock, patch
 
 from opentelemetry import trace
+from opentelemetry.propagators.textmap import DictGetter
 from opentelemetry.trace.propagation import tracecontext
-from opentelemetry.trace.propagation.textmap import DictGetter
 from opentelemetry.trace.span import TraceState
 
 FORMAT = tracecontext.TraceContextTextMapPropagator()
@@ -68,7 +68,7 @@ class TestTraceContextFormat(unittest.TestCase):
         )
         self.assertTrue(span_context.is_remote)
         output = {}  # type:typing.Dict[str, str]
-        span = trace.DefaultSpan(span_context)
+        span = trace.NonRecordingSpan(span_context)
 
         ctx = trace.set_span_in_context(span)
         FORMAT.inject(dict.__setitem__, output, ctx)
@@ -149,7 +149,7 @@ class TestTraceContextFormat(unittest.TestCase):
         empty tracestate headers but SHOULD avoid sending them.
         """
         output = {}  # type:typing.Dict[str, str]
-        span = trace.DefaultSpan(
+        span = trace.NonRecordingSpan(
             trace.SpanContext(self.TRACE_ID, self.SPAN_ID, is_remote=False)
         )
         ctx = trace.set_span_in_context(span)
@@ -187,8 +187,7 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertFalse("traceparent" in output)
 
     def test_tracestate_empty_header(self):
-        """Test tracestate with an additional empty header (should be ignored)
-        """
+        """Test tracestate with an additional empty header (should be ignored)"""
         span = trace.get_current_span(
             FORMAT.extract(
                 carrier_getter,
@@ -203,8 +202,7 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertEqual(span.get_span_context().trace_state["foo"], "1")
 
     def test_tracestate_header_with_trailing_comma(self):
-        """Do not propagate invalid trace context.
-        """
+        """Do not propagate invalid trace context."""
         span = trace.get_current_span(
             FORMAT.extract(
                 carrier_getter,
@@ -219,8 +217,7 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertEqual(span.get_span_context().trace_state["foo"], "1")
 
     def test_tracestate_keys(self):
-        """Test for valid key patterns in the tracestate
-        """
+        """Test for valid key patterns in the tracestate"""
         tracestate_value = ",".join(
             [
                 "1a-2f@foo=bar1",

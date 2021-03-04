@@ -1,8 +1,8 @@
 Working With Fork Process Models
 ================================
 
-The `BatchExportSpanProcessor` is not fork-safe and doesn't work well with application servers
-(Gunicorn, uWSGI) which are based on the pre-fork web server model. The `BatchExportSpanProcessor`
+The `BatchSpanProcessor` is not fork-safe and doesn't work well with application servers
+(Gunicorn, uWSGI) which are based on the pre-fork web server model. The `BatchSpanProcessor`
 spawns a thread to run in the background to export spans to the telemetry backend. During the fork, the child
 process inherits the lock which is held by the parent process and deadlock occurs. We can use fork hooks to
 get around this limitation of the span processor.
@@ -19,7 +19,7 @@ Gunicorn post_fork hook
     from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.resources import Resource
     from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 
     def post_fork(server, worker):
@@ -30,7 +30,7 @@ Gunicorn post_fork hook
         })
 
         trace.set_tracer_provider(TracerProvider(resource=resource))
-        span_processor = BatchExportSpanProcessor(
+        span_processor = BatchSpanProcessor(
             OTLPSpanExporter(endpoint="localhost:4317")
         )
         trace.get_tracer_provider().add_span_processor(span_processor)
@@ -47,7 +47,7 @@ uWSGI postfork decorator
     from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
     from opentelemetry.sdk.resources import Resource
     from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 
     @postfork
@@ -57,7 +57,7 @@ uWSGI postfork decorator
         })
 
         trace.set_tracer_provider(TracerProvider(resource=resource))
-        span_processor = BatchExportSpanProcessor(
+        span_processor = BatchSpanProcessor(
             OTLPSpanExporter(endpoint="localhost:4317")
         )
         trace.get_tracer_provider().add_span_processor(span_processor)

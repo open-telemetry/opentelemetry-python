@@ -17,7 +17,7 @@ from os import environ
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
-from opentelemetry.baggage.propagation import BaggagePropagator
+from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.trace.propagation.tracecontext import (
     TraceContextTextMapPropagator,
@@ -33,7 +33,8 @@ class TestPropagators(TestCase):
 
             self.assertEqual(len(propagators), 2)
             self.assertEqual(
-                propagators, {TraceContextTextMapPropagator, BaggagePropagator}
+                propagators,
+                {TraceContextTextMapPropagator, W3CBaggagePropagator},
             )
 
         mock_compositehttppropagator.configure_mock(

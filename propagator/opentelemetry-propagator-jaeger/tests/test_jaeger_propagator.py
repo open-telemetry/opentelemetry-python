@@ -16,13 +16,13 @@ import unittest
 from unittest.mock import Mock
 
 import opentelemetry.sdk.trace as trace
-import opentelemetry.sdk.trace.ids_generator as ids_generator
+import opentelemetry.sdk.trace.id_generator as id_generator
 import opentelemetry.trace as trace_api
 from opentelemetry import baggage
 from opentelemetry.propagators import (  # pylint: disable=no-name-in-module
     jaeger,
 )
-from opentelemetry.trace.propagation.textmap import DictGetter
+from opentelemetry.propagators.textmap import DictGetter
 
 FORMAT = jaeger.JaegerPropagator()
 
@@ -43,7 +43,7 @@ def get_context_new_carrier(old_carrier, carrier_baggage=None):
         "child",
         trace_api.SpanContext(
             parent_span_context.trace_id,
-            ids_generator.RandomIdsGenerator().generate_span_id(),
+            id_generator.RandomIdGenerator().generate_span_id(),
             is_remote=False,
             trace_flags=parent_span_context.trace_flags,
             trace_state=parent_span_context.trace_state,
@@ -68,10 +68,10 @@ def _format_uber_trace_id(trace_id, span_id, parent_span_id, flags):
 class TestJaegerPropagator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        id_generator = ids_generator.RandomIdsGenerator()
-        cls.trace_id = id_generator.generate_trace_id()
-        cls.span_id = id_generator.generate_span_id()
-        cls.parent_span_id = id_generator.generate_span_id()
+        generator = id_generator.RandomIdGenerator()
+        cls.trace_id = generator.generate_trace_id()
+        cls.span_id = generator.generate_span_id()
+        cls.parent_span_id = generator.generate_span_id()
         cls.serialized_uber_trace_id = _format_uber_trace_id(
             cls.trace_id, cls.span_id, cls.parent_span_id, 11
         )
