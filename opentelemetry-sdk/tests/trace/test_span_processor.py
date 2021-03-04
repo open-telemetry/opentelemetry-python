@@ -154,7 +154,7 @@ class MultiSpanProcessorTestBase(abc.ABC):
     @staticmethod
     def create_default_span() -> trace_api.Span:
         span_context = trace_api.SpanContext(37, 73, is_remote=False)
-        return trace_api.DefaultSpan(span_context)
+        return trace_api.NonRecordingSpan(span_context)
 
     def test_on_start(self):
         multi_processor = self.create_multi_span_processor()
