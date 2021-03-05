@@ -20,7 +20,7 @@ from unittest.mock import Mock, PropertyMock, patch
 
 from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
-from grpc import ChannelCredentials, StatusCode, server
+from grpc import ChannelCredentials, Compression, StatusCode, server
 
 from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
@@ -46,7 +46,9 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as OTLPSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
 from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_SPAN_COMPRESSION,
     OTEL_EXPORTER_OTLP_SPAN_ENDPOINT,
     OTEL_EXPORTER_OTLP_SPAN_HEADERS,
     OTEL_EXPORTER_OTLP_SPAN_TIMEOUT,
@@ -174,6 +176,7 @@ class TestOTLPSpanExporter(TestCase):
             + "/fixtures/test.cert",
             OTEL_EXPORTER_OTLP_SPAN_HEADERS: "key1=value1,key2=value2",
             OTEL_EXPORTER_OTLP_SPAN_TIMEOUT: "10",
+            OTEL_EXPORTER_OTLP_SPAN_COMPRESSION: "gzip",
         },
     )
     @patch("opentelemetry.exporter.otlp.exporter.OTLPExporterMixin.__init__")
@@ -186,6 +189,7 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(kwargs["endpoint"], "collector:4317")
         self.assertEqual(kwargs["headers"], "key1=value1,key2=value2")
         self.assertEqual(kwargs["timeout"], 10)
+        self.assertEqual(kwargs["compression"], Compression.Gzip)
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
 
@@ -219,6 +223,57 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(
             exporter._headers, (("key3", "value3"), ("key4", "value4"))
         )
+
+    # pylint: disable=no-self-use
+    def test_otlp_compression_from_env(self):
+        # Specifying kwarg should take precedence over env
+        with patch(
+            "opentelemetry.exporter.otlp.exporter.insecure_channel"
+        ) as mock_insecure_channel, patch.dict(
+            "os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"}
+        ):
+            OTLPSpanExporter(
+                insecure=True, compression=Compression.NoCompression
+            )
+            mock_insecure_channel.assert_called_once_with(
+                "localhost:4317", compression=Compression.NoCompression
+            )
+
+        # No env or kwarg should be NoCompression
+        with patch(
+            "opentelemetry.exporter.otlp.exporter.insecure_channel"
+        ) as mock_insecure_channel, patch.dict("os.environ", {}):
+            OTLPSpanExporter(insecure=True)
+            mock_insecure_channel.assert_called_once_with(
+                "localhost:4317", compression=Compression.NoCompression
+            )
+
+        # Just OTEL_EXPORTER_OTLP_COMPRESSION should work
+        with patch(
+            "opentelemetry.exporter.otlp.exporter.insecure_channel"
+        ) as mock_insecure_channel, patch.dict(
+            "os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "deflate"}
+        ):
+            OTLPSpanExporter(insecure=True)
+            mock_insecure_channel.assert_called_once_with(
+                "localhost:4317", compression=Compression.Deflate
+            )
+
+        # OTEL_EXPORTER_OTLP_SPAN_COMPRESSION as higher priority than
+        # OTEL_EXPORTER_OTLP_COMPRESSION
+        with patch(
+            "opentelemetry.exporter.otlp.exporter.insecure_channel"
+        ) as mock_insecure_channel, patch.dict(
+            "os.environ",
+            {
+                OTEL_EXPORTER_OTLP_COMPRESSION: "deflate",
+                OTEL_EXPORTER_OTLP_SPAN_COMPRESSION: "gzip",
+            },
+        ):
+            OTLPSpanExporter(insecure=True)
+            mock_insecure_channel.assert_called_once_with(
+                "localhost:4317", compression=Compression.Gzip
+            )
 
     @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
     @patch("opentelemetry.exporter.otlp.exporter.secure_channel")

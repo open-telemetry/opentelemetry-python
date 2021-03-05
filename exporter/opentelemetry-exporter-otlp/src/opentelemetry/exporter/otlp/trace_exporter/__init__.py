@@ -17,13 +17,14 @@ import logging
 from os import environ
 from typing import Optional, Sequence
 
-from grpc import ChannelCredentials
+from grpc import ChannelCredentials, Compression
 
 from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
-    _get_resource_data,
     _load_credential_from_file,
     _translate_key_values,
+    environ_to_compression,
+    get_resource_data,
 )
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
@@ -40,6 +41,7 @@ from opentelemetry.proto.trace.v1.trace_pb2 import Span as CollectorSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_SPAN_COMPRESSION,
     OTEL_EXPORTER_OTLP_SPAN_ENDPOINT,
     OTEL_EXPORTER_OTLP_SPAN_HEADERS,
     OTEL_EXPORTER_OTLP_SPAN_INSECURE,
@@ -80,6 +82,7 @@ class OTLPSpanExporter(
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[Sequence] = None,
         timeout: Optional[int] = None,
+        compression: Optional[Compression] = None,
     ):
         if insecure is None:
             insecure = environ.get(OTEL_EXPORTER_OTLP_SPAN_INSECURE)
@@ -97,6 +100,12 @@ class OTLPSpanExporter(
             int(environ_timeout) if environ_timeout is not None else None
         )
 
+        compression = (
+            environ_to_compression(OTEL_EXPORTER_OTLP_SPAN_COMPRESSION)
+            if compression is None
+            else compression
+        )
+
         super().__init__(
             **{
                 "endpoint": endpoint
@@ -106,6 +115,7 @@ class OTLPSpanExporter(
                 "headers": headers
                 or environ.get(OTEL_EXPORTER_OTLP_SPAN_HEADERS),
                 "timeout": timeout or environ_timeout,
+                "compression": compression,
             }
         )
 
@@ -274,7 +284,7 @@ class OTLPSpanExporter(
             ].spans.append(CollectorSpan(**self._collector_span_kwargs))
 
         return ExportTraceServiceRequest(
-            resource_spans=_get_resource_data(
+            resource_spans=get_resource_data(
                 sdk_resource_instrumentation_library_spans,
                 ResourceSpans,
                 "spans",
