@@ -39,8 +39,8 @@ v2 json, v2 protobuf).
     trace.set_tracer_provider(TracerProvider())
     tracer = trace.get_tracer(__name__)
 
-    # create a ZipkinSpanExporter
-    zipkin_exporter = zipkin.ZipkinSpanExporter(
+    # create a ZipkinExporter
+    zipkin_exporter = zipkin.ZipkinExporter(
         # protocol=Protocol.V2_PROTOBUF
         # optional:
         # endpoint="http://localhost:9411/api/v2/spans",
@@ -92,7 +92,7 @@ REQUESTS_SUCCESS_STATUS_CODES = (200, 202)
 logger = logging.getLogger(__name__)
 
 
-class ZipkinSpanExporter(SpanExporter):
+class ZipkinExporter(SpanExporter):
     def __init__(
         self,
         protocol: Protocol,
