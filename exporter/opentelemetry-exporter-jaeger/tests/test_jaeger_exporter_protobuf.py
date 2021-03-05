@@ -22,7 +22,7 @@ from unittest.mock import patch
 import opentelemetry.exporter.jaeger.gen.model_pb2 as model_pb2
 import opentelemetry.exporter.jaeger.translate.protobuf as pb_translator
 from opentelemetry import trace as trace_api
-from opentelemetry.exporter.jaeger import JaegerSpanExporter
+from opentelemetry.exporter.jaeger import JaegerExporter
 from opentelemetry.exporter.jaeger.translate import (
     NAME_KEY,
     VERSION_KEY,
@@ -39,7 +39,7 @@ from opentelemetry.trace.status import Status, StatusCode
 
 
 # pylint:disable=no-member
-class TestJaegerSpanExporter(unittest.TestCase):
+class TestJaegerExporter(unittest.TestCase):
     def setUp(self):
         # create and save span to be used in tests
         context = trace_api.SpanContext(
@@ -71,7 +71,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         env_patch.start()
 
-        exporter = JaegerSpanExporter(
+        exporter = JaegerExporter(
             service_name=service, transport_format="protobuf"
         )
 

@@ -34,8 +34,8 @@ Usage
     trace.set_tracer_provider(TracerProvider())
     tracer = trace.get_tracer(__name__)
 
-    # create a JaegerSpanExporter
-    jaeger_exporter = jaeger.JaegerSpanExporter(
+    # create a JaegerExporter
+    jaeger_exporter = jaeger.JaegerExporter(
         service_name='my-helloworld-service',
         # configure agent
         agent_host_name='localhost',
@@ -105,7 +105,7 @@ TRANSPORT_FORMAT_PROTOBUF = "protobuf"
 logger = logging.getLogger(__name__)
 
 
-class JaegerSpanExporter(SpanExporter):
+class JaegerExporter(SpanExporter):
     """Jaeger span exporter for OpenTelemetry.
 
     Args:

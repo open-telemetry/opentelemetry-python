@@ -37,7 +37,7 @@ from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCode
 
 
-class TestJaegerSpanExporter(unittest.TestCase):
+class TestJaegerExporter(unittest.TestCase):
     def setUp(self):
         # create and save span to be used in tests
         context = trace_api.SpanContext(
@@ -57,7 +57,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         service_name = "my-service-name"
         agent_host_name = "localhost"
         agent_port = 6831
-        exporter = jaeger_exporter.JaegerSpanExporter(service_name)
+        exporter = jaeger_exporter.JaegerExporter(service_name)
 
         self.assertEqual(exporter.service_name, service_name)
         self.assertEqual(exporter.agent_host_name, agent_host_name)
@@ -82,7 +82,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         password = "password"
         auth = (username, password)
 
-        exporter = jaeger_exporter.JaegerSpanExporter(
+        exporter = jaeger_exporter.JaegerExporter(
             service_name=service,
             agent_host_name=agent_host_name,
             agent_port=agent_port,
@@ -135,7 +135,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         environ_patcher.start()
 
-        exporter = jaeger_exporter.JaegerSpanExporter(service_name=service)
+        exporter = jaeger_exporter.JaegerExporter(service_name=service)
 
         self.assertEqual(exporter.service_name, service)
         self.assertEqual(exporter.agent_host_name, agent_host_name)
@@ -433,7 +433,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
     def test_export(self):
         """Test that agent and/or collector are invoked"""
-        exporter = jaeger_exporter.JaegerSpanExporter(
+        exporter = jaeger_exporter.JaegerExporter(
             "test_export", agent_host_name="localhost", agent_port=6318
         )
 
