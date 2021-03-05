@@ -147,9 +147,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         otel_spans[0].set_attribute("key_float", 111.22)
         otel_spans[0].set_attribute("key_int", 333)
         otel_spans[0].set_status(
-            trace_api.Status(
-                trace_api.status.StatusCode.OK, "test description",
-            )
+            trace_api.Status(trace_api.status.StatusCode.OK)
         )
         otel_spans[0].end(end_time=end_times[0])
         otel_spans[1].start(start_time=start_times[1])
@@ -198,7 +196,6 @@ class TestCollectorSpanExporter(unittest.TestCase):
         self.assertEqual(
             output_spans[0].status.code, trace_api.status.StatusCode.OK.value,
         )
-        self.assertEqual(output_spans[0].status.message, "test description")
         self.assertEqual(len(output_spans[0].tracestate.entries), 1)
         self.assertEqual(output_spans[0].tracestate.entries[0].key, "testkey")
         self.assertEqual(
