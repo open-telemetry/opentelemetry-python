@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1656])(https://github.com/open-telemetry/opentelemetry-python/pull/1656)
 - Rename `DefaultSpan` to `NonRecordingSpan`
   ([#1661])(https://github.com/open-telemetry/opentelemetry-python/pull/1661)
+- Fixed distro configuration with `OTEL_TRACES_EXPORTER` env var set to `otlp`
+  ([#1657])(https://github.com/open-telemetry/opentelemetry-python/pull/1657)
 - Moving `Getter`, `Setter` and `TextMapPropagator` out of `opentelemetry.trace.propagation` and
   into `opentelemetry.propagators`
   ([#1662])(https://github.com/open-telemetry/opentelemetry-python/pull/1662)
