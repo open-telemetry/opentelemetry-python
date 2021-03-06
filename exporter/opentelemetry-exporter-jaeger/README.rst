@@ -22,7 +22,7 @@ Installation
 Configuration
 -------------
 
-OpenTelemetry Jaeger Exporter can be configured by setting `JaegerSpanExporter parameters
+OpenTelemetry Jaeger Exporter can be configured by setting `JaegerExporter parameters
 <https://github.com/open-telemetry/opentelemetry-python/blob/main/exporter/opentelemetry-exporter-jaeger
 /src/opentelemetry/exporter/jaeger/__init__.py#L88>`_ or by setting
 `environment variables <https://github.com/open-telemetry/opentelemetry-specification/blob/main/
