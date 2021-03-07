@@ -181,8 +181,11 @@ class JaegerExporter(SpanExporter):
         )
         tracer_provider = trace.get_tracer_provider()
         resource = tracer_provider.resource
-        self.service_name = resource.attributes[SERVICE_NAME] if resource else "unknown_service"
-
+        self.service_name = (
+            resource.attributes[SERVICE_NAME]
+            if getattr(tracer_provider, "resource", None)
+            else "unknown_service"
+        )
 
     @property
     def _collector_grpc_client(self) -> Optional[CollectorServiceStub]:

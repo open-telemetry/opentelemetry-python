@@ -13,32 +13,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import os
 import unittest
 from unittest import mock
+from unittest.mock import patch
 
 # pylint:disable=no-name-in-module
 # pylint:disable=import-error
 import opentelemetry.exporter.jaeger as jaeger_exporter
-import os
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.jaeger.gen.jaeger import ttypes as jaeger
 from opentelemetry.exporter.jaeger.translate import Translate
 from opentelemetry.exporter.jaeger.translate.thrift import ThriftTranslator
 from opentelemetry.sdk import trace
-from unittest.mock import patch
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_AGENT_HOST,
     OTEL_EXPORTER_JAEGER_AGENT_PORT,
     OTEL_EXPORTER_JAEGER_ENDPOINT,
     OTEL_EXPORTER_JAEGER_PASSWORD,
     OTEL_EXPORTER_JAEGER_USER,
-    OTEL_RESOURCE_ATTRIBUTES
+    OTEL_RESOURCE_ATTRIBUTES,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME
 from opentelemetry.sdk.trace import Resource, TracerProvider
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCode
+
+
+class Provider:
+    def __init__(self, resource=None, id_generator=None):
+        self.id_generator = id_generator
+        self.processor = None
+        self.resource = Resource.create({})
 
 
 class TestJaegerExporter(unittest.TestCase):
@@ -58,35 +65,32 @@ class TestJaegerExporter(unittest.TestCase):
     def test_constructor_default(self):
         # pylint: disable=protected-access
         """Test the default values assigned by constructor."""
-        # service_name = "my-service-name"
+        service_name = "my-service-name"
         agent_host_name = "localhost"
         agent_port = 6831
         env_patch = patch.dict(
             "os.environ",
-            {
-                OTEL_RESOURCE_ATTRIBUTES: {SERVICE_NAME: "my-service-name"}
-            },
+            {OTEL_RESOURCE_ATTRIBUTES: "service.name=my-service-name"},
         )
-
-        exporter = jaeger_exporter.JaegerExporter()
-        env_patch.start()
-        service_name = os.environ.get(SERVICE_NAME)
-        self.assertEqual(exporter.service_name, service_name)
-        env_patch.stop()
-        self.assertEqual(exporter.agent_host_name, agent_host_name)
-        self.assertEqual(exporter.agent_port, agent_port)
-        self.assertEqual(exporter.collector_endpoint, None)
-        self.assertEqual(exporter.username, None)
-        self.assertEqual(exporter.password, None)
-        self.assertTrue(exporter._collector_http_client is None)
-        self.assertTrue(exporter._agent_client is not None)
-        self.assertIsNone(exporter._max_tag_value_length)
-        
+        with patch("opentelemetry.exporter.jaeger.trace") as mock_trace:
+            env_patch.start()
+            mock_trace.get_tracer_provider.return_value = Provider()
+            exporter = jaeger_exporter.JaegerExporter()
+            self.assertEqual(exporter.service_name, service_name)
+            self.assertEqual(exporter.agent_host_name, agent_host_name)
+            self.assertEqual(exporter.agent_port, agent_port)
+            self.assertEqual(exporter.collector_endpoint, None)
+            self.assertEqual(exporter.username, None)
+            self.assertEqual(exporter.password, None)
+            self.assertTrue(exporter._collector_http_client is None)
+            self.assertTrue(exporter._agent_client is not None)
+            self.assertIsNone(exporter._max_tag_value_length)
+            env_patch.stop()
 
     def test_constructor_explicit(self):
         # pylint: disable=protected-access
         """Test the constructor passing all the options."""
-        # service = "my-opentelemetry-jaeger"
+        service = "my-opentelemetry-jaeger"
         collector_endpoint = "https://opentelemetry.io:15875"
 
         agent_port = 14268
@@ -95,39 +99,42 @@ class TestJaegerExporter(unittest.TestCase):
         username = "username"
         password = "password"
         auth = (username, password)
-
-        exporter = jaeger_exporter.JaegerExporter(
-            agent_host_name=agent_host_name,
-            agent_port=agent_port,
-            collector_endpoint=collector_endpoint,
-            username=username,
-            password=password,
-            max_tag_value_length=42,
+        env_patch = patch.dict(
+            "os.environ",
+            {OTEL_RESOURCE_ATTRIBUTES: "service.name=my-opentelemetry-jaeger"},
         )
-        self.env_patch.start()
-        service = os.environ.get(SERVICE_NAME)
-        self.assertEqual(exporter.service_name, service)
-        self.env_patch.stop()
-        self.assertEqual(exporter.agent_host_name, agent_host_name)
-        self.assertEqual(exporter.agent_port, agent_port)
-        self.assertTrue(exporter._collector_http_client is not None)
-        self.assertEqual(exporter._collector_http_client.auth, auth)
-        # property should not construct new object
-        collector = exporter._collector_http_client
-        self.assertEqual(exporter._collector_http_client, collector)
-        # property should construct new object
-        exporter._collector = None
-        exporter.username = None
-        exporter.password = None
-        self.assertNotEqual(exporter._collector_http_client, collector)
-        self.assertTrue(exporter._collector_http_client.auth is None)
-        self.assertEqual(exporter._max_tag_value_length, 42)
-        
-    
+        with patch("opentelemetry.exporter.jaeger.trace") as mock_trace:
+            env_patch.start()
+            mock_trace.get_tracer_provider.return_value = Provider()
+            exporter = jaeger_exporter.JaegerExporter(
+                agent_host_name=agent_host_name,
+                agent_port=agent_port,
+                collector_endpoint=collector_endpoint,
+                username=username,
+                password=password,
+                max_tag_value_length=42,
+            )
+            self.assertEqual(exporter.service_name, service)
+            self.assertEqual(exporter.agent_host_name, agent_host_name)
+            self.assertEqual(exporter.agent_port, agent_port)
+            self.assertTrue(exporter._collector_http_client is not None)
+            self.assertEqual(exporter._collector_http_client.auth, auth)
+            # property should not construct new object
+            collector = exporter._collector_http_client
+            self.assertEqual(exporter._collector_http_client, collector)
+            # property should construct new object
+            exporter._collector = None
+            exporter.username = None
+            exporter.password = None
+            self.assertNotEqual(exporter._collector_http_client, collector)
+            self.assertTrue(exporter._collector_http_client.auth is None)
+            self.assertEqual(exporter._max_tag_value_length, 42)
+            env_patch.stop()
+
     def test_constructor_by_environment_variables(self):
         #  pylint: disable=protected-access
         """Test the constructor using Environment Variables."""
-        # service = "my-opentelemetry-jaeger"
+        service = "my-opentelemetry-jaeger"
 
         agent_host_name = "opentelemetry.io"
         agent_port = "6831"
@@ -146,30 +153,32 @@ class TestJaegerExporter(unittest.TestCase):
                 OTEL_EXPORTER_JAEGER_ENDPOINT: collector_endpoint,
                 OTEL_EXPORTER_JAEGER_USER: username,
                 OTEL_EXPORTER_JAEGER_PASSWORD: password,
-                OTEL_RESOURCE_ATTRIBUTES: {SERVICE_NAME: "test_service_name"}
+                OTEL_RESOURCE_ATTRIBUTES: "service.name=my-opentelemetry-jaeger",
             },
         )
 
-        environ_patcher.start()
-        service = os.environ.get(SERVICE_NAME)
-        exporter = jaeger_exporter.JaegerExporter()
-        self.assertEqual(exporter.service_name, service)
-        self.assertEqual(exporter.agent_host_name, agent_host_name)
-        self.assertEqual(exporter.agent_port, int(agent_port))
-        self.assertTrue(exporter._collector_http_client is not None)
-        self.assertEqual(exporter.collector_endpoint, collector_endpoint)
-        self.assertEqual(exporter._collector_http_client.auth, auth)
-        # property should not construct new object
-        collector = exporter._collector_http_client
-        self.assertEqual(exporter._collector_http_client, collector)
-        # property should construct new object
-        exporter._collector = None
-        exporter.username = None
-        exporter.password = None
-        self.assertNotEqual(exporter._collector_http_client, collector)
-        self.assertTrue(exporter._collector_http_client.auth is None)
+        with patch("opentelemetry.exporter.jaeger.trace") as mock_trace:
+            environ_patcher.start()
+            mock_trace.get_tracer_provider.return_value = Provider()
+            # trace_api.set_tracer_provider(TracerProvider())
+            exporter = jaeger_exporter.JaegerExporter()
+            self.assertEqual(exporter.service_name, service)
+            self.assertEqual(exporter.agent_host_name, agent_host_name)
+            self.assertEqual(exporter.agent_port, int(agent_port))
+            self.assertTrue(exporter._collector_http_client is not None)
+            self.assertEqual(exporter.collector_endpoint, collector_endpoint)
+            self.assertEqual(exporter._collector_http_client.auth, auth)
+            # property should not construct new object
+            collector = exporter._collector_http_client
+            self.assertEqual(exporter._collector_http_client, collector)
+            # property should construct new object
+            exporter._collector = None
+            exporter.username = None
+            exporter.password = None
+            self.assertNotEqual(exporter._collector_http_client, collector)
+            self.assertTrue(exporter._collector_http_client.auth is None)
 
-        environ_patcher.stop()
+            environ_patcher.stop()
 
     def test_nsec_to_usec_round(self):
         # pylint: disable=protected-access

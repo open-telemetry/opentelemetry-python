@@ -27,7 +27,6 @@ from opentelemetry.distro import (
 )
 from opentelemetry.environment_variables import (
     OTEL_PYTHON_ID_GENERATOR,
-    OTEL_PYTHON_SERVICE_NAME,
     OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.sdk.resources import Resource
@@ -38,7 +37,7 @@ class Provider:
     def __init__(self, resource=None, id_generator=None):
         self.id_generator = id_generator
         self.processor = None
-        self.resource = resource
+        self.resource = Resource.create({})
 
     def add_span_processor(self, processor):
         self.processor = processor
@@ -102,8 +101,11 @@ class TestTraceInit(TestCase):
         self.set_provider_patcher.stop()
 
     # pylint: disable=protected-access
+    @patch.dict(
+        environ, {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-test-service"}
+    )
     def test_trace_init_default(self):
-        environ[OTEL_PYTHON_SERVICE_NAME] = "my-test-service"
+        # environ[OTEL_PYTHON_SERVICE_NAME] = "my-test-service"
         _init_tracing({"zipkin": Exporter}, RandomIdGenerator)
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
@@ -116,8 +118,12 @@ class TestTraceInit(TestCase):
             provider.processor.exporter.service_name, "my-test-service"
         )
 
+    @patch.dict(
+        environ,
+        {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-otlp-test-service"},
+    )
     def test_trace_init_otlp(self):
-        environ[OTEL_PYTHON_SERVICE_NAME] = "my-otlp-test-service"
+        # environ[OTEL_PYTHON_SERVICE_NAME] = "my-otlp-test-service"
         _init_tracing({"otlp": OTLPExporter}, RandomIdGenerator)
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
@@ -131,7 +137,7 @@ class TestTraceInit(TestCase):
             provider.resource.attributes.get("service.name"),
             "my-otlp-test-service",
         )
-        del environ[OTEL_PYTHON_SERVICE_NAME]
+        # del environ[OTEL_PYTHON_SERVICE_NAME]
 
     @patch.dict(environ, {OTEL_PYTHON_ID_GENERATOR: "custom_id_generator"})
     @patch("opentelemetry.distro.IdGenerator", new=IdGenerator)

@@ -32,12 +32,19 @@ from opentelemetry.sdk import trace
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_CERTIFICATE,
     OTEL_EXPORTER_JAEGER_ENDPOINT,
-    OTEL_RESOURCE_ATTRIBUTES
+    OTEL_RESOURCE_ATTRIBUTES,
 )
-from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.resources import SERVICE_NAME
+from opentelemetry.sdk.trace import Resource, TracerProvider
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import Status, StatusCode
+
+
+class Provider:
+    def __init__(self, resource=None, id_generator=None):
+        self.id_generator = id_generator
+        self.processor = None
+        self.resource = Resource.create({})
 
 
 # pylint:disable=no-member
@@ -53,12 +60,22 @@ class TestJaegerExporter(unittest.TestCase):
         self._test_span = trace._Span("test_span", context=context)
         self._test_span.start()
         self._test_span.end()
+        # self.get_provider_patcher = patch(
+        #     "opentelemetry.sdk.trace.TracerProvider", Provider
+        # )
+        # self.set_provider_patcher = patch(
+        #     "opentelemetry.exporter.jaeger.trace.get_tracer_provider", Provider
+        # )
+
+        # self.get_provider_mock = self.get_provider_patcher.start()
+        # self.set_provider_mock = self.set_provider_patcher.start()
+
         # pylint: disable=protected-access
 
     def test_constructor_by_environment_variables(self):
         """Test using Environment Variables."""
         # pylint: disable=protected-access
-        # service = "my-opentelemetry-jaeger"
+        service = "my-opentelemetry-jaeger"
 
         collector_endpoint = "localhost:14250"
 
@@ -68,19 +85,19 @@ class TestJaegerExporter(unittest.TestCase):
                 OTEL_EXPORTER_JAEGER_ENDPOINT: collector_endpoint,
                 OTEL_EXPORTER_JAEGER_CERTIFICATE: os.path.dirname(__file__)
                 + "/certs/cred.cert",
-                OTEL_RESOURCE_ATTRIBUTES: {SERVICE_NAME: "test_service_name"}
+                OTEL_RESOURCE_ATTRIBUTES: "service.name=my-opentelemetry-jaeger",
             },
         )
-
-        env_patch.start()
-        service = os.environ.get(SERVICE_NAME)
-        exporter = JaegerExporter(transport_format="protobuf")
-        self.assertEqual(exporter.service_name, service)
-        self.assertIsNotNone(exporter._collector_grpc_client)
-        self.assertEqual(exporter.collector_endpoint, collector_endpoint)
-        self.assertIsNotNone(exporter.credentials)
-
-        env_patch.stop()
+        with patch("opentelemetry.exporter.jaeger.trace") as mock_trace:
+            env_patch.start()
+            mock_trace.get_tracer_provider.return_value = Provider()
+            # trace_api.set_tracer_provider(TracerProvider())
+            exporter = JaegerExporter(transport_format="protobuf")
+            self.assertEqual(exporter.service_name, service)
+            self.assertIsNotNone(exporter._collector_grpc_client)
+            self.assertEqual(exporter.collector_endpoint, collector_endpoint)
+            self.assertIsNotNone(exporter.credentials)
+            env_patch.stop()
 
     # pylint: disable=too-many-locals,too-many-statements
     def test_translate_to_jaeger(self):
