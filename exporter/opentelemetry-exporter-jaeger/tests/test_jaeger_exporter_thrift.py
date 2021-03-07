@@ -68,7 +68,7 @@ class TestJaegerExporter(unittest.TestCase):
             },
         )
 
-        exporter = jaeger_exporter.JaegerSpanExporter()
+        exporter = jaeger_exporter.JaegerExporter()
         env_patch.start()
         service_name = os.environ.get(SERVICE_NAME)
         self.assertEqual(exporter.service_name, service_name)
@@ -96,12 +96,7 @@ class TestJaegerExporter(unittest.TestCase):
         password = "password"
         auth = (username, password)
 
-<<<<<<< HEAD
-        exporter = jaeger_exporter.JaegerSpanExporter(
-=======
         exporter = jaeger_exporter.JaegerExporter(
-            service_name=service,
->>>>>>> 94e3a4a747b24c546d8c45dd6013805f0d649228
             agent_host_name=agent_host_name,
             agent_port=agent_port,
             collector_endpoint=collector_endpoint,
@@ -156,14 +151,8 @@ class TestJaegerExporter(unittest.TestCase):
         )
 
         environ_patcher.start()
-<<<<<<< HEAD
         service = os.environ.get(SERVICE_NAME)
-        exporter = jaeger_exporter.JaegerSpanExporter()
-=======
-
-        exporter = jaeger_exporter.JaegerExporter(service_name=service)
-
->>>>>>> 94e3a4a747b24c546d8c45dd6013805f0d649228
+        exporter = jaeger_exporter.JaegerExporter()
         self.assertEqual(exporter.service_name, service)
         self.assertEqual(exporter.agent_host_name, agent_host_name)
         self.assertEqual(exporter.agent_port, int(agent_port))
@@ -461,7 +450,6 @@ class TestJaegerExporter(unittest.TestCase):
     def test_export(self):
 
         """Test that agent and/or collector are invoked"""
-<<<<<<< HEAD
 
         trace_api.set_tracer_provider(
             TracerProvider(
@@ -469,12 +457,8 @@ class TestJaegerExporter(unittest.TestCase):
             )
         )
 
-        exporter = jaeger_exporter.JaegerSpanExporter(
-            agent_host_name="localhost", agent_port=6318
-=======
         exporter = jaeger_exporter.JaegerExporter(
-            "test_export", agent_host_name="localhost", agent_port=6318
->>>>>>> 94e3a4a747b24c546d8c45dd6013805f0d649228
+            agent_host_name="localhost", agent_port=6318
         )
 
         # just agent is configured now

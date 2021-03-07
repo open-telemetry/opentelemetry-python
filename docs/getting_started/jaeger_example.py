@@ -25,7 +25,7 @@ trace.set_tracer_provider(
     )
 )
 
-jaeger_exporter = jaeger.JaegerSpanExporter(
+jaeger_exporter = jaeger.JaegerExporter(
     agent_host_name="localhost", agent_port=6831,
 )
 

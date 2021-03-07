@@ -34,8 +34,8 @@ Usage
     trace.set_tracer_provider(TracerProvider())
     tracer = trace.get_tracer(__name__)
 
-    # create a JaegerSpanExporter
-    jaeger_exporter = jaeger.JaegerSpanExporter(
+    # create a JaegerExporter
+    jaeger_exporter = jaeger.JaegerExporter(
         # configure agent
         agent_host_name='localhost',
         agent_port=6831,
