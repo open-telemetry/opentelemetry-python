@@ -19,17 +19,20 @@ from unittest import mock
 # pylint:disable=no-name-in-module
 # pylint:disable=import-error
 import opentelemetry.exporter.jaeger as jaeger_exporter
+import os
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.jaeger.gen.jaeger import ttypes as jaeger
 from opentelemetry.exporter.jaeger.translate import Translate
 from opentelemetry.exporter.jaeger.translate.thrift import ThriftTranslator
 from opentelemetry.sdk import trace
+from unittest.mock import patch
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_AGENT_HOST,
     OTEL_EXPORTER_JAEGER_AGENT_PORT,
     OTEL_EXPORTER_JAEGER_ENDPOINT,
     OTEL_EXPORTER_JAEGER_PASSWORD,
     OTEL_EXPORTER_JAEGER_USER,
+    OTEL_RESOURCE_ATTRIBUTES
 )
 from opentelemetry.sdk.resources import SERVICE_NAME
 from opentelemetry.sdk.trace import Resource, TracerProvider
@@ -58,9 +61,18 @@ class TestJaegerSpanExporter(unittest.TestCase):
         # service_name = "my-service-name"
         agent_host_name = "localhost"
         agent_port = 6831
-        exporter = jaeger_exporter.JaegerSpanExporter()
+        env_patch = patch.dict(
+            "os.environ",
+            {
+                OTEL_RESOURCE_ATTRIBUTES: {SERVICE_NAME: "my-service-name"}
+            },
+        )
 
-        # self.assertEqual(exporter.service_name, service_name)
+        exporter = jaeger_exporter.JaegerSpanExporter()
+        env_patch.start()
+        service_name = os.environ.get(SERVICE_NAME)
+        self.assertEqual(exporter.service_name, service_name)
+        env_patch.stop()
         self.assertEqual(exporter.agent_host_name, agent_host_name)
         self.assertEqual(exporter.agent_port, agent_port)
         self.assertEqual(exporter.collector_endpoint, None)
@@ -69,6 +81,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self.assertTrue(exporter._collector_http_client is None)
         self.assertTrue(exporter._agent_client is not None)
         self.assertIsNone(exporter._max_tag_value_length)
+        
 
     def test_constructor_explicit(self):
         # pylint: disable=protected-access
@@ -91,8 +104,10 @@ class TestJaegerSpanExporter(unittest.TestCase):
             password=password,
             max_tag_value_length=42,
         )
-
-        # self.assertEqual(exporter.service_name, service)
+        self.env_patch.start()
+        service = os.environ.get(SERVICE_NAME)
+        self.assertEqual(exporter.service_name, service)
+        self.env_patch.stop()
         self.assertEqual(exporter.agent_host_name, agent_host_name)
         self.assertEqual(exporter.agent_port, agent_port)
         self.assertTrue(exporter._collector_http_client is not None)
@@ -107,7 +122,8 @@ class TestJaegerSpanExporter(unittest.TestCase):
         self.assertNotEqual(exporter._collector_http_client, collector)
         self.assertTrue(exporter._collector_http_client.auth is None)
         self.assertEqual(exporter._max_tag_value_length, 42)
-
+        
+    
     def test_constructor_by_environment_variables(self):
         #  pylint: disable=protected-access
         """Test the constructor using Environment Variables."""
@@ -130,14 +146,14 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 OTEL_EXPORTER_JAEGER_ENDPOINT: collector_endpoint,
                 OTEL_EXPORTER_JAEGER_USER: username,
                 OTEL_EXPORTER_JAEGER_PASSWORD: password,
+                OTEL_RESOURCE_ATTRIBUTES: {SERVICE_NAME: "test_service_name"}
             },
         )
 
         environ_patcher.start()
-
+        service = os.environ.get(SERVICE_NAME)
         exporter = jaeger_exporter.JaegerSpanExporter()
-
-        # self.assertEqual(exporter.service_name, service)
+        self.assertEqual(exporter.service_name, service)
         self.assertEqual(exporter.agent_host_name, agent_host_name)
         self.assertEqual(exporter.agent_port, int(agent_port))
         self.assertTrue(exporter._collector_http_client is not None)

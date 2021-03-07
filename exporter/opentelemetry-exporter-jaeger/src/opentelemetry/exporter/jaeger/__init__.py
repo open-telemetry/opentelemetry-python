@@ -179,6 +179,10 @@ class JaegerSpanExporter(SpanExporter):
             if transport_format
             else TRANSPORT_FORMAT_THRIFT
         )
+        tracer_provider = trace.get_tracer_provider()
+        resource = tracer_provider.resource
+        self.service_name = resource.attributes[SERVICE_NAME] if resource else "unknown_service"
+
 
     @property
     def _collector_grpc_client(self) -> Optional[CollectorServiceStub]:
@@ -220,13 +224,10 @@ class JaegerSpanExporter(SpanExporter):
 
     def export(self, spans) -> SpanExportResult:
 
-        tracer_provider = trace.get_tracer_provider()
-        resource = tracer_provider.resource
-        svc_name = resource.attributes[SERVICE_NAME]
         translator = Translate(spans)
         if self.transport_format == TRANSPORT_FORMAT_PROTOBUF:
             pb_translator = ProtobufTranslator(
-                svc_name, self._max_tag_value_length
+                self.service_name, self._max_tag_value_length
             )
             jaeger_spans = translator._translate(pb_translator)
             batch = model_pb2.Batch(spans=jaeger_spans)
@@ -237,7 +238,7 @@ class JaegerSpanExporter(SpanExporter):
             jaeger_spans = translator._translate(thrift_translator)
             batch = jaeger_thrift.Batch(
                 spans=jaeger_spans,
-                process=jaeger_thrift.Process(serviceName=svc_name),
+                process=jaeger_thrift.Process(serviceName=self.service_name),
             )
             if self._collector_http_client is not None:
                 self._collector_http_client.submit(batch)

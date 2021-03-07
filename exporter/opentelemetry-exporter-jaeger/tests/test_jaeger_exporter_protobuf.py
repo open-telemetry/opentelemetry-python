@@ -32,8 +32,10 @@ from opentelemetry.sdk import trace
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_CERTIFICATE,
     OTEL_EXPORTER_JAEGER_ENDPOINT,
+    OTEL_RESOURCE_ATTRIBUTES
 )
 from opentelemetry.sdk.trace import Resource
+from opentelemetry.sdk.resources import SERVICE_NAME
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import Status, StatusCode
 
@@ -66,13 +68,14 @@ class TestJaegerSpanExporter(unittest.TestCase):
                 OTEL_EXPORTER_JAEGER_ENDPOINT: collector_endpoint,
                 OTEL_EXPORTER_JAEGER_CERTIFICATE: os.path.dirname(__file__)
                 + "/certs/cred.cert",
+                OTEL_RESOURCE_ATTRIBUTES: {SERVICE_NAME: "test_service_name"}
             },
         )
 
         env_patch.start()
-
+        service = os.environ.get(SERVICE_NAME)
         exporter = JaegerSpanExporter(transport_format="protobuf")
-
+        self.assertEqual(exporter.service_name, service)
         self.assertIsNotNone(exporter._collector_grpc_client)
         self.assertEqual(exporter.collector_endpoint, collector_endpoint)
         self.assertIsNotNone(exporter.credentials)
