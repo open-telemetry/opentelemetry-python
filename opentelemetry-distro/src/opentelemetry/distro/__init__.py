@@ -67,7 +67,7 @@ def _get_exporter_names() -> Sequence[str]:
         )
 
     if EXPORTER_OTLP in exporters:
-        exporters.pop(EXPORTER_OTLP)
+        exporters.remove(EXPORTER_OTLP)
         exporters.add(EXPORTER_OTLP_SPAN)
 
     return list(exporters)
