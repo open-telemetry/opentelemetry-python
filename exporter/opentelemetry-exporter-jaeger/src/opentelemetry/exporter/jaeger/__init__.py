@@ -105,7 +105,7 @@ TRANSPORT_FORMAT_PROTOBUF = "protobuf"
 logger = logging.getLogger(__name__)
 
 
-class JaegerSpanExporter(SpanExporter):
+class JaegerExporter(SpanExporter):
     """Jaeger span exporter for OpenTelemetry.
 
     Args:

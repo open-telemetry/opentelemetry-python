@@ -41,7 +41,7 @@ from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCode
 
 
-class TestJaegerSpanExporter(unittest.TestCase):
+class TestJaegerExporter(unittest.TestCase):
     def setUp(self):
         # create and save span to be used in tests
         context = trace_api.SpanContext(
@@ -96,7 +96,12 @@ class TestJaegerSpanExporter(unittest.TestCase):
         password = "password"
         auth = (username, password)
 
+<<<<<<< HEAD
         exporter = jaeger_exporter.JaegerSpanExporter(
+=======
+        exporter = jaeger_exporter.JaegerExporter(
+            service_name=service,
+>>>>>>> 94e3a4a747b24c546d8c45dd6013805f0d649228
             agent_host_name=agent_host_name,
             agent_port=agent_port,
             collector_endpoint=collector_endpoint,
@@ -151,8 +156,14 @@ class TestJaegerSpanExporter(unittest.TestCase):
         )
 
         environ_patcher.start()
+<<<<<<< HEAD
         service = os.environ.get(SERVICE_NAME)
         exporter = jaeger_exporter.JaegerSpanExporter()
+=======
+
+        exporter = jaeger_exporter.JaegerExporter(service_name=service)
+
+>>>>>>> 94e3a4a747b24c546d8c45dd6013805f0d649228
         self.assertEqual(exporter.service_name, service)
         self.assertEqual(exporter.agent_host_name, agent_host_name)
         self.assertEqual(exporter.agent_port, int(agent_port))
@@ -450,6 +461,7 @@ class TestJaegerSpanExporter(unittest.TestCase):
     def test_export(self):
 
         """Test that agent and/or collector are invoked"""
+<<<<<<< HEAD
 
         trace_api.set_tracer_provider(
             TracerProvider(
@@ -459,6 +471,10 @@ class TestJaegerSpanExporter(unittest.TestCase):
 
         exporter = jaeger_exporter.JaegerSpanExporter(
             agent_host_name="localhost", agent_port=6318
+=======
+        exporter = jaeger_exporter.JaegerExporter(
+            "test_export", agent_host_name="localhost", agent_port=6318
+>>>>>>> 94e3a4a747b24c546d8c45dd6013805f0d649228
         )
 
         # just agent is configured now
