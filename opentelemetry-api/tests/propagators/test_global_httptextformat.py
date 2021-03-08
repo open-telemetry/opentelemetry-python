@@ -18,6 +18,7 @@ from opentelemetry import baggage, trace
 from opentelemetry.propagate import extract, inject
 from opentelemetry.propagators.textmap import DictGetter
 from opentelemetry.trace import get_current_span, set_span_in_context
+from opentelemetry.trace.span import format_span_id, format_trace_id
 
 carrier_getter = DictGetter()
 
@@ -30,8 +31,8 @@ class TestDefaultGlobalPropagator(unittest.TestCase):
 
     def test_propagation(self):
         traceparent_value = "00-{trace_id}-{span_id}-00".format(
-            trace_id=format(self.TRACE_ID, "032x"),
-            span_id=format(self.SPAN_ID, "016x"),
+            trace_id=format_trace_id(self.TRACE_ID),
+            span_id=format_span_id(self.SPAN_ID),
         )
         tracestate_value = "foo=1,bar=2,baz=3"
         headers = {
