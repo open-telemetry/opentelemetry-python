@@ -956,9 +956,7 @@ class Tracer(trace_api.Tracer):
 
     @contextmanager
     def use_span(
-        self,
-        span: trace_api.Span,
-        end_on_exit: bool = False,
+        self, span: trace_api.Span, end_on_exit: bool = False,
     ) -> Iterator[trace_api.Span]:
         try:
             token = context_api.attach(context_api.set_value(SPAN_KEY, span))
