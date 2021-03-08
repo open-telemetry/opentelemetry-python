@@ -105,7 +105,6 @@ class TestTraceInit(TestCase):
         environ, {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-test-service"}
     )
     def test_trace_init_default(self):
-        # environ[OTEL_PYTHON_SERVICE_NAME] = "my-test-service"
         _init_tracing({"zipkin": Exporter}, RandomIdGenerator)
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
@@ -123,7 +122,6 @@ class TestTraceInit(TestCase):
         {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-otlp-test-service"},
     )
     def test_trace_init_otlp(self):
-        # environ[OTEL_PYTHON_SERVICE_NAME] = "my-otlp-test-service"
         _init_tracing({"otlp": OTLPExporter}, RandomIdGenerator)
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
@@ -137,7 +135,6 @@ class TestTraceInit(TestCase):
             provider.resource.attributes.get("service.name"),
             "my-otlp-test-service",
         )
-        # del environ[OTEL_PYTHON_SERVICE_NAME]
 
     @patch.dict(environ, {OTEL_PYTHON_ID_GENERATOR: "custom_id_generator"})
     @patch("opentelemetry.distro.IdGenerator", new=IdGenerator)

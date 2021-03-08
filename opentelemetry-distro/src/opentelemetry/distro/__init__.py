@@ -45,10 +45,6 @@ def _get_id_generator() -> str:
     return environ.get(OTEL_PYTHON_ID_GENERATOR, _DEFAULT_ID_GENERATOR)
 
 
-def _get_service_name() -> str:
-    pass
-    # return environ.get(OTEL_PYTHON_SERVICE_NAME, "")
-
 
 def _get_exporter_names() -> Sequence[str]:
     trace_exporters = environ.get(OTEL_TRACES_EXPORTER)

@@ -49,8 +49,11 @@ class OpenCensusSpanExporter(SpanExporter):
         self, endpoint=DEFAULT_ENDPOINT, host_name=None, client=None,
     ):
         tracer_provider = trace.get_tracer_provider()
-        resource = tracer_provider.resource
-        service_name = resource.attributes[SERVICE_NAME]
+        service_name = (
+            tracer_provider.resource.attributes[SERVICE_NAME]
+            if getattr(tracer_provider, "resource", None)
+            else "unknown_service"
+        )
         self.endpoint = endpoint
         if client is None:
             self.channel = grpc.insecure_channel(self.endpoint)
