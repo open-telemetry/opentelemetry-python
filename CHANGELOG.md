@@ -5,10 +5,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v0.18b0...HEAD)
+- Update OTLP exporter to use OTLP proto `0.7.0`
+  ([#1674](https://github.com/open-telemetry/opentelemetry-python/pull/1674))
 
 ### Added
+- Document how to work with fork process web server models(Gunicorn, uWSGI etc...)
+  ([#1609](https://github.com/open-telemetry/opentelemetry-python/pull/1609))
 - Add `max_attr_value_length` support to Jaeger exporter
   ([#1633](https://github.com/open-telemetry/opentelemetry-python/pull/1633))
+- Moved `use_span` from Tracer to `opentelemetry.trace.use_span`.
+  ([#1668](https://github.com/open-telemetry/opentelemetry-python/pull/1668))
+- `opentelemetry.trace.use_span()` will now overwrite previously set status on span in case an
+  exception is raised inside the context manager and `set_status_on_exception` is set to `True`.
+  ([#1668](https://github.com/open-telemetry/opentelemetry-python/pull/1668))
+- Add `udp_split_oversized_batches` support to jaeger exporter
+  ([#1500](https://github.com/open-telemetry/opentelemetry-python/pull/1500))
 
 ### Changed
 - Rename `IdsGenerator` to `IdGenerator`
@@ -33,6 +44,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1664](https://github.com/open-telemetry/opentelemetry-python/pull/1664))
 - Cleanup OTLP exporter compression options, add tests
   ([#1671](https://github.com/open-telemetry/opentelemetry-python/pull/1671))
+
+### Removed
+- Removed unused `get_hexadecimal_trace_id` and `get_hexadecimal_span_id` methods.
+  ([#1675])(https://github.com/open-telemetry/opentelemetry-python/pull/1675)
 
 ## [0.18b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.18b0) - 2021-02-16
 

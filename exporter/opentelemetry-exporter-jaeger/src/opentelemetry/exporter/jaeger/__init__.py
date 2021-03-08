@@ -86,6 +86,7 @@ from opentelemetry.exporter.jaeger.translate.thrift import ThriftTranslator
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_AGENT_HOST,
     OTEL_EXPORTER_JAEGER_AGENT_PORT,
+    OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES,
     OTEL_EXPORTER_JAEGER_ENDPOINT,
     OTEL_EXPORTER_JAEGER_PASSWORD,
     OTEL_EXPORTER_JAEGER_USER,
@@ -122,6 +123,7 @@ class JaegerExporter(SpanExporter):
         credentials: Credentials for server authentication.
         transport_format: Transport format for exporting spans to collector.
         max_tag_value_length: Max length string attribute values can have. Set to None to disable.
+        udp_split_oversized_batches: Re-emit oversized batches in smaller chunks.
     """
 
     def __init__(
@@ -136,6 +138,7 @@ class JaegerExporter(SpanExporter):
         credentials: Optional[ChannelCredentials] = None,
         transport_format: Optional[str] = None,
         max_tag_value_length: Optional[int] = None,
+        udp_split_oversized_batches: bool = None,
     ):
         self.service_name = service_name
         self._max_tag_value_length = max_tag_value_length
@@ -155,8 +158,17 @@ class JaegerExporter(SpanExporter):
             env_variable=environ_agent_port,
             default=DEFAULT_AGENT_PORT,
         )
+        self.udp_split_oversized_batches = _parameter_setter(
+            param=udp_split_oversized_batches,
+            env_variable=environ.get(
+                OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES
+            ),
+            default=False,
+        )
         self._agent_client = AgentClientUDP(
-            host_name=self.agent_host_name, port=self.agent_port
+            host_name=self.agent_host_name,
+            port=self.agent_port,
+            split_oversized_batches=self.udp_split_oversized_batches,
         )
         self.collector_endpoint = _parameter_setter(
             param=collector_endpoint,

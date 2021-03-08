@@ -471,7 +471,7 @@ class SpanContext(
 
     def __repr__(self) -> str:
         return (
-            "{}(trace_id={}, span_id={}, trace_flags=0x{:02x}, trace_state={!r}, is_remote={})"
+            "{}(trace_id=0x{}, span_id=0x{}, trace_flags=0x{:02x}, trace_state={!r}, is_remote={})"
         ).format(
             type(self).__name__,
             format_trace_id(self.trace_id),
@@ -548,16 +548,22 @@ INVALID_SPAN = NonRecordingSpan(INVALID_SPAN_CONTEXT)
 
 
 def format_trace_id(trace_id: int) -> str:
-    return "0x{:032x}".format(trace_id)
+    """Convenience trace ID formatting method
+    Args:
+        trace_id: Trace ID int
+
+    Returns:
+        The trace ID as 32-byte hexadecimal string
+    """
+    return format(trace_id, "032x")
 
 
 def format_span_id(span_id: int) -> str:
-    return "0x{:016x}".format(span_id)
+    """Convenience span ID formatting method
+    Args:
+        span_id: Span ID int
 
-
-def get_hexadecimal_trace_id(trace_id: int) -> str:
-    return "{:032x}".format(trace_id)
-
-
-def get_hexadecimal_span_id(span_id: int) -> str:
-    return "{:016x}".format(span_id)
+    Returns:
+        The span ID as 16-byte hexadecimal string
+    """
+    return format(span_id, "016x")
