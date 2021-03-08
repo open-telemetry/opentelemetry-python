@@ -226,6 +226,17 @@ class TestOTLPSpanExporter(TestCase):
 
     # pylint: disable=no-self-use
     def test_otlp_compression_from_env(self):
+        # Just OTEL_EXPORTER_OTLP_COMPRESSION should work
+        with patch(
+            "opentelemetry.exporter.otlp.exporter.insecure_channel"
+        ) as mock_insecure_channel, patch.dict(
+            "os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "deflate"}
+        ):
+            OTLPSpanExporter(insecure=True)
+            mock_insecure_channel.assert_called_once_with(
+                "localhost:4317", compression=Compression.Deflate
+            )
+
         # Specifying kwarg should take precedence over env
         with patch(
             "opentelemetry.exporter.otlp.exporter.insecure_channel"
@@ -246,17 +257,6 @@ class TestOTLPSpanExporter(TestCase):
             OTLPSpanExporter(insecure=True)
             mock_insecure_channel.assert_called_once_with(
                 "localhost:4317", compression=Compression.NoCompression
-            )
-
-        # Just OTEL_EXPORTER_OTLP_COMPRESSION should work
-        with patch(
-            "opentelemetry.exporter.otlp.exporter.insecure_channel"
-        ) as mock_insecure_channel, patch.dict(
-            "os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "deflate"}
-        ):
-            OTLPSpanExporter(insecure=True)
-            mock_insecure_channel.assert_called_once_with(
-                "localhost:4317", compression=Compression.Deflate
             )
 
         # OTEL_EXPORTER_OTLP_SPAN_COMPRESSION as higher priority than

@@ -171,8 +171,8 @@ class OTLPExporterMixin(
         insecure: Connection type
         credentials: ChannelCredentials object for server authentication
         headers: Headers to send when exporting
-        compression: Compression algorithm to be used in channel
         timeout: Backend request timeout in seconds
+        compression: gRPC compression method to use
     """
 
     def __init__(
