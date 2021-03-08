@@ -122,18 +122,6 @@ tracer_provider.add_span_processor(mock_processor)
         out = run_general_code(False, False)
         self.assertTrue(out.startswith(b"0"))
 
-    def test_use_span_exception(self):
-        class TestUseSpanException(Exception):
-            pass
-
-        default_span = trace_api.NonRecordingSpan(
-            trace_api.INVALID_SPAN_CONTEXT
-        )
-        tracer = new_tracer()
-        with self.assertRaises(TestUseSpanException):
-            with tracer.use_span(default_span):
-                raise TestUseSpanException()
-
     def test_tracer_provider_accepts_concurrent_multi_span_processor(self):
         span_processor = trace.ConcurrentMultiSpanProcessor(2)
         tracer_provider = trace.TracerProvider(
@@ -307,7 +295,7 @@ class TestSpanCreation(unittest.TestCase):
         self.assertIsNone(root.end_time)
         self.assertEqual(root.kind, trace_api.SpanKind.INTERNAL)
 
-        with tracer.use_span(root, True):
+        with trace_api.use_span(root, True):
             self.assertIs(trace_api.get_current_span(), root)
 
             with tracer.start_span(
@@ -364,7 +352,7 @@ class TestSpanCreation(unittest.TestCase):
         self.assertIsNone(root.end_time)
 
         # Test with the implicit root span
-        with tracer.use_span(root, True):
+        with trace_api.use_span(root, True):
             self.assertIs(trace_api.get_current_span(), root)
 
             with tracer.start_span("stepchild", other_parent_context) as child:
@@ -947,7 +935,7 @@ class TestSpan(unittest.TestCase):
             .start_as_current_span("root")
         )
 
-    def test_override_error_status(self):
+    def test_last_status_wins(self):
         def error_status_test(context):
             with self.assertRaises(AssertionError):
                 with context as root:
@@ -956,8 +944,10 @@ class TestSpan(unittest.TestCase):
                     )
                     raise AssertionError("unknown")
 
-            self.assertIs(root.status.status_code, StatusCode.OK)
-            self.assertEqual(root.status.description, "OK")
+            self.assertIs(root.status.status_code, StatusCode.ERROR)
+            self.assertEqual(
+                root.status.description, "AssertionError: unknown"
+            )
 
         error_status_test(
             trace.TracerProvider().get_tracer(__name__).start_span("root")
