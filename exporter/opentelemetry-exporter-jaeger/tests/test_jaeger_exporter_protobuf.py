@@ -34,8 +34,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_ENDPOINT,
     OTEL_RESOURCE_ATTRIBUTES,
 )
-from opentelemetry.sdk.resources import SERVICE_NAME
-from opentelemetry.sdk.trace import Resource, TracerProvider
+from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import Status, StatusCode
 
