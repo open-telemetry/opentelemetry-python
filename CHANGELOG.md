@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Add `max_attr_value_length` support to Jaeger exporter
   ([#1633])(https://github.com/open-telemetry/opentelemetry-python/pull/1633)
+- Moved `use_span` from Tracer to `opentelemetry.trace.use_span`.
+  ([#1668](https://github.com/open-telemetry/opentelemetry-python/pull/1668))
+- `opentelemetry.trace.use_span()` will now overwrite previously set status on span in case an
+  exception is raised inside the context manager and `set_status_on_exception` is set to `True`.
+  ([#1668](https://github.com/open-telemetry/opentelemetry-python/pull/1668))
 - Add `udp_split_oversized_batches` support to jaeger exporter
   ([#1500](https://github.com/open-telemetry/opentelemetry-python/pull/1500))
 
@@ -24,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1656])(https://github.com/open-telemetry/opentelemetry-python/pull/1656)
 - Rename `DefaultSpan` to `NonRecordingSpan`
   ([#1661])(https://github.com/open-telemetry/opentelemetry-python/pull/1661)
+- Fixed distro configuration with `OTEL_TRACES_EXPORTER` env var set to `otlp`
+  ([#1657])(https://github.com/open-telemetry/opentelemetry-python/pull/1657)
 - Moving `Getter`, `Setter` and `TextMapPropagator` out of `opentelemetry.trace.propagation` and
   into `opentelemetry.propagators`
   ([#1662])(https://github.com/open-telemetry/opentelemetry-python/pull/1662)
