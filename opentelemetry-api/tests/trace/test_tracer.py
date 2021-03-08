@@ -29,11 +29,6 @@ class TestTracer(unittest.TestCase):
         with self.tracer.start_as_current_span("") as span:
             self.assertIsInstance(span, trace.Span)
 
-    def test_use_span(self):
-        span = trace.NonRecordingSpan(trace.INVALID_SPAN_CONTEXT)
-        with self.tracer.use_span(span):
-            pass
-
     def test_get_current_span(self):
         with self.tracer.start_as_current_span("test") as span:
             trace.get_current_span().set_attribute("test", "test")
