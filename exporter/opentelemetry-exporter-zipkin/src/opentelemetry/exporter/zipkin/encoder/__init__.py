@@ -28,10 +28,10 @@ from opentelemetry.sdk.trace import Event
 from opentelemetry.trace import (
     Span,
     SpanContext,
+    StatusCode,
     format_span_id,
     format_trace_id,
 )
-from opentelemetry.trace.status import StatusCode
 
 EncodedLocalEndpointT = TypeVar("EncodedLocalEndpointT")
 

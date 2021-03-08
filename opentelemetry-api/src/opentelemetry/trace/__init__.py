@@ -516,4 +516,5 @@ __all__ = [
     "set_span_in_context",
     "use_span",
     "Status",
+    "StatusCode",
 ]
