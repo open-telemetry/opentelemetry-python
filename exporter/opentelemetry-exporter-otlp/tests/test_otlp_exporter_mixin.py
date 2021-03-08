@@ -18,8 +18,8 @@ from unittest.mock import patch
 from grpc import Compression
 
 from opentelemetry.exporter.otlp.exporter import (
-    environ_to_compression,
     InvalidCompressionValueException,
+    environ_to_compression,
 )
 
 
