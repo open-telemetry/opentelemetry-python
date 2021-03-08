@@ -780,10 +780,7 @@ class Span(trace_api.Span, ReadableSpan):
                 self.record_exception(exception=exc_val, escaped=True)
             # Records status if span is used as context manager
             # i.e. with tracer.start_span() as span:
-            if (
-                self._status.status_code is StatusCode.UNSET
-                and self._set_status_on_exception
-            ):
+            if self._set_status_on_exception:
                 self.set_status(
                     Status(
                         status_code=StatusCode.ERROR,
@@ -873,7 +870,12 @@ class Tracer(trace_api.Tracer):
             record_exception=record_exception,
             set_status_on_exception=set_status_on_exception,
         )
-        with self.use_span(span, end_on_exit=end_on_exit) as span_context:
+        with trace_api.use_span(
+            span,
+            end_on_exit=end_on_exit,
+            record_exception=record_exception,
+            set_status_on_exception=set_status_on_exception,
+        ) as span_context:
             yield span_context
 
     def start_span(  # pylint: disable=too-many-locals
@@ -953,44 +955,6 @@ class Tracer(trace_api.Tracer):
         else:
             span = trace_api.NonRecordingSpan(context=span_context)
         return span
-
-    @contextmanager
-    def use_span(
-        self, span: trace_api.Span, end_on_exit: bool = False,
-    ) -> Iterator[trace_api.Span]:
-        try:
-            token = context_api.attach(context_api.set_value(SPAN_KEY, span))
-            try:
-                yield span
-            finally:
-                context_api.detach(token)
-
-        except Exception as exc:  # pylint: disable=broad-except
-            # Record the exception as an event
-            if isinstance(span, Span) and span.is_recording():
-                # pylint:disable=protected-access
-                if span._record_exception:
-                    span.record_exception(exc)
-
-                # Records status if use_span is used
-                # i.e. with tracer.start_as_current_span() as span:
-                if (
-                    span._status.status_code is StatusCode.UNSET
-                    and span._set_status_on_exception
-                ):
-                    span.set_status(
-                        Status(
-                            status_code=StatusCode.ERROR,
-                            description="{}: {}".format(
-                                type(exc).__name__, exc
-                            ),
-                        )
-                    )
-            raise
-
-        finally:
-            if end_on_exit:
-                span.end()
 
 
 class TracerProvider(trace_api.TracerProvider):
