@@ -71,8 +71,8 @@ def _get_exporter_names() -> Sequence[str]:
 def _init_tracing(
     exporters: Sequence[SpanExporter], id_generator: IdGenerator
 ):
-    # service_name = _get_service_name()
-    # if the OTEL_RESOURCE_ATTRIBUTES is given, it will the service_name from there else defaults to "unknown_service"
+    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
+    # from the env variable else defaults to "unknown_service"
     provider = TracerProvider(id_generator=id_generator(),)
     trace.set_tracer_provider(provider)
 

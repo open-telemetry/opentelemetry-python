@@ -60,15 +60,6 @@ class TestJaegerExporter(unittest.TestCase):
         self._test_span = trace._Span("test_span", context=context)
         self._test_span.start()
         self._test_span.end()
-        # self.get_provider_patcher = patch(
-        #     "opentelemetry.sdk.trace.TracerProvider", Provider
-        # )
-        # self.set_provider_patcher = patch(
-        #     "opentelemetry.exporter.jaeger.trace.get_tracer_provider", Provider
-        # )
-
-        # self.get_provider_mock = self.get_provider_patcher.start()
-        # self.set_provider_mock = self.set_provider_patcher.start()
 
         # pylint: disable=protected-access
 

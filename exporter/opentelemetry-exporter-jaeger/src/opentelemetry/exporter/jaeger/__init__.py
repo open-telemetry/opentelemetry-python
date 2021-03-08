@@ -180,9 +180,8 @@ class JaegerExporter(SpanExporter):
             else TRANSPORT_FORMAT_THRIFT
         )
         tracer_provider = trace.get_tracer_provider()
-        resource = tracer_provider.resource
         self.service_name = (
-            resource.attributes[SERVICE_NAME]
+            tracer_provider.resource.attributes[SERVICE_NAME]
             if getattr(tracer_provider, "resource", None)
             else "unknown_service"
         )
