@@ -37,7 +37,7 @@ from opentelemetry.sdk.trace import Resource, sampling
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.trace.status import StatusCode
+from opentelemetry.trace import StatusCode
 from opentelemetry.util.time import time_ns
 
 
@@ -835,18 +835,14 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(start_time, span.start_time)
 
         self.assertIsNotNone(span.status)
-        self.assertIs(
-            span.status.status_code, trace_api.status.StatusCode.UNSET
-        )
+        self.assertIs(span.status.status_code, trace_api.StatusCode.UNSET)
 
         # status
         new_status = trace_api.status.Status(
-            trace_api.status.StatusCode.ERROR, "Test description"
+            trace_api.StatusCode.ERROR, "Test description"
         )
         span.set_status(new_status)
-        self.assertIs(
-            span.status.status_code, trace_api.status.StatusCode.ERROR
-        )
+        self.assertIs(span.status.status_code, trace_api.StatusCode.ERROR)
         self.assertIs(span.status.description, "Test description")
 
     def test_start_accepts_context(self):
@@ -906,14 +902,12 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(root.name, "root")
 
         new_status = trace_api.status.Status(
-            trace_api.status.StatusCode.ERROR, "Test description"
+            trace_api.StatusCode.ERROR, "Test description"
         )
 
         with self.assertLogs(level=WARNING):
             root.set_status(new_status)
-        self.assertEqual(
-            root.status.status_code, trace_api.status.StatusCode.UNSET
-        )
+        self.assertEqual(root.status.status_code, trace_api.StatusCode.UNSET)
 
     def test_error_status(self):
         def error_status_test(context):

@@ -42,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1663](https://github.com/open-telemetry/opentelemetry-python/pull/1663))
 - Rename `JaegerSpanExporter` to `JaegerExporter` and rename `ZipkinSpanExporter` to `ZipkinExporter`
   ([#1664](https://github.com/open-telemetry/opentelemetry-python/pull/1664))
+- Expose `StatusCode` from the `opentelemetry.trace` module
+  ([#](https://github.com/open-telemetry/opentelemetry-python/pull/))
 
 ### Removed
 - Removed unused `get_hexadecimal_trace_id` and `get_hexadecimal_span_id` methods.
