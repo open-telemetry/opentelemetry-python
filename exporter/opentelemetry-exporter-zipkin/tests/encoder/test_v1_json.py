@@ -18,7 +18,7 @@ from opentelemetry.exporter.zipkin.encoder import NAME_KEY, VERSION_KEY
 from opentelemetry.exporter.zipkin.encoder.v1.json import JsonV1Encoder
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk import trace
-from opentelemetry.trace import TraceFlags
+from opentelemetry.trace import TraceFlags, format_span_id, format_trace_id
 
 from .common_tests import TEST_SERVICE_NAME, CommonEncoderTestCases
 
@@ -194,13 +194,13 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
 
         expected_output = [
             {
-                "traceId": format(trace_id, "032x"),
-                "id": format(span_id, "016x"),
+                "traceId": format_trace_id(trace_id),
+                "id": format_span_id(span_id),
                 "name": TEST_SERVICE_NAME,
                 "timestamp": JsonV1Encoder._nsec_to_usec_round(start_time),
                 "duration": JsonV1Encoder._nsec_to_usec_round(duration),
                 "debug": True,
-                "parentId": format(parent_id, "016x"),
+                "parentId": format_span_id(parent_id),
             }
         ]
 

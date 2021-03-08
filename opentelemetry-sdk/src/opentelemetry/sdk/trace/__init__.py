@@ -521,8 +521,12 @@ class ReadableSpan:
     @staticmethod
     def _format_context(context):
         x_ctx = OrderedDict()
-        x_ctx["trace_id"] = trace_api.format_trace_id(context.trace_id)
-        x_ctx["span_id"] = trace_api.format_span_id(context.span_id)
+        x_ctx["trace_id"] = "0x{}".format(
+            trace_api.format_trace_id(context.trace_id)
+        )
+        x_ctx["span_id"] = "0x{}".format(
+            trace_api.format_span_id(context.span_id)
+        )
         x_ctx["trace_state"] = repr(context.trace_state)
         return x_ctx
 
@@ -952,7 +956,9 @@ class Tracer(trace_api.Tracer):
 
     @contextmanager
     def use_span(
-        self, span: trace_api.Span, end_on_exit: bool = False,
+        self,
+        span: trace_api.Span,
+        end_on_exit: bool = False,
     ) -> Iterator[trace_api.Span]:
         try:
             token = context_api.attach(context_api.set_value(SPAN_KEY, span))
