@@ -47,7 +47,7 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.trace import Span as ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
-from opentelemetry.trace.status import StatusCode
+from opentelemetry.trace import StatusCode
 
 logger = logging.getLogger(__name__)
 
