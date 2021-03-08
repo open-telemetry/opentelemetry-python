@@ -23,6 +23,7 @@ from opentelemetry.propagators.textmap import (
     TextMapPropagator,
     TextMapPropagatorT,
 )
+from opentelemetry.trace import format_span_id, format_trace_id
 
 
 class B3Format(TextMapPropagator):
@@ -160,16 +161,6 @@ class B3Format(TextMapPropagator):
             self.PARENT_SPAN_ID_KEY,
             self.SAMPLED_KEY,
         }
-
-
-def format_trace_id(trace_id: int) -> str:
-    """Format the trace id according to b3 specification."""
-    return format(trace_id, "032x")
-
-
-def format_span_id(span_id: int) -> str:
-    """Format the span id according to b3 specification."""
-    return format(span_id, "016x")
 
 
 def _extract_first_element(

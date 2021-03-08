@@ -18,6 +18,7 @@ import typing
 import opentelemetry.trace as trace
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
+from opentelemetry.trace import format_span_id, format_trace_id
 from opentelemetry.trace.span import TraceState
 
 
@@ -96,10 +97,10 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         span_context = span.get_span_context()
         if span_context == trace.INVALID_SPAN_CONTEXT:
             return
-        traceparent_string = "00-{:032x}-{:016x}-{:02x}".format(
-            span_context.trace_id,
-            span_context.span_id,
+        traceparent_string = "00-{trace_id}-{span_id}-{:02x}".format(
             span_context.trace_flags,
+            trace_id=format_trace_id(span_context.trace_id),
+            span_id=format_span_id(span_context.span_id),
         )
         set_in_carrier(
             carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string
