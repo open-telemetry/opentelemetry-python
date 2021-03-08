@@ -90,7 +90,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_PASSWORD,
     OTEL_EXPORTER_JAEGER_USER,
 )
-from opentelemetry.sdk.resources import SERVICE_NAME
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
 DEFAULT_AGENT_HOST_NAME = "localhost"
@@ -183,7 +183,7 @@ class JaegerExporter(SpanExporter):
         self.service_name = (
             tracer_provider.resource.attributes[SERVICE_NAME]
             if getattr(tracer_provider, "resource", None)
-            else "unknown_service"
+            else Resource.create({})
         )
 
     @property

@@ -26,7 +26,7 @@ from opencensus.proto.trace.v1 import trace_pb2
 
 import opentelemetry.exporter.opencensus.util as utils
 from opentelemetry import trace
-from opentelemetry.sdk.resources import SERVICE_NAME
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
@@ -52,7 +52,7 @@ class OpenCensusSpanExporter(SpanExporter):
         service_name = (
             tracer_provider.resource.attributes[SERVICE_NAME]
             if getattr(tracer_provider, "resource", None)
-            else "unknown_service"
+            else Resource.create({})
         )
         self.endpoint = endpoint
         if client is None:
