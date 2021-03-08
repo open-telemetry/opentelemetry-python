@@ -80,9 +80,11 @@ from enum import Enum
 from logging import getLogger
 from typing import Iterator, Optional, Sequence, cast
 
+from opentelemetry import context as context_api
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_TRACER_PROVIDER
 from opentelemetry.trace.propagation import (
+    SPAN_KEY,
     get_current_span,
     set_span_in_context,
 )
@@ -101,7 +103,7 @@ from opentelemetry.trace.span import (
     format_span_id,
     format_trace_id,
 )
-from opentelemetry.trace.status import Status
+from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 from opentelemetry.util._providers import _load_provider
 
@@ -324,7 +326,7 @@ class Tracer(ABC):
         is equivalent to::
 
             span = tracer.start_span(name)
-            with tracer.use_span(span, end_on_exit=True):
+            with opentelemetry.trace.use_span(span, end_on_exit=True):
                 do_work()
 
         Args:
@@ -348,28 +350,6 @@ class Tracer(ABC):
 
         Yields:
             The newly-created span.
-        """
-
-    @contextmanager  # type: ignore
-    @abstractmethod
-    def use_span(
-        self, span: "Span", end_on_exit: bool = False,
-    ) -> Iterator[None]:
-        """Context manager for setting the passed span as the
-        current span in the context, as well as resetting the
-        context back upon exiting the context manager.
-
-        Set the given span as the current span in this tracer's context.
-
-        On exiting the context manager set the span that was previously active
-        as the current span (this is usually but not necessarily the parent of
-        the given span). If ``end_on_exit`` is ``True``, then the span is also
-        ended when exiting the context manager.
-
-        Args:
-            span: The span to start and make current.
-            end_on_exit: Whether to end the span automatically when leaving the
-                context manager.
         """
 
 
@@ -408,13 +388,6 @@ class DefaultTracer(Tracer):
     ) -> Iterator["Span"]:
         # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN
-
-    @contextmanager  # type: ignore
-    def use_span(
-        self, span: "Span", end_on_exit: bool = False,
-    ) -> Iterator[None]:
-        # pylint: disable=unused-argument,no-self-use
-        yield
 
 
 _TRACER_PROVIDER = None
@@ -466,6 +439,55 @@ def get_tracer_provider() -> TracerProvider:
     return _TRACER_PROVIDER
 
 
+@contextmanager  # type: ignore
+def use_span(
+    span: Span,
+    end_on_exit: bool = False,
+    record_exception: bool = True,
+    set_status_on_exception: bool = True,
+) -> Iterator[Span]:
+    """Takes a non-active span and activates it in the current context.
+
+    Args:
+        span: The span that should be activated in the current context.
+        end_on_exit: Whether to end the span automatically when leaving the
+            context manager scope.
+        record_exception: Whether to record any exceptions raised within the
+            context as error event on the span.
+        set_status_on_exception: Only relevant if the returned span is used
+            in a with/context manager. Defines wether the span status will
+            be automatically set to ERROR when an uncaught exception is
+            raised in the span with block. The span status won't be set by
+            this mechanism if it was previously set manually.
+    """
+    try:
+        token = context_api.attach(context_api.set_value(SPAN_KEY, span))
+        try:
+            yield span
+        finally:
+            context_api.detach(token)
+
+    except Exception as exc:  # pylint: disable=broad-except
+        if isinstance(span, Span) and span.is_recording():
+            # Record the exception as an event
+            if record_exception:
+                span.record_exception(exc)
+
+            # Set status in case exception was raised
+            if set_status_on_exception:
+                span.set_status(
+                    Status(
+                        status_code=StatusCode.ERROR,
+                        description="{}: {}".format(type(exc).__name__, exc),
+                    )
+                )
+        raise
+
+    finally:
+        if end_on_exit:
+            span.end()
+
+
 __all__ = [
     "DEFAULT_TRACE_OPTIONS",
     "DEFAULT_TRACE_STATE",
@@ -492,5 +514,6 @@ __all__ = [
     "get_tracer_provider",
     "set_tracer_provider",
     "set_span_in_context",
+    "use_span",
     "Status",
 ]
