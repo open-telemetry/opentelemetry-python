@@ -59,12 +59,6 @@ def get_context_new_carrier(old_carrier, carrier_baggage=None):
     return ctx, new_carrier
 
 
-def _format_uber_trace_id(trace_id, span_id, parent_span_id, flags):
-    return "{:032x}:{:016x}:{:016x}:{:02x}".format(
-        trace_id, span_id, parent_span_id, flags
-    )
-
-
 class TestJaegerPropagator(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
@@ -72,7 +66,7 @@ class TestJaegerPropagator(unittest.TestCase):
         cls.trace_id = generator.generate_trace_id()
         cls.span_id = generator.generate_span_id()
         cls.parent_span_id = generator.generate_span_id()
-        cls.serialized_uber_trace_id = _format_uber_trace_id(
+        cls.serialized_uber_trace_id = jaeger._format_uber_trace_id(  # pylint: disable=protected-access
             cls.trace_id, cls.span_id, cls.parent_span_id, 11
         )
 
@@ -123,7 +117,7 @@ class TestJaegerPropagator(unittest.TestCase):
         self.assertEqual(FORMAT.DEBUG_FLAG, debug_flag_value)
 
     def test_sample_debug_flags_unset(self):
-        uber_trace_id = _format_uber_trace_id(
+        uber_trace_id = jaeger._format_uber_trace_id(  # pylint: disable=protected-access
             self.trace_id, self.span_id, self.parent_span_id, 0
         )
         old_carrier = {FORMAT.TRACE_ID_KEY: uber_trace_id}
