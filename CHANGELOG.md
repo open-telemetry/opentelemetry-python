@@ -16,7 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1668](https://github.com/open-telemetry/opentelemetry-python/pull/1668))
 
 ### Changed
-- remove `service_name` parameter from constructor of jaeger and opencensus
+- remove `service_name` from constructor of jaeger and opencensus exporters and 
+  use of env variable `OTEL_PYTHON_SERVICE_NAME`
   ([#1669])(https://github.com/open-telemetry/opentelemetry-python/pull/1669)
 - Rename `IdsGenerator` to `IdGenerator`
   ([#1651])(https://github.com/open-telemetry/opentelemetry-python/pull/1651)
