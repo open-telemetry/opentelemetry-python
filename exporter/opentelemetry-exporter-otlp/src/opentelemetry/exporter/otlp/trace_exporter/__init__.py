@@ -70,6 +70,7 @@ class OTLPSpanExporter(
         credentials: Credentials object for server authentication
         headers: Headers to send when exporting
         timeout: Backend request timeout in seconds
+        compression: gRPC compression method to use
     """
 
     _result = SpanExportResult

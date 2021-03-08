@@ -61,14 +61,23 @@ _ENVIRON_TO_COMPRESSION = {
 }
 
 
-def environ_to_compression(environ_key: str) -> Optional[Compression]:
-    environ_value = environ.get(environ_key)
-    if environ_value not in _ENVIRON_TO_COMPRESSION:
-        raise Exception(
+class InvalidCompressionValueException(Exception):
+    def __init__(self, environ_key: str, environ_value: str):
+        super().__init__(
             'Invalid value "{}" for compression envvar {}'.format(
                 environ_value, environ_key
             )
         )
+
+
+def environ_to_compression(environ_key: str) -> Optional[Compression]:
+    environ_value = (
+        environ[environ_key].lower().strip()
+        if environ_key in environ
+        else None
+    )
+    if environ_value not in _ENVIRON_TO_COMPRESSION:
+        raise InvalidCompressionValueException(environ_key, environ_value)
     return _ENVIRON_TO_COMPRESSION[environ_value]
 
 
