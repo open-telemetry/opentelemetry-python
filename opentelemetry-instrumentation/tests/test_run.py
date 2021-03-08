@@ -18,9 +18,7 @@ from os.path import abspath, dirname, pathsep
 from unittest import TestCase
 from unittest.mock import patch
 
-from opentelemetry.environment_variables import (
-    OTEL_TRACES_EXPORTER,
-)
+from opentelemetry.environment_variables import OTEL_TRACES_EXPORTER
 from opentelemetry.instrumentation import auto_instrumentation
 
 
