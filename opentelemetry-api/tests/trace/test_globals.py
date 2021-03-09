@@ -44,6 +44,7 @@ class TestGlobals(unittest.TestCase):
 
 class TestTracer(unittest.TestCase):
     def setUp(self):
+        # pylint: disable=protected-access
         self.tracer = trace._DefaultTracer()
 
     def test_get_current_span(self):

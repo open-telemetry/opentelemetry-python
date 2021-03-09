@@ -19,6 +19,7 @@ from opentelemetry import trace
 
 class TestTracer(unittest.TestCase):
     def setUp(self):
+        # pylint: disable=protected-access
         self.tracer = trace._DefaultTracer()
 
     def test_start_span(self):
