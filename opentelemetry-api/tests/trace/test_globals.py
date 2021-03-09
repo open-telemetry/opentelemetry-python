@@ -44,10 +44,10 @@ class TestGlobals(unittest.TestCase):
 
 class TestTracer(unittest.TestCase):
     def setUp(self):
-        self.tracer = trace.DefaultTracer()
+        self.tracer = trace._DefaultTracer()
 
     def test_get_current_span(self):
-        """DefaultTracer's start_span will also
+        """_DefaultTracer's start_span will also
         be retrievable via get_current_span
         """
         self.assertEqual(trace.get_current_span(), trace.INVALID_SPAN)

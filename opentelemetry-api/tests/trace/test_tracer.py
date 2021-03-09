@@ -19,7 +19,7 @@ from opentelemetry import trace
 
 class TestTracer(unittest.TestCase):
     def setUp(self):
-        self.tracer = trace.DefaultTracer()
+        self.tracer = trace._DefaultTracer()
 
     def test_start_span(self):
         with self.tracer.start_span("") as span:
