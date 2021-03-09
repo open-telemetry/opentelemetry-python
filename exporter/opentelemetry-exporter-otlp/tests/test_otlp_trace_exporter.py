@@ -113,7 +113,7 @@ class TraceServiceServicerALREADY_EXISTS(TraceServiceServicer):
 class TestOTLPSpanExporter(TestCase):
     def setUp(self):
         tracer_provider = TracerProvider()
-        self.exporter = OTLPSpanExporter(insecure=True)
+        self.exporter = OTLPSpanExporter()
         tracer_provider.add_span_processor(SimpleSpanProcessor(self.exporter))
         self.tracer = tracer_provider.get_tracer(__name__)
 
@@ -188,16 +188,6 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(kwargs["timeout"], 10)
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
-
-    @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
-    @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
-    @patch("opentelemetry.exporter.otlp.trace_exporter.OTLPSpanExporter._stub")
-    # pylint: disable=unused-argument
-    def test_no_credentials_error(
-        self, mock_ssl_channel, mock_secure, mock_stub
-    ):
-        OTLPSpanExporter(insecure=False)
-        self.assertTrue(mock_ssl_channel.called)
 
     @patch.dict(
         "os.environ",

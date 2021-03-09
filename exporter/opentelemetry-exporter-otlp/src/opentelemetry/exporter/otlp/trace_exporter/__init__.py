@@ -21,8 +21,8 @@ from grpc import ChannelCredentials
 
 from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
+    _get_credentials,
     _get_resource_data,
-    _load_credential_from_file,
     _translate_key_values,
 )
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
@@ -42,7 +42,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE,
     OTEL_EXPORTER_OTLP_SPAN_ENDPOINT,
     OTEL_EXPORTER_OTLP_SPAN_HEADERS,
-    OTEL_EXPORTER_OTLP_SPAN_INSECURE,
     OTEL_EXPORTER_OTLP_SPAN_TIMEOUT,
 )
 from opentelemetry.sdk.trace import Span as ReadableSpan
@@ -64,8 +63,8 @@ class OTLPSpanExporter(
 
     Args:
         endpoint: OpenTelemetry Collector receiver endpoint
-        insecure: Connection type
-        credentials: Credentials object for server authentication
+        credentials: Optional ChannelCredentials object for server authentication.
+            Set to None to use insecure channel.
         headers: Headers to send when exporting
         timeout: Backend request timeout in seconds
     """
@@ -76,21 +75,13 @@ class OTLPSpanExporter(
     def __init__(
         self,
         endpoint: Optional[str] = None,
-        insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[Sequence] = None,
         timeout: Optional[int] = None,
     ):
-        if insecure is None:
-            insecure = environ.get(OTEL_EXPORTER_OTLP_SPAN_INSECURE)
-
-        if (
-            not insecure
-            and environ.get(OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE) is not None
-        ):
-            credentials = credentials or _load_credential_from_file(
-                environ.get(OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE)
-            )
+        credentials = _get_credentials(
+            credentials, OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE
+        )
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_SPAN_TIMEOUT)
         environ_timeout = (
@@ -101,7 +92,6 @@ class OTLPSpanExporter(
             **{
                 "endpoint": endpoint
                 or environ.get(OTEL_EXPORTER_OTLP_SPAN_ENDPOINT),
-                "insecure": insecure,
                 "credentials": credentials,
                 "headers": headers
                 or environ.get(OTEL_EXPORTER_OTLP_SPAN_HEADERS),

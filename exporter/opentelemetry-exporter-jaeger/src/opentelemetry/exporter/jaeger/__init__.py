@@ -44,7 +44,6 @@ Usage
         # collector_endpoint='http://localhost:14268/api/traces?format=jaeger.thrift',
         # username=xxxx, # optional
         # password=xxxx, # optional
-        # insecure=True, # optional
         # credentials=xxx # optional channel creds
         # transport_format='protobuf' # optional
         # max_tag_value_length=None # optional
@@ -119,8 +118,8 @@ class JaegerExporter(SpanExporter):
             required.
         password: The password of the Basic Auth if authentication is
             required.
-        insecure: True if collector has no encryption or authentication
-        credentials: Credentials for server authentication.
+        credentials: Optional Credentials for server authentication. Set to None to use
+            insecure channel.
         transport_format: Transport format for exporting spans to collector.
         max_tag_value_length: Max length string attribute values can have. Set to None to disable.
         udp_split_oversized_batches: Re-emit oversized batches in smaller chunks.
@@ -134,7 +133,6 @@ class JaegerExporter(SpanExporter):
         collector_endpoint: Optional[str] = None,
         username: Optional[str] = None,
         password: Optional[str] = None,
-        insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
         transport_format: Optional[str] = None,
         max_tag_value_length: Optional[int] = None,
@@ -187,7 +185,6 @@ class JaegerExporter(SpanExporter):
         )
         self._collector = None
         self._grpc_client = None
-        self.insecure = util._get_insecure(insecure)
         self.credentials = util._get_credentials(credentials)
         self.transport_format = (
             transport_format.lower()
@@ -203,7 +200,7 @@ class JaegerExporter(SpanExporter):
         endpoint = self.collector_endpoint or DEFAULT_GRPC_COLLECTOR_ENDPOINT
 
         if self._grpc_client is None:
-            if self.insecure:
+            if self.credentials is None:
                 self._grpc_client = CollectorServiceStub(
                     insecure_channel(endpoint)
                 )
