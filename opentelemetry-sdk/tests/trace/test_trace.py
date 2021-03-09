@@ -516,7 +516,7 @@ class TestSpanCreation(unittest.TestCase):
         )
         self.assertEqual(
             span.resource.attributes.get(resources.TELEMETRY_SDK_VERSION),
-            resources.OPENTELEMETRY_SDK_VERSION,
+            resources._OPENTELEMETRY_SDK_VERSION,
         )
 
     def test_span_context_remote_flag(self):
