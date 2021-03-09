@@ -101,11 +101,15 @@ machine.
 
 1. Install scalene using the following command
 
-`pip install scalene`
+```sh
+pip install scalene
+```
 
 2. Run the `scalene` tests on any of the example Python programs
 
-`scalene opentelemetry-<PACKAGE>/tests/performance/resource-usage/<PATH_TO_TEST>/profile_resource_usage_<NAME_OF_TEST>.py`
+```sh
+scalene opentelemetry-<PACKAGE>/tests/performance/resource-usage/<PATH_TO_TEST>/profile_resource_usage_<NAME_OF_TEST>.py
+```
 
 
 ## Documentation

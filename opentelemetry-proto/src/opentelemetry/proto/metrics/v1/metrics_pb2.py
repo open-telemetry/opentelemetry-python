@@ -21,7 +21,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='opentelemetry.proto.metrics.v1',
   syntax='proto3',
   serialized_options=b'\n!io.opentelemetry.proto.metrics.v1B\014MetricsProtoP\001Z?github.com/open-telemetry/opentelemetry-proto/gen/go/metrics/v1',
-  serialized_pb=b'\n,opentelemetry/proto/metrics/v1/metrics.proto\x12\x1eopentelemetry.proto.metrics.v1\x1a*opentelemetry/proto/common/v1/common.proto\x1a.opentelemetry/proto/resource/v1/resource.proto\"\xb6\x01\n\x0fResourceMetrics\x12;\n\x08resource\x18\x01 \x01(\x0b\x32).opentelemetry.proto.resource.v1.Resource\x12\x66\n\x1finstrumentation_library_metrics\x18\x02 \x03(\x0b\x32=.opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics\"\xb0\x01\n\x1dInstrumentationLibraryMetrics\x12V\n\x17instrumentation_library\x18\x01 \x01(\x0b\x32\x35.opentelemetry.proto.common.v1.InstrumentationLibrary\x12\x37\n\x07metrics\x18\x02 \x03(\x0b\x32&.opentelemetry.proto.metrics.v1.Metric\"\xd5\x03\n\x06Metric\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x0c\n\x04unit\x18\x03 \x01(\t\x12=\n\tint_gauge\x18\x04 \x01(\x0b\x32(.opentelemetry.proto.metrics.v1.IntGaugeH\x00\x12\x43\n\x0c\x64ouble_gauge\x18\x05 \x01(\x0b\x32+.opentelemetry.proto.metrics.v1.DoubleGaugeH\x00\x12\x39\n\x07int_sum\x18\x06 \x01(\x0b\x32&.opentelemetry.proto.metrics.v1.IntSumH\x00\x12?\n\ndouble_sum\x18\x07 \x01(\x0b\x32).opentelemetry.proto.metrics.v1.DoubleSumH\x00\x12\x45\n\rint_histogram\x18\x08 \x01(\x0b\x32,.opentelemetry.proto.metrics.v1.IntHistogramH\x00\x12K\n\x10\x64ouble_histogram\x18\t \x01(\x0b\x32/.opentelemetry.proto.metrics.v1.DoubleHistogramH\x00\x42\x06\n\x04\x64\x61ta\"M\n\x08IntGauge\x12\x41\n\x0b\x64\x61ta_points\x18\x01 \x03(\x0b\x32,.opentelemetry.proto.metrics.v1.IntDataPoint\"S\n\x0b\x44oubleGauge\x12\x44\n\x0b\x64\x61ta_points\x18\x01 \x03(\x0b\x32/.opentelemetry.proto.metrics.v1.DoubleDataPoint\"\xba\x01\n\x06IntSum\x12\x41\n\x0b\x64\x61ta_points\x18\x01 \x03(\x0b\x32,.opentelemetry.proto.metrics.v1.IntDataPoint\x12W\n\x17\x61ggregation_temporality\x18\x02 \x01(\x0e\x32\x36.opentelemetry.proto.metrics.v1.AggregationTemporality\x12\x14\n\x0cis_monotonic\x18\x03 \x01(\x08\"\xc0\x01\n\tDoubleSum\x12\x44\n\x0b\x64\x61ta_points\x18\x01 \x03(\x0b\x32/.opentelemetry.proto.metrics.v1.DoubleDataPoint\x12W\n\x17\x61ggregation_temporality\x18\x02 \x01(\x0e\x32\x36.opentelemetry.proto.metrics.v1.AggregationTemporality\x12\x14\n\x0cis_monotonic\x18\x03 \x01(\x08\"\xb3\x01\n\x0cIntHistogram\x12J\n\x0b\x64\x61ta_points\x18\x01 \x03(\x0b\x32\x35.opentelemetry.proto.metrics.v1.IntHistogramDataPoint\x12W\n\x17\x61ggregation_temporality\x18\x02 \x01(\x0e\x32\x36.opentelemetry.proto.metrics.v1.AggregationTemporality\"\xb9\x01\n\x0f\x44oubleHistogram\x12M\n\x0b\x64\x61ta_points\x18\x01 \x03(\x0b\x32\x38.opentelemetry.proto.metrics.v1.DoubleHistogramDataPoint\x12W\n\x17\x61ggregation_temporality\x18\x02 \x01(\x0e\x32\x36.opentelemetry.proto.metrics.v1.AggregationTemporality\"\xd2\x01\n\x0cIntDataPoint\x12=\n\x06labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x1c\n\x14start_time_unix_nano\x18\x02 \x01(\x06\x12\x16\n\x0etime_unix_nano\x18\x03 \x01(\x06\x12\r\n\x05value\x18\x04 \x01(\x10\x12>\n\texemplars\x18\x05 \x03(\x0b\x32+.opentelemetry.proto.metrics.v1.IntExemplar\"\xd8\x01\n\x0f\x44oubleDataPoint\x12=\n\x06labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x1c\n\x14start_time_unix_nano\x18\x02 \x01(\x06\x12\x16\n\x0etime_unix_nano\x18\x03 \x01(\x06\x12\r\n\x05value\x18\x04 \x01(\x01\x12\x41\n\texemplars\x18\x05 \x03(\x0b\x32..opentelemetry.proto.metrics.v1.DoubleExemplar\"\x98\x02\n\x15IntHistogramDataPoint\x12=\n\x06labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x1c\n\x14start_time_unix_nano\x18\x02 \x01(\x06\x12\x16\n\x0etime_unix_nano\x18\x03 \x01(\x06\x12\r\n\x05\x63ount\x18\x04 \x01(\x06\x12\x0b\n\x03sum\x18\x05 \x01(\x10\x12\x15\n\rbucket_counts\x18\x06 \x03(\x06\x12\x17\n\x0f\x65xplicit_bounds\x18\x07 \x03(\x01\x12>\n\texemplars\x18\x08 \x03(\x0b\x32+.opentelemetry.proto.metrics.v1.IntExemplar\"\x9e\x02\n\x18\x44oubleHistogramDataPoint\x12=\n\x06labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x1c\n\x14start_time_unix_nano\x18\x02 \x01(\x06\x12\x16\n\x0etime_unix_nano\x18\x03 \x01(\x06\x12\r\n\x05\x63ount\x18\x04 \x01(\x06\x12\x0b\n\x03sum\x18\x05 \x01(\x01\x12\x15\n\rbucket_counts\x18\x06 \x03(\x06\x12\x17\n\x0f\x65xplicit_bounds\x18\x07 \x03(\x01\x12\x41\n\texemplars\x18\x08 \x03(\x0b\x32..opentelemetry.proto.metrics.v1.DoubleExemplar\"\x9f\x01\n\x0bIntExemplar\x12\x46\n\x0f\x66iltered_labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x16\n\x0etime_unix_nano\x18\x02 \x01(\x06\x12\r\n\x05value\x18\x03 \x01(\x10\x12\x0f\n\x07span_id\x18\x04 \x01(\x0c\x12\x10\n\x08trace_id\x18\x05 \x01(\x0c\"\xa2\x01\n\x0e\x44oubleExemplar\x12\x46\n\x0f\x66iltered_labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x16\n\x0etime_unix_nano\x18\x02 \x01(\x06\x12\r\n\x05value\x18\x03 \x01(\x01\x12\x0f\n\x07span_id\x18\x04 \x01(\x0c\x12\x10\n\x08trace_id\x18\x05 \x01(\x0c*\x8c\x01\n\x16\x41ggregationTemporality\x12\'\n#AGGREGATION_TEMPORALITY_UNSPECIFIED\x10\x00\x12!\n\x1d\x41GGREGATION_TEMPORALITY_DELTA\x10\x01\x12&\n\"AGGREGATION_TEMPORALITY_CUMULATIVE\x10\x02\x42t\n!io.opentelemetry.proto.metrics.v1B\x0cMetricsProtoP\x01Z?github.com/open-telemetry/opentelemetry-proto/gen/go/metrics/v1b\x06proto3'
+  serialized_pb=b'\n,opentelemetry/proto/metrics/v1/metrics.proto\x12\x1eopentelemetry.proto.metrics.v1\x1a*opentelemetry/proto/common/v1/common.proto\x1a.opentelemetry/proto/resource/v1/resource.proto\"\xb6\x01\n\x0fResourceMetrics\x12;\n\x08resource\x18\x01 \x01(\x0b\x32).opentelemetry.proto.resource.v1.Resource\x12\x66\n\x1finstrumentation_library_metrics\x18\x02 \x03(\x0b\x32=.opentelemetry.proto.metrics.v1.InstrumentationLibraryMetrics\"\xb0\x01\n\x1dInstrumentationLibraryMetrics\x12V\n\x17instrumentation_library\x18\x01 \x01(\x0b\x32\x35.opentelemetry.proto.common.v1.InstrumentationLibrary\x12\x37\n\x07metrics\x18\x02 \x03(\x0b\x32&.opentelemetry.proto.metrics.v1.Metric\"\x9e\x04\n\x06Metric\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x13\n\x0b\x64\x65scription\x18\x02 \x01(\t\x12\x0c\n\x04unit\x18\x03 \x01(\t\x12=\n\tint_gauge\x18\x04 \x01(\x0b\x32(.opentelemetry.proto.metrics.v1.IntGaugeH\x00\x12\x43\n\x0c\x64ouble_gauge\x18\x05 \x01(\x0b\x32+.opentelemetry.proto.metrics.v1.DoubleGaugeH\x00\x12\x39\n\x07int_sum\x18\x06 \x01(\x0b\x32&.opentelemetry.proto.metrics.v1.IntSumH\x00\x12?\n\ndouble_sum\x18\x07 \x01(\x0b\x32).opentelemetry.proto.metrics.v1.DoubleSumH\x00\x12\x45\n\rint_histogram\x18\x08 \x01(\x0b\x32,.opentelemetry.proto.metrics.v1.IntHistogramH\x00\x12K\n\x10\x64ouble_histogram\x18\t \x01(\x0b\x32/.opentelemetry.proto.metrics.v1.DoubleHistogramH\x00\x12G\n\x0e\x64ouble_summary\x18\x0b \x01(\x0b\x32-.opentelemetry.proto.metrics.v1.DoubleSummaryH\x00\x42\x06\n\x04\x64\x61ta\"M\n\x08IntGauge\x12\x41\n\x0b\x64\x61ta_points\x18\x01 \x03(\x0b\x32,.opentelemetry.proto.metrics.v1.IntDataPoint\"S\n\x0b\x44oubleGauge\x12\x44\n\x0b\x64\x61ta_points\x18\x01 \x03(\x0b\x32/.opentelemetry.proto.metrics.v1.DoubleDataPoint\"\xba\x01\n\x06IntSum\x12\x41\n\x0b\x64\x61ta_points\x18\x01 \x03(\x0b\x32,.opentelemetry.proto.metrics.v1.IntDataPoint\x12W\n\x17\x61ggregation_temporality\x18\x02 \x01(\x0e\x32\x36.opentelemetry.proto.metrics.v1.AggregationTemporality\x12\x14\n\x0cis_monotonic\x18\x03 \x01(\x08\"\xc0\x01\n\tDoubleSum\x12\x44\n\x0b\x64\x61ta_points\x18\x01 \x03(\x0b\x32/.opentelemetry.proto.metrics.v1.DoubleDataPoint\x12W\n\x17\x61ggregation_temporality\x18\x02 \x01(\x0e\x32\x36.opentelemetry.proto.metrics.v1.AggregationTemporality\x12\x14\n\x0cis_monotonic\x18\x03 \x01(\x08\"\xb3\x01\n\x0cIntHistogram\x12J\n\x0b\x64\x61ta_points\x18\x01 \x03(\x0b\x32\x35.opentelemetry.proto.metrics.v1.IntHistogramDataPoint\x12W\n\x17\x61ggregation_temporality\x18\x02 \x01(\x0e\x32\x36.opentelemetry.proto.metrics.v1.AggregationTemporality\"\xb9\x01\n\x0f\x44oubleHistogram\x12M\n\x0b\x64\x61ta_points\x18\x01 \x03(\x0b\x32\x38.opentelemetry.proto.metrics.v1.DoubleHistogramDataPoint\x12W\n\x17\x61ggregation_temporality\x18\x02 \x01(\x0e\x32\x36.opentelemetry.proto.metrics.v1.AggregationTemporality\"\\\n\rDoubleSummary\x12K\n\x0b\x64\x61ta_points\x18\x01 \x03(\x0b\x32\x36.opentelemetry.proto.metrics.v1.DoubleSummaryDataPoint\"\xd2\x01\n\x0cIntDataPoint\x12=\n\x06labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x1c\n\x14start_time_unix_nano\x18\x02 \x01(\x06\x12\x16\n\x0etime_unix_nano\x18\x03 \x01(\x06\x12\r\n\x05value\x18\x04 \x01(\x10\x12>\n\texemplars\x18\x05 \x03(\x0b\x32+.opentelemetry.proto.metrics.v1.IntExemplar\"\xd8\x01\n\x0f\x44oubleDataPoint\x12=\n\x06labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x1c\n\x14start_time_unix_nano\x18\x02 \x01(\x06\x12\x16\n\x0etime_unix_nano\x18\x03 \x01(\x06\x12\r\n\x05value\x18\x04 \x01(\x01\x12\x41\n\texemplars\x18\x05 \x03(\x0b\x32..opentelemetry.proto.metrics.v1.DoubleExemplar\"\x98\x02\n\x15IntHistogramDataPoint\x12=\n\x06labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x1c\n\x14start_time_unix_nano\x18\x02 \x01(\x06\x12\x16\n\x0etime_unix_nano\x18\x03 \x01(\x06\x12\r\n\x05\x63ount\x18\x04 \x01(\x06\x12\x0b\n\x03sum\x18\x05 \x01(\x10\x12\x15\n\rbucket_counts\x18\x06 \x03(\x06\x12\x17\n\x0f\x65xplicit_bounds\x18\x07 \x03(\x01\x12>\n\texemplars\x18\x08 \x03(\x0b\x32+.opentelemetry.proto.metrics.v1.IntExemplar\"\x9e\x02\n\x18\x44oubleHistogramDataPoint\x12=\n\x06labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x1c\n\x14start_time_unix_nano\x18\x02 \x01(\x06\x12\x16\n\x0etime_unix_nano\x18\x03 \x01(\x06\x12\r\n\x05\x63ount\x18\x04 \x01(\x06\x12\x0b\n\x03sum\x18\x05 \x01(\x01\x12\x15\n\rbucket_counts\x18\x06 \x03(\x06\x12\x17\n\x0f\x65xplicit_bounds\x18\x07 \x03(\x01\x12\x41\n\texemplars\x18\x08 \x03(\x0b\x32..opentelemetry.proto.metrics.v1.DoubleExemplar\"\xbe\x02\n\x16\x44oubleSummaryDataPoint\x12=\n\x06labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x1c\n\x14start_time_unix_nano\x18\x02 \x01(\x06\x12\x16\n\x0etime_unix_nano\x18\x03 \x01(\x06\x12\r\n\x05\x63ount\x18\x04 \x01(\x06\x12\x0b\n\x03sum\x18\x05 \x01(\x01\x12_\n\x0fquantile_values\x18\x06 \x03(\x0b\x32\x46.opentelemetry.proto.metrics.v1.DoubleSummaryDataPoint.ValueAtQuantile\x1a\x32\n\x0fValueAtQuantile\x12\x10\n\x08quantile\x18\x01 \x01(\x01\x12\r\n\x05value\x18\x02 \x01(\x01\"\x9f\x01\n\x0bIntExemplar\x12\x46\n\x0f\x66iltered_labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x16\n\x0etime_unix_nano\x18\x02 \x01(\x06\x12\r\n\x05value\x18\x03 \x01(\x10\x12\x0f\n\x07span_id\x18\x04 \x01(\x0c\x12\x10\n\x08trace_id\x18\x05 \x01(\x0c\"\xa2\x01\n\x0e\x44oubleExemplar\x12\x46\n\x0f\x66iltered_labels\x18\x01 \x03(\x0b\x32-.opentelemetry.proto.common.v1.StringKeyValue\x12\x16\n\x0etime_unix_nano\x18\x02 \x01(\x06\x12\r\n\x05value\x18\x03 \x01(\x01\x12\x0f\n\x07span_id\x18\x04 \x01(\x0c\x12\x10\n\x08trace_id\x18\x05 \x01(\x0c*\x8c\x01\n\x16\x41ggregationTemporality\x12\'\n#AGGREGATION_TEMPORALITY_UNSPECIFIED\x10\x00\x12!\n\x1d\x41GGREGATION_TEMPORALITY_DELTA\x10\x01\x12&\n\"AGGREGATION_TEMPORALITY_CUMULATIVE\x10\x02\x42t\n!io.opentelemetry.proto.metrics.v1B\x0cMetricsProtoP\x01Z?github.com/open-telemetry/opentelemetry-proto/gen/go/metrics/v1b\x06proto3'
   ,
   dependencies=[opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2.DESCRIPTOR,opentelemetry_dot_proto_dot_resource_dot_v1_dot_resource__pb2.DESCRIPTOR,])
 
@@ -46,8 +46,8 @@ _AGGREGATIONTEMPORALITY = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=3258,
-  serialized_end=3398,
+  serialized_start=3746,
+  serialized_end=3886,
 )
 _sym_db.RegisterEnumDescriptor(_AGGREGATIONTEMPORALITY)
 
@@ -204,6 +204,13 @@ _METRIC = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='double_summary', full_name='opentelemetry.proto.metrics.v1.Metric.double_summary', index=9,
+      number=11, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -220,7 +227,7 @@ _METRIC = _descriptor.Descriptor(
       index=0, containing_type=None, fields=[]),
   ],
   serialized_start=537,
-  serialized_end=1006,
+  serialized_end=1079,
 )
 
 
@@ -250,8 +257,8 @@ _INTGAUGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1008,
-  serialized_end=1085,
+  serialized_start=1081,
+  serialized_end=1158,
 )
 
 
@@ -281,8 +288,8 @@ _DOUBLEGAUGE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1087,
-  serialized_end=1170,
+  serialized_start=1160,
+  serialized_end=1243,
 )
 
 
@@ -326,8 +333,8 @@ _INTSUM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1173,
-  serialized_end=1359,
+  serialized_start=1246,
+  serialized_end=1432,
 )
 
 
@@ -371,8 +378,8 @@ _DOUBLESUM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1362,
-  serialized_end=1554,
+  serialized_start=1435,
+  serialized_end=1627,
 )
 
 
@@ -409,8 +416,8 @@ _INTHISTOGRAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1557,
-  serialized_end=1736,
+  serialized_start=1630,
+  serialized_end=1809,
 )
 
 
@@ -447,8 +454,39 @@ _DOUBLEHISTOGRAM = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1739,
-  serialized_end=1924,
+  serialized_start=1812,
+  serialized_end=1997,
+)
+
+
+_DOUBLESUMMARY = _descriptor.Descriptor(
+  name='DoubleSummary',
+  full_name='opentelemetry.proto.metrics.v1.DoubleSummary',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='data_points', full_name='opentelemetry.proto.metrics.v1.DoubleSummary.data_points', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=1999,
+  serialized_end=2091,
 )
 
 
@@ -506,8 +544,8 @@ _INTDATAPOINT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1927,
-  serialized_end=2137,
+  serialized_start=2094,
+  serialized_end=2304,
 )
 
 
@@ -565,8 +603,8 @@ _DOUBLEDATAPOINT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2140,
-  serialized_end=2356,
+  serialized_start=2307,
+  serialized_end=2523,
 )
 
 
@@ -645,8 +683,8 @@ _INTHISTOGRAMDATAPOINT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2359,
-  serialized_end=2639,
+  serialized_start=2526,
+  serialized_end=2806,
 )
 
 
@@ -725,8 +763,111 @@ _DOUBLEHISTOGRAMDATAPOINT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2642,
-  serialized_end=2928,
+  serialized_start=2809,
+  serialized_end=3095,
+)
+
+
+_DOUBLESUMMARYDATAPOINT_VALUEATQUANTILE = _descriptor.Descriptor(
+  name='ValueAtQuantile',
+  full_name='opentelemetry.proto.metrics.v1.DoubleSummaryDataPoint.ValueAtQuantile',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='quantile', full_name='opentelemetry.proto.metrics.v1.DoubleSummaryDataPoint.ValueAtQuantile.quantile', index=0,
+      number=1, type=1, cpp_type=5, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='value', full_name='opentelemetry.proto.metrics.v1.DoubleSummaryDataPoint.ValueAtQuantile.value', index=1,
+      number=2, type=1, cpp_type=5, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=3366,
+  serialized_end=3416,
+)
+
+_DOUBLESUMMARYDATAPOINT = _descriptor.Descriptor(
+  name='DoubleSummaryDataPoint',
+  full_name='opentelemetry.proto.metrics.v1.DoubleSummaryDataPoint',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='labels', full_name='opentelemetry.proto.metrics.v1.DoubleSummaryDataPoint.labels', index=0,
+      number=1, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='start_time_unix_nano', full_name='opentelemetry.proto.metrics.v1.DoubleSummaryDataPoint.start_time_unix_nano', index=1,
+      number=2, type=6, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='time_unix_nano', full_name='opentelemetry.proto.metrics.v1.DoubleSummaryDataPoint.time_unix_nano', index=2,
+      number=3, type=6, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='count', full_name='opentelemetry.proto.metrics.v1.DoubleSummaryDataPoint.count', index=3,
+      number=4, type=6, cpp_type=4, label=1,
+      has_default_value=False, default_value=0,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='sum', full_name='opentelemetry.proto.metrics.v1.DoubleSummaryDataPoint.sum', index=4,
+      number=5, type=1, cpp_type=5, label=1,
+      has_default_value=False, default_value=float(0),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='quantile_values', full_name='opentelemetry.proto.metrics.v1.DoubleSummaryDataPoint.quantile_values', index=5,
+      number=6, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
+  ],
+  extensions=[
+  ],
+  nested_types=[_DOUBLESUMMARYDATAPOINT_VALUEATQUANTILE, ],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=3098,
+  serialized_end=3416,
 )
 
 
@@ -784,8 +925,8 @@ _INTEXEMPLAR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=2931,
-  serialized_end=3090,
+  serialized_start=3419,
+  serialized_end=3578,
 )
 
 
@@ -843,8 +984,8 @@ _DOUBLEEXEMPLAR = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=3093,
-  serialized_end=3255,
+  serialized_start=3581,
+  serialized_end=3743,
 )
 
 _RESOURCEMETRICS.fields_by_name['resource'].message_type = opentelemetry_dot_proto_dot_resource_dot_v1_dot_resource__pb2._RESOURCE
@@ -857,6 +998,7 @@ _METRIC.fields_by_name['int_sum'].message_type = _INTSUM
 _METRIC.fields_by_name['double_sum'].message_type = _DOUBLESUM
 _METRIC.fields_by_name['int_histogram'].message_type = _INTHISTOGRAM
 _METRIC.fields_by_name['double_histogram'].message_type = _DOUBLEHISTOGRAM
+_METRIC.fields_by_name['double_summary'].message_type = _DOUBLESUMMARY
 _METRIC.oneofs_by_name['data'].fields.append(
   _METRIC.fields_by_name['int_gauge'])
 _METRIC.fields_by_name['int_gauge'].containing_oneof = _METRIC.oneofs_by_name['data']
@@ -875,6 +1017,9 @@ _METRIC.fields_by_name['int_histogram'].containing_oneof = _METRIC.oneofs_by_nam
 _METRIC.oneofs_by_name['data'].fields.append(
   _METRIC.fields_by_name['double_histogram'])
 _METRIC.fields_by_name['double_histogram'].containing_oneof = _METRIC.oneofs_by_name['data']
+_METRIC.oneofs_by_name['data'].fields.append(
+  _METRIC.fields_by_name['double_summary'])
+_METRIC.fields_by_name['double_summary'].containing_oneof = _METRIC.oneofs_by_name['data']
 _INTGAUGE.fields_by_name['data_points'].message_type = _INTDATAPOINT
 _DOUBLEGAUGE.fields_by_name['data_points'].message_type = _DOUBLEDATAPOINT
 _INTSUM.fields_by_name['data_points'].message_type = _INTDATAPOINT
@@ -885,6 +1030,7 @@ _INTHISTOGRAM.fields_by_name['data_points'].message_type = _INTHISTOGRAMDATAPOIN
 _INTHISTOGRAM.fields_by_name['aggregation_temporality'].enum_type = _AGGREGATIONTEMPORALITY
 _DOUBLEHISTOGRAM.fields_by_name['data_points'].message_type = _DOUBLEHISTOGRAMDATAPOINT
 _DOUBLEHISTOGRAM.fields_by_name['aggregation_temporality'].enum_type = _AGGREGATIONTEMPORALITY
+_DOUBLESUMMARY.fields_by_name['data_points'].message_type = _DOUBLESUMMARYDATAPOINT
 _INTDATAPOINT.fields_by_name['labels'].message_type = opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2._STRINGKEYVALUE
 _INTDATAPOINT.fields_by_name['exemplars'].message_type = _INTEXEMPLAR
 _DOUBLEDATAPOINT.fields_by_name['labels'].message_type = opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2._STRINGKEYVALUE
@@ -893,6 +1039,9 @@ _INTHISTOGRAMDATAPOINT.fields_by_name['labels'].message_type = opentelemetry_dot
 _INTHISTOGRAMDATAPOINT.fields_by_name['exemplars'].message_type = _INTEXEMPLAR
 _DOUBLEHISTOGRAMDATAPOINT.fields_by_name['labels'].message_type = opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2._STRINGKEYVALUE
 _DOUBLEHISTOGRAMDATAPOINT.fields_by_name['exemplars'].message_type = _DOUBLEEXEMPLAR
+_DOUBLESUMMARYDATAPOINT_VALUEATQUANTILE.containing_type = _DOUBLESUMMARYDATAPOINT
+_DOUBLESUMMARYDATAPOINT.fields_by_name['labels'].message_type = opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2._STRINGKEYVALUE
+_DOUBLESUMMARYDATAPOINT.fields_by_name['quantile_values'].message_type = _DOUBLESUMMARYDATAPOINT_VALUEATQUANTILE
 _INTEXEMPLAR.fields_by_name['filtered_labels'].message_type = opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2._STRINGKEYVALUE
 _DOUBLEEXEMPLAR.fields_by_name['filtered_labels'].message_type = opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2._STRINGKEYVALUE
 DESCRIPTOR.message_types_by_name['ResourceMetrics'] = _RESOURCEMETRICS
@@ -904,10 +1053,12 @@ DESCRIPTOR.message_types_by_name['IntSum'] = _INTSUM
 DESCRIPTOR.message_types_by_name['DoubleSum'] = _DOUBLESUM
 DESCRIPTOR.message_types_by_name['IntHistogram'] = _INTHISTOGRAM
 DESCRIPTOR.message_types_by_name['DoubleHistogram'] = _DOUBLEHISTOGRAM
+DESCRIPTOR.message_types_by_name['DoubleSummary'] = _DOUBLESUMMARY
 DESCRIPTOR.message_types_by_name['IntDataPoint'] = _INTDATAPOINT
 DESCRIPTOR.message_types_by_name['DoubleDataPoint'] = _DOUBLEDATAPOINT
 DESCRIPTOR.message_types_by_name['IntHistogramDataPoint'] = _INTHISTOGRAMDATAPOINT
 DESCRIPTOR.message_types_by_name['DoubleHistogramDataPoint'] = _DOUBLEHISTOGRAMDATAPOINT
+DESCRIPTOR.message_types_by_name['DoubleSummaryDataPoint'] = _DOUBLESUMMARYDATAPOINT
 DESCRIPTOR.message_types_by_name['IntExemplar'] = _INTEXEMPLAR
 DESCRIPTOR.message_types_by_name['DoubleExemplar'] = _DOUBLEEXEMPLAR
 DESCRIPTOR.enum_types_by_name['AggregationTemporality'] = _AGGREGATIONTEMPORALITY
@@ -976,6 +1127,13 @@ DoubleHistogram = _reflection.GeneratedProtocolMessageType('DoubleHistogram', (_
   })
 _sym_db.RegisterMessage(DoubleHistogram)
 
+DoubleSummary = _reflection.GeneratedProtocolMessageType('DoubleSummary', (_message.Message,), {
+  'DESCRIPTOR' : _DOUBLESUMMARY,
+  '__module__' : 'opentelemetry.proto.metrics.v1.metrics_pb2'
+  # @@protoc_insertion_point(class_scope:opentelemetry.proto.metrics.v1.DoubleSummary)
+  })
+_sym_db.RegisterMessage(DoubleSummary)
+
 IntDataPoint = _reflection.GeneratedProtocolMessageType('IntDataPoint', (_message.Message,), {
   'DESCRIPTOR' : _INTDATAPOINT,
   '__module__' : 'opentelemetry.proto.metrics.v1.metrics_pb2'
@@ -1003,6 +1161,21 @@ DoubleHistogramDataPoint = _reflection.GeneratedProtocolMessageType('DoubleHisto
   # @@protoc_insertion_point(class_scope:opentelemetry.proto.metrics.v1.DoubleHistogramDataPoint)
   })
 _sym_db.RegisterMessage(DoubleHistogramDataPoint)
+
+DoubleSummaryDataPoint = _reflection.GeneratedProtocolMessageType('DoubleSummaryDataPoint', (_message.Message,), {
+
+  'ValueAtQuantile' : _reflection.GeneratedProtocolMessageType('ValueAtQuantile', (_message.Message,), {
+    'DESCRIPTOR' : _DOUBLESUMMARYDATAPOINT_VALUEATQUANTILE,
+    '__module__' : 'opentelemetry.proto.metrics.v1.metrics_pb2'
+    # @@protoc_insertion_point(class_scope:opentelemetry.proto.metrics.v1.DoubleSummaryDataPoint.ValueAtQuantile)
+    })
+  ,
+  'DESCRIPTOR' : _DOUBLESUMMARYDATAPOINT,
+  '__module__' : 'opentelemetry.proto.metrics.v1.metrics_pb2'
+  # @@protoc_insertion_point(class_scope:opentelemetry.proto.metrics.v1.DoubleSummaryDataPoint)
+  })
+_sym_db.RegisterMessage(DoubleSummaryDataPoint)
+_sym_db.RegisterMessage(DoubleSummaryDataPoint.ValueAtQuantile)
 
 IntExemplar = _reflection.GeneratedProtocolMessageType('IntExemplar', (_message.Message,), {
   'DESCRIPTOR' : _INTEXEMPLAR,
