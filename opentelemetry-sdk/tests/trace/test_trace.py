@@ -933,9 +933,7 @@ class TestSpan(unittest.TestCase):
         def error_status_test(context):
             with self.assertRaises(AssertionError):
                 with context as root:
-                    root.set_status(
-                        trace_api.status.Status(StatusCode.OK, "OK")
-                    )
+                    root.set_status(trace_api.status.Status(StatusCode.OK))
                     raise AssertionError("unknown")
 
             self.assertIs(root.status.status_code, StatusCode.ERROR)
