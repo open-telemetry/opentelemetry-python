@@ -16,7 +16,7 @@ from typing import Dict, Sequence
 
 from wrapt import ObjectProxy
 
-from opentelemetry.trace.status import StatusCode
+from opentelemetry.trace import StatusCode
 
 
 def extract_attributes_from_object(
