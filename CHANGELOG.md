@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v0.18b0...HEAD)
+- Remove time_ns from API
+  ([#1602](https://github.com/open-telemetry/opentelemetry-python/pull/1602))
 - Update OTLP exporter to use OTLP proto `0.7.0`
   ([#1674](https://github.com/open-telemetry/opentelemetry-python/pull/1674))
 
