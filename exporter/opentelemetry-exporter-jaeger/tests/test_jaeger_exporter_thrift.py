@@ -274,7 +274,7 @@ class TestJaegerExporter(unittest.TestCase):
         otel_spans[1].end(end_time=end_times[1])
 
         otel_spans[2].start(start_time=start_times[2])
-        otel_spans[2].set_status(Status(StatusCode.OK, "Example description"))
+        otel_spans[2].set_status(Status(StatusCode.OK))
         otel_spans[2].end(end_time=end_times[2])
 
         translate = Translate(otel_spans)
@@ -397,11 +397,6 @@ class TestJaegerExporter(unittest.TestCase):
                         vStr="OK",
                     ),
                     jaeger.Tag(
-                        key="otel.status_description",
-                        vType=jaeger.TagType.STRING,
-                        vStr="Example description",
-                    ),
-                    jaeger.Tag(
                         key="span.kind",
                         vType=jaeger.TagType.STRING,
                         vStr="internal",
@@ -520,3 +515,58 @@ class TestJaegerExporter(unittest.TestCase):
         self.assertEqual("hello", tags_by_keys["key_string"])
         self.assertEqual("('tup", tags_by_keys["key_tuple"])
         self.assertEqual("some_", tags_by_keys["key_resource"])
+
+    def test_agent_client_split(self):
+        agent_client = jaeger_exporter.AgentClientUDP(
+            host_name="localhost",
+            port=6354,
+            max_packet_size=250,
+            split_oversized_batches=True,
+        )
+
+        translator = jaeger_exporter.Translate((self._test_span,))
+        small_batch = jaeger.Batch(
+            # pylint: disable=protected-access
+            spans=translator._translate(ThriftTranslator()),
+            process=jaeger.Process(serviceName="xxx"),
+        )
+
+        with unittest.mock.patch(
+            "socket.socket.sendto", autospec=True
+        ) as fake_sendto:
+            agent_client.emit(small_batch)
+            self.assertEqual(fake_sendto.call_count, 1)
+
+        translator = jaeger_exporter.Translate([self._test_span] * 2)
+        large_batch = jaeger.Batch(
+            # pylint: disable=protected-access
+            spans=translator._translate(ThriftTranslator()),
+            process=jaeger.Process(serviceName="xxx"),
+        )
+
+        with unittest.mock.patch(
+            "socket.socket.sendto", autospec=True
+        ) as fake_sendto:
+            agent_client.emit(large_batch)
+            self.assertEqual(fake_sendto.call_count, 2)
+
+    def test_agent_client_dont_send_empty_spans(self):
+        agent_client = jaeger_exporter.AgentClientUDP(
+            host_name="localhost",
+            port=6354,
+            max_packet_size=415,
+            split_oversized_batches=True,
+        )
+
+        translator = jaeger_exporter.Translate([self._test_span] * 4)
+        large_batch = jaeger.Batch(
+            # pylint: disable=protected-access
+            spans=translator._translate(ThriftTranslator()),
+            process=jaeger.Process(serviceName="xxx"),
+        )
+
+        with unittest.mock.patch(
+            "socket.socket.sendto", autospec=True
+        ) as fake_sendto:
+            agent_client.emit(large_batch)
+            self.assertEqual(fake_sendto.call_count, 4)
