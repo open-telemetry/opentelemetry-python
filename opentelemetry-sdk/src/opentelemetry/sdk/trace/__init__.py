@@ -62,11 +62,11 @@ SPAN_ATTRIBUTE_COUNT_LIMIT = int(
     environ.get(OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, 128)
 )
 
-SPAN_EVENT_COUNT_LIMIT = int(environ.get(OTEL_SPAN_EVENT_COUNT_LIMIT, 128))
-SPAN_LINK_COUNT_LIMIT = int(environ.get(OTEL_SPAN_LINK_COUNT_LIMIT, 128))
-VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
+_SPAN_EVENT_COUNT_LIMIT = int(environ.get(OTEL_SPAN_EVENT_COUNT_LIMIT, 128))
+_SPAN_LINK_COUNT_LIMIT = int(environ.get(OTEL_SPAN_LINK_COUNT_LIMIT, 128))
+_VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
 # pylint: disable=protected-access
-TRACE_SAMPLER = sampling._get_from_env_or_default()
+_TRACE_SAMPLER = sampling._get_from_env_or_default()
 
 
 class SpanProcessor:
@@ -333,14 +333,14 @@ def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
             if element is None:
                 continue
             element_type = type(element)
-            if element_type not in VALID_ATTR_VALUE_TYPES:
+            if element_type not in _VALID_ATTR_VALUE_TYPES:
                 logger.warning(
                     "Invalid type %s in attribute value sequence. Expected one of "
                     "%s or None",
                     element_type.__name__,
                     [
                         valid_type.__name__
-                        for valid_type in VALID_ATTR_VALUE_TYPES
+                        for valid_type in _VALID_ATTR_VALUE_TYPES
                     ],
                 )
                 return False
@@ -356,12 +356,12 @@ def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
                 )
                 return False
 
-    elif not isinstance(value, VALID_ATTR_VALUE_TYPES):
+    elif not isinstance(value, _VALID_ATTR_VALUE_TYPES):
         logger.warning(
             "Invalid type %s for attribute value. Expected one of %s or a "
             "sequence of those types",
             type(value).__name__,
-            [valid_type.__name__ for valid_type in VALID_ATTR_VALUE_TYPES],
+            [valid_type.__name__ for valid_type in _VALID_ATTR_VALUE_TYPES],
         )
         return False
     return True
@@ -640,7 +640,7 @@ class Span(trace_api.Span, ReadableSpan):
         if links is None:
             self._links = self._new_links()
         else:
-            self._links = BoundedList.from_seq(SPAN_LINK_COUNT_LIMIT, links)
+            self._links = BoundedList.from_seq(_SPAN_LINK_COUNT_LIMIT, links)
 
     def __repr__(self):
         return '{}(name="{}", context={})'.format(
@@ -653,11 +653,11 @@ class Span(trace_api.Span, ReadableSpan):
 
     @staticmethod
     def _new_events():
-        return BoundedList(SPAN_EVENT_COUNT_LIMIT)
+        return BoundedList(_SPAN_EVENT_COUNT_LIMIT)
 
     @staticmethod
     def _new_links():
-        return BoundedList(SPAN_LINK_COUNT_LIMIT)
+        return BoundedList(_SPAN_LINK_COUNT_LIMIT)
 
     def get_span_context(self):
         return self._context
@@ -962,7 +962,7 @@ class TracerProvider(trace_api.TracerProvider):
 
     def __init__(
         self,
-        sampler: sampling.Sampler = TRACE_SAMPLER,
+        sampler: sampling.Sampler = _TRACE_SAMPLER,
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
         active_span_processor: Union[

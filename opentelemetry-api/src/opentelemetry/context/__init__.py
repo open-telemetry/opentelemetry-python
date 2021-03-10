@@ -20,11 +20,11 @@ from os import environ
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry.context.context import Context, RuntimeContext
+from opentelemetry.context.context import Context, _RuntimeContext
 from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
 
 logger = logging.getLogger(__name__)
-_RUNTIME_CONTEXT = None  # type: typing.Optional[RuntimeContext]
+_RUNTIME_CONTEXT = None  # type: typing.Optional[_RuntimeContext]
 _RUNTIME_CONTEXT_LOCK = threading.Lock()
 
 _F = typing.TypeVar("_F", bound=typing.Callable[..., typing.Any])

@@ -21,7 +21,7 @@ class Context(typing.Dict[str, object]):
         raise ValueError
 
 
-class RuntimeContext(ABC):
+class _RuntimeContext(ABC):
     """The RuntimeContext interface provides a wrapper for the different
     mechanisms that are used to propagate context in Python.
     Implementations can be made available via entry_points and
@@ -39,7 +39,7 @@ class RuntimeContext(ABC):
 
     @abstractmethod
     def get_current(self) -> Context:
-        """ Returns the current `Context` object. """
+        """Returns the current `Context` object. """
 
     @abstractmethod
     def detach(self, token: object) -> None:
@@ -50,4 +50,4 @@ class RuntimeContext(ABC):
         """
 
 
-__all__ = ["Context", "RuntimeContext"]
+__all__ = ["Context"]

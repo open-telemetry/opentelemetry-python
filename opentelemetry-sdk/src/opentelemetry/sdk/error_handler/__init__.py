@@ -75,7 +75,7 @@ class ErrorHandler(ABC):
         """
 
 
-class DefaultErrorHandler(ErrorHandler):
+class _DefaultErrorHandler(ErrorHandler):
     """
     Default error handler
 
@@ -144,6 +144,6 @@ class GlobalErrorHandler:
 
         if not plugin_handled:
 
-            DefaultErrorHandler()._handle(exc_value)
+            _DefaultErrorHandler()._handle(exc_value)
 
         return True
