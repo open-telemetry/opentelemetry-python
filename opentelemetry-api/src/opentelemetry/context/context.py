@@ -30,15 +30,24 @@ class _RuntimeContext(ABC):
 
     @abstractmethod
     def attach(self, context: Context) -> object:
-        pass
+        """Sets the current `Context` object. Returns a
+        token that can be used to reset to the previous `Context`.
+
+        Args:
+            context: The Context to set.
+        """
 
     @abstractmethod
     def get_current(self) -> Context:
-        pass
+        """Returns the current `Context` object. """
 
     @abstractmethod
     def detach(self, token: object) -> None:
-        pass
+        """Resets Context to a previous value
+
+        Args:
+            token: A reference to a previous Context.
+        """
 
 
 __all__ = ["Context"]
