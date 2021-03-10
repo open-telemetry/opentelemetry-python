@@ -38,7 +38,7 @@ from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import StatusCode
-from opentelemetry.util.time import time_ns
+from opentelemetry.util._time import _time_ns
 
 
 def new_tracer() -> trace_api.Tracer:
@@ -709,7 +709,7 @@ class TestSpan(unittest.TestCase):
             )
 
             # event name, attributes and timestamp
-            now = time_ns()
+            now = _time_ns()
             root.add_event("event2", {"name": ["birthday"]}, now)
 
             mutable_list = ["original_contents"]
