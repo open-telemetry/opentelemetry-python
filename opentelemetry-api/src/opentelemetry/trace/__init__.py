@@ -527,7 +527,6 @@ def set_tracer_provider(tracer_provider: TracerProvider) -> None:
 
 def get_tracer_provider() -> TracerProvider:
     """Gets the current global :class:`~.TracerProvider` object."""
-    global _TRACER_PROVIDER  # pylint: disable=global-statement
 
     if _TRACER_PROVIDER is None:
         return _load_trace_provider("tracer_provider")
