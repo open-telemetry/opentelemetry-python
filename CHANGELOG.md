@@ -5,10 +5,6 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v0.18b0...HEAD)
-- Remove time_ns from API
-  ([#1602](https://github.com/open-telemetry/opentelemetry-python/pull/1602))
-- Update OTLP exporter to use OTLP proto `0.7.0`
-  ([#1674](https://github.com/open-telemetry/opentelemetry-python/pull/1674))
 
 ### Added
 - Document how to work with fork process web server models(Gunicorn, uWSGI etc...)
@@ -45,7 +41,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Rename `JaegerSpanExporter` to `JaegerExporter` and rename `ZipkinSpanExporter` to `ZipkinExporter`
   ([#1664](https://github.com/open-telemetry/opentelemetry-python/pull/1664))
 - Expose `StatusCode` from the `opentelemetry.trace` module
-  ([#](https://github.com/open-telemetry/opentelemetry-python/pull/))
+  ([#1681](https://github.com/open-telemetry/opentelemetry-python/pull/1681))
+- Status now only sets `description` when `status_code` is set to `StatusCode.ERROR`
+  ([#1673](https://github.com/open-telemetry/opentelemetry-python/pull/1673))
+- Update OTLP exporter to use OTLP proto `0.7.0`
+  ([#1674](https://github.com/open-telemetry/opentelemetry-python/pull/1674))
+- Remove time_ns from API
+  ([#1602](https://github.com/open-telemetry/opentelemetry-python/pull/1602))
 
 ### Removed
 - Removed unused `get_hexadecimal_trace_id` and `get_hexadecimal_span_id` methods.
