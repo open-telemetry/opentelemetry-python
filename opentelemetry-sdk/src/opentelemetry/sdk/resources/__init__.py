@@ -149,7 +149,7 @@ TELEMETRY_AUTO_VERSION = "telemetry.auto.version"
 TELEMETRY_SDK_LANGUAGE = "telemetry.sdk.language"
 
 
-OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
+_OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
     "opentelemetry-sdk"
 ).version
 
@@ -225,7 +225,7 @@ _DEFAULT_RESOURCE = Resource(
     {
         TELEMETRY_SDK_LANGUAGE: "python",
         TELEMETRY_SDK_NAME: "opentelemetry",
-        TELEMETRY_SDK_VERSION: OPENTELEMETRY_SDK_VERSION,
+        TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
     }
 )
 

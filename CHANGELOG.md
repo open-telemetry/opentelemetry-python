@@ -48,6 +48,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1674](https://github.com/open-telemetry/opentelemetry-python/pull/1674))
 - Remove time_ns from API and add a warning for older versions of Python
   ([#1602](https://github.com/open-telemetry/opentelemetry-python/pull/1602))
+- Hide implementation classes/variables in api/sdk
+  ([#1684](https://github.com/open-telemetry/opentelemetry-python/pull/1684))
 
 ### Removed
 - Removed unused `get_hexadecimal_trace_id` and `get_hexadecimal_span_id` methods.

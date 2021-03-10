@@ -101,6 +101,7 @@ nitpick_ignore = [
     # Even if wrapt is added to intersphinx_mapping, sphinx keeps failing
     # with "class reference target not found: ObjectProxy".
     ("py:class", "ObjectProxy"),
+    ("py:class", "opentelemetry.trace._LinkBase",),
     # TODO: Understand why sphinx is not able to find this local class
     ("py:class", "opentelemetry.propagators.textmap.TextMapPropagator",),
     ("py:class", "opentelemetry.propagators.textmap.DictGetter",),
