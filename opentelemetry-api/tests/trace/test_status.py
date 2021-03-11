@@ -29,7 +29,40 @@ class TestStatus(unittest.TestCase):
         self.assertEqual(status.description, "unavailable")
 
     def test_invalid_description(self):
-        with self.assertLogs(level=WARNING):
+        with self.assertLogs(level=WARNING) as warning:
             status = Status(description={"test": "val"})  # type: ignore
             self.assertIs(status.status_code, StatusCode.UNSET)
             self.assertEqual(status.description, None)
+            self.assertIn(
+                "Invalid status description type, expected str",
+                warning.output[0],
+            )
+
+    def test_description_and_non_error_status(self):
+        with self.assertLogs(level=WARNING) as warning:
+            status = Status(
+                status_code=StatusCode.OK, description="status description"
+            )
+            self.assertIs(status.status_code, StatusCode.OK)
+            self.assertEqual(status.description, None)
+            self.assertIn(
+                "description should only be set when status_code is set to StatusCode.ERROR",
+                warning.output[0],
+            )
+
+        with self.assertLogs(level=WARNING) as warning:
+            status = Status(
+                status_code=StatusCode.UNSET, description="status description"
+            )
+            self.assertIs(status.status_code, StatusCode.UNSET)
+            self.assertEqual(status.description, None)
+            self.assertIn(
+                "description should only be set when status_code is set to StatusCode.ERROR",
+                warning.output[0],
+            )
+
+        status = Status(
+            status_code=StatusCode.ERROR, description="status description"
+        )
+        self.assertIs(status.status_code, StatusCode.ERROR)
+        self.assertEqual(status.description, "status description")

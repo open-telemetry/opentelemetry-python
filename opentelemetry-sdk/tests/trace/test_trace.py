@@ -38,7 +38,7 @@ from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import StatusCode
-from opentelemetry.util.time import time_ns
+from opentelemetry.util._time import _time_ns
 
 
 def new_tracer() -> trace_api.Tracer:
@@ -516,7 +516,7 @@ class TestSpanCreation(unittest.TestCase):
         )
         self.assertEqual(
             span.resource.attributes.get(resources.TELEMETRY_SDK_VERSION),
-            resources.OPENTELEMETRY_SDK_VERSION,
+            resources._OPENTELEMETRY_SDK_VERSION,
         )
 
     def test_span_context_remote_flag(self):
@@ -709,7 +709,7 @@ class TestSpan(unittest.TestCase):
             )
 
             # event name, attributes and timestamp
-            now = time_ns()
+            now = _time_ns()
             root.add_event("event2", {"name": ["birthday"]}, now)
 
             mutable_list = ["original_contents"]
@@ -933,9 +933,7 @@ class TestSpan(unittest.TestCase):
         def error_status_test(context):
             with self.assertRaises(AssertionError):
                 with context as root:
-                    root.set_status(
-                        trace_api.status.Status(StatusCode.OK, "OK")
-                    )
+                    root.set_status(trace_api.status.Status(StatusCode.OK))
                     raise AssertionError("unknown")
 
             self.assertIs(root.status.status_code, StatusCode.ERROR)

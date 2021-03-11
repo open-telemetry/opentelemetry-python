@@ -43,7 +43,7 @@ class TestResources(unittest.TestCase):
             "cost": 112.12,
             resources.TELEMETRY_SDK_NAME: "opentelemetry",
             resources.TELEMETRY_SDK_LANGUAGE: "python",
-            resources.TELEMETRY_SDK_VERSION: resources.OPENTELEMETRY_SDK_VERSION,
+            resources.TELEMETRY_SDK_VERSION: resources._OPENTELEMETRY_SDK_VERSION,
             resources.SERVICE_NAME: "unknown_service",
         }
 
@@ -113,7 +113,7 @@ class TestResources(unittest.TestCase):
         default_attributes = {
             resources.TELEMETRY_SDK_NAME: "opentelemetry",
             resources.TELEMETRY_SDK_LANGUAGE: "python",
-            resources.TELEMETRY_SDK_VERSION: resources.OPENTELEMETRY_SDK_VERSION,
+            resources.TELEMETRY_SDK_VERSION: resources._OPENTELEMETRY_SDK_VERSION,
             resources.SERVICE_NAME: "unknown_service",
         }
 
