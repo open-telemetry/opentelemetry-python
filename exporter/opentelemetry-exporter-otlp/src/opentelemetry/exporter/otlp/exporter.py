@@ -57,7 +57,6 @@ ExportResultT = TypeVar("ExportResultT")
 _ENVIRON_TO_COMPRESSION = {
     None: None,
     "gzip": Compression.Gzip,
-    "deflate": Compression.Deflate,
 }
 
 

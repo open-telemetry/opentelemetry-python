@@ -47,11 +47,11 @@ from opentelemetry.proto.trace.v1.trace_pb2 import Span as OTLPSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
-    OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE,
-    OTEL_EXPORTER_OTLP_SPAN_COMPRESSION,
-    OTEL_EXPORTER_OTLP_SPAN_ENDPOINT,
-    OTEL_EXPORTER_OTLP_SPAN_HEADERS,
-    OTEL_EXPORTER_OTLP_SPAN_TIMEOUT,
+    OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
+    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+    OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+    OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.trace import Status as SDKStatus
@@ -171,12 +171,12 @@ class TestOTLPSpanExporter(TestCase):
     @patch.dict(
         "os.environ",
         {
-            OTEL_EXPORTER_OTLP_SPAN_ENDPOINT: "collector:4317",
-            OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE: THIS_DIR
+            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "collector:4317",
+            OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: THIS_DIR
             + "/fixtures/test.cert",
-            OTEL_EXPORTER_OTLP_SPAN_HEADERS: "key1=value1,key2=value2",
-            OTEL_EXPORTER_OTLP_SPAN_TIMEOUT: "10",
-            OTEL_EXPORTER_OTLP_SPAN_COMPRESSION: "gzip",
+            OTEL_EXPORTER_OTLP_TRACES_HEADERS: "key1=value1,key2=value2",
+            OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "10",
+            OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip",
         },
     )
     @patch("opentelemetry.exporter.otlp.exporter.OTLPExporterMixin.__init__")
@@ -205,7 +205,7 @@ class TestOTLPSpanExporter(TestCase):
 
     @patch.dict(
         "os.environ",
-        {OTEL_EXPORTER_OTLP_SPAN_HEADERS: "key1=value1,key2=value2"},
+        {OTEL_EXPORTER_OTLP_TRACES_HEADERS: "key1=value1,key2=value2"},
     )
     @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
     @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
@@ -230,11 +230,11 @@ class TestOTLPSpanExporter(TestCase):
         with patch(
             "opentelemetry.exporter.otlp.exporter.insecure_channel"
         ) as mock_insecure_channel, patch.dict(
-            "os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "deflate"}
+            "os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"}
         ):
             OTLPSpanExporter(insecure=True)
             mock_insecure_channel.assert_called_once_with(
-                "localhost:4317", compression=Compression.Deflate
+                "localhost:4317", compression=Compression.Gzip
             )
 
         # Specifying kwarg should take precedence over env
@@ -259,16 +259,12 @@ class TestOTLPSpanExporter(TestCase):
                 "localhost:4317", compression=Compression.NoCompression
             )
 
-        # OTEL_EXPORTER_OTLP_SPAN_COMPRESSION as higher priority than
+        # OTEL_EXPORTER_OTLP_TRACES_COMPRESSION as higher priority than
         # OTEL_EXPORTER_OTLP_COMPRESSION
         with patch(
             "opentelemetry.exporter.otlp.exporter.insecure_channel"
         ) as mock_insecure_channel, patch.dict(
-            "os.environ",
-            {
-                OTEL_EXPORTER_OTLP_COMPRESSION: "deflate",
-                OTEL_EXPORTER_OTLP_SPAN_COMPRESSION: "gzip",
-            },
+            "os.environ", {OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip"},
         ):
             OTLPSpanExporter(insecure=True)
             mock_insecure_channel.assert_called_once_with(

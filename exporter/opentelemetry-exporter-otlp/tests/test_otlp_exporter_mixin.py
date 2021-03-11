@@ -30,7 +30,6 @@ class TestOTLPExporterMixin(TestCase):
             {
                 "test_gzip": "gzip",
                 "test_gzip_caseinsensitive_with_whitespace": " GzIp ",
-                "test_deflate": "deflate",
                 "test_invalid": "some invalid compression",
             },
         ):
@@ -42,9 +41,6 @@ class TestOTLPExporterMixin(TestCase):
                     "test_gzip_caseinsensitive_with_whitespace"
                 ),
                 Compression.Gzip,
-            )
-            self.assertEqual(
-                environ_to_compression("test_deflate"), Compression.Deflate
             )
             self.assertIsNone(environ_to_compression("missing_key"),)
             with self.assertRaises(InvalidCompressionValueException):
