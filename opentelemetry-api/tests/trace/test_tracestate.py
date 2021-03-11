@@ -72,27 +72,31 @@ class TestTraceContextFormat(unittest.TestCase):
         self.assertLessEqual(a_place, c_place)
 
     def test_tracestate_from_header(self):
-        entries = [
-            "1a-2f@foo=bar1",
-            "1a-_*/2b@foo=bar2",
-            "foo=bar3",
-            "foo-_*/bar=bar4",
-        ]
-        header_list = [",".join(entries)]
-        state = TraceState.from_header(header_list)
-        self.assertEqual(state.to_header(), ",".join(entries))
+        header = ",".join(
+            [
+                "1a-2f@foo=bar1",
+                "1a-_*/2b@foo=bar2",
+                "foo=bar3",
+                "foo-_*/bar=bar4",
+            ]
+        )
+        self.assertEqual(TraceState.from_header(header).to_header(), header)
 
     def test_tracestate_order_changed(self):
-        entries = [
-            "1a-2f@foo=bar1",
-            "1a-_*/2b@foo=bar2",
-            "foo=bar3",
-            "foo-_*/bar=bar4",
-        ]
-        header_list = [",".join(entries)]
-        state = TraceState.from_header(header_list)
-        new_state = state.update("foo", "bar33")
-        entries = list(new_state.items())  # type: ignore
+        entries = list(
+            TraceState.from_header(
+                ",".join(
+                    [
+                        "1a-2f@foo=bar1",
+                        "1a-_*/2b@foo=bar2",
+                        "foo=bar3",
+                        "foo-_*/bar=bar4",
+                    ]
+                )
+            )
+            .update("foo", "bar33")
+            .items()
+        )
         foo_place = entries.index(("foo", "bar33"))  # type: ignore
         prev_first_place = entries.index(("1a-2f@foo", "bar1"))  # type: ignore
         self.assertLessEqual(foo_place, prev_first_place)

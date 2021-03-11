@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v0.18b0...HEAD)
 
+- Remove setters and getters
+  ([#1690](https://github.com/open-telemetry/opentelemetry-python/pull/1690))
+
 ### Added
 - Document how to work with fork process web server models(Gunicorn, uWSGI etc...)
   ([#1609](https://github.com/open-telemetry/opentelemetry-python/pull/1609))

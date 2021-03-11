@@ -493,9 +493,9 @@ class TestShim(TestCase):
         headers = {}
         self.shim.inject(context, opentracing.Format.HTTP_HEADERS, headers)
         self.assertEqual(
-            headers[MockTextMapPropagator.TRACE_ID_KEY], str(1220)
+            headers[MockTextMapPropagator.trace_id_key], str(1220)
         )
-        self.assertEqual(headers[MockTextMapPropagator.SPAN_ID_KEY], str(7478))
+        self.assertEqual(headers[MockTextMapPropagator.span_id_key], str(7478))
 
     def test_inject_text_map(self):
         """Test `inject()` method for Format.TEXT_MAP."""
@@ -509,10 +509,10 @@ class TestShim(TestCase):
         text_map = {}
         self.shim.inject(context, opentracing.Format.TEXT_MAP, text_map)
         self.assertEqual(
-            text_map[MockTextMapPropagator.TRACE_ID_KEY], str(1220)
+            text_map[MockTextMapPropagator.trace_id_key], str(1220)
         )
         self.assertEqual(
-            text_map[MockTextMapPropagator.SPAN_ID_KEY], str(7478)
+            text_map[MockTextMapPropagator.span_id_key], str(7478)
         )
 
     def test_inject_binary(self):
@@ -531,8 +531,8 @@ class TestShim(TestCase):
         """Test `extract()` method for Format.HTTP_HEADERS."""
 
         carrier = {
-            MockTextMapPropagator.TRACE_ID_KEY: 1220,
-            MockTextMapPropagator.SPAN_ID_KEY: 7478,
+            MockTextMapPropagator.trace_id_key: 1220,
+            MockTextMapPropagator.span_id_key: 7478,
         }
 
         ctx = self.shim.extract(opentracing.Format.HTTP_HEADERS, carrier)
@@ -557,8 +557,8 @@ class TestShim(TestCase):
         """Test `extract()` method for Format.TEXT_MAP."""
 
         carrier = {
-            MockTextMapPropagator.TRACE_ID_KEY: 1220,
-            MockTextMapPropagator.SPAN_ID_KEY: 7478,
+            MockTextMapPropagator.trace_id_key: 1220,
+            MockTextMapPropagator.span_id_key: 7478,
         }
 
         ctx = self.shim.extract(opentracing.Format.TEXT_MAP, carrier)

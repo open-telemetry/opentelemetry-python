@@ -20,22 +20,15 @@ from unittest.mock import Mock
 from opentelemetry.propagators.composite import CompositeHTTPPropagator
 
 
-def get_as_list(dict_object, key):
-    value = dict_object.get(key)
-    return [value] if value is not None else []
-
-
 def mock_inject(name, value="data"):
-    def wrapped(setter, carrier=None, context=None):
+    def wrapped(carrier=None, context=None):
         carrier[name] = value
-        setter({}, "inject_field_{}_0".format(name), None)
-        setter({}, "inject_field_{}_1".format(name), None)
 
     return wrapped
 
 
 def mock_extract(name, value="context"):
-    def wrapped(getter, carrier=None, context=None):
+    def wrapped(carrier=None, context=None):
         new_context = context.copy()
         new_context[name] = value
         return new_context
@@ -69,24 +62,20 @@ class TestCompositePropagator(unittest.TestCase):
     def test_no_propagators(self):
         propagator = CompositeHTTPPropagator([])
         new_carrier = {}
-        propagator.inject(dict.__setitem__, carrier=new_carrier)
+        propagator.inject(carrier=new_carrier)
         self.assertEqual(new_carrier, {})
 
-        context = propagator.extract(
-            get_as_list, carrier=new_carrier, context={}
-        )
+        context = propagator.extract(carrier=new_carrier, context={})
         self.assertEqual(context, {})
 
     def test_single_propagator(self):
         propagator = CompositeHTTPPropagator([self.mock_propagator_0])
 
         new_carrier = {}
-        propagator.inject(dict.__setitem__, carrier=new_carrier)
+        propagator.inject(carrier=new_carrier)
         self.assertEqual(new_carrier, {"mock-0": "data"})
 
-        context = propagator.extract(
-            get_as_list, carrier=new_carrier, context={}
-        )
+        context = propagator.extract(carrier=new_carrier, context={})
         self.assertEqual(context, {"mock-0": "context"})
 
     def test_multiple_propagators(self):
@@ -95,12 +84,10 @@ class TestCompositePropagator(unittest.TestCase):
         )
 
         new_carrier = {}
-        propagator.inject(dict.__setitem__, carrier=new_carrier)
+        propagator.inject(carrier=new_carrier)
         self.assertEqual(new_carrier, {"mock-0": "data", "mock-1": "data"})
 
-        context = propagator.extract(
-            get_as_list, carrier=new_carrier, context={}
-        )
+        context = propagator.extract(carrier=new_carrier, context={})
         self.assertEqual(context, {"mock-0": "context", "mock-1": "context"})
 
     def test_multiple_propagators_same_key(self):
@@ -111,12 +98,10 @@ class TestCompositePropagator(unittest.TestCase):
         )
 
         new_carrier = {}
-        propagator.inject(dict.__setitem__, carrier=new_carrier)
+        propagator.inject(carrier=new_carrier)
         self.assertEqual(new_carrier, {"mock-0": "data2"})
 
-        context = propagator.extract(
-            get_as_list, carrier=new_carrier, context={}
-        )
+        context = propagator.extract(carrier=new_carrier, context={})
         self.assertEqual(context, {"mock-0": "context2"})
 
     def test_fields(self):
@@ -128,13 +113,14 @@ class TestCompositePropagator(unittest.TestCase):
             ]
         )
 
-        mock_set_in_carrier = Mock()
+        propagator.inject({})
 
-        propagator.inject(mock_set_in_carrier, {})
-
-        inject_fields = set()
-
-        for mock_call in mock_set_in_carrier.mock_calls:
-            inject_fields.add(mock_call[1][1])
-
-        self.assertEqual(inject_fields, propagator.fields)
+        self.assertEqual(
+            {
+                "inject_field_mock-0_0",
+                "inject_field_mock-0_1",
+                "inject_field_mock-1_0",
+                "inject_field_mock-1_1",
+            },
+            propagator.fields,
+        )

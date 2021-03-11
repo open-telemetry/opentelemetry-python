@@ -40,23 +40,12 @@ Example::
     PROPAGATOR = propagators.get_global_textmap()
 
 
-    def get_header_from_flask_request(request, key):
-        return request.headers.get_all(key)
-
-    def set_header_into_requests_request(request: requests.Request,
-                                            key: str, value: str):
-        request.headers[key] = value
-
     def example_route():
-        context = PROPAGATOR.extract(
-            get_header_from_flask_request,
-            flask.request
-        )
+        context = PROPAGATOR.extract(flask.request)
         request_to_downstream = requests.Request(
             "GET", "http://httpbin.org/get"
         )
         PROPAGATOR.inject(
-            set_header_into_requests_request,
             request_to_downstream,
             context=context
         )
@@ -68,23 +57,22 @@ Example::
     https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/api-propagators.md
 """
 
-import typing
 from logging import getLogger
 from os import environ
+from typing import Dict, Optional
 
 from pkg_resources import iter_entry_points
 
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
-from opentelemetry.propagators import composite, textmap
+from opentelemetry.propagators import composite
+from opentelemetry.propagators.textmap import TextMapPropagator
 
-logger = getLogger(__name__)
+_logger = getLogger(__name__)
 
 
 def extract(
-    getter: textmap.Getter[textmap.TextMapPropagatorT],
-    carrier: textmap.TextMapPropagatorT,
-    context: typing.Optional[Context] = None,
+    carrier: Dict[str, str], context: Optional[Context] = None,
 ) -> Context:
     """Uses the configured propagator to extract a Context from the carrier.
 
@@ -99,26 +87,21 @@ def extract(
         context: an optional Context to use. Defaults to current
             context if not set.
     """
-    return get_global_textmap().extract(getter, carrier, context)
+    return get_global_textmap().extract(carrier, context)
 
 
 def inject(
-    set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
-    carrier: textmap.TextMapPropagatorT,
-    context: typing.Optional[Context] = None,
+    carrier: Dict[str, str], context: Optional[Context] = None,
 ) -> None:
     """Uses the configured propagator to inject a Context into the carrier.
 
     Args:
-        set_in_carrier: A setter function that can set values
-            on the carrier.
-        carrier: An object that contains a representation of HTTP
-            headers. Should be paired with set_in_carrier, which
-            should know how to set header values on the carrier.
+        carrier: A dict-like object that contains a representation of HTTP
+            headers.
         context: an optional Context to use. Defaults to current
             context if not set.
     """
-    get_global_textmap().inject(set_in_carrier, carrier, context)
+    get_global_textmap().inject(carrier, context)
 
 
 try:
@@ -138,16 +121,16 @@ try:
         )
 
 except Exception:  # pylint: disable=broad-except
-    logger.exception("Failed to load configured propagators")
+    _logger.error("Failed to load configured propagators")
     raise
 
-_HTTP_TEXT_FORMAT = composite.CompositeHTTPPropagator(propagators)  # type: ignore
+_textmap_propagator = composite.CompositeHTTPPropagator(propagators)  # type: ignore
 
 
-def get_global_textmap() -> textmap.TextMapPropagator:
-    return _HTTP_TEXT_FORMAT
+def get_global_textmap() -> TextMapPropagator:
+    return _textmap_propagator
 
 
-def set_global_textmap(http_text_format: textmap.TextMapPropagator,) -> None:
-    global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement
-    _HTTP_TEXT_FORMAT = http_text_format  # type: ignore
+def set_global_textmap(http_text_format: TextMapPropagator,) -> None:
+    global _textmap_propagator  # pylint:disable=global-statement
+    _textmap_propagator = http_text_format  # type: ignore

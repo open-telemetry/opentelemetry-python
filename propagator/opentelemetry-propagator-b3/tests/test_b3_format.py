@@ -12,31 +12,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
-from unittest.mock import Mock, patch
+from unittest import TestCase
+from unittest.mock import patch
 
-import opentelemetry.propagators.b3 as b3_format  # pylint: disable=no-name-in-module,import-error
-import opentelemetry.sdk.trace as trace
-import opentelemetry.sdk.trace.id_generator as id_generator
-import opentelemetry.trace as trace_api
+from opentelemetry import trace
 from opentelemetry.context import get_current
-from opentelemetry.propagators.textmap import DictGetter
+from opentelemetry.propagators.b3 import (
+    B3Format,
+    format_span_id,
+    format_trace_id,
+)
+from opentelemetry.sdk.trace import TracerProvider, _Span, id_generator
+from opentelemetry.trace import (
+    INVALID_SPAN_ID,
+    INVALID_TRACE_ID,
+    SpanContext,
+    get_current_span,
+    set_span_in_context,
+)
 
-FORMAT = b3_format.B3Format()
-
-
-carrier_getter = DictGetter()
+format_ = B3Format()
 
 
 def get_child_parent_new_carrier(old_carrier):
 
-    ctx = FORMAT.extract(carrier_getter, old_carrier)
-    parent_span_context = trace_api.get_current_span(ctx).get_span_context()
+    ctx = format_.extract(old_carrier)
+    parent_span_context = get_current_span(ctx).get_span_context()
 
-    parent = trace._Span("parent", parent_span_context)
-    child = trace._Span(
+    parent = _Span("parent", parent_span_context)
+    child = _Span(
         "child",
-        trace_api.SpanContext(
+        SpanContext(
             parent_span_context.trace_id,
             id_generator.RandomIdGenerator().generate_span_id(),
             is_remote=False,
@@ -47,30 +53,27 @@ def get_child_parent_new_carrier(old_carrier):
     )
 
     new_carrier = {}
-    ctx = trace_api.set_span_in_context(child)
-    FORMAT.inject(dict.__setitem__, new_carrier, context=ctx)
+    ctx = set_span_in_context(child)
+
+    format_.inject(new_carrier, context=ctx)
 
     return child, parent, new_carrier
 
 
-class TestB3Format(unittest.TestCase):
+class TestB3Format(TestCase):
     @classmethod
     def setUpClass(cls):
         generator = id_generator.RandomIdGenerator()
-        cls.serialized_trace_id = b3_format.format_trace_id(
+        cls.serialized_trace_id = format_trace_id(
             generator.generate_trace_id()
         )
-        cls.serialized_span_id = b3_format.format_span_id(
-            generator.generate_span_id()
-        )
-        cls.serialized_parent_id = b3_format.format_span_id(
-            generator.generate_span_id()
-        )
+        cls.serialized_span_id = format_span_id(generator.generate_span_id())
+        cls.serialized_parent_id = format_span_id(generator.generate_span_id())
 
     def setUp(self) -> None:
-        tracer_provider = trace.TracerProvider()
-        patcher = unittest.mock.patch.object(
-            trace_api, "get_tracer_provider", return_value=tracer_provider
+        tracer_provider = TracerProvider()
+        patcher = patch.object(
+            trace, "get_tracer_provider", return_value=tracer_provider
         )
         patcher.start()
         self.addCleanup(patcher.stop)
@@ -79,52 +82,53 @@ class TestB3Format(unittest.TestCase):
         """Test the extraction of B3 headers."""
         child, parent, new_carrier = get_child_parent_new_carrier(
             {
-                FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-                FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-                FORMAT.PARENT_SPAN_ID_KEY: self.serialized_parent_id,
-                FORMAT.SAMPLED_KEY: "1",
+                format_.TRACE_ID_KEY: self.serialized_trace_id,
+                format_.SPAN_ID_KEY: self.serialized_span_id,
+                format_.PARENT_SPAN_ID_KEY: self.serialized_parent_id,
+                format_.SAMPLED_KEY: "1",
             }
         )
 
         self.assertEqual(
-            new_carrier[FORMAT.TRACE_ID_KEY],
-            b3_format.format_trace_id(child.context.trace_id),
+            new_carrier[format_.TRACE_ID_KEY],
+            format_trace_id(child.context.trace_id),
         )
         self.assertEqual(
-            new_carrier[FORMAT.SPAN_ID_KEY],
-            b3_format.format_span_id(child.context.span_id),
+            new_carrier[format_.SPAN_ID_KEY],
+            format_span_id(child.context.span_id),
         )
+
         self.assertEqual(
-            new_carrier[FORMAT.PARENT_SPAN_ID_KEY],
-            b3_format.format_span_id(parent.context.span_id),
+            new_carrier[format_.PARENT_SPAN_ID_KEY],
+            format_span_id(parent.context.span_id),
         )
         self.assertTrue(parent.context.is_remote)
-        self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
+        self.assertEqual(new_carrier[format_.SAMPLED_KEY], "1")
 
     def test_extract_single_header(self):
         """Test the extraction from a single b3 header."""
         child, parent, new_carrier = get_child_parent_new_carrier(
             {
-                FORMAT.SINGLE_HEADER_KEY: "{}-{}".format(
+                format_.SINGLE_HEADER_KEY: "{}-{}".format(
                     self.serialized_trace_id, self.serialized_span_id
                 )
             }
         )
 
         self.assertEqual(
-            new_carrier[FORMAT.TRACE_ID_KEY],
-            b3_format.format_trace_id(child.context.trace_id),
+            new_carrier[format_.TRACE_ID_KEY],
+            format_trace_id(child.context.trace_id),
         )
         self.assertEqual(
-            new_carrier[FORMAT.SPAN_ID_KEY],
-            b3_format.format_span_id(child.context.span_id),
+            new_carrier[format_.SPAN_ID_KEY],
+            format_span_id(child.context.span_id),
         )
-        self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
+        self.assertEqual(new_carrier[format_.SAMPLED_KEY], "1")
         self.assertTrue(parent.context.is_remote)
 
         child, parent, new_carrier = get_child_parent_new_carrier(
             {
-                FORMAT.SINGLE_HEADER_KEY: "{}-{}-1-{}".format(
+                format_.SINGLE_HEADER_KEY: "{}-{}-1-{}".format(
                     self.serialized_trace_id,
                     self.serialized_span_id,
                     self.serialized_parent_id,
@@ -133,19 +137,19 @@ class TestB3Format(unittest.TestCase):
         )
 
         self.assertEqual(
-            new_carrier[FORMAT.TRACE_ID_KEY],
-            b3_format.format_trace_id(child.context.trace_id),
+            new_carrier[format_.TRACE_ID_KEY],
+            format_trace_id(child.context.trace_id),
         )
         self.assertEqual(
-            new_carrier[FORMAT.SPAN_ID_KEY],
-            b3_format.format_span_id(child.context.span_id),
+            new_carrier[format_.SPAN_ID_KEY],
+            format_span_id(child.context.span_id),
         )
         self.assertEqual(
-            new_carrier[FORMAT.PARENT_SPAN_ID_KEY],
-            b3_format.format_span_id(parent.context.span_id),
+            new_carrier[format_.PARENT_SPAN_ID_KEY],
+            format_span_id(parent.context.span_id),
         )
         self.assertTrue(parent.context.is_remote)
-        self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
+        self.assertEqual(new_carrier[format_.SAMPLED_KEY], "1")
 
     def test_extract_header_precedence(self):
         """A single b3 header should take precedence over multiple
@@ -155,17 +159,17 @@ class TestB3Format(unittest.TestCase):
 
         _, _, new_carrier = get_child_parent_new_carrier(
             {
-                FORMAT.SINGLE_HEADER_KEY: "{}-{}".format(
+                format_.SINGLE_HEADER_KEY: "{}-{}".format(
                     single_header_trace_id, self.serialized_span_id
                 ),
-                FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-                FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-                FORMAT.SAMPLED_KEY: "1",
+                format_.TRACE_ID_KEY: self.serialized_trace_id,
+                format_.SPAN_ID_KEY: self.serialized_span_id,
+                format_.SAMPLED_KEY: "1",
             }
         )
 
         self.assertEqual(
-            new_carrier[FORMAT.TRACE_ID_KEY], single_header_trace_id
+            new_carrier[format_.TRACE_ID_KEY], single_header_trace_id
         )
 
     def test_enabled_sampling(self):
@@ -173,50 +177,50 @@ class TestB3Format(unittest.TestCase):
         for variant in ["1", "True", "true", "d"]:
             _, _, new_carrier = get_child_parent_new_carrier(
                 {
-                    FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-                    FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-                    FORMAT.SAMPLED_KEY: variant,
+                    format_.TRACE_ID_KEY: self.serialized_trace_id,
+                    format_.SPAN_ID_KEY: self.serialized_span_id,
+                    format_.SAMPLED_KEY: variant,
                 }
             )
 
-            self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
+            self.assertEqual(new_carrier[format_.SAMPLED_KEY], "1")
 
     def test_disabled_sampling(self):
         """Test b3 sample key variants that turn off sampling."""
         for variant in ["0", "False", "false", None]:
             _, _, new_carrier = get_child_parent_new_carrier(
                 {
-                    FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-                    FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-                    FORMAT.SAMPLED_KEY: variant,
+                    format_.TRACE_ID_KEY: self.serialized_trace_id,
+                    format_.SPAN_ID_KEY: self.serialized_span_id,
+                    format_.SAMPLED_KEY: variant,
                 }
             )
 
-            self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "0")
+            self.assertEqual(new_carrier[format_.SAMPLED_KEY], "0")
 
     def test_flags(self):
         """x-b3-flags set to "1" should result in propagation."""
         _, _, new_carrier = get_child_parent_new_carrier(
             {
-                FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-                FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-                FORMAT.FLAGS_KEY: "1",
+                format_.TRACE_ID_KEY: self.serialized_trace_id,
+                format_.SPAN_ID_KEY: self.serialized_span_id,
+                format_.FLAGS_KEY: "1",
             }
         )
 
-        self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
+        self.assertEqual(new_carrier[format_.SAMPLED_KEY], "1")
 
     def test_flags_and_sampling(self):
         """Propagate if b3 flags and sampling are set."""
         _, _, new_carrier = get_child_parent_new_carrier(
             {
-                FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-                FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-                FORMAT.FLAGS_KEY: "1",
+                format_.TRACE_ID_KEY: self.serialized_trace_id,
+                format_.SPAN_ID_KEY: self.serialized_span_id,
+                format_.FLAGS_KEY: "1",
             }
         )
 
-        self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
+        self.assertEqual(new_carrier[format_.SAMPLED_KEY], "1")
 
     def test_64bit_trace_id(self):
         """64 bit trace ids should be padded to 128 bit trace ids."""
@@ -224,36 +228,36 @@ class TestB3Format(unittest.TestCase):
 
         _, _, new_carrier = get_child_parent_new_carrier(
             {
-                FORMAT.TRACE_ID_KEY: trace_id_64_bit,
-                FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-                FORMAT.FLAGS_KEY: "1",
+                format_.TRACE_ID_KEY: trace_id_64_bit,
+                format_.SPAN_ID_KEY: self.serialized_span_id,
+                format_.FLAGS_KEY: "1",
             }
         )
 
         self.assertEqual(
-            new_carrier[FORMAT.TRACE_ID_KEY], "0" * 16 + trace_id_64_bit
+            new_carrier[format_.TRACE_ID_KEY], "0" * 16 + trace_id_64_bit
         )
 
     def test_invalid_single_header(self):
         """If an invalid single header is passed, return an
         invalid SpanContext.
         """
-        carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
-        ctx = FORMAT.extract(carrier_getter, carrier)
-        span_context = trace_api.get_current_span(ctx).get_span_context()
-        self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
-        self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
+        carrier = {format_.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
+        ctx = format_.extract(carrier)
+        span_context = get_current_span(ctx).get_span_context()
+        self.assertEqual(span_context.trace_id, INVALID_TRACE_ID)
+        self.assertEqual(span_context.span_id, INVALID_SPAN_ID)
 
     def test_missing_trace_id(self):
         """If a trace id is missing, populate an invalid trace id."""
         carrier = {
-            FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-            FORMAT.FLAGS_KEY: "1",
+            format_.SPAN_ID_KEY: self.serialized_span_id,
+            format_.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(carrier_getter, carrier)
-        span_context = trace_api.get_current_span(ctx).get_span_context()
-        self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
+        ctx = format_.extract(carrier)
+        span_context = get_current_span(ctx).get_span_context()
+        self.assertEqual(span_context.trace_id, INVALID_TRACE_ID)
 
     @patch(
         "opentelemetry.sdk.trace.id_generator.RandomIdGenerator.generate_trace_id"
@@ -270,13 +274,13 @@ class TestB3Format(unittest.TestCase):
         mock_generate_span_id.configure_mock(return_value=2)
 
         carrier = {
-            FORMAT.TRACE_ID_KEY: "abc123",
-            FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-            FORMAT.FLAGS_KEY: "1",
+            format_.TRACE_ID_KEY: "abc123",
+            format_.SPAN_ID_KEY: self.serialized_span_id,
+            format_.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(carrier_getter, carrier)
-        span_context = trace_api.get_current_span(ctx).get_span_context()
+        ctx = format_.extract(carrier)
+        span_context = get_current_span(ctx).get_span_context()
 
         self.assertEqual(span_context.trace_id, 1)
         self.assertEqual(span_context.span_id, 2)
@@ -296,13 +300,13 @@ class TestB3Format(unittest.TestCase):
         mock_generate_span_id.configure_mock(return_value=2)
 
         carrier = {
-            FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-            FORMAT.SPAN_ID_KEY: "abc123",
-            FORMAT.FLAGS_KEY: "1",
+            format_.TRACE_ID_KEY: self.serialized_trace_id,
+            format_.SPAN_ID_KEY: "abc123",
+            format_.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(carrier_getter, carrier)
-        span_context = trace_api.get_current_span(ctx).get_span_context()
+        ctx = format_.extract(carrier)
+        span_context = get_current_span(ctx).get_span_context()
 
         self.assertEqual(span_context.trace_id, 1)
         self.assertEqual(span_context.span_id, 2)
@@ -310,49 +314,38 @@ class TestB3Format(unittest.TestCase):
     def test_missing_span_id(self):
         """If a trace id is missing, populate an invalid trace id."""
         carrier = {
-            FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-            FORMAT.FLAGS_KEY: "1",
+            format_.TRACE_ID_KEY: self.serialized_trace_id,
+            format_.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(carrier_getter, carrier)
-        span_context = trace_api.get_current_span(ctx).get_span_context()
-        self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
+        ctx = format_.extract(carrier)
+        span_context = get_current_span(ctx).get_span_context()
+        self.assertEqual(span_context.span_id, INVALID_SPAN_ID)
 
-    @staticmethod
-    def test_inject_empty_context():
+    def test_inject_empty_context(self):
         """If the current context has no span, don't add headers"""
         new_carrier = {}
-        FORMAT.inject(dict.__setitem__, new_carrier, get_current())
-        assert len(new_carrier) == 0
+        format_.inject(new_carrier, get_current())
+        self.assertEqual(len(new_carrier), 0)
 
-    @staticmethod
-    def test_default_span():
-        """Make sure propagator does not crash when working with NonRecordingSpan"""
+    def test_default_span(self):
+        """Make sure propagator does not crash when working with
+        NonRecordingSpan"""
 
-        class CarrierGetter(DictGetter):
-            def get(self, carrier, key):
-                return carrier.get(key, None)
-
-        def setter(carrier, key, value):
-            carrier[key] = value
-
-        ctx = FORMAT.extract(CarrierGetter(), {})
-        FORMAT.inject(setter, {}, ctx)
+        try:
+            format_.inject({}, format_.extract({}))
+        except Exception:  # pylint: disable=broad-except
+            self.fail("propagator crashed when working with NonRecordingSpan")
 
     def test_fields(self):
         """Make sure the fields attribute returns the fields used in inject"""
 
-        tracer = trace.TracerProvider().get_tracer("sdk_tracer_provider")
+        tracer = TracerProvider().get_tracer("sdk_tracer_provider")
 
-        mock_set_in_carrier = Mock()
+        carrier = {}
 
         with tracer.start_as_current_span("parent"):
             with tracer.start_as_current_span("child"):
-                FORMAT.inject(mock_set_in_carrier, {})
+                format_.inject(carrier)
 
-        inject_fields = set()
-
-        for call in mock_set_in_carrier.mock_calls:
-            inject_fields.add(call[1][1])
-
-        self.assertEqual(FORMAT.fields, inject_fields)
+        self.assertEqual(format_.fields, carrier.keys())

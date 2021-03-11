@@ -18,45 +18,43 @@ import unittest
 
 from opentelemetry import baggage, trace
 from opentelemetry.propagate import extract, inject
-from opentelemetry.propagators.textmap import DictGetter
 from opentelemetry.trace import get_current_span, set_span_in_context
 from opentelemetry.trace.span import format_span_id, format_trace_id
-
-carrier_getter = DictGetter()
 
 
 class TestDefaultGlobalPropagator(unittest.TestCase):
     """Test ensures the default global composite propagator works as intended"""
 
-    TRACE_ID = int("12345678901234567890123456789012", 16)  # type:int
-    SPAN_ID = int("1234567890123456", 16)  # type:int
+    trace_id = int("12345678901234567890123456789012", 16)  # type:int
+    span_id = int("1234567890123456", 16)  # type:int
 
     def test_propagation(self):
         traceparent_value = "00-{trace_id}-{span_id}-00".format(
-            trace_id=format_trace_id(self.TRACE_ID),
-            span_id=format_span_id(self.SPAN_ID),
+            trace_id=format_trace_id(self.trace_id),
+            span_id=format_span_id(self.span_id),
         )
-        tracestate_value = "foo=1,bar=2,baz=3"
-        headers = {
-            "baggage": ["key1=val1,key2=val2"],
-            "traceparent": [traceparent_value],
-            "tracestate": [tracestate_value],
-        }
-        ctx = extract(carrier_getter, headers)
-        baggage_entries = baggage.get_all(context=ctx)
-        expected = {"key1": "val1", "key2": "val2"}
-        self.assertEqual(baggage_entries, expected)
+
+        ctx = extract(
+            {
+                "baggage": "key1=val1,key2=val2",
+                "traceparent": traceparent_value,
+                "tracestate": "foo=1,bar=2,baz=3",
+            }
+        )
+        self.assertEqual(
+            baggage.get_all(context=ctx), {"key1": "val1", "key2": "val2"}
+        )
         span_context = get_current_span(context=ctx).get_span_context()
 
-        self.assertEqual(span_context.trace_id, self.TRACE_ID)
-        self.assertEqual(span_context.span_id, self.SPAN_ID)
+        self.assertEqual(span_context.trace_id, self.trace_id)
+        self.assertEqual(span_context.span_id, self.span_id)
 
         span = trace.NonRecordingSpan(span_context)
         ctx = baggage.set_baggage("key3", "val3")
         ctx = baggage.set_baggage("key4", "val4", context=ctx)
         ctx = set_span_in_context(span, context=ctx)
         output = {}
-        inject(dict.__setitem__, output, context=ctx)
+        inject(output, context=ctx)
         self.assertEqual(traceparent_value, output["traceparent"])
         self.assertIn("key3=val3", output["baggage"])
         self.assertIn("key4=val4", output["baggage"])

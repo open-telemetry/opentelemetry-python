@@ -335,11 +335,11 @@ class TraceState(typing.Mapping[str, str]):
         return ",".join(key + "=" + value for key, value in self._dict.items())
 
     @classmethod
-    def from_header(cls, header_list: typing.List[str]) -> "TraceState":
+    def from_header(cls, header: str) -> "TraceState":
         """Parses one or more w3c tracestate header into a TraceState.
 
         Args:
-            header_list: one or more w3c tracestate headers.
+            header: one W3C tracestate headers.
 
         Returns:
             A valid TraceState that contains values extracted from
@@ -351,24 +351,24 @@ class TraceState(typing.Mapping[str, str]):
             If the number of keys is beyond the maximum, all values
             will be discarded and an empty tracestate will be returned.
         """
+
         pairs = OrderedDict()
-        for header in header_list:
-            for member in re.split(_delimiter_pattern, header):
-                # empty members are valid, but no need to process further.
-                if not member:
-                    continue
-                match = _member_pattern.fullmatch(member)
-                if not match:
-                    _logger.warning(
-                        "Member doesn't match the w3c identifiers format %s",
-                        member,
-                    )
-                    return cls()
-                key, _eq, value = match.groups()
-                # duplicate keys are not legal in header
-                if key in pairs:
-                    return cls()
-                pairs[key] = value
+        for member in re.split(_delimiter_pattern, header):
+            # empty members are valid, but no need to process further.
+            if not member:
+                continue
+            match = _member_pattern.fullmatch(member)
+            if not match:
+                _logger.warning(
+                    "Member doesn't match the w3c identifiers format %s",
+                    member,
+                )
+                return cls()
+            key, _eq, value = match.groups()
+            # duplicate keys are not legal in header
+            if key in pairs:
+                return cls()
+            pairs[key] = value
         return cls(list(pairs.items()))
 
     @classmethod

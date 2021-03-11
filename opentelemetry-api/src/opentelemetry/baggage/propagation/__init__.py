@@ -11,29 +11,26 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-#
-import typing
-import urllib.parse
+
+from typing import Dict, Optional, Set
+from urllib.parse import quote_plus, unquote
 
 from opentelemetry import baggage
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
-from opentelemetry.propagators import textmap
+from opentelemetry.propagators.textmap import TextMapPropagator
 
 
-class W3CBaggagePropagator(textmap.TextMapPropagator):
+class W3CBaggagePropagator(TextMapPropagator):
     """Extracts and injects Baggage which is used to annotate telemetry."""
 
-    _MAX_HEADER_LENGTH = 8192
-    _MAX_PAIR_LENGTH = 4096
-    _MAX_PAIRS = 180
-    _BAGGAGE_HEADER_NAME = "baggage"
+    _baggage_header_name = "baggage"
+    _max_header_length = 9182
+    _max_pairs = 180
+    _max_pair_length = 4096
 
     def extract(
-        self,
-        getter: textmap.Getter[textmap.TextMapPropagatorT],
-        carrier: textmap.TextMapPropagatorT,
-        context: typing.Optional[Context] = None,
+        self, carrier: Dict[str, str], context: Optional[Context] = None,
     ) -> Context:
         """Extract Baggage from the carrier.
 
@@ -44,38 +41,31 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         if context is None:
             context = get_current()
 
-        header = _extract_first_element(
-            getter.get(carrier, self._BAGGAGE_HEADER_NAME)
-        )
+        header = carrier.get(self._baggage_header_name)
 
-        if not header or len(header) > self._MAX_HEADER_LENGTH:
+        if header is None or len(header) > self._max_header_length:
             return context
 
-        baggage_entries = header.split(",")
-        total_baggage_entries = self._MAX_PAIRS
-        for entry in baggage_entries:
+        total_baggage_entries = self._max_pairs
+
+        for entry in header.split(","):
             if total_baggage_entries <= 0:
                 return context
             total_baggage_entries -= 1
-            if len(entry) > self._MAX_PAIR_LENGTH:
+            if len(entry) > self._max_pair_length:
                 continue
-            try:
+            if "=" in entry:
                 name, value = entry.split("=", 1)
-            except Exception:  # pylint: disable=broad-except
-                continue
-            context = baggage.set_baggage(
-                urllib.parse.unquote(name).strip(),
-                urllib.parse.unquote(value).strip(),
-                context=context,
-            )
+                context = baggage.set_baggage(
+                    unquote(name).strip(),
+                    unquote(value).strip(),
+                    context=context,
+                )
 
         return context
 
     def inject(
-        self,
-        set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
-        carrier: textmap.TextMapPropagatorT,
-        context: typing.Optional[Context] = None,
+        self, carrier: Dict[str, str], context: Optional[Context] = None,
     ) -> None:
         """Injects Baggage into the carrier.
 
@@ -83,28 +73,14 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         `opentelemetry.propagators.textmap.TextMapPropagator.inject`
         """
         baggage_entries = baggage.get_all(context=context)
-        if not baggage_entries:
-            return
 
-        baggage_string = _format_baggage(baggage_entries)
-        set_in_carrier(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
+        if baggage_entries:
+            carrier[self._baggage_header_name] = ",".join(
+                key + "=" + quote_plus(str(value))
+                for key, value in baggage_entries.items()
+            )
 
     @property
-    def fields(self) -> typing.Set[str]:
+    def fields(self) -> Set[str]:
         """Returns a set with the fields set in `inject`."""
-        return {self._BAGGAGE_HEADER_NAME}
-
-
-def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
-    return ",".join(
-        key + "=" + urllib.parse.quote_plus(str(value))
-        for key, value in baggage_entries.items()
-    )
-
-
-def _extract_first_element(
-    items: typing.Optional[typing.Iterable[textmap.TextMapPropagatorT]],
-) -> typing.Optional[textmap.TextMapPropagatorT]:
-    if items is None:
-        return None
-    return next(iter(items), None)
+        return {self._baggage_header_name}
