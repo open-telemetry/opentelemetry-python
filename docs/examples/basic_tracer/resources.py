@@ -20,6 +20,7 @@ from opentelemetry.sdk.trace.export import (
     SimpleSpanProcessor,
 )
 
+# Use Resource.create() instead of constructor directly
 resource = Resource.create({"service.name": "basic_service"})
 
 trace.set_tracer_provider(TracerProvider(resource=resource))
