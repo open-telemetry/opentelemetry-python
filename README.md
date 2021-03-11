@@ -134,6 +134,7 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 - [Diego Hurtado](https://github.com/ocelotl)
 - [Hector Hernandez](https://github.com/hectorhdzg), Microsoft
 - [Owais Lone](https://github.com/owais), Splunk
+- [Srikanth Chekuri](https://github.com/lonewolf3739)
 - [Yusuke Tsutsumi](https://github.com/toumorokoshi), Google
 
 *For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver).*
