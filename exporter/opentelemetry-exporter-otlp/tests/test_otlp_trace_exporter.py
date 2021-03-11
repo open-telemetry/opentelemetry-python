@@ -225,51 +225,54 @@ class TestOTLPSpanExporter(TestCase):
         )
 
     # pylint: disable=no-self-use
-    def test_otlp_compression_from_env(self):
-        # Just OTEL_EXPORTER_OTLP_COMPRESSION should work
-        with patch(
-            "opentelemetry.exporter.otlp.exporter.insecure_channel"
-        ) as mock_insecure_channel, patch.dict(
-            "os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"}
-        ):
-            OTLPSpanExporter(insecure=True)
-            mock_insecure_channel.assert_called_once_with(
-                "localhost:4317", compression=Compression.Gzip
-            )
+    @patch("opentelemetry.exporter.otlp.exporter.insecure_channel")
+    @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
+    def test_otlp_exporter_otlp_compression_envvar(
+        self, mock_insecure_channel
+    ):
+        """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
+        OTLPSpanExporter(insecure=True)
+        mock_insecure_channel.assert_called_once_with(
+            "localhost:4317", compression=Compression.Gzip
+        )
 
-        # Specifying kwarg should take precedence over env
-        with patch(
-            "opentelemetry.exporter.otlp.exporter.insecure_channel"
-        ) as mock_insecure_channel, patch.dict(
-            "os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"}
-        ):
-            OTLPSpanExporter(
-                insecure=True, compression=Compression.NoCompression
-            )
-            mock_insecure_channel.assert_called_once_with(
-                "localhost:4317", compression=Compression.NoCompression
-            )
+    # pylint: disable=no-self-use
+    @patch("opentelemetry.exporter.otlp.exporter.insecure_channel")
+    @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
+    def test_otlp_exporter_otlp_compression_kwarg(self, mock_insecure_channel):
+        """Specifying kwarg should take precedence over env"""
+        OTLPSpanExporter(insecure=True, compression=Compression.NoCompression)
+        mock_insecure_channel.assert_called_once_with(
+            "localhost:4317", compression=Compression.NoCompression
+        )
 
-        # No env or kwarg should be NoCompression
-        with patch(
-            "opentelemetry.exporter.otlp.exporter.insecure_channel"
-        ) as mock_insecure_channel, patch.dict("os.environ", {}):
-            OTLPSpanExporter(insecure=True)
-            mock_insecure_channel.assert_called_once_with(
-                "localhost:4317", compression=Compression.NoCompression
-            )
+    # pylint: disable=no-self-use
+    @patch("opentelemetry.exporter.otlp.exporter.insecure_channel")
+    @patch.dict("os.environ", {})
+    def test_otlp_exporter_otlp_compression_unspecified(
+        self, mock_insecure_channel
+    ):
+        """No env or kwarg should be NoCompression"""
+        OTLPSpanExporter(insecure=True)
+        mock_insecure_channel.assert_called_once_with(
+            "localhost:4317", compression=Compression.NoCompression
+        )
 
-        # OTEL_EXPORTER_OTLP_TRACES_COMPRESSION as higher priority than
-        # OTEL_EXPORTER_OTLP_COMPRESSION
-        with patch(
-            "opentelemetry.exporter.otlp.exporter.insecure_channel"
-        ) as mock_insecure_channel, patch.dict(
-            "os.environ", {OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip"},
-        ):
-            OTLPSpanExporter(insecure=True)
-            mock_insecure_channel.assert_called_once_with(
-                "localhost:4317", compression=Compression.Gzip
-            )
+    # pylint: disable=no-self-use
+    @patch("opentelemetry.exporter.otlp.exporter.insecure_channel")
+    @patch.dict(
+        "os.environ", {OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip"},
+    )
+    def test_otlp_exporter_otlp_compression_precendence(
+        self, mock_insecure_channel
+    ):
+        """OTEL_EXPORTER_OTLP_TRACES_COMPRESSION as higher priority than
+        OTEL_EXPORTER_OTLP_COMPRESSION
+        """
+        OTLPSpanExporter(insecure=True)
+        mock_insecure_channel.assert_called_once_with(
+            "localhost:4317", compression=Compression.Gzip
+        )
 
     @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
     @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
