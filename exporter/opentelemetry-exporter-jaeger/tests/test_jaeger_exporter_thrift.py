@@ -146,7 +146,6 @@ class TestJaegerExporter(unittest.TestCase):
                 OTEL_EXPORTER_JAEGER_ENDPOINT: collector_endpoint,
                 OTEL_EXPORTER_JAEGER_USER: username,
                 OTEL_EXPORTER_JAEGER_PASSWORD: password,
-                # OTEL_RESOURCE_ATTRIBUTES: "service.name=my-opentelemetry-jaeger",
             },
         )
 

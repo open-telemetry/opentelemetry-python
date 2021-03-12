@@ -69,7 +69,6 @@ class TestJaegerExporter(unittest.TestCase):
                 OTEL_EXPORTER_JAEGER_ENDPOINT: collector_endpoint,
                 OTEL_EXPORTER_JAEGER_CERTIFICATE: os.path.dirname(__file__)
                 + "/certs/cred.cert",
-                # OTEL_RESOURCE_ATTRIBUTES: "service.name=my-opentelemetry-jaeger",
             },
         )
         trace_api.set_tracer_provider(
