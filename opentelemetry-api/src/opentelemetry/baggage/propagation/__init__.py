@@ -24,9 +24,9 @@ from opentelemetry.propagators import textmap
 class W3CBaggagePropagator(textmap.TextMapPropagator):
     """Extracts and injects Baggage which is used to annotate telemetry."""
 
-    MAX_HEADER_LENGTH = 8192
-    MAX_PAIR_LENGTH = 4096
-    MAX_PAIRS = 180
+    _MAX_HEADER_LENGTH = 8192
+    _MAX_PAIR_LENGTH = 4096
+    _MAX_PAIRS = 180
     _BAGGAGE_HEADER_NAME = "baggage"
 
     def extract(
@@ -48,16 +48,16 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
             getter.get(carrier, self._BAGGAGE_HEADER_NAME)
         )
 
-        if not header or len(header) > self.MAX_HEADER_LENGTH:
+        if not header or len(header) > self._MAX_HEADER_LENGTH:
             return context
 
         baggage_entries = header.split(",")
-        total_baggage_entries = self.MAX_PAIRS
+        total_baggage_entries = self._MAX_PAIRS
         for entry in baggage_entries:
             if total_baggage_entries <= 0:
                 return context
             total_baggage_entries -= 1
-            if len(entry) > self.MAX_PAIR_LENGTH:
+            if len(entry) > self._MAX_PAIR_LENGTH:
                 continue
             try:
                 name, value = entry.split("=", 1)

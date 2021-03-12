@@ -14,7 +14,7 @@
 from contextvars import ContextVar
 from sys import version_info
 
-from opentelemetry.context.context import Context, RuntimeContext
+from opentelemetry.context.context import Context, _RuntimeContext
 
 if (3, 5, 3) <= version_info < (3, 7):
     import aiocontextvars  # type: ignore # pylint:disable=unused-import,import-error
@@ -23,7 +23,7 @@ elif (3, 4) < version_info <= (3, 5, 2):
     import opentelemetry.context.aiocontextvarsfix  # pylint:disable=unused-import
 
 
-class ContextVarsRuntimeContext(RuntimeContext):
+class ContextVarsRuntimeContext(_RuntimeContext):
     """An implementation of the RuntimeContext interface which wraps ContextVar under
     the hood. This is the prefered implementation for usage with Python 3.5+
     """
@@ -36,15 +36,24 @@ class ContextVarsRuntimeContext(RuntimeContext):
         )
 
     def attach(self, context: Context) -> object:
-        """See `opentelemetry.context.RuntimeContext.attach`."""
+        """Sets the current `Context` object. Returns a
+        token that can be used to reset to the previous `Context`.
+
+        Args:
+            context: The Context to set.
+        """
         return self._current_context.set(context)
 
     def get_current(self) -> Context:
-        """See `opentelemetry.context.RuntimeContext.get_current`."""
+        """Returns the current `Context` object. """
         return self._current_context.get()
 
     def detach(self, token: object) -> None:
-        """See `opentelemetry.context.RuntimeContext.detach`."""
+        """Resets Context to a previous value
+
+        Args:
+            token: A reference to a previous Context.
+        """
         self._current_context.reset(token)  # type: ignore
 
 
