@@ -110,7 +110,7 @@ from opentelemetry.util._providers import _load_provider
 logger = getLogger(__name__)
 
 
-class LinkBase(ABC):
+class _LinkBase(ABC):
     def __init__(self, context: "SpanContext") -> None:
         self._context = context
 
@@ -124,7 +124,7 @@ class LinkBase(ABC):
         pass
 
 
-class Link(LinkBase):
+class Link(_LinkBase):
     """A link to a `Span`.
 
     Args:
@@ -205,7 +205,7 @@ class TracerProvider(ABC):
         """
 
 
-class DefaultTracerProvider(TracerProvider):
+class _DefaultTracerProvider(TracerProvider):
     """The default TracerProvider, used when no implementation is available.
 
     All operations are no-op.
@@ -217,7 +217,7 @@ class DefaultTracerProvider(TracerProvider):
         instrumenting_library_version: str = "",
     ) -> "Tracer":
         # pylint:disable=no-self-use,unused-argument
-        return DefaultTracer()
+        return _DefaultTracer()
 
 
 class Tracer(ABC):
@@ -226,10 +226,6 @@ class Tracer(ABC):
     This class provides methods for manipulating the context, creating spans,
     and controlling spans' lifecycles.
     """
-
-    # Constant used to represent the current span being used as a parent.
-    # This is the default behavior when creating spans.
-    CURRENT_SPAN = NonRecordingSpan(INVALID_SPAN_CONTEXT)
 
     @abstractmethod
     def start_span(
@@ -353,7 +349,7 @@ class Tracer(ABC):
         """
 
 
-class DefaultTracer(Tracer):
+class _DefaultTracer(Tracer):
     """The default Tracer, used when no Tracer implementation is available.
 
     All operations are no-op.
@@ -496,10 +492,7 @@ __all__ = [
     "INVALID_SPAN_ID",
     "INVALID_TRACE_ID",
     "NonRecordingSpan",
-    "DefaultTracer",
-    "DefaultTracerProvider",
     "Link",
-    "LinkBase",
     "Span",
     "SpanContext",
     "SpanKind",
@@ -516,4 +509,5 @@ __all__ = [
     "set_span_in_context",
     "use_span",
     "Status",
+    "StatusCode",
 ]

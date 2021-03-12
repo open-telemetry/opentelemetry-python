@@ -25,8 +25,13 @@ from typing import Any, Dict, List, Optional, Sequence, TypeVar
 
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk.trace import Event
-from opentelemetry.trace import Span, SpanContext
-from opentelemetry.trace.status import StatusCode
+from opentelemetry.trace import (
+    Span,
+    SpanContext,
+    StatusCode,
+    format_span_id,
+    format_trace_id,
+)
 
 EncodedLocalEndpointT = TypeVar("EncodedLocalEndpointT")
 
@@ -260,8 +265,8 @@ class JsonEncoder(Encoder):
 
     @staticmethod
     def _encode_span_id(span_id: int) -> str:
-        return format(span_id, "016x")
+        return format_span_id(span_id)
 
     @staticmethod
     def _encode_trace_id(trace_id: int) -> str:
-        return format(trace_id, "032x")
+        return format_trace_id(trace_id)

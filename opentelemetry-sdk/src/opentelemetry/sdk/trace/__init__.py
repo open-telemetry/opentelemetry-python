@@ -54,7 +54,7 @@ from opentelemetry.trace import SpanContext
 from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
-from opentelemetry.util.time import time_ns
+from opentelemetry.util._time import _time_ns
 
 logger = logging.getLogger(__name__)
 
@@ -62,11 +62,11 @@ SPAN_ATTRIBUTE_COUNT_LIMIT = int(
     environ.get(OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, 128)
 )
 
-SPAN_EVENT_COUNT_LIMIT = int(environ.get(OTEL_SPAN_EVENT_COUNT_LIMIT, 128))
-SPAN_LINK_COUNT_LIMIT = int(environ.get(OTEL_SPAN_LINK_COUNT_LIMIT, 128))
-VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
+_SPAN_EVENT_COUNT_LIMIT = int(environ.get(OTEL_SPAN_EVENT_COUNT_LIMIT, 128))
+_SPAN_LINK_COUNT_LIMIT = int(environ.get(OTEL_SPAN_LINK_COUNT_LIMIT, 128))
+_VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
 # pylint: disable=protected-access
-TRACE_SAMPLER = sampling._get_from_env_or_default()
+_TRACE_SAMPLER = sampling._get_from_env_or_default()
 
 
 class SpanProcessor:
@@ -171,9 +171,9 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
             True if all span processors flushed their spans within the
             given timeout, False otherwise.
         """
-        deadline_ns = time_ns() + timeout_millis * 1000000
+        deadline_ns = _time_ns() + timeout_millis * 1000000
         for sp in self._span_processors:
-            current_time_ns = time_ns()
+            current_time_ns = _time_ns()
             if current_time_ns >= deadline_ns:
                 return False
 
@@ -273,7 +273,7 @@ class EventBase(abc.ABC):
     def __init__(self, name: str, timestamp: Optional[int] = None) -> None:
         self._name = name
         if timestamp is None:
-            self._timestamp = time_ns()
+            self._timestamp = _time_ns()
         else:
             self._timestamp = timestamp
 
@@ -333,14 +333,14 @@ def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
             if element is None:
                 continue
             element_type = type(element)
-            if element_type not in VALID_ATTR_VALUE_TYPES:
+            if element_type not in _VALID_ATTR_VALUE_TYPES:
                 logger.warning(
                     "Invalid type %s in attribute value sequence. Expected one of "
                     "%s or None",
                     element_type.__name__,
                     [
                         valid_type.__name__
-                        for valid_type in VALID_ATTR_VALUE_TYPES
+                        for valid_type in _VALID_ATTR_VALUE_TYPES
                     ],
                 )
                 return False
@@ -356,12 +356,12 @@ def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
                 )
                 return False
 
-    elif not isinstance(value, VALID_ATTR_VALUE_TYPES):
+    elif not isinstance(value, _VALID_ATTR_VALUE_TYPES):
         logger.warning(
             "Invalid type %s for attribute value. Expected one of %s or a "
             "sequence of those types",
             type(value).__name__,
-            [valid_type.__name__ for valid_type in VALID_ATTR_VALUE_TYPES],
+            [valid_type.__name__ for valid_type in _VALID_ATTR_VALUE_TYPES],
         )
         return False
     return True
@@ -521,8 +521,12 @@ class ReadableSpan:
     @staticmethod
     def _format_context(context):
         x_ctx = OrderedDict()
-        x_ctx["trace_id"] = trace_api.format_trace_id(context.trace_id)
-        x_ctx["span_id"] = trace_api.format_span_id(context.span_id)
+        x_ctx["trace_id"] = "0x{}".format(
+            trace_api.format_trace_id(context.trace_id)
+        )
+        x_ctx["span_id"] = "0x{}".format(
+            trace_api.format_span_id(context.span_id)
+        )
         x_ctx["trace_state"] = repr(context.trace_state)
         return x_ctx
 
@@ -636,7 +640,7 @@ class Span(trace_api.Span, ReadableSpan):
         if links is None:
             self._links = self._new_links()
         else:
-            self._links = BoundedList.from_seq(SPAN_LINK_COUNT_LIMIT, links)
+            self._links = BoundedList.from_seq(_SPAN_LINK_COUNT_LIMIT, links)
 
     def __repr__(self):
         return '{}(name="{}", context={})'.format(
@@ -649,11 +653,11 @@ class Span(trace_api.Span, ReadableSpan):
 
     @staticmethod
     def _new_events():
-        return BoundedList(SPAN_EVENT_COUNT_LIMIT)
+        return BoundedList(_SPAN_EVENT_COUNT_LIMIT)
 
     @staticmethod
     def _new_links():
-        return BoundedList(SPAN_LINK_COUNT_LIMIT)
+        return BoundedList(_SPAN_LINK_COUNT_LIMIT)
 
     def get_span_context(self):
         return self._context
@@ -704,7 +708,7 @@ class Span(trace_api.Span, ReadableSpan):
             Event(
                 name=name,
                 attributes=attributes,
-                timestamp=time_ns() if timestamp is None else timestamp,
+                timestamp=_time_ns() if timestamp is None else timestamp,
             )
         )
 
@@ -734,7 +738,7 @@ class Span(trace_api.Span, ReadableSpan):
                 logger.warning("Calling start() on a started span.")
                 return
             self._start_time = (
-                start_time if start_time is not None else time_ns()
+                start_time if start_time is not None else _time_ns()
             )
 
         self._span_processor.on_start(self, parent_context=parent_context)
@@ -747,7 +751,7 @@ class Span(trace_api.Span, ReadableSpan):
                 logger.warning("Calling end() on an ended span.")
                 return
 
-            self._end_time = end_time if end_time is not None else time_ns()
+            self._end_time = end_time if end_time is not None else _time_ns()
 
         self._span_processor.on_end(self._readable_span())
 
@@ -958,7 +962,7 @@ class TracerProvider(trace_api.TracerProvider):
 
     def __init__(
         self,
-        sampler: sampling.Sampler = TRACE_SAMPLER,
+        sampler: sampling.Sampler = _TRACE_SAMPLER,
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
         active_span_processor: Union[

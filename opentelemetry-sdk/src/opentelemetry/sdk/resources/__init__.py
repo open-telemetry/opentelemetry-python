@@ -23,11 +23,13 @@ This package implements `OpenTelemetry Resources
     these attributes can be included in the Resource.*
 
 Resource objects are created with `Resource.create`, which accepts attributes
-(key-values). Resource attributes can also be passed at process invocation in
-the :envvar:`OTEL_RESOURCE_ATTRIBUTES` environment variable. You should
-register your resource with the  `opentelemetry.sdk.trace.TracerProvider` by
-passing them into their constructors. The `Resource` passed to a provider is
-available to the exporter, which can send on this information as it sees fit.
+(key-values). Resources should NOT be created via constructor, and working with
+`Resource` objects should only be done via the Resource API methods. Resource
+attributes can also be passed at process invocation in the
+:envvar:`OTEL_RESOURCE_ATTRIBUTES` environment variable. You should register
+your resource with the  `opentelemetry.sdk.trace.TracerProvider` by passing
+them into their constructors. The `Resource` passed to a provider is available
+to the exporter, which can send on this information as it sees fit.
 
 .. code-block:: python
 
@@ -149,7 +151,7 @@ TELEMETRY_AUTO_VERSION = "telemetry.auto.version"
 TELEMETRY_SDK_LANGUAGE = "telemetry.sdk.language"
 
 
-OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
+_OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
     "opentelemetry-sdk"
 ).version
 
@@ -225,7 +227,7 @@ _DEFAULT_RESOURCE = Resource(
     {
         TELEMETRY_SDK_LANGUAGE: "python",
         TELEMETRY_SDK_NAME: "opentelemetry",
-        TELEMETRY_SDK_VERSION: OPENTELEMETRY_SDK_VERSION,
+        TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
     }
 )
 

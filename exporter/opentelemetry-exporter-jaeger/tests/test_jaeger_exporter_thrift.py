@@ -305,7 +305,7 @@ class TestJaegerExporter(unittest.TestCase):
         otel_spans[1].end(end_time=end_times[1])
 
         otel_spans[2].start(start_time=start_times[2])
-        otel_spans[2].set_status(Status(StatusCode.OK, "Example description"))
+        otel_spans[2].set_status(Status(StatusCode.OK))
         otel_spans[2].end(end_time=end_times[2])
 
         translate = Translate(otel_spans)
@@ -426,11 +426,6 @@ class TestJaegerExporter(unittest.TestCase):
                         key="otel.status_code",
                         vType=jaeger.TagType.STRING,
                         vStr="OK",
-                    ),
-                    jaeger.Tag(
-                        key="otel.status_description",
-                        vType=jaeger.TagType.STRING,
-                        vStr="Example description",
                     ),
                     jaeger.Tag(
                         key="span.kind",
