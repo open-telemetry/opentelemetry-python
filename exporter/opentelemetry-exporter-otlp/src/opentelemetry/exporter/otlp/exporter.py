@@ -221,9 +221,7 @@ class OTLPExporterMixin(
             )
         else:
             self._client = self._stub(
-                secure_channel(
-                    endpoint, credentials, compression=compression
-                )
+                secure_channel(endpoint, credentials, compression=compression)
             )
 
     @abstractmethod
