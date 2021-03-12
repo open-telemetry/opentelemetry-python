@@ -31,20 +31,12 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_ENDPOINT,
     OTEL_EXPORTER_JAEGER_PASSWORD,
     OTEL_EXPORTER_JAEGER_USER,
-    OTEL_RESOURCE_ATTRIBUTES,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME
 from opentelemetry.sdk.trace import Resource, TracerProvider
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCode
-
-
-class Provider:
-    def __init__(self, resource=None, id_generator=None):
-        self.id_generator = id_generator
-        self.processor = None
-        self.resource = Resource.create({})
 
 
 class TestJaegerExporter(unittest.TestCase):
@@ -61,31 +53,32 @@ class TestJaegerExporter(unittest.TestCase):
         self._test_span.end()
         # pylint: disable=protected-access
 
+    @patch("opentelemetry.exporter.jaeger.trace._TRACER_PROVIDER", None)
     def test_constructor_default(self):
         # pylint: disable=protected-access
         """Test the default values assigned by constructor."""
         service_name = "my-service-name"
         agent_host_name = "localhost"
         agent_port = 6831
-        env_patch = patch.dict(
-            "os.environ",
-            {OTEL_RESOURCE_ATTRIBUTES: "service.name=my-service-name"},
-        )
-        with patch("opentelemetry.exporter.jaeger.trace") as mock_trace:
-            env_patch.start()
-            mock_trace.get_tracer_provider.return_value = Provider()
-            exporter = jaeger_exporter.JaegerExporter()
-            self.assertEqual(exporter.service_name, service_name)
-            self.assertEqual(exporter.agent_host_name, agent_host_name)
-            self.assertEqual(exporter.agent_port, agent_port)
-            self.assertEqual(exporter.collector_endpoint, None)
-            self.assertEqual(exporter.username, None)
-            self.assertEqual(exporter.password, None)
-            self.assertTrue(exporter._collector_http_client is None)
-            self.assertTrue(exporter._agent_client is not None)
-            self.assertIsNone(exporter._max_tag_value_length)
-            env_patch.stop()
 
+        trace_api.set_tracer_provider(
+            TracerProvider(
+                resource=Resource.create({SERVICE_NAME: "my-service-name"})
+            )
+        )
+
+        exporter = jaeger_exporter.JaegerExporter()
+        self.assertEqual(exporter.service_name, service_name)
+        self.assertEqual(exporter.agent_host_name, agent_host_name)
+        self.assertEqual(exporter.agent_port, agent_port)
+        self.assertEqual(exporter.collector_endpoint, None)
+        self.assertEqual(exporter.username, None)
+        self.assertEqual(exporter.password, None)
+        self.assertTrue(exporter._collector_http_client is None)
+        self.assertTrue(exporter._agent_client is not None)
+        self.assertIsNone(exporter._max_tag_value_length)
+
+    @patch("opentelemetry.exporter.jaeger.trace._TRACER_PROVIDER", None)
     def test_constructor_explicit(self):
         # pylint: disable=protected-access
         """Test the constructor passing all the options."""
@@ -98,38 +91,39 @@ class TestJaegerExporter(unittest.TestCase):
         username = "username"
         password = "password"
         auth = (username, password)
-        env_patch = patch.dict(
-            "os.environ",
-            {OTEL_RESOURCE_ATTRIBUTES: "service.name=my-opentelemetry-jaeger"},
-        )
-        with patch("opentelemetry.exporter.jaeger.trace") as mock_trace:
-            env_patch.start()
-            mock_trace.get_tracer_provider.return_value = Provider()
-            exporter = jaeger_exporter.JaegerExporter(
-                agent_host_name=agent_host_name,
-                agent_port=agent_port,
-                collector_endpoint=collector_endpoint,
-                username=username,
-                password=password,
-                max_tag_value_length=42,
+        trace_api.set_tracer_provider(
+            TracerProvider(
+                resource=Resource.create(
+                    {SERVICE_NAME: "my-opentelemetry-jaeger"}
+                )
             )
-            self.assertEqual(exporter.service_name, service)
-            self.assertEqual(exporter.agent_host_name, agent_host_name)
-            self.assertEqual(exporter.agent_port, agent_port)
-            self.assertTrue(exporter._collector_http_client is not None)
-            self.assertEqual(exporter._collector_http_client.auth, auth)
-            # property should not construct new object
-            collector = exporter._collector_http_client
-            self.assertEqual(exporter._collector_http_client, collector)
-            # property should construct new object
-            exporter._collector = None
-            exporter.username = None
-            exporter.password = None
-            self.assertNotEqual(exporter._collector_http_client, collector)
-            self.assertTrue(exporter._collector_http_client.auth is None)
-            self.assertEqual(exporter._max_tag_value_length, 42)
-            env_patch.stop()
+        )
 
+        exporter = jaeger_exporter.JaegerExporter(
+            agent_host_name=agent_host_name,
+            agent_port=agent_port,
+            collector_endpoint=collector_endpoint,
+            username=username,
+            password=password,
+            max_tag_value_length=42,
+        )
+        self.assertEqual(exporter.service_name, service)
+        self.assertEqual(exporter.agent_host_name, agent_host_name)
+        self.assertEqual(exporter.agent_port, agent_port)
+        self.assertTrue(exporter._collector_http_client is not None)
+        self.assertEqual(exporter._collector_http_client.auth, auth)
+        # property should not construct new object
+        collector = exporter._collector_http_client
+        self.assertEqual(exporter._collector_http_client, collector)
+        # property should construct new object
+        exporter._collector = None
+        exporter.username = None
+        exporter.password = None
+        self.assertNotEqual(exporter._collector_http_client, collector)
+        self.assertTrue(exporter._collector_http_client.auth is None)
+        self.assertEqual(exporter._max_tag_value_length, 42)
+
+    @patch("opentelemetry.exporter.jaeger.trace._TRACER_PROVIDER", None)
     def test_constructor_by_environment_variables(self):
         #  pylint: disable=protected-access
         """Test the constructor using Environment Variables."""
@@ -152,32 +146,45 @@ class TestJaegerExporter(unittest.TestCase):
                 OTEL_EXPORTER_JAEGER_ENDPOINT: collector_endpoint,
                 OTEL_EXPORTER_JAEGER_USER: username,
                 OTEL_EXPORTER_JAEGER_PASSWORD: password,
-                OTEL_RESOURCE_ATTRIBUTES: "service.name=my-opentelemetry-jaeger",
+                # OTEL_RESOURCE_ATTRIBUTES: "service.name=my-opentelemetry-jaeger",
             },
         )
 
-        with patch("opentelemetry.exporter.jaeger.trace") as mock_trace:
-            environ_patcher.start()
-            mock_trace.get_tracer_provider.return_value = Provider()
-            # trace_api.set_tracer_provider(TracerProvider())
-            exporter = jaeger_exporter.JaegerExporter()
-            self.assertEqual(exporter.service_name, service)
-            self.assertEqual(exporter.agent_host_name, agent_host_name)
-            self.assertEqual(exporter.agent_port, int(agent_port))
-            self.assertTrue(exporter._collector_http_client is not None)
-            self.assertEqual(exporter.collector_endpoint, collector_endpoint)
-            self.assertEqual(exporter._collector_http_client.auth, auth)
-            # property should not construct new object
-            collector = exporter._collector_http_client
-            self.assertEqual(exporter._collector_http_client, collector)
-            # property should construct new object
-            exporter._collector = None
-            exporter.username = None
-            exporter.password = None
-            self.assertNotEqual(exporter._collector_http_client, collector)
-            self.assertTrue(exporter._collector_http_client.auth is None)
+        trace_api.set_tracer_provider(
+            TracerProvider(
+                resource=Resource.create(
+                    {SERVICE_NAME: "my-opentelemetry-jaeger"}
+                )
+            )
+        )
 
-            environ_patcher.stop()
+        environ_patcher.start()
+        exporter = jaeger_exporter.JaegerExporter()
+        self.assertEqual(exporter.service_name, service)
+        self.assertEqual(exporter.agent_host_name, agent_host_name)
+        self.assertEqual(exporter.agent_port, int(agent_port))
+        self.assertTrue(exporter._collector_http_client is not None)
+        self.assertEqual(exporter.collector_endpoint, collector_endpoint)
+        self.assertEqual(exporter._collector_http_client.auth, auth)
+        # property should not construct new object
+        collector = exporter._collector_http_client
+        self.assertEqual(exporter._collector_http_client, collector)
+        # property should construct new object
+        exporter._collector = None
+        exporter.username = None
+        exporter.password = None
+        self.assertNotEqual(exporter._collector_http_client, collector)
+        self.assertTrue(exporter._collector_http_client.auth is None)
+        environ_patcher.stop()
+
+    @patch("opentelemetry.exporter.jaeger.trace._TRACER_PROVIDER", None)
+    def test_constructor_with_no_traceprovider_resource(self):
+
+        """Test the constructor when there is no resource attached to trace_provider"""
+
+        exporter = jaeger_exporter.JaegerExporter()
+
+        self.assertEqual(exporter.service_name, "unknown_service")
 
     def test_nsec_to_usec_round(self):
         # pylint: disable=protected-access
@@ -455,6 +462,7 @@ class TestJaegerExporter(unittest.TestCase):
 
         self.assertEqual(spans, expected_spans)
 
+    @patch("opentelemetry.exporter.jaeger.trace._TRACER_PROVIDER", None)
     def test_export(self):
 
         """Test that agent and/or collector are invoked"""
@@ -485,6 +493,7 @@ class TestJaegerExporter(unittest.TestCase):
         exporter.export((self._test_span,))
         self.assertEqual(agent_client_mock.emit.call_count, 1)
         self.assertEqual(collector_mock.submit.call_count, 1)
+        # trace_api._TRACER_PROVIDER = None
 
     def test_agent_client(self):
         agent_client = jaeger_exporter.AgentClientUDP(

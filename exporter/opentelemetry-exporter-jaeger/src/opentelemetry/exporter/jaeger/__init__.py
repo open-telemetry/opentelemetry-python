@@ -195,7 +195,7 @@ class JaegerExporter(SpanExporter):
         self.service_name = (
             tracer_provider.resource.attributes[SERVICE_NAME]
             if getattr(tracer_provider, "resource", None)
-            else Resource.create({})
+            else Resource.create().attributes.get(SERVICE_NAME)
         )
 
     @property
