@@ -14,7 +14,6 @@
 
 """OTLP Exporter"""
 
-import enum
 import logging
 from abc import ABC, abstractmethod
 from collections.abc import Mapping, Sequence
@@ -40,6 +39,7 @@ from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_INSECURE,
@@ -54,9 +54,30 @@ TypingResourceT = TypeVar("TypingResourceT")
 ExportServiceRequestT = TypeVar("ExportServiceRequestT")
 ExportResultT = TypeVar("ExportResultT")
 
+_ENVIRON_TO_COMPRESSION = {
+    None: None,
+    "gzip": Compression.Gzip,
+}
 
-class OTLPCompression(enum.Enum):
-    gzip = "gzip"
+
+class InvalidCompressionValueException(Exception):
+    def __init__(self, environ_key: str, environ_value: str):
+        super().__init__(
+            'Invalid value "{}" for compression envvar {}'.format(
+                environ_value, environ_key
+            )
+        )
+
+
+def environ_to_compression(environ_key: str) -> Optional[Compression]:
+    environ_value = (
+        environ[environ_key].lower().strip()
+        if environ_key in environ
+        else None
+    )
+    if environ_value not in _ENVIRON_TO_COMPRESSION:
+        raise InvalidCompressionValueException(environ_key, environ_value)
+    return _ENVIRON_TO_COMPRESSION[environ_value]
 
 
 def _translate_key_values(key: Text, value: Any) -> KeyValue:
@@ -87,7 +108,7 @@ def _translate_key_values(key: Text, value: Any) -> KeyValue:
     return KeyValue(key=key, value=any_value)
 
 
-def _get_resource_data(
+def get_resource_data(
     sdk_resource_instrumentation_library_data: Dict[
         SDKResource, ResourceDataT
     ],
@@ -149,8 +170,8 @@ class OTLPExporterMixin(
         insecure: Connection type
         credentials: ChannelCredentials object for server authentication
         headers: Headers to send when exporting
-        compression: Compression algorithm to be used in channel
         timeout: Backend request timeout in seconds
+        compression: gRPC compression method to use
     """
 
     def __init__(
@@ -160,7 +181,7 @@ class OTLPExporterMixin(
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[Sequence] = None,
         timeout: Optional[int] = None,
-        compression: str = None,
+        compression: Optional[Compression] = None,
     ):
         super().__init__()
 
@@ -187,30 +208,15 @@ class OTLPExporterMixin(
         )
         self._collector_span_kwargs = None
 
-        if compression is None:
-            compression_algorithm = Compression.NoCompression
-        elif (
-            compression in OTLPCompression._value2member_map_
-            and OTLPCompression(compression) is OTLPCompression.gzip
-        ):
-            compression_algorithm = Compression.Gzip
-        else:
-            compression_str = environ.get(OTEL_EXPORTER_OTLP_INSECURE)
-            if compression_str is None:
-                compression_algorithm = Compression.NoCompression
-            elif (
-                compression_str in OTLPCompression._value2member_map_
-                and OTLPCompression(compression_str) is OTLPCompression.gzip
-            ):
-                compression_algorithm = Compression.Gzip
-            else:
-                raise ValueError(
-                    "OTEL_EXPORTER_OTLP_COMPRESSION environment variable does not match gzip."
-                )
+        compression = (
+            environ_to_compression(OTEL_EXPORTER_OTLP_COMPRESSION)
+            if compression is None
+            else compression
+        ) or Compression.NoCompression
 
         if insecure:
             self._client = self._stub(
-                insecure_channel(endpoint, compression=compression_algorithm)
+                insecure_channel(endpoint, compression=compression)
             )
             return
 
@@ -226,9 +232,7 @@ class OTLPExporterMixin(
                 environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE)
             )
         self._client = self._stub(
-            secure_channel(
-                endpoint, credentials, compression=compression_algorithm
-            )
+            secure_channel(endpoint, credentials, compression=compression)
         )
 
     @abstractmethod
