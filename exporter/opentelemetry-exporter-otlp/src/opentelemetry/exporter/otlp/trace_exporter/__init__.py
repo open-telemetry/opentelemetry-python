@@ -17,13 +17,14 @@ import logging
 from os import environ
 from typing import Optional, Sequence
 
-from grpc import ChannelCredentials
+from grpc import ChannelCredentials, Compression
 
 from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
-    _get_resource_data,
     _load_credential_from_file,
     _translate_key_values,
+    environ_to_compression,
+    get_resource_data,
 )
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
@@ -39,11 +40,12 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as CollectorSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
 from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE,
-    OTEL_EXPORTER_OTLP_SPAN_ENDPOINT,
-    OTEL_EXPORTER_OTLP_SPAN_HEADERS,
-    OTEL_EXPORTER_OTLP_SPAN_INSECURE,
-    OTEL_EXPORTER_OTLP_SPAN_TIMEOUT,
+    OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
+    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
+    OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+    OTEL_EXPORTER_OTLP_TRACES_INSECURE,
+    OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
 )
 from opentelemetry.sdk.trace import Span as ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
@@ -68,6 +70,7 @@ class OTLPSpanExporter(
         credentials: Credentials object for server authentication
         headers: Headers to send when exporting
         timeout: Backend request timeout in seconds
+        compression: gRPC compression method to use
     """
 
     _result = SpanExportResult
@@ -80,32 +83,40 @@ class OTLPSpanExporter(
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[Sequence] = None,
         timeout: Optional[int] = None,
+        compression: Optional[Compression] = None,
     ):
         if insecure is None:
-            insecure = environ.get(OTEL_EXPORTER_OTLP_SPAN_INSECURE)
+            insecure = environ.get(OTEL_EXPORTER_OTLP_TRACES_INSECURE)
 
         if (
             not insecure
-            and environ.get(OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE) is not None
+            and environ.get(OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE) is not None
         ):
             credentials = credentials or _load_credential_from_file(
-                environ.get(OTEL_EXPORTER_OTLP_SPAN_CERTIFICATE)
+                environ.get(OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE)
             )
 
-        environ_timeout = environ.get(OTEL_EXPORTER_OTLP_SPAN_TIMEOUT)
+        environ_timeout = environ.get(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)
         environ_timeout = (
             int(environ_timeout) if environ_timeout is not None else None
+        )
+
+        compression = (
+            environ_to_compression(OTEL_EXPORTER_OTLP_TRACES_COMPRESSION)
+            if compression is None
+            else compression
         )
 
         super().__init__(
             **{
                 "endpoint": endpoint
-                or environ.get(OTEL_EXPORTER_OTLP_SPAN_ENDPOINT),
+                or environ.get(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT),
                 "insecure": insecure,
                 "credentials": credentials,
                 "headers": headers
-                or environ.get(OTEL_EXPORTER_OTLP_SPAN_HEADERS),
+                or environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS),
                 "timeout": timeout or environ_timeout,
+                "compression": compression,
             }
         )
 
@@ -274,7 +285,7 @@ class OTLPSpanExporter(
             ].spans.append(CollectorSpan(**self._collector_span_kwargs))
 
         return ExportTraceServiceRequest(
-            resource_spans=_get_resource_data(
+            resource_spans=get_resource_data(
                 sdk_resource_instrumentation_library_spans,
                 ResourceSpans,
                 "spans",
