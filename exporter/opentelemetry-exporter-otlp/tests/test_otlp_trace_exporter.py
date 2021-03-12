@@ -221,7 +221,7 @@ class TestOTLPSpanExporter(TestCase):
         self, mock_insecure_channel
     ):
         """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
-        OTLPSpanExporter(insecure=True)
+        OTLPSpanExporter()
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317", compression=Compression.Gzip
         )
@@ -231,7 +231,7 @@ class TestOTLPSpanExporter(TestCase):
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
     def test_otlp_exporter_otlp_compression_kwarg(self, mock_insecure_channel):
         """Specifying kwarg should take precedence over env"""
-        OTLPSpanExporter(insecure=True, compression=Compression.NoCompression)
+        OTLPSpanExporter(compression=Compression.NoCompression)
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317", compression=Compression.NoCompression
         )
@@ -243,7 +243,7 @@ class TestOTLPSpanExporter(TestCase):
         self, mock_insecure_channel
     ):
         """No env or kwarg should be NoCompression"""
-        OTLPSpanExporter(insecure=True)
+        OTLPSpanExporter()
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317", compression=Compression.NoCompression
         )
@@ -259,7 +259,7 @@ class TestOTLPSpanExporter(TestCase):
         """OTEL_EXPORTER_OTLP_TRACES_COMPRESSION as higher priority than
         OTEL_EXPORTER_OTLP_COMPRESSION
         """
-        OTLPSpanExporter(insecure=True)
+        OTLPSpanExporter()
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317", compression=Compression.Gzip
         )
