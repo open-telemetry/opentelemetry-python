@@ -22,7 +22,6 @@ from grpc import ChannelCredentials, Compression
 from opentelemetry.exporter.otlp.exporter import (
     OTLPExporterMixin,
     _get_credentials,
-    _get_resource_data,
     _translate_key_values,
     environ_to_compression,
     get_resource_data,
