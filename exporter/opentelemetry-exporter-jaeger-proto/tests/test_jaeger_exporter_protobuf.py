@@ -71,9 +71,7 @@ class TestJaegerExporter(unittest.TestCase):
 
         env_patch.start()
 
-        exporter = JaegerExporter(
-            service_name=service, transport_format="protobuf"
-        )
+        exporter = JaegerExporter(service_name=service,)
 
         self.assertEqual(exporter.service_name, service)
         self.assertIsNotNone(exporter._collector_grpc_client)

@@ -8,32 +8,17 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 trace.set_tracer_provider(TracerProvider())
 tracer = trace.get_tracer(__name__)
 
-# create a JaegerExporter
-jaeger_exporter = jaeger.JaegerExporter(
-    service_name="my-helloworld-service",
-    # configure agent
-    agent_host_name="localhost",
-    agent_port=6831,
-    # optional: configure also collector
-    # collector_host_name="localhost",
-    # collector_port=14268,
-    # collector_endpoint="/api/traces?format=jaeger.thrift",
-    # username=xxxx, # optional
-    # password=xxxx, # optional
-)
-
 # Create a JaegerExporter to send spans with gRPC
 # If there is no encryption or authentication set `insecure` to True
 # If server has authentication with SSL/TLS you can set the
 # parameter credentials=ChannelCredentials(...) or the environment variable
 # `EXPORTER_JAEGER_CERTIFICATE` with file containing creds.
 
-# jaeger_exporter = jaeger.JaegerExporter(
-#     service_name="my-helloworld-service",
-#     collector_endpoint="localhost:14250",
-#     insecure=True,
-#     transport_format="protobuf",
-# )
+jaeger_exporter = jaeger.JaegerExporter(
+    service_name="my-helloworld-service",
+    collector_endpoint="localhost:14250",
+    insecure=True,
+)
 
 # create a BatchSpanProcessor and add the exporter to it
 span_processor = BatchSpanProcessor(jaeger_exporter)
