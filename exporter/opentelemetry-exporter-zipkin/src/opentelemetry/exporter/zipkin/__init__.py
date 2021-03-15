@@ -75,7 +75,11 @@ from typing import Optional, Sequence
 
 import requests
 
-from opentelemetry.exporter.zipkin.encoder import Encoder, Protocol
+from opentelemetry.exporter.zipkin.encoder import (
+    DEFAULT_MAX_TAG_VALUE_LENGTH,
+    Encoder,
+    Protocol,
+)
 from opentelemetry.exporter.zipkin.encoder.v1.json import JsonV1Encoder
 from opentelemetry.exporter.zipkin.encoder.v2.json import JsonV2Encoder
 from opentelemetry.exporter.zipkin.encoder.v2.protobuf import ProtobufEncoder
@@ -83,6 +87,7 @@ from opentelemetry.exporter.zipkin.node_endpoint import IpInput, NodeEndpoint
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_ZIPKIN_ENDPOINT,
 )
+from opentelemetry.sdk.resources import SERVICE_NAME
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import Span
 
@@ -100,7 +105,7 @@ class ZipkinExporter(SpanExporter):
         local_node_ipv4: IpInput = None,
         local_node_ipv6: IpInput = None,
         local_node_port: Optional[int] = None,
-        max_tag_value_length: Optional[int] = None,
+        max_tag_value_length: Optional[int] = DEFAULT_MAX_TAG_VALUE_LENGTH,
     ):
         self.local_node = NodeEndpoint(
             local_node_ipv4, local_node_ipv6, local_node_port
@@ -120,6 +125,11 @@ class ZipkinExporter(SpanExporter):
             self.encoder = ProtobufEncoder(max_tag_value_length)
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
+        # Populate service_name from first span
+        if spans:
+            service_name = spans[0].resource.attributes.get(SERVICE_NAME)
+            if service_name:
+                self.local_node.service_name = service_name
         result = requests.post(
             url=self.endpoint,
             data=self.encoder.serialize(spans, self.local_node),
