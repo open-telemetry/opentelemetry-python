@@ -14,6 +14,10 @@
 # limitations under the License.
 
 """
+
+OpenTelemetry Jaeger Protobuf Exporter
+--------------------------------------
+
 The **OpenTelemetry Jaeger Protobuf Exporter** allows to export `OpenTelemetry`_ traces to `Jaeger`_.
 This exporter always sends traces to the configured agent using Protobuf via gRPC.
 
@@ -23,7 +27,7 @@ Usage
 .. code:: python
 
     from opentelemetry import trace
-    from opentelemetry.exporter.thrift.proto import JaegerExporter
+    from opentelemetry.exporter.jaeger.proto import JaegerExporter
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 

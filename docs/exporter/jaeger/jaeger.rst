@@ -6,14 +6,18 @@ Opentelemetry Jaeger Exporters
     :undoc-members:
     :show-inheritance:
 
-
-Submodules
-----------
-
 .. automodule:: opentelemetry.exporter.jaeger.thrift
     :members:
     :undoc-members:
     :show-inheritance:
+
+.. automodule:: opentelemetry.exporter.jaeger.proto
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+Submodules
+----------
 
 .. automodule:: opentelemetry.exporter.jaeger.thrift.gen.jaeger.ttypes
     :members:
@@ -21,11 +25,6 @@ Submodules
     :show-inheritance:
 
 .. automodule:: opentelemetry.exporter.jaeger.thrift.send.thrift
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-.. automodule:: opentelemetry.exporter.jaeger.proto
     :members:
     :undoc-members:
     :show-inheritance:

@@ -14,6 +14,10 @@
 # limitations under the License.
 
 """
+
+OpenTelemetry Jaeger Thrift Exporter
+------------------------------------
+
 The **OpenTelemetry Jaeger Thrift Exporter** allows to export `OpenTelemetry`_ traces to `Jaeger`_.
 This exporter always sends traces to the configured agent using the Thrift compact protocol over UDP.
 When it is not feasible to deploy Jaeger Agent next to the application, for example, when the
