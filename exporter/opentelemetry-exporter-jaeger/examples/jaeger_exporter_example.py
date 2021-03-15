@@ -23,6 +23,7 @@ jaeger_exporter = jaeger.JaegerExporter(
 )
 
 # Create a JaegerExporter to send spans with gRPC
+# If there is no encryption or authentication set `insecure` to True
 # If server has authentication with SSL/TLS you can set the
 # parameter credentials=ChannelCredentials(...) or the environment variable
 # `EXPORTER_JAEGER_CERTIFICATE` with file containing creds.
@@ -30,6 +31,7 @@ jaeger_exporter = jaeger.JaegerExporter(
 # jaeger_exporter = jaeger.JaegerExporter(
 #     service_name="my-helloworld-service",
 #     collector_endpoint="localhost:14250",
+#     insecure=True,
 #     transport_format="protobuf",
 # )
 

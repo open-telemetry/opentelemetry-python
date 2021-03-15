@@ -164,7 +164,7 @@ def _get_credentials(creds, environ_key):
     creds_env = environ.get(environ_key)
     if creds_env:
         return _load_credential_from_file(creds_env)
-    return None
+    return ssl_channel_credentials()
 
 
 # pylint: disable=no-member
@@ -175,8 +175,8 @@ class OTLPExporterMixin(
 
     Args:
         endpoint: OpenTelemetry Collector receiver endpoint
-        credentials: Optional ChannelCredentials object for server authentication.
-            Set to None to use insecure channel.
+        insecure: Connection type
+        credentials: ChannelCredentials object for server authentication
         headers: Headers to send when exporting
         timeout: Backend request timeout in seconds
         compression: gRPC compression method to use
@@ -185,6 +185,7 @@ class OTLPExporterMixin(
     def __init__(
         self,
         endpoint: Optional[str] = None,
+        insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[Sequence] = None,
         timeout: Optional[int] = None,
@@ -205,9 +206,6 @@ class OTLPExporterMixin(
             environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10)
         )
         self._collector_span_kwargs = None
-        credentials = _get_credentials(
-            credentials, OTEL_EXPORTER_OTLP_CERTIFICATE
-        )
 
         compression = (
             environ_to_compression(OTEL_EXPORTER_OTLP_COMPRESSION)
@@ -215,11 +213,14 @@ class OTLPExporterMixin(
             else compression
         ) or Compression.NoCompression
 
-        if credentials is None:
+        if insecure:
             self._client = self._stub(
                 insecure_channel(endpoint, compression=compression)
             )
         else:
+            credentials = _get_credentials(
+                credentials, OTEL_EXPORTER_OTLP_CERTIFICATE
+            )
             self._client = self._stub(
                 secure_channel(endpoint, credentials, compression=compression)
             )

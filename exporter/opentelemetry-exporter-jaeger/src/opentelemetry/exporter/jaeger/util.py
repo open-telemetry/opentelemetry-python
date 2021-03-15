@@ -40,4 +40,4 @@ def _get_credentials(param):
     creds_env = environ.get(OTEL_EXPORTER_JAEGER_CERTIFICATE)
     if creds_env:
         return _load_credential_from_file(creds_env)
-    return None
+    return ssl_channel_credentials()

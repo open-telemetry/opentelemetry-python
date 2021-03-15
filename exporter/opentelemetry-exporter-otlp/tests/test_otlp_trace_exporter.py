@@ -115,7 +115,7 @@ class TraceServiceServicerALREADY_EXISTS(TraceServiceServicer):
 class TestOTLPSpanExporter(TestCase):
     def setUp(self):
         tracer_provider = TracerProvider()
-        self.exporter = OTLPSpanExporter()
+        self.exporter = OTLPSpanExporter(insecure=True)
         tracer_provider.add_span_processor(SimpleSpanProcessor(self.exporter))
         self.tracer = tracer_provider.get_tracer(__name__)
 
@@ -193,6 +193,16 @@ class TestOTLPSpanExporter(TestCase):
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
 
+    @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
+    @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
+    @patch("opentelemetry.exporter.otlp.trace_exporter.OTLPSpanExporter._stub")
+    # pylint: disable=unused-argument
+    def test_no_credentials_error(
+        self, mock_ssl_channel, mock_secure, mock_stub
+    ):
+        OTLPSpanExporter(insecure=False)
+        self.assertTrue(mock_ssl_channel.called)
+
     @patch.dict(
         "os.environ",
         {OTEL_EXPORTER_OTLP_TRACES_HEADERS: "key1=value1,key2=value2"},
@@ -221,7 +231,7 @@ class TestOTLPSpanExporter(TestCase):
         self, mock_insecure_channel
     ):
         """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
-        OTLPSpanExporter()
+        OTLPSpanExporter(insecure=True)
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317", compression=Compression.Gzip
         )
@@ -231,7 +241,7 @@ class TestOTLPSpanExporter(TestCase):
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
     def test_otlp_exporter_otlp_compression_kwarg(self, mock_insecure_channel):
         """Specifying kwarg should take precedence over env"""
-        OTLPSpanExporter(compression=Compression.NoCompression)
+        OTLPSpanExporter(insecure=True, compression=Compression.NoCompression)
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317", compression=Compression.NoCompression
         )
@@ -243,7 +253,7 @@ class TestOTLPSpanExporter(TestCase):
         self, mock_insecure_channel
     ):
         """No env or kwarg should be NoCompression"""
-        OTLPSpanExporter()
+        OTLPSpanExporter(insecure=True)
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317", compression=Compression.NoCompression
         )
@@ -259,7 +269,7 @@ class TestOTLPSpanExporter(TestCase):
         """OTEL_EXPORTER_OTLP_TRACES_COMPRESSION as higher priority than
         OTEL_EXPORTER_OTLP_COMPRESSION
         """
-        OTLPSpanExporter()
+        OTLPSpanExporter(insecure=True)
         mock_insecure_channel.assert_called_once_with(
             "localhost:4317", compression=Compression.Gzip
         )

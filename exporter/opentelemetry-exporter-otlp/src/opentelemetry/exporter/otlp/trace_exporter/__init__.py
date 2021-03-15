@@ -65,8 +65,8 @@ class OTLPSpanExporter(
 
     Args:
         endpoint: OpenTelemetry Collector receiver endpoint
-        credentials: Optional ChannelCredentials object for server authentication.
-            Set to None to use insecure channel.
+        insecure: Connection type
+        credentials: Credentials object for server authentication
         headers: Headers to send when exporting
         timeout: Backend request timeout in seconds
         compression: gRPC compression method to use
@@ -78,14 +78,19 @@ class OTLPSpanExporter(
     def __init__(
         self,
         endpoint: Optional[str] = None,
+        insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[Sequence] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
-        credentials = _get_credentials(
-            credentials, OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE
-        )
+        if (
+            not insecure
+            and environ.get(OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE) is not None
+        ):
+            credentials = _get_credentials(
+                credentials, OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE
+            )
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)
         environ_timeout = (
@@ -102,6 +107,7 @@ class OTLPSpanExporter(
             **{
                 "endpoint": endpoint
                 or environ.get(OTEL_EXPORTER_OTLP_TRACES_ENDPOINT),
+                "insecure": insecure,
                 "credentials": credentials,
                 "headers": headers
                 or environ.get(OTEL_EXPORTER_OTLP_TRACES_HEADERS),

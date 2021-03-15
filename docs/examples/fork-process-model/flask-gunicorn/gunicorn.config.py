@@ -42,7 +42,9 @@ def post_fork(server, worker):
     resource = Resource.create(attributes={"service.name": "api-service"})
 
     trace.set_tracer_provider(TracerProvider(resource=resource))
+    # This uses insecure connection for the purpose of example. Please see the
+    # OTLP Exporter documentation for other options.
     span_processor = BatchSpanProcessor(
-        OTLPSpanExporter(endpoint="localhost:4317")
+        OTLPSpanExporter(endpoint="localhost:4317", insecure=True)
     )
     trace.get_tracer_provider().add_span_processor(span_processor)
