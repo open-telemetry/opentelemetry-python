@@ -76,16 +76,8 @@ def _init_tracing(
     provider = TracerProvider(id_generator=id_generator(),)
     trace.set_tracer_provider(provider)
 
-    for exporter_name, exporter_class in exporters.items():
+    for _, exporter_class in exporters.items():
         exporter_args = {}
-        if exporter_name not in [
-            EXPORTER_OTLP,
-            EXPORTER_OTLP_SPAN,
-        ]:
-            exporter_args["service_name"] = provider.resource.attributes.get(
-                SERVICE_NAME
-            )
-
         provider.add_span_processor(
             BatchSpanProcessor(exporter_class(**exporter_args))
         )
