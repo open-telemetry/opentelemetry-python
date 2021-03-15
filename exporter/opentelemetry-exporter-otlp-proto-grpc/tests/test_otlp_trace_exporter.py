@@ -22,7 +22,9 @@ from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
-from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter,
+)
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
     ExportTraceServiceResponse,
@@ -179,7 +181,9 @@ class TestOTLPSpanExporter(TestCase):
             OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip",
         },
     )
-    @patch("opentelemetry.exporter.otlp.exporter.OTLPExporterMixin.__init__")
+    @patch(
+        "opentelemetry.opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
+    )
     def test_env_variables(self, mock_exporter_mixin):
         OTLPSpanExporter()
 
@@ -193,9 +197,15 @@ class TestOTLPSpanExporter(TestCase):
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
 
-    @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
-    @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
-    @patch("opentelemetry.exporter.otlp.trace_exporter.OTLPSpanExporter._stub")
+    @patch(
+        "opentelemetry.opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
+    )
+    @patch(
+        "opentelemetry.opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel"
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter._stub"
+    )
     # pylint: disable=unused-argument
     def test_no_credentials_error(
         self, mock_ssl_channel, mock_secure, mock_stub
@@ -207,8 +217,12 @@ class TestOTLPSpanExporter(TestCase):
         "os.environ",
         {OTEL_EXPORTER_OTLP_TRACES_HEADERS: "key1=value1,key2=value2"},
     )
-    @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
-    @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
+    @patch(
+        "opentelemetry.opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
+    )
+    @patch(
+        "opentelemetry.opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel"
+    )
     # pylint: disable=unused-argument
     def test_otlp_headers_from_env(self, mock_ssl_channel, mock_secure):
         exporter = OTLPSpanExporter()
@@ -225,7 +239,9 @@ class TestOTLPSpanExporter(TestCase):
         )
 
     # pylint: disable=no-self-use
-    @patch("opentelemetry.exporter.otlp.exporter.insecure_channel")
+    @patch(
+        "opentelemetry.opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel"
+    )
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
     def test_otlp_exporter_otlp_compression_envvar(
         self, mock_insecure_channel
@@ -237,7 +253,9 @@ class TestOTLPSpanExporter(TestCase):
         )
 
     # pylint: disable=no-self-use
-    @patch("opentelemetry.exporter.otlp.exporter.insecure_channel")
+    @patch(
+        "opentelemetry.opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel"
+    )
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
     def test_otlp_exporter_otlp_compression_kwarg(self, mock_insecure_channel):
         """Specifying kwarg should take precedence over env"""
@@ -247,7 +265,9 @@ class TestOTLPSpanExporter(TestCase):
         )
 
     # pylint: disable=no-self-use
-    @patch("opentelemetry.exporter.otlp.exporter.insecure_channel")
+    @patch(
+        "opentelemetry.opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel"
+    )
     @patch.dict("os.environ", {})
     def test_otlp_exporter_otlp_compression_unspecified(
         self, mock_insecure_channel
@@ -259,7 +279,9 @@ class TestOTLPSpanExporter(TestCase):
         )
 
     # pylint: disable=no-self-use
-    @patch("opentelemetry.exporter.otlp.exporter.insecure_channel")
+    @patch(
+        "opentelemetry.opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel"
+    )
     @patch.dict(
         "os.environ", {OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip"},
     )
@@ -274,16 +296,24 @@ class TestOTLPSpanExporter(TestCase):
             "localhost:4317", compression=Compression.Gzip
         )
 
-    @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
-    @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
+    @patch(
+        "opentelemetry.opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
+    )
+    @patch(
+        "opentelemetry.opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel"
+    )
     # pylint: disable=unused-argument
     def test_otlp_headers(self, mock_ssl_channel, mock_secure):
         exporter = OTLPSpanExporter()
         # pylint: disable=protected-access
         self.assertIsNone(exporter._headers, None)
 
-    @patch("opentelemetry.exporter.otlp.exporter.expo")
-    @patch("opentelemetry.exporter.otlp.exporter.sleep")
+    @patch(
+        "opentelemetry.opentelemetry.exporter.otlp.proto.grpc.exporter.expo"
+    )
+    @patch(
+        "opentelemetry.opentelemetry.exporter.otlp.proto.grpc.exporter.sleep"
+    )
     def test_unavailable(self, mock_sleep, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [1]})
@@ -296,8 +326,12 @@ class TestOTLPSpanExporter(TestCase):
         )
         mock_sleep.assert_called_with(1)
 
-    @patch("opentelemetry.exporter.otlp.exporter.expo")
-    @patch("opentelemetry.exporter.otlp.exporter.sleep")
+    @patch(
+        "opentelemetry.opentelemetry.exporter.otlp.proto.grpc.exporter.expo"
+    )
+    @patch(
+        "opentelemetry.opentelemetry.exporter.otlp.proto.grpc.exporter.sleep"
+    )
     def test_unavailable_delay(self, mock_sleep, mock_expo):
 
         mock_expo.configure_mock(**{"return_value": [1]})
