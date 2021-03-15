@@ -23,7 +23,7 @@ Usage
 .. code:: python
 
     from opentelemetry import trace
-    from opentelemetry.exporter import jaeger
+    from opentelemetry.exporter.thrift.proto import JaegerExporter
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -31,7 +31,7 @@ Usage
     tracer = trace.get_tracer(__name__)
 
     # create a JaegerExporter
-    jaeger_exporter = jaeger.JaegerExporter(
+    jaeger_exporter = JaegerExporter(
         service_name='my-helloworld-service',
         # optional: configure collector
         # collector_endpoint='http://localhost:14268/api/traces?format=jaeger.thrift',
@@ -54,6 +54,7 @@ You can configure the exporter with the following environment variables:
 - :envvar:`OTEL_EXPORTER_JAEGER_INSECURE`
 - :envvar:`OTEL_EXPORTER_JAEGER_ENDPOINT`
 - :envvar:`OTEL_EXPORTER_JAEGER_CERTIFICATE`
+
 API
 ---
 .. _Jaeger: https://www.jaegertracing.io/

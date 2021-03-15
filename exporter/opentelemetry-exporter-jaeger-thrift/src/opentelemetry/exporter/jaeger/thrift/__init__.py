@@ -27,7 +27,7 @@ Usage
 .. code:: python
 
     from opentelemetry import trace
-    from opentelemetry.exporter import jaeger
+    from opentelemetry.exporter.jaeger.thrift import JaegerExporter
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -35,7 +35,7 @@ Usage
     tracer = trace.get_tracer(__name__)
 
     # create a JaegerExporter
-    jaeger_exporter = jaeger.JaegerExporter(
+    jaeger_exporter = JaegerExporter(
         service_name='my-helloworld-service',
         # configure agent
         agent_host_name='localhost',

@@ -14,13 +14,13 @@
 
 # jaeger_example.py
 from opentelemetry import trace
-from opentelemetry.exporter import jaeger
+from opentelemetry.exporter.thrift.jaeger import JaegerExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 trace.set_tracer_provider(TracerProvider())
 
-jaeger_exporter = jaeger.JaegerExporter(
+jaeger_exporter = JaegerExporter(
     service_name="my-helloworld-service",
     agent_host_name="localhost",
     agent_port=6831,
