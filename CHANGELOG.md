@@ -52,6 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1684](https://github.com/open-telemetry/opentelemetry-python/pull/1684))
 - Cleanup OTLP exporter compression options, add tests
   ([#1671](https://github.com/open-telemetry/opentelemetry-python/pull/1671))
+- Initial documentation for environment variables
+  ([#1680](https://github.com/open-telemetry/opentelemetry-python/pull/1680))
 
 ### Removed
 - Removed unused `get_hexadecimal_trace_id` and `get_hexadecimal_span_id` methods.
