@@ -1,7 +1,7 @@
 import time
 
 from opentelemetry import trace
-from opentelemetry.exporter import jaeger
+from opentelemetry.exporter.jaeger import thrift
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -9,7 +9,7 @@ trace.set_tracer_provider(TracerProvider())
 tracer = trace.get_tracer(__name__)
 
 # create a JaegerExporter
-jaeger_exporter = jaeger.JaegerExporter(
+jaeger_exporter = thrift.JaegerExporter(
     service_name="my-helloworld-service",
     # configure agent
     agent_host_name="localhost",
