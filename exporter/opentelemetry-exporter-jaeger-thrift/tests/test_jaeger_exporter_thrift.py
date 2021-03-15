@@ -18,11 +18,13 @@ from unittest import mock
 
 # pylint:disable=no-name-in-module
 # pylint:disable=import-error
-import opentelemetry.exporter.jaeger as jaeger_exporter
+import opentelemetry.exporter.jaeger.thrift as jaeger_exporter
 from opentelemetry import trace as trace_api
-from opentelemetry.exporter.jaeger.gen.jaeger import ttypes as jaeger
-from opentelemetry.exporter.jaeger.translate import Translate
-from opentelemetry.exporter.jaeger.translate.thrift import ThriftTranslator
+from opentelemetry.exporter.jaeger.thrift.gen.jaeger import ttypes as jaeger
+from opentelemetry.exporter.jaeger.thrift.translate import Translate
+from opentelemetry.exporter.jaeger.thrift.translate.thrift import (
+    ThriftTranslator,
+)
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_AGENT_HOST,

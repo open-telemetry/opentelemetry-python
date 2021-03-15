@@ -17,7 +17,13 @@ import setuptools
 
 BASE_DIR = os.path.dirname(__file__)
 VERSION_FILENAME = os.path.join(
-    BASE_DIR, "src", "opentelemetry", "exporter", "jaeger", "version.py"
+    BASE_DIR,
+    "src",
+    "opentelemetry",
+    "exporter",
+    "jaeger",
+    "proto",
+    "version.py",
 )
 PACKAGE_INFO = {}
 with open(VERSION_FILENAME) as f:

@@ -19,11 +19,11 @@ from unittest.mock import patch
 
 # pylint:disable=no-name-in-module
 # pylint:disable=import-error
-import opentelemetry.exporter.jaeger.gen.model_pb2 as model_pb2
-import opentelemetry.exporter.jaeger.translate.protobuf as pb_translator
+import opentelemetry.exporter.jaeger.proto.gen.model_pb2 as model_pb2
+import opentelemetry.exporter.jaeger.proto.translate.protobuf as pb_translator
 from opentelemetry import trace as trace_api
-from opentelemetry.exporter.jaeger import JaegerExporter
-from opentelemetry.exporter.jaeger.translate import (
+from opentelemetry.exporter.jaeger.proto import JaegerExporter
+from opentelemetry.exporter.jaeger.proto.translate import (
     NAME_KEY,
     VERSION_KEY,
     Translate,

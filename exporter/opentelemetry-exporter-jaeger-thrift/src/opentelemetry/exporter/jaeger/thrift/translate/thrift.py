@@ -14,8 +14,10 @@
 # pylint: disable=no-self-use
 from typing import Optional, Sequence
 
-from opentelemetry.exporter.jaeger.gen.jaeger import Collector as TCollector
-from opentelemetry.exporter.jaeger.translate import (
+from opentelemetry.exporter.jaeger.thrift.gen.jaeger import (
+    Collector as TCollector,
+)
+from opentelemetry.exporter.jaeger.thrift.translate import (
     NAME_KEY,
     OTLP_JAEGER_SPAN_KIND,
     VERSION_KEY,
