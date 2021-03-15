@@ -1,19 +1,19 @@
-OpenTelemetry Collector Protobuf over gRPC Exporter
-===================================================
+OpenTelemetry Collector Exporters
+=================================
 
 |pypi|
 
-.. |pypi| image:: https://badge.fury.io/py/opentelemetry-exporter-otlp-proto-grpc.svg
-   :target: https://pypi.org/project/opentelemetry-exporter-otlp-proto-grpc/
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-exporter-otlp.svg
+   :target: https://pypi.org/project/opentelemetry-exporter-otlp/
 
-This library allows to export data to the OpenTelemetry Collector using the OpenTelemetry Protocol using Protobuf over gRPC.
+This library allows to export data to the OpenTelemetry Collector using the OpenTelemetry Protocol.
 
 Installation
 ------------
 
 ::
 
-     pip install opentelemetry-exporter-otlp-proto-grpc
+     pip install opentelemetry-exporter-otlp
 
 
 References
