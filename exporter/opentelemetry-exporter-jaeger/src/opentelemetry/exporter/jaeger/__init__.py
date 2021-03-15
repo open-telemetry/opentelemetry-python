@@ -59,6 +59,16 @@ Usage
     with tracer.start_as_current_span('foo'):
         print('Hello world!')
 
+You can configure the exporter with the following environment variables:
+
+- :envvar:`OTEL_EXPORTER_JAEGER_USER`
+- :envvar:`OTEL_EXPORTER_JAEGER_PASSWORD`
+- :envvar:`OTEL_EXPORTER_JAEGER_INSECURE`
+- :envvar:`OTEL_EXPORTER_JAEGER_ENDPOINT`
+- :envvar:`OTEL_EXPORTER_JAEGER_CERTIFICATE`
+- :envvar:`OTEL_EXPORTER_JAEGER_AGENT_PORT`
+- :envvar:`OTEL_EXPORTER_JAEGER_AGENT_HOST`
+
 API
 ---
 .. _Jaeger: https://www.jaegertracing.io/
