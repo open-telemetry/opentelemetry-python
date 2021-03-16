@@ -10,7 +10,6 @@ tracer = trace.get_tracer(__name__)
 
 # create a JaegerExporter
 jaeger_exporter = thrift.JaegerExporter(
-    service_name="my-helloworld-service",
     # configure agent
     agent_host_name="localhost",
     agent_port=6831,
