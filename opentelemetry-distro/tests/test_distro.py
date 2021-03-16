@@ -33,4 +33,6 @@ class TestDistribution(TestCase):
         distro = OpenTelemetryDistro()
         self.assertIsNone(os.environ.get(OTEL_TRACES_EXPORTER))
         distro.configure()
-        self.assertEqual("otlp_span", os.environ.get(OTEL_TRACES_EXPORTER))
+        self.assertEqual(
+            "otlp_proto_grpc_span", os.environ.get(OTEL_TRACES_EXPORTER)
+        )
