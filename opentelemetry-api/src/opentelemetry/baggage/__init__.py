@@ -34,7 +34,7 @@ def get_all(
     """
     baggage = get_value(_BAGGAGE_KEY, context=context)
     if isinstance(baggage, dict):
-        return MappingProxyType(baggage.copy())
+        return MappingProxyType(baggage)
     return MappingProxyType({})
 
 
