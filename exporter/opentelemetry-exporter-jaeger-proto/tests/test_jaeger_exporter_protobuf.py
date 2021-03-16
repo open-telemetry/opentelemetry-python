@@ -32,8 +32,9 @@ from opentelemetry.sdk import trace
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_CERTIFICATE,
     OTEL_EXPORTER_JAEGER_ENDPOINT,
+    OTEL_RESOURCE_ATTRIBUTES,
 )
-from opentelemetry.sdk.trace import Resource
+from opentelemetry.sdk.trace import Resource, TracerProvider
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import Status, StatusCode
 
@@ -51,6 +52,7 @@ class TestJaegerExporter(unittest.TestCase):
         self._test_span = trace._Span("test_span", context=context)
         self._test_span.start()
         self._test_span.end()
+
         # pylint: disable=protected-access
 
     def test_constructor_by_environment_variables(self):
@@ -66,18 +68,18 @@ class TestJaegerExporter(unittest.TestCase):
                 OTEL_EXPORTER_JAEGER_ENDPOINT: collector_endpoint,
                 OTEL_EXPORTER_JAEGER_CERTIFICATE: os.path.dirname(__file__)
                 + "/certs/cred.cert",
+                OTEL_RESOURCE_ATTRIBUTES: "service.name=my-opentelemetry-jaeger",
             },
         )
 
         env_patch.start()
-
-        exporter = JaegerExporter(service_name=service,)
-
+        provider = TracerProvider(resource=Resource.create({}))
+        trace_api.set_tracer_provider(provider)
+        exporter = JaegerExporter()
         self.assertEqual(exporter.service_name, service)
         self.assertIsNotNone(exporter._collector_grpc_client)
         self.assertEqual(exporter.collector_endpoint, collector_endpoint)
         self.assertIsNotNone(exporter.credentials)
-
         env_patch.stop()
 
     # pylint: disable=too-many-locals,too-many-statements
@@ -122,8 +124,8 @@ class TestJaegerExporter(unittest.TestCase):
 
         event_timestamp = base_time + 50 * 10 ** 6
         # pylint:disable=protected-access
-        event_timestamp_proto = pb_translator._proto_timestamp_from_epoch_nanos(
-            event_timestamp
+        event_timestamp_proto = (
+            pb_translator._proto_timestamp_from_epoch_nanos(event_timestamp)
         )
 
         event = trace.Event(
@@ -335,7 +337,9 @@ class TestJaegerExporter(unittest.TestCase):
                 duration=span2_duration,
                 flags=0,
                 tags=default_tags,
-                process=model_pb2.Process(service_name="svc",),
+                process=model_pb2.Process(
+                    service_name="svc",
+                ),
             ),
             model_pb2.Span(
                 operation_name=span_names[2],
@@ -366,7 +370,9 @@ class TestJaegerExporter(unittest.TestCase):
                         v_str="version",
                     ),
                 ],
-                process=model_pb2.Process(service_name="svc",),
+                process=model_pb2.Process(
+                    service_name="svc",
+                ),
             ),
         ]
 
@@ -374,7 +380,8 @@ class TestJaegerExporter(unittest.TestCase):
         # (attributes) in otel is not important but in jeager it is
         # pylint: disable=no-member
         self.assertCountEqual(
-            spans[0].logs[0].fields, expected_spans[0].logs[0].fields,
+            spans[0].logs[0].fields,
+            expected_spans[0].logs[0].fields,
         )
 
         self.assertEqual(spans, expected_spans)

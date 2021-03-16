@@ -15,7 +15,6 @@ tracer = trace.get_tracer(__name__)
 # `EXPORTER_JAEGER_CERTIFICATE` with file containing creds.
 
 jaeger_exporter = proto.JaegerExporter(
-    service_name="my-helloworld-service",
     collector_endpoint="localhost:14250",
     insecure=True,
 )

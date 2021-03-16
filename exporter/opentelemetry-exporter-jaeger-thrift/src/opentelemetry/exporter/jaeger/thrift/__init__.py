@@ -40,7 +40,6 @@ Usage
 
     # create a JaegerExporter
     jaeger_exporter = JaegerExporter(
-        service_name='my-helloworld-service',
         # configure agent
         agent_host_name='localhost',
         agent_port=6831,
@@ -80,6 +79,7 @@ import logging
 from os import environ
 from typing import Optional
 
+from opentelemetry import trace
 from opentelemetry.exporter.jaeger.thrift.gen.jaeger import (
     Collector as jaeger_thrift,
 )
@@ -96,6 +96,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_PASSWORD,
     OTEL_EXPORTER_JAEGER_USER,
 )
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
 DEFAULT_AGENT_HOST_NAME = "localhost"
@@ -108,8 +109,6 @@ class JaegerExporter(SpanExporter):
     """Jaeger span exporter for OpenTelemetry.
 
     Args:
-        service_name: Service that logged an annotation in a trace.Classifier
-            when query for spans.
         agent_host_name: The host name of the Jaeger-Agent.
         agent_port: The port of the Jaeger-Agent.
         collector_endpoint: The endpoint of the Jaeger collector that uses
@@ -124,7 +123,6 @@ class JaegerExporter(SpanExporter):
 
     def __init__(
         self,
-        service_name: str,
         agent_host_name: Optional[str] = None,
         agent_port: Optional[int] = None,
         collector_endpoint: Optional[str] = None,
@@ -133,7 +131,6 @@ class JaegerExporter(SpanExporter):
         max_tag_value_length: Optional[int] = None,
         udp_split_oversized_batches: bool = None,
     ):
-        self.service_name = service_name
         self._max_tag_value_length = max_tag_value_length
         self.agent_host_name = _parameter_setter(
             param=agent_host_name,
@@ -179,6 +176,11 @@ class JaegerExporter(SpanExporter):
             default=None,
         )
         self._collector = None
+        self.service_name = (
+            tracer_provider.resource.attributes[SERVICE_NAME]
+            if getattr(tracer_provider, "resource", None)
+            else Resource.create().attributes.get(SERVICE_NAME)
+        )
 
     @property
     def _collector_http_client(self) -> Optional[Collector]:
@@ -198,6 +200,7 @@ class JaegerExporter(SpanExporter):
         return self._collector
 
     def export(self, spans) -> SpanExportResult:
+
         translator = Translate(spans)
         thrift_translator = ThriftTranslator(self._max_tag_value_length)
         jaeger_spans = translator._translate(thrift_translator)
