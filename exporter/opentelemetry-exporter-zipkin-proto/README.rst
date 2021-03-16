@@ -1,19 +1,20 @@
-OpenTelemetry Zipkin Exporter
-=============================
+OpenTelemetry Zipkin Protobuf Exporter
+======================================
 
 |pypi|
 
-.. |pypi| image:: https://badge.fury.io/py/opentelemetry-exporter-zipkin.svg
-   :target: https://pypi.org/project/opentelemetry-exporter-zipkin/
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-exporter-zipkin-proto.svg
+   :target: https://pypi.org/project/opentelemetry-exporter-zipkin-proto/
 
-This library allows to export tracing data to `Zipkin <https://zipkin.io/>`_.
+This library allows export of tracing data to `Zipkin <https://zipkin.io/>`_ using Protobuf
+for serialization.
 
 Installation
 ------------
 
 ::
 
-     pip install opentelemetry-exporter-zipkin
+     pip install opentelemetry-exporter-zipkin-proto
 
 
 References
