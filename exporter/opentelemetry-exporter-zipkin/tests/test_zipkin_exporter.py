@@ -140,7 +140,7 @@ class TestZipkinExporter(unittest.TestCase):
     @patch("requests.post")
     def test_export_span_service_name(self, mock_post):
         mock_post.return_value = MockResponse(200)
-        resource = Resource.create({SERVICE_NAME:"test"})
+        resource = Resource.create({SERVICE_NAME: "test"})
         context = trace.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
