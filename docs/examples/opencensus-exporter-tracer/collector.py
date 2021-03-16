@@ -21,9 +21,7 @@ from opentelemetry.exporter.opencensus.trace_exporter import (
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
-exporter = OpenCensusSpanExporter(
-    service_name="basic-service", endpoint="localhost:55678"
-)
+exporter = OpenCensusSpanExporter(endpoint="localhost:55678")
 
 trace.set_tracer_provider(TracerProvider())
 tracer = trace.get_tracer(__name__)
