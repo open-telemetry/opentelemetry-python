@@ -24,7 +24,7 @@ class TestJaegerExporter(unittest.TestCase):
     def test_constructors(self):
         """ Test ensures both exporters can co-exist"""
         try:
-            proto.JaegerExporter(service_name="test-123")
-            thrift.JaegerExporter(service_name="test-456")
+            proto.JaegerExporter()
+            thrift.JaegerExporter()
         except Exception as exc:  # pylint: disable=broad-except
             self.assertIsNone(exc)

@@ -14,7 +14,6 @@ tracer_provider = trace.get_tracer_provider()
 
 # Configure the tracer to export traces to Jaeger
 jaeger_exporter = JaegerExporter(
-    service_name="OpenTracing Shim Example",
     agent_host_name="localhost",
     agent_port=6831,
 )

@@ -36,7 +36,6 @@ Usage
 
     # create a JaegerExporter
     jaeger_exporter = JaegerExporter(
-        service_name='my-helloworld-service',
         # optional: configure collector
         # collector_endpoint='localhost:14250',
         # insecure=True, # optional
@@ -72,6 +71,7 @@ from typing import Optional
 
 from grpc import ChannelCredentials, insecure_channel, secure_channel
 
+from opentelemetry import trace
 from opentelemetry.exporter.jaeger.proto import util
 from opentelemetry.exporter.jaeger.proto.gen import model_pb2
 from opentelemetry.exporter.jaeger.proto.gen.collector_pb2 import (
@@ -87,6 +87,7 @@ from opentelemetry.exporter.jaeger.proto.translate import (
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_ENDPOINT,
 )
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
 DEFAULT_GRPC_COLLECTOR_ENDPOINT = "localhost:14250"
@@ -98,8 +99,6 @@ class JaegerExporter(SpanExporter):
     """Jaeger span exporter for OpenTelemetry.
 
     Args:
-        service_name: Service that logged an annotation in a trace.Classifier
-            when query for spans.
         collector_endpoint: The endpoint of the Jaeger collector that uses
             Protobuf via gRPC.
         insecure: True if collector has no encryption or authentication
@@ -109,13 +108,11 @@ class JaegerExporter(SpanExporter):
 
     def __init__(
         self,
-        service_name: str,
         collector_endpoint: Optional[str] = None,
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
         max_tag_value_length: Optional[int] = None,
     ):
-        self.service_name = service_name
         self._max_tag_value_length = max_tag_value_length
 
         self.collector_endpoint = _parameter_setter(
@@ -126,6 +123,12 @@ class JaegerExporter(SpanExporter):
         self._grpc_client = None
         self.insecure = util._get_insecure(insecure)
         self.credentials = util._get_credentials(credentials)
+        tracer_provider = trace.get_tracer_provider()
+        self.service_name = (
+            tracer_provider.resource.attributes[SERVICE_NAME]
+            if getattr(tracer_provider, "resource", None)
+            else Resource.create().attributes.get(SERVICE_NAME)
+        )
 
     @property
     def _collector_grpc_client(self) -> Optional[CollectorServiceStub]:
