@@ -54,6 +54,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1671](https://github.com/open-telemetry/opentelemetry-python/pull/1671))
 - Initial documentation for environment variables
   ([#1680](https://github.com/open-telemetry/opentelemetry-python/pull/1680))
+- Created `opentelemetry-exporter-otlp-proto-grpc` and changed `opentelemetry-exporter-otlp` to
+  install it as a dependency. This will allow for the next package/protocol to also be in
+  its own package.
+  ([#1695](https://github.com/open-telemetry/opentelemetry-python/pull/1695))
 
 ### Removed
 - Removed unused `get_hexadecimal_trace_id` and `get_hexadecimal_span_id` methods.
