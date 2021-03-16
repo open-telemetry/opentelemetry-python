@@ -18,9 +18,9 @@ import unittest
 from unittest.mock import patch
 
 from opentelemetry import trace
-from opentelemetry.exporter.zipkin.json import DEFAULT_ENDPOINT, ZipkinExporter
 from opentelemetry.exporter.zipkin.encoder import Protocol
 from opentelemetry.exporter.zipkin.encoder.v2.json import JsonV2Encoder
+from opentelemetry.exporter.zipkin.json import DEFAULT_ENDPOINT, ZipkinExporter
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_ZIPKIN_ENDPOINT,
