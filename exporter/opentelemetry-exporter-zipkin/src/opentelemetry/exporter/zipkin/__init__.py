@@ -27,8 +27,6 @@ v2 json, v2 protobuf).
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
 .. _Specification: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/sdk-environment-variables.md#zipkin-exporter
 
-.. envvar:: OTEL_EXPORTER_ZIPKIN_ENDPOINT
-
 .. code:: python
 
     from opentelemetry import trace
@@ -61,9 +59,7 @@ v2 json, v2 protobuf).
 
 The exporter supports the following environment variable for configuration:
 
-:envvar:`OTEL_EXPORTER_ZIPKIN_ENDPOINT`: zipkin collector endpoint to which the
-exporter will send data. This may include a path (e.g.
-http://example.com:9411/api/v2/spans).
+- :envvar:`OTEL_EXPORTER_ZIPKIN_ENDPOINT`
 
 API
 ---
