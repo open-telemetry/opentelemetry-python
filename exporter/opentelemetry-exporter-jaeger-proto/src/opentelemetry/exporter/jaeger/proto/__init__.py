@@ -121,7 +121,7 @@ class JaegerExporter(SpanExporter):
             default=None,
         )
         self._grpc_client = None
-        self.insecure = util._get_insecure(insecure)
+        self.insecure = insecure
         self.credentials = util._get_credentials(credentials)
         tracer_provider = trace.get_tracer_provider()
         self.service_name = (
