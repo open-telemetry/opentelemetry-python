@@ -18,9 +18,9 @@ import unittest
 from unittest.mock import patch
 
 from opentelemetry import trace
-from opentelemetry.exporter.zipkin import DEFAULT_ENDPOINT, ZipkinExporter
+from opentelemetry.exporter.zipkin.json import DEFAULT_ENDPOINT, ZipkinExporter
 from opentelemetry.exporter.zipkin.encoder import Protocol
-from opentelemetry.exporter.zipkin.encoder.v2.protobuf import ProtobufEncoder
+from opentelemetry.exporter.zipkin.encoder.v2.json import JsonV2Encoder
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_ZIPKIN_ENDPOINT,
@@ -52,8 +52,8 @@ class TestZipkinExporter(unittest.TestCase):
             del os.environ[OTEL_EXPORTER_ZIPKIN_ENDPOINT]
 
     def test_constructor_default(self):
-        exporter = ZipkinExporter(Protocol.V2_PROTOBUF)
-        self.assertIsInstance(exporter.encoder, ProtobufEncoder)
+        exporter = ZipkinExporter()
+        self.assertIsInstance(exporter.encoder, JsonV2Encoder)
         self.assertEqual(exporter.endpoint, DEFAULT_ENDPOINT)
         self.assertEqual(exporter.local_node.service_name, TEST_SERVICE_NAME)
         self.assertEqual(exporter.local_node.ipv4, None)
@@ -64,7 +64,7 @@ class TestZipkinExporter(unittest.TestCase):
         os_endpoint = "https://foo:9911/path"
         os.environ[OTEL_EXPORTER_ZIPKIN_ENDPOINT] = os_endpoint
 
-        exporter = ZipkinExporter(Protocol.V2_PROTOBUF)
+        exporter = ZipkinExporter()
 
         self.assertEqual(exporter.endpoint, os_endpoint)
         self.assertEqual(exporter.local_node.service_name, TEST_SERVICE_NAME)
@@ -75,12 +75,11 @@ class TestZipkinExporter(unittest.TestCase):
     def test_constructor_protocol_endpoint(self):
         """Test the constructor for the common usage of providing the
         protocol and endpoint arguments."""
-        protocol = Protocol.V2_PROTOBUF
         endpoint = "https://opentelemetry.io:15875/myapi/traces?format=zipkin"
 
-        exporter = ZipkinExporter(protocol, endpoint)
+        exporter = ZipkinExporter(endpoint=endpoint)
 
-        self.assertIsInstance(exporter.encoder, ProtobufEncoder)
+        self.assertIsInstance(exporter.encoder, JsonV2Encoder)
         self.assertEqual(exporter.endpoint, endpoint)
         self.assertEqual(exporter.local_node.service_name, TEST_SERVICE_NAME)
         self.assertEqual(exporter.local_node.ipv4, None)
@@ -94,7 +93,7 @@ class TestZipkinExporter(unittest.TestCase):
         os_endpoint = "https://os.env.param:9911/path"
         os.environ[OTEL_EXPORTER_ZIPKIN_ENDPOINT] = os_endpoint
 
-        constructor_param_protocol = Protocol.V2_PROTOBUF
+        constructor_param_version = Protocol.V2
         constructor_param_endpoint = "https://constructor.param:9911/path"
         local_node_ipv4 = "192.168.0.1"
         local_node_ipv6 = "2001:db8::1000"
@@ -102,7 +101,7 @@ class TestZipkinExporter(unittest.TestCase):
         max_tag_value_length = 56
 
         exporter = ZipkinExporter(
-            constructor_param_protocol,
+            constructor_param_version,
             constructor_param_endpoint,
             local_node_ipv4,
             local_node_ipv6,
@@ -110,7 +109,7 @@ class TestZipkinExporter(unittest.TestCase):
             max_tag_value_length,
         )
 
-        self.assertIsInstance(exporter.encoder, ProtobufEncoder)
+        self.assertIsInstance(exporter.encoder, JsonV2Encoder)
         self.assertEqual(exporter.endpoint, constructor_param_endpoint)
         self.assertEqual(exporter.local_node.service_name, TEST_SERVICE_NAME)
         self.assertEqual(
@@ -125,7 +124,7 @@ class TestZipkinExporter(unittest.TestCase):
     def test_export_success(self, mock_post):
         mock_post.return_value = MockResponse(200)
         spans = []
-        exporter = ZipkinExporter(Protocol.V2_PROTOBUF)
+        exporter = ZipkinExporter()
         status = exporter.export(spans)
         self.assertEqual(SpanExportResult.SUCCESS, status)
 
@@ -133,7 +132,7 @@ class TestZipkinExporter(unittest.TestCase):
     def test_export_invalid_response(self, mock_post):
         mock_post.return_value = MockResponse(404)
         spans = []
-        exporter = ZipkinExporter(Protocol.V2_PROTOBUF)
+        exporter = ZipkinExporter()
         status = exporter.export(spans)
         self.assertEqual(SpanExportResult.FAILURE, status)
 
@@ -149,7 +148,7 @@ class TestZipkinExporter(unittest.TestCase):
         span = _Span("test_span", context=context, resource=resource)
         span.start()
         span.end()
-        exporter = ZipkinExporter(Protocol.V2_PROTOBUF)
+        exporter = ZipkinExporter()
         exporter.export([span])
         self.assertEqual(exporter.local_node.service_name, "test")
 

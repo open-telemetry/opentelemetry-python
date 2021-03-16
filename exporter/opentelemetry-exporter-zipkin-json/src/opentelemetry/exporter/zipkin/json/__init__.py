@@ -13,15 +13,17 @@
 # limitations under the License.
 
 """
+OpenTelemetry Zipkin JSON Exporter
+----------------------------------
+
 This library allows to export tracing data to `Zipkin <https://zipkin.io/>`_.
 
 Usage
 -----
 
-The **OpenTelemetry Zipkin Exporter** allows exporting of `OpenTelemetry`_
+The **OpenTelemetry Zipkin JSON Exporter** allows exporting of `OpenTelemetry`_
 traces to `Zipkin`_. This exporter sends traces to the configured Zipkin
-collector endpoint using HTTP and supports multiple protocols (v1 json,
-v2 json, v2 protobuf).
+collector endpoint using JSON over HTTP and supports multiple versions (v1, v2).
 
 .. _Zipkin: https://zipkin.io/
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
@@ -30,7 +32,7 @@ v2 json, v2 protobuf).
 .. code:: python
 
     from opentelemetry import trace
-    from opentelemetry.exporter import zipkin
+    from opentelemetry.exporter.zipkin.json import ZipkinExporter
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -38,8 +40,8 @@ v2 json, v2 protobuf).
     tracer = trace.get_tracer(__name__)
 
     # create a ZipkinExporter
-    zipkin_exporter = zipkin.ZipkinExporter(
-        # protocol=Protocol.V2_PROTOBUF
+    zipkin_exporter = ZipkinExporter(
+        # version=Protocol.V2
         # optional:
         # endpoint="http://localhost:9411/api/v2/spans",
         # local_node_ipv4="192.168.0.1",
@@ -78,7 +80,6 @@ from opentelemetry.exporter.zipkin.encoder import (
 )
 from opentelemetry.exporter.zipkin.encoder.v1.json import JsonV1Encoder
 from opentelemetry.exporter.zipkin.encoder.v2.json import JsonV2Encoder
-from opentelemetry.exporter.zipkin.encoder.v2.protobuf import ProtobufEncoder
 from opentelemetry.exporter.zipkin.node_endpoint import IpInput, NodeEndpoint
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_ZIPKIN_ENDPOINT,
@@ -96,7 +97,7 @@ logger = logging.getLogger(__name__)
 class ZipkinExporter(SpanExporter):
     def __init__(
         self,
-        protocol: Protocol,
+        version: Protocol = Protocol.V2,
         endpoint: Optional[str] = None,
         local_node_ipv4: IpInput = None,
         local_node_ipv6: IpInput = None,
@@ -113,12 +114,10 @@ class ZipkinExporter(SpanExporter):
             )
         self.endpoint = endpoint
 
-        if protocol == Protocol.V1_JSON:
+        if version == Protocol.V1:
             self.encoder = JsonV1Encoder(max_tag_value_length)
-        elif protocol == Protocol.V2_JSON:
+        elif version == Protocol.V2:
             self.encoder = JsonV2Encoder(max_tag_value_length)
-        elif protocol == Protocol.V2_PROTOBUF:
-            self.encoder = ProtobufEncoder(max_tag_value_length)
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
         # Populate service_name from first span
