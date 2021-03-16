@@ -38,7 +38,7 @@ Usage
     jaeger_exporter = JaegerExporter(
         service_name='my-helloworld-service',
         # optional: configure collector
-        # collector_endpoint='http://localhost:14268/api/traces?format=jaeger.thrift',
+        # collector_endpoint='localhost:14250',
         # insecure=True, # optional
         # credentials=xxx # optional channel creds
         # max_tag_value_length=None # optional
