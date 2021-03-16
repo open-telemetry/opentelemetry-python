@@ -15,7 +15,7 @@ jaeger_exporter = thrift.JaegerExporter(
     agent_host_name="localhost",
     agent_port=6831,
     # optional: configure also collector
-    # collector_endpoint="/api/traces?format=jaeger.thrift",
+    # collector_endpoint="http://localhost:14268/api/traces?format=jaeger.thrift",
     # username=xxxx, # optional
     # password=xxxx, # optional
 )

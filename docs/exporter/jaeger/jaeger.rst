@@ -24,7 +24,7 @@ Submodules
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: opentelemetry.exporter.jaeger.thrift.send.thrift
+.. automodule:: opentelemetry.exporter.jaeger.thrift.send
     :members:
     :undoc-members:
     :show-inheritance:
