@@ -21,7 +21,7 @@ from grpc import ChannelCredentials, Compression
 
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     OTLPExporterMixin,
-    _load_credential_from_file,
+    _get_credentials,
     _translate_key_values,
     environ_to_compression,
     get_resource_data,
@@ -44,7 +44,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
-    OTEL_EXPORTER_OTLP_TRACES_INSECURE,
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
 )
 from opentelemetry.sdk.trace import Span as ReadableSpan
@@ -85,15 +84,12 @@ class OTLPSpanExporter(
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
-        if insecure is None:
-            insecure = environ.get(OTEL_EXPORTER_OTLP_TRACES_INSECURE)
-
         if (
             not insecure
             and environ.get(OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE) is not None
         ):
-            credentials = credentials or _load_credential_from_file(
-                environ.get(OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE)
+            credentials = _get_credentials(
+                credentials, OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE
             )
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_TRACES_TIMEOUT)

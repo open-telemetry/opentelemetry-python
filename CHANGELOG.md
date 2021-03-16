@@ -61,7 +61,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 - Removed unused `get_hexadecimal_trace_id` and `get_hexadecimal_span_id` methods.
-  ([#1675])(https://github.com/open-telemetry/opentelemetry-python/pull/1675)
+  ([#1675](https://github.com/open-telemetry/opentelemetry-python/pull/1675))
+- Remove `OTEL_EXPORTER_*_ INSECURE` env var
+  ([#1682](https://github.com/open-telemetry/opentelemetry-python/pull/1682))
 
 ## [0.18b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.18b0) - 2021-02-16
 

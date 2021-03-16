@@ -42,7 +42,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
-    OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -159,6 +158,15 @@ def _load_credential_from_file(filepath) -> ChannelCredentials:
         return None
 
 
+def _get_credentials(creds, environ_key):
+    if creds is not None:
+        return creds
+    creds_env = environ.get(environ_key)
+    if creds_env:
+        return _load_credential_from_file(creds_env)
+    return ssl_channel_credentials()
+
+
 # pylint: disable=no-member
 class OTLPExporterMixin(
     ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT]
@@ -185,26 +193,17 @@ class OTLPExporterMixin(
     ):
         super().__init__()
 
-        endpoint = (
-            endpoint
-            or environ.get(OTEL_EXPORTER_OTLP_ENDPOINT)
-            or "localhost:4317"
+        endpoint = endpoint or environ.get(
+            OTEL_EXPORTER_OTLP_ENDPOINT, "localhost:4317"
         )
-
-        if insecure is None:
-            insecure = environ.get(OTEL_EXPORTER_OTLP_INSECURE)
-        if insecure is None:
-            insecure = False
 
         self._headers = headers or environ.get(OTEL_EXPORTER_OTLP_HEADERS)
         if isinstance(self._headers, str):
             self._headers = tuple(
                 tuple(item.split("=")) for item in self._headers.split(",")
             )
-        self._timeout = (
-            timeout
-            or int(environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 0))
-            or 10  # default: 10 seconds
+        self._timeout = timeout or int(
+            environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10)
         )
         self._collector_span_kwargs = None
 
@@ -218,22 +217,13 @@ class OTLPExporterMixin(
             self._client = self._stub(
                 insecure_channel(endpoint, compression=compression)
             )
-            return
-
-        # secure mode
-        if (
-            credentials is None
-            and environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE) is None
-        ):
-            # use the default location chosen by gRPC runtime
-            credentials = ssl_channel_credentials()
         else:
-            credentials = credentials or _load_credential_from_file(
-                environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE)
+            credentials = _get_credentials(
+                credentials, OTEL_EXPORTER_OTLP_CERTIFICATE
             )
-        self._client = self._stub(
-            secure_channel(endpoint, credentials, compression=compression)
-        )
+            self._client = self._stub(
+                secure_channel(endpoint, credentials, compression=compression)
+            )
 
     @abstractmethod
     def _translate_data(
