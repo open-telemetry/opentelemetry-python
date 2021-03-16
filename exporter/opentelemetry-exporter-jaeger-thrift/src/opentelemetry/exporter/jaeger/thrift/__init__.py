@@ -181,6 +181,12 @@ class JaegerExporter(SpanExporter):
             if getattr(tracer_provider, "resource", None)
             else Resource.create().attributes.get(SERVICE_NAME)
         )
+        tracer_provider = trace.get_tracer_provider()
+        self.service_name = (
+            tracer_provider.resource.attributes[SERVICE_NAME]
+            if getattr(tracer_provider, "resource", None)
+            else Resource.create().attributes.get(SERVICE_NAME)
+        )
 
     @property
     def _collector_http_client(self) -> Optional[Collector]:
