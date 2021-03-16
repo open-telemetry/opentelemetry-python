@@ -15,8 +15,7 @@ tracer = trace.get_tracer(__name__)
 # `EXPORTER_JAEGER_CERTIFICATE` with file containing creds.
 
 jaeger_exporter = proto.JaegerExporter(
-    collector_endpoint="localhost:14250",
-    insecure=True,
+    collector_endpoint="localhost:14250", insecure=True,
 )
 
 # create a BatchSpanProcessor and add the exporter to it
