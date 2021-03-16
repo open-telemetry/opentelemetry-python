@@ -19,7 +19,7 @@ API spec: https://github.com/openzipkin/zipkin-api/blob/master/zipkin.proto
 from typing import List, Optional, Sequence
 
 from opentelemetry.exporter.zipkin.encoder import Encoder
-from opentelemetry.exporter.zipkin.encoder.v2.protobuf.gen import zipkin_pb2
+from opentelemetry.exporter.zipkin.proto.v2.gen import zipkin_pb2
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk.trace import Event
 from opentelemetry.trace import Span, SpanContext, SpanKind

@@ -76,7 +76,7 @@ from opentelemetry.exporter.zipkin.encoder import (
     Encoder,
     Protocol,
 )
-from opentelemetry.exporter.zipkin.encoder.v2.protobuf import ProtobufEncoder
+from opentelemetry.exporter.zipkin.proto.v2 import ProtobufEncoder
 from opentelemetry.exporter.zipkin.node_endpoint import IpInput, NodeEndpoint
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_ZIPKIN_ENDPOINT,

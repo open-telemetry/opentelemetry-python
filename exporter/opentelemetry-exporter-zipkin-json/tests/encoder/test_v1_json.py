@@ -15,7 +15,7 @@ import json
 
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.zipkin.encoder import NAME_KEY, VERSION_KEY
-from opentelemetry.exporter.zipkin.encoder.v1.json import JsonV1Encoder
+from opentelemetry.exporter.zipkin.json.v1 import JsonV1Encoder
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk import trace
 from opentelemetry.trace import TraceFlags, format_span_id, format_trace_id

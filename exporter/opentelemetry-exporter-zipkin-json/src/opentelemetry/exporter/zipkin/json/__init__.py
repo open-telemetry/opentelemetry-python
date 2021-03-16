@@ -78,8 +78,8 @@ from opentelemetry.exporter.zipkin.encoder import (
     Encoder,
     Protocol,
 )
-from opentelemetry.exporter.zipkin.encoder.v1.json import JsonV1Encoder
-from opentelemetry.exporter.zipkin.encoder.v2.json import JsonV2Encoder
+from opentelemetry.exporter.zipkin.json.v1 import JsonV1Encoder
+from opentelemetry.exporter.zipkin.json.v2 import JsonV2Encoder
 from opentelemetry.exporter.zipkin.node_endpoint import IpInput, NodeEndpoint
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_ZIPKIN_ENDPOINT,

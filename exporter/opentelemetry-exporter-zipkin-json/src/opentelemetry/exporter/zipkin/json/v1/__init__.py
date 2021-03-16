@@ -14,11 +14,31 @@
 
 """Zipkin Export Encoders for JSON formats
 """
-from typing import Dict
 
-from opentelemetry.exporter.zipkin.encoder import JsonEncoder
-from opentelemetry.exporter.zipkin.encoder.v1 import V1Encoder
+import abc
+from typing import Dict, List
+
+from opentelemetry.exporter.zipkin.encoder import Encoder, JsonEncoder
 from opentelemetry.trace import Span
+
+
+# pylint: disable=W0223
+class V1Encoder(Encoder):
+    def _extract_binary_annotations(
+        self, span: Span, encoded_local_endpoint: Dict
+    ) -> List[Dict]:
+        binary_annotations = []
+        for tag_key, tag_value in self._extract_tags_from_span(span).items():
+            if isinstance(tag_value, str) and self.max_tag_value_length > 0:
+                tag_value = tag_value[: self.max_tag_value_length]
+            binary_annotations.append(
+                {
+                    "key": tag_key,
+                    "value": tag_value,
+                    "endpoint": encoded_local_endpoint,
+                }
+            )
+        return binary_annotations
 
 
 class JsonV1Encoder(JsonEncoder, V1Encoder):
