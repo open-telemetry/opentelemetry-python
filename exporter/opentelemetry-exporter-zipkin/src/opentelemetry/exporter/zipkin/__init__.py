@@ -101,7 +101,7 @@ class ZipkinExporter(SpanExporter):
         local_node_ipv4: IpInput = None,
         local_node_ipv6: IpInput = None,
         local_node_port: Optional[int] = None,
-        max_tag_value_length: Optional[int] = DEFAULT_MAX_TAG_VALUE_LENGTH,
+        max_tag_value_length: Optional[int] = None,
     ):
         self.local_node = NodeEndpoint(
             local_node_ipv4, local_node_ipv6, local_node_port
@@ -122,6 +122,10 @@ class ZipkinExporter(SpanExporter):
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
         # Populate service_name from first span
+        # We restrict any SpanProcessor to be only associated with a single
+        # TracerProvider, so it is safe to assume that all Spans in a single
+        # batch all originate from one TracerProvider (and in turn have all
+        # the same service.name)
         if spans:
             service_name = spans[0].resource.attributes.get(SERVICE_NAME)
             if service_name:

@@ -144,20 +144,23 @@ class Encoder(abc.ABC):
                 logger.warning("Could not serialize tag %s", attribute_key)
                 continue
 
-            if self.max_tag_value_length > 0:
+            if self.max_tag_value_length is not None and \
+                self.max_tag_value_length > 0:
                 value = value[: self.max_tag_value_length]
             tags[attribute_key] = value
         return tags
 
     def _extract_tag_value_string_from_sequence(self, sequence: Sequence):
-        if self.max_tag_value_length == 1:
+        if self.max_tag_value_length and \
+            self.max_tag_value_length == 1:
             return None
 
         tag_value_elements = []
         running_string_length = (
             2  # accounts for array brackets in output string
         )
-        defined_max_tag_value_length = self.max_tag_value_length > 0
+        defined_max_tag_value_length = self.max_tag_value_length is not None \
+            and self.max_tag_value_length > 0
 
         for element in sequence:
             if isinstance(element, bool):
@@ -214,7 +217,9 @@ class Encoder(abc.ABC):
         for event in events:
             attrs = {}
             for key, value in event.attributes.items():
-                if isinstance(value, str) and self.max_tag_value_length > 0:
+                if isinstance(value, str) and \
+                    self.max_tag_value_length is not None and \
+                    self.max_tag_value_length > 0:
                     value = value[: self.max_tag_value_length]
                 attrs[key] = value
 
