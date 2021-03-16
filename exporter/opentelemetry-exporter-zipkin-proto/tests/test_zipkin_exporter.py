@@ -18,12 +18,12 @@ import unittest
 from unittest.mock import patch
 
 from opentelemetry import trace
-from opentelemetry.exporter.zipkin.proto.v2 import ProtobufEncoder
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.exporter.zipkin.proto import (
     DEFAULT_ENDPOINT,
     ZipkinExporter,
 )
+from opentelemetry.exporter.zipkin.proto.v2 import ProtobufEncoder
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_ZIPKIN_ENDPOINT,
 )

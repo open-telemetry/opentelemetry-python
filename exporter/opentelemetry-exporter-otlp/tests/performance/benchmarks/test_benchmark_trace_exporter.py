@@ -25,7 +25,8 @@ from opentelemetry.sdk.trace.export import (
 def get_tracer_with_processor(span_processor_class):
     span_processor = span_processor_class(OTLPSpanExporter())
     tracer = TracerProvider(
-        active_span_processor=span_processor, sampler=sampling.DEFAULT_ON,
+        active_span_processor=span_processor,
+        sampler=sampling.DEFAULT_ON,
     ).get_tracer("pipeline_benchmark_tracer")
     return tracer
 
@@ -43,7 +44,9 @@ def test_simple_span_processor(benchmark):
     tracer = get_tracer_with_processor(SimpleSpanProcessor)
 
     def create_spans_to_be_exported():
-        span = tracer.start_span("benchmarkedSpan",)
+        span = tracer.start_span(
+            "benchmarkedSpan",
+        )
         for i in range(10):
             span.set_attribute(
                 "benchmarkAttribute_{}".format(i),
@@ -69,7 +72,9 @@ def test_batch_span_processor(benchmark):
     tracer = get_tracer_with_processor(BatchSpanProcessor)
 
     def create_spans_to_be_exported():
-        span = tracer.start_span("benchmarkedSpan",)
+        span = tracer.start_span(
+            "benchmarkedSpan",
+        )
         for i in range(10):
             span.set_attribute(
                 "benchmarkAttribute_{}".format(i),
