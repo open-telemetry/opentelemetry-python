@@ -51,9 +51,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         endpoint = "testEndpoint"
         with patch:
             exporter = OpenCensusSpanExporter(
-                host_name=host_name,
-                endpoint=endpoint,
-                client=client,
+                host_name=host_name, endpoint=endpoint, client=client,
             )
 
         self.assertIs(exporter.client, client)
@@ -156,10 +154,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         otel_spans[0].end(end_time=end_times[0])
         otel_spans[1].start(start_time=start_times[1])
         otel_spans[1].set_status(
-            trace_api.Status(
-                trace_api.StatusCode.ERROR,
-                {"test", "val"},
-            )
+            trace_api.Status(trace_api.StatusCode.ERROR, {"test", "val"},)
         )
         otel_spans[1].end(end_time=end_times[1])
         otel_spans[2].start(start_time=start_times[2])
@@ -199,8 +194,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
             output_spans[2].parent_span_id, b"\x11\x11\x11\x11\x11\x11\x11\x11"
         )
         self.assertEqual(
-            output_spans[0].status.code,
-            trace_api.StatusCode.OK.value,
+            output_spans[0].status.code, trace_api.StatusCode.OK.value,
         )
         self.assertEqual(len(output_spans[0].tracestate.entries), 1)
         self.assertEqual(output_spans[0].tracestate.entries[0].key, "testkey")
@@ -270,8 +264,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
             trace_pb2.Span.Link.Type.TYPE_UNSPECIFIED,
         )
         self.assertEqual(
-            output_spans[1].status.code,
-            trace_api.StatusCode.ERROR.value,
+            output_spans[1].status.code, trace_api.StatusCode.ERROR.value,
         )
         self.assertEqual(
             output_spans[2].links.link[0].type,

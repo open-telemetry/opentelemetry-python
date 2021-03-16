@@ -241,12 +241,10 @@ class OTLPSpanExporter(
                 sdk_resource_instrumentation_library_spans.keys()
             ):
                 if sdk_span.instrumentation_info is not None:
-                    instrumentation_library_spans = (
-                        InstrumentationLibrarySpans(
-                            instrumentation_library=InstrumentationLibrary(
-                                name=sdk_span.instrumentation_info.name,
-                                version=sdk_span.instrumentation_info.version,
-                            )
+                    instrumentation_library_spans = InstrumentationLibrarySpans(
+                        instrumentation_library=InstrumentationLibrary(
+                            name=sdk_span.instrumentation_info.name,
+                            version=sdk_span.instrumentation_info.version,
                         )
                     )
 

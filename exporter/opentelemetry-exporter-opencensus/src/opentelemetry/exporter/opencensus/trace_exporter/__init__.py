@@ -46,10 +46,7 @@ class OpenCensusSpanExporter(SpanExporter):
     """
 
     def __init__(
-        self,
-        endpoint=DEFAULT_ENDPOINT,
-        host_name=None,
-        client=None,
+        self, endpoint=DEFAULT_ENDPOINT, host_name=None, client=None,
     ):
         tracer_provider = trace.get_tracer_provider()
         service_name = (
