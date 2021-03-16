@@ -14,7 +14,6 @@
 
 import unittest
 
-from opentelemetry import trace
 from opentelemetry.exporter.zipkin import json, proto
 
 
