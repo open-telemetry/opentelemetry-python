@@ -22,7 +22,6 @@ from shutil import which
 
 from opentelemetry.environment_variables import (
     OTEL_PYTHON_ID_GENERATOR,
-    OTEL_PYTHON_SERVICE_NAME,
     OTEL_TRACES_EXPORTER,
 )
 
@@ -83,8 +82,6 @@ def parse_args():
 def load_config_from_cli_args(args):
     if args.trace_exporter:
         environ[OTEL_TRACES_EXPORTER] = args.trace_exporter
-    if args.service_name:
-        environ[OTEL_PYTHON_SERVICE_NAME] = args.service_name
     if args.id_generator:
         environ[OTEL_PYTHON_ID_GENERATOR] = args.id_generator
 
