@@ -14,7 +14,7 @@
 
 # jaeger_example.py
 from opentelemetry import trace
-from opentelemetry.exporter.thrift.jaeger import JaegerExporter
+from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
