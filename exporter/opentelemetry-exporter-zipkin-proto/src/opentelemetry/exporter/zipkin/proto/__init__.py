@@ -14,7 +14,7 @@
 
 """
 OpenTelemetry Zipkin Protobuf Exporter
-----------------------------------
+--------------------------------------
 
 This library allows to export tracing data to `Zipkin <https://zipkin.io/>`_.
 
