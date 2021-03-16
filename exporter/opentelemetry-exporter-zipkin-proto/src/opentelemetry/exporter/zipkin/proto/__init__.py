@@ -13,6 +13,9 @@
 # limitations under the License.
 
 """
+OpenTelemetry Zipkin Protobuf Exporter
+----------------------------------
+
 This library allows to export tracing data to `Zipkin <https://zipkin.io/>`_.
 
 Usage
@@ -20,8 +23,7 @@ Usage
 
 The **OpenTelemetry Zipkin Exporter** allows exporting of `OpenTelemetry`_
 traces to `Zipkin`_. This exporter sends traces to the configured Zipkin
-collector endpoint using HTTP and supports multiple protocols (v1 json,
-v2 json, v2 protobuf).
+collector endpoint using HTTP and supports v2 protobuf.
 
 .. _Zipkin: https://zipkin.io/
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
@@ -30,7 +32,7 @@ v2 json, v2 protobuf).
 .. code:: python
 
     from opentelemetry import trace
-    from opentelemetry.exporter import zipkin
+    from opentelemetry.exporter.zipkin.proto import ZipkinExporter
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -38,8 +40,7 @@ v2 json, v2 protobuf).
     tracer = trace.get_tracer(__name__)
 
     # create a ZipkinExporter
-    zipkin_exporter = zipkin.ZipkinExporter(
-        # protocol=Protocol.V2_PROTOBUF
+    zipkin_exporter = ZipkinExporter(
         # optional:
         # endpoint="http://localhost:9411/api/v2/spans",
         # local_node_ipv4="192.168.0.1",
