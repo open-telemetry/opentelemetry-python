@@ -63,7 +63,6 @@ You can configure the exporter with the following environment variables:
 
 - :envvar:`OTEL_EXPORTER_JAEGER_USER`
 - :envvar:`OTEL_EXPORTER_JAEGER_PASSWORD`
-- :envvar:`OTEL_EXPORTER_JAEGER_INSECURE`
 - :envvar:`OTEL_EXPORTER_JAEGER_ENDPOINT`
 - :envvar:`OTEL_EXPORTER_JAEGER_CERTIFICATE`
 - :envvar:`OTEL_EXPORTER_JAEGER_AGENT_PORT`
@@ -197,7 +196,7 @@ class JaegerExporter(SpanExporter):
         )
         self._collector = None
         self._grpc_client = None
-        self.insecure = util._get_insecure(insecure)
+        self.insecure = insecure
         self.credentials = util._get_credentials(credentials)
         self.transport_format = (
             transport_format.lower()
