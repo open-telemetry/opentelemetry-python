@@ -80,9 +80,9 @@ from opentelemetry.exporter.jaeger.proto.gen.collector_pb2 import (
 from opentelemetry.exporter.jaeger.proto.gen.collector_pb2_grpc import (
     CollectorServiceStub,
 )
-from opentelemetry.exporter.jaeger.proto.translate import Translate
-from opentelemetry.exporter.jaeger.proto.translate.protobuf import (
+from opentelemetry.exporter.jaeger.proto.translate import (
     ProtobufTranslator,
+    Translate,
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_ENDPOINT,

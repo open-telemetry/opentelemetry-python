@@ -83,13 +83,10 @@ from typing import Optional
 from opentelemetry.exporter.jaeger.thrift.gen.jaeger import (
     Collector as jaeger_thrift,
 )
-from opentelemetry.exporter.jaeger.thrift.send import (
-    AgentClientUDP,
-    Collector,
-)
-from opentelemetry.exporter.jaeger.thrift.translate import Translate
+from opentelemetry.exporter.jaeger.thrift.send import AgentClientUDP, Collector
 from opentelemetry.exporter.jaeger.thrift.translate import (
     ThriftTranslator,
+    Translate,
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_AGENT_HOST,

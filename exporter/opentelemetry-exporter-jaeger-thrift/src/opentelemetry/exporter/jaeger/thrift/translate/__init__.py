@@ -15,7 +15,6 @@
 import abc
 from typing import Optional, Sequence
 
-
 from opentelemetry.exporter.jaeger.thrift.gen.jaeger import (
     Collector as TCollector,
 )

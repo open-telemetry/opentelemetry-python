@@ -21,9 +21,9 @@ from unittest import mock
 import opentelemetry.exporter.jaeger.thrift as jaeger_exporter
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.jaeger.thrift.gen.jaeger import ttypes as jaeger
-from opentelemetry.exporter.jaeger.thrift.translate import Translate
 from opentelemetry.exporter.jaeger.thrift.translate import (
     ThriftTranslator,
+    Translate,
 )
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.environment_variables import (
@@ -228,9 +228,7 @@ class TestJaegerExporter(unittest.TestCase):
 
         default_tags = [
             jaeger.Tag(
-                key="span.kind",
-                vType=jaeger.TagType.STRING,
-                vStr="internal",
+                key="span.kind", vType=jaeger.TagType.STRING, vStr="internal",
             ),
         ]
 
@@ -463,8 +461,7 @@ class TestJaegerExporter(unittest.TestCase):
         spans = translate._translate(ThriftTranslator())
 
         batch = jaeger.Batch(
-            spans=spans,
-            process=jaeger.Process(serviceName="xxx"),
+            spans=spans, process=jaeger.Process(serviceName="xxx"),
         )
 
         agent_client.emit(batch)
