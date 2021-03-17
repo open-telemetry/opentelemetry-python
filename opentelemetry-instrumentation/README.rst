@@ -68,10 +68,6 @@ Well known trace exporter names:
 
 ``otlp`` is an alias for ``otlp_proto_grpc_span``.
 
-* ``--service-name`` or ``OTEL_PYTHON_SERVICE_NAME``
-
-When present the value is passed on to the relevant exporter initializer as ``service_name`` argument.
-
 * ``--id-generator`` or ``OTEL_PYTHON_ID_GENERATOR``
 
 Used to specify which IDs Generator to use for the global Tracer Provider. By default, it

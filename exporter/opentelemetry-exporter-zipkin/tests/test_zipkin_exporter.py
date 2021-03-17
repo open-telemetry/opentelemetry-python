@@ -26,7 +26,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_ZIPKIN_ENDPOINT,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace import TracerProvider, _Span
 from opentelemetry.sdk.trace.export import SpanExportResult
 
 TEST_SERVICE_NAME = "test_service"
@@ -122,12 +122,36 @@ class TestZipkinExporter(unittest.TestCase):
         self.assertEqual(exporter.local_node.port, local_node_port)
 
     @patch("requests.post")
-    def test_invalid_response(self, mock_post):
+    def test_export_success(self, mock_post):
+        mock_post.return_value = MockResponse(200)
+        spans = []
+        exporter = ZipkinExporter(Protocol.V2_PROTOBUF)
+        status = exporter.export(spans)
+        self.assertEqual(SpanExportResult.SUCCESS, status)
+
+    @patch("requests.post")
+    def test_export_invalid_response(self, mock_post):
         mock_post.return_value = MockResponse(404)
         spans = []
         exporter = ZipkinExporter(Protocol.V2_PROTOBUF)
         status = exporter.export(spans)
         self.assertEqual(SpanExportResult.FAILURE, status)
+
+    @patch("requests.post")
+    def test_export_span_service_name(self, mock_post):
+        mock_post.return_value = MockResponse(200)
+        resource = Resource.create({SERVICE_NAME: "test"})
+        context = trace.SpanContext(
+            trace_id=0x000000000000000000000000DEADBEEF,
+            span_id=0x00000000DEADBEF0,
+            is_remote=False,
+        )
+        span = _Span("test_span", context=context, resource=resource)
+        span.start()
+        span.end()
+        exporter = ZipkinExporter(Protocol.V2_PROTOBUF)
+        exporter.export([span])
+        self.assertEqual(exporter.local_node.service_name, "test")
 
 
 class TestZipkinNodeEndpoint(unittest.TestCase):
