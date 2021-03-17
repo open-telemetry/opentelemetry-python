@@ -3,7 +3,7 @@
 from rediscache import RedisCache
 
 from opentelemetry import trace
-from opentelemetry.exporter.jaeger import JaegerExporter
+from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.shim import opentracing_shim
@@ -13,11 +13,7 @@ trace.set_tracer_provider(TracerProvider())
 tracer_provider = trace.get_tracer_provider()
 
 # Configure the tracer to export traces to Jaeger
-jaeger_exporter = JaegerExporter(
-    service_name="OpenTracing Shim Example",
-    agent_host_name="localhost",
-    agent_port=6831,
-)
+jaeger_exporter = JaegerExporter(agent_host_name="localhost", agent_port=6831,)
 span_processor = SimpleSpanProcessor(jaeger_exporter)
 tracer_provider.add_span_processor(span_processor)
 

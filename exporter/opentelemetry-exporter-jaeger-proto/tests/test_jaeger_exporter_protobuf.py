@@ -19,11 +19,11 @@ from unittest.mock import patch
 
 # pylint:disable=no-name-in-module
 # pylint:disable=import-error
-import opentelemetry.exporter.jaeger.gen.model_pb2 as model_pb2
-import opentelemetry.exporter.jaeger.translate.protobuf as pb_translator
+import opentelemetry.exporter.jaeger.proto.gen.model_pb2 as model_pb2
+import opentelemetry.exporter.jaeger.proto.translate as pb_translator
 from opentelemetry import trace as trace_api
-from opentelemetry.exporter.jaeger import JaegerExporter
-from opentelemetry.exporter.jaeger.translate import (
+from opentelemetry.exporter.jaeger.proto import JaegerExporter
+from opentelemetry.exporter.jaeger.proto.translate import (
     NAME_KEY,
     VERSION_KEY,
     Translate,
@@ -75,7 +75,7 @@ class TestJaegerExporter(unittest.TestCase):
         env_patch.start()
         provider = TracerProvider(resource=Resource.create({}))
         trace_api.set_tracer_provider(provider)
-        exporter = JaegerExporter(transport_format="protobuf")
+        exporter = JaegerExporter()
         self.assertEqual(exporter.service_name, service)
         self.assertIsNotNone(exporter._collector_grpc_client)
         self.assertEqual(exporter.collector_endpoint, collector_endpoint)
