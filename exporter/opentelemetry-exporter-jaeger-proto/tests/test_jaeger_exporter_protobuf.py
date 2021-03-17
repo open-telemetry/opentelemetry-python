@@ -459,7 +459,7 @@ class TestJaegerExporter(unittest.TestCase):
         client_mock = mock.Mock()
         exporter = JaegerExporter()
         exporter._grpc_client = client_mock
-        status = exporter.export([span])
+        exporter.export([span])
         self.assertEqual(exporter.service_name, "test")
 
 
