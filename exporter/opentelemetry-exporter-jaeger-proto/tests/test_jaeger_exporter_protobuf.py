@@ -15,7 +15,7 @@
 import os
 import unittest
 from collections import OrderedDict
-from unittest.mock import patch
+from unittest import mock
 
 # pylint:disable=no-name-in-module
 # pylint:disable=import-error
@@ -34,7 +34,9 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_ENDPOINT,
     OTEL_RESOURCE_ATTRIBUTES,
 )
-from opentelemetry.sdk.trace import Resource, TracerProvider
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.trace import TracerProvider
+from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace.status import Status, StatusCode
 
@@ -43,13 +45,13 @@ from opentelemetry.trace.status import Status, StatusCode
 class TestJaegerExporter(unittest.TestCase):
     def setUp(self):
         # create and save span to be used in tests
-        context = trace_api.SpanContext(
+        self.context = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
             is_remote=False,
         )
 
-        self._test_span = trace._Span("test_span", context=context)
+        self._test_span = trace._Span("test_span", context=self.context)
         self._test_span.start()
         self._test_span.end()
 
@@ -62,7 +64,7 @@ class TestJaegerExporter(unittest.TestCase):
 
         collector_endpoint = "localhost:14250"
 
-        env_patch = patch.dict(
+        env_patch = mock.patch.dict(
             "os.environ",
             {
                 OTEL_EXPORTER_JAEGER_ENDPOINT: collector_endpoint,
@@ -438,3 +440,30 @@ class TestJaegerExporter(unittest.TestCase):
         self.assertEqual("hello", tags_by_keys["key_string"])
         self.assertEqual("('tup", tags_by_keys["key_tuple"])
         self.assertEqual("some_", tags_by_keys["key_resource"])
+
+    def test_export(self):
+        client_mock = mock.Mock()
+        spans = []
+        exporter = JaegerExporter()
+        exporter._grpc_client = client_mock
+        status = exporter.export(spans)
+        self.assertEqual(SpanExportResult.SUCCESS, status)
+
+    def test_export_span_service_name(self):
+        resource = Resource.create({SERVICE_NAME: "test"})
+        span = trace._Span(
+            "test_span", context=self.context, resource=resource
+        )
+        span.start()
+        span.end()
+        client_mock = mock.Mock()
+        exporter = JaegerExporter()
+        exporter._grpc_client = client_mock
+        exporter.export([span])
+        self.assertEqual(exporter.service_name, "test")
+
+
+class MockResponse:
+    def __init__(self, status_code):
+        self.status_code = status_code
+        self.text = status_code
