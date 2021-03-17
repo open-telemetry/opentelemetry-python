@@ -14,12 +14,16 @@
 # limitations under the License.
 
 """
-The **OpenTelemetry Jaeger Exporter** allows to export `OpenTelemetry`_ traces to `Jaeger`_.
+
+OpenTelemetry Jaeger Thrift Exporter
+------------------------------------
+
+The **OpenTelemetry Jaeger Thrift Exporter** allows to export `OpenTelemetry`_ traces to `Jaeger`_.
 This exporter always sends traces to the configured agent using the Thrift compact protocol over UDP.
 When it is not feasible to deploy Jaeger Agent next to the application, for example, when the
 application code is running as Lambda function, a collector can be configured to send spans
-using either Thrift over HTTP or Protobuf via gRPC. If both agent and collector are configured,
-the exporter sends traces only to the collector to eliminate the duplicate entries.
+using Thrift over HTTP. If both agent and collector are configured, the exporter sends traces
+only to the collector to eliminate the duplicate entries.
 
 Usage
 -----
@@ -27,7 +31,7 @@ Usage
 .. code:: python
 
     from opentelemetry import trace
-    from opentelemetry.exporter import jaeger
+    from opentelemetry.exporter.jaeger.thrift import JaegerExporter
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -35,7 +39,7 @@ Usage
     tracer = trace.get_tracer(__name__)
 
     # create a JaegerExporter
-    jaeger_exporter = jaeger.JaegerExporter(
+    jaeger_exporter = JaegerExporter(
         # configure agent
         agent_host_name='localhost',
         agent_port=6831,
@@ -43,9 +47,6 @@ Usage
         # collector_endpoint='http://localhost:14268/api/traces?format=jaeger.thrift',
         # username=xxxx, # optional
         # password=xxxx, # optional
-        # insecure=True, # optional
-        # credentials=xxx # optional channel creds
-        # transport_format='protobuf' # optional
         # max_tag_value_length=None # optional
     )
 
@@ -63,9 +64,9 @@ You can configure the exporter with the following environment variables:
 - :envvar:`OTEL_EXPORTER_JAEGER_USER`
 - :envvar:`OTEL_EXPORTER_JAEGER_PASSWORD`
 - :envvar:`OTEL_EXPORTER_JAEGER_ENDPOINT`
-- :envvar:`OTEL_EXPORTER_JAEGER_CERTIFICATE`
 - :envvar:`OTEL_EXPORTER_JAEGER_AGENT_PORT`
 - :envvar:`OTEL_EXPORTER_JAEGER_AGENT_HOST`
+- :envvar:`OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES`
 
 API
 ---
@@ -78,20 +79,15 @@ import logging
 from os import environ
 from typing import Optional
 
-from grpc import ChannelCredentials, insecure_channel, secure_channel
-
 from opentelemetry import trace
-from opentelemetry.exporter.jaeger import util
-from opentelemetry.exporter.jaeger.gen import model_pb2
-from opentelemetry.exporter.jaeger.gen.collector_pb2 import PostSpansRequest
-from opentelemetry.exporter.jaeger.gen.collector_pb2_grpc import (
-    CollectorServiceStub,
+from opentelemetry.exporter.jaeger.thrift.gen.jaeger import (
+    Collector as jaeger_thrift,
 )
-from opentelemetry.exporter.jaeger.gen.jaeger import Collector as jaeger_thrift
-from opentelemetry.exporter.jaeger.send.thrift import AgentClientUDP, Collector
-from opentelemetry.exporter.jaeger.translate import Translate
-from opentelemetry.exporter.jaeger.translate.protobuf import ProtobufTranslator
-from opentelemetry.exporter.jaeger.translate.thrift import ThriftTranslator
+from opentelemetry.exporter.jaeger.thrift.send import AgentClientUDP, Collector
+from opentelemetry.exporter.jaeger.thrift.translate import (
+    ThriftTranslator,
+    Translate,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_AGENT_HOST,
     OTEL_EXPORTER_JAEGER_AGENT_PORT,
@@ -105,12 +101,6 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
 DEFAULT_AGENT_HOST_NAME = "localhost"
 DEFAULT_AGENT_PORT = 6831
-DEFAULT_GRPC_COLLECTOR_ENDPOINT = "localhost:14250"
-
-UDP_PACKET_MAX_LENGTH = 65000
-
-TRANSPORT_FORMAT_THRIFT = "thrift"
-TRANSPORT_FORMAT_PROTOBUF = "protobuf"
 
 logger = logging.getLogger(__name__)
 
@@ -122,14 +112,11 @@ class JaegerExporter(SpanExporter):
         agent_host_name: The host name of the Jaeger-Agent.
         agent_port: The port of the Jaeger-Agent.
         collector_endpoint: The endpoint of the Jaeger collector that uses
-            Thrift over HTTP/HTTPS or Protobuf via gRPC.
+            Thrift over HTTP/HTTPS.
         username: The user name of the Basic Auth if authentication is
             required.
         password: The password of the Basic Auth if authentication is
             required.
-        insecure: True if collector has no encryption or authentication
-        credentials: Credentials for server authentication.
-        transport_format: Transport format for exporting spans to collector.
         max_tag_value_length: Max length string attribute values can have. Set to None to disable.
         udp_split_oversized_batches: Re-emit oversized batches in smaller chunks.
     """
@@ -141,9 +128,6 @@ class JaegerExporter(SpanExporter):
         collector_endpoint: Optional[str] = None,
         username: Optional[str] = None,
         password: Optional[str] = None,
-        insecure: Optional[bool] = None,
-        credentials: Optional[ChannelCredentials] = None,
-        transport_format: Optional[str] = None,
         max_tag_value_length: Optional[int] = None,
         udp_split_oversized_batches: bool = None,
     ):
@@ -192,14 +176,6 @@ class JaegerExporter(SpanExporter):
             default=None,
         )
         self._collector = None
-        self._grpc_client = None
-        self.insecure = insecure
-        self.credentials = util._get_credentials(credentials)
-        self.transport_format = (
-            transport_format.lower()
-            if transport_format
-            else TRANSPORT_FORMAT_THRIFT
-        )
         tracer_provider = trace.get_tracer_provider()
         self.service_name = (
             tracer_provider.resource.attributes[SERVICE_NAME]
@@ -208,32 +184,11 @@ class JaegerExporter(SpanExporter):
         )
 
     @property
-    def _collector_grpc_client(self) -> Optional[CollectorServiceStub]:
-        if self.transport_format != TRANSPORT_FORMAT_PROTOBUF:
-            return None
-
-        endpoint = self.collector_endpoint or DEFAULT_GRPC_COLLECTOR_ENDPOINT
-
-        if self._grpc_client is None:
-            if self.insecure:
-                self._grpc_client = CollectorServiceStub(
-                    insecure_channel(endpoint)
-                )
-            else:
-                self._grpc_client = CollectorServiceStub(
-                    secure_channel(endpoint, self.credentials)
-                )
-        return self._grpc_client
-
-    @property
     def _collector_http_client(self) -> Optional[Collector]:
         if self._collector is not None:
             return self._collector
 
-        if (
-            self.collector_endpoint is None
-            or self.transport_format != TRANSPORT_FORMAT_THRIFT
-        ):
+        if self.collector_endpoint is None:
             return None
 
         auth = None
@@ -248,25 +203,16 @@ class JaegerExporter(SpanExporter):
     def export(self, spans) -> SpanExportResult:
 
         translator = Translate(spans)
-        if self.transport_format == TRANSPORT_FORMAT_PROTOBUF:
-            pb_translator = ProtobufTranslator(
-                self.service_name, self._max_tag_value_length
-            )
-            jaeger_spans = translator._translate(pb_translator)
-            batch = model_pb2.Batch(spans=jaeger_spans)
-            request = PostSpansRequest(batch=batch)
-            self._collector_grpc_client.PostSpans(request)
+        thrift_translator = ThriftTranslator(self._max_tag_value_length)
+        jaeger_spans = translator._translate(thrift_translator)
+        batch = jaeger_thrift.Batch(
+            spans=jaeger_spans,
+            process=jaeger_thrift.Process(serviceName=self.service_name),
+        )
+        if self._collector_http_client is not None:
+            self._collector_http_client.submit(batch)
         else:
-            thrift_translator = ThriftTranslator(self._max_tag_value_length)
-            jaeger_spans = translator._translate(thrift_translator)
-            batch = jaeger_thrift.Batch(
-                spans=jaeger_spans,
-                process=jaeger_thrift.Process(serviceName=self.service_name),
-            )
-            if self._collector_http_client is not None:
-                self._collector_http_client.submit(batch)
-            else:
-                self._agent_client.emit(batch)
+            self._agent_client.emit(batch)
 
         return SpanExportResult.SUCCESS
 
