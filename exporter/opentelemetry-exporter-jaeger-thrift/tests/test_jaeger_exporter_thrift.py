@@ -44,13 +44,13 @@ from opentelemetry.trace.status import Status, StatusCode
 class TestJaegerExporter(unittest.TestCase):
     def setUp(self):
         # create and save span to be used in tests
-        context = trace_api.SpanContext(
+        self.context = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
             span_id=0x00000000DEADBEF0,
             is_remote=False,
         )
 
-        self._test_span = trace._Span("test_span", context=context)
+        self._test_span = trace._Span("test_span", context=self.context)
         self._test_span.start()
         self._test_span.end()
         # pylint: disable=protected-access
@@ -490,6 +490,27 @@ class TestJaegerExporter(unittest.TestCase):
         self.assertEqual(agent_client_mock.emit.call_count, 1)
         self.assertEqual(collector_mock.submit.call_count, 1)
         # trace_api._TRACER_PROVIDER = None
+
+    @patch("opentelemetry.exporter.jaeger.thrift.trace._TRACER_PROVIDER", None)
+    def test_export_span_service_name(self):
+        trace_api.set_tracer_provider(
+            TracerProvider(
+                resource=Resource.create({SERVICE_NAME: "text_export"})
+            )
+        )
+        exporter = jaeger_exporter.JaegerExporter(
+            agent_host_name="localhost", agent_port=6318
+        )
+        agent_client_mock = mock.Mock(spec=jaeger_exporter.AgentClientUDP)
+        exporter._agent_client = agent_client_mock
+        resource = Resource.create({SERVICE_NAME: "test"})
+        span = trace._Span(
+            "test_span", context=self.context, resource=resource
+        )
+        span.start()
+        span.end()
+        exporter.export([span])
+        self.assertEqual(exporter.service_name, "test")
 
     def test_agent_client(self):
         agent_client = jaeger_exporter.AgentClientUDP(
