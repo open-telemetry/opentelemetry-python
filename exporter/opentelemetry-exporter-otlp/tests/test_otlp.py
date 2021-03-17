@@ -23,5 +23,7 @@ class TestOTLPExporters(unittest.TestCase):
     def test_constructors(self):
         try:
             OTLPSpanExporter()
-        except Exception: # pylint: disable=broad-except
-            self.fail("Unexpected exception raised when instantiating OTLPSpanExporter")
+        except Exception:  # pylint: disable=broad-except
+            self.fail(
+                "Unexpected exception raised when instantiating OTLPSpanExporter"
+            )
