@@ -14,7 +14,9 @@
 
 from unittest.mock import patch
 
-from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter,
+)
 from opentelemetry.sdk.trace import TracerProvider, sampling
 from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
@@ -36,7 +38,7 @@ class MockTraceServiceStub(object):
 
 
 @patch(
-    "opentelemetry.exporter.otlp.trace_exporter.OTLPSpanExporter._stub",
+    "opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter._stub",
     new=MockTraceServiceStub,
 )
 def test_simple_span_processor(benchmark):
@@ -55,7 +57,7 @@ def test_simple_span_processor(benchmark):
 
 
 @patch(
-    "opentelemetry.exporter.otlp.trace_exporter.OTLPSpanExporter._stub",
+    "opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter._stub",
     new=MockTraceServiceStub,
 )
 def test_batch_span_processor(benchmark):

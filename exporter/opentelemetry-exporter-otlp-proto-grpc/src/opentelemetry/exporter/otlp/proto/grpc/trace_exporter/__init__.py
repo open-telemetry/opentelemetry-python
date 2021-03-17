@@ -19,7 +19,7 @@ from typing import Optional, Sequence
 
 from grpc import ChannelCredentials, Compression
 
-from opentelemetry.exporter.otlp.exporter import (
+from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     OTLPExporterMixin,
     _get_credentials,
     _translate_key_values,
