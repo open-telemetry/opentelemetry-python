@@ -35,7 +35,7 @@ logger = getLogger(__file__)
 
 
 EXPORTER_OTLP = "otlp"
-EXPORTER_OTLP_SPAN = "otlp_span"
+EXPORTER_OTLP_SPAN = "otlp_proto_grpc_span"
 
 RANDOM_ID_GENERATOR = "random"
 _DEFAULT_ID_GENERATOR = RANDOM_ID_GENERATOR
@@ -159,4 +159,4 @@ class OpenTelemetryDistro(BaseDistro):
     """
 
     def _configure(self, **kwargs):
-        os.environ.setdefault(OTEL_TRACES_EXPORTER, "otlp_span")
+        os.environ.setdefault(OTEL_TRACES_EXPORTER, "otlp_proto_grpc_span")
