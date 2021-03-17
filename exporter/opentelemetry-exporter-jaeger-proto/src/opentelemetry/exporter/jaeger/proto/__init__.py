@@ -145,6 +145,15 @@ class JaegerExporter(SpanExporter):
         return self._grpc_client
 
     def export(self, spans) -> SpanExportResult:
+        # Populate service_name from first span
+        # We restrict any SpanProcessor to be only associated with a single
+        # TracerProvider, so it is safe to assume that all Spans in a single
+        # batch all originate from one TracerProvider (and in turn have all
+        # the same service.name)
+        if spans:
+            service_name = spans[0].resource.attributes.get(SERVICE_NAME)
+            if service_name:
+                self.service_name = service_name
         translator = Translate(spans)
         pb_translator = ProtobufTranslator(
             self.service_name, self._max_tag_value_length
