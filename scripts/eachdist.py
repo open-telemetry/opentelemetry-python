@@ -7,7 +7,6 @@ import shlex
 import shutil
 import subprocess
 import sys
-from collections import namedtuple
 from configparser import ConfigParser
 from datetime import datetime
 from inspect import cleandoc
@@ -230,7 +229,8 @@ def parse_args(args=None):
     )
 
     releaseparser = subparsers.add_parser(
-        "release", help="Prepares release, used by maintainers and CI",
+        "release",
+        help="Prepares release, used by maintainers and CI",
     )
     releaseparser.set_defaults(func=release_args)
     releaseparser.add_argument("--version", required=True)
@@ -513,7 +513,11 @@ def lint_args(args):
     execute_args(
         parse_subargs(
             args,
-            ("exec", "python scripts/check_for_valid_readme.py {}", "--all",),
+            (
+                "exec",
+                "python scripts/check_for_valid_readme.py {}",
+                "--all",
+            ),
         )
     )
 
