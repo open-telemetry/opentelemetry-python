@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1500](https://github.com/open-telemetry/opentelemetry-python/pull/1500))
 
 ### Changed
+- remove `service_name` from constructor of jaeger and opencensus exporters and 
+  use of env variable `OTEL_PYTHON_SERVICE_NAME`
+  ([#1669])(https://github.com/open-telemetry/opentelemetry-python/pull/1669)
 - Rename `IdsGenerator` to `IdGenerator`
   ([#1651](https://github.com/open-telemetry/opentelemetry-python/pull/1651))
 - Make TracerProvider's resource attribute private
@@ -50,10 +53,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1602](https://github.com/open-telemetry/opentelemetry-python/pull/1602))
 - Hide implementation classes/variables in api/sdk
   ([#1684](https://github.com/open-telemetry/opentelemetry-python/pull/1684))
+- Cleanup OTLP exporter compression options, add tests
+  ([#1671](https://github.com/open-telemetry/opentelemetry-python/pull/1671))
+- Initial documentation for environment variables
+  ([#1680](https://github.com/open-telemetry/opentelemetry-python/pull/1680))
+- Change Zipkin exporter to obtain service.name from span
+  ([#1696](https://github.com/open-telemetry/opentelemetry-python/pull/1696))
+- Split up `opentelemetry-exporter-jaeger` package into `opentelemetry-exporter-jaeger-proto` and
+  `opentelemetry-exporter-jaeger-thrift` packages to reduce dependencies for each one.
+  ([#1694](https://github.com/open-telemetry/opentelemetry-python/pull/1694))
+- Added `opentelemetry-exporter-otlp-proto-grpc` and changed `opentelemetry-exporter-otlp` to
+  install it as a dependency. This will allow for the next package/protocol to also be in
+  its own package.
+  ([#1695](https://github.com/open-telemetry/opentelemetry-python/pull/1695))
+- Change Jaeger exporters to obtain service.name from span
+  ([#1703](https://github.com/open-telemetry/opentelemetry-python/pull/1703))
 
 ### Removed
 - Removed unused `get_hexadecimal_trace_id` and `get_hexadecimal_span_id` methods.
-  ([#1675])(https://github.com/open-telemetry/opentelemetry-python/pull/1675)
+  ([#1675](https://github.com/open-telemetry/opentelemetry-python/pull/1675))
+- Remove `OTEL_EXPORTER_*_ INSECURE` env var
+  ([#1682](https://github.com/open-telemetry/opentelemetry-python/pull/1682))
 
 ## [0.18b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.18b0) - 2021-02-16
 

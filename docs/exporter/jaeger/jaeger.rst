@@ -1,26 +1,35 @@
-Opentelemetry Jaeger Exporter
-=============================
+Opentelemetry Jaeger Exporters
+==============================
 
 .. automodule:: opentelemetry.exporter.jaeger
     :members:
     :undoc-members:
     :show-inheritance:
 
+.. automodule:: opentelemetry.exporter.jaeger.thrift
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+.. automodule:: opentelemetry.exporter.jaeger.proto
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
 Submodules
 ----------
 
-.. automodule:: opentelemetry.exporter.jaeger.gen.jaeger.ttypes
+.. automodule:: opentelemetry.exporter.jaeger.thrift.gen.jaeger.ttypes
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: opentelemetry.exporter.jaeger.send.thrift
+.. automodule:: opentelemetry.exporter.jaeger.thrift.send
     :members:
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: opentelemetry.exporter.jaeger.gen.collector_pb2_grpc
+.. automodule:: opentelemetry.exporter.jaeger.proto.gen.collector_pb2_grpc
     :members:
     :undoc-members:
     :show-inheritance:

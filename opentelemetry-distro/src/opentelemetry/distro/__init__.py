@@ -22,12 +22,11 @@ from pkg_resources import iter_entry_points
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
     OTEL_PYTHON_ID_GENERATOR,
-    OTEL_PYTHON_SERVICE_NAME,
     OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.instrumentation.configurator import BaseConfigurator
 from opentelemetry.instrumentation.distro import BaseDistro
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
@@ -36,7 +35,7 @@ logger = getLogger(__file__)
 
 
 EXPORTER_OTLP = "otlp"
-EXPORTER_OTLP_SPAN = "otlp_span"
+EXPORTER_OTLP_SPAN = "otlp_proto_grpc_span"
 
 RANDOM_ID_GENERATOR = "random"
 _DEFAULT_ID_GENERATOR = RANDOM_ID_GENERATOR
@@ -44,10 +43,6 @@ _DEFAULT_ID_GENERATOR = RANDOM_ID_GENERATOR
 
 def _get_id_generator() -> str:
     return environ.get(OTEL_PYTHON_ID_GENERATOR, _DEFAULT_ID_GENERATOR)
-
-
-def _get_service_name() -> str:
-    return environ.get(OTEL_PYTHON_SERVICE_NAME, "")
 
 
 def _get_exporter_names() -> Sequence[str]:
@@ -76,21 +71,13 @@ def _get_exporter_names() -> Sequence[str]:
 def _init_tracing(
     exporters: Sequence[SpanExporter], id_generator: IdGenerator
 ):
-    service_name = _get_service_name()
-    provider = TracerProvider(
-        resource=Resource.create({"service.name": service_name}),
-        id_generator=id_generator(),
-    )
+    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
+    # from the env variable else defaults to "unknown_service"
+    provider = TracerProvider(id_generator=id_generator(),)
     trace.set_tracer_provider(provider)
 
-    for exporter_name, exporter_class in exporters.items():
+    for _, exporter_class in exporters.items():
         exporter_args = {}
-        if exporter_name not in [
-            EXPORTER_OTLP,
-            EXPORTER_OTLP_SPAN,
-        ]:
-            exporter_args["service_name"] = service_name
-
         provider.add_span_processor(
             BatchSpanProcessor(exporter_class(**exporter_args))
         )
@@ -172,4 +159,4 @@ class OpenTelemetryDistro(BaseDistro):
     """
 
     def _configure(self, **kwargs):
-        os.environ.setdefault(OTEL_TRACES_EXPORTER, "otlp_span")
+        os.environ.setdefault(OTEL_TRACES_EXPORTER, "otlp_proto_grpc_span")

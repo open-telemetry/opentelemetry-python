@@ -23,11 +23,13 @@ This package implements `OpenTelemetry Resources
     these attributes can be included in the Resource.*
 
 Resource objects are created with `Resource.create`, which accepts attributes
-(key-values). Resource attributes can also be passed at process invocation in
-the :envvar:`OTEL_RESOURCE_ATTRIBUTES` environment variable. You should
-register your resource with the  `opentelemetry.sdk.trace.TracerProvider` by
-passing them into their constructors. The `Resource` passed to a provider is
-available to the exporter, which can send on this information as it sees fit.
+(key-values). Resources should NOT be created via constructor, and working with
+`Resource` objects should only be done via the Resource API methods. Resource
+attributes can also be passed at process invocation in the
+:envvar:`OTEL_RESOURCE_ATTRIBUTES` environment variable. You should register
+your resource with the  `opentelemetry.sdk.trace.TracerProvider` by passing
+them into their constructors. The `Resource` passed to a provider is available
+to the exporter, which can send on this information as it sees fit.
 
 .. code-block:: python
 
@@ -51,29 +53,6 @@ Note that the OpenTelemetry project documents certain `"standard attributes"
 <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/semantic_conventions/README.md>`_
 that have prescribed semantic meanings, for example ``service.name`` in the
 above example.
-
-.. envvar:: OTEL_RESOURCE_ATTRIBUTES
-
-The :envvar:`OTEL_RESOURCE_ATTRIBUTES` environment variable allows resource
-attributes to be passed to the SDK at process invocation. The attributes from
-:envvar:`OTEL_RESOURCE_ATTRIBUTES` are merged with those passed to
-`Resource.create`, meaning :envvar:`OTEL_RESOURCE_ATTRIBUTES` takes *lower*
-priority. Attributes should be in the format ``key1=value1,key2=value2``.
-Additional details are available `in the specification
-<https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/resource/sdk.md#specifying-resource-information-via-an-environment-variable>`_.
-
-.. code-block:: console
-
-    $ OTEL_RESOURCE_ATTRIBUTES="service.name=shoppingcard,will_be_overridden=foo" python - <<EOF
-    import pprint
-    from opentelemetry.sdk.resources import Resource
-    pprint.pprint(Resource.create({"will_be_overridden": "bar"}).attributes)
-    EOF
-    {'service.name': 'shoppingcard',
-    'telemetry.sdk.language': 'python',
-    'telemetry.sdk.name': 'opentelemetry',
-    'telemetry.sdk.version': '0.13.dev0',
-    'will_be_overridden': 'bar'}
  """
 
 import abc
