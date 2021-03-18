@@ -25,7 +25,7 @@ if version_info.minor < 7:
     )
     from time import time
 
-    def _time_ns():
+    def _time_ns() -> int:
         return int(time() * 1e9)
 
 
