@@ -26,17 +26,7 @@ def unique(elems):
             seen.add(elem)
 
 
-try:
-    subprocess_run = subprocess.run
-except AttributeError:  # Py < 3.5 compat
-    CompletedProcess = namedtuple("CompletedProcess", "returncode")
-
-    def subprocess_run(*args, **kwargs):
-        check = kwargs.pop("check", False)
-        if check:
-            subprocess.check_call(*args, **kwargs)
-            return CompletedProcess(returncode=0)
-        return CompletedProcess(returncode=subprocess.call(*args, **kwargs))
+subprocess_run = subprocess.run
 
 
 def extraargs_help(calledcmd):
@@ -240,7 +230,8 @@ def parse_args(args=None):
     )
 
     releaseparser = subparsers.add_parser(
-        "release", help="Prepares release, used by maintainers and CI",
+        "release",
+        help="Prepares release, used by maintainers and CI",
     )
     releaseparser.set_defaults(func=release_args)
     releaseparser.add_argument("--version", required=True)
@@ -523,7 +514,11 @@ def lint_args(args):
     execute_args(
         parse_subargs(
             args,
-            ("exec", "python scripts/check_for_valid_readme.py {}", "--all",),
+            (
+                "exec",
+                "python scripts/check_for_valid_readme.py {}",
+                "--all",
+            ),
         )
     )
 
