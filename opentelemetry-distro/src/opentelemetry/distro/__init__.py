@@ -52,6 +52,7 @@ def _get_exporter_names() -> Sequence[str]:
 
     if (
         trace_exporters is not None
+        and trace_exporters != ''
         and trace_exporters.lower().strip() != "none"
     ):
         exporters.update(

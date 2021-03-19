@@ -171,3 +171,7 @@ class TestExporterNames(TestCase):
     @patch.dict(environ, {}, clear=True)
     def test_no_exporters(self):
         self.assertEqual(sorted(_get_exporter_names()), [])
+
+    @patch.dict(environ, {OTEL_TRACES_EXPORTER: ""})
+    def test_empty_exporters(self):
+        self.assertEqual(sorted(_get_exporter_names()), [])
