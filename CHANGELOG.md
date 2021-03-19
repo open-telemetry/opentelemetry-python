@@ -68,6 +68,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1695](https://github.com/open-telemetry/opentelemetry-python/pull/1695))
 - Change Jaeger exporters to obtain service.name from span
   ([#1703](https://github.com/open-telemetry/opentelemetry-python/pull/1703))
+- Fixed a parse error on no `OTEL_TRACES_EXPORTER`
+  ([#1707](https://github.com/open-telemetry/opentelemetry-python/pull/1707))
 
 ### Removed
 - Removed unused `get_hexadecimal_trace_id` and `get_hexadecimal_span_id` methods.
