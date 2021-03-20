@@ -50,10 +50,7 @@ def _get_exporter_names() -> Sequence[str]:
 
     exporters = set()
 
-    if (
-        trace_exporters
-        and trace_exporters.lower().strip() != "none"
-    ):
+    if trace_exporters and trace_exporters.lower().strip() != "none":
         exporters.update(
             {
                 trace_exporter.strip()
