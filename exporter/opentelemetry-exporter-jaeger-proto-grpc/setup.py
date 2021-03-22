@@ -23,6 +23,7 @@ VERSION_FILENAME = os.path.join(
     "exporter",
     "jaeger",
     "proto",
+    "grpc",
     "version.py",
 )
 PACKAGE_INFO = {}
