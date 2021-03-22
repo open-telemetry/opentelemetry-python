@@ -16,7 +16,7 @@ generally be used in production environments.
 
 Requirement
 -----------
-OpenTelemetry-Python supports Python 3.5 and higher.
+OpenTelemetry-Python supports Python 3.6 and higher.
 
 Installation
 ------------

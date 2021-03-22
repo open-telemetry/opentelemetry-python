@@ -37,8 +37,8 @@ def _load_runtime_context(func: _F) -> _F:
         A wrapper of the decorated method.
     """
 
-    @wraps(func)  # type: ignore
-    def wrapper(
+    @wraps(func)  # type: ignore[misc]
+    def wrapper(  # type: ignore[misc]
         *args: typing.Tuple[typing.Any, typing.Any],
         **kwargs: typing.Dict[typing.Any, typing.Any]
     ) -> typing.Optional[typing.Any]:
@@ -63,9 +63,9 @@ def _load_runtime_context(func: _F) -> _F:
                     logger.error(
                         "Failed to load context: %s", configured_context
                     )
-        return func(*args, **kwargs)  # type: ignore
+        return func(*args, **kwargs)  # type: ignore[misc]
 
-    return wrapper  # type:ignore
+    return typing.cast(_F, wrapper)  # type: ignore[misc]
 
 
 def get_value(key: str, context: typing.Optional[Context] = None) -> "object":

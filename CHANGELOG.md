@@ -78,6 +78,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1675](https://github.com/open-telemetry/opentelemetry-python/pull/1675))
 - Remove `OTEL_EXPORTER_*_ INSECURE` env var
   ([#1682](https://github.com/open-telemetry/opentelemetry-python/pull/1682))
+- Removing support for Python 3.5
+  ([#1706](https://github.com/open-telemetry/opentelemetry-python/pull/1706))
 
 ## [0.18b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.18b0) - 2021-02-16
 
