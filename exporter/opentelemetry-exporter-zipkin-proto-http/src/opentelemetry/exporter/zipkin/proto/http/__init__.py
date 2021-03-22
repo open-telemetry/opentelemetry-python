@@ -32,7 +32,7 @@ collector endpoint using HTTP and supports v2 protobuf.
 .. code:: python
 
     from opentelemetry import trace
-    from opentelemetry.exporter.zipkin.proto import ZipkinExporter
+    from opentelemetry.exporter.zipkin.proto.http import ZipkinExporter
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -77,7 +77,7 @@ from opentelemetry.exporter.zipkin.encoder import (
     Encoder,
     Protocol,
 )
-from opentelemetry.exporter.zipkin.proto.v2 import ProtobufEncoder
+from opentelemetry.exporter.zipkin.proto.http.v2 import ProtobufEncoder
 from opentelemetry.exporter.zipkin.node_endpoint import IpInput, NodeEndpoint
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_ZIPKIN_ENDPOINT,

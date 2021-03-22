@@ -16,8 +16,8 @@ import json
 
 from opentelemetry.exporter.zipkin.encoder import NAME_KEY, VERSION_KEY
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
-from opentelemetry.exporter.zipkin.proto.v2 import ProtobufEncoder
-from opentelemetry.exporter.zipkin.proto.v2.gen import zipkin_pb2
+from opentelemetry.exporter.zipkin.proto.http.v2 import ProtobufEncoder
+from opentelemetry.exporter.zipkin.proto.http.v2.gen import zipkin_pb2
 from opentelemetry.trace import SpanKind
 
 from .common_tests import TEST_SERVICE_NAME, CommonEncoderTestCases

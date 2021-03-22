@@ -23,6 +23,7 @@ VERSION_FILENAME = os.path.join(
     "exporter",
     "zipkin",
     "proto",
+    "http",
     "version.py",
 )
 PACKAGE_INFO = {}

@@ -14,13 +14,14 @@
 
 import unittest
 
-from opentelemetry.exporter.zipkin import json, proto
+from opentelemetry.exporter.zipkin import json
+from opentelemetry.exporter.zipkin.proto import http
 
 
 class TestZipkinExporter(unittest.TestCase):
     def test_constructors(self):
         try:
             json.ZipkinExporter()
-            proto.ZipkinExporter()
+            http.ZipkinExporter()
         except Exception as exc:  # pylint: disable=broad-except
             self.assertIsNone(exc)

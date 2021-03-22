@@ -20,7 +20,7 @@ exclude =
   exporter/opentelemetry-exporter-jaeger-proto/build/*
   exporter/opentelemetry-exporter-jaeger-thrift/src/opentelemetry/exporter/jaeger/thrift/gen/
   exporter/opentelemetry-exporter-jaeger-thrift/build/*
-  exporter/opentelemetry-exporter-zipkin-proto-http/src/opentelemetry/exporter/zipkin/proto/v2/gen/
+  exporter/opentelemetry-exporter-zipkin-proto-http/src/opentelemetry/exporter/zipkin/proto/http/v2/gen/
   docs/examples/opentelemetry-example-app/src/opentelemetry_example_app/grpc/gen/
   docs/examples/opentelemetry-example-app/build/*
   opentelemetry-proto/build/*
