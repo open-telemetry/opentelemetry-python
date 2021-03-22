@@ -59,7 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1680](https://github.com/open-telemetry/opentelemetry-python/pull/1680))
 - Change Zipkin exporter to obtain service.name from span
   ([#1696](https://github.com/open-telemetry/opentelemetry-python/pull/1696))
-- Split up `opentelemetry-exporter-jaeger` package into `opentelemetry-exporter-jaeger-proto` and
+- Split up `opentelemetry-exporter-jaeger` package into `opentelemetry-exporter-jaeger-proto-grpc` and
   `opentelemetry-exporter-jaeger-thrift` packages to reduce dependencies for each one.
   ([#1694](https://github.com/open-telemetry/opentelemetry-python/pull/1694))
 - Added `opentelemetry-exporter-otlp-proto-grpc` and changed `opentelemetry-exporter-otlp` to

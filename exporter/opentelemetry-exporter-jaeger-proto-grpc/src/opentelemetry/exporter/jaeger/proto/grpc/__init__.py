@@ -27,7 +27,7 @@ Usage
 .. code:: python
 
     from opentelemetry import trace
-    from opentelemetry.exporter.jaeger.proto import JaegerExporter
+    from opentelemetry.exporter.jaeger.proto.grpc import JaegerExporter
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -71,15 +71,15 @@ from typing import Optional
 from grpc import ChannelCredentials, insecure_channel, secure_channel
 
 from opentelemetry import trace
-from opentelemetry.exporter.jaeger.proto import util
-from opentelemetry.exporter.jaeger.proto.gen import model_pb2
-from opentelemetry.exporter.jaeger.proto.gen.collector_pb2 import (
+from opentelemetry.exporter.jaeger.proto.grpc import util
+from opentelemetry.exporter.jaeger.proto.grpc.gen import model_pb2
+from opentelemetry.exporter.jaeger.proto.grpc.gen.collector_pb2 import (
     PostSpansRequest,
 )
-from opentelemetry.exporter.jaeger.proto.gen.collector_pb2_grpc import (
+from opentelemetry.exporter.jaeger.proto.grpc.gen.collector_pb2_grpc import (
     CollectorServiceStub,
 )
-from opentelemetry.exporter.jaeger.proto.translate import (
+from opentelemetry.exporter.jaeger.proto.grpc.translate import (
     ProtobufTranslator,
     Translate,
 )

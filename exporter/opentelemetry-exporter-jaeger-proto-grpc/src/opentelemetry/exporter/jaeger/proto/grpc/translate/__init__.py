@@ -18,7 +18,7 @@ from typing import Optional, Sequence
 from google.protobuf.duration_pb2 import Duration
 from google.protobuf.timestamp_pb2 import Timestamp
 
-from opentelemetry.exporter.jaeger.proto.gen import model_pb2
+from opentelemetry.exporter.jaeger.proto.grpc.gen import model_pb2
 
 from opentelemetry.sdk.trace import ReadableSpan, StatusCode
 from opentelemetry.trace import SpanKind
