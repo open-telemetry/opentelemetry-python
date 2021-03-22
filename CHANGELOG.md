@@ -70,6 +70,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1703](https://github.com/open-telemetry/opentelemetry-python/pull/1703))
 - Fixed an unset `OTEL_TRACES_EXPORTER` resulting in an error
   ([#1707](https://github.com/open-telemetry/opentelemetry-python/pull/1707))
+- Split Zipkin exporter into `opentelemetry-exporter-zipkin-json` and
+  `opentelemetry-exporter-zipkin-proto-http` packages to reduce dependencies. The
+  `opentelemetry-exporter-zipkin` installs both.
+  ([#1699](https://github.com/open-telemetry/opentelemetry-python/pull/1699))
 
 ### Removed
 - Removed unused `get_hexadecimal_trace_id` and `get_hexadecimal_span_id` methods.
