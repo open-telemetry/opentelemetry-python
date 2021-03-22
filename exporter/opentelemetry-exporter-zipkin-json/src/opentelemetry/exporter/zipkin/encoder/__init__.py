@@ -49,9 +49,8 @@ class Protocol(Enum):
     OS environ var OTEL_EXPORTER_ZIPKIN_PROTOCOL (reserved for future usage).
     """
 
-    V1_JSON = "v1_json"
-    V2_JSON = "v2_json"
-    V2_PROTOBUF = "v2_protobuf"
+    V1 = "v1"
+    V2 = "v2"
 
 
 # pylint: disable=W0223

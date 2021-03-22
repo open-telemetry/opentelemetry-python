@@ -15,47 +15,39 @@ import json
 
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.zipkin.encoder import NAME_KEY, VERSION_KEY
-from opentelemetry.exporter.zipkin.encoder.v2.json import JsonV2Encoder
+from opentelemetry.exporter.zipkin.json.v1 import JsonV1Encoder
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk import trace
-from opentelemetry.trace import SpanKind, TraceFlags
+from opentelemetry.trace import TraceFlags, format_span_id, format_trace_id
 
 from .common_tests import TEST_SERVICE_NAME, CommonEncoderTestCases
 
 
 # pylint: disable=protected-access
-class TestV2JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
+class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
     @staticmethod
-    def get_encoder(*args, **kwargs) -> JsonV2Encoder:
-        return JsonV2Encoder(*args, **kwargs)
+    def get_encoder(*args, **kwargs) -> JsonV1Encoder:
+        return JsonV1Encoder(*args, **kwargs)
 
     def test_encode(self):
+
         local_endpoint = {"serviceName": TEST_SERVICE_NAME}
-        span_kind = JsonV2Encoder.SPAN_KIND_MAP[SpanKind.INTERNAL]
 
         otel_spans = self.get_exhaustive_otel_span_list()
-        trace_id = JsonV2Encoder._encode_trace_id(
+        trace_id = JsonV1Encoder._encode_trace_id(
             otel_spans[0].context.trace_id
         )
 
         expected_output = [
             {
                 "traceId": trace_id,
-                "id": JsonV2Encoder._encode_span_id(
+                "id": JsonV1Encoder._encode_span_id(
                     otel_spans[0].context.span_id
                 ),
                 "name": otel_spans[0].name,
                 "timestamp": otel_spans[0].start_time // 10 ** 3,
                 "duration": (otel_spans[0].end_time // 10 ** 3)
                 - (otel_spans[0].start_time // 10 ** 3),
-                "localEndpoint": local_endpoint,
-                "kind": span_kind,
-                "tags": {
-                    "key_bool": "false",
-                    "key_string": "hello_world",
-                    "key_float": "111.22",
-                    "otel.status_code": "OK",
-                },
                 "annotations": [
                     {
                         "timestamp": otel_spans[0].events[0].timestamp
@@ -70,64 +62,112 @@ class TestV2JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                             },
                             sort_keys=True,
                         ),
+                        "endpoint": local_endpoint,
                     }
                 ],
+                "binaryAnnotations": [
+                    {
+                        "key": "key_bool",
+                        "value": "false",
+                        "endpoint": local_endpoint,
+                    },
+                    {
+                        "key": "key_string",
+                        "value": "hello_world",
+                        "endpoint": local_endpoint,
+                    },
+                    {
+                        "key": "key_float",
+                        "value": "111.22",
+                        "endpoint": local_endpoint,
+                    },
+                    {
+                        "key": "otel.status_code",
+                        "value": "OK",
+                        "endpoint": local_endpoint,
+                    },
+                ],
                 "debug": True,
-                "parentId": JsonV2Encoder._encode_span_id(
+                "parentId": JsonV1Encoder._encode_span_id(
                     otel_spans[0].parent.span_id
                 ),
             },
             {
                 "traceId": trace_id,
-                "id": JsonV2Encoder._encode_span_id(
+                "id": JsonV1Encoder._encode_span_id(
                     otel_spans[1].context.span_id
                 ),
                 "name": otel_spans[1].name,
                 "timestamp": otel_spans[1].start_time // 10 ** 3,
                 "duration": (otel_spans[1].end_time // 10 ** 3)
                 - (otel_spans[1].start_time // 10 ** 3),
-                "localEndpoint": local_endpoint,
-                "kind": span_kind,
-                "tags": {
-                    "key_resource": "some_resource",
-                    "otel.status_code": "ERROR",
-                    "error": "Example description",
-                },
+                "binaryAnnotations": [
+                    {
+                        "key": "key_resource",
+                        "value": "some_resource",
+                        "endpoint": local_endpoint,
+                    },
+                    {
+                        "key": "otel.status_code",
+                        "value": "ERROR",
+                        "endpoint": local_endpoint,
+                    },
+                    {
+                        "key": "error",
+                        "value": "Example description",
+                        "endpoint": local_endpoint,
+                    },
+                ],
             },
             {
                 "traceId": trace_id,
-                "id": JsonV2Encoder._encode_span_id(
+                "id": JsonV1Encoder._encode_span_id(
                     otel_spans[2].context.span_id
                 ),
                 "name": otel_spans[2].name,
                 "timestamp": otel_spans[2].start_time // 10 ** 3,
                 "duration": (otel_spans[2].end_time // 10 ** 3)
                 - (otel_spans[2].start_time // 10 ** 3),
-                "localEndpoint": local_endpoint,
-                "kind": span_kind,
-                "tags": {
-                    "key_string": "hello_world",
-                    "key_resource": "some_resource",
-                },
+                "binaryAnnotations": [
+                    {
+                        "key": "key_string",
+                        "value": "hello_world",
+                        "endpoint": local_endpoint,
+                    },
+                    {
+                        "key": "key_resource",
+                        "value": "some_resource",
+                        "endpoint": local_endpoint,
+                    },
+                ],
             },
             {
                 "traceId": trace_id,
-                "id": JsonV2Encoder._encode_span_id(
+                "id": JsonV1Encoder._encode_span_id(
                     otel_spans[3].context.span_id
                 ),
                 "name": otel_spans[3].name,
                 "timestamp": otel_spans[3].start_time // 10 ** 3,
                 "duration": (otel_spans[3].end_time // 10 ** 3)
                 - (otel_spans[3].start_time // 10 ** 3),
-                "localEndpoint": local_endpoint,
-                "kind": span_kind,
-                "tags": {NAME_KEY: "name", VERSION_KEY: "version"},
+                "binaryAnnotations": [
+                    {
+                        "key": NAME_KEY,
+                        "value": "name",
+                        "endpoint": local_endpoint,
+                    },
+                    {
+                        "key": VERSION_KEY,
+                        "value": "version",
+                        "endpoint": local_endpoint,
+                    },
+                ],
             },
         ]
 
         self.assert_equal_encoded_spans(
             json.dumps(expected_output),
-            JsonV2Encoder().serialize(otel_spans, NodeEndpoint()),
+            JsonV1Encoder().serialize(otel_spans, NodeEndpoint()),
         )
 
     def test_encode_id_zero_padding(self):
@@ -154,21 +194,19 @@ class TestV2JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
 
         expected_output = [
             {
-                "traceId": format(trace_id, "032x"),
-                "id": format(span_id, "016x"),
+                "traceId": format_trace_id(trace_id),
+                "id": format_span_id(span_id),
                 "name": TEST_SERVICE_NAME,
-                "timestamp": JsonV2Encoder._nsec_to_usec_round(start_time),
-                "duration": JsonV2Encoder._nsec_to_usec_round(duration),
-                "localEndpoint": {"serviceName": TEST_SERVICE_NAME},
-                "kind": JsonV2Encoder.SPAN_KIND_MAP[SpanKind.INTERNAL],
+                "timestamp": JsonV1Encoder._nsec_to_usec_round(start_time),
+                "duration": JsonV1Encoder._nsec_to_usec_round(duration),
                 "debug": True,
-                "parentId": format(parent_id, "016x"),
+                "parentId": format_span_id(parent_id),
             }
         ]
 
-        self.assert_equal_encoded_spans(
+        self.assertEqual(
             json.dumps(expected_output),
-            JsonV2Encoder().serialize([otel_span], NodeEndpoint()),
+            JsonV1Encoder().serialize([otel_span], NodeEndpoint()),
         )
 
     def _test_encode_max_tag_length(self, max_tag_value_length: int):
@@ -177,29 +215,37 @@ class TestV2JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
         )
         service_name = otel_span.name
 
+        binary_annotations = []
+        for tag_key, tag_expected_value in expected_tag_output.items():
+            binary_annotations.append(
+                {
+                    "key": tag_key,
+                    "value": tag_expected_value,
+                    "endpoint": {"serviceName": service_name},
+                }
+            )
+
         expected_output = [
             {
-                "traceId": JsonV2Encoder._encode_trace_id(
+                "traceId": JsonV1Encoder._encode_trace_id(
                     otel_span.context.trace_id
                 ),
-                "id": JsonV2Encoder._encode_span_id(otel_span.context.span_id),
+                "id": JsonV1Encoder._encode_span_id(otel_span.context.span_id),
                 "name": service_name,
-                "timestamp": JsonV2Encoder._nsec_to_usec_round(
+                "timestamp": JsonV1Encoder._nsec_to_usec_round(
                     otel_span.start_time
                 ),
-                "duration": JsonV2Encoder._nsec_to_usec_round(
+                "duration": JsonV1Encoder._nsec_to_usec_round(
                     otel_span.end_time - otel_span.start_time
                 ),
-                "localEndpoint": {"serviceName": service_name},
-                "kind": JsonV2Encoder.SPAN_KIND_MAP[SpanKind.INTERNAL],
-                "tags": expected_tag_output,
+                "binaryAnnotations": binary_annotations,
                 "debug": True,
             }
         ]
 
         self.assert_equal_encoded_spans(
             json.dumps(expected_output),
-            JsonV2Encoder(max_tag_value_length).serialize(
+            JsonV1Encoder(max_tag_value_length).serialize(
                 [otel_span], NodeEndpoint()
             ),
         )

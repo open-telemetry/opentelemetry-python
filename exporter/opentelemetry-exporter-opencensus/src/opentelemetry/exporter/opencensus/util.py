@@ -82,9 +82,9 @@ def add_proto_attribute_value(pb_attributes, key, value):
 def get_node(service_name, host_name):
     """Generates Node message from params and system information.
 
-     Args:
-        service_name: Name of Collector service.
-        host_name: Host name.
+    Args:
+       service_name: Name of Collector service.
+       host_name: Host name.
     """
     return common_pb2.Node(
         identifier=common_pb2.ProcessIdentifier(
