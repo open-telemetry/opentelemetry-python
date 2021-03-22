@@ -34,7 +34,7 @@ cov opentelemetry-sdk
 cov exporter/opentelemetry-exporter-datadog
 cov instrumentation/opentelemetry-instrumentation-flask
 cov instrumentation/opentelemetry-instrumentation-requests
-cov exporter/opentelemetry-exporter-jaeger-proto
+cov exporter/opentelemetry-exporter-jaeger-proto-grpc
 cov exporter/opentelemetry-exporter-jaeger-thrift
 cov instrumentation/opentelemetry-instrumentation-opentracing-shim
 cov util/opentelemetry-util-http

@@ -3,8 +3,8 @@ OpenTelemetry Jaeger Protobuf Exporter
 
 |pypi|
 
-.. |pypi| image:: https://badge.fury.io/py/opentelemetry-exporter-jaeger-proto.svg
-   :target: https://pypi.org/project/opentelemetry-exporter-jaeger-proto/
+.. |pypi| image:: https://badge.fury.io/py/opentelemetry-exporter-jaeger-proto-grpc.svg
+   :target: https://pypi.org/project/opentelemetry-exporter-jaeger-proto-grpc/
 
 This library allows to export tracing data to `Jaeger <https://www.jaegertracing.io/>`_.
 
@@ -13,7 +13,7 @@ Installation
 
 ::
 
-    pip install opentelemetry-exporter-jaeger-proto
+    pip install opentelemetry-exporter-jaeger-proto-grpc
 
 
 .. _Jaeger: https://www.jaegertracing.io/
@@ -23,7 +23,7 @@ Configuration
 -------------
 
 OpenTelemetry Jaeger Exporter can be configured by setting `JaegerExporter parameters
-<https://github.com/open-telemetry/opentelemetry-python/blob/main/exporter/opentelemetry-exporter-jaeger-proto
+<https://github.com/open-telemetry/opentelemetry-python/blob/main/exporter/opentelemetry-exporter-jaeger-proto-grpc
 /src/opentelemetry/exporter/jaeger/proto/__init__.py#L88>`_ or by setting
 `environment variables <https://github.com/open-telemetry/opentelemetry-specification/blob/main/
 specification/sdk-environment-variables.md#jaeger-exporter>`_
