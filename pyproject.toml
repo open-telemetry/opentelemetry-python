@@ -5,7 +5,7 @@ exclude = '''
   /(  # generated files
     exporter/opentelemetry-exporter-jaeger-proto/src/opentelemetry/exporter/jaeger/proto/gen|
     exporter/opentelemetry-exporter-jaeger-thrift/src/opentelemetry/exporter/jaeger/thrift/gen|
-    exporter/opentelemetry-exporter-zipkin-proto/src/opentelemetry/exporter/zipkin/proto/v2/gen|
+    exporter/opentelemetry-exporter-zipkin-proto-http/src/opentelemetry/exporter/zipkin/proto/v2/gen|
     opentelemetry-proto/src/opentelemetry/proto/collector|
     opentelemetry-proto/src/opentelemetry/proto/common|
     opentelemetry-proto/src/opentelemetry/proto/metrics|

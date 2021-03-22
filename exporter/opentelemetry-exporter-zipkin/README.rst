@@ -8,7 +8,7 @@ OpenTelemetry Zipkin Exporter
 
 This library is provided as a convenience to install all supported OpenTelemetry Zipkin Exporters. Currently it installs:
 * opentelemetry-exporter-zipkin-json
-* opentelemetry-exporter-zipkin-proto
+* opentelemetry-exporter-zipkin-proto-http
 
 In the future, additional packages may be available:
 * opentelemetry-exporter-zipkin-thrift
