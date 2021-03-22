@@ -12,25 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, Optional, Set
-from urllib.parse import quote, unquote
+import typing
+import urllib.parse
 
+import opentelemetry.trace as trace
 from opentelemetry import baggage
 from opentelemetry.context import Context, get_current
 from opentelemetry.propagators.textmap import TextMapPropagator
-from opentelemetry.trace import (
-    INVALID_SPAN,
-    INVALID_SPAN_CONTEXT,
-    INVALID_SPAN_ID,
-    INVALID_TRACE_ID,
-    NonRecordingSpan,
-    SpanContext,
-    TraceFlags,
-    format_span_id,
-    format_trace_id,
-    get_current_span,
-    set_span_in_context,
-)
+from opentelemetry.trace import format_span_id, format_trace_id
 
 
 class JaegerPropagator(TextMapPropagator):
@@ -39,64 +28,73 @@ class JaegerPropagator(TextMapPropagator):
     See: https://www.jaegertracing.io/docs/1.19/client-libraries/#propagation-format
     """
 
-    _trace_id_key = "uber-trace-id"
-    _baggage_prefix = "uberctx-"
-    _debug_flag = 0x02
+    TRACE_ID_KEY = "uber-trace-id"
+    BAGGAGE_PREFIX = "uberctx-"
+    DEBUG_FLAG = 0x02
 
     def extract(
-        self, carrier: Dict[str, str], context: Optional[Context] = None,
+        self,
+        carrier: typing.Dict[str, str],
+        context: typing.Optional[Context] = None,
     ) -> Context:
 
         if context is None:
             context = get_current()
-        header = carrier.get(self._trace_id_key)
+        header = carrier.get(self.TRACE_ID_KEY)
         if header is None:
-            return set_span_in_context(INVALID_SPAN, context)
+            return trace.set_span_in_context(trace.INVALID_SPAN, context)
         fields = header.split(":")
 
         for key in [
             key
             for key in carrier.keys()
-            if key.startswith(self._baggage_prefix)
+            if key.startswith(self.BAGGAGE_PREFIX)
         ]:
             context = baggage.set_baggage(
-                key.replace(self._baggage_prefix, ""),
-                unquote(carrier[key]).strip(),
+                key.replace(self.BAGGAGE_PREFIX, ""),
+                urllib.parse.quote(carrier[key]).strip(),
                 context=context,
             )
 
         if len(fields) != 4:
-            return set_span_in_context(INVALID_SPAN, context)
+            return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
         trace_id, span_id, _parent_id, flags = fields
-        if trace_id == INVALID_TRACE_ID or span_id == INVALID_SPAN_ID:
-            return set_span_in_context(INVALID_SPAN, context)
+        if (
+            trace_id == trace.INVALID_TRACE_ID
+            or span_id == trace.INVALID_SPAN_ID
+        ):
+            return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
-        span = NonRecordingSpan(
-            SpanContext(
+        span = trace.NonRecordingSpan(
+            trace.SpanContext(
                 trace_id=int(trace_id, 16),
                 span_id=int(span_id, 16),
                 is_remote=True,
-                trace_flags=TraceFlags(int(flags, 16) & TraceFlags.SAMPLED),
+                trace_flags=trace.TraceFlags(
+                    int(flags, 16) & trace.TraceFlags.SAMPLED
+                ),
             )
         )
-        return set_span_in_context(span, context)
+        return trace.set_span_in_context(span, context)
 
     def inject(
-        self, carrier: Dict[str, str], context: Optional[Context] = None,
+        self,
+        carrier: typing.Dict[str, str],
+        context: typing.Optional[Context] = None,
     ) -> None:
-        span = get_current_span(context=context)
+        span = trace.get_current_span(context=context)
         span_context = span.get_span_context()
-        if span_context == INVALID_SPAN_CONTEXT:
+        if span_context == trace.INVALID_SPAN_CONTEXT:
             return
 
         span_parent_id = span.parent.span_id if span.parent else 0
         trace_flags = span_context.trace_flags
         if trace_flags.sampled:
-            trace_flags |= self._debug_flag
+            trace_flags |= self.DEBUG_FLAG
 
         # set span identity
-        carrier[self._trace_id_key] = _format_uber_trace_id(
+        carrier[self.TRACE_ID_KEY] = _format_uber_trace_id(
             span_context.trace_id,
             span_context.span_id,
             span_parent_id,
@@ -108,18 +106,33 @@ class JaegerPropagator(TextMapPropagator):
         if not baggage_entries:
             return
         for key, value in baggage_entries.items():
-            baggage_key = self._baggage_prefix + key
-            carrier[baggage_key] = quote(str(value))
+            baggage_key = self.BAGGAGE_PREFIX + key
+            carrier[baggage_key] = urllib.parse.quote(str(value))
 
     @property
-    def fields(self) -> Set[str]:
-        return {self._trace_id_key}
+    def fields(self) -> typing.Set[str]:
+        return {self.TRACE_ID_KEY}
+
+    def _extract_baggage(self, getter, carrier, context):
+        baggage_keys = [
+            key
+            for key in getter.keys(carrier)
+            if key.startswith(self.BAGGAGE_PREFIX)
+        ]
+        for key in baggage_keys:
+            value = carrier.get(key)
+            context = baggage.set_baggage(
+                key.replace(self.BAGGAGE_PREFIX, ""),
+                urllib.parse.quote(value).strip(),
+                context=context,
+            )
+        return context
 
 
 def _format_uber_trace_id(trace_id, span_id, parent_span_id, flags):
-    return "{trace_id}:{span_id}:{parent_id}:{flags:02x}".format(
+    return "{trace_id}:{span_id}:{parent_id}:{:02x}".format(
+        flags,
         trace_id=format_trace_id(trace_id),
         span_id=format_span_id(span_id),
         parent_id=format_span_id(parent_span_id),
-        flags=flags,
     )

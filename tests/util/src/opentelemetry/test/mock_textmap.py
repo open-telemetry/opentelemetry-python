@@ -12,17 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Dict, Optional
+import typing
 
+from opentelemetry import trace
 from opentelemetry.context import Context, get_current
 from opentelemetry.propagators.textmap import TextMapPropagator
-from opentelemetry.trace import (
-    INVALID_SPAN,
-    NonRecordingSpan,
-    SpanContext,
-    get_current_span,
-    set_span_in_context,
-)
 
 
 class NOOPTextMapPropagator(TextMapPropagator):
@@ -33,12 +27,16 @@ class NOOPTextMapPropagator(TextMapPropagator):
     """
 
     def extract(
-        self, carrier: Dict[str, str], context: Optional[Context] = None,
+        self,
+        carrier: typing.Dict[str, str],
+        context: typing.Optional[Context] = None,
     ) -> Context:
         return get_current()
 
     def inject(
-        self, carrier: Dict[str, str], context: Optional[Context] = None,
+        self,
+        carrier: typing.Dict[str, str],
+        context: typing.Optional[Context] = None,
     ) -> None:
         return None
 
@@ -50,33 +48,37 @@ class NOOPTextMapPropagator(TextMapPropagator):
 class MockTextMapPropagator(TextMapPropagator):
     """Mock propagator for testing purposes."""
 
-    trace_id_key = "mock-traceid"
-    span_id_key = "mock-spanid"
+    TRACE_ID_KEY = "mock-traceid"
+    SPAN_ID_KEY = "mock-spanid"
 
     def extract(
-        self, carrier: Dict[str, str], context: Optional[Context] = None,
+        self,
+        carrier: typing.Dict[str, str],
+        context: typing.Optional[Context] = None,
     ) -> Context:
-        trace_id = carrier.get(self.trace_id_key)
-        span_id = carrier.get(self.span_id_key)
+        trace_id = carrier.get(self.TRACE_ID_KEY)
+        span_id = carrier.get(self.SPAN_ID_KEY)
 
         if trace_id is None or span_id is None:
-            return set_span_in_context(INVALID_SPAN)
+            return trace.set_span_in_context(trace.INVALID_SPAN)
 
-        return set_span_in_context(
-            NonRecordingSpan(
-                SpanContext(
+        return trace.set_span_in_context(
+            trace.NonRecordingSpan(
+                trace.SpanContext(
                     trace_id=trace_id, span_id=span_id, is_remote=True,
                 )
             )
         )
 
     def inject(
-        self, carrier: Dict[str, str], context: Optional[Context] = None,
+        self,
+        carrier: typing.Dict[str, str],
+        context: typing.Optional[Context] = None,
     ) -> None:
-        span = get_current_span(context)
-        carrier[self.trace_id_key] = str(span.get_span_context().trace_id)
-        carrier[self.span_id_key] = str(span.get_span_context().span_id)
+        span = trace.get_current_span(context)
+        carrier[self.TRACE_ID_KEY] = str(span.get_span_context().trace_id)
+        carrier[self.SPAN_ID_KEY] = str(span.get_span_context().span_id)
 
     @property
     def fields(self):
-        return {self.trace_id_key, self.span_id_key}
+        return {self.TRACE_ID_KEY, self.SPAN_ID_KEY}

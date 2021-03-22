@@ -57,22 +57,21 @@ Example::
     https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/api-propagators.md
 """
 
+import typing
 from logging import getLogger
 from os import environ
-from typing import Dict, Optional
 
 from pkg_resources import iter_entry_points
 
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
-from opentelemetry.propagators import composite
-from opentelemetry.propagators.textmap import TextMapPropagator
+from opentelemetry.propagators import composite, textmap
 
-_logger = getLogger(__name__)
+logger = getLogger(__name__)
 
 
 def extract(
-    carrier: Dict[str, str], context: Optional[Context] = None,
+    carrier: typing.Dict[str, str], context: typing.Optional[Context] = None,
 ) -> Context:
     """Uses the configured propagator to extract a Context from the carrier.
 
@@ -91,7 +90,7 @@ def extract(
 
 
 def inject(
-    carrier: Dict[str, str], context: Optional[Context] = None,
+    carrier: typing.Dict[str, str], context: typing.Optional[Context] = None,
 ) -> None:
     """Uses the configured propagator to inject a Context into the carrier.
 
@@ -121,16 +120,16 @@ try:
         )
 
 except Exception:  # pylint: disable=broad-except
-    _logger.error("Failed to load configured propagators")
+    logger.exception("Failed to load configured propagators")
     raise
 
-_textmap_propagator = composite.CompositeHTTPPropagator(propagators)  # type: ignore
+_HTTP_TEXT_FORMAT = composite.CompositeHTTPPropagator(propagators)  # type: ignore
 
 
-def get_global_textmap() -> TextMapPropagator:
-    return _textmap_propagator
+def get_global_textmap() -> textmap.TextMapPropagator:
+    return _HTTP_TEXT_FORMAT
 
 
-def set_global_textmap(http_text_format: TextMapPropagator,) -> None:
-    global _textmap_propagator  # pylint:disable=global-statement
-    _textmap_propagator = http_text_format  # type: ignore
+def set_global_textmap(http_text_format: textmap.TextMapPropagator,) -> None:
+    global _HTTP_TEXT_FORMAT  # pylint:disable=global-statement
+    _HTTP_TEXT_FORMAT = http_text_format  # type: ignore

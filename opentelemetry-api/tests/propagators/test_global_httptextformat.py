@@ -25,13 +25,13 @@ from opentelemetry.trace.span import format_span_id, format_trace_id
 class TestDefaultGlobalPropagator(unittest.TestCase):
     """Test ensures the default global composite propagator works as intended"""
 
-    trace_id = int("12345678901234567890123456789012", 16)  # type:int
-    span_id = int("1234567890123456", 16)  # type:int
+    TRACE_ID = int("12345678901234567890123456789012", 16)  # type:int
+    SPAN_ID = int("1234567890123456", 16)  # type:int
 
     def test_propagation(self):
         traceparent_value = "00-{trace_id}-{span_id}-00".format(
-            trace_id=format_trace_id(self.trace_id),
-            span_id=format_span_id(self.span_id),
+            trace_id=format_trace_id(self.TRACE_ID),
+            span_id=format_span_id(self.SPAN_ID),
         )
 
         ctx = extract(
@@ -46,8 +46,8 @@ class TestDefaultGlobalPropagator(unittest.TestCase):
         )
         span_context = get_current_span(context=ctx).get_span_context()
 
-        self.assertEqual(span_context.trace_id, self.trace_id)
-        self.assertEqual(span_context.span_id, self.span_id)
+        self.assertEqual(span_context.trace_id, self.TRACE_ID)
+        self.assertEqual(span_context.span_id, self.SPAN_ID)
 
         span = trace.NonRecordingSpan(span_context)
         ctx = baggage.set_baggage("key3", "val3")

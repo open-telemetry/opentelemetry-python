@@ -11,26 +11,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from typing import Dict, Optional, Set
-from urllib.parse import quote_plus, unquote
+#
+import typing
+import urllib.parse
 
 from opentelemetry import baggage
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
-from opentelemetry.propagators.textmap import TextMapPropagator
+from opentelemetry.propagators import textmap
 
 
-class W3CBaggagePropagator(TextMapPropagator):
+class W3CBaggagePropagator(textmap.TextMapPropagator):
     """Extracts and injects Baggage which is used to annotate telemetry."""
 
-    _baggage_header_name = "baggage"
-    _max_header_length = 9182
-    _max_pairs = 180
-    _max_pair_length = 4096
+    _MAX_HEADER_LENGTH = 8192
+    _MAX_PAIR_LENGTH = 4096
+    _MAX_PAIRS = 180
+    _BAGGAGE_HEADER_NAME = "baggage"
 
     def extract(
-        self, carrier: Dict[str, str], context: Optional[Context] = None,
+        self,
+        carrier: typing.Dict[str, str],
+        context: typing.Optional[Context] = None,
     ) -> Context:
         """Extract Baggage from the carrier.
 
@@ -41,31 +43,33 @@ class W3CBaggagePropagator(TextMapPropagator):
         if context is None:
             context = get_current()
 
-        header = carrier.get(self._baggage_header_name)
+        header = carrier.get(self._BAGGAGE_HEADER_NAME)
 
-        if header is None or len(header) > self._max_header_length:
+        if not header or len(header) > self._MAX_HEADER_LENGTH:
             return context
 
-        total_baggage_entries = self._max_pairs
-
-        for entry in header.split(","):
+        baggage_entries = header.split(",")
+        total_baggage_entries = self._MAX_PAIRS
+        for entry in baggage_entries:
             if total_baggage_entries <= 0:
                 return context
             total_baggage_entries -= 1
-            if len(entry) > self._max_pair_length:
+            if len(entry) > self._MAX_PAIR_LENGTH:
                 continue
             if "=" in entry:
                 name, value = entry.split("=", 1)
                 context = baggage.set_baggage(
-                    unquote(name).strip(),
-                    unquote(value).strip(),
+                    urllib.parse.unquote(name).strip(),
+                    urllib.parse.unquote(value).strip(),
                     context=context,
                 )
 
         return context
 
     def inject(
-        self, carrier: Dict[str, str], context: Optional[Context] = None,
+        self,
+        carrier: typing.Dict[str, str],
+        context: typing.Optional[Context] = None,
     ) -> None:
         """Injects Baggage into the carrier.
 
@@ -75,12 +79,12 @@ class W3CBaggagePropagator(TextMapPropagator):
         baggage_entries = baggage.get_all(context=context)
 
         if baggage_entries:
-            carrier[self._baggage_header_name] = ",".join(
-                key + "=" + quote_plus(str(value))
+            carrier[self._BAGGAGE_HEADER_NAME] = ",".join(
+                key + "=" + urllib.parse.quote_plus(str(value))
                 for key, value in baggage_entries.items()
             )
 
     @property
-    def fields(self) -> Set[str]:
+    def fields(self) -> typing.Set[str]:
         """Returns a set with the fields set in `inject`."""
-        return {self._baggage_header_name}
+        return {self._BAGGAGE_HEADER_NAME}

@@ -11,101 +11,92 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+#
+import re
+import typing
 
-from re import compile as compile_
-from re import search
-from typing import Dict, Optional, Set
-
+import opentelemetry.trace as trace
 from opentelemetry.context.context import Context
-from opentelemetry.propagators.textmap import TextMapPropagator
-from opentelemetry.trace import (
-    INVALID_SPAN,
-    INVALID_SPAN_CONTEXT,
-    NonRecordingSpan,
-    SpanContext,
-    TraceFlags,
-    format_span_id,
-    format_trace_id,
-    get_current_span,
-    set_span_in_context,
-)
+from opentelemetry.propagators import textmap
+from opentelemetry.trace import format_span_id, format_trace_id
 from opentelemetry.trace.span import TraceState
 
 
-class TraceContextTextMapPropagator(TextMapPropagator):
+class TraceContextTextMapPropagator(textmap.TextMapPropagator):
     """Extracts and injects using w3c TraceContext's headers."""
 
-    _traceparent_header_name = "traceparent"
-    _tracestate_header_name = "tracestate"
-    _traceparent_header_format_re = compile_(
-        r"^\s*(?P<version>[0-9a-f]{2})-"
-        r"(?P<trace_id>[0-9a-f]{32})-"
-        r"(?P<span_id>[0-9a-f]{16})-"
-        r"(?P<trace_flags>[0-9a-f]{2})"
-        r"(?P<remainder>.+?)?\s*$"
+    _TRACEPARENT_HEADER_NAME = "traceparent"
+    _TRACESTATE_HEADER_NAME = "tracestate"
+    _TRACEPARENT_HEADER_FORMAT = (
+        "^[ \t]*([0-9a-f]{2})-([0-9a-f]{32})-([0-9a-f]{16})-([0-9a-f]{2})"
+        + "(-.*)?[ \t]*$"
     )
+    _TRACEPARENT_HEADER_FORMAT_RE = re.compile(_TRACEPARENT_HEADER_FORMAT)
 
     def extract(
-        self, carrier: Dict[str, str], context: Optional[Context] = None,
+        self,
+        carrier: typing.Dict[str, str],
+        context: typing.Optional[Context] = None,
     ) -> Context:
         """Extracts SpanContext from the carrier.
 
         See `opentelemetry.propagators.textmap.TextMapPropagator.extract`
         """
-        header = carrier.get(self._traceparent_header_name)
+        header = carrier.get(self._TRACEPARENT_HEADER_NAME)
 
-        if header is None:
-            return set_span_in_context(INVALID_SPAN, context)
+        if not header:
+            return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
-        match = search(self._traceparent_header_format_re, header)
-        if match is None:
-            return set_span_in_context(INVALID_SPAN, context)
+        match = re.search(self._TRACEPARENT_HEADER_FORMAT_RE, header)
+        if not match:
+            return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
-        version = match.group("version")
-        trace_id = match.group("trace_id")
-        span_id = match.group("span_id")
+        version = match.group(1)
+        trace_id = match.group(2)
+        span_id = match.group(3)
+        trace_flags = match.group(4)
 
-        if (
-            version == "ff"
-            or trace_id == "0" * 32
-            or span_id == "0" * 16
-            or (version == "00" and match.group("remainder"))
-        ):
+        if trace_id == "0" * 32 or span_id == "0" * 16:
+            return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
-            return set_span_in_context(INVALID_SPAN, context)
+        if version == "00":
+            if match.group(5):
+                return trace.set_span_in_context(trace.INVALID_SPAN, context)
+        if version == "ff":
+            return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
-        tracestate_headers = carrier.get(self._tracestate_header_name)
-
+        tracestate_headers = carrier.get(self._TRACESTATE_HEADER_NAME)
         if tracestate_headers is None:
             tracestate = None
         else:
             tracestate = TraceState.from_header(tracestate_headers)
 
-        return set_span_in_context(
-            NonRecordingSpan(
-                SpanContext(
-                    trace_id=int(trace_id, 16),
-                    span_id=int(span_id, 16),
-                    is_remote=True,
-                    trace_flags=TraceFlags(match.group("trace_flags")),
-                    trace_state=tracestate,
-                )
-            ),
-            context,
+        span_context = trace.SpanContext(
+            trace_id=int(trace_id, 16),
+            span_id=int(span_id, 16),
+            is_remote=True,
+            trace_flags=trace.TraceFlags(trace_flags),
+            trace_state=tracestate,
+        )
+        return trace.set_span_in_context(
+            trace.NonRecordingSpan(span_context), context
         )
 
     def inject(
-        self, carrier: Dict[str, str], context: Optional[Context] = None,
+        self,
+        carrier: typing.Dict[str, str],
+        context: typing.Optional[Context] = None,
     ) -> None:
         """Injects SpanContext into the carrier.
 
         See `opentelemetry.propagators.textmap.TextMapPropagator.inject`
         """
-        span_context = get_current_span(context).get_span_context()
-        if span_context == INVALID_SPAN_CONTEXT:
+        span = trace.get_current_span(context)
+        span_context = span.get_span_context()
+        if span_context == trace.INVALID_SPAN_CONTEXT:
             return
         carrier[
-            self._traceparent_header_name
+            self._TRACEPARENT_HEADER_NAME
         ] = "00-{trace_id}-{span_id}-{:02x}".format(
             span_context.trace_flags,
             trace_id=format_trace_id(span_context.trace_id),
@@ -113,15 +104,14 @@ class TraceContextTextMapPropagator(TextMapPropagator):
         )
 
         if span_context.trace_state:
-            carrier[
-                self._tracestate_header_name
-            ] = span_context.trace_state.to_header()
+            tracestate_string = span_context.trace_state.to_header()
+            carrier[self._TRACESTATE_HEADER_NAME] = tracestate_string
 
     @property
-    def fields(self) -> Set[str]:
+    def fields(self) -> typing.Set[str]:
         """Returns a set with the fields set in `inject`.
 
         See
         `opentelemetry.propagators.textmap.TextMapPropagator.fields`
         """
-        return {self._traceparent_header_name, self._tracestate_header_name}
+        return {self._TRACEPARENT_HEADER_NAME, self._TRACESTATE_HEADER_NAME}

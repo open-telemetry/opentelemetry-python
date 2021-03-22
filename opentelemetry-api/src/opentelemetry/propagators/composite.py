@@ -11,17 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-from logging import getLogger
-from typing import Dict, Optional, Sequence, Set
+import logging
+import typing
 
 from opentelemetry.context.context import Context
-from opentelemetry.propagators.textmap import TextMapPropagator
+from opentelemetry.propagators import textmap
 
-_logger = getLogger(__name__)
+logger = logging.getLogger(__name__)
 
 
-class CompositeHTTPPropagator(TextMapPropagator):
+class CompositeHTTPPropagator(textmap.TextMapPropagator):
     """CompositeHTTPPropagator provides a mechanism for combining multiple
     propagators into a single one.
 
@@ -29,17 +28,20 @@ class CompositeHTTPPropagator(TextMapPropagator):
         propagators: the list of propagators to use
     """
 
-    def __init__(self, propagators: Sequence[TextMapPropagator]) -> None:
+    def __init__(
+        self, propagators: typing.Sequence[textmap.TextMapPropagator]
+    ) -> None:
         self._propagators = propagators
 
     def extract(
-        self, carrier: Dict[str, str], context: Optional[Context] = None,
+        self,
+        carrier: typing.Dict[str, str],
+        context: typing.Optional[Context] = None,
     ) -> Context:
-        """Run each of the configured propagators with the given context and
-        carrier.
+        """Run each of the configured propagators with the given context and carrier.
         Propagators are run in the order they are configured, if multiple
-        propagators write the same context key, the last propagator that writes
-        the context key will override previous propagators.
+        propagators write the same context key, the propagator later in the list
+        will override previous propagators.
 
         See `opentelemetry.propagators.textmap.TextMapPropagator.extract`
         """
@@ -48,12 +50,14 @@ class CompositeHTTPPropagator(TextMapPropagator):
         return context  # type: ignore
 
     def inject(
-        self, carrier: Dict[str, str], context: Optional[Context] = None,
+        self,
+        carrier: typing.Dict[str, str],
+        context: typing.Optional[Context] = None,
     ) -> None:
-        """Run each of the configured propagators with the given context and
-        carrier. Propagators are run in the order they are configured, if
-        multiple propagators write the same carrier key, the last propagator
-        that writes the carrier key will override previous propagators.
+        """Run each of the configured propagators with the given context and carrier.
+        Propagators are run in the order they are configured, if multiple
+        propagators write the same carrier key, the propagator later in the list
+        will override previous propagators.
 
         See `opentelemetry.propagators.textmap.TextMapPropagator.inject`
         """
@@ -61,7 +65,7 @@ class CompositeHTTPPropagator(TextMapPropagator):
             propagator.inject(carrier, context)
 
     @property
-    def fields(self) -> Set[str]:
+    def fields(self) -> typing.Set[str]:
         """Returns a set with the fields set in `inject`.
 
         See

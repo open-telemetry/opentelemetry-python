@@ -12,22 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from abc import ABC, abstractmethod
-from typing import Dict, Optional, Set
+import abc
+import typing
 
 from opentelemetry.context.context import Context
 
 
-class TextMapPropagator(ABC):
+class TextMapPropagator(abc.ABC):
     """This class provides an interface that enables extracting and injecting
     context into headers of HTTP requests. HTTP frameworks and clients can
     integrate with TextMapPropagator by providing the object containing the
     headers.
     """
 
-    @abstractmethod
+    @abc.abstractmethod
     def extract(
-        self, carrier: Dict[str, str], context: Optional[Context] = None,
+        self,
+        carrier: typing.Dict[str, str],
+        context: typing.Optional[Context] = None,
     ) -> Context:
         """Create a Context from values in the carrier.
 
@@ -43,9 +45,11 @@ class TextMapPropagator(ABC):
             A Context with the configuration found in the carrier.
         """
 
-    @abstractmethod
+    @abc.abstractmethod
     def inject(
-        self, carrier: Dict[str, str], context: Optional[Context] = None,
+        self,
+        carrier: typing.Dict[str, str],
+        context: typing.Optional[Context] = None,
     ) -> None:
         """Inject values from a Context into a carrier.
 
@@ -60,8 +64,8 @@ class TextMapPropagator(ABC):
         """
 
     @property
-    @abstractmethod
-    def fields(self) -> Set[str]:
+    @abc.abstractmethod
+    def fields(self) -> typing.Set[str]:
         """
         Gets the fields set in the carrier by the `inject` method.
 

@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from re import compile as compile_
-from typing import Dict, Optional, Set
+import typing
+from re import compile as re_compile
 
 import opentelemetry.trace as trace
 from opentelemetry.context import Context
@@ -34,11 +34,13 @@ class B3Format(TextMapPropagator):
     SAMPLED_KEY = "x-b3-sampled"
     FLAGS_KEY = "x-b3-flags"
     _SAMPLE_PROPAGATE_VALUES = set(["1", "True", "true", "d"])
-    _trace_id_regex = compile_(r"[\da-fA-F]{16}|[\da-fA-F]{32}")
-    _span_id_regex = compile_(r"[\da-fA-F]{16}")
+    _trace_id_regex = re_compile(r"[\da-fA-F]{16}|[\da-fA-F]{32}")
+    _span_id_regex = re_compile(r"[\da-fA-F]{16}")
 
     def extract(
-        self, carrier: Dict[str, str], context: Optional[Context] = None,
+        self,
+        carrier: typing.Dict[str, str],
+        context: typing.Optional[Context] = None,
     ) -> Context:
 
         trace_id = format_trace_id(trace.INVALID_TRACE_ID)
@@ -106,7 +108,9 @@ class B3Format(TextMapPropagator):
         )
 
     def inject(
-        self, carrier: Dict[str, str], context: Optional[Context] = None,
+        self,
+        carrier: typing.Dict[str, str],
+        context: typing.Optional[Context] = None,
     ) -> None:
 
         span = trace.get_current_span(context=context)
@@ -126,7 +130,7 @@ class B3Format(TextMapPropagator):
             carrier[self.SAMPLED_KEY] = "1" if sampled else "0"
 
     @property
-    def fields(self) -> Set[str]:
+    def fields(self) -> typing.Set[str]:
         return {
             self.TRACE_ID_KEY,
             self.SPAN_ID_KEY,
