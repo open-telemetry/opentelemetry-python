@@ -16,7 +16,8 @@ import unittest
 
 # pylint:disable=no-name-in-module
 # pylint:disable=import-error
-from opentelemetry.exporter.jaeger import proto, thrift
+from opentelemetry.exporter.jaeger import thrift
+from opentelemetry.exporter.jaeger.proto import grpc
 
 
 # pylint:disable=no-member
@@ -24,7 +25,7 @@ class TestJaegerExporter(unittest.TestCase):
     def test_constructors(self):
         """ Test ensures both exporters can co-exist"""
         try:
-            proto.JaegerExporter()
+            grpc.JaegerExporter()
             thrift.JaegerExporter()
         except Exception as exc:  # pylint: disable=broad-except
             self.assertIsNone(exc)
