@@ -16,7 +16,7 @@ exclude =
   venv*/
   target
   __pycache__
-  exporter/opentelemetry-exporter-jaeger-proto-grpc/src/opentelemetry/exporter/jaeger/proto/gen/
+  exporter/opentelemetry-exporter-jaeger-proto-grpc/src/opentelemetry/exporter/jaeger/proto/grpc/gen/
   exporter/opentelemetry-exporter-jaeger-proto-grpc/build/*
   exporter/opentelemetry-exporter-jaeger-thrift/src/opentelemetry/exporter/jaeger/thrift/gen/
   exporter/opentelemetry-exporter-jaeger-thrift/build/*
