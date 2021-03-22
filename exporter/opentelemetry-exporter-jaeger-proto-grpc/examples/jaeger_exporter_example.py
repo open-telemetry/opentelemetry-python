@@ -1,7 +1,7 @@
 import time
 
 from opentelemetry import trace
-from opentelemetry.exporter.jaeger import proto
+from opentelemetry.exporter.jaeger.proto import grpc
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
@@ -14,7 +14,7 @@ tracer = trace.get_tracer(__name__)
 # parameter credentials=ChannelCredentials(...) or the environment variable
 # `EXPORTER_JAEGER_CERTIFICATE` with file containing creds.
 
-jaeger_exporter = proto.JaegerExporter(
+jaeger_exporter = grpc.JaegerExporter(
     collector_endpoint="localhost:14250", insecure=True,
 )
 
