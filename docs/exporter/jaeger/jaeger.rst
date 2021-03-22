@@ -11,7 +11,7 @@ Opentelemetry Jaeger Exporters
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: opentelemetry.exporter.jaeger.proto
+.. automodule:: opentelemetry.exporter.jaeger.proto.grpc
     :members:
     :undoc-members:
     :show-inheritance:
@@ -29,7 +29,7 @@ Submodules
     :undoc-members:
     :show-inheritance:
 
-.. automodule:: opentelemetry.exporter.jaeger.proto.gen.collector_pb2_grpc
+.. automodule:: opentelemetry.exporter.jaeger.proto.grpc.gen.collector_pb2_grpc
     :members:
     :undoc-members:
     :show-inheritance:

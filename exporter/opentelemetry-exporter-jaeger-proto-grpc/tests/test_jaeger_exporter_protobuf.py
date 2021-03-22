@@ -19,11 +19,11 @@ from unittest import mock
 
 # pylint:disable=no-name-in-module
 # pylint:disable=import-error
-import opentelemetry.exporter.jaeger.proto.gen.model_pb2 as model_pb2
-import opentelemetry.exporter.jaeger.proto.translate as pb_translator
+import opentelemetry.exporter.jaeger.proto.grpc.gen.model_pb2 as model_pb2
+import opentelemetry.exporter.jaeger.proto.grpc.translate as pb_translator
 from opentelemetry import trace as trace_api
-from opentelemetry.exporter.jaeger.proto import JaegerExporter
-from opentelemetry.exporter.jaeger.proto.translate import (
+from opentelemetry.exporter.jaeger.proto.grpc import JaegerExporter
+from opentelemetry.exporter.jaeger.proto.grpc.translate import (
     NAME_KEY,
     VERSION_KEY,
     Translate,
@@ -126,8 +126,8 @@ class TestJaegerExporter(unittest.TestCase):
 
         event_timestamp = base_time + 50 * 10 ** 6
         # pylint:disable=protected-access
-        event_timestamp_proto = pb_translator._proto_timestamp_from_epoch_nanos(
-            event_timestamp
+        event_timestamp_proto = (
+            pb_translator._proto_timestamp_from_epoch_nanos(event_timestamp)
         )
 
         event = trace.Event(
@@ -339,7 +339,9 @@ class TestJaegerExporter(unittest.TestCase):
                 duration=span2_duration,
                 flags=0,
                 tags=default_tags,
-                process=model_pb2.Process(service_name="svc",),
+                process=model_pb2.Process(
+                    service_name="svc",
+                ),
             ),
             model_pb2.Span(
                 operation_name=span_names[2],
@@ -370,7 +372,9 @@ class TestJaegerExporter(unittest.TestCase):
                         v_str="version",
                     ),
                 ],
-                process=model_pb2.Process(service_name="svc",),
+                process=model_pb2.Process(
+                    service_name="svc",
+                ),
             ),
         ]
 
@@ -378,7 +382,8 @@ class TestJaegerExporter(unittest.TestCase):
         # (attributes) in otel is not important but in jeager it is
         # pylint: disable=no-member
         self.assertCountEqual(
-            spans[0].logs[0].fields, expected_spans[0].logs[0].fields,
+            spans[0].logs[0].fields,
+            expected_spans[0].logs[0].fields,
         )
 
         self.assertEqual(spans, expected_spans)

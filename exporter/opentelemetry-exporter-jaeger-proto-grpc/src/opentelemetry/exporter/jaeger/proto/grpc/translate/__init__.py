@@ -18,7 +18,7 @@ from typing import Optional, Sequence
 from google.protobuf.duration_pb2 import Duration
 from google.protobuf.timestamp_pb2 import Timestamp
 
-from opentelemetry.exporter.jaeger.proto.gen import model_pb2
+from opentelemetry.exporter.jaeger.proto.grpc.gen import model_pb2
 
 from opentelemetry.sdk.trace import ReadableSpan, StatusCode
 from opentelemetry.trace import SpanKind
@@ -195,7 +195,8 @@ def _duration_from_two_time_stamps(
     See https://developers.google.com/protocol-buffers/docs/reference/google.protobuf#duration
     """
     duration = Duration(
-        seconds=end.seconds - start.seconds, nanos=end.nanos - start.nanos,
+        seconds=end.seconds - start.seconds,
+        nanos=end.nanos - start.nanos,
     )
     # pylint: disable=chained-comparison
     if duration.seconds < 0 and duration.nanos > 0:
@@ -350,7 +351,10 @@ class ProtobufTranslator(Translator):
                     fields.append(tag)
 
             fields.append(
-                _get_string_key_value(key="message", value=event.name,)
+                _get_string_key_value(
+                    key="message",
+                    value=event.name,
+                )
             )
             event_ts = _proto_timestamp_from_epoch_nanos(event.timestamp)
             logs.append(model_pb2.Log(timestamp=event_ts, fields=fields))
