@@ -16,7 +16,7 @@
 import shutil
 import subprocess
 import unittest
-from datetime import datetime
+from datetime import datetime, timezone
 from importlib import reload
 from logging import ERROR, WARNING
 from typing import Optional
@@ -1359,12 +1359,14 @@ class TestSpanProcessor(unittest.TestCase):
             resource=Resource({"resource:foo": "resource:bar"},),
         )
         expected_span.start(
-            datetime(2021, 3, 3, 12, 34, 56).timestamp() * 1000000000
+            datetime(2021, 3, 3, 12, 34, 56, tzinfo=timezone.utc).timestamp()
+            * 1000000000
         )
         expected_span.add_event(
             "event",
             {"event:foo": "event:bar"},
-            datetime(2021, 3, 3, 20, 20, 20).timestamp() * 1000000000,
+            datetime(2021, 3, 3, 20, 20, 20, tzinfo=timezone.utc).timestamp()
+            * 1000000000,
         )
         expected_span.set_status(
             trace_api.status.Status(
@@ -1372,7 +1374,8 @@ class TestSpanProcessor(unittest.TestCase):
             )
         )
         expected_span.end(
-            datetime(2021, 3, 4, 10, 20, 30).timestamp() * 1000000000
+            datetime(2021, 3, 4, 10, 20, 30, tzinfo=timezone.utc).timestamp()
+            * 1000000000
         )
         actual_span = trace.Span.from_json(
             {
