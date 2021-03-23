@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1668](https://github.com/open-telemetry/opentelemetry-python/pull/1668))
 - Add `udp_split_oversized_batches` support to jaeger exporter
   ([#1500](https://github.com/open-telemetry/opentelemetry-python/pull/1500))
+- Add `Span.from_json` method to create a span from a JSON string
+  ([#1713](https://github.com/open-telemetry/opentelemetry-python/pull/1713))
 
 ### Changed
 - remove `service_name` from constructor of jaeger and opencensus exporters and 
