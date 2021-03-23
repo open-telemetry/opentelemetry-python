@@ -1234,7 +1234,7 @@ class TestSpanProcessor(unittest.TestCase):
         "span_id": "0x00000000deadbef0",
         "trace_state": "[]"
     },
-    "kind": "SpanKind.INTERNAL",
+    "kind": "INTERNAL",
     "parent_id": null,
     "start_time": null,
     "end_time": null,
@@ -1249,7 +1249,7 @@ class TestSpanProcessor(unittest.TestCase):
         )
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "[]"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {}, "events": [], "links": [], "resource": {}}',
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "[]"}, "kind": "INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {}, "events": [], "links": [], "resource": {}}',
         )
 
     def test_attributes_to_json(self):
@@ -1265,7 +1265,7 @@ class TestSpanProcessor(unittest.TestCase):
         date_str = ns_to_iso_str(123)
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "[]"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {"key": "value"}, "events": [{"name": "event", "timestamp": "'
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "[]"}, "kind": "INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {"key": "value"}, "events": [{"name": "event", "timestamp": "'
             + date_str
             + '", "attributes": {"key2": "value2"}}], "links": [], "resource": {}}',
         )
@@ -1287,7 +1287,7 @@ class TestSpanProcessor(unittest.TestCase):
                     "span_id": "0x00000000deadbef0",
                     "trace_state": "[]",
                 },
-                "kind": "SpanKind.INTERNAL",
+                "kind": "INTERNAL",
                 "parent_id": None,
                 "start_time": None,
                 "end_time": None,
@@ -1317,7 +1317,7 @@ class TestSpanProcessor(unittest.TestCase):
         "span_id": "0x00000000deadbef0",
         "trace_state": "[]"
     },
-    "kind": "SpanKind.INTERNAL",
+    "kind": "INTERNAL",
     "parent_id": null,
     "start_time": null,
     "end_time": null,
@@ -1383,7 +1383,7 @@ class TestSpanProcessor(unittest.TestCase):
                     "span_id": "0x00000000deadbef0",
                     "trace_state": '[["foo", "bar"]]',
                 },
-                "kind": "SpanKind.INTERNAL",
+                "kind": "INTERNAL",
                 "parent_id": None,
                 "start_time": "2021-03-03T03:34:56.000000Z",
                 "end_time": "2021-03-04T01:20:30.000000Z",
