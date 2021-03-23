@@ -17,7 +17,7 @@ import json
 import threading
 from collections import OrderedDict, deque
 from collections.abc import MutableMapping, Sequence
-from typing import Dict, Sequence, Optional
+from typing import Dict, Optional
 
 from opentelemetry import trace as trace_api
 
@@ -45,27 +45,31 @@ def get_dict_as_key(labels):
 def to_context(data: Dict[str, str]) -> trace_api.SpanContext:
     trace_state = None
     if data.get("trace_state", None):
-        trace_state = trace_api.TraceState(entries=json.loads(data["trace_state"]))
+        trace_state = trace_api.TraceState(
+            entries=json.loads(data["trace_state"])
+        )
 
     return trace_api.SpanContext(
         int(data.get("trace_id", "0x0"), 0),
         int(data.get("span_id", "0x0"), 0),
         is_remote=False,
-        trace_state=trace_state
+        trace_state=trace_state,
     )
 
 
-def iso_str_to_ns(s: str) -> int:
-    if s[-1] == "Z":
-        s = s[:-1] + "+00:00"
+def iso_str_to_ns(dt_str: str) -> int:
+    if dt_str[-1] == "Z":
+        dt_str = dt_str[:-1] + "+00:00"
 
-    return int(datetime.datetime.fromisoformat(s).timestamp() * 1000000000)
+    return int(
+        datetime.datetime.fromisoformat(dt_str).timestamp() * 1000000000
+    )
 
 
-def to_span_kind(s: str) -> Optional[trace_api.SpanKind]:
-    if "." not in s:
+def to_span_kind(span_kind_str: str) -> Optional[trace_api.SpanKind]:
+    if "." not in span_kind_str:
         return None
-    return getattr(trace_api.SpanKind, s.split(".")[1])
+    return getattr(trace_api.SpanKind, span_kind_str.split(".")[1])
 
 
 def to_link(data: Dict[str, str]) -> trace_api.Link:

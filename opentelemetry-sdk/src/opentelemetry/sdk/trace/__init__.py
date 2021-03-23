@@ -314,10 +314,10 @@ class Event(EventBase):
     @staticmethod
     def from_dict(data: Dict[str, str]) -> "EventBase":
         return Event(
-                name=data["name"],
-                timestamp=util.iso_str_to_ns(data["timestamp"]),
-                attributes=data["attributes"],
-            )
+            name=data["name"],
+            timestamp=util.iso_str_to_ns(data["timestamp"]),
+            attributes=data["attributes"],
+        )
 
 
 def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
@@ -415,7 +415,9 @@ class ReadableSpan:
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         instrumentation_info: InstrumentationInfo = None,
-        status: trace_api.Status = trace_api.Status(trace_api.StatusCode.UNSET),
+        status: trace_api.Status = trace_api.Status(
+            trace_api.StatusCode.UNSET
+        ),
         start_time: Optional[int] = None,
         end_time: Optional[int] = None,
     ) -> None:

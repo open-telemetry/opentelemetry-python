@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-many-lines
-from datetime import datetime
 import shutil
 import subprocess
 import unittest
+
+# pylint: disable=too-many-lines
+from datetime import datetime
 from importlib import reload
 from logging import ERROR, WARNING
 from typing import Optional
@@ -1275,26 +1276,28 @@ class TestSpanProcessor(unittest.TestCase):
             span_id=0x00000000DEADBEF0,
             is_remote=False,
         )
-        expected_span = trace._Span("span-name", context, resource=Resource({}))
-        actual_span = trace.Span.from_json({
-            "name": "span-name",
-            "context": {
-                "trace_id": "0x000000000000000000000000deadbeef",
-                "span_id": "0x00000000deadbef0",
-                "trace_state": "[]"
-            },
-            "kind": "SpanKind.INTERNAL",
-            "parent_id": None,
-            "start_time": None,
-            "end_time": None,
-            "status": {
-                "status_code": "UNSET"
-            },
-            "attributes": {},
-            "events": [],
-            "links": [],
-            "resource": {}
-        })
+        expected_span = trace._Span(
+            "span-name", context, resource=Resource({})
+        )
+        actual_span = trace.Span.from_json(
+            {
+                "name": "span-name",
+                "context": {
+                    "trace_id": "0x000000000000000000000000deadbeef",
+                    "span_id": "0x00000000deadbef0",
+                    "trace_state": "[]",
+                },
+                "kind": "SpanKind.INTERNAL",
+                "parent_id": None,
+                "start_time": None,
+                "end_time": None,
+                "status": {"status_code": "UNSET"},
+                "attributes": {},
+                "events": [],
+                "links": [],
+                "resource": {},
+            }
+        )
         self.assertEqual(expected_span.to_json(), actual_span.to_json())
 
     def test_from_json_with_str(self):
@@ -1303,7 +1306,9 @@ class TestSpanProcessor(unittest.TestCase):
             span_id=0x00000000DEADBEF0,
             is_remote=False,
         )
-        expected_span = trace._Span("span-name", context, resource=Resource({}))
+        expected_span = trace._Span(
+            "span-name", context, resource=Resource({})
+        )
         actual_span = trace.Span.from_json(
             """{
     "name": "span-name",
@@ -1342,7 +1347,7 @@ class TestSpanProcessor(unittest.TestCase):
                     is_remote=False,
                     trace_state={"foo": "bar"},
                 ),
-                {"link:foo": "link:bar"}
+                {"link:foo": "link:bar"},
             )
         ]
         expected_span = trace._Span(
@@ -1352,92 +1357,62 @@ class TestSpanProcessor(unittest.TestCase):
             parent=None,
             links=links,
             attributes={"attr:foo": "attr:bar"},
-            resource=Resource({"resource:foo": "resource:bar"},
-        ))
-        expected_span.start(datetime(2021, 3, 3, 12, 34, 56).timestamp() * 1000000000)
-        expected_span.add_event("event", {"event:foo": "event:bar"}, datetime(2021, 3, 3, 20, 20, 20).timestamp() * 1000000000)
+            resource=Resource({"resource:foo": "resource:bar"},),
+        )
+        expected_span.start(
+            datetime(2021, 3, 3, 12, 34, 56).timestamp() * 1000000000
+        )
+        expected_span.add_event(
+            "event",
+            {"event:foo": "event:bar"},
+            datetime(2021, 3, 3, 20, 20, 20).timestamp() * 1000000000,
+        )
         expected_span.set_status(
             trace_api.status.Status(
                 trace_api.StatusCode.ERROR, "Test description"
             )
         )
-        expected_span.end(datetime(2021, 3, 4, 10, 20, 30).timestamp() * 1000000000)
-        actual_span = trace.Span.from_json({
-            "name": "span-name",
-            "context": {
-                "trace_id": "0x000000000000000000000000deadbeef",
-                "span_id": "0x00000000deadbef0",
-                "trace_state": "[[\"foo\", \"bar\"]]"
-            },
-            "kind": "SpanKind.INTERNAL",
-            "parent_id": None,
-            "start_time": "2021-03-03T03:34:56.000000Z",
-            "end_time": "2021-03-04T01:20:30.000000Z",
-            "status": {
-                "status_code": "ERROR",
-                "description": "Test description"
-            },
-            "attributes": {
-                "attr:foo": "attr:bar"
-            },
-            "events": [{
-                "name": "event",
-                "timestamp": "2021-03-03T11:20:20.000000Z",
-                "attributes": {
-                    "event:foo": "event:bar"
-                }
-            }],
-            "links": [{
+        expected_span.end(
+            datetime(2021, 3, 4, 10, 20, 30).timestamp() * 1000000000
+        )
+        actual_span = trace.Span.from_json(
+            {
+                "name": "span-name",
                 "context": {
-                    "trace_id": "0x00000000000000000000000000000001",
-                    "span_id": "0x0000000000000001",
-                    "trace_state": "[[\"foo\", \"bar\"]]"
+                    "trace_id": "0x000000000000000000000000deadbeef",
+                    "span_id": "0x00000000deadbef0",
+                    "trace_state": '[["foo", "bar"]]',
                 },
-                "attributes": {"link:foo": "link:bar"}
-            }],
-            "resource": {
-                "resource:foo": "resource:bar"
+                "kind": "SpanKind.INTERNAL",
+                "parent_id": None,
+                "start_time": "2021-03-03T03:34:56.000000Z",
+                "end_time": "2021-03-04T01:20:30.000000Z",
+                "status": {
+                    "status_code": "ERROR",
+                    "description": "Test description",
+                },
+                "attributes": {"attr:foo": "attr:bar"},
+                "events": [
+                    {
+                        "name": "event",
+                        "timestamp": "2021-03-03T11:20:20.000000Z",
+                        "attributes": {"event:foo": "event:bar"},
+                    }
+                ],
+                "links": [
+                    {
+                        "context": {
+                            "trace_id": "0x00000000000000000000000000000001",
+                            "span_id": "0x0000000000000001",
+                            "trace_state": '[["foo", "bar"]]',
+                        },
+                        "attributes": {"link:foo": "link:bar"},
+                    }
+                ],
+                "resource": {"resource:foo": "resource:bar"},
             }
-        })
+        )
         self.assertEqual(expected_span.to_json(), actual_span.to_json())
-
-
-class TestSpanLimits(unittest.TestCase):
-    @mock.patch.dict(
-        "os.environ",
-        {
-            OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT: "10",
-            OTEL_SPAN_EVENT_COUNT_LIMIT: "20",
-            OTEL_SPAN_LINK_COUNT_LIMIT: "30",
-        },
-    )
-    def test_span_environment_limits(self):
-        reload(trace)
-        tracer = new_tracer()
-        id_generator = RandomIdGenerator()
-        some_links = [
-            trace_api.Link(
-                trace_api.SpanContext(
-                    trace_id=id_generator.generate_trace_id(),
-                    span_id=id_generator.generate_span_id(),
-                    is_remote=False,
-                )
-            )
-            for _ in range(100)
-        ]
-        with pytest.raises(ValueError):
-            with tracer.start_as_current_span("root", links=some_links):
-                pass
-
-        with tracer.start_as_current_span("root") as root:
-            for idx in range(100):
-                root.set_attribute("my_attribute_{}".format(idx), 0)
-                root.add_event("my_event_{}".format(idx))
-
-            self.assertEqual(len(root.attributes), 10)
-            self.assertEqual(len(root.events), 20)
-
-
 
 
 class TestSpanLimits(unittest.TestCase):
