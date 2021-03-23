@@ -51,7 +51,6 @@ from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
-from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 from opentelemetry.util._time import _time_ns

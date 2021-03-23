@@ -14,19 +14,13 @@
 
 import datetime
 import json
-import re
 import threading
 from collections import OrderedDict, deque
 from collections.abc import MutableMapping, Sequence
-from types import MappingProxyType
-from typing import Dict, Sequence, List, Optional
+from typing import Dict, Sequence, Optional
 
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.trace import SpanKind, SpanContext, Link, TraceState
-from opentelemetry.util.types import Attributes
-
-
-_trace_state_regexp = re.compile("'\\{key=([^,]*), *value=([^}]*)\\}'")
 
 
 def ns_to_iso_str(nanoseconds):
