@@ -22,7 +22,7 @@ from typing import Dict, Optional
 
 from opentelemetry import trace as trace_api
 
-_tz_regexp = re.compile("([+-])(\\d{2}):(\d{2})$")
+_tz_regexp = re.compile("([+-])(\\d{2}):(\\d{2})$")
 
 
 def ns_to_iso_str(nanoseconds):
