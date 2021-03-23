@@ -512,7 +512,7 @@ class ReadableSpan:
 
         f_span["name"] = self._name
         f_span["context"] = self._format_context(self._context)
-        f_span["kind"] = str(self.kind)
+        f_span["kind"] = self.kind.name
         f_span["parent_id"] = parent_id
         f_span["start_time"] = start_time
         f_span["end_time"] = end_time

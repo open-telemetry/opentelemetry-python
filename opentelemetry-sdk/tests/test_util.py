@@ -57,7 +57,7 @@ def test_iso_str_to_ns() -> None:
 
 def test_to_span_kind() -> None:
     assert to_span_kind("foo") is None
-    assert trace_api.SpanKind.INTERNAL == to_span_kind("SpanKind.INTERNAL")
+    assert to_span_kind("INTERNAL") == trace_api.SpanKind.INTERNAL
 
 
 def test_to_link() -> None:

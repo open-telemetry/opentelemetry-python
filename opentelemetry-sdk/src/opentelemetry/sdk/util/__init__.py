@@ -67,9 +67,10 @@ def iso_str_to_ns(dt_str: str) -> int:
 
 
 def to_span_kind(span_kind_str: str) -> Optional[trace_api.SpanKind]:
-    if "." not in span_kind_str:
-        return None
-    return getattr(trace_api.SpanKind, span_kind_str.split(".")[1])
+    for item in trace_api.SpanKind:
+        if item.name == span_kind_str:
+            return item
+    return None
 
 
 def to_link(data: Dict[str, str]) -> trace_api.Link:
@@ -83,7 +84,12 @@ def to_link(data: Dict[str, str]) -> trace_api.Link:
 def to_status(data: Dict[str, Optional[str]]) -> trace_api.Status:
     status_code = None
     if "status_code" in data:
-        status_code = getattr(trace_api.StatusCode, data["status_code"])
+        status_code = None
+        for item in trace_api.StatusCode:
+            if item.name == data["status_code"]:
+                status_code = item
+                break
+        return None
 
     return trace_api.Status(
         status_code=status_code, description=data.get("description", None),
