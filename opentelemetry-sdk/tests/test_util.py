@@ -74,9 +74,9 @@ def test_to_link() -> None:
 
 
 def test_to_status() -> None:
-    expected_status = trace_api.Status(trace_api.StatusCode.UNSET, "foo")
+    expected_status = trace_api.Status(trace_api.StatusCode.ERROR, "foo")
     actual_status = to_status({
-        "status_code": "UNSET",
+        "status_code": "ERROR",
         "description": "foo",
     })
     assert expected_status.status_code == actual_status.status_code
