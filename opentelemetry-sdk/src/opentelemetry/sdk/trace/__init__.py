@@ -418,9 +418,7 @@ class ReadableSpan:
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         instrumentation_info: InstrumentationInfo = None,
-        status: Status = Status(
-            StatusCode.UNSET
-        ),
+        status: Status = Status(StatusCode.UNSET),
         start_time: Optional[int] = None,
         end_time: Optional[int] = None,
     ) -> None:
