@@ -1276,6 +1276,34 @@ class TestSpanProcessor(unittest.TestCase):
             is_remote=False,
         )
         expected_span = trace._Span("span-name", context, resource=Resource({}))
+        actual_span = trace.Span.from_json({
+            "name": "span-name",
+            "context": {
+                "trace_id": "0x000000000000000000000000deadbeef",
+                "span_id": "0x00000000deadbef0",
+                "trace_state": "[]"
+            },
+            "kind": "SpanKind.INTERNAL",
+            "parent_id": None,
+            "start_time": None,
+            "end_time": None,
+            "status": {
+                "status_code": "UNSET"
+            },
+            "attributes": {},
+            "events": [],
+            "links": [],
+            "resource": {}
+        })
+        self.assertEqual(expected_span.to_json(), actual_span.to_json())
+
+    def test_from_json_with_str(self):
+        context = trace_api.SpanContext(
+            trace_id=0x000000000000000000000000DEADBEEF,
+            span_id=0x00000000DEADBEF0,
+            is_remote=False,
+        )
+        expected_span = trace._Span("span-name", context, resource=Resource({}))
         actual_span = trace.Span.from_json(
             """{
     "name": "span-name",
@@ -1334,45 +1362,43 @@ class TestSpanProcessor(unittest.TestCase):
             )
         )
         expected_span.end(datetime(2021, 3, 4, 10, 20, 30).timestamp() * 1000000000)
-        actual_span = trace.Span.from_json(
-            """{
-    "name": "span-name",
-    "context": {
-        "trace_id": "0x000000000000000000000000deadbeef",
-        "span_id": "0x00000000deadbef0",
-        "trace_state": "[[\\"foo\\", \\"bar\\"]]"
-    },
-    "kind": "SpanKind.INTERNAL",
-    "parent_id": null,
-    "start_time": "2021-03-03T03:34:56.000000Z",
-    "end_time": "2021-03-04T01:20:30.000000Z",
-    "status": {
-        "status_code": "ERROR",
-        "description": "Test description"
-    },
-    "attributes": {
-        "attr:foo": "attr:bar"
-    },
-    "events": [{
-        "name": "event",
-        "timestamp": "2021-03-03T11:20:20.000000Z",
-        "attributes": {
-            "event:foo": "event:bar"
-        }
-    }],
-    "links": [{
-        "context": {
-            "trace_id": "0x00000000000000000000000000000001",
-            "span_id": "0x0000000000000001",
-            "trace_state": "[[\\"foo\\", \\"bar\\"]]"
-        },
-        "attributes": {"link:foo": "link:bar"}
-    }],
-    "resource": {
-        "resource:foo": "resource:bar"
-    }
-}"""
-        )
+        actual_span = trace.Span.from_json({
+            "name": "span-name",
+            "context": {
+                "trace_id": "0x000000000000000000000000deadbeef",
+                "span_id": "0x00000000deadbef0",
+                "trace_state": "[[\"foo\", \"bar\"]]"
+            },
+            "kind": "SpanKind.INTERNAL",
+            "parent_id": None,
+            "start_time": "2021-03-03T03:34:56.000000Z",
+            "end_time": "2021-03-04T01:20:30.000000Z",
+            "status": {
+                "status_code": "ERROR",
+                "description": "Test description"
+            },
+            "attributes": {
+                "attr:foo": "attr:bar"
+            },
+            "events": [{
+                "name": "event",
+                "timestamp": "2021-03-03T11:20:20.000000Z",
+                "attributes": {
+                    "event:foo": "event:bar"
+                }
+            }],
+            "links": [{
+                "context": {
+                    "trace_id": "0x00000000000000000000000000000001",
+                    "span_id": "0x0000000000000001",
+                    "trace_state": "[[\"foo\", \"bar\"]]"
+                },
+                "attributes": {"link:foo": "link:bar"}
+            }],
+            "resource": {
+                "resource:foo": "resource:bar"
+            }
+        })
         self.assertEqual(expected_span.to_json(), actual_span.to_json())
 
 
