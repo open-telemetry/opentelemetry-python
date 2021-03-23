@@ -61,9 +61,11 @@ def iso_str_to_ns(dt_str: str) -> int:
     if dt_str[-1] == "Z":
         dt_str = dt_str[:-1] + "+00:00"
 
-    return int(
-        datetime.datetime.fromisoformat(dt_str).timestamp() * 1000000000
-    )
+    try:
+        dt = datetime.datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+    except ValueError:
+        dt = datetime.datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f%z")
+    return int(dt.timestamp() * 1000000000)
 
 
 def to_span_kind(span_kind_str: str) -> Optional[trace_api.SpanKind]:
