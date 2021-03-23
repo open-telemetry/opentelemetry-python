@@ -59,9 +59,9 @@ def to_context(data: Dict[str, str]) -> trace_api.SpanContext:
 
 def iso_str_to_ns(dt_str: str) -> int:
     if dt_str[-1] == "Z":
-        dt_str = dt_str[:-1] + "+00:00"
-
-    dt = datetime.datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f%z")
+        dt = datetime.datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%fZ")
+    else:
+        dt = datetime.datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f%z")
     return int(dt.timestamp() * 1000000000)
 
 

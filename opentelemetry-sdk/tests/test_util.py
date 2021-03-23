@@ -44,7 +44,7 @@ def test_to_context() -> None:
 
 
 def test_iso_str_to_ns() -> None:
-    assert iso_str_to_ns("2021-03-03T03:34:56.000000Z") == 1614742496000000000
+    assert iso_str_to_ns("2021-03-03T03:34:56.000000Z") == 1614710096000000000
     assert (
         iso_str_to_ns("2021-03-03T03:34:56.000000+00:00")
         == 1614742496000000000

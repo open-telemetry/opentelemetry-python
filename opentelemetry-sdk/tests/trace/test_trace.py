@@ -1359,12 +1359,12 @@ class TestSpanProcessor(unittest.TestCase):
             resource=Resource({"resource:foo": "resource:bar"},),
         )
         expected_span.start(
-            datetime(2021, 3, 3, 12, 34, 56, tzinfo=None).timestamp() * 1000000000
+            datetime(2021, 3, 3, 12, 34, 56).timestamp() * 1000000000
         )
         expected_span.add_event(
             "event",
             {"event:foo": "event:bar"},
-            datetime(2021, 3, 3, 20, 20, 20, tzinfo=None).timestamp() * 1000000000,
+            datetime(2021, 3, 3, 20, 20, 20).timestamp() * 1000000000,
         )
         expected_span.set_status(
             trace_api.status.Status(
@@ -1372,7 +1372,7 @@ class TestSpanProcessor(unittest.TestCase):
             )
         )
         expected_span.end(
-            datetime(2021, 3, 4, 10, 20, 30, tzinfo=None).timestamp() * 1000000000
+            datetime(2021, 3, 4, 10, 20, 30).timestamp() * 1000000000
         )
         actual_span = trace.Span.from_json(
             {
@@ -1384,8 +1384,8 @@ class TestSpanProcessor(unittest.TestCase):
                 },
                 "kind": "INTERNAL",
                 "parent_id": None,
-                "start_time": "2021-03-03T03:34:56.000000Z",
-                "end_time": "2021-03-04T01:20:30.000000Z",
+                "start_time": "2021-03-03T12:34:56.000000Z",
+                "end_time": "2021-03-04T10:20:30.000000Z",
                 "status": {
                     "status_code": "ERROR",
                     "description": "Test description",
@@ -1394,7 +1394,7 @@ class TestSpanProcessor(unittest.TestCase):
                 "events": [
                     {
                         "name": "event",
-                        "timestamp": "2021-03-03T11:20:20.000000Z",
+                        "timestamp": "2021-03-03T20:20:20.000000Z",
                         "attributes": {"event:foo": "event:bar"},
                     }
                 ],
