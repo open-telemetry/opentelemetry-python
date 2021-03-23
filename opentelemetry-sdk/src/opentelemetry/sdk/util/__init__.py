@@ -55,13 +55,17 @@ def to_context(data: Dict[str, str]) -> SpanContext:
         trace_state = TraceState(entries=json.loads(data["trace_state"]))
 
     return SpanContext(
-        int(data["trace_id"], 0), int(data["span_id"], 0), is_remote=False, trace_state=trace_state
+        int(data.get("trace_id", "0x0"), 0),
+        int(data.get("span_id", "0x0"), 0),
+        is_remote=False,
+        trace_state=trace_state
     )
 
 
 def iso_str_to_ns(s: str) -> int:
     if s[-1] == "Z":
         s = s[:-1] + "+00:00"
+
     return int(datetime.datetime.fromisoformat(s).timestamp() * 1000000000)
 
 
@@ -69,13 +73,21 @@ def to_span_kind(s: str) -> SpanKind:
     return getattr(SpanKind, s.split(".")[1])
 
 
-def to_link(d: Dict[str, str]) -> Link:
-    return Link(to_context(d["context"]), attributes=d["attributes"])
+def to_link(data: Dict[str, str]) -> Link:
+    context = None
+    if "context" in data:
+        context = to_context(data["context"])
+
+    return Link(context, attributes=data.get("attributes", {}))
 
 
 def to_status(data: Dict[str, Optional[str]]) -> Status:
+    status_code = None
+    if "status_code" in data:
+        status_code = getattr(StatusCode, data["status_code"])
+
     return Status(
-        status_code=getattr(StatusCode, data["status_code"]), description=data.get("description", None),
+        status_code=status_code, description=data.get("description", None),
     )
 
 
