@@ -14,12 +14,15 @@
 
 import datetime
 import json
+import re
 import threading
 from collections import OrderedDict, deque
 from collections.abc import MutableMapping, Sequence
 from typing import Dict, Optional
 
 from opentelemetry import trace as trace_api
+
+_tz_regexp = re.compile("([+-])(\\d{2}):(\d{2})$")
 
 
 def ns_to_iso_str(nanoseconds):
@@ -63,6 +66,8 @@ def iso_str_to_ns(dt_str: str) -> int:
             dt_str, "%Y-%m-%dT%H:%M:%S.%fZ"
         ).replace(tzinfo=datetime.timezone.utc)
     else:
+        # For python 3.6 support.
+        dt_str = _tz_regexp.sub("\\1\\2\\3", dt_str)
         dt = datetime.datetime.strptime(dt_str, "%Y-%m-%dT%H:%M:%S.%f%z")
     return int(dt.timestamp() * 1000000000)
 
