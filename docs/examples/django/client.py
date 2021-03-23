@@ -36,7 +36,7 @@ with tracer.start_as_current_span("client"):
 
     with tracer.start_as_current_span("client-server"):
         headers = {}
-        inject(headers)
+        inject(dict.__setitem__, headers)
         requested = get(
             "http://localhost:8000",
             params={"param": argv[1]},

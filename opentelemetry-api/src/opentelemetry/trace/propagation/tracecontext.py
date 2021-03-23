@@ -35,19 +35,20 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
 
     def extract(
         self,
-        carrier: typing.Dict[str, str],
+        getter: textmap.Getter[textmap.TextMapPropagatorT],
+        carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         """Extracts SpanContext from the carrier.
 
         See `opentelemetry.propagators.textmap.TextMapPropagator.extract`
         """
-        header = carrier.get(self._TRACEPARENT_HEADER_NAME)
+        header = getter.get(carrier, self._TRACEPARENT_HEADER_NAME)
 
         if not header:
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
-        match = re.search(self._TRACEPARENT_HEADER_FORMAT_RE, header)
+        match = re.search(self._TRACEPARENT_HEADER_FORMAT_RE, header[0])
         if not match:
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
@@ -65,7 +66,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         if version == "ff":
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
-        tracestate_headers = carrier.get(self._TRACESTATE_HEADER_NAME)
+        tracestate_headers = getter.get(carrier, self._TRACESTATE_HEADER_NAME)
         if tracestate_headers is None:
             tracestate = None
         else:
@@ -84,7 +85,8 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
 
     def inject(
         self,
-        carrier: typing.Dict[str, str],
+        set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
+        carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
         """Injects SpanContext into the carrier.
@@ -95,17 +97,19 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         span_context = span.get_span_context()
         if span_context == trace.INVALID_SPAN_CONTEXT:
             return
-        carrier[
-            self._TRACEPARENT_HEADER_NAME
-        ] = "00-{trace_id}-{span_id}-{:02x}".format(
+        traceparent_string = "00-{trace_id}-{span_id}-{:02x}".format(
             span_context.trace_flags,
             trace_id=format_trace_id(span_context.trace_id),
             span_id=format_span_id(span_context.span_id),
         )
-
+        set_in_carrier(
+            carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string
+        )
         if span_context.trace_state:
             tracestate_string = span_context.trace_state.to_header()
-            carrier[self._TRACESTATE_HEADER_NAME] = tracestate_string
+            set_in_carrier(
+                carrier, self._TRACESTATE_HEADER_NAME, tracestate_string
+            )
 
     @property
     def fields(self) -> typing.Set[str]:

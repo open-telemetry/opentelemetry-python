@@ -18,7 +18,12 @@ import urllib.parse
 import opentelemetry.trace as trace
 from opentelemetry import baggage
 from opentelemetry.context import Context, get_current
-from opentelemetry.propagators.textmap import TextMapPropagator
+from opentelemetry.propagators.textmap import (
+    Getter,
+    Setter,
+    TextMapPropagator,
+    TextMapPropagatorT,
+)
 from opentelemetry.trace import format_span_id, format_trace_id
 
 
@@ -34,28 +39,19 @@ class JaegerPropagator(TextMapPropagator):
 
     def extract(
         self,
-        carrier: typing.Dict[str, str],
+        getter: Getter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
 
         if context is None:
             context = get_current()
-        header = carrier.get(self.TRACE_ID_KEY)
-        if header is None:
+        header = getter.get(carrier, self.TRACE_ID_KEY)
+        if not header:
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
-        fields = header.split(":")
+        fields = _extract_first_element(header).split(":")
 
-        for key in [
-            key
-            for key in carrier.keys()
-            if key.startswith(self.BAGGAGE_PREFIX)
-        ]:
-            context = baggage.set_baggage(
-                key.replace(self.BAGGAGE_PREFIX, ""),
-                urllib.parse.quote(carrier[key]).strip(),
-                context=context,
-            )
-
+        context = self._extract_baggage(getter, carrier, context)
         if len(fields) != 4:
             return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
@@ -80,7 +76,8 @@ class JaegerPropagator(TextMapPropagator):
 
     def inject(
         self,
-        carrier: typing.Dict[str, str],
+        set_in_carrier: Setter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
         span = trace.get_current_span(context=context)
@@ -94,11 +91,15 @@ class JaegerPropagator(TextMapPropagator):
             trace_flags |= self.DEBUG_FLAG
 
         # set span identity
-        carrier[self.TRACE_ID_KEY] = _format_uber_trace_id(
-            span_context.trace_id,
-            span_context.span_id,
-            span_parent_id,
-            trace_flags,
+        set_in_carrier(
+            carrier,
+            self.TRACE_ID_KEY,
+            _format_uber_trace_id(
+                span_context.trace_id,
+                span_context.span_id,
+                span_parent_id,
+                trace_flags,
+            ),
         )
 
         # set span baggage, if any
@@ -107,7 +108,9 @@ class JaegerPropagator(TextMapPropagator):
             return
         for key, value in baggage_entries.items():
             baggage_key = self.BAGGAGE_PREFIX + key
-            carrier[baggage_key] = urllib.parse.quote(str(value))
+            set_in_carrier(
+                carrier, baggage_key, urllib.parse.quote(str(value))
+            )
 
     @property
     def fields(self) -> typing.Set[str]:
@@ -120,10 +123,10 @@ class JaegerPropagator(TextMapPropagator):
             if key.startswith(self.BAGGAGE_PREFIX)
         ]
         for key in baggage_keys:
-            value = carrier.get(key)
+            value = _extract_first_element(getter.get(carrier, key))
             context = baggage.set_baggage(
                 key.replace(self.BAGGAGE_PREFIX, ""),
-                urllib.parse.quote(value).strip(),
+                urllib.parse.unquote(value).strip(),
                 context=context,
             )
         return context
@@ -136,3 +139,11 @@ def _format_uber_trace_id(trace_id, span_id, parent_span_id, flags):
         span_id=format_span_id(span_id),
         parent_id=format_span_id(parent_span_id),
     )
+
+
+def _extract_first_element(
+    items: typing.Iterable[TextMapPropagatorT],
+) -> typing.Optional[TextMapPropagatorT]:
+    if items is None:
+        return None
+    return next(iter(items), None)

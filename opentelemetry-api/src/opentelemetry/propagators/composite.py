@@ -35,7 +35,8 @@ class CompositeHTTPPropagator(textmap.TextMapPropagator):
 
     def extract(
         self,
-        carrier: typing.Dict[str, str],
+        getter: textmap.Getter[textmap.TextMapPropagatorT],
+        carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         """Run each of the configured propagators with the given context and carrier.
@@ -46,12 +47,13 @@ class CompositeHTTPPropagator(textmap.TextMapPropagator):
         See `opentelemetry.propagators.textmap.TextMapPropagator.extract`
         """
         for propagator in self._propagators:
-            context = propagator.extract(carrier, context)
+            context = propagator.extract(getter, carrier, context)
         return context  # type: ignore
 
     def inject(
         self,
-        carrier: typing.Dict[str, str],
+        set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
+        carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
         """Run each of the configured propagators with the given context and carrier.
@@ -62,7 +64,7 @@ class CompositeHTTPPropagator(textmap.TextMapPropagator):
         See `opentelemetry.propagators.textmap.TextMapPropagator.inject`
         """
         for propagator in self._propagators:
-            propagator.inject(carrier, context)
+            propagator.inject(set_in_carrier, carrier, context)
 
     @property
     def fields(self) -> typing.Set[str]:

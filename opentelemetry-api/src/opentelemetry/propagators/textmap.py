@@ -17,47 +17,126 @@ import typing
 
 from opentelemetry.context.context import Context
 
+TextMapPropagatorT = typing.TypeVar("TextMapPropagatorT")
+CarrierValT = typing.Union[typing.List[str], str]
+
+Setter = typing.Callable[[TextMapPropagatorT, str, str], None]
+
+
+class Getter(typing.Generic[TextMapPropagatorT]):
+    """This class implements a Getter that enables extracting propagated
+    fields from a carrier.
+    """
+
+    def get(
+        self, carrier: TextMapPropagatorT, key: str
+    ) -> typing.Optional[typing.List[str]]:
+        """Function that can retrieve zero
+        or more values from the carrier. In the case that
+        the value does not exist, returns None.
+
+        Args:
+            carrier: An object which contains values that are used to
+                    construct a Context.
+            key: key of a field in carrier.
+        Returns: first value of the propagation key or None if the key doesn't
+                exist.
+        """
+        raise NotImplementedError()
+
+    def keys(self, carrier: TextMapPropagatorT) -> typing.List[str]:
+        """Function that can retrieve all the keys in a carrier object.
+
+        Args:
+            carrier: An object which contains values that are
+                used to construct a Context.
+        Returns:
+            list of keys from the carrier.
+        """
+        raise NotImplementedError()
+
+
+class DictGetter(Getter[typing.Dict[str, CarrierValT]]):
+    def get(
+        self, carrier: typing.Dict[str, CarrierValT], key: str
+    ) -> typing.Optional[typing.List[str]]:
+        """Getter implementation to retrieve a value from a dictionary.
+
+        Args:
+            carrier: dictionary in which header
+            key: the key used to get the value
+        Returns:
+            A list with a single string with the value if it exists, else None.
+        """
+        val = carrier.get(key, None)
+        if val is None:
+            return None
+        if isinstance(val, typing.Iterable) and not isinstance(val, str):
+            return list(val)
+        return [val]
+
+    def keys(self, carrier: typing.Dict[str, CarrierValT]) -> typing.List[str]:
+        """Keys implementation that returns all keys from a dictionary."""
+        return list(carrier.keys())
+
 
 class TextMapPropagator(abc.ABC):
     """This class provides an interface that enables extracting and injecting
-    context into headers of HTTP requests. HTTP frameworks and clients can
-    integrate with TextMapPropagator by providing the object containing the
-    headers.
+    context into headers of HTTP requests. HTTP frameworks and clients
+    can integrate with TextMapPropagator by providing the object containing the
+    headers, and a getter and setter function for the extraction and
+    injection of values, respectively.
+
     """
 
     @abc.abstractmethod
     def extract(
         self,
-        carrier: typing.Dict[str, str],
+        getter: Getter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         """Create a Context from values in the carrier.
 
-        Retrieves values from the carrier object and uses them to populate a
-        context and returns it afterwards.
+        The extract function should retrieve values from the carrier
+        object using getter, and use values to populate a
+        Context value and return it.
 
         Args:
-            carrier: and object which contains values that are used to
-                construct a Context.
-            context: an optional Context to use. Defaults to current context if
-                not set.
+            getter: a function that can retrieve zero
+                or more values from the carrier. In the case that
+                the value does not exist, return an empty list.
+            carrier: and object which contains values that are
+                used to construct a Context. This object
+                must be paired with an appropriate getter
+                which understands how to extract a value from it.
+            context: an optional Context to use. Defaults to current
+                context if not set.
         Returns:
-            A Context with the configuration found in the carrier.
+            A Context with configuration found in the carrier.
+
         """
 
     @abc.abstractmethod
     def inject(
         self,
-        carrier: typing.Dict[str, str],
+        set_in_carrier: Setter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
         """Inject values from a Context into a carrier.
 
-        Enables the propagation of values into HTTP clients or other objects
-        which perform an HTTP request.
+        inject enables the propagation of values into HTTP clients or
+        other objects which perform an HTTP request. Implementations
+        should use the set_in_carrier method to set values on the
+        carrier.
 
         Args:
-            carrier: An dict-like object where to store HTTP headers.
+            set_in_carrier: A setter function that can set values
+                on the carrier.
+            carrier: An object that a place to define HTTP headers.
+                Should be paired with set_in_carrier, which should
+                know how to set header values on the carrier.
             context: an optional Context to use. Defaults to current
                 context if not set.
 

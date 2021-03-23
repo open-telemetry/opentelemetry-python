@@ -102,6 +102,7 @@ from opentracing import (
 from opentelemetry.baggage import get_baggage, set_baggage
 from opentelemetry.context import Context, attach, detach, get_value, set_value
 from opentelemetry.propagate import get_global_textmap
+from opentelemetry.propagators.textmap import DictGetter
 from opentelemetry.shim.opentracing_shim import util
 from opentelemetry.shim.opentracing_shim.version import __version__
 from opentelemetry.trace import INVALID_SPAN_CONTEXT, Link, NonRecordingSpan
@@ -526,6 +527,7 @@ class TracerShim(Tracer):
             Format.TEXT_MAP,
             Format.HTTP_HEADERS,
         )
+        self._carrier_getter = DictGetter()
 
     def unwrap(self):
         """Returns the :class:`opentelemetry.trace.Tracer` object that is
@@ -682,7 +684,7 @@ class TracerShim(Tracer):
         propagator = get_global_textmap()
 
         ctx = set_span_in_context(NonRecordingSpan(span_context.unwrap()))
-        propagator.inject(carrier, context=ctx)
+        propagator.inject(type(carrier).__setitem__, carrier, context=ctx)
 
     def extract(self, format: object, carrier: object):
         """Returns an ``opentracing.SpanContext`` instance extracted from a
@@ -710,7 +712,7 @@ class TracerShim(Tracer):
             raise UnsupportedFormatException
 
         propagator = get_global_textmap()
-        ctx = propagator.extract(carrier)
+        ctx = propagator.extract(self._carrier_getter, carrier)
         span = get_current_span(ctx)
         if span is not None:
             otel_context = span.get_span_context()

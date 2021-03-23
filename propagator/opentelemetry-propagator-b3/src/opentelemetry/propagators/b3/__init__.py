@@ -17,7 +17,12 @@ from re import compile as re_compile
 
 import opentelemetry.trace as trace
 from opentelemetry.context import Context
-from opentelemetry.propagators.textmap import TextMapPropagator
+from opentelemetry.propagators.textmap import (
+    Getter,
+    Setter,
+    TextMapPropagator,
+    TextMapPropagatorT,
+)
 from opentelemetry.trace import format_span_id, format_trace_id
 
 
@@ -39,18 +44,19 @@ class B3Format(TextMapPropagator):
 
     def extract(
         self,
-        carrier: typing.Dict[str, str],
+        getter: Getter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
-
         trace_id = format_trace_id(trace.INVALID_TRACE_ID)
         span_id = format_span_id(trace.INVALID_SPAN_ID)
         sampled = "0"
         flags = None
 
-        single_header = carrier.get(self.SINGLE_HEADER_KEY)
-
-        if single_header is not None:
+        single_header = _extract_first_element(
+            getter.get(carrier, self.SINGLE_HEADER_KEY)
+        )
+        if single_header:
             # The b3 spec calls for the sampling state to be
             # "deferred", which is unspecified. This concept does not
             # translate to SpanContext, so we set it as recorded.
@@ -68,10 +74,22 @@ class B3Format(TextMapPropagator):
             else:
                 return trace.set_span_in_context(trace.INVALID_SPAN)
         else:
-            trace_id = carrier.get(self.TRACE_ID_KEY, False) or trace_id
-            span_id = carrier.get(self.SPAN_ID_KEY, False) or span_id
-            sampled = carrier.get(self.SAMPLED_KEY, False) or sampled
-            flags = carrier.get(self.FLAGS_KEY, False) or flags
+            trace_id = (
+                _extract_first_element(getter.get(carrier, self.TRACE_ID_KEY))
+                or trace_id
+            )
+            span_id = (
+                _extract_first_element(getter.get(carrier, self.SPAN_ID_KEY))
+                or span_id
+            )
+            sampled = (
+                _extract_first_element(getter.get(carrier, self.SAMPLED_KEY))
+                or sampled
+            )
+            flags = (
+                _extract_first_element(getter.get(carrier, self.FLAGS_KEY))
+                or flags
+            )
 
         if (
             self._trace_id_regex.fullmatch(trace_id) is None
@@ -109,10 +127,10 @@ class B3Format(TextMapPropagator):
 
     def inject(
         self,
-        carrier: typing.Dict[str, str],
+        set_in_carrier: Setter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
-
         span = trace.get_current_span(context=context)
 
         span_context = span.get_span_context()
@@ -120,14 +138,20 @@ class B3Format(TextMapPropagator):
             return
 
         sampled = (trace.TraceFlags.SAMPLED & span_context.trace_flags) != 0
-        carrier[self.TRACE_ID_KEY] = format_trace_id(span_context.trace_id)
-        carrier[self.SPAN_ID_KEY] = format_span_id(span_context.span_id)
+        set_in_carrier(
+            carrier, self.TRACE_ID_KEY, format_trace_id(span_context.trace_id),
+        )
+        set_in_carrier(
+            carrier, self.SPAN_ID_KEY, format_span_id(span_context.span_id)
+        )
         span_parent = getattr(span, "parent", None)
         if span_parent is not None:
-            carrier[self.PARENT_SPAN_ID_KEY] = format_span_id(
-                span_parent.span_id
+            set_in_carrier(
+                carrier,
+                self.PARENT_SPAN_ID_KEY,
+                format_span_id(span_parent.span_id),
             )
-            carrier[self.SAMPLED_KEY] = "1" if sampled else "0"
+        set_in_carrier(carrier, self.SAMPLED_KEY, "1" if sampled else "0")
 
     @property
     def fields(self) -> typing.Set[str]:
@@ -137,3 +161,11 @@ class B3Format(TextMapPropagator):
             self.PARENT_SPAN_ID_KEY,
             self.SAMPLED_KEY,
         }
+
+
+def _extract_first_element(
+    items: typing.Iterable[TextMapPropagatorT],
+) -> typing.Optional[TextMapPropagatorT]:
+    if items is None:
+        return None
+    return next(iter(items), None)

@@ -37,7 +37,7 @@ Manually instrumented server
     def server_request():
         with tracer.start_as_current_span(
             "server_request",
-            context=propagators.extract(request.headers
+            context=propagators.extract(DictGetter(), request.headers
             ),
         ):
             print(request.args.get("param"))

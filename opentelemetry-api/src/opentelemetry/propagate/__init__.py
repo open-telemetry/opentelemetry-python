@@ -40,12 +40,23 @@ Example::
     PROPAGATOR = propagators.get_global_textmap()
 
 
+    def get_header_from_flask_request(request, key):
+        return request.headers.get_all(key)
+
+    def set_header_into_requests_request(request: requests.Request,
+                                            key: str, value: str):
+        request.headers[key] = value
+
     def example_route():
-        context = PROPAGATOR.extract(flask.request)
+        context = PROPAGATOR.extract(
+            get_header_from_flask_request,
+            flask.request
+        )
         request_to_downstream = requests.Request(
             "GET", "http://httpbin.org/get"
         )
         PROPAGATOR.inject(
+            set_header_into_requests_request,
             request_to_downstream,
             context=context
         )
@@ -71,7 +82,9 @@ logger = getLogger(__name__)
 
 
 def extract(
-    carrier: typing.Dict[str, str], context: typing.Optional[Context] = None,
+    getter: textmap.Getter[textmap.TextMapPropagatorT],
+    carrier: textmap.TextMapPropagatorT,
+    context: typing.Optional[Context] = None,
 ) -> Context:
     """Uses the configured propagator to extract a Context from the carrier.
 
@@ -86,21 +99,26 @@ def extract(
         context: an optional Context to use. Defaults to current
             context if not set.
     """
-    return get_global_textmap().extract(carrier, context)
+    return get_global_textmap().extract(getter, carrier, context)
 
 
 def inject(
-    carrier: typing.Dict[str, str], context: typing.Optional[Context] = None,
+    set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
+    carrier: textmap.TextMapPropagatorT,
+    context: typing.Optional[Context] = None,
 ) -> None:
     """Uses the configured propagator to inject a Context into the carrier.
 
     Args:
-        carrier: A dict-like object that contains a representation of HTTP
-            headers.
+        set_in_carrier: A setter function that can set values
+            on the carrier.
+        carrier: An object that contains a representation of HTTP
+            headers. Should be paired with set_in_carrier, which
+            should know how to set header values on the carrier.
         context: an optional Context to use. Defaults to current
             context if not set.
     """
-    get_global_textmap().inject(carrier, context)
+    get_global_textmap().inject(set_in_carrier, carrier, context)
 
 
 try:

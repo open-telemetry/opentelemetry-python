@@ -15,11 +15,14 @@
 # type: ignore
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from opentelemetry import baggage
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.context import get_current
+from opentelemetry.propagators.textmap import DictGetter
+
+carrier_getter = DictGetter()
 
 
 class TestBaggagePropagation(unittest.TestCase):
@@ -28,9 +31,8 @@ class TestBaggagePropagation(unittest.TestCase):
 
     def _extract(self, header_value):
         """Test helper"""
-        return baggage.get_all(
-            self.propagator.extract({"baggage": header_value})
-        )
+        header = {"baggage": [header_value]}
+        return baggage.get_all(self.propagator.extract(carrier_getter, header))
 
     def _inject(self, values):
         """Test helper"""
@@ -38,11 +40,14 @@ class TestBaggagePropagation(unittest.TestCase):
         for k, v in values.items():
             ctx = baggage.set_baggage(k, v, context=ctx)
         output = {}
-        self.propagator.inject(output, context=ctx)
+        self.propagator.inject(dict.__setitem__, output, context=ctx)
         return output.get("baggage")
 
     def test_no_context_header(self):
-        self.assertEqual(baggage.get_all(self.propagator.extract({})), {})
+        baggage_entries = baggage.get_all(
+            self.propagator.extract(carrier_getter, {})
+        )
+        self.assertEqual(baggage_entries, {})
 
     def test_empty_context_header(self):
         header = ""
@@ -141,14 +146,16 @@ class TestBaggagePropagation(unittest.TestCase):
         self.assertIn("key3=123.567", output)
 
     @patch("opentelemetry.baggage.propagation.baggage")
-    def test_fields(self, mock_baggage):
+    @patch("opentelemetry.baggage.propagation._format_baggage")
+    def test_fields(self, mock_format_baggage, mock_baggage):
 
-        mock_baggage.configure_mock(
-            **{"get_all.return_value": {"a": "b", "c": "d"}}
-        )
+        mock_set_in_carrier = Mock()
 
-        carrier = {}
+        self.propagator.inject(mock_set_in_carrier, {})
 
-        self.propagator.inject(carrier)
+        inject_fields = set()
 
-        self.assertEqual(carrier.keys(), self.propagator.fields)
+        for mock_call in mock_set_in_carrier.mock_calls:
+            inject_fields.add(mock_call[1][1])
+
+        self.assertEqual(inject_fields, self.propagator.fields)

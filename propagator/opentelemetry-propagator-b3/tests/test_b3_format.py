@@ -13,20 +13,24 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 import opentelemetry.propagators.b3 as b3_format  # pylint: disable=no-name-in-module,import-error
 import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.id_generator as id_generator
 import opentelemetry.trace as trace_api
 from opentelemetry.context import get_current
+from opentelemetry.propagators.textmap import DictGetter
 
 FORMAT = b3_format.B3Format()
 
 
+carrier_getter = DictGetter()
+
+
 def get_child_parent_new_carrier(old_carrier):
 
-    ctx = FORMAT.extract(old_carrier)
+    ctx = FORMAT.extract(carrier_getter, old_carrier)
     parent_span_context = trace_api.get_current_span(ctx).get_span_context()
 
     parent = trace._Span("parent", parent_span_context)
@@ -44,8 +48,7 @@ def get_child_parent_new_carrier(old_carrier):
 
     new_carrier = {}
     ctx = trace_api.set_span_in_context(child)
-
-    FORMAT.inject(new_carrier, context=ctx)
+    FORMAT.inject(dict.__setitem__, new_carrier, context=ctx)
 
     return child, parent, new_carrier
 
@@ -91,7 +94,6 @@ class TestB3Format(unittest.TestCase):
             new_carrier[FORMAT.SPAN_ID_KEY],
             b3_format.format_span_id(child.context.span_id),
         )
-
         self.assertEqual(
             new_carrier[FORMAT.PARENT_SPAN_ID_KEY],
             b3_format.format_span_id(parent.context.span_id),
@@ -234,10 +236,10 @@ class TestB3Format(unittest.TestCase):
 
     def test_invalid_single_header(self):
         """If an invalid single header is passed, return an
-        invalid trace_api.SpanContext.
+        invalid SpanContext.
         """
         carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
-        ctx = FORMAT.extract(carrier)
+        ctx = FORMAT.extract(carrier_getter, carrier)
         span_context = trace_api.get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
@@ -249,7 +251,7 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(carrier)
+        ctx = FORMAT.extract(carrier_getter, carrier)
         span_context = trace_api.get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
 
@@ -273,7 +275,7 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(carrier)
+        ctx = FORMAT.extract(carrier_getter, carrier)
         span_context = trace_api.get_current_span(ctx).get_span_context()
 
         self.assertEqual(span_context.trace_id, 1)
@@ -299,7 +301,7 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(carrier)
+        ctx = FORMAT.extract(carrier_getter, carrier)
         span_context = trace_api.get_current_span(ctx).get_span_context()
 
         self.assertEqual(span_context.trace_id, 1)
@@ -312,34 +314,45 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(carrier)
+        ctx = FORMAT.extract(carrier_getter, carrier)
         span_context = trace_api.get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
 
-    def test_inject_empty_context(self):
+    @staticmethod
+    def test_inject_empty_context():
         """If the current context has no span, don't add headers"""
         new_carrier = {}
-        FORMAT.inject(new_carrier, get_current())
-        self.assertEqual(len(new_carrier), 0)
+        FORMAT.inject(dict.__setitem__, new_carrier, get_current())
+        assert len(new_carrier) == 0
 
-    def test_default_span(self):
-        """Make sure propagator does not crash when working with
-        NonRecordingSpan"""
+    @staticmethod
+    def test_default_span():
+        """Make sure propagator does not crash when working with NonRecordingSpan"""
 
-        try:
-            FORMAT.inject({}, FORMAT.extract({}))
-        except Exception:  # pylint: disable=broad-except
-            self.fail("propagator crashed when working with NonRecordingSpan")
+        class CarrierGetter(DictGetter):
+            def get(self, carrier, key):
+                return carrier.get(key, None)
+
+        def setter(carrier, key, value):
+            carrier[key] = value
+
+        ctx = FORMAT.extract(CarrierGetter(), {})
+        FORMAT.inject(setter, {}, ctx)
 
     def test_fields(self):
         """Make sure the fields attribute returns the fields used in inject"""
 
         tracer = trace.TracerProvider().get_tracer("sdk_tracer_provider")
 
-        carrier = {}
+        mock_set_in_carrier = Mock()
 
         with tracer.start_as_current_span("parent"):
             with tracer.start_as_current_span("child"):
-                FORMAT.inject(carrier)
+                FORMAT.inject(mock_set_in_carrier, {})
 
-        self.assertEqual(FORMAT.fields, carrier.keys())
+        inject_fields = set()
+
+        for call in mock_set_in_carrier.mock_calls:
+            inject_fields.add(call[1][1])
+
+        self.assertEqual(FORMAT.fields, inject_fields)

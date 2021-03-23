@@ -78,7 +78,7 @@ class TestTraceContextFormat(unittest.TestCase):
             "foo=bar3",
             "foo-_*/bar=bar4",
         ]
-        header_list = ",".join(entries)
+        header_list = [",".join(entries)]
         state = TraceState.from_header(header_list)
         self.assertEqual(state.to_header(), ",".join(entries))
 
@@ -89,7 +89,7 @@ class TestTraceContextFormat(unittest.TestCase):
             "foo=bar3",
             "foo-_*/bar=bar4",
         ]
-        header_list = ",".join(entries)
+        header_list = [",".join(entries)]
         state = TraceState.from_header(header_list)
         new_state = state.update("foo", "bar33")
         entries = list(new_state.items())  # type: ignore

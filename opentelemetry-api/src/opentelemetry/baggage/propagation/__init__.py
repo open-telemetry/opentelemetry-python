@@ -31,7 +31,8 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
 
     def extract(
         self,
-        carrier: typing.Dict[str, str],
+        getter: textmap.Getter[textmap.TextMapPropagatorT],
+        carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         """Extract Baggage from the carrier.
@@ -43,7 +44,9 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         if context is None:
             context = get_current()
 
-        header = carrier.get(self._BAGGAGE_HEADER_NAME)
+        header = _extract_first_element(
+            getter.get(carrier, self._BAGGAGE_HEADER_NAME)
+        )
 
         if not header or len(header) > self._MAX_HEADER_LENGTH:
             return context
@@ -56,19 +59,22 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
             total_baggage_entries -= 1
             if len(entry) > self._MAX_PAIR_LENGTH:
                 continue
-            if "=" in entry:
+            try:
                 name, value = entry.split("=", 1)
-                context = baggage.set_baggage(
-                    urllib.parse.unquote(name).strip(),
-                    urllib.parse.unquote(value).strip(),
-                    context=context,
-                )
+            except Exception:  # pylint: disable=broad-except
+                continue
+            context = baggage.set_baggage(
+                urllib.parse.unquote(name).strip(),
+                urllib.parse.unquote(value).strip(),
+                context=context,
+            )
 
         return context
 
     def inject(
         self,
-        carrier: typing.Dict[str, str],
+        set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
+        carrier: textmap.TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
         """Injects Baggage into the carrier.
@@ -77,14 +83,28 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         `opentelemetry.propagators.textmap.TextMapPropagator.inject`
         """
         baggage_entries = baggage.get_all(context=context)
+        if not baggage_entries:
+            return
 
-        if baggage_entries:
-            carrier[self._BAGGAGE_HEADER_NAME] = ",".join(
-                key + "=" + urllib.parse.quote_plus(str(value))
-                for key, value in baggage_entries.items()
-            )
+        baggage_string = _format_baggage(baggage_entries)
+        set_in_carrier(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
 
     @property
     def fields(self) -> typing.Set[str]:
         """Returns a set with the fields set in `inject`."""
         return {self._BAGGAGE_HEADER_NAME}
+
+
+def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
+    return ",".join(
+        key + "=" + urllib.parse.quote_plus(str(value))
+        for key, value in baggage_entries.items()
+    )
+
+
+def _extract_first_element(
+    items: typing.Optional[typing.Iterable[textmap.TextMapPropagatorT]],
+) -> typing.Optional[textmap.TextMapPropagatorT]:
+    if items is None:
+        return None
+    return next(iter(items), None)

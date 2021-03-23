@@ -16,7 +16,12 @@ import typing
 
 from opentelemetry import trace
 from opentelemetry.context import Context, get_current
-from opentelemetry.propagators.textmap import TextMapPropagator
+from opentelemetry.propagators.textmap import (
+    Getter,
+    Setter,
+    TextMapPropagator,
+    TextMapPropagatorT,
+)
 
 
 class NOOPTextMapPropagator(TextMapPropagator):
@@ -28,14 +33,16 @@ class NOOPTextMapPropagator(TextMapPropagator):
 
     def extract(
         self,
-        carrier: typing.Dict[str, str],
+        getter: Getter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
         return get_current()
 
     def inject(
         self,
-        carrier: typing.Dict[str, str],
+        set_in_carrier: Setter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
         return None
@@ -53,31 +60,39 @@ class MockTextMapPropagator(TextMapPropagator):
 
     def extract(
         self,
-        carrier: typing.Dict[str, str],
+        getter: Getter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> Context:
-        trace_id = carrier.get(self.TRACE_ID_KEY)
-        span_id = carrier.get(self.SPAN_ID_KEY)
+        trace_id_list = getter.get(carrier, self.TRACE_ID_KEY)
+        span_id_list = getter.get(carrier, self.SPAN_ID_KEY)
 
-        if trace_id is None or span_id is None:
+        if not trace_id_list or not span_id_list:
             return trace.set_span_in_context(trace.INVALID_SPAN)
 
         return trace.set_span_in_context(
             trace.NonRecordingSpan(
                 trace.SpanContext(
-                    trace_id=trace_id, span_id=span_id, is_remote=True,
+                    trace_id=int(trace_id_list[0]),
+                    span_id=int(span_id_list[0]),
+                    is_remote=True,
                 )
             )
         )
 
     def inject(
         self,
-        carrier: typing.Dict[str, str],
+        set_in_carrier: Setter[TextMapPropagatorT],
+        carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
     ) -> None:
         span = trace.get_current_span(context)
-        carrier[self.TRACE_ID_KEY] = str(span.get_span_context().trace_id)
-        carrier[self.SPAN_ID_KEY] = str(span.get_span_context().span_id)
+        set_in_carrier(
+            carrier, self.TRACE_ID_KEY, str(span.get_span_context().trace_id)
+        )
+        set_in_carrier(
+            carrier, self.SPAN_ID_KEY, str(span.get_span_context().span_id)
+        )
 
     @property
     def fields(self):
