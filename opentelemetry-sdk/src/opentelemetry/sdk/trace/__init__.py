@@ -50,6 +50,9 @@ from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.trace import SpanContext
+from opentelemetry.trace.propagation import SPAN_KEY
+from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 from opentelemetry.util._time import _time_ns
 
@@ -415,8 +418,8 @@ class ReadableSpan:
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         instrumentation_info: InstrumentationInfo = None,
-        status: trace_api.Status = trace_api.Status(
-            trace_api.StatusCode.UNSET
+        status: Status = Status(
+            StatusCode.UNSET
         ),
         start_time: Optional[int] = None,
         end_time: Optional[int] = None,
@@ -462,7 +465,7 @@ class ReadableSpan:
         return self._end_time
 
     @property
-    def status(self) -> trace_api.Status:
+    def status(self) -> Status:
         return self._status
 
     @property
@@ -794,7 +797,7 @@ class Span(trace_api.Span, ReadableSpan):
         return self._end_time is None
 
     @_check_span_ended
-    def set_status(self, status: trace_api.Status) -> None:
+    def set_status(self, status: Status) -> None:
         self._status = status
 
     def __exit__(
@@ -813,8 +816,8 @@ class Span(trace_api.Span, ReadableSpan):
             # i.e. with tracer.start_span() as span:
             if self._set_status_on_exception:
                 self.set_status(
-                    trace_api.Status(
-                        status_code=trace_api.StatusCode.ERROR,
+                    Status(
+                        status_code=StatusCode.ERROR,
                         description="{}: {}".format(
                             exc_type.__name__, exc_val
                         ),

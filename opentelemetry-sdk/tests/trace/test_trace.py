@@ -12,11 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-many-lines
 import shutil
 import subprocess
 import unittest
-
-# pylint: disable=too-many-lines
 from datetime import datetime
 from importlib import reload
 from logging import ERROR, WARNING
