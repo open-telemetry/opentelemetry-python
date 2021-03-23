@@ -69,7 +69,9 @@ def iso_str_to_ns(s: str) -> int:
     return int(datetime.datetime.fromisoformat(s).timestamp() * 1000000000)
 
 
-def to_span_kind(s: str) -> SpanKind:
+def to_span_kind(s: str) -> Optional[SpanKind]:
+    if "." not in s:
+        return None
     return getattr(SpanKind, s.split(".")[1])
 
 

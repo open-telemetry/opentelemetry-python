@@ -15,7 +15,72 @@
 import collections
 import unittest
 
-from opentelemetry.sdk.util import BoundedDict, BoundedList
+from opentelemetry import trace as trace_api
+from opentelemetry.sdk.util import BoundedDict, BoundedList, to_context, iso_str_to_ns, to_span_kind, to_link, to_status
+
+
+def test_to_context() -> None:
+    expected_context = trace_api.SpanContext(
+        trace_id=0x1,
+        span_id=0x1,
+        is_remote=False,
+        trace_state={"foo": "bar"},
+    )
+    actual_context = to_context({
+        "trace_id": "0x1",
+        "span_id": "0x1",
+        "trace_state": "[[\"foo\", \"bar\"]]"
+    })
+    assert expected_context.trace_id == actual_context.trace_id
+    assert expected_context.span_id == actual_context.span_id
+    assert expected_context.trace_state == actual_context.trace_state
+
+
+def test_iso_str_to_ns() -> None:
+    assert 1614742496000000000 == iso_str_to_ns("2021-03-03T03:34:56.000000Z")
+    assert 1614742496000000000 == iso_str_to_ns("2021-03-03T03:34:56.000000+00:00")
+    assert 1614710096000000000 == iso_str_to_ns("2021-03-03T03:34:56.000000+09:00")
+
+
+def test_to_span_kind() -> None:
+    assert None == to_span_kind("foo")
+    assert trace_api.SpanKind.INTERNAL == to_span_kind("SpanKind.INTERNAL")
+
+
+def test_to_link() -> None:
+    expected_link = trace_api.Link(
+        trace_api.SpanContext(
+            trace_id=0x1,
+            span_id=0x1,
+            is_remote=False,
+            trace_state={"foo": "bar"},
+        ),
+        {"link:foo": "link:bar"}
+    )
+    actual_link = to_link({
+        "context": {
+            "trace_id": "0x1",
+            "span_id": "0x1",
+            "trace_state": "[[\"foo\", \"bar\"]]"
+        },
+        "attributes": {
+            "link:foo": "link:bar"
+        },
+    })
+    assert expected_link.context.trace_id == actual_link.context.trace_id
+    assert expected_link.context.span_id == actual_link.context.span_id
+    assert expected_link.context.trace_state == actual_link.context.trace_state
+    assert expected_link.attributes == actual_link.attributes
+
+
+def test_to_status() -> None:
+    expected_status = trace_api.Status(trace_api.StatusCode.UNSET, "foo")
+    actual_status = to_status({
+        "status_code": "UNSET",
+        "description": "foo",
+    })
+    assert expected_status.status_code == actual_status.status_code
+    assert expected_status.description == actual_status.description
 
 
 class TestBoundedList(unittest.TestCase):
