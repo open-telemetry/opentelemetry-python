@@ -21,6 +21,8 @@ from opentelemetry.propagators.textmap import (
     Setter,
     TextMapPropagator,
     TextMapPropagatorT,
+    default_getter,
+    default_setter,
 )
 
 
@@ -33,17 +35,17 @@ class NOOPTextMapPropagator(TextMapPropagator):
 
     def extract(
         self,
-        getter: Getter[TextMapPropagatorT],
         carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
+        getter: Getter = default_getter,
     ) -> Context:
         return get_current()
 
     def inject(
         self,
-        set_in_carrier: Setter[TextMapPropagatorT],
         carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
+        set_in_carrier: Setter = default_setter,
     ) -> None:
         return None
 
@@ -60,9 +62,9 @@ class MockTextMapPropagator(TextMapPropagator):
 
     def extract(
         self,
-        getter: Getter[TextMapPropagatorT],
         carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
+        getter: Getter = default_getter,
     ) -> Context:
         trace_id_list = getter.get(carrier, self.TRACE_ID_KEY)
         span_id_list = getter.get(carrier, self.SPAN_ID_KEY)
@@ -82,15 +84,15 @@ class MockTextMapPropagator(TextMapPropagator):
 
     def inject(
         self,
-        set_in_carrier: Setter[TextMapPropagatorT],
         carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
+        set_in_carrier: Setter = default_setter,
     ) -> None:
         span = trace.get_current_span(context)
-        set_in_carrier(
+        set_in_carrier.set(
             carrier, self.TRACE_ID_KEY, str(span.get_span_context().trace_id)
         )
-        set_in_carrier(
+        set_in_carrier.set(
             carrier, self.SPAN_ID_KEY, str(span.get_span_context().span_id)
         )
 

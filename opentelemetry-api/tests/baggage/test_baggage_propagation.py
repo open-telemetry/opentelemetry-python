@@ -32,7 +32,9 @@ class TestBaggagePropagation(unittest.TestCase):
     def _extract(self, header_value):
         """Test helper"""
         header = {"baggage": [header_value]}
-        return baggage.get_all(self.propagator.extract(carrier_getter, header))
+        return baggage.get_all(
+            self.propagator.extract(header, getter=carrier_getter)
+        )
 
     def _inject(self, values):
         """Test helper"""
@@ -40,12 +42,12 @@ class TestBaggagePropagation(unittest.TestCase):
         for k, v in values.items():
             ctx = baggage.set_baggage(k, v, context=ctx)
         output = {}
-        self.propagator.inject(dict.__setitem__, output, context=ctx)
+        self.propagator.inject(output, context=ctx)
         return output.get("baggage")
 
     def test_no_context_header(self):
         baggage_entries = baggage.get_all(
-            self.propagator.extract(carrier_getter, {})
+            self.propagator.extract({}, getter=carrier_getter)
         )
         self.assertEqual(baggage_entries, {})
 
@@ -151,7 +153,7 @@ class TestBaggagePropagation(unittest.TestCase):
 
         mock_set_in_carrier = Mock()
 
-        self.propagator.inject(mock_set_in_carrier, {})
+        self.propagator.inject({}, set_in_carrier=mock_set_in_carrier)
 
         inject_fields = set()
 

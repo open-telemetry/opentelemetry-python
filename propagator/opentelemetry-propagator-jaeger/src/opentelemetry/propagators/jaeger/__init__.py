@@ -23,6 +23,8 @@ from opentelemetry.propagators.textmap import (
     Setter,
     TextMapPropagator,
     TextMapPropagatorT,
+    default_getter,
+    default_setter,
 )
 from opentelemetry.trace import format_span_id, format_trace_id
 
@@ -39,9 +41,9 @@ class JaegerPropagator(TextMapPropagator):
 
     def extract(
         self,
-        getter: Getter[TextMapPropagatorT],
         carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
+        getter: Getter = default_getter,
     ) -> Context:
 
         if context is None:
@@ -76,9 +78,9 @@ class JaegerPropagator(TextMapPropagator):
 
     def inject(
         self,
-        set_in_carrier: Setter[TextMapPropagatorT],
         carrier: TextMapPropagatorT,
         context: typing.Optional[Context] = None,
+        set_in_carrier: Setter = default_setter,
     ) -> None:
         span = trace.get_current_span(context=context)
         span_context = span.get_span_context()
@@ -91,7 +93,7 @@ class JaegerPropagator(TextMapPropagator):
             trace_flags |= self.DEBUG_FLAG
 
         # set span identity
-        set_in_carrier(
+        set_in_carrier.set(
             carrier,
             self.TRACE_ID_KEY,
             _format_uber_trace_id(
@@ -108,7 +110,7 @@ class JaegerPropagator(TextMapPropagator):
             return
         for key, value in baggage_entries.items():
             baggage_key = self.BAGGAGE_PREFIX + key
-            set_in_carrier(
+            set_in_carrier.set(
                 carrier, baggage_key, urllib.parse.quote(str(value))
             )
 

@@ -684,7 +684,7 @@ class TracerShim(Tracer):
         propagator = get_global_textmap()
 
         ctx = set_span_in_context(NonRecordingSpan(span_context.unwrap()))
-        propagator.inject(type(carrier).__setitem__, carrier, context=ctx)
+        propagator.inject(carrier, context=ctx)
 
     def extract(self, format: object, carrier: object):
         """Returns an ``opentracing.SpanContext`` instance extracted from a
@@ -712,7 +712,7 @@ class TracerShim(Tracer):
             raise UnsupportedFormatException
 
         propagator = get_global_textmap()
-        ctx = propagator.extract(self._carrier_getter, carrier)
+        ctx = propagator.extract(carrier, getter=self._carrier_getter)
         span = get_current_span(ctx)
         if span is not None:
             otel_context = span.get_span_context()

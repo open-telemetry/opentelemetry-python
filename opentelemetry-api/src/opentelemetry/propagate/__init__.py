@@ -82,9 +82,9 @@ logger = getLogger(__name__)
 
 
 def extract(
-    getter: textmap.Getter[textmap.TextMapPropagatorT],
     carrier: textmap.TextMapPropagatorT,
     context: typing.Optional[Context] = None,
+    getter: textmap.Getter = textmap.default_getter,
 ) -> Context:
     """Uses the configured propagator to extract a Context from the carrier.
 
@@ -99,13 +99,13 @@ def extract(
         context: an optional Context to use. Defaults to current
             context if not set.
     """
-    return get_global_textmap().extract(getter, carrier, context)
+    return get_global_textmap().extract(carrier, context, getter=getter)
 
 
 def inject(
-    set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
     carrier: textmap.TextMapPropagatorT,
     context: typing.Optional[Context] = None,
+    set_in_carrier: textmap.Setter = textmap.default_setter,
 ) -> None:
     """Uses the configured propagator to inject a Context into the carrier.
 
@@ -118,7 +118,9 @@ def inject(
         context: an optional Context to use. Defaults to current
             context if not set.
     """
-    get_global_textmap().inject(set_in_carrier, carrier, context)
+    get_global_textmap().inject(
+        carrier, context=context, set_in_carrier=set_in_carrier
+    )
 
 
 try:

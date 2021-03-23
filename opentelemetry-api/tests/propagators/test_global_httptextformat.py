@@ -42,7 +42,7 @@ class TestDefaultGlobalPropagator(unittest.TestCase):
             "traceparent": [traceparent_value],
             "tracestate": [tracestate_value],
         }
-        ctx = extract(carrier_getter, headers)
+        ctx = extract(headers, getter=carrier_getter)
         baggage_entries = baggage.get_all(context=ctx)
         expected = {"key1": "val1", "key2": "val2"}
         self.assertEqual(baggage_entries, expected)
@@ -56,7 +56,7 @@ class TestDefaultGlobalPropagator(unittest.TestCase):
         ctx = baggage.set_baggage("key4", "val4", context=ctx)
         ctx = set_span_in_context(span, context=ctx)
         output = {}
-        inject(dict.__setitem__, output, context=ctx)
+        inject(output, context=ctx)
         self.assertEqual(traceparent_value, output["traceparent"])
         self.assertIn("key3=val3", output["baggage"])
         self.assertIn("key4=val4", output["baggage"])
