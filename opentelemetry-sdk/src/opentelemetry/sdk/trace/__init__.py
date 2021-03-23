@@ -314,6 +314,14 @@ class Event(EventBase):
     def attributes(self) -> types.Attributes:
         return self._attributes
 
+    @staticmethod
+    def from_dict(data: Dict[str, str]) -> "EventBase":
+        return Event(
+                name=data["name"],
+                timestamp=util.iso_str_to_ns(data["timestamp"]),
+                attributes=data["attributes"],
+            )
+
 
 def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
     """Checks if attribute value is valid.
@@ -527,7 +535,7 @@ class ReadableSpan:
         x_ctx["span_id"] = "0x{}".format(
             trace_api.format_span_id(context.span_id)
         )
-        x_ctx["trace_state"] = repr(context.trace_state)
+        x_ctx["trace_state"] = json.dumps(list(context.trace_state.items()))
         return x_ctx
 
     @staticmethod
@@ -658,6 +666,30 @@ class Span(trace_api.Span, ReadableSpan):
     @staticmethod
     def _new_links():
         return BoundedList(_SPAN_LINK_COUNT_LIMIT)
+
+    @staticmethod
+    def from_json(data: Union[str, Dict[str, Any]]) -> "Span":
+        if isinstance(data, str):
+            data = json.loads(data)
+        context = None
+        if data.get("context", None):
+            context = util.to_context(data["context"])
+        span = _Span(
+            name=data["name"],
+            context=context,
+            kind=util.to_span_kind(data["kind"]),
+            resource=Resource(data["resource"]),
+            attributes=data["attributes"],
+            events=[Event.from_dict(d) for d in data["events"]],
+            links=[util.to_link(d) for d in data["links"]],
+        )
+        if data.get("status", None):
+            span.set_status(util.to_status(data["status"]))
+        if data.get("start_time", None):
+            span.start(util.iso_str_to_ns(data["start_time"]))
+        if data.get("end_time", None):
+            span.end(util.iso_str_to_ns(data["end_time"]))
+        return span
 
     def get_span_context(self):
         return self._context

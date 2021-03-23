@@ -13,9 +13,20 @@
 # limitations under the License.
 
 import datetime
+import json
+import re
 import threading
 from collections import OrderedDict, deque
 from collections.abc import MutableMapping, Sequence
+from types import MappingProxyType
+from typing import Dict, Sequence, List, Optional
+
+from opentelemetry.trace.status import Status, StatusCode
+from opentelemetry.trace import SpanKind, SpanContext, Link, TraceState
+from opentelemetry.util.types import Attributes
+
+
+_trace_state_regexp = re.compile("'\\{key=([^,]*), *value=([^}]*)\\}'")
 
 
 def ns_to_iso_str(nanoseconds):
@@ -35,6 +46,36 @@ def get_dict_as_key(labels):
                 labels.items(),
             )
         )
+    )
+
+
+def to_context(data: Dict[str, str]) -> SpanContext:
+    trace_state = None
+    if data.get("trace_state", None):
+        trace_state = TraceState(entries=json.loads(data["trace_state"]))
+
+    return SpanContext(
+        int(data["trace_id"], 0), int(data["span_id"], 0), is_remote=False, trace_state=trace_state
+    )
+
+
+def iso_str_to_ns(s: str) -> int:
+    if s[-1] == "Z":
+        s = s[:-1] + "+00:00"
+    return int(datetime.datetime.fromisoformat(s).timestamp() * 1000000000)
+
+
+def to_span_kind(s: str) -> SpanKind:
+    return getattr(SpanKind, s.split(".")[1])
+
+
+def to_link(d: Dict[str, str]) -> Link:
+    return Link(to_context(d["context"]), attributes=d["attributes"])
+
+
+def to_status(data: Dict[str, Optional[str]]) -> Status:
+    return Status(
+        status_code=getattr(StatusCode, data["status_code"]), description=data.get("description", None),
     )
 
 
