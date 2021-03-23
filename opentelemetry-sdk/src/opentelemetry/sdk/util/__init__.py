@@ -19,8 +19,7 @@ from collections import OrderedDict, deque
 from collections.abc import MutableMapping, Sequence
 from typing import Dict, Sequence, Optional
 
-from opentelemetry.trace.status import Status, StatusCode
-from opentelemetry.trace import SpanKind, SpanContext, Link, TraceState
+from opentelemetry import trace as trace_api
 
 
 def ns_to_iso_str(nanoseconds):
@@ -43,12 +42,12 @@ def get_dict_as_key(labels):
     )
 
 
-def to_context(data: Dict[str, str]) -> SpanContext:
+def to_context(data: Dict[str, str]) -> trace_api.SpanContext:
     trace_state = None
     if data.get("trace_state", None):
-        trace_state = TraceState(entries=json.loads(data["trace_state"]))
+        trace_state = trace_api.TraceState(entries=json.loads(data["trace_state"]))
 
-    return SpanContext(
+    return trace_api.SpanContext(
         int(data.get("trace_id", "0x0"), 0),
         int(data.get("span_id", "0x0"), 0),
         is_remote=False,
@@ -63,26 +62,26 @@ def iso_str_to_ns(s: str) -> int:
     return int(datetime.datetime.fromisoformat(s).timestamp() * 1000000000)
 
 
-def to_span_kind(s: str) -> Optional[SpanKind]:
+def to_span_kind(s: str) -> Optional[trace_api.SpanKind]:
     if "." not in s:
         return None
-    return getattr(SpanKind, s.split(".")[1])
+    return getattr(trace_api.SpanKind, s.split(".")[1])
 
 
-def to_link(data: Dict[str, str]) -> Link:
+def to_link(data: Dict[str, str]) -> trace_api.Link:
     context = None
     if "context" in data:
         context = to_context(data["context"])
 
-    return Link(context, attributes=data.get("attributes", {}))
+    return trace_api.Link(context, attributes=data.get("attributes", {}))
 
 
-def to_status(data: Dict[str, Optional[str]]) -> Status:
+def to_status(data: Dict[str, Optional[str]]) -> trace_api.Status:
     status_code = None
     if "status_code" in data:
-        status_code = getattr(StatusCode, data["status_code"])
+        status_code = getattr(trace_api.StatusCode, data["status_code"])
 
-    return Status(
+    return trace_api.Status(
         status_code=status_code, description=data.get("description", None),
     )
 
