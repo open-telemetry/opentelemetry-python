@@ -89,7 +89,6 @@ def to_status(data: Dict[str, Optional[str]]) -> trace_api.Status:
             if item.name == data["status_code"]:
                 status_code = item
                 break
-        return None
 
     return trace_api.Status(
         status_code=status_code, description=data.get("description", None),
