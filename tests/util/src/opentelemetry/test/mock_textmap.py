@@ -20,7 +20,7 @@ from opentelemetry.propagators.textmap import (
     Getter,
     Setter,
     TextMapPropagator,
-    TextMapPropagatorT,
+    CarrierT,
     default_getter,
     default_setter,
 )
@@ -35,7 +35,7 @@ class NOOPTextMapPropagator(TextMapPropagator):
 
     def extract(
         self,
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
         getter: Getter = default_getter,
     ) -> Context:
@@ -43,7 +43,7 @@ class NOOPTextMapPropagator(TextMapPropagator):
 
     def inject(
         self,
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
         set_in_carrier: Setter = default_setter,
     ) -> None:
@@ -62,7 +62,7 @@ class MockTextMapPropagator(TextMapPropagator):
 
     def extract(
         self,
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
         getter: Getter = default_getter,
     ) -> Context:
@@ -84,7 +84,7 @@ class MockTextMapPropagator(TextMapPropagator):
 
     def inject(
         self,
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
         set_in_carrier: Setter = default_setter,
     ) -> None:

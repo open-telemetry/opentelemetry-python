@@ -22,7 +22,7 @@ from opentelemetry.propagators.textmap import (
     Getter,
     Setter,
     TextMapPropagator,
-    TextMapPropagatorT,
+    CarrierT,
     default_getter,
     default_setter,
 )
@@ -41,7 +41,7 @@ class JaegerPropagator(TextMapPropagator):
 
     def extract(
         self,
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
         getter: Getter = default_getter,
     ) -> Context:
@@ -78,7 +78,7 @@ class JaegerPropagator(TextMapPropagator):
 
     def inject(
         self,
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
         set_in_carrier: Setter = default_setter,
     ) -> None:
@@ -144,8 +144,8 @@ def _format_uber_trace_id(trace_id, span_id, parent_span_id, flags):
 
 
 def _extract_first_element(
-    items: typing.Iterable[TextMapPropagatorT],
-) -> typing.Optional[TextMapPropagatorT]:
+    items: typing.Iterable[CarrierT],
+) -> typing.Optional[CarrierT]:
     if items is None:
         return None
     return next(iter(items), None)

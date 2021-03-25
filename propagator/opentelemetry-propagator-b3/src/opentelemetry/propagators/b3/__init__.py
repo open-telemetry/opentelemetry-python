@@ -21,7 +21,7 @@ from opentelemetry.propagators.textmap import (
     Getter,
     Setter,
     TextMapPropagator,
-    TextMapPropagatorT,
+    CarrierT,
     default_getter,
     default_setter,
 )
@@ -46,7 +46,7 @@ class B3Format(TextMapPropagator):
 
     def extract(
         self,
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
         getter: Getter = default_getter,
     ) -> Context:
@@ -129,7 +129,7 @@ class B3Format(TextMapPropagator):
 
     def inject(
         self,
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
         set_in_carrier: Setter = default_setter,
     ) -> None:
@@ -166,8 +166,8 @@ class B3Format(TextMapPropagator):
 
 
 def _extract_first_element(
-    items: typing.Iterable[TextMapPropagatorT],
-) -> typing.Optional[TextMapPropagatorT]:
+    items: typing.Iterable[CarrierT],
+) -> typing.Optional[CarrierT]:
     if items is None:
         return None
     return next(iter(items), None)

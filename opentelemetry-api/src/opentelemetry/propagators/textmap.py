@@ -17,7 +17,7 @@ import typing
 
 from opentelemetry.context.context import Context
 
-TextMapPropagatorT = typing.TypeVar("TextMapPropagatorT")
+CarrierT = typing.TypeVar("CarrierT")
 CarrierValT = typing.Union[typing.List[str], str]
 
 
@@ -28,7 +28,7 @@ class Getter(abc.ABC):
 
     @abc.abstractmethod
     def get(
-        self, carrier: TextMapPropagatorT, key: str
+        self, carrier: CarrierT, key: str
     ) -> typing.Optional[typing.List[str]]:
         """Function that can retrieve zero
         or more values from the carrier. In the case that
@@ -43,7 +43,7 @@ class Getter(abc.ABC):
         """
 
     @abc.abstractmethod
-    def keys(self, carrier: TextMapPropagatorT) -> typing.List[str]:
+    def keys(self, carrier: CarrierT) -> typing.List[str]:
         """Function that can retrieve all the keys in a carrier object.
 
         Args:
@@ -60,7 +60,7 @@ class Setter(abc.ABC):
     """
 
     @abc.abstractmethod
-    def set(self, carrier: TextMapPropagatorT, key: str, value: str) -> None:
+    def set(self, carrier: CarrierT, key: str, value: str) -> None:
         """Function that can set a value into a carrier""
 
         Args:
@@ -128,7 +128,7 @@ class TextMapPropagator(abc.ABC):
     @abc.abstractmethod
     def extract(
         self,
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
         getter: Getter = default_getter,
     ) -> Context:
@@ -156,7 +156,7 @@ class TextMapPropagator(abc.ABC):
     @abc.abstractmethod
     def inject(
         self,
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
         set_in_carrier: Setter = default_setter,
     ) -> None:

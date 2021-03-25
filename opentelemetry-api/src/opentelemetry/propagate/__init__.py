@@ -82,7 +82,7 @@ logger = getLogger(__name__)
 
 
 def extract(
-    carrier: textmap.TextMapPropagatorT,
+    carrier: textmap.CarrierT,
     context: typing.Optional[Context] = None,
     getter: textmap.Getter = textmap.default_getter,
 ) -> Context:
@@ -103,7 +103,7 @@ def extract(
 
 
 def inject(
-    carrier: textmap.TextMapPropagatorT,
+    carrier: textmap.CarrierT,
     context: typing.Optional[Context] = None,
     set_in_carrier: textmap.Setter = textmap.default_setter,
 ) -> None:

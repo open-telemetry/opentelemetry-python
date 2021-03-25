@@ -35,7 +35,7 @@ class CompositeHTTPPropagator(textmap.TextMapPropagator):
 
     def extract(
         self,
-        carrier: textmap.TextMapPropagatorT,
+        carrier: textmap.CarrierT,
         context: typing.Optional[Context] = None,
         getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
@@ -52,7 +52,7 @@ class CompositeHTTPPropagator(textmap.TextMapPropagator):
 
     def inject(
         self,
-        carrier: textmap.TextMapPropagatorT,
+        carrier: textmap.CarrierT,
         context: typing.Optional[Context] = None,
         set_in_carrier: textmap.Setter = textmap.default_setter,
     ) -> None:
