@@ -20,9 +20,6 @@ from unittest.mock import Mock, patch
 from opentelemetry import baggage
 from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.context import get_current
-from opentelemetry.propagators.textmap import DictGetter
-
-carrier_getter = DictGetter()
 
 
 class TestBaggagePropagation(unittest.TestCase):
@@ -33,7 +30,7 @@ class TestBaggagePropagation(unittest.TestCase):
         """Test helper"""
         header = {"baggage": [header_value]}
         return baggage.get_all(
-            self.propagator.extract(header, getter=carrier_getter)
+            self.propagator.extract(header)
         )
 
     def _inject(self, values):
@@ -47,7 +44,7 @@ class TestBaggagePropagation(unittest.TestCase):
 
     def test_no_context_header(self):
         baggage_entries = baggage.get_all(
-            self.propagator.extract({}, getter=carrier_getter)
+            self.propagator.extract({})
         )
         self.assertEqual(baggage_entries, {})
 

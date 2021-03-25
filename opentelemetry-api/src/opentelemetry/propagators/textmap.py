@@ -71,7 +71,7 @@ class Setter(abc.ABC):
         """
 
 
-class DictGetter(Getter):
+class DefaultGetter(Getter):
     def get(  # type: ignore
         self, carrier: typing.Dict[str, CarrierValT], key: str
     ) -> typing.Optional[typing.List[str]]:
@@ -97,10 +97,10 @@ class DictGetter(Getter):
         return list(carrier.keys())
 
 
-default_getter = DictGetter()
+default_getter = DefaultGetter()
 
 
-class DictSetter(Setter):
+class DefaultSetter(Setter):
     def set(  # type: ignore
         self, carrier: typing.Dict[str, CarrierValT], key: str, value: str
     ) -> None:
@@ -113,7 +113,7 @@ class DictSetter(Setter):
         carrier[key] = value
 
 
-default_setter = DictSetter()
+default_setter = DefaultSetter()
 
 
 class TextMapPropagator(abc.ABC):

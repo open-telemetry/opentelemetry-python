@@ -19,13 +19,10 @@ import unittest
 from unittest.mock import Mock, patch
 
 from opentelemetry import trace
-from opentelemetry.propagators.textmap import DictGetter
 from opentelemetry.trace.propagation import tracecontext
 from opentelemetry.trace.span import TraceState
 
 FORMAT = tracecontext.TraceContextTextMapPropagator()
-
-carrier_getter = DictGetter()
 
 
 class TestTraceContextFormat(unittest.TestCase):
@@ -43,7 +40,7 @@ class TestTraceContextFormat(unittest.TestCase):
         """
         output = {}  # type:typing.Dict[str, typing.List[str]]
         span = trace.get_current_span(
-            FORMAT.extract(output, getter=carrier_getter)
+            FORMAT.extract(output)
         )
         self.assertIsInstance(span.get_span_context(), trace.SpanContext)
 
@@ -62,7 +59,6 @@ class TestTraceContextFormat(unittest.TestCase):
                     "traceparent": [traceparent_value],
                     "tracestate": [tracestate_value],
                 },
-                getter=carrier_getter,
             )
         ).get_span_context()
         self.assertEqual(span_context.trace_id, self.TRACE_ID)
@@ -108,7 +104,6 @@ class TestTraceContextFormat(unittest.TestCase):
                     ],
                     "tracestate": ["foo=1,bar=2,foo=3"],
                 },
-                getter=carrier_getter,
             )
         )
         self.assertEqual(span.get_span_context(), trace.INVALID_SPAN_CONTEXT)
@@ -139,7 +134,6 @@ class TestTraceContextFormat(unittest.TestCase):
                     ],
                     "tracestate": ["foo=1,bar=2,foo=3"],
                 },
-                getter=carrier_getter,
             )
         )
         self.assertEqual(span.get_span_context(), trace.INVALID_SPAN_CONTEXT)
@@ -178,7 +172,6 @@ class TestTraceContextFormat(unittest.TestCase):
                     ],
                     "tracestate": ["foo=1,bar=2,foo=3"],
                 },
-                getter=carrier_getter,
             )
         )
         self.assertEqual(span.get_span_context(), trace.INVALID_SPAN_CONTEXT)
@@ -200,7 +193,6 @@ class TestTraceContextFormat(unittest.TestCase):
                     ],
                     "tracestate": ["foo=1", ""],
                 },
-                getter=carrier_getter,
             )
         )
         self.assertEqual(span.get_span_context().trace_state["foo"], "1")
@@ -215,7 +207,6 @@ class TestTraceContextFormat(unittest.TestCase):
                     ],
                     "tracestate": ["foo=1,"],
                 },
-                getter=carrier_getter,
             )
         )
         self.assertEqual(span.get_span_context().trace_state["foo"], "1")
@@ -239,7 +230,6 @@ class TestTraceContextFormat(unittest.TestCase):
                     ],
                     "tracestate": [tracestate_value],
                 },
-                getter=carrier_getter,
             )
         )
         self.assertEqual(

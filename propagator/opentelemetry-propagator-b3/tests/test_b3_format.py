@@ -20,17 +20,14 @@ import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.id_generator as id_generator
 import opentelemetry.trace as trace_api
 from opentelemetry.context import get_current
-from opentelemetry.propagators.textmap import DictGetter, default_setter
+from opentelemetry.propagators.textmap import DefaultGetter
 
 FORMAT = b3_format.B3Format()
 
 
-carrier_getter = DictGetter()
-
-
 def get_child_parent_new_carrier(old_carrier):
 
-    ctx = FORMAT.extract(old_carrier, getter=carrier_getter)
+    ctx = FORMAT.extract(old_carrier)
     parent_span_context = trace_api.get_current_span(ctx).get_span_context()
 
     parent = trace._Span("parent", parent_span_context)
@@ -239,7 +236,7 @@ class TestB3Format(unittest.TestCase):
         invalid SpanContext.
         """
         carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
-        ctx = FORMAT.extract(carrier, getter=carrier_getter)
+        ctx = FORMAT.extract(carrier)
         span_context = trace_api.get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
@@ -251,7 +248,7 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(carrier, getter=carrier_getter)
+        ctx = FORMAT.extract(carrier)
         span_context = trace_api.get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
 
@@ -275,7 +272,7 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(carrier, getter=carrier_getter)
+        ctx = FORMAT.extract(carrier)
         span_context = trace_api.get_current_span(ctx).get_span_context()
 
         self.assertEqual(span_context.trace_id, 1)
@@ -301,7 +298,7 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(carrier, getter=carrier_getter)
+        ctx = FORMAT.extract(carrier)
         span_context = trace_api.get_current_span(ctx).get_span_context()
 
         self.assertEqual(span_context.trace_id, 1)
@@ -314,7 +311,7 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(carrier, getter=carrier_getter)
+        ctx = FORMAT.extract(carrier)
         span_context = trace_api.get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
 
@@ -329,12 +326,12 @@ class TestB3Format(unittest.TestCase):
     def test_default_span():
         """Make sure propagator does not crash when working with NonRecordingSpan"""
 
-        class CarrierGetter(DictGetter):
+        class CarrierGetter(DefaultGetter):
             def get(self, carrier, key):
                 return carrier.get(key, None)
 
         ctx = FORMAT.extract({}, getter=CarrierGetter())
-        FORMAT.inject({}, context=ctx, setter=default_setter)
+        FORMAT.inject({}, context=ctx)
 
     def test_fields(self):
         """Make sure the fields attribute returns the fields used in inject"""
