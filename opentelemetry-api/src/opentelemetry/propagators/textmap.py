@@ -72,7 +72,7 @@ class Setter(abc.ABC):
 
 
 class DictGetter(Getter):
-    def get(
+    def get(  # type: ignore
         self, carrier: typing.Dict[str, CarrierValT], key: str
     ) -> typing.Optional[typing.List[str]]:
         """Getter implementation to retrieve a value from a dictionary.
@@ -90,7 +90,9 @@ class DictGetter(Getter):
             return list(val)
         return [val]
 
-    def keys(self, carrier: typing.Dict[str, CarrierValT]) -> typing.List[str]:
+    def keys(  # type: ignore
+        self, carrier: typing.Dict[str, CarrierValT]
+    ) -> typing.List[str]:
         """Keys implementation that returns all keys from a dictionary."""
         return list(carrier.keys())
 
@@ -99,7 +101,7 @@ default_getter = DictGetter()
 
 
 class DictSetter(Setter):
-    def set(
+    def set(  # type: ignore
         self, carrier: typing.Dict[str, CarrierValT], key: str, value: str
     ) -> None:
         """Setter implementation to set a value into a dictionary.
