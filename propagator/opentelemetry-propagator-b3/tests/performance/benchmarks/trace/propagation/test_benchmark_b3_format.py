@@ -33,7 +33,6 @@ def test_inject_empty_context(benchmark):
         with tracer.start_as_current_span("Child Span"):
             benchmark(
                 FORMAT.inject,
-                dict.__setitem__,
                 {
                     FORMAT.TRACE_ID_KEY: "bdb5b63237ed38aea578af665aa5aa60",
                     FORMAT.SPAN_ID_KEY: "00000000000000000c32d953d73ad225",
