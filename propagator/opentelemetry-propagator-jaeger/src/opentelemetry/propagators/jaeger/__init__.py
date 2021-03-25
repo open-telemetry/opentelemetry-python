@@ -19,10 +19,10 @@ import opentelemetry.trace as trace
 from opentelemetry import baggage
 from opentelemetry.context import Context, get_current
 from opentelemetry.propagators.textmap import (
+    CarrierT,
     Getter,
     Setter,
     TextMapPropagator,
-    CarrierT,
     default_getter,
     default_setter,
 )
@@ -110,9 +110,7 @@ class JaegerPropagator(TextMapPropagator):
             return
         for key, value in baggage_entries.items():
             baggage_key = self.BAGGAGE_PREFIX + key
-            setter.set(
-                carrier, baggage_key, urllib.parse.quote(str(value))
-            )
+            setter.set(carrier, baggage_key, urllib.parse.quote(str(value)))
 
     @property
     def fields(self) -> typing.Set[str]:

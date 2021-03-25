@@ -102,9 +102,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
             trace_id=format_trace_id(span_context.trace_id),
             span_id=format_span_id(span_context.span_id),
         )
-        setter.set(
-            carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string
-        )
+        setter.set(carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string)
         if span_context.trace_state:
             tracestate_string = span_context.trace_state.to_header()
             setter.set(

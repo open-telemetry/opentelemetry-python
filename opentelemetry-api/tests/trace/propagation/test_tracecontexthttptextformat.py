@@ -39,9 +39,7 @@ class TestTraceContextFormat(unittest.TestCase):
         trace-id and parent-id that represents the current request.
         """
         output = {}  # type:typing.Dict[str, typing.List[str]]
-        span = trace.get_current_span(
-            FORMAT.extract(output)
-        )
+        span = trace.get_current_span(FORMAT.extract(output))
         self.assertIsInstance(span.get_span_context(), trace.SpanContext)
 
     def test_headers_with_tracestate(self):

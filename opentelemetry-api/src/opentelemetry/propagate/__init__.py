@@ -118,9 +118,7 @@ def inject(
         context: an optional Context to use. Defaults to current
             context if not set.
     """
-    get_global_textmap().inject(
-        carrier, context=context, setter=setter
-    )
+    get_global_textmap().inject(carrier, context=context, setter=setter)
 
 
 try:

@@ -17,10 +17,10 @@ import typing
 from opentelemetry import trace
 from opentelemetry.context import Context, get_current
 from opentelemetry.propagators.textmap import (
+    CarrierT,
     Getter,
     Setter,
     TextMapPropagator,
-    CarrierT,
     default_getter,
     default_setter,
 )

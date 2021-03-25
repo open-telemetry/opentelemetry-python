@@ -18,10 +18,10 @@ from re import compile as re_compile
 import opentelemetry.trace as trace
 from opentelemetry.context import Context
 from opentelemetry.propagators.textmap import (
+    CarrierT,
     Getter,
     Setter,
     TextMapPropagator,
-    CarrierT,
     default_getter,
     default_setter,
 )

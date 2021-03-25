@@ -29,9 +29,7 @@ class TestBaggagePropagation(unittest.TestCase):
     def _extract(self, header_value):
         """Test helper"""
         header = {"baggage": [header_value]}
-        return baggage.get_all(
-            self.propagator.extract(header)
-        )
+        return baggage.get_all(self.propagator.extract(header))
 
     def _inject(self, values):
         """Test helper"""
@@ -43,9 +41,7 @@ class TestBaggagePropagation(unittest.TestCase):
         return output.get("baggage")
 
     def test_no_context_header(self):
-        baggage_entries = baggage.get_all(
-            self.propagator.extract({})
-        )
+        baggage_entries = baggage.get_all(self.propagator.extract({}))
         self.assertEqual(baggage_entries, {})
 
     def test_empty_context_header(self):
