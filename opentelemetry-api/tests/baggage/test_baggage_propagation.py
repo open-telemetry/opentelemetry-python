@@ -151,13 +151,13 @@ class TestBaggagePropagation(unittest.TestCase):
     @patch("opentelemetry.baggage.propagation._format_baggage")
     def test_fields(self, mock_format_baggage, mock_baggage):
 
-        mock_set_in_carrier = Mock()
+        mock_setter = Mock()
 
-        self.propagator.inject({}, set_in_carrier=mock_set_in_carrier)
+        self.propagator.inject({}, setter=mock_setter)
 
         inject_fields = set()
 
-        for mock_call in mock_set_in_carrier.mock_calls:
+        for mock_call in mock_setter.mock_calls:
             inject_fields.add(mock_call[1][1])
 
         self.assertEqual(inject_fields, self.propagator.fields)

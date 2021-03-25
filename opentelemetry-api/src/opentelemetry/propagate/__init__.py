@@ -105,21 +105,21 @@ def extract(
 def inject(
     carrier: textmap.CarrierT,
     context: typing.Optional[Context] = None,
-    set_in_carrier: textmap.Setter = textmap.default_setter,
+    setter: textmap.Setter = textmap.default_setter,
 ) -> None:
     """Uses the configured propagator to inject a Context into the carrier.
 
     Args:
-        set_in_carrier: A setter function that can set values
+        setter: A setter function that can set values
             on the carrier.
         carrier: An object that contains a representation of HTTP
-            headers. Should be paired with set_in_carrier, which
+            headers. Should be paired with setter, which
             should know how to set header values on the carrier.
         context: an optional Context to use. Defaults to current
             context if not set.
     """
     get_global_textmap().inject(
-        carrier, context=context, set_in_carrier=set_in_carrier
+        carrier, context=context, setter=setter
     )
 
 

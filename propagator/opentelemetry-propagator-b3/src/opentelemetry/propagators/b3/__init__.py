@@ -131,7 +131,7 @@ class B3Format(TextMapPropagator):
         self,
         carrier: CarrierT,
         context: typing.Optional[Context] = None,
-        set_in_carrier: Setter = default_setter,
+        setter: Setter = default_setter,
     ) -> None:
         span = trace.get_current_span(context=context)
 
@@ -140,20 +140,20 @@ class B3Format(TextMapPropagator):
             return
 
         sampled = (trace.TraceFlags.SAMPLED & span_context.trace_flags) != 0
-        set_in_carrier.set(
+        setter.set(
             carrier, self.TRACE_ID_KEY, format_trace_id(span_context.trace_id),
         )
-        set_in_carrier.set(
+        setter.set(
             carrier, self.SPAN_ID_KEY, format_span_id(span_context.span_id)
         )
         span_parent = getattr(span, "parent", None)
         if span_parent is not None:
-            set_in_carrier.set(
+            setter.set(
                 carrier,
                 self.PARENT_SPAN_ID_KEY,
                 format_span_id(span_parent.span_id),
             )
-        set_in_carrier.set(carrier, self.SAMPLED_KEY, "1" if sampled else "0")
+        setter.set(carrier, self.SAMPLED_KEY, "1" if sampled else "0")
 
     @property
     def fields(self) -> typing.Set[str]:

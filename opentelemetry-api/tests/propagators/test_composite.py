@@ -26,10 +26,10 @@ def get_as_list(dict_object, key):
 
 
 def mock_inject(name, value="data"):
-    def wrapped(carrier=None, context=None, set_in_carrier=None):
+    def wrapped(carrier=None, context=None, setter=None):
         carrier[name] = value
-        set_in_carrier.set({}, "inject_field_{}_0".format(name), None)
-        set_in_carrier.set({}, "inject_field_{}_1".format(name), None)
+        setter.set({}, "inject_field_{}_0".format(name), None)
+        setter.set({}, "inject_field_{}_1".format(name), None)
 
     return wrapped
 
@@ -128,13 +128,13 @@ class TestCompositePropagator(unittest.TestCase):
             ]
         )
 
-        mock_set_in_carrier = Mock()
+        mock_setter = Mock()
 
-        propagator.inject({}, set_in_carrier=mock_set_in_carrier)
+        propagator.inject({}, setter=mock_setter)
 
         inject_fields = set()
 
-        for mock_call in mock_set_in_carrier.mock_calls:
+        for mock_call in mock_setter.mock_calls:
             inject_fields.add(mock_call[1][1])
 
         self.assertEqual(inject_fields, propagator.fields)

@@ -158,20 +158,20 @@ class TextMapPropagator(abc.ABC):
         self,
         carrier: CarrierT,
         context: typing.Optional[Context] = None,
-        set_in_carrier: Setter = default_setter,
+        setter: Setter = default_setter,
     ) -> None:
         """Inject values from a Context into a carrier.
 
         inject enables the propagation of values into HTTP clients or
         other objects which perform an HTTP request. Implementations
-        should use the set_in_carrier method to set values on the
+        should use the setter method to set values on the
         carrier.
 
         Args:
-            set_in_carrier: A setter function that can set values
+            setter: A setter function that can set values
                 on the carrier.
             carrier: An object that a place to define HTTP headers.
-                Should be paired with set_in_carrier, which should
+                Should be paired with setter, which should
                 know how to set header values on the carrier.
             context: an optional Context to use. Defaults to current
                 context if not set.

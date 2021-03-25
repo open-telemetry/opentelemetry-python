@@ -45,7 +45,7 @@ class NOOPTextMapPropagator(TextMapPropagator):
         self,
         carrier: CarrierT,
         context: typing.Optional[Context] = None,
-        set_in_carrier: Setter = default_setter,
+        setter: Setter = default_setter,
     ) -> None:
         return None
 
@@ -86,13 +86,13 @@ class MockTextMapPropagator(TextMapPropagator):
         self,
         carrier: CarrierT,
         context: typing.Optional[Context] = None,
-        set_in_carrier: Setter = default_setter,
+        setter: Setter = default_setter,
     ) -> None:
         span = trace.get_current_span(context)
-        set_in_carrier.set(
+        setter.set(
             carrier, self.TRACE_ID_KEY, str(span.get_span_context().trace_id)
         )
-        set_in_carrier.set(
+        setter.set(
             carrier, self.SPAN_ID_KEY, str(span.get_span_context().span_id)
         )
 

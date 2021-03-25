@@ -80,7 +80,7 @@ class JaegerPropagator(TextMapPropagator):
         self,
         carrier: CarrierT,
         context: typing.Optional[Context] = None,
-        set_in_carrier: Setter = default_setter,
+        setter: Setter = default_setter,
     ) -> None:
         span = trace.get_current_span(context=context)
         span_context = span.get_span_context()
@@ -93,7 +93,7 @@ class JaegerPropagator(TextMapPropagator):
             trace_flags |= self.DEBUG_FLAG
 
         # set span identity
-        set_in_carrier.set(
+        setter.set(
             carrier,
             self.TRACE_ID_KEY,
             _format_uber_trace_id(
@@ -110,7 +110,7 @@ class JaegerPropagator(TextMapPropagator):
             return
         for key, value in baggage_entries.items():
             baggage_key = self.BAGGAGE_PREFIX + key
-            set_in_carrier.set(
+            setter.set(
                 carrier, baggage_key, urllib.parse.quote(str(value))
             )
 

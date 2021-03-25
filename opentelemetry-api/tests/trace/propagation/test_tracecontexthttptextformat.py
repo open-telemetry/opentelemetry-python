@@ -272,13 +272,13 @@ class TestTraceContextFormat(unittest.TestCase):
             )
         )
 
-        mock_set_in_carrier = Mock()
+        mock_setter = Mock()
 
-        FORMAT.inject({}, set_in_carrier=mock_set_in_carrier)
+        FORMAT.inject({}, setter=mock_setter)
 
         inject_fields = set()
 
-        for mock_call in mock_set_in_carrier.mock_calls:
+        for mock_call in mock_setter.mock_calls:
             inject_fields.add(mock_call[1][1])
 
         self.assertEqual(inject_fields, FORMAT.fields)

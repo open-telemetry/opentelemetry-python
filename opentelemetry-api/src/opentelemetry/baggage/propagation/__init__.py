@@ -75,7 +75,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         self,
         carrier: textmap.CarrierT,
         context: typing.Optional[Context] = None,
-        set_in_carrier: textmap.Setter = textmap.default_setter,
+        setter: textmap.Setter = textmap.default_setter,
     ) -> None:
         """Injects Baggage into the carrier.
 
@@ -87,7 +87,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
             return
 
         baggage_string = _format_baggage(baggage_entries)
-        set_in_carrier.set(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
+        setter.set(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
 
     @property
     def fields(self) -> typing.Set[str]:

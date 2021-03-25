@@ -54,7 +54,7 @@ class CompositeHTTPPropagator(textmap.TextMapPropagator):
         self,
         carrier: textmap.CarrierT,
         context: typing.Optional[Context] = None,
-        set_in_carrier: textmap.Setter = textmap.default_setter,
+        setter: textmap.Setter = textmap.default_setter,
     ) -> None:
         """Run each of the configured propagators with the given context and carrier.
         Propagators are run in the order they are configured, if multiple
@@ -64,7 +64,7 @@ class CompositeHTTPPropagator(textmap.TextMapPropagator):
         See `opentelemetry.propagators.textmap.TextMapPropagator.inject`
         """
         for propagator in self._propagators:
-            propagator.inject(carrier, context, set_in_carrier=set_in_carrier)
+            propagator.inject(carrier, context, setter=setter)
 
     @property
     def fields(self) -> typing.Set[str]:

@@ -87,7 +87,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         self,
         carrier: textmap.CarrierT,
         context: typing.Optional[Context] = None,
-        set_in_carrier: textmap.Setter = textmap.default_setter,
+        setter: textmap.Setter = textmap.default_setter,
     ) -> None:
         """Injects SpanContext into the carrier.
 
@@ -102,12 +102,12 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
             trace_id=format_trace_id(span_context.trace_id),
             span_id=format_span_id(span_context.span_id),
         )
-        set_in_carrier.set(
+        setter.set(
             carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string
         )
         if span_context.trace_state:
             tracestate_string = span_context.trace_state.to_header()
-            set_in_carrier.set(
+            setter.set(
                 carrier, self._TRACESTATE_HEADER_NAME, tracestate_string
             )
 

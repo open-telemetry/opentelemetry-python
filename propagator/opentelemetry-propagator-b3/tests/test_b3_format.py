@@ -334,22 +334,22 @@ class TestB3Format(unittest.TestCase):
                 return carrier.get(key, None)
 
         ctx = FORMAT.extract({}, getter=CarrierGetter())
-        FORMAT.inject({}, context=ctx, set_in_carrier=default_setter)
+        FORMAT.inject({}, context=ctx, setter=default_setter)
 
     def test_fields(self):
         """Make sure the fields attribute returns the fields used in inject"""
 
         tracer = trace.TracerProvider().get_tracer("sdk_tracer_provider")
 
-        mock_set_in_carrier = Mock()
+        mock_setter = Mock()
 
         with tracer.start_as_current_span("parent"):
             with tracer.start_as_current_span("child"):
-                FORMAT.inject({}, set_in_carrier=mock_set_in_carrier)
+                FORMAT.inject({}, setter=mock_setter)
 
         inject_fields = set()
 
-        for call in mock_set_in_carrier.mock_calls:
+        for call in mock_setter.mock_calls:
             inject_fields.add(call[1][1])
 
         self.assertEqual(FORMAT.fields, inject_fields)
