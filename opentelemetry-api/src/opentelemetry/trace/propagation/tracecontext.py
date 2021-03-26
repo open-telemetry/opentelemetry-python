@@ -35,9 +35,9 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
 
     def extract(
         self,
-        getter: textmap.Getter[textmap.TextMapPropagatorT],
-        carrier: textmap.TextMapPropagatorT,
+        carrier: textmap.CarrierT,
         context: typing.Optional[Context] = None,
+        getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
         """Extracts SpanContext from the carrier.
 
@@ -85,9 +85,9 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
 
     def inject(
         self,
-        set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
-        carrier: textmap.TextMapPropagatorT,
+        carrier: textmap.CarrierT,
         context: typing.Optional[Context] = None,
+        setter: textmap.Setter = textmap.default_setter,
     ) -> None:
         """Injects SpanContext into the carrier.
 
@@ -102,12 +102,10 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
             trace_id=format_trace_id(span_context.trace_id),
             span_id=format_span_id(span_context.span_id),
         )
-        set_in_carrier(
-            carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string
-        )
+        setter.set(carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string)
         if span_context.trace_state:
             tracestate_string = span_context.trace_state.to_header()
-            set_in_carrier(
+            setter.set(
                 carrier, self._TRACESTATE_HEADER_NAME, tracestate_string
             )
 

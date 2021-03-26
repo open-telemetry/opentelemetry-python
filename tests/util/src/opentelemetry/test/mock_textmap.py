@@ -17,10 +17,12 @@ import typing
 from opentelemetry import trace
 from opentelemetry.context import Context, get_current
 from opentelemetry.propagators.textmap import (
+    CarrierT,
     Getter,
     Setter,
     TextMapPropagator,
-    TextMapPropagatorT,
+    default_getter,
+    default_setter,
 )
 
 
@@ -33,17 +35,17 @@ class NOOPTextMapPropagator(TextMapPropagator):
 
     def extract(
         self,
-        getter: Getter[TextMapPropagatorT],
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
+        getter: Getter = default_getter,
     ) -> Context:
         return get_current()
 
     def inject(
         self,
-        set_in_carrier: Setter[TextMapPropagatorT],
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
+        setter: Setter = default_setter,
     ) -> None:
         return None
 
@@ -60,9 +62,9 @@ class MockTextMapPropagator(TextMapPropagator):
 
     def extract(
         self,
-        getter: Getter[TextMapPropagatorT],
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
+        getter: Getter = default_getter,
     ) -> Context:
         trace_id_list = getter.get(carrier, self.TRACE_ID_KEY)
         span_id_list = getter.get(carrier, self.SPAN_ID_KEY)
@@ -82,15 +84,15 @@ class MockTextMapPropagator(TextMapPropagator):
 
     def inject(
         self,
-        set_in_carrier: Setter[TextMapPropagatorT],
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
+        setter: Setter = default_setter,
     ) -> None:
         span = trace.get_current_span(context)
-        set_in_carrier(
+        setter.set(
             carrier, self.TRACE_ID_KEY, str(span.get_span_context().trace_id)
         )
-        set_in_carrier(
+        setter.set(
             carrier, self.SPAN_ID_KEY, str(span.get_span_context().span_id)
         )
 

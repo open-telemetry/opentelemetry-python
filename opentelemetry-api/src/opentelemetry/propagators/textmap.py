@@ -17,19 +17,18 @@ import typing
 
 from opentelemetry.context.context import Context
 
-TextMapPropagatorT = typing.TypeVar("TextMapPropagatorT")
+CarrierT = typing.TypeVar("CarrierT")
 CarrierValT = typing.Union[typing.List[str], str]
 
-Setter = typing.Callable[[TextMapPropagatorT, str, str], None]
 
-
-class Getter(typing.Generic[TextMapPropagatorT]):
+class Getter(abc.ABC):
     """This class implements a Getter that enables extracting propagated
     fields from a carrier.
     """
 
+    @abc.abstractmethod
     def get(
-        self, carrier: TextMapPropagatorT, key: str
+        self, carrier: CarrierT, key: str
     ) -> typing.Optional[typing.List[str]]:
         """Function that can retrieve zero
         or more values from the carrier. In the case that
@@ -42,9 +41,9 @@ class Getter(typing.Generic[TextMapPropagatorT]):
         Returns: first value of the propagation key or None if the key doesn't
                 exist.
         """
-        raise NotImplementedError()
 
-    def keys(self, carrier: TextMapPropagatorT) -> typing.List[str]:
+    @abc.abstractmethod
+    def keys(self, carrier: CarrierT) -> typing.List[str]:
         """Function that can retrieve all the keys in a carrier object.
 
         Args:
@@ -53,17 +52,33 @@ class Getter(typing.Generic[TextMapPropagatorT]):
         Returns:
             list of keys from the carrier.
         """
-        raise NotImplementedError()
 
 
-class DictGetter(Getter[typing.Dict[str, CarrierValT]]):
-    def get(
-        self, carrier: typing.Dict[str, CarrierValT], key: str
+class Setter(abc.ABC):
+    """This class implements a Setter that enables injecting propagated
+    fields into a carrier.
+    """
+
+    @abc.abstractmethod
+    def set(self, carrier: CarrierT, key: str, value: str) -> None:
+        """Function that can set a value into a carrier""
+
+        Args:
+            carrier: An object which contains values that are used to
+                    construct a Context.
+            key: key of a field in carrier.
+            value: value for a field in carrier.
+        """
+
+
+class DefaultGetter(Getter):
+    def get(  # type: ignore
+        self, carrier: typing.Mapping[str, CarrierValT], key: str
     ) -> typing.Optional[typing.List[str]]:
         """Getter implementation to retrieve a value from a dictionary.
 
         Args:
-            carrier: dictionary in which header
+            carrier: dictionary in which to get value
             key: the key used to get the value
         Returns:
             A list with a single string with the value if it exists, else None.
@@ -75,9 +90,34 @@ class DictGetter(Getter[typing.Dict[str, CarrierValT]]):
             return list(val)
         return [val]
 
-    def keys(self, carrier: typing.Dict[str, CarrierValT]) -> typing.List[str]:
+    def keys(  # type: ignore
+        self, carrier: typing.Dict[str, CarrierValT]
+    ) -> typing.List[str]:
         """Keys implementation that returns all keys from a dictionary."""
         return list(carrier.keys())
+
+
+default_getter = DefaultGetter()
+
+
+class DefaultSetter(Setter):
+    def set(  # type: ignore
+        self,
+        carrier: typing.MutableMapping[str, CarrierValT],
+        key: str,
+        value: CarrierValT,
+    ) -> None:
+        """Setter implementation to set a value into a dictionary.
+
+        Args:
+            carrier: dictionary in which to set value
+            key: the key used to set the value
+            value: the value to set
+        """
+        carrier[key] = value
+
+
+default_setter = DefaultSetter()
 
 
 class TextMapPropagator(abc.ABC):
@@ -92,9 +132,9 @@ class TextMapPropagator(abc.ABC):
     @abc.abstractmethod
     def extract(
         self,
-        getter: Getter[TextMapPropagatorT],
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
+        getter: Getter = default_getter,
     ) -> Context:
         """Create a Context from values in the carrier.
 
@@ -120,25 +160,25 @@ class TextMapPropagator(abc.ABC):
     @abc.abstractmethod
     def inject(
         self,
-        set_in_carrier: Setter[TextMapPropagatorT],
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
+        setter: Setter = default_setter,
     ) -> None:
         """Inject values from a Context into a carrier.
 
         inject enables the propagation of values into HTTP clients or
         other objects which perform an HTTP request. Implementations
-        should use the set_in_carrier method to set values on the
+        should use the `Setter` 's set method to set values on the
         carrier.
 
         Args:
-            set_in_carrier: A setter function that can set values
-                on the carrier.
             carrier: An object that a place to define HTTP headers.
-                Should be paired with set_in_carrier, which should
+                Should be paired with setter, which should
                 know how to set header values on the carrier.
             context: an optional Context to use. Defaults to current
                 context if not set.
+            setter: An optional `Setter` object that can set values
+                on the carrier.
 
         """
 
