@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v0.18b0...HEAD)
 
+
+## [1.0.0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.0.0) - 2021-03-26
 ### Added
 - Document how to work with fork process web server models(Gunicorn, uWSGI etc...)
   ([#1609](https://github.com/open-telemetry/opentelemetry-python/pull/1609))
@@ -80,6 +82,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1675](https://github.com/open-telemetry/opentelemetry-python/pull/1675))
 - Remove `OTEL_EXPORTER_*_ INSECURE` env var
   ([#1682](https://github.com/open-telemetry/opentelemetry-python/pull/1682))
+- Removing support for Python 3.5
+  ([#1706](https://github.com/open-telemetry/opentelemetry-python/pull/1706))
+
+## [0.19b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.19b0) - 2021-03-26
+
+### Changed
+- remove `service_name` from constructor of jaeger and opencensus exporters and 
+  use of env variable `OTEL_PYTHON_SERVICE_NAME`
+  ([#1669])(https://github.com/open-telemetry/opentelemetry-python/pull/1669)
+- Rename `IdsGenerator` to `IdGenerator`
+  ([#1651](https://github.com/open-telemetry/opentelemetry-python/pull/1651))
+
+### Removed
 - Removing support for Python 3.5
   ([#1706](https://github.com/open-telemetry/opentelemetry-python/pull/1706))
 
