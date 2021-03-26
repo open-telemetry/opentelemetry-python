@@ -76,6 +76,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `opentelemetry-exporter-zipkin-proto-http` packages to reduce dependencies. The
   `opentelemetry-exporter-zipkin` installs both.
   ([#1699](https://github.com/open-telemetry/opentelemetry-python/pull/1699))
+- Make setters and getters optional
+  ([#1690](https://github.com/open-telemetry/opentelemetry-python/pull/1690))
 
 ### Removed
 - Removed unused `get_hexadecimal_trace_id` and `get_hexadecimal_span_id` methods.

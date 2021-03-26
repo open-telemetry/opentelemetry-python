@@ -31,9 +31,9 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
 
     def extract(
         self,
-        getter: textmap.Getter[textmap.TextMapPropagatorT],
-        carrier: textmap.TextMapPropagatorT,
+        carrier: textmap.CarrierT,
         context: typing.Optional[Context] = None,
+        getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
         """Extract Baggage from the carrier.
 
@@ -73,9 +73,9 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
 
     def inject(
         self,
-        set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
-        carrier: textmap.TextMapPropagatorT,
+        carrier: textmap.CarrierT,
         context: typing.Optional[Context] = None,
+        setter: textmap.Setter = textmap.default_setter,
     ) -> None:
         """Injects Baggage into the carrier.
 
@@ -87,7 +87,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
             return
 
         baggage_string = _format_baggage(baggage_entries)
-        set_in_carrier(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
+        setter.set(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
 
     @property
     def fields(self) -> typing.Set[str]:
@@ -103,8 +103,8 @@ def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
 
 
 def _extract_first_element(
-    items: typing.Optional[typing.Iterable[textmap.TextMapPropagatorT]],
-) -> typing.Optional[textmap.TextMapPropagatorT]:
+    items: typing.Optional[typing.Iterable[textmap.CarrierT]],
+) -> typing.Optional[textmap.CarrierT]:
     if items is None:
         return None
     return next(iter(items), None)

@@ -19,13 +19,10 @@ import unittest
 from unittest.mock import Mock, patch
 
 from opentelemetry import trace
-from opentelemetry.propagators.textmap import DictGetter
 from opentelemetry.trace.propagation import tracecontext
 from opentelemetry.trace.span import TraceState
 
 FORMAT = tracecontext.TraceContextTextMapPropagator()
-
-carrier_getter = DictGetter()
 
 
 class TestTraceContextFormat(unittest.TestCase):
@@ -42,7 +39,7 @@ class TestTraceContextFormat(unittest.TestCase):
         trace-id and parent-id that represents the current request.
         """
         output = {}  # type:typing.Dict[str, typing.List[str]]
-        span = trace.get_current_span(FORMAT.extract(carrier_getter, output))
+        span = trace.get_current_span(FORMAT.extract(output))
         self.assertIsInstance(span.get_span_context(), trace.SpanContext)
 
     def test_headers_with_tracestate(self):
@@ -56,7 +53,6 @@ class TestTraceContextFormat(unittest.TestCase):
         tracestate_value = "foo=1,bar=2,baz=3"
         span_context = trace.get_current_span(
             FORMAT.extract(
-                carrier_getter,
                 {
                     "traceparent": [traceparent_value],
                     "tracestate": [tracestate_value],
@@ -73,7 +69,7 @@ class TestTraceContextFormat(unittest.TestCase):
         span = trace.NonRecordingSpan(span_context)
 
         ctx = trace.set_span_in_context(span)
-        FORMAT.inject(dict.__setitem__, output, ctx)
+        FORMAT.inject(output, context=ctx)
         self.assertEqual(output["traceparent"], traceparent_value)
         for pair in ["foo=1", "bar=2", "baz=3"]:
             self.assertIn(pair, output["tracestate"])
@@ -100,7 +96,6 @@ class TestTraceContextFormat(unittest.TestCase):
         """
         span = trace.get_current_span(
             FORMAT.extract(
-                carrier_getter,
                 {
                     "traceparent": [
                         "00-00000000000000000000000000000000-1234567890123456-00"
@@ -131,7 +126,6 @@ class TestTraceContextFormat(unittest.TestCase):
         """
         span = trace.get_current_span(
             FORMAT.extract(
-                carrier_getter,
                 {
                     "traceparent": [
                         "00-00000000000000000000000000000000-0000000000000000-00"
@@ -155,7 +149,7 @@ class TestTraceContextFormat(unittest.TestCase):
             trace.SpanContext(self.TRACE_ID, self.SPAN_ID, is_remote=False)
         )
         ctx = trace.set_span_in_context(span)
-        FORMAT.inject(dict.__setitem__, output, ctx)
+        FORMAT.inject(output, context=ctx)
         self.assertTrue("traceparent" in output)
         self.assertFalse("tracestate" in output)
 
@@ -169,7 +163,6 @@ class TestTraceContextFormat(unittest.TestCase):
         """
         span = trace.get_current_span(
             FORMAT.extract(
-                carrier_getter,
                 {
                     "traceparent": [
                         "00-12345678901234567890123456789012-"
@@ -185,14 +178,13 @@ class TestTraceContextFormat(unittest.TestCase):
         """Do not propagate invalid trace context."""
         output = {}  # type:typing.Dict[str, str]
         ctx = trace.set_span_in_context(trace.INVALID_SPAN)
-        FORMAT.inject(dict.__setitem__, output, context=ctx)
+        FORMAT.inject(output, context=ctx)
         self.assertFalse("traceparent" in output)
 
     def test_tracestate_empty_header(self):
         """Test tracestate with an additional empty header (should be ignored)"""
         span = trace.get_current_span(
             FORMAT.extract(
-                carrier_getter,
                 {
                     "traceparent": [
                         "00-12345678901234567890123456789012-1234567890123456-00"
@@ -207,7 +199,6 @@ class TestTraceContextFormat(unittest.TestCase):
         """Do not propagate invalid trace context."""
         span = trace.get_current_span(
             FORMAT.extract(
-                carrier_getter,
                 {
                     "traceparent": [
                         "00-12345678901234567890123456789012-1234567890123456-00"
@@ -230,7 +221,6 @@ class TestTraceContextFormat(unittest.TestCase):
         )
         span = trace.get_current_span(
             FORMAT.extract(
-                carrier_getter,
                 {
                     "traceparent": [
                         "00-12345678901234567890123456789012-"
@@ -270,13 +260,13 @@ class TestTraceContextFormat(unittest.TestCase):
             )
         )
 
-        mock_set_in_carrier = Mock()
+        mock_setter = Mock()
 
-        FORMAT.inject(mock_set_in_carrier, {})
+        FORMAT.inject({}, setter=mock_setter)
 
         inject_fields = set()
 
-        for mock_call in mock_set_in_carrier.mock_calls:
+        for mock_call in mock_setter.mock_calls:
             inject_fields.add(mock_call[1][1])
 
         self.assertEqual(inject_fields, FORMAT.fields)
