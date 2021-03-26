@@ -110,7 +110,7 @@ def inject(
     """Uses the configured propagator to inject a Context into the carrier.
 
     Args:
-        setter: A setter function that can set values
+        setter: A `Setter` object that can set values
             on the carrier.
         carrier: An object that contains a representation of HTTP
             headers. Should be paired with setter, which
