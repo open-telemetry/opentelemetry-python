@@ -73,12 +73,12 @@ class Setter(abc.ABC):
 
 class DefaultGetter(Getter):
     def get(  # type: ignore
-        self, carrier: typing.Dict[str, CarrierValT], key: str
+        self, carrier: typing.Mapping[str, CarrierValT], key: str
     ) -> typing.Optional[typing.List[str]]:
         """Getter implementation to retrieve a value from a dictionary.
 
         Args:
-            carrier: dictionary in which header
+            carrier: dictionary in which to get value
             key: the key used to get the value
         Returns:
             A list with a single string with the value if it exists, else None.
@@ -102,12 +102,15 @@ default_getter = DefaultGetter()
 
 class DefaultSetter(Setter):
     def set(  # type: ignore
-        self, carrier: typing.Dict[str, CarrierValT], key: str, value: str
+        self,
+        carrier: typing.MutableMapping[str, CarrierValT],
+        key: str,
+        value: CarrierValT,
     ) -> None:
         """Setter implementation to set a value into a dictionary.
 
         Args:
-            carrier: dictionary in which header
+            carrier: dictionary in which to set value
             key: the key used to set the value
             value: the value to set
         """
