@@ -109,6 +109,7 @@ class DefaultSetter(Setter):
         Args:
             carrier: dictionary in which header
             key: the key used to set the value
+            value: the value to set
         """
         carrier[key] = value
 
