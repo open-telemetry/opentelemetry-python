@@ -82,9 +82,9 @@ logger = getLogger(__name__)
 
 
 def extract(
-    getter: textmap.Getter[textmap.TextMapPropagatorT],
-    carrier: textmap.TextMapPropagatorT,
+    carrier: textmap.CarrierT,
     context: typing.Optional[Context] = None,
+    getter: textmap.Getter = textmap.default_getter,
 ) -> Context:
     """Uses the configured propagator to extract a Context from the carrier.
 
@@ -99,26 +99,26 @@ def extract(
         context: an optional Context to use. Defaults to current
             context if not set.
     """
-    return get_global_textmap().extract(getter, carrier, context)
+    return get_global_textmap().extract(carrier, context, getter=getter)
 
 
 def inject(
-    set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
-    carrier: textmap.TextMapPropagatorT,
+    carrier: textmap.CarrierT,
     context: typing.Optional[Context] = None,
+    setter: textmap.Setter = textmap.default_setter,
 ) -> None:
     """Uses the configured propagator to inject a Context into the carrier.
 
     Args:
-        set_in_carrier: A setter function that can set values
-            on the carrier.
         carrier: An object that contains a representation of HTTP
-            headers. Should be paired with set_in_carrier, which
+            headers. Should be paired with setter, which
             should know how to set header values on the carrier.
-        context: an optional Context to use. Defaults to current
+        context: An optional Context to use. Defaults to current
             context if not set.
+        setter: An optional `Setter` object that can set values
+            on the carrier.
     """
-    get_global_textmap().inject(set_in_carrier, carrier, context)
+    get_global_textmap().inject(carrier, context=context, setter=setter)
 
 
 try:

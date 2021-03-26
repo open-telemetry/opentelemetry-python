@@ -19,10 +19,12 @@ import opentelemetry.trace as trace
 from opentelemetry import baggage
 from opentelemetry.context import Context, get_current
 from opentelemetry.propagators.textmap import (
+    CarrierT,
     Getter,
     Setter,
     TextMapPropagator,
-    TextMapPropagatorT,
+    default_getter,
+    default_setter,
 )
 from opentelemetry.trace import format_span_id, format_trace_id
 
@@ -39,9 +41,9 @@ class JaegerPropagator(TextMapPropagator):
 
     def extract(
         self,
-        getter: Getter[TextMapPropagatorT],
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
+        getter: Getter = default_getter,
     ) -> Context:
 
         if context is None:
@@ -76,9 +78,9 @@ class JaegerPropagator(TextMapPropagator):
 
     def inject(
         self,
-        set_in_carrier: Setter[TextMapPropagatorT],
-        carrier: TextMapPropagatorT,
+        carrier: CarrierT,
         context: typing.Optional[Context] = None,
+        setter: Setter = default_setter,
     ) -> None:
         span = trace.get_current_span(context=context)
         span_context = span.get_span_context()
@@ -91,7 +93,7 @@ class JaegerPropagator(TextMapPropagator):
             trace_flags |= self.DEBUG_FLAG
 
         # set span identity
-        set_in_carrier(
+        setter.set(
             carrier,
             self.TRACE_ID_KEY,
             _format_uber_trace_id(
@@ -108,9 +110,7 @@ class JaegerPropagator(TextMapPropagator):
             return
         for key, value in baggage_entries.items():
             baggage_key = self.BAGGAGE_PREFIX + key
-            set_in_carrier(
-                carrier, baggage_key, urllib.parse.quote(str(value))
-            )
+            setter.set(carrier, baggage_key, urllib.parse.quote(str(value)))
 
     @property
     def fields(self) -> typing.Set[str]:
@@ -142,8 +142,8 @@ def _format_uber_trace_id(trace_id, span_id, parent_span_id, flags):
 
 
 def _extract_first_element(
-    items: typing.Iterable[TextMapPropagatorT],
-) -> typing.Optional[TextMapPropagatorT]:
+    items: typing.Iterable[CarrierT],
+) -> typing.Optional[CarrierT]:
     if items is None:
         return None
     return next(iter(items), None)
