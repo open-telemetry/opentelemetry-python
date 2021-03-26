@@ -168,7 +168,7 @@ class TextMapPropagator(abc.ABC):
         carrier.
 
         Args:
-            setter: A setter function that can set values
+            setter: A `Setter` object that can set values
                 on the carrier.
             carrier: An object that a place to define HTTP headers.
                 Should be paired with setter, which should
