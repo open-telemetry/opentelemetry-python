@@ -9,7 +9,7 @@ specification](https://github.com/open-telemetry/opentelemetry-specification/blo
 
 The OpenTelemetry implementations, the OpenTelemetry Spec itself and this repo follows [SemVer V2](https://semver.org/spec/v2.0.0.html) guidelines.
 This means that, for any stable packages released from this repo, all public APIs will remain [backward
-compatible](https://github.com/dotnet/runtime/blob/main/docs/coding-guidelines/breaking-change-rules.md#breaking-change-rules),
+compatible](https://www.python.org/dev/peps/pep-0387/),
 unless a major version bump occurs. This applies to the API, SDK, as well as Exporters, Instrumentation etc. shipped from this repo.
 
 For example, users can take a dependency on 1.0.0 version of any package, with the assurance that all future releases until 2.0.0 will be backward compatible.
