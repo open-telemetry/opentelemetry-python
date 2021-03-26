@@ -164,7 +164,7 @@ class TextMapPropagator(abc.ABC):
 
         inject enables the propagation of values into HTTP clients or
         other objects which perform an HTTP request. Implementations
-        should use the setter method to set values on the
+        should use the `Setter` 's set method to set values on the
         carrier.
 
         Args:
