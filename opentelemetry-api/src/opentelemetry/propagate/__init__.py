@@ -110,13 +110,13 @@ def inject(
     """Uses the configured propagator to inject a Context into the carrier.
 
     Args:
-        setter: A `Setter` object that can set values
-            on the carrier.
         carrier: An object that contains a representation of HTTP
             headers. Should be paired with setter, which
             should know how to set header values on the carrier.
-        context: an optional Context to use. Defaults to current
+        context: An optional Context to use. Defaults to current
             context if not set.
+        setter: An optional `Setter` object that can set values
+            on the carrier.
     """
     get_global_textmap().inject(carrier, context=context, setter=setter)
 
