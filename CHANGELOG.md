@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.0.0...HEAD)
 
+- Silence unnecessary warning when creating a new Status object without description.
+  ([#1721](https://github.com/open-telemetry/opentelemetry-python/pull/1721))
+
 
 ## [1.0.0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.0.0) - 2021-03-26
 ### Added
