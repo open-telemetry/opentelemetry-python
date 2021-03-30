@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.0.0...HEAD)
 
+- Added `py.typed` file to every package. This should resolve a bunch of mypy
+  errors for users.
+  ([#1720](https://github.com/open-telemetry/opentelemetry-python/pull/1720))
+
 
 ## [1.0.0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.0.0) - 2021-03-26
 ### Added
