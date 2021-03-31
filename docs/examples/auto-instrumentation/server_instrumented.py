@@ -20,9 +20,8 @@ from opentelemetry.propagate import extract
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
-    SimpleExportSpanProcessor,
+    SimpleSpanProcessor,
 )
-from opentelemetry.trace.propagation.textmap import DictGetter
 
 app = Flask(__name__)
 
@@ -30,7 +29,7 @@ trace.set_tracer_provider(TracerProvider())
 tracer = trace.get_tracer_provider().get_tracer(__name__)
 
 trace.get_tracer_provider().add_span_processor(
-    SimpleExportSpanProcessor(ConsoleSpanExporter())
+    SimpleSpanProcessor(ConsoleSpanExporter())
 )
 
 
@@ -38,7 +37,7 @@ trace.get_tracer_provider().add_span_processor(
 def server_request():
     with tracer.start_as_current_span(
         "server_request",
-        context=extract(DictGetter(), request.headers),
+        context=extract(request.headers),
         kind=trace.SpanKind.SERVER,
         attributes=collect_request_attributes(request.environ),
     ):

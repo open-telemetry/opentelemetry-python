@@ -15,9 +15,11 @@
 import time
 from unittest.mock import patch
 
-from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter,
+)
 from opentelemetry.sdk.trace import TracerProvider, sampling
-from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 TEST_DURATION_SECONDS = 15
 SPANS_PER_SECOND = 10_000
@@ -31,7 +33,7 @@ class MockTraceServiceStub(object):
 old_stub = OTLPSpanExporter._stub
 OTLPSpanExporter._stub = MockTraceServiceStub
 
-simple_span_processor = BatchExportSpanProcessor(OTLPSpanExporter())
+simple_span_processor = BatchSpanProcessor(OTLPSpanExporter())
 tracer = TracerProvider(
     active_span_processor=simple_span_processor, sampler=sampling.DEFAULT_ON,
 ).get_tracer("resource_usage_tracer")

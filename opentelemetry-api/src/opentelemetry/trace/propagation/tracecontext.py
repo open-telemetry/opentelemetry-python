@@ -17,13 +17,13 @@ import typing
 
 import opentelemetry.trace as trace
 from opentelemetry.context.context import Context
-from opentelemetry.trace.propagation import textmap
+from opentelemetry.propagators import textmap
+from opentelemetry.trace import format_span_id, format_trace_id
 from opentelemetry.trace.span import TraceState
 
 
 class TraceContextTextMapPropagator(textmap.TextMapPropagator):
-    """Extracts and injects using w3c TraceContext's headers.
-    """
+    """Extracts and injects using w3c TraceContext's headers."""
 
     _TRACEPARENT_HEADER_NAME = "traceparent"
     _TRACESTATE_HEADER_NAME = "tracestate"
@@ -35,13 +35,13 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
 
     def extract(
         self,
-        getter: textmap.Getter[textmap.TextMapPropagatorT],
-        carrier: textmap.TextMapPropagatorT,
+        carrier: textmap.CarrierT,
         context: typing.Optional[Context] = None,
+        getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
         """Extracts SpanContext from the carrier.
 
-        See `opentelemetry.trace.propagation.textmap.TextMapPropagator.extract`
+        See `opentelemetry.propagators.textmap.TextMapPropagator.extract`
         """
         header = getter.get(carrier, self._TRACEPARENT_HEADER_NAME)
 
@@ -80,34 +80,32 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
             trace_state=tracestate,
         )
         return trace.set_span_in_context(
-            trace.DefaultSpan(span_context), context
+            trace.NonRecordingSpan(span_context), context
         )
 
     def inject(
         self,
-        set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
-        carrier: textmap.TextMapPropagatorT,
+        carrier: textmap.CarrierT,
         context: typing.Optional[Context] = None,
+        setter: textmap.Setter = textmap.default_setter,
     ) -> None:
         """Injects SpanContext into the carrier.
 
-        See `opentelemetry.trace.propagation.textmap.TextMapPropagator.inject`
+        See `opentelemetry.propagators.textmap.TextMapPropagator.inject`
         """
         span = trace.get_current_span(context)
         span_context = span.get_span_context()
         if span_context == trace.INVALID_SPAN_CONTEXT:
             return
-        traceparent_string = "00-{:032x}-{:016x}-{:02x}".format(
-            span_context.trace_id,
-            span_context.span_id,
+        traceparent_string = "00-{trace_id}-{span_id}-{:02x}".format(
             span_context.trace_flags,
+            trace_id=format_trace_id(span_context.trace_id),
+            span_id=format_span_id(span_context.span_id),
         )
-        set_in_carrier(
-            carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string
-        )
+        setter.set(carrier, self._TRACEPARENT_HEADER_NAME, traceparent_string)
         if span_context.trace_state:
             tracestate_string = span_context.trace_state.to_header()
-            set_in_carrier(
+            setter.set(
                 carrier, self._TRACESTATE_HEADER_NAME, tracestate_string
             )
 
@@ -116,6 +114,6 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         """Returns a set with the fields set in `inject`.
 
         See
-        `opentelemetry.trace.propagation.textmap.TextMapPropagator.fields`
+        `opentelemetry.propagators.textmap.TextMapPropagator.fields`
         """
         return {self._TRACEPARENT_HEADER_NAME, self._TRACESTATE_HEADER_NAME}

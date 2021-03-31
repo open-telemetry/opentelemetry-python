@@ -6,7 +6,15 @@ OpenTelemetry Zipkin Exporter
 .. |pypi| image:: https://badge.fury.io/py/opentelemetry-exporter-zipkin.svg
    :target: https://pypi.org/project/opentelemetry-exporter-zipkin/
 
-This library allows to export tracing data to `Zipkin <https://zipkin.io/>`_.
+This library is provided as a convenience to install all supported OpenTelemetry Zipkin Exporters. Currently it installs:
+* opentelemetry-exporter-zipkin-json
+* opentelemetry-exporter-zipkin-proto-http
+
+In the future, additional packages may be available:
+* opentelemetry-exporter-zipkin-thrift
+
+To avoid unnecessary dependencies, users should install the specific package once they've determined their
+preferred serialization method.
 
 Installation
 ------------

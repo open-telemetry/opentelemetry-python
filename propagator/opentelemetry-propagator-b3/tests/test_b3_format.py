@@ -17,20 +17,17 @@ from unittest.mock import Mock, patch
 
 import opentelemetry.propagators.b3 as b3_format  # pylint: disable=no-name-in-module,import-error
 import opentelemetry.sdk.trace as trace
-import opentelemetry.sdk.trace.ids_generator as ids_generator
+import opentelemetry.sdk.trace.id_generator as id_generator
 import opentelemetry.trace as trace_api
 from opentelemetry.context import get_current
-from opentelemetry.trace.propagation.textmap import DictGetter
+from opentelemetry.propagators.textmap import DefaultGetter
 
 FORMAT = b3_format.B3Format()
 
 
-carrier_getter = DictGetter()
-
-
 def get_child_parent_new_carrier(old_carrier):
 
-    ctx = FORMAT.extract(carrier_getter, old_carrier)
+    ctx = FORMAT.extract(old_carrier)
     parent_span_context = trace_api.get_current_span(ctx).get_span_context()
 
     parent = trace._Span("parent", parent_span_context)
@@ -38,7 +35,7 @@ def get_child_parent_new_carrier(old_carrier):
         "child",
         trace_api.SpanContext(
             parent_span_context.trace_id,
-            ids_generator.RandomIdsGenerator().generate_span_id(),
+            id_generator.RandomIdGenerator().generate_span_id(),
             is_remote=False,
             trace_flags=parent_span_context.trace_flags,
             trace_state=parent_span_context.trace_state,
@@ -48,7 +45,7 @@ def get_child_parent_new_carrier(old_carrier):
 
     new_carrier = {}
     ctx = trace_api.set_span_in_context(child)
-    FORMAT.inject(dict.__setitem__, new_carrier, context=ctx)
+    FORMAT.inject(new_carrier, context=ctx)
 
     return child, parent, new_carrier
 
@@ -56,15 +53,15 @@ def get_child_parent_new_carrier(old_carrier):
 class TestB3Format(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        id_generator = ids_generator.RandomIdsGenerator()
+        generator = id_generator.RandomIdGenerator()
         cls.serialized_trace_id = b3_format.format_trace_id(
-            id_generator.generate_trace_id()
+            generator.generate_trace_id()
         )
         cls.serialized_span_id = b3_format.format_span_id(
-            id_generator.generate_span_id()
+            generator.generate_span_id()
         )
         cls.serialized_parent_id = b3_format.format_span_id(
-            id_generator.generate_span_id()
+            generator.generate_span_id()
         )
 
     def setUp(self) -> None:
@@ -239,7 +236,7 @@ class TestB3Format(unittest.TestCase):
         invalid SpanContext.
         """
         carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
-        ctx = FORMAT.extract(carrier_getter, carrier)
+        ctx = FORMAT.extract(carrier)
         span_context = trace_api.get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
@@ -251,15 +248,15 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(carrier_getter, carrier)
+        ctx = FORMAT.extract(carrier)
         span_context = trace_api.get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
 
     @patch(
-        "opentelemetry.sdk.trace.ids_generator.RandomIdsGenerator.generate_trace_id"
+        "opentelemetry.sdk.trace.id_generator.RandomIdGenerator.generate_trace_id"
     )
     @patch(
-        "opentelemetry.sdk.trace.ids_generator.RandomIdsGenerator.generate_span_id"
+        "opentelemetry.sdk.trace.id_generator.RandomIdGenerator.generate_span_id"
     )
     def test_invalid_trace_id(
         self, mock_generate_span_id, mock_generate_trace_id
@@ -275,17 +272,17 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(carrier_getter, carrier)
+        ctx = FORMAT.extract(carrier)
         span_context = trace_api.get_current_span(ctx).get_span_context()
 
         self.assertEqual(span_context.trace_id, 1)
         self.assertEqual(span_context.span_id, 2)
 
     @patch(
-        "opentelemetry.sdk.trace.ids_generator.RandomIdsGenerator.generate_trace_id"
+        "opentelemetry.sdk.trace.id_generator.RandomIdGenerator.generate_trace_id"
     )
     @patch(
-        "opentelemetry.sdk.trace.ids_generator.RandomIdsGenerator.generate_span_id"
+        "opentelemetry.sdk.trace.id_generator.RandomIdGenerator.generate_span_id"
     )
     def test_invalid_span_id(
         self, mock_generate_span_id, mock_generate_trace_id
@@ -301,7 +298,7 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(carrier_getter, carrier)
+        ctx = FORMAT.extract(carrier)
         span_context = trace_api.get_current_span(ctx).get_span_context()
 
         self.assertEqual(span_context.trace_id, 1)
@@ -314,7 +311,7 @@ class TestB3Format(unittest.TestCase):
             FORMAT.FLAGS_KEY: "1",
         }
 
-        ctx = FORMAT.extract(carrier_getter, carrier)
+        ctx = FORMAT.extract(carrier)
         span_context = trace_api.get_current_span(ctx).get_span_context()
         self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
 
@@ -322,37 +319,34 @@ class TestB3Format(unittest.TestCase):
     def test_inject_empty_context():
         """If the current context has no span, don't add headers"""
         new_carrier = {}
-        FORMAT.inject(dict.__setitem__, new_carrier, get_current())
+        FORMAT.inject(new_carrier, get_current())
         assert len(new_carrier) == 0
 
     @staticmethod
     def test_default_span():
-        """Make sure propagator does not crash when working with DefaultSpan"""
+        """Make sure propagator does not crash when working with NonRecordingSpan"""
 
-        class CarrierGetter(DictGetter):
+        class CarrierGetter(DefaultGetter):
             def get(self, carrier, key):
                 return carrier.get(key, None)
 
-        def setter(carrier, key, value):
-            carrier[key] = value
-
-        ctx = FORMAT.extract(CarrierGetter(), {})
-        FORMAT.inject(setter, {}, ctx)
+        ctx = FORMAT.extract({}, getter=CarrierGetter())
+        FORMAT.inject({}, context=ctx)
 
     def test_fields(self):
         """Make sure the fields attribute returns the fields used in inject"""
 
         tracer = trace.TracerProvider().get_tracer("sdk_tracer_provider")
 
-        mock_set_in_carrier = Mock()
+        mock_setter = Mock()
 
         with tracer.start_as_current_span("parent"):
             with tracer.start_as_current_span("child"):
-                FORMAT.inject(mock_set_in_carrier, {})
+                FORMAT.inject({}, setter=mock_setter)
 
         inject_fields = set()
 
-        for call in mock_set_in_carrier.mock_calls:
+        for call in mock_setter.mock_calls:
             inject_fields.add(call[1][1])
 
         self.assertEqual(FORMAT.fields, inject_fields)

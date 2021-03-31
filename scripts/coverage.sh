@@ -34,18 +34,15 @@ cov opentelemetry-sdk
 cov exporter/opentelemetry-exporter-datadog
 cov instrumentation/opentelemetry-instrumentation-flask
 cov instrumentation/opentelemetry-instrumentation-requests
-cov exporter/opentelemetry-exporter-jaeger
+cov exporter/opentelemetry-exporter-jaeger-proto-grpc
+cov exporter/opentelemetry-exporter-jaeger-thrift
 cov instrumentation/opentelemetry-instrumentation-opentracing-shim
 cov util/opentelemetry-util-http
 cov exporter/opentelemetry-exporter-zipkin
 
-# aiohttp is only supported on Python 3.5+.
-if [ ${PYTHON_VERSION_INFO[1]} -gt 4 ]; then
-    cov instrumentation/opentelemetry-instrumentation-aiohttp-client
-# ext-asgi is only supported on Python 3.5+.
-if [ ${PYTHON_VERSION_INFO[1]} -gt 4 ]; then
-    cov instrumentation/opentelemetry-instrumentation-asgi
-fi
+
+cov instrumentation/opentelemetry-instrumentation-aiohttp-client
+cov instrumentation/opentelemetry-instrumentation-asgi
 
 coverage report --show-missing
 coverage xml

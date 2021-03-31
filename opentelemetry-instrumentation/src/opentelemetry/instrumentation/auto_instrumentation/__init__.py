@@ -22,8 +22,7 @@ from shutil import which
 
 from opentelemetry.environment_variables import (
     OTEL_METRICS_EXPORTER,
-    OTEL_PYTHON_IDS_GENERATOR,
-    OTEL_PYTHON_SERVICE_NAME,
+    OTEL_PYTHON_ID_GENERATOR,
     OTEL_TRACES_EXPORTER,
 )
 
@@ -65,14 +64,14 @@ def parse_args():
     )
 
     parser.add_argument(
-        "--ids-generator",
+        "--id-generator",
         required=False,
         help="""
         The IDs Generator to be used with the Tracer Provider.
 
         Examples:
 
-            --ids-generator=random
+            --id-generator=random
         """,
     )
 
@@ -99,10 +98,8 @@ def load_config_from_cli_args(args):
         environ[OTEL_METRICS_EXPORTER] = args.metrics_exporter
     if args.trace_exporter:
         environ[OTEL_TRACES_EXPORTER] = args.trace_exporter
-    if args.service_name:
-        environ[OTEL_PYTHON_SERVICE_NAME] = args.service_name
-    if args.ids_generator:
-        environ[OTEL_PYTHON_IDS_GENERATOR] = args.ids_generator
+    if args.id_generator:
+        environ[OTEL_PYTHON_ID_GENERATOR] = args.id_generator
 
 
 def run() -> None:

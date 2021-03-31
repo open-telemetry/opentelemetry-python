@@ -64,17 +64,13 @@ Well known trace exporter names:
     - jaeger
     - opencensus
     - otlp
-    - otlp_span
-    - otlp_metric
+    - otlp_proto_grpc_span
+    - otlp_proto_grpc_metric
     - zipkin
 
-``otlp`` is an alias for ``otlp_span,otlp_metric``.
+``otlp`` is an alias for ``otlp_proto_grpc_span,otlp_proto_grpc_metric``.
 
-* ``--service-name`` or ``OTEL_PYTHON_SERVICE_NAME``
-
-When present the value is passed on to the relevant exporter initializer as ``service_name`` argument.
-
-* ``--ids-generator`` or ``OTEL_PYTHON_IDS_GENERATOR``
+* ``--id-generator`` or ``OTEL_PYTHON_ID_GENERATOR``
 
 Used to specify which IDs Generator to use for the global Tracer Provider. By default, it
 will use the random IDs generator.
@@ -94,13 +90,13 @@ Examples
 
 ::
 
-    opentelemetry-instrument -e otlp flask run --port=3000
+    opentelemetry-instrument --trace-exporter otlp flask run --port=3000
 
-The above command will pass ``-e otlp`` to the instrument command and ``--port=3000`` to ``flask run``.
+The above command will pass ``--trace-exporter otlp`` to the instrument command and ``--port=3000`` to ``flask run``.
 
 ::
 
-    opentelemetry-instrument -e zipkin,otlp celery -A tasks worker --loglevel=info
+    opentelemetry-instrument --trace-exporter zipkin,otlp celery -A tasks worker --loglevel=info
 
 The above command will configure global trace provider, attach zipkin and otlp exporters to it and then
 start celery with the rest of the arguments. 

@@ -34,11 +34,11 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER_ARG,
 )
 from opentelemetry.sdk.trace import Resource, sampling
-from opentelemetry.sdk.trace.ids_generator import RandomIdsGenerator
+from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.trace.status import StatusCode
-from opentelemetry.util.providers import time_ns
+from opentelemetry.trace import StatusCode
+from opentelemetry.util._time import _time_ns
 
 
 def new_tracer() -> trace_api.Tracer:
@@ -122,16 +122,6 @@ tracer_provider.add_span_processor(mock_processor)
         out = run_general_code(False, False)
         self.assertTrue(out.startswith(b"0"))
 
-    def test_use_span_exception(self):
-        class TestUseSpanException(Exception):
-            pass
-
-        default_span = trace_api.DefaultSpan(trace_api.INVALID_SPAN_CONTEXT)
-        tracer = new_tracer()
-        with self.assertRaises(TestUseSpanException):
-            with tracer.use_span(default_span):
-                raise TestUseSpanException()
-
     def test_tracer_provider_accepts_concurrent_multi_span_processor(self):
         span_processor = trace.ConcurrentMultiSpanProcessor(2)
         tracer_provider = trace.TracerProvider(
@@ -182,9 +172,9 @@ class TestTracerSampling(unittest.TestCase):
         # decides not to sampler
         root_span = tracer.start_span(name="root span", context=None)
         ctx = trace_api.set_span_in_context(root_span)
-        self.assertIsInstance(root_span, trace_api.DefaultSpan)
+        self.assertIsInstance(root_span, trace_api.NonRecordingSpan)
         child_span = tracer.start_span(name="child span", context=ctx)
-        self.assertIsInstance(child_span, trace_api.DefaultSpan)
+        self.assertIsInstance(child_span, trace_api.NonRecordingSpan)
         self.assertEqual(
             root_span.get_span_context().trace_flags,
             trace_api.TraceFlags.DEFAULT,
@@ -208,7 +198,7 @@ class TestTracerSampling(unittest.TestCase):
 
         root_span = tracer.start_span(name="root span", context=None)
         # Should be no-op
-        self.assertIsInstance(root_span, trace_api.DefaultSpan)
+        self.assertIsInstance(root_span, trace_api.NonRecordingSpan)
 
     @mock.patch.dict(
         "os.environ",
@@ -305,7 +295,7 @@ class TestSpanCreation(unittest.TestCase):
         self.assertIsNone(root.end_time)
         self.assertEqual(root.kind, trace_api.SpanKind.INTERNAL)
 
-        with tracer.use_span(root, True):
+        with trace_api.use_span(root, True):
             self.assertIs(trace_api.get_current_span(), root)
 
             with tracer.start_span(
@@ -362,7 +352,7 @@ class TestSpanCreation(unittest.TestCase):
         self.assertIsNone(root.end_time)
 
         # Test with the implicit root span
-        with tracer.use_span(root, True):
+        with trace_api.use_span(root, True):
             self.assertIs(trace_api.get_current_span(), root)
 
             with tracer.start_span("stepchild", other_parent_context) as child:
@@ -526,7 +516,7 @@ class TestSpanCreation(unittest.TestCase):
         )
         self.assertEqual(
             span.resource.attributes.get(resources.TELEMETRY_SDK_VERSION),
-            resources.OPENTELEMETRY_SDK_VERSION,
+            resources._OPENTELEMETRY_SDK_VERSION,
         )
 
     def test_span_context_remote_flag(self):
@@ -719,7 +709,7 @@ class TestSpan(unittest.TestCase):
             )
 
             # event name, attributes and timestamp
-            now = time_ns()
+            now = _time_ns()
             root.add_event("event2", {"name": ["birthday"]}, now)
 
             mutable_list = ["original_contents"]
@@ -791,15 +781,15 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(root.events[3].attributes, {"attr2": (1, 2)})
 
     def test_links(self):
-        ids_generator = RandomIdsGenerator()
+        id_generator = RandomIdGenerator()
         other_context1 = trace_api.SpanContext(
-            trace_id=ids_generator.generate_trace_id(),
-            span_id=ids_generator.generate_span_id(),
+            trace_id=id_generator.generate_trace_id(),
+            span_id=id_generator.generate_span_id(),
             is_remote=False,
         )
         other_context2 = trace_api.SpanContext(
-            trace_id=ids_generator.generate_trace_id(),
-            span_id=ids_generator.generate_span_id(),
+            trace_id=id_generator.generate_trace_id(),
+            span_id=id_generator.generate_span_id(),
             is_remote=False,
         )
 
@@ -845,18 +835,14 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(start_time, span.start_time)
 
         self.assertIsNotNone(span.status)
-        self.assertIs(
-            span.status.status_code, trace_api.status.StatusCode.UNSET
-        )
+        self.assertIs(span.status.status_code, trace_api.StatusCode.UNSET)
 
         # status
         new_status = trace_api.status.Status(
-            trace_api.status.StatusCode.ERROR, "Test description"
+            trace_api.StatusCode.ERROR, "Test description"
         )
         span.set_status(new_status)
-        self.assertIs(
-            span.status.status_code, trace_api.status.StatusCode.ERROR
-        )
+        self.assertIs(span.status.status_code, trace_api.StatusCode.ERROR)
         self.assertIs(span.status.description, "Test description")
 
     def test_start_accepts_context(self):
@@ -916,14 +902,12 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(root.name, "root")
 
         new_status = trace_api.status.Status(
-            trace_api.status.StatusCode.ERROR, "Test description"
+            trace_api.StatusCode.ERROR, "Test description"
         )
 
         with self.assertLogs(level=WARNING):
             root.set_status(new_status)
-        self.assertEqual(
-            root.status.status_code, trace_api.status.StatusCode.UNSET
-        )
+        self.assertEqual(root.status.status_code, trace_api.StatusCode.UNSET)
 
     def test_error_status(self):
         def error_status_test(context):
@@ -945,17 +929,17 @@ class TestSpan(unittest.TestCase):
             .start_as_current_span("root")
         )
 
-    def test_override_error_status(self):
+    def test_last_status_wins(self):
         def error_status_test(context):
             with self.assertRaises(AssertionError):
                 with context as root:
-                    root.set_status(
-                        trace_api.status.Status(StatusCode.OK, "OK")
-                    )
+                    root.set_status(trace_api.status.Status(StatusCode.OK))
                     raise AssertionError("unknown")
 
-            self.assertIs(root.status.status_code, StatusCode.OK)
-            self.assertEqual(root.status.description, "OK")
+            self.assertIs(root.status.status_code, StatusCode.ERROR)
+            self.assertEqual(
+                root.status.description, "AssertionError: unknown"
+            )
 
         error_status_test(
             trace.TracerProvider().get_tracer(__name__).start_span("root")
@@ -1297,12 +1281,12 @@ class TestSpanLimits(unittest.TestCase):
     def test_span_environment_limits(self):
         reload(trace)
         tracer = new_tracer()
-        ids_generator = RandomIdsGenerator()
+        id_generator = RandomIdGenerator()
         some_links = [
             trace_api.Link(
                 trace_api.SpanContext(
-                    trace_id=ids_generator.generate_trace_id(),
-                    span_id=ids_generator.generate_span_id(),
+                    trace_id=id_generator.generate_trace_id(),
+                    span_id=id_generator.generate_span_id(),
                     is_remote=False,
                 )
             )

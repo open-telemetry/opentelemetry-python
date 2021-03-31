@@ -19,7 +19,8 @@ from opentelemetry import trace
 
 class TestTracer(unittest.TestCase):
     def setUp(self):
-        self.tracer = trace.DefaultTracer()
+        # pylint: disable=protected-access
+        self.tracer = trace._DefaultTracer()
 
     def test_start_span(self):
         with self.tracer.start_span("") as span:
@@ -28,11 +29,6 @@ class TestTracer(unittest.TestCase):
     def test_start_as_current_span(self):
         with self.tracer.start_as_current_span("") as span:
             self.assertIsInstance(span, trace.Span)
-
-    def test_use_span(self):
-        span = trace.DefaultSpan(trace.INVALID_SPAN_CONTEXT)
-        with self.tracer.use_span(span):
-            pass
 
     def test_get_current_span(self):
         with self.tracer.start_as_current_span("test") as span:

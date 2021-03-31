@@ -29,7 +29,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_SCHEDULE_DELAY,
 )
 from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
-from opentelemetry.util.providers import time_ns
+from opentelemetry.util._time import _time_ns
 
 logger = logging.getLogger(__name__)
 
@@ -46,7 +46,7 @@ class SpanExporter:
     in their own format.
 
     To export data this MUST be registered to the :class`opentelemetry.sdk.trace.Tracer` using a
-    `SimpleExportSpanProcessor` or a `BatchExportSpanProcessor`.
+    `SimpleSpanProcessor` or a `BatchSpanProcessor`.
     """
 
     def export(
@@ -68,10 +68,10 @@ class SpanExporter:
         """
 
 
-class SimpleExportSpanProcessor(SpanProcessor):
+class SimpleSpanProcessor(SpanProcessor):
     """Simple SpanProcessor implementation.
 
-    SimpleExportSpanProcessor is an implementation of `SpanProcessor` that
+    SimpleSpanProcessor is an implementation of `SpanProcessor` that
     passes ended spans directly to the configured `SpanExporter`.
     """
 
@@ -103,7 +103,7 @@ class SimpleExportSpanProcessor(SpanProcessor):
 
 
 class _FlushRequest:
-    """Represents a request for the BatchExportSpanProcessor to flush spans."""
+    """Represents a request for the BatchSpanProcessor to flush spans."""
 
     __slots__ = ["event", "num_spans"]
 
@@ -112,11 +112,19 @@ class _FlushRequest:
         self.num_spans = 0
 
 
-class BatchExportSpanProcessor(SpanProcessor):
+class BatchSpanProcessor(SpanProcessor):
     """Batch span processor implementation.
 
-    BatchExportSpanProcessor is an implementation of `SpanProcessor` that
+    `BatchSpanProcessor` is an implementation of `SpanProcessor` that
     batches ended spans and pushes them to the configured `SpanExporter`.
+
+    `BatchSpanProcessor` is configurable with the following environment
+    variables which correspond to constructor parameters:
+
+    - :envvar:`OTEL_BSP_SCHEDULE_DELAY`
+    - :envvar:`OTEL_BSP_MAX_QUEUE_SIZE`
+    - :envvar:`OTEL_BSP_MAX_EXPORT_BATCH_SIZE`
+    - :envvar:`OTEL_BSP_EXPORT_TIMEOUT`
     """
 
     def __init__(
@@ -231,9 +239,9 @@ class BatchExportSpanProcessor(SpanProcessor):
                         break
 
             # subtract the duration of this export call to the next timeout
-            start = time_ns()
+            start = _time_ns()
             self._export(flush_request)
-            end = time_ns()
+            end = _time_ns()
             duration = (end - start) / 1e9
             timeout = self.schedule_delay_millis / 1e3 - duration
 
