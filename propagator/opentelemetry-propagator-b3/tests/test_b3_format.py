@@ -231,50 +231,73 @@ class TestB3Format(unittest.TestCase):
             new_carrier[FORMAT.TRACE_ID_KEY], "0" * 16 + trace_id_64_bit
         )
 
-    def test_invalid_input(self):
-        """Provided with various invalid input, return the given context as is"""
-        testcases = [
-            (
-                "invalid single header",
-                {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"},
-            ),
-            (
-                "missing trace ID",
-                {
-                    FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-                    FORMAT.FLAGS_KEY: "1",
-                },
-            ),
-            (
-                "invalid trace ID",
-                {
-                    FORMAT.TRACE_ID_KEY: "abc123",
-                    FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-                    FORMAT.FLAGS_KEY: "1",
-                },
-            ),
-            (
-                "invalid span ID",
-                {
-                    FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-                    FORMAT.SPAN_ID_KEY: "abc123",
-                    FORMAT.FLAGS_KEY: "1",
-                },
-            ),
-            (
-                "missing span ID",
-                {
-                    FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-                    FORMAT.FLAGS_KEY: "1",
-                },
-            ),
-        ]
-        for name, carrier in testcases:
-            with self.subTest(name=name):
-                old_ctx = get_current()
-                new_ctx = FORMAT.extract(carrier, old_ctx)
+    def test_extract_invalid_single_header(self):
+        """Given unparsable header, do not modify context"""
+        old_ctx = {}
 
-                self.assertIs(new_ctx, old_ctx)
+        carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
+        new_ctx = FORMAT.extract(carrier, old_ctx)
+
+        self.assertDictEqual(new_ctx, old_ctx)
+
+    def test_extract_missing_trace_id(self):
+        """Given no trace ID, do not modify context"""
+        old_ctx = {}
+
+        carrier = {
+            FORMAT.SPAN_ID_KEY: self.serialized_span_id,
+            FORMAT.FLAGS_KEY: "1",
+        }
+        new_ctx = FORMAT.extract(carrier, old_ctx)
+
+        self.assertDictEqual(new_ctx, old_ctx)
+
+    def test_extract_invalid_trace_id(self):
+        """Given invalid trace ID, do not modify context"""
+        old_ctx = {}
+
+        carrier = {
+            FORMAT.TRACE_ID_KEY: "abc123",
+            FORMAT.SPAN_ID_KEY: self.serialized_span_id,
+            FORMAT.FLAGS_KEY: "1",
+        }
+        new_ctx = FORMAT.extract(carrier, old_ctx)
+
+        self.assertDictEqual(new_ctx, old_ctx)
+
+    def test_extract_invalid_span_id(self):
+        """Given invalid span ID, do not modify context"""
+        old_ctx = {}
+
+        carrier = {
+            FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
+            FORMAT.SPAN_ID_KEY: "abc123",
+            FORMAT.FLAGS_KEY: "1",
+        }
+        new_ctx = FORMAT.extract(carrier, old_ctx)
+
+        self.assertDictEqual(new_ctx, old_ctx)
+
+    def test_extract_missing_span_id(self):
+        """Given no span ID, do not modify context"""
+        old_ctx = {}
+
+        carrier = {
+            FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
+            FORMAT.FLAGS_KEY: "1",
+        }
+        new_ctx = FORMAT.extract(carrier, old_ctx)
+
+        self.assertDictEqual(new_ctx, old_ctx)
+
+    def test_extract_empty_carrier(self):
+        """Given no headers at all, do not modify context"""
+        old_ctx = {}
+
+        carrier = {}
+        new_ctx = FORMAT.extract(carrier, old_ctx)
+
+        self.assertDictEqual(new_ctx, old_ctx)
 
     @staticmethod
     def test_inject_empty_context():
