@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 import opentelemetry.propagators.b3 as b3_format  # pylint: disable=no-name-in-module,import-error
 import opentelemetry.sdk.trace as trace
@@ -231,89 +231,73 @@ class TestB3Format(unittest.TestCase):
             new_carrier[FORMAT.TRACE_ID_KEY], "0" * 16 + trace_id_64_bit
         )
 
-    def test_invalid_single_header(self):
-        """If an invalid single header is passed, return an
-        invalid SpanContext.
-        """
-        carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
-        ctx = FORMAT.extract(carrier)
-        span_context = trace_api.get_current_span(ctx).get_span_context()
-        self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
-        self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
+    def test_extract_invalid_single_header(self):
+        """Given unparsable header, do not modify context"""
+        old_ctx = {}
 
-    def test_missing_trace_id(self):
-        """If a trace id is missing, populate an invalid trace id."""
+        carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
+        new_ctx = FORMAT.extract(carrier, old_ctx)
+
+        self.assertDictEqual(new_ctx, old_ctx)
+
+    def test_extract_missing_trace_id(self):
+        """Given no trace ID, do not modify context"""
+        old_ctx = {}
+
         carrier = {
             FORMAT.SPAN_ID_KEY: self.serialized_span_id,
             FORMAT.FLAGS_KEY: "1",
         }
+        new_ctx = FORMAT.extract(carrier, old_ctx)
 
-        ctx = FORMAT.extract(carrier)
-        span_context = trace_api.get_current_span(ctx).get_span_context()
-        self.assertEqual(span_context.trace_id, trace_api.INVALID_TRACE_ID)
+        self.assertDictEqual(new_ctx, old_ctx)
 
-    @patch(
-        "opentelemetry.sdk.trace.id_generator.RandomIdGenerator.generate_trace_id"
-    )
-    @patch(
-        "opentelemetry.sdk.trace.id_generator.RandomIdGenerator.generate_span_id"
-    )
-    def test_invalid_trace_id(
-        self, mock_generate_span_id, mock_generate_trace_id
-    ):
-        """If a trace id is invalid, generate a trace id."""
-
-        mock_generate_trace_id.configure_mock(return_value=1)
-        mock_generate_span_id.configure_mock(return_value=2)
+    def test_extract_invalid_trace_id(self):
+        """Given invalid trace ID, do not modify context"""
+        old_ctx = {}
 
         carrier = {
             FORMAT.TRACE_ID_KEY: "abc123",
             FORMAT.SPAN_ID_KEY: self.serialized_span_id,
             FORMAT.FLAGS_KEY: "1",
         }
+        new_ctx = FORMAT.extract(carrier, old_ctx)
 
-        ctx = FORMAT.extract(carrier)
-        span_context = trace_api.get_current_span(ctx).get_span_context()
+        self.assertDictEqual(new_ctx, old_ctx)
 
-        self.assertEqual(span_context.trace_id, 1)
-        self.assertEqual(span_context.span_id, 2)
-
-    @patch(
-        "opentelemetry.sdk.trace.id_generator.RandomIdGenerator.generate_trace_id"
-    )
-    @patch(
-        "opentelemetry.sdk.trace.id_generator.RandomIdGenerator.generate_span_id"
-    )
-    def test_invalid_span_id(
-        self, mock_generate_span_id, mock_generate_trace_id
-    ):
-        """If a span id is invalid, generate a trace id."""
-
-        mock_generate_trace_id.configure_mock(return_value=1)
-        mock_generate_span_id.configure_mock(return_value=2)
+    def test_extract_invalid_span_id(self):
+        """Given invalid span ID, do not modify context"""
+        old_ctx = {}
 
         carrier = {
             FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
             FORMAT.SPAN_ID_KEY: "abc123",
             FORMAT.FLAGS_KEY: "1",
         }
+        new_ctx = FORMAT.extract(carrier, old_ctx)
 
-        ctx = FORMAT.extract(carrier)
-        span_context = trace_api.get_current_span(ctx).get_span_context()
+        self.assertDictEqual(new_ctx, old_ctx)
 
-        self.assertEqual(span_context.trace_id, 1)
-        self.assertEqual(span_context.span_id, 2)
+    def test_extract_missing_span_id(self):
+        """Given no span ID, do not modify context"""
+        old_ctx = {}
 
-    def test_missing_span_id(self):
-        """If a trace id is missing, populate an invalid trace id."""
         carrier = {
             FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
             FORMAT.FLAGS_KEY: "1",
         }
+        new_ctx = FORMAT.extract(carrier, old_ctx)
 
-        ctx = FORMAT.extract(carrier)
-        span_context = trace_api.get_current_span(ctx).get_span_context()
-        self.assertEqual(span_context.span_id, trace_api.INVALID_SPAN_ID)
+        self.assertDictEqual(new_ctx, old_ctx)
+
+    def test_extract_empty_carrier(self):
+        """Given no headers at all, do not modify context"""
+        old_ctx = {}
+
+        carrier = {}
+        new_ctx = FORMAT.extract(carrier, old_ctx)
+
+        self.assertDictEqual(new_ctx, old_ctx)
 
     @staticmethod
     def test_inject_empty_context():
