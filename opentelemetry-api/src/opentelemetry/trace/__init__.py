@@ -428,7 +428,7 @@ def get_tracer_provider() -> TracerProvider:
     global _TRACER_PROVIDER  # pylint: disable=global-statement
 
     if _TRACER_PROVIDER is None:
-        _TRACER_PROVIDER = cast(  # type: ignore
+        _TRACER_PROVIDER = cast(
             "TracerProvider",
             _load_provider(OTEL_PYTHON_TRACER_PROVIDER, "tracer_provider"),
         )

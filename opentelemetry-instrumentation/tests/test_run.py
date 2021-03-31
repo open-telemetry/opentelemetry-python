@@ -18,7 +18,10 @@ from os.path import abspath, dirname, pathsep
 from unittest import TestCase
 from unittest.mock import patch
 
-from opentelemetry.environment_variables import OTEL_TRACES_EXPORTER, OTEL_METRICS_EXPORTER
+from opentelemetry.environment_variables import (
+    OTEL_METRICS_EXPORTER,
+    OTEL_TRACES_EXPORTER,
+)
 from opentelemetry.instrumentation import auto_instrumentation
 
 
@@ -111,7 +114,17 @@ class TestArgs(TestCase):
             self.assertIsNone(environ.get(OTEL_TRACES_EXPORTER))
 
         with patch(
-            "sys.argv", ["instrument", "--trace-exporter", "jaeger", "1", "2"]
+            "sys.argv",
+            [
+                "instrument",
+                "--trace-exporter",
+                "jaeger",
+                "--metrics-exporter",
+                "prometheus",
+                "1",
+                "2",
+            ],
         ):
             auto_instrumentation.run()
             self.assertEqual(environ.get(OTEL_TRACES_EXPORTER), "jaeger")
+            self.assertEqual(environ.get(OTEL_METRICS_EXPORTER), "prometheus")

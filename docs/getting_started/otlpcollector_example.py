@@ -17,11 +17,11 @@ import time
 
 from opentelemetry import metrics, trace
 from opentelemetry.exporter.otlp.metrics_exporter import OTLPMetricsExporter
-from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 

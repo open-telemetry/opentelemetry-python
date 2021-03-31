@@ -38,6 +38,7 @@ from typing import (
     Type,
     TypeVar,
     Union,
+    cast,
 )
 
 from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
@@ -606,6 +607,9 @@ def get_meter_provider() -> MeterProvider:
     global _METER_PROVIDER  # pylint: disable=global-statement
 
     if _METER_PROVIDER is None:
-        _METER_PROVIDER = _load_provider(OTEL_PYTHON_METER_PROVIDER, "meter_provider")
+        _METER_PROVIDER = cast(
+            "MeterProvider",
+            _load_provider(OTEL_PYTHON_METER_PROVIDER, "meter_provider"),
+        )
 
     return _METER_PROVIDER

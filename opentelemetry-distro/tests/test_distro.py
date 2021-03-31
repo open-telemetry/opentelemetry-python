@@ -40,4 +40,6 @@ class TestDistribution(TestCase):
         self.assertEqual(
             "otlp_proto_grpc_span", os.environ.get(OTEL_TRACES_EXPORTER)
         )
-        self.assertEqual("otlp_proto_grpc_metric", os.environ.get(OTEL_METRICS_EXPORTER))
+        self.assertEqual(
+            "otlp_proto_grpc_metric", os.environ.get(OTEL_METRICS_EXPORTER)
+        )
