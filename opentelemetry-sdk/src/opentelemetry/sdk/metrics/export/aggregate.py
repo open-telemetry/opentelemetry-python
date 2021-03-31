@@ -18,7 +18,7 @@ import threading
 from collections import OrderedDict, namedtuple
 from math import inf
 
-from opentelemetry.util import time_ns
+from opentelemetry.util._time import _time_ns
 
 logger = logging.getLogger(__name__)
 
@@ -34,7 +34,7 @@ class Aggregator(abc.ABC):
         self._lock = threading.Lock()
         self.last_update_timestamp = 0
         self.initial_checkpoint_timestamp = 0
-        self.first_timestamp = time_ns()
+        self.first_timestamp = _time_ns()
         self.checkpointed = True
         if config is not None:
             self.config = config
@@ -45,9 +45,9 @@ class Aggregator(abc.ABC):
     def update(self, value):
         """Updates the current with the new value."""
         if self.checkpointed:
-            self.initial_checkpoint_timestamp = time_ns()
+            self.initial_checkpoint_timestamp = _time_ns()
             self.checkpointed = False
-        self.last_update_timestamp = time_ns()
+        self.last_update_timestamp = _time_ns()
 
     @abc.abstractmethod
     def take_checkpoint(self):

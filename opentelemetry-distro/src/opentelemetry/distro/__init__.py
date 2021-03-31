@@ -61,22 +61,24 @@ def _get_exporter_names() -> Sequence[str]:
                 for trace_exporter in trace_exporters.split(",")
             }
         )
+        try:
+            exporters.remove(EXPORTER_OTLP)
+            exporters.add(EXPORTER_OTLP_SPAN)
+        except KeyError:
+            pass
 
-    if (
-        metrics_exporters is not None
-        or metrics_exporters.lower().strip() != "none"
-    ):
+    if metrics_exporters and metrics_exporters.lower().strip() != "none":
         exporters.update(
             {
                 metrics_exporter.strip()
                 for metrics_exporter in metrics_exporters.split(",")
             }
         )
-
-    if EXPORTER_OTLP in exporters:
-        exporters.remove(EXPORTER_OTLP)
-        exporters.add(EXPORTER_OTLP_SPAN)
-        exporters.add(EXPORTER_OTLP_METRIC)
+        try:
+            exporters.remove(EXPORTER_OTLP)
+            exporters.add(EXPORTER_OTLP_METRIC)
+        except KeyError:
+            pass
 
     return list(exporters)
 

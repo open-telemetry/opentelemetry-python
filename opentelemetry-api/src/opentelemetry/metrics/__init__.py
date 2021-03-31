@@ -40,7 +40,8 @@ from typing import (
     Union,
 )
 
-from opentelemetry.util import _load_meter_provider
+from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
+from opentelemetry.util._providers import _load_provider
 
 logger = getLogger(__name__)
 ValueT = TypeVar("ValueT", int, float)
@@ -605,6 +606,6 @@ def get_meter_provider() -> MeterProvider:
     global _METER_PROVIDER  # pylint: disable=global-statement
 
     if _METER_PROVIDER is None:
-        _METER_PROVIDER = _load_meter_provider("meter_provider")
+        _METER_PROVIDER = _load_provider(OTEL_PYTHON_METER_PROVIDER, "meter_provider")
 
     return _METER_PROVIDER

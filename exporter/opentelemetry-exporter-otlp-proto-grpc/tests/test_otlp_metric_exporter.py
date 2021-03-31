@@ -19,7 +19,9 @@ from unittest.mock import Mock, patch
 
 from grpc import ChannelCredentials
 
-from opentelemetry.exporter.otlp.metrics_exporter import OTLPMetricsExporter
+from opentelemetry.exporter.otlp.proto.grpc.metrics_exporter import (
+    OTLPMetricsExporter,
+)
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
 )
@@ -78,7 +80,9 @@ class TestOTLPMetricExporter(TestCase):
             OTEL_EXPORTER_OTLP_METRIC_TIMEOUT: "10",
         },
     )
-    @patch("opentelemetry.exporter.otlp.exporter.OTLPExporterMixin.__init__")
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
+    )
     def test_env_variables(self, mock_exporter_mixin):
         OTLPMetricsExporter()
 
@@ -91,10 +95,12 @@ class TestOTLPMetricExporter(TestCase):
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
 
-    @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
-    @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
     @patch(
-        "opentelemetry.exporter.otlp.metrics_exporter.OTLPMetricsExporter._stub"
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.metrics_exporter.OTLPMetricsExporter._stub"
     )
     # pylint: disable=unused-argument
     def test_no_credentials_error(
@@ -107,8 +113,10 @@ class TestOTLPMetricExporter(TestCase):
         "os.environ",
         {OTEL_EXPORTER_OTLP_METRIC_HEADERS: "key1=value1,key2=value2"},
     )
-    @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
-    @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
     # pylint: disable=unused-argument
     def test_otlp_headers_from_env(self, mock_ssl_channel, mock_secure):
         exporter = OTLPMetricsExporter()
@@ -124,15 +132,17 @@ class TestOTLPMetricExporter(TestCase):
             exporter._headers, (("key3", "value3"), ("key4", "value4")),
         )
 
-    @patch("opentelemetry.exporter.otlp.exporter.ssl_channel_credentials")
-    @patch("opentelemetry.exporter.otlp.exporter.secure_channel")
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
     # pylint: disable=unused-argument
     def test_otlp_headers(self, mock_ssl_channel, mock_secure):
         exporter = OTLPMetricsExporter()
         # pylint: disable=protected-access
         self.assertIsNone(exporter._headers, None)
 
-    @patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
+    @patch("opentelemetry.sdk.metrics.export.aggregate._time_ns")
     def test_translate_counter_export_record(self, mock_time_ns):
         mock_time_ns.configure_mock(**{"return_value": 1})
 
@@ -199,7 +209,7 @@ class TestOTLPMetricExporter(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
+    @patch("opentelemetry.sdk.metrics.export.aggregate._time_ns")
     def test_translate_sum_observer_export_record(self, mock_time_ns):
         mock_time_ns.configure_mock(**{"return_value": 1})
         counter_export_record = ExportRecord(
@@ -265,7 +275,7 @@ class TestOTLPMetricExporter(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
+    @patch("opentelemetry.sdk.metrics.export.aggregate._time_ns")
     def test_translate_updowncounter_export_record(self, mock_time_ns):
         mock_time_ns.configure_mock(**{"return_value": 1})
 
@@ -331,7 +341,7 @@ class TestOTLPMetricExporter(TestCase):
 
         self.assertEqual(expected, actual)
 
-    @patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
+    @patch("opentelemetry.sdk.metrics.export.aggregate._time_ns")
     def test_translate_updownsum_observer_export_record(self, mock_time_ns):
         mock_time_ns.configure_mock(**{"return_value": 1})
         counter_export_record = ExportRecord(

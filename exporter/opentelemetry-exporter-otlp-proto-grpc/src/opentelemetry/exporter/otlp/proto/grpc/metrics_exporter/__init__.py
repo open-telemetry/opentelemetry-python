@@ -18,12 +18,13 @@ import logging
 from os import environ
 from typing import List, Optional, Sequence, Type, TypeVar
 
-from grpc import ChannelCredentials
+from grpc import ChannelCredentials, Compression
 
-from opentelemetry.exporter.otlp.exporter import (
+from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     OTLPExporterMixin,
-    _get_resource_data,
-    _load_credential_from_file,
+    get_resource_data,
+    _get_credentials,
+    environ_to_compression,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
@@ -48,7 +49,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE,
     OTEL_EXPORTER_OTLP_METRIC_ENDPOINT,
     OTEL_EXPORTER_OTLP_METRIC_HEADERS,
-    OTEL_EXPORTER_OTLP_METRIC_INSECURE,
+    OTEL_EXPORTER_OTLP_METRIC_COMPRESSION,
     OTEL_EXPORTER_OTLP_METRIC_TIMEOUT,
 )
 from opentelemetry.sdk.metrics import (
@@ -148,21 +149,25 @@ class OTLPMetricsExporter(
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[Sequence] = None,
         timeout: Optional[int] = None,
+        compression: Optional[Compression] = None,
     ):
-        if insecure is None:
-            insecure = environ.get(OTEL_EXPORTER_OTLP_METRIC_INSECURE)
-
         if (
             not insecure
             and environ.get(OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE) is not None
         ):
-            credentials = credentials or _load_credential_from_file(
-                environ.get(OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE)
+            credentials = _get_credentials(
+                credentials, OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE
             )
 
         environ_timeout = environ.get(OTEL_EXPORTER_OTLP_METRIC_TIMEOUT)
         environ_timeout = (
             int(environ_timeout) if environ_timeout is not None else None
+        )
+
+        compression = (
+            environ_to_compression(OTEL_EXPORTER_OTLP_METRIC_COMPRESSION)
+            if compression is None
+            else compression
         )
 
         super().__init__(
@@ -174,6 +179,7 @@ class OTLPMetricsExporter(
                 "headers": headers
                 or environ.get(OTEL_EXPORTER_OTLP_METRIC_HEADERS),
                 "timeout": timeout or environ_timeout,
+                "compression": compression,
             }
         )
 
@@ -344,7 +350,7 @@ class OTLPMetricsExporter(
                 ) = version
 
         return ExportMetricsServiceRequest(
-            resource_metrics=_get_resource_data(
+            resource_metrics=get_resource_data(
                 sdk_resource_instrumentation_library_metrics,
                 ResourceMetrics,
                 "metrics",

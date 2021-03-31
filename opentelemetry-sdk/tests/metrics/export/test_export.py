@@ -88,7 +88,7 @@ class TestProcessor(unittest.TestCase):
         self.assertEqual(records[0].aggregator, aggregator)
 
     def test_checkpoint_set_empty(self):
-        processor = Processor(True, Resource.create_empty())
+        processor = Processor(True, Resource.get_empty())
         records = processor.checkpoint_set()
         self.assertEqual(len(records), 0)
 
@@ -200,7 +200,7 @@ class TestSumAggregator(unittest.TestCase):
             update_total += val
         return update_total
 
-    @mock.patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
+    @mock.patch("opentelemetry.sdk.metrics.export.aggregate._time_ns")
     def test_update(self, time_mock):
         time_mock.return_value = 123
         sum_agg = SumAggregator()
@@ -273,7 +273,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
             count_ += 1
         return MinMaxSumCountAggregator._TYPE(min_, max_, sum_, count_)
 
-    @mock.patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
+    @mock.patch("opentelemetry.sdk.metrics.export.aggregate._time_ns")
     def test_update(self, time_mock):
         time_mock.return_value = 123
         mmsc = MinMaxSumCountAggregator()
@@ -426,7 +426,7 @@ class TestMinMaxSumCountAggregator(unittest.TestCase):
 
 
 class TestValueObserverAggregator(unittest.TestCase):
-    @mock.patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
+    @mock.patch("opentelemetry.sdk.metrics.export.aggregate._time_ns")
     def test_update(self, time_mock):
         time_mock.return_value = 123
         observer = ValueObserverAggregator()
@@ -598,7 +598,7 @@ class TestValueObserverAggregator(unittest.TestCase):
 
 
 class TestLastValueAggregator(unittest.TestCase):
-    @mock.patch("opentelemetry.sdk.metrics.export.aggregate.time_ns")
+    @mock.patch("opentelemetry.sdk.metrics.export.aggregate._time_ns")
     def test_update(self, time_mock):
         time_mock.return_value = 123
         observer = LastValueAggregator()

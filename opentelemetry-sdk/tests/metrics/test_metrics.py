@@ -31,7 +31,7 @@ class TestMeterProvider(unittest.TestCase):
         self.assertIs(meter.processor.stateful, False)
 
     def test_resource_empty(self):
-        resource = resources.Resource.create_empty()
+        resource = resources.Resource.get_empty()
         meter_provider = metrics.MeterProvider(resource=resource)
         self.assertIs(meter_provider.resource, resource)
 
@@ -59,7 +59,7 @@ class TestMeterProvider(unittest.TestCase):
             meter_provider.resource.attributes.get(
                 resources.TELEMETRY_SDK_VERSION
             ),
-            resources.OPENTELEMETRY_SDK_VERSION,
+            resources._OPENTELEMETRY_SDK_VERSION,
         )
 
     def test_start_pipeline(self):

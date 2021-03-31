@@ -21,6 +21,7 @@ from opentelemetry import trace
 from opentelemetry.distro import (
     EXPORTER_OTLP,
     EXPORTER_OTLP_SPAN,
+    EXPORTER_OTLP_METRIC,
     _get_exporter_names,
     _get_id_generator,
     _import_id_generator,
@@ -29,6 +30,7 @@ from opentelemetry.distro import (
 from opentelemetry.environment_variables import (
     OTEL_PYTHON_ID_GENERATOR,
     OTEL_TRACES_EXPORTER,
+    OTEL_METRICS_EXPORTER,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
@@ -158,7 +160,7 @@ class TestTraceInit(TestCase):
         self.assertIsInstance(provider.id_generator, CustomIdGenerator)
 
 
-class TestExporterNames(TestCase):
+class TestTracesExporterNames(TestCase):
     def test_otlp_exporter_overwrite(self):
         for exporter in [EXPORTER_OTLP, EXPORTER_OTLP_SPAN]:
             with patch.dict(environ, {OTEL_TRACES_EXPORTER: exporter}):
@@ -177,5 +179,33 @@ class TestExporterNames(TestCase):
         self.assertEqual(sorted(_get_exporter_names()), [])
 
     @patch.dict(environ, {OTEL_TRACES_EXPORTER: ""})
+    def test_empty_exporters(self):
+        self.assertEqual(sorted(_get_exporter_names()), [])
+
+
+class TestMetricsExporterNames(TestCase):
+    def test_otlp_exporter_overwrite(self):
+        for exporter in [EXPORTER_OTLP, EXPORTER_OTLP_METRIC]:
+            with patch.dict(environ, {OTEL_METRICS_EXPORTER: exporter}):
+                self.assertEqual(_get_exporter_names(), [EXPORTER_OTLP_METRIC])
+
+    @patch.dict(
+        environ, {OTEL_METRICS_EXPORTER: "otlp_proto_grpc_metric,prometheus"}
+    )
+    def test_multiple_exporters(self):
+        self.assertEqual(
+            sorted(_get_exporter_names()),
+            ["otlp_proto_grpc_metric", "prometheus"],
+        )
+
+    @patch.dict(environ, {OTEL_METRICS_EXPORTER: "none"})
+    def test_none_exporters(self):
+        self.assertEqual(sorted(_get_exporter_names()), [])
+
+    @patch.dict(environ, {}, clear=True)
+    def test_no_exporters(self):
+        self.assertEqual(sorted(_get_exporter_names()), [])
+
+    @patch.dict(environ, {OTEL_METRICS_EXPORTER: ""})
     def test_empty_exporters(self):
         self.assertEqual(sorted(_get_exporter_names()), [])
