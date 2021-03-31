@@ -6,6 +6,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.0.0...HEAD)
 
+### Changed
+- Adjust `B3Format` propagator to be spec compliant by not modifying context
+  when propagation headers are not present/invalid/empty
+  ([#1728]https://github.com/open-telemetry/opentelemetry-python/pull/1728)
+
 
 ## [1.0.0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.0.0) - 2021-03-26
 ### Added
