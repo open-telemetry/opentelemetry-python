@@ -16,7 +16,7 @@ import typing
 from re import compile as re_compile
 
 import opentelemetry.trace as trace
-from opentelemetry.context import Context
+from opentelemetry.context import Context, get_current
 from opentelemetry.propagators.textmap import (
     CarrierT,
     Getter,
@@ -50,6 +50,8 @@ class B3Format(TextMapPropagator):
         context: typing.Optional[Context] = None,
         getter: Getter = default_getter,
     ) -> Context:
+        if context is None:
+            context = get_current()
         trace_id = trace.INVALID_TRACE_ID
         span_id = trace.INVALID_SPAN_ID
         sampled = "0"

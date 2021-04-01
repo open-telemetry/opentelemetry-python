@@ -19,7 +19,7 @@ import opentelemetry.propagators.b3 as b3_format  # pylint: disable=no-name-in-m
 import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.id_generator as id_generator
 import opentelemetry.trace as trace_api
-from opentelemetry.context import get_current
+from opentelemetry import context as otel_context
 from opentelemetry.propagators.textmap import DefaultGetter
 
 FORMAT = b3_format.B3Format()
@@ -233,7 +233,7 @@ class TestB3Format(unittest.TestCase):
 
     def test_extract_invalid_single_header(self):
         """Given unparsable header, do not modify context"""
-        old_ctx = {}
+        old_ctx = otel_context.Context()
 
         carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
         new_ctx = FORMAT.extract(carrier, old_ctx)
@@ -242,7 +242,7 @@ class TestB3Format(unittest.TestCase):
 
     def test_extract_missing_trace_id(self):
         """Given no trace ID, do not modify context"""
-        old_ctx = {}
+        old_ctx = otel_context.Context()
 
         carrier = {
             FORMAT.SPAN_ID_KEY: self.serialized_span_id,
@@ -254,7 +254,7 @@ class TestB3Format(unittest.TestCase):
 
     def test_extract_invalid_trace_id(self):
         """Given invalid trace ID, do not modify context"""
-        old_ctx = {}
+        old_ctx = otel_context.Context()
 
         carrier = {
             FORMAT.TRACE_ID_KEY: "abc123",
@@ -267,7 +267,7 @@ class TestB3Format(unittest.TestCase):
 
     def test_extract_invalid_span_id(self):
         """Given invalid span ID, do not modify context"""
-        old_ctx = {}
+        old_ctx = otel_context.Context()
 
         carrier = {
             FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
@@ -280,7 +280,7 @@ class TestB3Format(unittest.TestCase):
 
     def test_extract_missing_span_id(self):
         """Given no span ID, do not modify context"""
-        old_ctx = {}
+        old_ctx = otel_context.Context()
 
         carrier = {
             FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
@@ -292,18 +292,33 @@ class TestB3Format(unittest.TestCase):
 
     def test_extract_empty_carrier(self):
         """Given no headers at all, do not modify context"""
-        old_ctx = {}
+        old_ctx = otel_context.Context()
 
         carrier = {}
         new_ctx = FORMAT.extract(carrier, old_ctx)
 
         self.assertDictEqual(new_ctx, old_ctx)
 
+    def test_extract_default_current_context(self):
+        """If context is not given, default to the current one"""
+        current_ctx = otel_context.set_value(
+            "current", "context", otel_context.Context()
+        )
+        token = otel_context.attach(current_ctx)
+
+        carrier = {}
+        new_ctx = FORMAT.extract(carrier)
+
+        self.assertIsNotNone(new_ctx)
+        self.assertEqual(otel_context.get_value("current", new_ctx), "context")
+
+        otel_context.detach(token)
+
     @staticmethod
     def test_inject_empty_context():
         """If the current context has no span, don't add headers"""
         new_carrier = {}
-        FORMAT.inject(new_carrier, get_current())
+        FORMAT.inject(new_carrier, otel_context.get_current())
         assert len(new_carrier) == 0
 
     @staticmethod
