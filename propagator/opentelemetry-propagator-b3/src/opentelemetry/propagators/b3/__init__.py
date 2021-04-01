@@ -50,8 +50,8 @@ class B3Format(TextMapPropagator):
         context: typing.Optional[Context] = None,
         getter: Getter = default_getter,
     ) -> Context:
-        trace_id = format_trace_id(trace.INVALID_TRACE_ID)
-        span_id = format_span_id(trace.INVALID_SPAN_ID)
+        trace_id = trace.INVALID_TRACE_ID
+        span_id = trace.INVALID_SPAN_ID
         sampled = "0"
         flags = None
 
@@ -73,8 +73,6 @@ class B3Format(TextMapPropagator):
                 trace_id, span_id, sampled = fields
             elif len(fields) == 4:
                 trace_id, span_id, sampled, _ = fields
-            else:
-                return trace.set_span_in_context(trace.INVALID_SPAN)
         else:
             trace_id = (
                 _extract_first_element(getter.get(carrier, self.TRACE_ID_KEY))
@@ -94,18 +92,15 @@ class B3Format(TextMapPropagator):
             )
 
         if (
-            self._trace_id_regex.fullmatch(trace_id) is None
+            trace_id == trace.INVALID_TRACE_ID
+            or span_id == trace.INVALID_SPAN_ID
+            or self._trace_id_regex.fullmatch(trace_id) is None
             or self._span_id_regex.fullmatch(span_id) is None
         ):
-            id_generator = trace.get_tracer_provider().id_generator
-            trace_id = id_generator.generate_trace_id()
-            span_id = id_generator.generate_span_id()
-            sampled = "0"
+            return context
 
-        else:
-            trace_id = int(trace_id, 16)
-            span_id = int(span_id, 16)
-
+        trace_id = int(trace_id, 16)
+        span_id = int(span_id, 16)
         options = 0
         # The b3 spec provides no defined behavior for both sample and
         # flag values set. Since the setting of at least one implies
