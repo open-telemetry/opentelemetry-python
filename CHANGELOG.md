@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.0.0...HEAD)
 
+### Added
+- Added `py.typed` file to every package. This should resolve a bunch of mypy
+  errors for users.
+  ([#1720](https://github.com/open-telemetry/opentelemetry-python/pull/1720))
+
+### Changed
+- Adjust `B3Format` propagator to be spec compliant by not modifying context
+  when propagation headers are not present/invalid/empty
+  ([#1728](https://github.com/open-telemetry/opentelemetry-python/pull/1728))
 - Update bootstrap cmd to use exact version when installing instrumentation packages. 
   ([#1722](https://github.com/open-telemetry/opentelemetry-python/pull/1722))
 
