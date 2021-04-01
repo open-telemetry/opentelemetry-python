@@ -49,15 +49,16 @@ class Status:
         self._status_code = status_code
         self._description = None
 
-        if description is not None and not isinstance(description, str):
-            logger.warning("Invalid status description type, expected str")
-            return
+        if description is not None:
+            if not isinstance(description, str):
+                logger.warning("Invalid status description type, expected str")
+                return
 
-        if status_code is not StatusCode.ERROR:
-            logger.warning(
-                "description should only be set when status_code is set to StatusCode.ERROR"
-            )
-            return
+            if status_code is not StatusCode.ERROR:
+                logger.warning(
+                    "description should only be set when status_code is set to StatusCode.ERROR"
+                )
+                return
 
         self._description = description
 
