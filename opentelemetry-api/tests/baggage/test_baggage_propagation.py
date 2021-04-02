@@ -12,25 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+# type: ignore
+
 import unittest
 from unittest.mock import Mock, patch
 
 from opentelemetry import baggage
-from opentelemetry.baggage.propagation import BaggagePropagator
+from opentelemetry.baggage.propagation import W3CBaggagePropagator
 from opentelemetry.context import get_current
-from opentelemetry.trace.propagation.textmap import DictGetter
-
-carrier_getter = DictGetter()
 
 
 class TestBaggagePropagation(unittest.TestCase):
     def setUp(self):
-        self.propagator = BaggagePropagator()
+        self.propagator = W3CBaggagePropagator()
 
     def _extract(self, header_value):
         """Test helper"""
         header = {"baggage": [header_value]}
-        return baggage.get_all(self.propagator.extract(carrier_getter, header))
+        return baggage.get_all(self.propagator.extract(header))
 
     def _inject(self, values):
         """Test helper"""
@@ -38,13 +37,11 @@ class TestBaggagePropagation(unittest.TestCase):
         for k, v in values.items():
             ctx = baggage.set_baggage(k, v, context=ctx)
         output = {}
-        self.propagator.inject(dict.__setitem__, output, context=ctx)
+        self.propagator.inject(output, context=ctx)
         return output.get("baggage")
 
     def test_no_context_header(self):
-        baggage_entries = baggage.get_all(
-            self.propagator.extract(carrier_getter, {})
-        )
+        baggage_entries = baggage.get_all(self.propagator.extract({}))
         self.assertEqual(baggage_entries, {})
 
     def test_empty_context_header(self):
@@ -87,7 +84,7 @@ class TestBaggagePropagation(unittest.TestCase):
         self.assertEqual(self._extract(header), expected)
 
     def test_header_too_long(self):
-        long_value = "s" * (BaggagePropagator.MAX_HEADER_LENGTH + 1)
+        long_value = "s" * (W3CBaggagePropagator._MAX_HEADER_LENGTH + 1)
         header = "key1={}".format(long_value)
         expected = {}
         self.assertEqual(self._extract(header), expected)
@@ -96,15 +93,15 @@ class TestBaggagePropagation(unittest.TestCase):
         header = ",".join(
             [
                 "key{}=val".format(k)
-                for k in range(BaggagePropagator.MAX_PAIRS + 1)
+                for k in range(W3CBaggagePropagator._MAX_PAIRS + 1)
             ]
         )
         self.assertEqual(
-            len(self._extract(header)), BaggagePropagator.MAX_PAIRS
+            len(self._extract(header)), W3CBaggagePropagator._MAX_PAIRS
         )
 
     def test_header_contains_pair_too_long(self):
-        long_value = "s" * (BaggagePropagator.MAX_PAIR_LENGTH + 1)
+        long_value = "s" * (W3CBaggagePropagator._MAX_PAIR_LENGTH + 1)
         header = "key1=value1,key2={},key3=value3".format(long_value)
         expected = {"key1": "value1", "key3": "value3"}
         self.assertEqual(self._extract(header), expected)
@@ -147,13 +144,13 @@ class TestBaggagePropagation(unittest.TestCase):
     @patch("opentelemetry.baggage.propagation._format_baggage")
     def test_fields(self, mock_format_baggage, mock_baggage):
 
-        mock_set_in_carrier = Mock()
+        mock_setter = Mock()
 
-        self.propagator.inject(mock_set_in_carrier, {})
+        self.propagator.inject({}, setter=mock_setter)
 
         inject_fields = set()
 
-        for mock_call in mock_set_in_carrier.mock_calls:
+        for mock_call in mock_setter.mock_calls:
             inject_fields.add(mock_call[1][1])
 
         self.assertEqual(inject_fields, self.propagator.fields)

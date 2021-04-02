@@ -24,7 +24,7 @@ loop = asyncio.get_event_loop()
 
 
 async def async_span(span):
-    with tracer.use_span(span):
+    with trace.use_span(span):
         ctx = baggage.set_baggage("foo", "bar")
     return ctx
 

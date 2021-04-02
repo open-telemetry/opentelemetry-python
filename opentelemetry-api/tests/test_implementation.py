@@ -34,7 +34,8 @@ class TestAPIOnlyImplementation(unittest.TestCase):
             trace.TracerProvider()  # type:ignore
 
     def test_default_tracer(self):
-        tracer_provider = trace.DefaultTracerProvider()
+        # pylint: disable=protected-access
+        tracer_provider = trace._DefaultTracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
         with tracer.start_span("test") as span:
             self.assertEqual(
@@ -55,7 +56,7 @@ class TestAPIOnlyImplementation(unittest.TestCase):
             trace.Span()  # type:ignore
 
     def test_default_span(self):
-        span = trace.DefaultSpan(trace.INVALID_SPAN_CONTEXT)
+        span = trace.NonRecordingSpan(trace.INVALID_SPAN_CONTEXT)
         self.assertEqual(span.get_span_context(), trace.INVALID_SPAN_CONTEXT)
         self.assertIs(span.is_recording(), False)
 

@@ -16,7 +16,7 @@ from http import HTTPStatus
 
 from opentelemetry.instrumentation.utils import http_status_to_status_code
 from opentelemetry.test.test_base import TestBase
-from opentelemetry.trace.status import StatusCode
+from opentelemetry.trace import StatusCode
 
 
 class TestUtils(TestBase):

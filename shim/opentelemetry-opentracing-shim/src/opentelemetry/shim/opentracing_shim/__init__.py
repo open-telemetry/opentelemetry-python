@@ -104,15 +104,15 @@ from opentelemetry.context import Context, attach, detach, get_value, set_value
 from opentelemetry.propagate import get_global_textmap
 from opentelemetry.shim.opentracing_shim import util
 from opentelemetry.shim.opentracing_shim.version import __version__
-from opentelemetry.trace import INVALID_SPAN_CONTEXT, DefaultSpan, Link
+from opentelemetry.trace import INVALID_SPAN_CONTEXT, Link, NonRecordingSpan
 from opentelemetry.trace import SpanContext as OtelSpanContext
 from opentelemetry.trace import Tracer as OtelTracer
 from opentelemetry.trace import (
     TracerProvider,
     get_current_span,
     set_span_in_context,
+    use_span,
 )
-from opentelemetry.trace.propagation.textmap import DictGetter
 from opentelemetry.util.types import Attributes
 
 ValueT = TypeVar("ValueT", int, float, bool, str)
@@ -322,7 +322,7 @@ class ScopeShim(Scope):
     It is necessary to have both ways for constructing `ScopeShim` objects
     because in some cases we need to create the object from an OpenTelemetry
     `opentelemetry.trace.Span` context manager (as returned by
-    :meth:`opentelemetry.trace.Tracer.use_span`), in which case our only way of
+    :meth:`opentelemetry.trace.use_span`), in which case our only way of
     retrieving a `opentelemetry.trace.Span` object is by calling the
     ``__enter__()`` method on the context manager, which makes the span active
     in the OpenTelemetry tracer; whereas in other cases we need to accept a
@@ -365,7 +365,7 @@ class ScopeShim(Scope):
         Example usage::
 
             span = otel_tracer.start_span("TestSpan")
-            span_cm = otel_tracer.use_span(span)
+            span_cm = opentelemetry.trace.use_span(span)
             scope_shim = ScopeShim.from_context_manager(
                 scope_manager_shim,
                 span_cm=span_cm,
@@ -375,7 +375,7 @@ class ScopeShim(Scope):
             manager: The :class:`ScopeManagerShim` that created this
                 :class:`ScopeShim`.
             span_cm: A context manager as returned by
-                :meth:`opentelemetry.trace.Tracer.use_span`.
+                :meth:`opentelemetry.trace.use_span`.
         """
 
         otel_span = span_cm.__enter__()
@@ -452,9 +452,7 @@ class ScopeManagerShim(ScopeManager):
             A :class:`ScopeShim` representing the activated span.
         """
 
-        span_cm = self._tracer.unwrap().use_span(
-            span.unwrap(), end_on_exit=finish_on_close
-        )
+        span_cm = use_span(span.unwrap(), end_on_exit=finish_on_close)
         return ScopeShim.from_context_manager(self, span_cm=span_cm)
 
     @property
@@ -528,7 +526,6 @@ class TracerShim(Tracer):
             Format.TEXT_MAP,
             Format.HTTP_HEADERS,
         )
-        self._carrier_getter = DictGetter()
 
     def unwrap(self):
         """Returns the :class:`opentelemetry.trace.Tracer` object that is
@@ -633,7 +630,7 @@ class TracerShim(Tracer):
         # use a `None` parent, which triggers the creation of a new trace.
         parent = child_of.unwrap() if child_of else None
         if isinstance(parent, OtelSpanContext):
-            parent = DefaultSpan(parent)
+            parent = NonRecordingSpan(parent)
 
         parent_span_context = set_span_in_context(parent)
 
@@ -684,8 +681,8 @@ class TracerShim(Tracer):
 
         propagator = get_global_textmap()
 
-        ctx = set_span_in_context(DefaultSpan(span_context.unwrap()))
-        propagator.inject(type(carrier).__setitem__, carrier, context=ctx)
+        ctx = set_span_in_context(NonRecordingSpan(span_context.unwrap()))
+        propagator.inject(carrier, context=ctx)
 
     def extract(self, format: object, carrier: object):
         """Returns an ``opentracing.SpanContext`` instance extracted from a
@@ -713,7 +710,7 @@ class TracerShim(Tracer):
             raise UnsupportedFormatException
 
         propagator = get_global_textmap()
-        ctx = propagator.extract(self._carrier_getter, carrier)
+        ctx = propagator.extract(carrier)
         span = get_current_span(ctx)
         if span is not None:
             otel_context = span.get_span_context()

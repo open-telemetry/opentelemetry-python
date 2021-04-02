@@ -86,7 +86,7 @@ class View:
 
     def get_view_data(self, labels):
         """Find an existing ViewData for this set of labels. If that ViewData
-            does not exist, create a new one to represent the labels
+        does not exist, create a new one to represent the labels
         """
         active_labels = []
         if self.view_config == ViewConfig.LABEL_KEYS:

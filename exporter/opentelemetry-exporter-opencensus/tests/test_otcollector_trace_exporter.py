@@ -26,6 +26,8 @@ from opentelemetry.exporter.opencensus.trace_exporter import (
     translate_to_collector,
 )
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.trace import TraceFlags
 
@@ -38,21 +40,23 @@ class TestCollectorSpanExporter(unittest.TestCase):
             "opentelemetry.exporter.opencensus.util.get_node",
             side_effect=mock_get_node,
         )
-        service_name = "testServiceName"
+        trace_api.set_tracer_provider(
+            TracerProvider(
+                resource=Resource.create({SERVICE_NAME: "testServiceName"})
+            )
+        )
+
         host_name = "testHostName"
         client = grpc.insecure_channel("")
         endpoint = "testEndpoint"
         with patch:
             exporter = OpenCensusSpanExporter(
-                service_name=service_name,
-                host_name=host_name,
-                endpoint=endpoint,
-                client=client,
+                host_name=host_name, endpoint=endpoint, client=client,
             )
 
         self.assertIs(exporter.client, client)
         self.assertEqual(exporter.endpoint, endpoint)
-        mock_get_node.assert_called_with(service_name, host_name)
+        mock_get_node.assert_called_with("testServiceName", host_name)
 
     def test_get_collector_span_kind(self):
         result = utils.get_collector_span_kind(trace_api.SpanKind.SERVER)
@@ -146,17 +150,11 @@ class TestCollectorSpanExporter(unittest.TestCase):
         otel_spans[0].set_attribute("key_string", "hello_world")
         otel_spans[0].set_attribute("key_float", 111.22)
         otel_spans[0].set_attribute("key_int", 333)
-        otel_spans[0].set_status(
-            trace_api.Status(
-                trace_api.status.StatusCode.OK, "test description",
-            )
-        )
+        otel_spans[0].set_status(trace_api.Status(trace_api.StatusCode.OK))
         otel_spans[0].end(end_time=end_times[0])
         otel_spans[1].start(start_time=start_times[1])
         otel_spans[1].set_status(
-            trace_api.Status(
-                trace_api.status.StatusCode.ERROR, {"test", "val"},
-            )
+            trace_api.Status(trace_api.StatusCode.ERROR, {"test", "val"},)
         )
         otel_spans[1].end(end_time=end_times[1])
         otel_spans[2].start(start_time=start_times[2])
@@ -196,9 +194,8 @@ class TestCollectorSpanExporter(unittest.TestCase):
             output_spans[2].parent_span_id, b"\x11\x11\x11\x11\x11\x11\x11\x11"
         )
         self.assertEqual(
-            output_spans[0].status.code, trace_api.status.StatusCode.OK.value,
+            output_spans[0].status.code, trace_api.StatusCode.OK.value,
         )
-        self.assertEqual(output_spans[0].status.message, "test description")
         self.assertEqual(len(output_spans[0].tracestate.entries), 1)
         self.assertEqual(output_spans[0].tracestate.entries[0].key, "testkey")
         self.assertEqual(
@@ -267,8 +264,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
             trace_pb2.Span.Link.Type.TYPE_UNSPECIFIED,
         )
         self.assertEqual(
-            output_spans[1].status.code,
-            trace_api.status.StatusCode.ERROR.value,
+            output_spans[1].status.code, trace_api.StatusCode.ERROR.value,
         )
         self.assertEqual(
             output_spans[2].links.link[0].type,

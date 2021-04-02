@@ -77,8 +77,8 @@ class TestSampler(unittest.TestCase):
     @staticmethod
     def _create_parent_span(
         trace_flags: trace.TraceFlags, is_remote=False
-    ) -> trace.DefaultSpan:
-        return trace.DefaultSpan(
+    ) -> trace.NonRecordingSpan:
+        return trace.NonRecordingSpan(
             trace.SpanContext(
                 0xDEADBEEF,
                 0xDEADBEF0,

@@ -12,31 +12,33 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# type: ignore
+
 import unittest
 
-from opentelemetry.trace.propagation.textmap import DictGetter
+from opentelemetry.propagators.textmap import DefaultGetter
 
 
-class TestDictGetter(unittest.TestCase):
+class TestDefaultGetter(unittest.TestCase):
     def test_get_none(self):
-        getter = DictGetter()
+        getter = DefaultGetter()
         carrier = {}
         val = getter.get(carrier, "test")
         self.assertIsNone(val)
 
     def test_get_str(self):
-        getter = DictGetter()
+        getter = DefaultGetter()
         carrier = {"test": "val"}
         val = getter.get(carrier, "test")
         self.assertEqual(val, ["val"])
 
     def test_get_iter(self):
-        getter = DictGetter()
+        getter = DefaultGetter()
         carrier = {"test": ["val"]}
         val = getter.get(carrier, "test")
         self.assertEqual(val, ["val"])
 
     def test_keys(self):
-        getter = DictGetter()
+        getter = DefaultGetter()
         keys = getter.keys({"test": "val"})
         self.assertEqual(keys, ["test"])

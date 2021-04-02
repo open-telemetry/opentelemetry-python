@@ -10,13 +10,12 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: 6e328246c895ff433b14430c9edddfead072287c
+  CONTRIB_REPO_SHA: 4fc64a01c118c640e273f56d2afb1b4597b82f0f
 
 jobs:
   build:
     env:
       # We use these variables to convert between tox and GHA version literals
-      py35: 3.5
       py36: 3.6
       py37: 3.7
       py38: 3.8
@@ -27,18 +26,9 @@ jobs:
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
-        python-version: [ py35, py36, py37, py38, py39, pypy3 ]
+        python-version: [ py36, py37, py38, py39, pypy3 ]
         package: ["instrumentation", "core", "exporter", "propagator"]
         os: [ ubuntu-latest ]
-        include:
-          # py35-instrumentation segfaults on 18.04 so we instead run on 20.04
-          - python-version: py35
-            package: instrumentation
-            os: ubuntu-20.04
-        exclude:
-          - os: ubuntu-latest
-            python-version: py35
-            package: instrumentation
     steps:
       - name: Checkout Core Repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v2
@@ -118,7 +108,6 @@ jobs:
   contrib-build:
     env:
       # We use these variables to convert between tox and GHA version literals
-      py35: 3.5
       py36: 3.6
       py37: 3.7
       py38: 3.8
@@ -128,18 +117,9 @@ jobs:
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
-        python-version: [ py35, py36, py37, py38, py39, pypy3 ]
+        python-version: [ py36, py37, py38, py39, pypy3 ]
         package: ["instrumentation", "exporter"]
         os: [ ubuntu-latest ]
-        include:
-          # py35-instrumentation segfaults on 18.04 so we instead run on 20.04
-          - python-version: py35
-            package: instrumentation
-            os: ubuntu-20.04
-        exclude:
-          - os: ubuntu-latest
-            python-version: py35
-            package: instrumentation
     steps:
       - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
         uses: actions/checkout@v2

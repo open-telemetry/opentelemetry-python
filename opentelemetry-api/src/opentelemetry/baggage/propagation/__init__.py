@@ -18,28 +18,27 @@ import urllib.parse
 from opentelemetry import baggage
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
-from opentelemetry.trace.propagation import textmap
+from opentelemetry.propagators import textmap
 
 
-class BaggagePropagator(textmap.TextMapPropagator):
-    """Extracts and injects Baggage which is used to annotate telemetry.
-    """
+class W3CBaggagePropagator(textmap.TextMapPropagator):
+    """Extracts and injects Baggage which is used to annotate telemetry."""
 
-    MAX_HEADER_LENGTH = 8192
-    MAX_PAIR_LENGTH = 4096
-    MAX_PAIRS = 180
+    _MAX_HEADER_LENGTH = 8192
+    _MAX_PAIR_LENGTH = 4096
+    _MAX_PAIRS = 180
     _BAGGAGE_HEADER_NAME = "baggage"
 
     def extract(
         self,
-        getter: textmap.Getter[textmap.TextMapPropagatorT],
-        carrier: textmap.TextMapPropagatorT,
+        carrier: textmap.CarrierT,
         context: typing.Optional[Context] = None,
+        getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
         """Extract Baggage from the carrier.
 
         See
-        `opentelemetry.trace.propagation.textmap.TextMapPropagator.extract`
+        `opentelemetry.propagators.textmap.TextMapPropagator.extract`
         """
 
         if context is None:
@@ -49,16 +48,16 @@ class BaggagePropagator(textmap.TextMapPropagator):
             getter.get(carrier, self._BAGGAGE_HEADER_NAME)
         )
 
-        if not header or len(header) > self.MAX_HEADER_LENGTH:
+        if not header or len(header) > self._MAX_HEADER_LENGTH:
             return context
 
         baggage_entries = header.split(",")
-        total_baggage_entries = self.MAX_PAIRS
+        total_baggage_entries = self._MAX_PAIRS
         for entry in baggage_entries:
             if total_baggage_entries <= 0:
                 return context
             total_baggage_entries -= 1
-            if len(entry) > self.MAX_PAIR_LENGTH:
+            if len(entry) > self._MAX_PAIR_LENGTH:
                 continue
             try:
                 name, value = entry.split("=", 1)
@@ -74,21 +73,21 @@ class BaggagePropagator(textmap.TextMapPropagator):
 
     def inject(
         self,
-        set_in_carrier: textmap.Setter[textmap.TextMapPropagatorT],
-        carrier: textmap.TextMapPropagatorT,
+        carrier: textmap.CarrierT,
         context: typing.Optional[Context] = None,
+        setter: textmap.Setter = textmap.default_setter,
     ) -> None:
         """Injects Baggage into the carrier.
 
         See
-        `opentelemetry.trace.propagation.textmap.TextMapPropagator.inject`
+        `opentelemetry.propagators.textmap.TextMapPropagator.inject`
         """
         baggage_entries = baggage.get_all(context=context)
         if not baggage_entries:
             return
 
         baggage_string = _format_baggage(baggage_entries)
-        set_in_carrier(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
+        setter.set(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
 
     @property
     def fields(self) -> typing.Set[str]:
@@ -104,8 +103,8 @@ def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
 
 
 def _extract_first_element(
-    items: typing.Optional[typing.Iterable[textmap.TextMapPropagatorT]],
-) -> typing.Optional[textmap.TextMapPropagatorT]:
+    items: typing.Optional[typing.Iterable[textmap.CarrierT]],
+) -> typing.Optional[textmap.CarrierT]:
     if items is None:
         return None
     return next(iter(items), None)

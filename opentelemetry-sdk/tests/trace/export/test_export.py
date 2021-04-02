@@ -64,7 +64,7 @@ class MySpanExporter(export.SpanExporter):
         self.is_shutdown = True
 
 
-class TestSimpleExportSpanProcessor(unittest.TestCase):
+class TestSimpleSpanProcessor(unittest.TestCase):
     def test_simple_span_processor(self):
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
@@ -72,7 +72,7 @@ class TestSimpleExportSpanProcessor(unittest.TestCase):
         spans_names_list = []
 
         my_exporter = MySpanExporter(destination=spans_names_list)
-        span_processor = export.SimpleExportSpanProcessor(my_exporter)
+        span_processor = export.SimpleSpanProcessor(my_exporter)
         tracer_provider.add_span_processor(span_processor)
 
         with tracer.start_as_current_span("foo"):
@@ -97,7 +97,7 @@ class TestSimpleExportSpanProcessor(unittest.TestCase):
         spans_names_list = []
 
         my_exporter = MySpanExporter(destination=spans_names_list)
-        span_processor = export.SimpleExportSpanProcessor(my_exporter)
+        span_processor = export.SimpleSpanProcessor(my_exporter)
         tracer_provider.add_span_processor(span_processor)
 
         with tracer.start_span("foo"):
@@ -113,9 +113,7 @@ class TestSimpleExportSpanProcessor(unittest.TestCase):
         tracer = tracer_provider.get_tracer(__name__)
 
         exporter = MySpanExporter([])
-        span_processor = mock.Mock(
-            wraps=export.SimpleExportSpanProcessor(exporter)
-        )
+        span_processor = mock.Mock(wraps=export.SimpleSpanProcessor(exporter))
         tracer_provider.add_span_processor(span_processor)
 
         context = Context()
@@ -133,7 +131,7 @@ class TestSimpleExportSpanProcessor(unittest.TestCase):
         spans_names_list = []
 
         my_exporter = MySpanExporter(destination=spans_names_list)
-        span_processor = export.SimpleExportSpanProcessor(my_exporter)
+        span_processor = export.SimpleSpanProcessor(my_exporter)
         tracer_provider.add_span_processor(span_processor)
 
         with tracer.start_as_current_span("foo"):
@@ -159,7 +157,7 @@ def _create_start_and_end_span(name, span_processor):
     span.end()
 
 
-class TestBatchExportSpanProcessor(unittest.TestCase):
+class TestBatchSpanProcessor(unittest.TestCase):
     @mock.patch.dict(
         "os.environ",
         {
@@ -171,7 +169,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
     )
     def test_batch_span_processor_environment_variables(self):
 
-        batch_span_processor = export.BatchExportSpanProcessor(
+        batch_span_processor = export.BatchSpanProcessor(
             MySpanExporter(destination=[])
         )
 
@@ -184,7 +182,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         # pylint: disable=no-self-use
         my_exporter = MySpanExporter(destination=[])
         span_processor = mock.Mock(
-            wraps=export.BatchExportSpanProcessor(my_exporter)
+            wraps=export.BatchSpanProcessor(my_exporter)
         )
         tracer_provider = trace.TracerProvider()
         tracer_provider.add_span_processor(span_processor)
@@ -201,7 +199,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         spans_names_list = []
 
         my_exporter = MySpanExporter(destination=spans_names_list)
-        span_processor = export.BatchExportSpanProcessor(my_exporter)
+        span_processor = export.BatchSpanProcessor(my_exporter)
 
         span_names = ["xxx", "bar", "foo"]
 
@@ -219,7 +217,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         spans_names_list = []
 
         my_exporter = MySpanExporter(destination=spans_names_list)
-        span_processor = export.BatchExportSpanProcessor(my_exporter)
+        span_processor = export.BatchSpanProcessor(my_exporter)
 
         span_names0 = ["xxx", "bar", "foo"]
         span_names1 = ["yyy", "baz", "fox"]
@@ -243,7 +241,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         spans_names_list = []
 
         my_exporter = MySpanExporter(destination=spans_names_list)
-        span_processor = export.BatchExportSpanProcessor(my_exporter)
+        span_processor = export.BatchSpanProcessor(my_exporter)
 
         self.assertTrue(span_processor.force_flush())
 
@@ -254,7 +252,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         span_list = []
 
         my_exporter = MySpanExporter(destination=span_list)
-        span_processor = export.BatchExportSpanProcessor(
+        span_processor = export.BatchSpanProcessor(
             my_exporter, max_queue_size=512, max_export_batch_size=128
         )
 
@@ -281,7 +279,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         my_exporter = MySpanExporter(
             destination=spans_names_list, export_timeout_millis=500
         )
-        span_processor = export.BatchExportSpanProcessor(my_exporter)
+        span_processor = export.BatchSpanProcessor(my_exporter)
 
         _create_start_and_end_span("foo", span_processor)
 
@@ -297,7 +295,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         my_exporter = MySpanExporter(
             destination=spans_names_list, max_export_batch_size=128
         )
-        span_processor = export.BatchExportSpanProcessor(
+        span_processor = export.BatchSpanProcessor(
             my_exporter, max_queue_size=512, max_export_batch_size=128
         )
 
@@ -316,7 +314,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         my_exporter = MySpanExporter(
             destination=spans_names_list, max_export_batch_size=128
         )
-        span_processor = export.BatchExportSpanProcessor(
+        span_processor = export.BatchSpanProcessor(
             my_exporter,
             max_queue_size=256,
             max_export_batch_size=64,
@@ -343,7 +341,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         my_exporter = MySpanExporter(
             destination=spans_names_list, max_export_batch_size=128
         )
-        span_processor = export.BatchExportSpanProcessor(
+        span_processor = export.BatchSpanProcessor(
             my_exporter,
             max_queue_size=256,
             max_export_batch_size=64,
@@ -366,7 +364,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         my_exporter = MySpanExporter(
             destination=spans_names_list, export_event=export_event
         )
-        span_processor = export.BatchExportSpanProcessor(
+        span_processor = export.BatchSpanProcessor(
             my_exporter, schedule_delay_millis=50,
         )
 
@@ -392,7 +390,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
             export_timeout_millis=50,
         )
 
-        span_processor = export.BatchExportSpanProcessor(
+        span_processor = export.BatchSpanProcessor(
             my_exporter, schedule_delay_millis=50,
         )
 
@@ -421,21 +419,18 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
     def test_batch_span_processor_parameters(self):
         # zero max_queue_size
         self.assertRaises(
-            ValueError, export.BatchExportSpanProcessor, None, max_queue_size=0
+            ValueError, export.BatchSpanProcessor, None, max_queue_size=0
         )
 
         # negative max_queue_size
         self.assertRaises(
-            ValueError,
-            export.BatchExportSpanProcessor,
-            None,
-            max_queue_size=-500,
+            ValueError, export.BatchSpanProcessor, None, max_queue_size=-500,
         )
 
         # zero schedule_delay_millis
         self.assertRaises(
             ValueError,
-            export.BatchExportSpanProcessor,
+            export.BatchSpanProcessor,
             None,
             schedule_delay_millis=0,
         )
@@ -443,7 +438,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         # negative schedule_delay_millis
         self.assertRaises(
             ValueError,
-            export.BatchExportSpanProcessor,
+            export.BatchSpanProcessor,
             None,
             schedule_delay_millis=-500,
         )
@@ -451,7 +446,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         # zero max_export_batch_size
         self.assertRaises(
             ValueError,
-            export.BatchExportSpanProcessor,
+            export.BatchSpanProcessor,
             None,
             max_export_batch_size=0,
         )
@@ -459,7 +454,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         # negative max_export_batch_size
         self.assertRaises(
             ValueError,
-            export.BatchExportSpanProcessor,
+            export.BatchSpanProcessor,
             None,
             max_export_batch_size=-500,
         )
@@ -467,7 +462,7 @@ class TestBatchExportSpanProcessor(unittest.TestCase):
         # max_export_batch_size > max_queue_size:
         self.assertRaises(
             ValueError,
-            export.BatchExportSpanProcessor,
+            export.BatchSpanProcessor,
             None,
             max_queue_size=256,
             max_export_batch_size=512,

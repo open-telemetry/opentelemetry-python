@@ -6,7 +6,12 @@ OpenTelemetry Jaeger Exporter
 .. |pypi| image:: https://badge.fury.io/py/opentelemetry-exporter-jaeger.svg
    :target: https://pypi.org/project/opentelemetry-exporter-jaeger/
 
-This library allows to export tracing data to `Jaeger <https://www.jaegertracing.io/>`_.
+This library is provided as a convenience to install all supported Jaeger Exporters. Currently it installs:
+* opentelemetry-exporter-jaeger-proto-grpc
+* opentelemetry-exporter-jaeger-thrift
+
+To avoid unnecessary dependencies, users should install the specific package once they've determined their
+preferred serialization method.
 
 Installation
 ------------
@@ -15,18 +20,6 @@ Installation
 
     pip install opentelemetry-exporter-jaeger
 
-
-.. _Jaeger: https://www.jaegertracing.io/
-.. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/
-
-Configuration
--------------
-
-OpenTelemetry Jaeger Exporter can be configured by setting `JaegerSpanExporter parameters
-<https://github.com/open-telemetry/opentelemetry-python/blob/main/exporter/opentelemetry-exporter-jaeger
-/src/opentelemetry/exporter/jaeger/__init__.py#L88>`_ or by setting
-`environment variables <https://github.com/open-telemetry/opentelemetry-specification/blob/main/
-specification/sdk-environment-variables.md#jaeger-exporter>`_
 
 References
 ----------

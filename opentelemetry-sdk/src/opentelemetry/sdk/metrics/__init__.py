@@ -177,8 +177,7 @@ class Metric(metrics_api.Metric):
 
 
 class Counter(Metric, metrics_api.Counter):
-    """See `opentelemetry.metrics.Counter`.
-    """
+    """See `opentelemetry.metrics.Counter`."""
 
     BOUND_INSTR_TYPE = BoundCounter
 
@@ -192,8 +191,7 @@ class Counter(Metric, metrics_api.Counter):
 
 
 class UpDownCounter(Metric, metrics_api.UpDownCounter):
-    """See `opentelemetry.metrics.UpDownCounter`.
-    """
+    """See `opentelemetry.metrics.UpDownCounter`."""
 
     BOUND_INSTR_TYPE = BoundUpDownCounter
 

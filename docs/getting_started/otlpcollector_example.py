@@ -16,12 +16,16 @@
 import time
 
 from opentelemetry import metrics, trace
-from opentelemetry.exporter.otlp.metrics_exporter import OTLPMetricsExporter
-from opentelemetry.exporter.otlp.trace_exporter import OTLPSpanExporter
+from opentelemetry.exporter.otlp.proto.grpc.metrics_exporter import (
+    OTLPMetricsExporter,
+)
+from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+    OTLPSpanExporter,
+)
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchExportSpanProcessor
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 span_exporter = OTLPSpanExporter(
     # optional
@@ -31,7 +35,7 @@ span_exporter = OTLPSpanExporter(
 )
 tracer_provider = TracerProvider()
 trace.set_tracer_provider(tracer_provider)
-span_processor = BatchExportSpanProcessor(span_exporter)
+span_processor = BatchSpanProcessor(span_exporter)
 tracer_provider.add_span_processor(span_processor)
 
 metric_exporter = OTLPMetricsExporter(
