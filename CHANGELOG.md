@@ -15,6 +15,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Adjust `B3Format` propagator to be spec compliant by not modifying context
   when propagation headers are not present/invalid/empty
   ([#1728](https://github.com/open-telemetry/opentelemetry-python/pull/1728))
+- Silence unnecessary warning when creating a new Status object without description.
+  ([#1721](https://github.com/open-telemetry/opentelemetry-python/pull/1721))
+- Update bootstrap cmd to use exact version when installing instrumentation packages. 
+  ([#1722](https://github.com/open-telemetry/opentelemetry-python/pull/1722))
 
 
 ## [1.0.0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.0.0) - 2021-03-26
