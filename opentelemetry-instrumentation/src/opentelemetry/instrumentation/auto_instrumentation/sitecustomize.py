@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import sys
+import logging
 from logging import getLogger
 from os import environ, path
 from os.path import abspath, dirname, pathsep
@@ -23,7 +24,9 @@ from pkg_resources import iter_entry_points
 from opentelemetry.environment_variables import (
     OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
 )
+from opentelemetry.instrumentation.resources import get_target_dependency_conflict
 
+logging.basicConfig(level=logging.DEBUG)
 logger = getLogger(__file__)
 
 
@@ -53,6 +56,13 @@ def _load_instrumentors():
                     "Instrumentation skipped for library %s", entry_point.name
                 )
                 continue
+
+            # check if instrumentor has any missing or conflicting dependencies
+            conflict = get_target_dependency_conflict(entry_point.dist)
+            if conflict:
+                logger.debug(conflict)
+                continue
+
             entry_point.load()().instrument()  # type: ignore
             logger.debug("Instrumented %s", entry_point.name)
         except Exception as exc:  # pylint: disable=broad-except
