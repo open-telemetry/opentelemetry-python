@@ -26,7 +26,6 @@ from opentelemetry.environment_variables import (
 )
 from opentelemetry.instrumentation.resources import get_target_dependency_conflict
 
-logging.basicConfig(level=logging.DEBUG)
 logger = getLogger(__file__)
 
 
@@ -63,7 +62,7 @@ def _load_instrumentors():
                 logger.debug(conflict)
                 continue
 
-            entry_point.load()().instrument()  # type: ignore
+            entry_point.load()(run_dependency_checks=False).instrument()  # type: ignore
             logger.debug("Instrumented %s", entry_point.name)
         except Exception as exc:  # pylint: disable=broad-except
             logger.exception("Instrumenting of %s failed", entry_point.name)
