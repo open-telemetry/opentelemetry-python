@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `py.typed` file to every package. This should resolve a bunch of mypy
   errors for users.
   ([#1720](https://github.com/open-telemetry/opentelemetry-python/pull/1720))
+- Distros can now implement `load_instrumentor(EntryPoint)` method to customize instrumentor
+  loading behaviour.
+  ([#1751](https://github.com/open-telemetry/opentelemetry-python/pull/1751))
 
 ### Changed
 - Adjust `B3Format` propagator to be spec compliant by not modifying context
