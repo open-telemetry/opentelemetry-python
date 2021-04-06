@@ -97,6 +97,8 @@ class B3Format(TextMapPropagator):
             or self._trace_id_regex.fullmatch(trace_id) is None
             or self._span_id_regex.fullmatch(span_id) is None
         ):
+            if context is None:
+                return trace.set_span_in_context(trace.INVALID_SPAN, context)
             return context
 
         trace_id = int(trace_id, 16)
@@ -119,7 +121,8 @@ class B3Format(TextMapPropagator):
                     trace_flags=trace.TraceFlags(options),
                     trace_state=trace.TraceState(),
                 )
-            )
+            ),
+            context,
         )
 
     def inject(
