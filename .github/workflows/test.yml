@@ -18,7 +18,7 @@ jobs:
       # We use these variables to convert between tox and GHA version literals
       py36: 3.6
       py37: 3.7
-    py38: 3.8
+      py38: 3.8
       py39: 3.9
       pypy3: pypy3
       RUN_MATRIX_COMBINATION: ${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os }}
