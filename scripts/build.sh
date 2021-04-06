@@ -11,12 +11,20 @@ python3 -m pip install --upgrade pip setuptools wheel
 BASEDIR=$(dirname $(readlink -f $(dirname $0)))
 DISTDIR=dist
 
+PACKAGES=<<DIRS
+exporter/opentelemetry-exporter-prometheus
+opentelemetry-api
+opentelemetry-sdk
+exporter/opentelemetry-exporter-otlp-proto-grpc
+exporter/opentelemetry-exporter-otlp
+DIRS
+
 (
   cd $BASEDIR
   mkdir -p $DISTDIR
   rm -rf $DISTDIR/*
 
- for d in opentelemetry-api/ opentelemetry-sdk/ opentelemetry-instrumentation/ opentelemetry-proto/ opentelemetry-distro/ exporter/*/ shim/*/ propagator/*/; do
+ for d in $PACKAGES; do
    (
      echo "building $d"
      cd "$d"
