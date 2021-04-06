@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1721](https://github.com/open-telemetry/opentelemetry-python/pull/1721))
 - Update bootstrap cmd to use exact version when installing instrumentation packages. 
   ([#1722](https://github.com/open-telemetry/opentelemetry-python/pull/1722))
+- Fix B3 propagator to never return None.
+  ([#1750](https://github.com/open-telemetry/opentelemetry-python/pull/1750))
 
 
 ## [1.0.0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.0.0) - 2021-03-26

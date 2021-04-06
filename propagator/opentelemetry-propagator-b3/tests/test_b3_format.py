@@ -51,6 +51,8 @@ def get_child_parent_new_carrier(old_carrier):
 
 
 class TestB3Format(unittest.TestCase):
+    # pylint: disable=too-many-public-methods
+
     @classmethod
     def setUpClass(cls):
         generator = id_generator.RandomIdGenerator()
@@ -215,6 +217,31 @@ class TestB3Format(unittest.TestCase):
 
         self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
 
+    def test_derived_ctx_is_returned_for_success(self):
+        """Ensure returned context is derived from the given context."""
+        old_ctx = {"k1": "v1"}
+        new_ctx = FORMAT.extract(
+            {
+                FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
+                FORMAT.SPAN_ID_KEY: self.serialized_span_id,
+                FORMAT.FLAGS_KEY: "1",
+            },
+            old_ctx,
+        )
+        self.assertIn("current-span", new_ctx)
+        for key, value in old_ctx.items():
+            self.assertIn(key, new_ctx)
+            self.assertEqual(new_ctx[key], value)
+
+    def test_derived_ctx_is_returned_for_failure(self):
+        """Ensure returned context is derived from the given context."""
+        old_ctx = {"k2": "v2"}
+        new_ctx = FORMAT.extract({}, old_ctx)
+        self.assertNotIn("current-span", new_ctx)
+        for key, value in old_ctx.items():
+            self.assertIn(key, new_ctx)
+            self.assertEqual(new_ctx[key], value)
+
     def test_64bit_trace_id(self):
         """64 bit trace ids should be padded to 128 bit trace ids."""
         trace_id_64_bit = self.serialized_trace_id[:16]
@@ -334,3 +361,12 @@ class TestB3Format(unittest.TestCase):
             inject_fields.add(call[1][1])
 
         self.assertEqual(FORMAT.fields, inject_fields)
+
+    def test_extract_none_context(self):
+        """Given no trace ID, do not modify context"""
+        old_ctx = None
+
+        carrier = {}
+        new_ctx = FORMAT.extract(carrier, old_ctx)
+        self.assertIsNotNone(new_ctx)
+        self.assertEqual(new_ctx["current-span"], trace_api.INVALID_SPAN)
