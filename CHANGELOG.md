@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1722](https://github.com/open-telemetry/opentelemetry-python/pull/1722))
 - Fix B3 propagator to never return None.
   ([#1750](https://github.com/open-telemetry/opentelemetry-python/pull/1750))
+- Added ProxyTracerProvider and ProxyTracer implementations to allow fetching provider
+  and tracer instances before a global provider is set up.
+  ([#1726](https://github.com/open-telemetry/opentelemetry-python/pull/1726))
 
 
 ## [1.0.0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.0.0) - 2021-03-26
