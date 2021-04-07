@@ -162,7 +162,7 @@ class TestTraceInit(TestCase):
 class TestExporterNames(TestCase):
     def test_otlp_exporter_overwrite(self):
         with patch.dict(environ, {OTEL_TRACES_EXPORTER: EXPORTER_OTLP}):
-            self.assertEqual(
+            self.assertCountEqual(
                 _get_exporter_names(),
                 [EXPORTER_OTLP_SPAN, EXPORTER_OTLP_METRIC],
             )
