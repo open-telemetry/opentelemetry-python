@@ -343,7 +343,7 @@ def runsubprocess(dry_run, params, *args, **kwargs):
 
     check = kwargs.pop("check")  # Enforce specifying check
 
-    print(">>>", cmdstr, file=sys.stderr)
+    print(">>>", cmdstr, file=sys.stderr, flush=True)
 
     # This is a workaround for subprocess.run(['python']) leaving the virtualenv on Win32.
     # The cause for this is that when running the python.exe in a virtualenv,
@@ -356,7 +356,7 @@ def runsubprocess(dry_run, params, *args, **kwargs):
     # Only this would find the "correct" python.exe.
 
     params = list(params)
-    executable = shutil.which(params[0])  # On Win32, pytho
+    executable = shutil.which(params[0])
     if executable:
         params[0] = executable
     try:
