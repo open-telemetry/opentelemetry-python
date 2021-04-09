@@ -74,6 +74,7 @@ either implicit or explicit context propagation consistently throughout.
 """
 
 
+import os
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from enum import Enum
@@ -220,6 +221,21 @@ class _DefaultTracerProvider(TracerProvider):
         return _DefaultTracer()
 
 
+class ProxyTracerProvider(TracerProvider):
+    def get_tracer(
+        self,
+        instrumenting_module_name: str,
+        instrumenting_library_version: str = "",
+    ) -> "Tracer":
+        if _TRACER_PROVIDER:
+            return _TRACER_PROVIDER.get_tracer(
+                instrumenting_module_name, instrumenting_library_version
+            )
+        return ProxyTracer(
+            instrumenting_module_name, instrumenting_library_version
+        )
+
+
 class Tracer(ABC):
     """Handles span creation and in-process context propagation.
 
@@ -349,6 +365,40 @@ class Tracer(ABC):
         """
 
 
+class ProxyTracer(Tracer):
+    # pylint: disable=W0222,signature-differs
+    def __init__(
+        self,
+        instrumenting_module_name: str,
+        instrumenting_library_version: str,
+    ):
+        self._instrumenting_module_name = instrumenting_module_name
+        self._instrumenting_library_version = instrumenting_library_version
+        self._real_tracer: Optional[Tracer] = None
+        self._noop_tracer = _DefaultTracer()
+
+    @property
+    def _tracer(self) -> Tracer:
+        if self._real_tracer:
+            return self._real_tracer
+
+        if _TRACER_PROVIDER:
+            self._real_tracer = _TRACER_PROVIDER.get_tracer(
+                self._instrumenting_module_name,
+                self._instrumenting_library_version,
+            )
+            return self._real_tracer
+        return self._noop_tracer
+
+    def start_span(self, *args, **kwargs) -> Span:  # type: ignore
+        return self._tracer.start_span(*args, **kwargs)  # type: ignore
+
+    def start_as_current_span(  # type: ignore
+        self, *args, **kwargs
+    ) -> Span:
+        return self._tracer.start_as_current_span(*args, **kwargs)  # type: ignore
+
+
 class _DefaultTracer(Tracer):
     """The default Tracer, used when no Tracer implementation is available.
 
@@ -387,6 +437,7 @@ class _DefaultTracer(Tracer):
 
 
 _TRACER_PROVIDER = None
+_PROXY_TRACER_PROVIDER = None
 
 
 def get_tracer(
@@ -425,9 +476,18 @@ def set_tracer_provider(tracer_provider: TracerProvider) -> None:
 
 def get_tracer_provider() -> TracerProvider:
     """Gets the current global :class:`~.TracerProvider` object."""
-    global _TRACER_PROVIDER  # pylint: disable=global-statement
+    # pylint: disable=global-statement
+    global _TRACER_PROVIDER
+    global _PROXY_TRACER_PROVIDER
 
     if _TRACER_PROVIDER is None:
+        # if a global tracer provider has not been set either via code or env
+        # vars, return a proxy tracer provider
+        if OTEL_PYTHON_TRACER_PROVIDER not in os.environ:
+            if not _PROXY_TRACER_PROVIDER:
+                _PROXY_TRACER_PROVIDER = ProxyTracerProvider()
+            return _PROXY_TRACER_PROVIDER
+
         _TRACER_PROVIDER = cast(  # type: ignore
             "TracerProvider",
             _load_provider(OTEL_PYTHON_TRACER_PROVIDER, "tracer_provider"),
