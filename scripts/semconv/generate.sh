@@ -26,7 +26,7 @@ docker run --rm \
   -f /source code \
   --template /templates/semantic_attributes.j2 \
   --output /output/attributes.py \
-  -Dclass=SpanSemanticAttributes
+  -Dclass=SpanAttributes
 
 docker run --rm \
   -v ${SCRIPT_DIR}/opentelemetry-specification/semantic_conventions/resource:/source \
