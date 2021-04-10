@@ -20,7 +20,7 @@
 
 from enum import Enum
 
-class {{class}}(Enum):
+class {{class}}:
     {%- for attribute in attributes | unique(attribute="fqn") %}
     {{attribute.fqn | to_const_name}} = "{{attribute.fqn}}"
     """

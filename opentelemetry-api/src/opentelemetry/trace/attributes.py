@@ -15,7 +15,7 @@
 from enum import Enum
 
 
-class SpanAttributes(Enum):
+class SpanAttributes:
     DB_SYSTEM = "db.system"
     """
     An identifier for the database management system (DBMS) product being used. See below for a list of well-known identifiers.

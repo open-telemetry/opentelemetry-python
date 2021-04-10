@@ -15,7 +15,7 @@
 from enum import Enum
 
 
-class ResourceAttributes(Enum):
+class ResourceAttributes:
     CLOUD_PROVIDER = "cloud.provider"
     """
     Name of the cloud provider.
