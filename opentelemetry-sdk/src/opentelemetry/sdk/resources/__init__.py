@@ -65,11 +65,67 @@ from json import dumps
 import pkg_resources
 
 from opentelemetry.sdk.environment_variables import OTEL_RESOURCE_ATTRIBUTES
-from opentelemetry.sdk.resources.attributes import ResourceAttributes
 
 LabelValue = typing.Union[str, bool, int, float]
 Attributes = typing.Dict[str, LabelValue]
 logger = logging.getLogger(__name__)
+
+
+CLOUD_PROVIDER = "cloud.provider"
+CLOUD_ACCOUNT_ID = "cloud.account.id"
+CLOUD_REGION = "cloud.region"
+CLOUD_ZONE = "cloud.zone"
+CONTAINER_NAME = "container.name"
+CONTAINER_ID = "container.id"
+CONTAINER_IMAGE_NAME = "container.image.name"
+CONTAINER_IMAGE_TAG = "container.image.tag"
+DEPLOYMENT_ENVIRONMENT = "deployment.environment"
+FAAS_NAME = "faas.name"
+FAAS_ID = "faas.id"
+FAAS_VERSION = "faas.version"
+FAAS_INSTANCE = "faas.instance"
+HOST_NAME = "host.name"
+HOST_TYPE = "host.type"
+HOST_IMAGE_NAME = "host.image.name"
+HOST_IMAGE_ID = "host.image.id"
+HOST_IMAGE_VERSION = "host.image.version"
+KUBERNETES_CLUSTER_NAME = "k8s.cluster.name"
+KUBERNETES_NAMESPACE_NAME = "k8s.namespace.name"
+KUBERNETES_POD_UID = "k8s.pod.uid"
+KUBERNETES_POD_NAME = "k8s.pod.name"
+KUBERNETES_CONTAINER_NAME = "k8s.container.name"
+KUBERNETES_REPLICA_SET_UID = "k8s.replicaset.uid"
+KUBERNETES_REPLICA_SET_NAME = "k8s.replicaset.name"
+KUBERNETES_DEPLOYMENT_UID = "k8s.deployment.uid"
+KUBERNETES_DEPLOYMENT_NAME = "k8s.deployment.name"
+KUBERNETES_STATEFUL_SET_UID = "k8s.statefulset.uid"
+KUBERNETES_STATEFUL_SET_NAME = "k8s.statefulset.name"
+KUBERNETES_DAEMON_SET_UID = "k8s.daemonset.uid"
+KUBERNETES_DAEMON_SET_NAME = "k8s.daemonset.name"
+KUBERNETES_JOB_UID = "k8s.job.uid"
+KUBERNETES_JOB_NAME = "k8s.job.name"
+KUBERNETES_CRON_JOB_UID = "k8s.cronjob.uid"
+KUBERNETES_CRON_JOB_NAME = "k8s.cronjob.name"
+OS_TYPE = "os.type"
+OS_DESCRIPTION = "os.description"
+PROCESS_PID = "process.pid"
+PROCESS_EXECUTABLE_NAME = "process.executable.name"
+PROCESS_EXECUTABLE_PATH = "process.executable.path"
+PROCESS_COMMAND = "process.command"
+PROCESS_COMMAND_LINE = "process.command_line"
+PROCESS_COMMAND_ARGS = "process.command_args"
+PROCESS_OWNER = "process.owner"
+PROCESS_RUNTIME_NAME = "process.runtime.name"
+PROCESS_RUNTIME_VERSION = "process.runtime.version"
+PROCESS_RUNTIME_DESCRIPTION = "process.runtime.description"
+SERVICE_NAME = "service.name"
+SERVICE_NAMESPACE = "service.namespace"
+SERVICE_INSTANCE_ID = "service.instance.id"
+SERVICE_VERSION = "service.version"
+TELEMETRY_SDK_NAME = "telemetry.sdk.name"
+TELEMETRY_SDK_VERSION = "telemetry.sdk.version"
+TELEMETRY_AUTO_VERSION = "telemetry.auto.version"
+TELEMETRY_SDK_LANGUAGE = "telemetry.sdk.language"
 
 
 _OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
@@ -98,17 +154,15 @@ class Resource:
         resource = _DEFAULT_RESOURCE.merge(
             OTELResourceDetector().detect()
         ).merge(Resource(attributes))
-        if not resource.attributes.get(ResourceAttributes.SERVICE_NAME, None):
+        if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
             process_executable_name = resource.attributes.get(
-                ResourceAttributes.PROCESS_EXECUTABLE_NAME, None
+                PROCESS_EXECUTABLE_NAME, None
             )
             if process_executable_name:
                 default_service_name += ":" + process_executable_name
             resource = resource.merge(
-                Resource(
-                    {ResourceAttributes.SERVICE_NAME: default_service_name}
-                )
+                Resource({SERVICE_NAME: default_service_name})
             )
         return resource
 
@@ -148,9 +202,9 @@ class Resource:
 _EMPTY_RESOURCE = Resource({})
 _DEFAULT_RESOURCE = Resource(
     {
-        ResourceAttributes.TELEMETRY_SDK_LANGUAGE: "python",
-        ResourceAttributes.TELEMETRY_SDK_NAME: "opentelemetry",
-        ResourceAttributes.TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
+        TELEMETRY_SDK_LANGUAGE: "python",
+        TELEMETRY_SDK_NAME: "opentelemetry",
+        TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
     }
 )
 
