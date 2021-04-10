@@ -8,6 +8,7 @@ Release Process:
 * [Create a Release](#Create-a-Release)
 * [Move stable tag](#Move-stable-tag)
 * [Update main](#Update-main)
+* [Update docs](#Update-docs)
 * [Check PyPI](#Check-PyPI)
 * [Troubleshooting](#troubleshooting)
 
@@ -72,6 +73,11 @@ perl -i -p -e 's/0.7b0/0.8.dev0/' $(git grep -l "0.7b0" | grep -vi CHANGELOG)
 # open a PR targeting main see #331
 git commit -m
 ```
+
+## Update docs
+
+If the docs for the Opentelemetry [website](https://opentelemetry.io/docs/python/) was updated in this release in this [folder](https://github.com/open-telemetry/opentelemetry-python/tree/main/website_docs), submit a [PR](https://github.com/open-telemetry/opentelemetry.io/tree/main/content/en/docs/python) to update the docs on the website accordingly.
+
 
 ## Troubleshooting
 
