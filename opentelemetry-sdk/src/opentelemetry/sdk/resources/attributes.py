@@ -14,6 +14,7 @@
 
 from enum import Enum
 
+
 class ResourceAttributes(Enum):
     CLOUD_PROVIDER = "cloud.provider"
     """
@@ -385,6 +386,7 @@ class ResourceAttributes(Enum):
     The version string of the auto instrumentation agent, if used.
     """
 
+
 class CloudProviderValues(Enum):
     AWS = "aws"
     """Amazon Web Services."""
@@ -539,4 +541,3 @@ class TelemetrySdkLanguageValues(Enum):
 
     WEBJS = "webjs"
     """webjs."""
-

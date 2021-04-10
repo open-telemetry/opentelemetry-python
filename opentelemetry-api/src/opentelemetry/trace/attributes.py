@@ -14,7 +14,8 @@
 
 from enum import Enum
 
-class SpanSemanticAttributes(Enum):
+
+class SpanAttributes(Enum):
     DB_SYSTEM = "db.system"
     """
     An identifier for the database management system (DBMS) product being used. See below for a list of well-known identifiers.
@@ -105,7 +106,9 @@ class SpanSemanticAttributes(Enum):
     Whether or not the query is idempotent.
     """
 
-    DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT = "db.cassandra.speculative_execution_count"
+    DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT = (
+        "db.cassandra.speculative_execution_count"
+    )
     """
     The number of times a query was speculatively executed. Not set or `0` if the query was not executed speculatively.
     """
@@ -254,7 +257,9 @@ clear whether the exception will escape.
     The size of the request payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://tools.ietf.org/html/rfc7230#section-3.3.2) header. For requests using transport encoding, this should be the compressed size.
     """
 
-    HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED = "http.request_content_length_uncompressed"
+    HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED = (
+        "http.request_content_length_uncompressed"
+    )
     """
     The size of the uncompressed request payload body after transport decoding. Not set if transport encoding not used.
     """
@@ -264,7 +269,9 @@ clear whether the exception will escape.
     The size of the response payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://tools.ietf.org/html/rfc7230#section-3.3.2) header. For requests using transport encoding, this should be the compressed size.
     """
 
-    HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED = "http.response_content_length_uncompressed"
+    HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED = (
+        "http.response_content_length_uncompressed"
+    )
     """
     The size of the uncompressed response payload body after transport decoding. Not set if transport encoding not used.
     """
@@ -346,12 +353,16 @@ clear whether the exception will escape.
     The [conversation ID](#conversations) identifying the conversation to which the message belongs, represented as a string. Sometimes called "Correlation ID".
     """
 
-    MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES = "messaging.message_payload_size_bytes"
+    MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES = (
+        "messaging.message_payload_size_bytes"
+    )
     """
     The (uncompressed) size of the message payload in bytes. Also use this attribute if it is unknown whether the compressed or uncompressed payload size is reported.
     """
 
-    MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES = "messaging.message_payload_compressed_size_bytes"
+    MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES = (
+        "messaging.message_payload_compressed_size_bytes"
+    )
     """
     The compressed size of the message payload in bytes.
     """
@@ -489,6 +500,7 @@ clear whether the exception will escape.
     """
     The [numeric status code](https://github.com/grpc/grpc/blob/v1.33.2/doc/statuscodes.md) of the gRPC request.
     """
+
 
 class DbSystemValues(Enum):
     OTHER_SQL = "other_sql"
@@ -808,4 +820,3 @@ class RpcGrpcStatusCodeValues(Enum):
 
     UNAUTHENTICATED = 16
     """UNAUTHENTICATED."""
-
