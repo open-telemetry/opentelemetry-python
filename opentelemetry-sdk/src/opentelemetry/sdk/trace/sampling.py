@@ -108,7 +108,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
-from opentelemetry.trace import SpanKind, Link, get_current_span
+from opentelemetry.trace import Link, SpanKind, get_current_span
 from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
 
