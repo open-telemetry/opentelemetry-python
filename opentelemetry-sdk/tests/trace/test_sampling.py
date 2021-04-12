@@ -98,6 +98,7 @@ class TestSampler(unittest.TestCase):
                     context,
                     0xDEADBEF1,
                     "sampling on",
+                    trace.SpanKind.INTERNAL,
                     attributes={"sampled.expect": "true"},
                     trace_state=trace_state,
                 )
@@ -118,6 +119,7 @@ class TestSampler(unittest.TestCase):
                     context,
                     0xDEADBEF1,
                     "sampling off",
+                    trace.SpanKind.INTERNAL,
                     attributes={"sampled.expect": "false"},
                     trace_state=trace_state,
                 )
@@ -132,6 +134,7 @@ class TestSampler(unittest.TestCase):
             context,
             0xDEADBEF1,
             "unsampled parent, sampling on",
+            trace.SpanKind.INTERNAL,
             attributes={"sampled.expect": "false"},
             trace_state=trace_state,
         )
@@ -144,6 +147,7 @@ class TestSampler(unittest.TestCase):
             context,
             0xDEADBEF1,
             "sampled parent, sampling on",
+            trace.SpanKind.INTERNAL,
             attributes={"sampled.expect": "true"},
             trace_state=trace_state,
         )
@@ -155,6 +159,7 @@ class TestSampler(unittest.TestCase):
             None,
             0xDEADBEF1,
             "no parent, sampling on",
+            trace.SpanKind.INTERNAL,
             attributes={"sampled.expect": "true"},
             trace_state=trace_state,
         )
@@ -169,6 +174,7 @@ class TestSampler(unittest.TestCase):
             context,
             0xDEADBEF1,
             "unsampled parent, sampling off",
+            trace.SpanKind.INTERNAL,
             attributes={"sampled.expect", "false"},
             trace_state=trace_state,
         )
@@ -181,6 +187,7 @@ class TestSampler(unittest.TestCase):
             context,
             0xDEADBEF1,
             "sampled parent, sampling on",
+            trace.SpanKind.INTERNAL,
             attributes={"sampled.expect": "true"},
             trace_state=trace_state,
         )
@@ -192,6 +199,7 @@ class TestSampler(unittest.TestCase):
             None,
             0xDEADBEF1,
             "unsampled parent, sampling off",
+            trace.SpanKind.INTERNAL,
             attributes={"sampled.expect": "false"},
             trace_state=trace_state,
         )
@@ -209,6 +217,7 @@ class TestSampler(unittest.TestCase):
             None,
             0x7FFFFFFFFFFFFFFF,
             "sampled true",
+            trace.SpanKind.INTERNAL,
             attributes={"sampled.expect": "true"},
             trace_state=trace_state,
         )
@@ -220,6 +229,7 @@ class TestSampler(unittest.TestCase):
             None,
             0x8000000000000000,
             "sampled false",
+            trace.SpanKind.INTERNAL,
             attributes={"sampled.expect": "false"},
             trace_state=trace_state,
         )
@@ -324,6 +334,7 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x7FFFFFFFFFFFFFFF,
                 "unsampled parent, sampling on",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "false"},
                 trace_state=trace_state,
             )
@@ -343,6 +354,7 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x7FFFFFFFFFFFFFFF,
                 "unsampled parent, sampling on",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "false"},
                 trace_state=trace_state,
             )
@@ -359,6 +371,7 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x8000000000000000,
                 "sampled parent, sampling off",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "true"},
                 trace_state=trace_state,
             )
@@ -378,6 +391,7 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x7FFFFFFFFFFFFFFF,
                 "unsampled parent, sampling on",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "false"},
                 trace_state=trace_state,
             )
@@ -394,6 +408,7 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x7FFFFFFFFFFFFFFF,
                 "unsampled parent, sampling on",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "false"},
                 trace_state=trace_state,
             )
@@ -413,6 +428,7 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x7FFFFFFFFFFFFFFF,
                 "unsampled parent, sampling on",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "false"},
                 trace_state=trace_state,
             )
@@ -429,6 +445,7 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x8000000000000000,
                 "sampled parent, sampling off",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "true"},
                 trace_state=trace_state,
             )
@@ -448,6 +465,7 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x7FFFFFFFFFFFFFFF,
                 "unsampled parent, sampling on",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "false"},
                 trace_state=trace_state,
             )
@@ -462,6 +480,7 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x8000000000000000,
                 "parent, sampling off",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "false"},
                 trace_state=trace_state,
             )
@@ -475,6 +494,7 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x8000000000000000,
                 "no parent, sampling on",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "true"},
                 trace_state=trace_state,
             )

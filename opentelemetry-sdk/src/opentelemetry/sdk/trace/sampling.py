@@ -108,7 +108,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
-from opentelemetry.trace import Link, get_current_span
+from opentelemetry.trace import SpanKind, Link, get_current_span
 from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
 
@@ -167,6 +167,7 @@ class Sampler(abc.ABC):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
+        kind: SpanKind = None,
         attributes: Attributes = None,
         links: Sequence["Link"] = None,
         trace_state: "TraceState" = None,
@@ -189,6 +190,7 @@ class StaticSampler(Sampler):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
+        kind: SpanKind = None,
         attributes: Attributes = None,
         links: Sequence["Link"] = None,
         trace_state: "TraceState" = None,
@@ -246,6 +248,7 @@ class TraceIdRatioBased(Sampler):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
+        kind: SpanKind = None,
         attributes: Attributes = None,
         links: Sequence["Link"] = None,
         trace_state: "TraceState" = None,
@@ -296,6 +299,7 @@ class ParentBased(Sampler):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
+        kind: SpanKind = None,
         attributes: Attributes = None,
         links: Sequence["Link"] = None,
         trace_state: "TraceState" = None,
@@ -322,6 +326,7 @@ class ParentBased(Sampler):
             parent_context=parent_context,
             trace_id=trace_id,
             name=name,
+            kind=kind,
             attributes=attributes,
             links=links,
             trace_state=trace_state,

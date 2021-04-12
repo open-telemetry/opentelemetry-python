@@ -918,7 +918,7 @@ class Tracer(trace_api.Tracer):
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling result.
         sampling_result = self.sampler.should_sample(
-            context, trace_id, name, attributes, links, trace_state
+            context, trace_id, name, kind, attributes, links, trace_state
         )
 
         trace_flags = (
