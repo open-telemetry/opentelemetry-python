@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import time
-from unittest.mock import patch
 
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
@@ -35,8 +34,7 @@ OTLPSpanExporter._stub = MockTraceServiceStub
 
 simple_span_processor = BatchSpanProcessor(OTLPSpanExporter())
 tracer = TracerProvider(
-    active_span_processor=simple_span_processor,
-    sampler=sampling.DEFAULT_ON,
+    active_span_processor=simple_span_processor, sampler=sampling.default_on,
 ).get_tracer("resource_usage_tracer")
 
 starttime = time.time()

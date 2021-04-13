@@ -162,10 +162,10 @@ class TestTracerSampling(unittest.TestCase):
         tracer_provider = trace.TracerProvider()
         self.assertIsInstance(tracer_provider.sampler, sampling.ParentBased)
         # pylint: disable=protected-access
-        self.assertEqual(tracer_provider.sampler._root, sampling.ALWAYS_ON)
+        self.assertEqual(tracer_provider.sampler._root, sampling.always_on)
 
     def test_sampler_no_sampling(self):
-        tracer_provider = trace.TracerProvider(sampling.ALWAYS_OFF)
+        tracer_provider = trace.TracerProvider(sampling.always_off)
         tracer = tracer_provider.get_tracer(__name__)
 
         # Check that the default tracer creates no-op spans if the sampler
@@ -225,7 +225,7 @@ class TestSpanCreation(unittest.TestCase):
         """
         tracer = new_tracer()
         parent_context = trace_api.set_span_in_context(
-            trace_api.INVALID_SPAN_CONTEXT
+            trace_api.invalid_span_context
         )
         new_span = tracer.start_span("root", context=parent_context)
         self.assertTrue(new_span.context.is_valid)
@@ -288,7 +288,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_start_span_implicit(self):
         tracer = new_tracer()
 
-        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+        self.assertEqual(trace_api.get_current_span(), trace_api.invalid_span)
 
         root = tracer.start_span("root")
         self.assertIsNotNone(root.start_time)
@@ -327,7 +327,7 @@ class TestSpanCreation(unittest.TestCase):
 
             self.assertIsNotNone(child.end_time)
 
-        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+        self.assertEqual(trace_api.get_current_span(), trace_api.invalid_span)
         self.assertIsNotNone(root.end_time)
 
     def test_start_span_explicit(self):
@@ -345,7 +345,7 @@ class TestSpanCreation(unittest.TestCase):
 
         other_parent_context = trace_api.set_span_in_context(other_parent)
 
-        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+        self.assertEqual(trace_api.get_current_span(), trace_api.invalid_span)
 
         root = tracer.start_span("root")
         self.assertIsNotNone(root.start_time)
@@ -394,7 +394,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_start_as_current_span_implicit(self):
         tracer = new_tracer()
 
-        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+        self.assertEqual(trace_api.get_current_span(), trace_api.invalid_span)
 
         with tracer.start_as_current_span("root") as root:
             self.assertIs(trace_api.get_current_span(), root)
@@ -408,7 +408,7 @@ class TestSpanCreation(unittest.TestCase):
             self.assertIs(trace_api.get_current_span(), root)
             self.assertIsNotNone(child.end_time)
 
-        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+        self.assertEqual(trace_api.get_current_span(), trace_api.invalid_span)
         self.assertIsNotNone(root.end_time)
 
     def test_start_as_current_span_explicit(self):
@@ -425,7 +425,7 @@ class TestSpanCreation(unittest.TestCase):
         )
         other_parent_ctx = trace_api.set_span_in_context(other_parent)
 
-        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+        self.assertEqual(trace_api.get_current_span(), trace_api.invalid_span)
 
         # Test with the implicit root span
         with tracer.start_as_current_span("root") as root:
@@ -453,7 +453,7 @@ class TestSpanCreation(unittest.TestCase):
     def test_start_as_current_span_decorator(self):
         tracer = new_tracer()
 
-        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+        self.assertEqual(trace_api.get_current_span(), trace_api.invalid_span)
 
         @tracer.start_as_current_span("root")
         def func():
@@ -472,12 +472,12 @@ class TestSpanCreation(unittest.TestCase):
 
         root1 = func()
 
-        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+        self.assertEqual(trace_api.get_current_span(), trace_api.invalid_span)
         self.assertIsNotNone(root1.end_time)
 
         # Second call must create a new span
         root2 = func()
-        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+        self.assertEqual(trace_api.get_current_span(), trace_api.invalid_span)
         self.assertIsNotNone(root2.end_time)
         self.assertIsNot(root1, root2)
 
@@ -697,7 +697,7 @@ class TestSpan(unittest.TestCase):
             )
 
     def test_events(self):
-        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+        self.assertEqual(trace_api.get_current_span(), trace_api.invalid_span)
 
         with self.tracer.start_as_current_span("root") as root:
             # only event name
@@ -766,7 +766,7 @@ class TestSpan(unittest.TestCase):
                 event.attributes["name"] = "hello"
 
     def test_invalid_event_attributes(self):
-        self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
+        self.assertEqual(trace_api.get_current_span(), trace_api.invalid_span)
 
         with self.tracer.start_as_current_span("root") as root:
             root.add_event("event0", {"attr1": True, "attr2": ["hi", False]})

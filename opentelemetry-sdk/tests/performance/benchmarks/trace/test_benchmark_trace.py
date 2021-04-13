@@ -17,7 +17,7 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
 
 tracer = trace.TracerProvider(
-    sampler=sampling.DEFAULT_ON,
+    sampler=sampling.default_on,
     resource=Resource(
         {
             "service.name": "A123456789",

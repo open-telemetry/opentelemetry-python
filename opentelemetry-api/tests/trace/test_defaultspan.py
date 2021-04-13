@@ -30,6 +30,6 @@ class TestNonRecordingSpan(unittest.TestCase):
         self.assertEqual(context, span.get_span_context())
 
     def test_invalid_span(self):
-        self.assertIsNotNone(trace.INVALID_SPAN)
-        self.assertIsNotNone(trace.INVALID_SPAN.get_span_context())
-        self.assertFalse(trace.INVALID_SPAN.get_span_context().is_valid)
+        self.assertIsNotNone(trace.invalid_span)
+        self.assertIsNotNone(trace.invalid_span.get_span_context())
+        self.assertFalse(trace.invalid_span.get_span_context().is_valid)

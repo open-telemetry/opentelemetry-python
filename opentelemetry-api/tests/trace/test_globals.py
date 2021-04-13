@@ -51,28 +51,28 @@ class TestTracer(unittest.TestCase):
         """_DefaultTracer's start_span will also
         be retrievable via get_current_span
         """
-        self.assertEqual(trace.get_current_span(), trace.INVALID_SPAN)
-        span = trace.NonRecordingSpan(trace.INVALID_SPAN_CONTEXT)
+        self.assertEqual(trace.get_current_span(), trace.invalid_span)
+        span = trace.NonRecordingSpan(trace.invalid_span_context)
         ctx = trace.set_span_in_context(span)
         token = context.attach(ctx)
         try:
             self.assertIs(trace.get_current_span(), span)
         finally:
             context.detach(token)
-        self.assertEqual(trace.get_current_span(), trace.INVALID_SPAN)
+        self.assertEqual(trace.get_current_span(), trace.invalid_span)
 
 
 class TestUseTracer(unittest.TestCase):
     def test_use_span(self):
-        self.assertEqual(trace.get_current_span(), trace.INVALID_SPAN)
-        span = trace.NonRecordingSpan(trace.INVALID_SPAN_CONTEXT)
+        self.assertEqual(trace.get_current_span(), trace.invalid_span)
+        span = trace.NonRecordingSpan(trace.invalid_span_context)
         with trace.use_span(span):
             self.assertIs(trace.get_current_span(), span)
-        self.assertEqual(trace.get_current_span(), trace.INVALID_SPAN)
+        self.assertEqual(trace.get_current_span(), trace.invalid_span)
 
     def test_use_span_end_on_exit(self):
 
-        test_span = TestSpan(trace.INVALID_SPAN_CONTEXT)
+        test_span = TestSpan(trace.invalid_span_context)
 
         with trace.use_span(test_span):
             pass
@@ -86,7 +86,7 @@ class TestUseTracer(unittest.TestCase):
         class TestUseSpanException(Exception):
             pass
 
-        test_span = TestSpan(trace.INVALID_SPAN_CONTEXT)
+        test_span = TestSpan(trace.invalid_span_context)
         exception = TestUseSpanException("test exception")
         with self.assertRaises(TestUseSpanException):
             with trace.use_span(test_span):
@@ -98,7 +98,7 @@ class TestUseTracer(unittest.TestCase):
         class TestUseSpanException(Exception):
             pass
 
-        test_span = TestSpan(trace.INVALID_SPAN_CONTEXT)
+        test_span = TestSpan(trace.invalid_span_context)
         with self.assertRaises(TestUseSpanException):
             with trace.use_span(test_span):
                 raise TestUseSpanException("test error")

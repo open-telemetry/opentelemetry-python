@@ -24,9 +24,9 @@ import opentelemetry.exporter.jaeger.proto.grpc.translate as pb_translator
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.jaeger.proto.grpc import JaegerExporter
 from opentelemetry.exporter.jaeger.proto.grpc.translate import (
-    NAME_KEY,
-    VERSION_KEY,
     Translate,
+    _name_key,
+    _version_key,
 )
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.environment_variables import (
@@ -362,12 +362,12 @@ class TestJaegerExporter(unittest.TestCase):
                         v_str="internal",
                     ),
                     model_pb2.KeyValue(
-                        key=NAME_KEY,
+                        key=_name_key,
                         v_type=model_pb2.ValueType.STRING,
                         v_str="name",
                     ),
                     model_pb2.KeyValue(
-                        key=VERSION_KEY,
+                        key=_version_key,
                         v_type=model_pb2.ValueType.STRING,
                         v_str="version",
                     ),

@@ -50,7 +50,7 @@ from opentelemetry.sdk.trace import Span as ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.trace import StatusCode
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 # pylint: disable=no-member
@@ -164,7 +164,7 @@ class OTLPSpanExporter(
                         _translate_key_values(key, value)
                     )
                 except Exception as error:  # pylint: disable=broad-except
-                    logger.exception(error)
+                    _logger.exception(error)
 
     def _translate_events(self, sdk_span: ReadableSpan) -> None:
         if sdk_span.events:
@@ -184,7 +184,7 @@ class OTLPSpanExporter(
                         )
                     # pylint: disable=broad-except
                     except Exception as error:
-                        logger.exception(error)
+                        _logger.exception(error)
 
                 self._collector_span_kwargs["events"].append(
                     collector_span_event
@@ -210,7 +210,7 @@ class OTLPSpanExporter(
                         )
                     # pylint: disable=broad-except
                     except Exception as error:
-                        logger.exception(error)
+                        _logger.exception(error)
 
                 self._collector_span_kwargs["links"].append(
                     collector_span_link

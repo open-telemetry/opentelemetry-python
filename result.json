@@ -1,0 +1,207 @@
+{
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/opentelemetry-api/src/opentelemetry/baggage/__init__.py": [
+        "get_all",
+        "get_baggage",
+        "set_baggage",
+        "remove_baggage",
+        "clear"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/opentelemetry-api/src/opentelemetry/baggage/propagation/__init__.py": [
+        "W3CBaggagePropagator"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/opentelemetry-api/src/opentelemetry/util/types.py": [
+        "AttributeValue",
+        "Attributes",
+        "AttributesAsKey"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/opentelemetry-api/src/opentelemetry/environment_variables/__init__.py": [
+        "OTEL_PROPAGATORS",
+        "OTEL_PYTHON_CONTEXT",
+        "OTEL_PYTHON_DISABLED_INSTRUMENTATIONS",
+        "OTEL_PYTHON_ID_GENERATOR",
+        "OTEL_TRACES_EXPORTER",
+        "OTEL_PYTHON_TRACER_PROVIDER"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/opentelemetry-api/src/opentelemetry/trace/span.py": [
+        "Span",
+        "TraceFlags",
+        "DEFAULT_TRACE_OPTIONS",
+        "TraceState",
+        "DEFAULT_TRACE_STATE",
+        "SpanContext",
+        "NonRecordingSpan",
+        "INVALID_SPAN_ID",
+        "INVALID_TRACE_ID",
+        "invalid_span_context",
+        "invalid_span",
+        "format_trace_id",
+        "format_span_id"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/opentelemetry-api/src/opentelemetry/trace/propagation/tracecontext.py": [
+        "TraceContextTextMapPropagator"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/opentelemetry-api/src/opentelemetry/propagators/composite.py": [
+        "CompositeHTTPPropagator"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/opentelemetry-api/src/opentelemetry/propagate/__init__.py": [
+        "extract",
+        "inject",
+        "get_global_textmap",
+        "set_global_textmap"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/exporter/opentelemetry-exporter-jaeger-proto-grpc/src/opentelemetry/exporter/jaeger/proto/grpc/translate/__init__.py": [
+        "Translator",
+        "Translate",
+        "ProtobufTranslator"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/exporter/opentelemetry-exporter-opencensus/src/opentelemetry/exporter/opencensus/trace_exporter/__init__.py": [
+        "OpenCensusSpanExporter"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/exporter/opentelemetry-exporter-zipkin-proto-http/src/opentelemetry/exporter/zipkin/proto/http/v2/__init__.py": [
+        "ProtobufEncoder"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/exporter/opentelemetry-exporter-zipkin-json/src/opentelemetry/exporter/zipkin/node_endpoint.py": [
+        "IpInput",
+        "NodeEndpoint"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/exporter/opentelemetry-exporter-zipkin-json/src/opentelemetry/exporter/zipkin/encoder/__init__.py": [
+        "EncodedLocalEndpointT",
+        "Protocol",
+        "Encoder",
+        "JsonEncoder"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/exporter/opentelemetry-exporter-zipkin-json/src/opentelemetry/exporter/zipkin/json/v2/__init__.py": [
+        "JsonV2Encoder"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/exporter/opentelemetry-exporter-zipkin-json/src/opentelemetry/exporter/zipkin/json/v1/__init__.py": [
+        "V1Encoder",
+        "JsonV1Encoder"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/exporter/opentelemetry-exporter-otlp-proto-grpc/src/opentelemetry/exporter/otlp/proto/grpc/trace_exporter/__init__.py": [
+        "OTLPSpanExporter"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/exporter/opentelemetry-exporter-jaeger-thrift/src/opentelemetry/exporter/jaeger/thrift/translate/__init__.py": [
+        "Translator",
+        "Translate",
+        "ThriftTranslator"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/opentelemetry-sdk/src/opentelemetry/sdk/resources/__init__.py": [
+        "LabelValue",
+        "Attributes",
+        "CLOUD_PROVIDER",
+        "CLOUD_ACCOUNT_ID",
+        "CLOUD_REGION",
+        "CLOUD_ZONE",
+        "CONTAINER_NAME",
+        "CONTAINER_ID",
+        "CONTAINER_IMAGE_NAME",
+        "CONTAINER_IMAGE_TAG",
+        "DEPLOYMENT_ENVIRONMENT",
+        "FAAS_NAME",
+        "FAAS_ID",
+        "FAAS_VERSION",
+        "FAAS_INSTANCE",
+        "HOST_NAME",
+        "HOST_TYPE",
+        "HOST_IMAGE_NAME",
+        "HOST_IMAGE_ID",
+        "HOST_IMAGE_VERSION",
+        "KUBERNETES_CLUSTER_NAME",
+        "KUBERNETES_NAMESPACE_NAME",
+        "KUBERNETES_POD_UID",
+        "KUBERNETES_POD_NAME",
+        "KUBERNETES_CONTAINER_NAME",
+        "KUBERNETES_REPLICA_SET_UID",
+        "KUBERNETES_REPLICA_SET_NAME",
+        "KUBERNETES_DEPLOYMENT_UID",
+        "KUBERNETES_DEPLOYMENT_NAME",
+        "KUBERNETES_STATEFUL_SET_UID",
+        "KUBERNETES_STATEFUL_SET_NAME",
+        "KUBERNETES_DAEMON_SET_UID",
+        "KUBERNETES_DAEMON_SET_NAME",
+        "KUBERNETES_JOB_UID",
+        "KUBERNETES_JOB_NAME",
+        "KUBERNETES_CRON_JOB_UID",
+        "KUBERNETES_CRON_JOB_NAME",
+        "OS_TYPE",
+        "OS_DESCRIPTION",
+        "PROCESS_PID",
+        "PROCESS_EXECUTABLE_NAME",
+        "PROCESS_EXECUTABLE_PATH",
+        "PROCESS_COMMAND",
+        "PROCESS_COMMAND_LINE",
+        "PROCESS_COMMAND_ARGS",
+        "PROCESS_OWNER",
+        "PROCESS_RUNTIME_NAME",
+        "PROCESS_RUNTIME_VERSION",
+        "PROCESS_RUNTIME_DESCRIPTION",
+        "SERVICE_NAME",
+        "SERVICE_NAMESPACE",
+        "SERVICE_INSTANCE_ID",
+        "SERVICE_VERSION",
+        "TELEMETRY_SDK_NAME",
+        "TELEMETRY_SDK_VERSION",
+        "TELEMETRY_AUTO_VERSION",
+        "TELEMETRY_SDK_LANGUAGE",
+        "Resource",
+        "ResourceDetector",
+        "OTELResourceDetector",
+        "get_aggregated_resources"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/opentelemetry-sdk/src/opentelemetry/sdk/util/instrumentation.py": [
+        "InstrumentationInfo"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/opentelemetry-sdk/src/opentelemetry/sdk/environment_variables/__init__.py": [
+        "OTEL_RESOURCE_ATTRIBUTES",
+        "OTEL_LOG_LEVEL",
+        "OTEL_TRACES_SAMPLER",
+        "OTEL_TRACES_SAMPLER_ARG",
+        "OTEL_BSP_SCHEDULE_DELAY",
+        "OTEL_BSP_EXPORT_TIMEOUT",
+        "OTEL_BSP_MAX_QUEUE_SIZE",
+        "OTEL_BSP_MAX_EXPORT_BATCH_SIZE",
+        "OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT",
+        "OTEL_SPAN_EVENT_COUNT_LIMIT",
+        "OTEL_SPAN_LINK_COUNT_LIMIT",
+        "OTEL_EXPORTER_JAEGER_AGENT_HOST",
+        "OTEL_EXPORTER_JAEGER_AGENT_PORT",
+        "OTEL_EXPORTER_JAEGER_ENDPOINT",
+        "OTEL_EXPORTER_JAEGER_USER",
+        "OTEL_EXPORTER_JAEGER_PASSWORD",
+        "OTEL_EXPORTER_ZIPKIN_ENDPOINT",
+        "OTEL_EXPORTER_OTLP_PROTOCOL",
+        "OTEL_EXPORTER_OTLP_CERTIFICATE",
+        "OTEL_EXPORTER_OTLP_HEADERS",
+        "OTEL_EXPORTER_OTLP_COMPRESSION",
+        "OTEL_EXPORTER_OTLP_TIMEOUT",
+        "OTEL_EXPORTER_OTLP_ENDPOINT",
+        "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT",
+        "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL",
+        "OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE",
+        "OTEL_EXPORTER_OTLP_TRACES_HEADERS",
+        "OTEL_EXPORTER_OTLP_TRACES_COMPRESSION",
+        "OTEL_EXPORTER_OTLP_TRACES_TIMEOUT",
+        "OTEL_EXPORTER_JAEGER_CERTIFICATE",
+        "OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/opentelemetry-sdk/src/opentelemetry/sdk/error_handler/__init__.py": [
+        "ErrorHandler",
+        "GlobalErrorHandler"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/opentelemetry-sdk/src/opentelemetry/sdk/trace/sampling.py": [
+        "Decision",
+        "SamplingResult",
+        "Sampler",
+        "StaticSampler",
+        "always_off",
+        "always_on",
+        "TraceIdRatioBased",
+        "ParentBased",
+        "default_off",
+        "default_on",
+        "ParentBasedTraceIdRatio"
+    ],
+    "/home/ocelotl/github/ocelotl/opentelemetry-python/opentelemetry-sdk/src/opentelemetry/sdk/trace/export/in_memory_span_exporter.py": [
+        "InMemorySpanExporter"
+    ]
+}

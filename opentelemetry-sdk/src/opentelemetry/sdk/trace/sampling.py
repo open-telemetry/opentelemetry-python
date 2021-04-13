@@ -22,8 +22,8 @@ OpenTelemetry provides two types of samplers:
 
 A `StaticSampler` always returns the same sampling result regardless of the conditions. Both possible StaticSamplers are already created:
 
-- Always sample spans: ALWAYS_ON
-- Never sample spans: ALWAYS_OFF
+- Always sample spans: always_on
+- Never sample spans: always_off
 
 A `TraceIdRatioBased` sampler makes a random sampling result based on the sampling probability given.
 
@@ -105,7 +105,6 @@ from logging import getLogger
 from types import MappingProxyType
 from typing import Optional, Sequence
 
-# pylint: disable=unused-import
 from opentelemetry.context import Context
 from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
@@ -152,8 +151,8 @@ class SamplingResult:
     def __init__(
         self,
         decision: Decision,
-        attributes: "Attributes" = None,
-        trace_state: "TraceState" = None,
+        attributes: Attributes = None,
+        trace_state: TraceState = None,
     ) -> None:
         self.decision = decision
         if attributes is None:
@@ -167,13 +166,13 @@ class Sampler(abc.ABC):
     @abc.abstractmethod
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: Optional[Context],
         trace_id: int,
         name: str,
         kind: SpanKind = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] = None,
-        trace_state: "TraceState" = None,
+        links: Sequence[Link] = None,
+        trace_state: TraceState = None,
     ) -> "SamplingResult":
         pass
 
@@ -190,13 +189,13 @@ class StaticSampler(Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: Optional[Context],
         trace_id: int,
         name: str,
         kind: SpanKind = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] = None,
-        trace_state: "TraceState" = None,
+        links: Sequence[Link] = None,
+        trace_state: TraceState = None,
     ) -> "SamplingResult":
         if self._decision is Decision.DROP:
             attributes = None
@@ -212,10 +211,10 @@ class StaticSampler(Sampler):
         return "AlwaysOnSampler"
 
 
-ALWAYS_OFF = StaticSampler(Decision.DROP)
+always_off = StaticSampler(Decision.DROP)
 """Sampler that never samples spans, regardless of the parent span's sampling decision."""
 
-ALWAYS_ON = StaticSampler(Decision.RECORD_AND_SAMPLE)
+always_on = StaticSampler(Decision.RECORD_AND_SAMPLE)
 """Sampler that always samples spans, regardless of the parent span's sampling decision."""
 
 
@@ -252,13 +251,13 @@ class TraceIdRatioBased(Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: Optional[Context],
         trace_id: int,
         name: str,
         kind: SpanKind = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] = None,
-        trace_state: "TraceState" = None,
+        links: Sequence[Link] = None,
+        trace_state: TraceState = None,
     ) -> "SamplingResult":
         decision = Decision.DROP
         if trace_id & self.TRACE_ID_LIMIT < self.bound:
@@ -294,10 +293,10 @@ class ParentBased(Sampler):
     def __init__(
         self,
         root: Sampler,
-        remote_parent_sampled: Sampler = ALWAYS_ON,
-        remote_parent_not_sampled: Sampler = ALWAYS_OFF,
-        local_parent_sampled: Sampler = ALWAYS_ON,
-        local_parent_not_sampled: Sampler = ALWAYS_OFF,
+        remote_parent_sampled: Sampler = always_on,
+        remote_parent_not_sampled: Sampler = always_off,
+        local_parent_sampled: Sampler = always_on,
+        local_parent_not_sampled: Sampler = always_off,
     ):
         self._root = root
         self._remote_parent_sampled = remote_parent_sampled
@@ -307,13 +306,13 @@ class ParentBased(Sampler):
 
     def should_sample(
         self,
-        parent_context: Optional["Context"],
+        parent_context: Optional[Context],
         trace_id: int,
         name: str,
         kind: SpanKind = None,
         attributes: Attributes = None,
-        links: Sequence["Link"] = None,
-        trace_state: "TraceState" = None,
+        links: Sequence[Link] = None,
+        trace_state: TraceState = None,
     ) -> "SamplingResult":
         parent_span_context = get_current_span(
             parent_context
@@ -352,10 +351,10 @@ class ParentBased(Sampler):
         )
 
 
-DEFAULT_OFF = ParentBased(ALWAYS_OFF)
+default_off = ParentBased(always_off)
 """Sampler that respects its parent span's sampling decision, but otherwise never samples."""
 
-DEFAULT_ON = ParentBased(ALWAYS_ON)
+default_on = ParentBased(always_on)
 """Sampler that respects its parent span's sampling decision, but otherwise always samples."""
 
 
@@ -371,10 +370,10 @@ class ParentBasedTraceIdRatio(ParentBased):
 
 
 _KNOWN_SAMPLERS = {
-    "always_on": ALWAYS_ON,
-    "always_off": ALWAYS_OFF,
-    "parentbased_always_on": DEFAULT_ON,
-    "parentbased_always_off": DEFAULT_OFF,
+    "always_on": always_on,
+    "always_off": always_off,
+    "parentbased_always_on": default_on,
+    "parentbased_always_off": default_off,
     "traceidratio": TraceIdRatioBased,
     "parentbased_traceidratio": ParentBasedTraceIdRatio,
 }

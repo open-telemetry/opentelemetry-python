@@ -50,19 +50,19 @@ class JaegerPropagator(TextMapPropagator):
             context = get_current()
         header = getter.get(carrier, self.TRACE_ID_KEY)
         if not header:
-            return trace.set_span_in_context(trace.INVALID_SPAN, context)
+            return trace.set_span_in_context(trace.invalid_span, context)
         fields = _extract_first_element(header).split(":")
 
         context = self._extract_baggage(getter, carrier, context)
         if len(fields) != 4:
-            return trace.set_span_in_context(trace.INVALID_SPAN, context)
+            return trace.set_span_in_context(trace.invalid_span, context)
 
         trace_id, span_id, _parent_id, flags = fields
         if (
             trace_id == trace.INVALID_TRACE_ID
             or span_id == trace.INVALID_SPAN_ID
         ):
-            return trace.set_span_in_context(trace.INVALID_SPAN, context)
+            return trace.set_span_in_context(trace.invalid_span, context)
 
         span = trace.NonRecordingSpan(
             trace.SpanContext(
@@ -84,7 +84,7 @@ class JaegerPropagator(TextMapPropagator):
     ) -> None:
         span = trace.get_current_span(context=context)
         span_context = span.get_span_context()
-        if span_context == trace.INVALID_SPAN_CONTEXT:
+        if span_context == trace.invalid_span_context:
             return
 
         span_parent_id = span.parent.span_id if span.parent else 0

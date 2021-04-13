@@ -98,7 +98,7 @@ class B3Format(TextMapPropagator):
             or self._span_id_regex.fullmatch(span_id) is None
         ):
             if context is None:
-                return trace.set_span_in_context(trace.INVALID_SPAN, context)
+                return trace.set_span_in_context(trace.invalid_span, context)
             return context
 
         trace_id = int(trace_id, 16)
@@ -134,7 +134,7 @@ class B3Format(TextMapPropagator):
         span = trace.get_current_span(context=context)
 
         span_context = span.get_span_context()
-        if span_context == trace.INVALID_SPAN_CONTEXT:
+        if span_context == trace.invalid_span_context:
             return
 
         sampled = (trace.TraceFlags.SAMPLED & span_context.trace_flags) != 0

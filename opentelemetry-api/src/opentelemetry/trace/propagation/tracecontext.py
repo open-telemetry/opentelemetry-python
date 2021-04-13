@@ -46,11 +46,11 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         header = getter.get(carrier, self._TRACEPARENT_HEADER_NAME)
 
         if not header:
-            return trace.set_span_in_context(trace.INVALID_SPAN, context)
+            return trace.set_span_in_context(trace.invalid_span, context)
 
         match = re.search(self._TRACEPARENT_HEADER_FORMAT_RE, header[0])
         if not match:
-            return trace.set_span_in_context(trace.INVALID_SPAN, context)
+            return trace.set_span_in_context(trace.invalid_span, context)
 
         version = match.group(1)
         trace_id = match.group(2)
@@ -58,13 +58,13 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         trace_flags = match.group(4)
 
         if trace_id == "0" * 32 or span_id == "0" * 16:
-            return trace.set_span_in_context(trace.INVALID_SPAN, context)
+            return trace.set_span_in_context(trace.invalid_span, context)
 
         if version == "00":
             if match.group(5):
-                return trace.set_span_in_context(trace.INVALID_SPAN, context)
+                return trace.set_span_in_context(trace.invalid_span, context)
         if version == "ff":
-            return trace.set_span_in_context(trace.INVALID_SPAN, context)
+            return trace.set_span_in_context(trace.invalid_span, context)
 
         tracestate_headers = getter.get(carrier, self._TRACESTATE_HEADER_NAME)
         if tracestate_headers is None:
@@ -95,7 +95,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         """
         span = trace.get_current_span(context)
         span_context = span.get_span_context()
-        if span_context == trace.INVALID_SPAN_CONTEXT:
+        if span_context == trace.invalid_span_context:
             return
         traceparent_string = "00-{trace_id}-{span_id}-{:02x}".format(
             span_context.trace_flags,

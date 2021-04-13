@@ -27,8 +27,7 @@ from opentelemetry.sdk.trace.export import (
 def get_tracer_with_processor(span_processor_class):
     span_processor = span_processor_class(OTLPSpanExporter())
     tracer = TracerProvider(
-        active_span_processor=span_processor,
-        sampler=sampling.DEFAULT_ON,
+        active_span_processor=span_processor, sampler=sampling.default_on,
     ).get_tracer("pipeline_benchmark_tracer")
     return tracer
 

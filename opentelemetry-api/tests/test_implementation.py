@@ -38,15 +38,15 @@ class TestAPIOnlyImplementation(unittest.TestCase):
         tracer = tracer_provider.get_tracer(__name__)
         with tracer.start_span("test") as span:
             self.assertEqual(
-                span.get_span_context(), trace.INVALID_SPAN_CONTEXT
+                span.get_span_context(), trace.invalid_span_context
             )
-            self.assertEqual(span, trace.INVALID_SPAN)
+            self.assertEqual(span, trace.invalid_span)
             self.assertIs(span.is_recording(), False)
             with tracer.start_span("test2") as span2:
                 self.assertEqual(
-                    span2.get_span_context(), trace.INVALID_SPAN_CONTEXT
+                    span2.get_span_context(), trace.invalid_span_context
                 )
-                self.assertEqual(span2, trace.INVALID_SPAN)
+                self.assertEqual(span2, trace.invalid_span)
                 self.assertIs(span2.is_recording(), False)
 
     def test_span(self):
@@ -55,6 +55,6 @@ class TestAPIOnlyImplementation(unittest.TestCase):
             trace.Span()  # type:ignore
 
     def test_default_span(self):
-        span = trace.NonRecordingSpan(trace.INVALID_SPAN_CONTEXT)
-        self.assertEqual(span.get_span_context(), trace.INVALID_SPAN_CONTEXT)
+        span = trace.NonRecordingSpan(trace.invalid_span_context)
+        self.assertEqual(span.get_span_context(), trace.invalid_span_context)
         self.assertIs(span.is_recording(), False)

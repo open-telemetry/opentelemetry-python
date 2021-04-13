@@ -25,7 +25,7 @@ from opentelemetry.trace import SpanKind
 from opentelemetry.util import types
 
 
-OTLP_JAEGER_SPAN_KIND = {
+_otlp_jaeger_span_kind = {
     SpanKind.CLIENT: "client",
     SpanKind.SERVER: "server",
     SpanKind.CONSUMER: "consumer",
@@ -33,8 +33,8 @@ OTLP_JAEGER_SPAN_KIND = {
     SpanKind.INTERNAL: "internal",
 }
 
-NAME_KEY = "otel.library.name"
-VERSION_KEY = "otel.library.version"
+_name_key = "otel.library.name"
+_version_key = "otel.library.version"
 
 
 def _nsec_to_usec_round(nsec: int) -> int:
@@ -295,17 +295,17 @@ class ProtobufTranslator(Translator):
                 )
         translated.append(
             _get_string_key_value(
-                "span.kind", OTLP_JAEGER_SPAN_KIND[span.kind]
+                "span.kind", _otlp_jaeger_span_kind[span.kind]
             )
         )
 
         # Instrumentation info KeyValues
         if span.instrumentation_info:
             name = _get_string_key_value(
-                NAME_KEY, span.instrumentation_info.name
+                _name_key, span.instrumentation_info.name
             )
             version = _get_string_key_value(
-                VERSION_KEY, span.instrumentation_info.version
+                _version_key, span.instrumentation_info.version
             )
             translated.extend([name, version])
 

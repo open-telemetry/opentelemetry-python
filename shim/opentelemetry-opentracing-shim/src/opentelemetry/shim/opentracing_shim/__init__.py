@@ -104,12 +104,13 @@ from opentelemetry.context import Context, attach, detach, get_value, set_value
 from opentelemetry.propagate import get_global_textmap
 from opentelemetry.shim.opentracing_shim import util
 from opentelemetry.shim.opentracing_shim.version import __version__
-from opentelemetry.trace import INVALID_SPAN_CONTEXT, Link, NonRecordingSpan
+from opentelemetry.trace import Link, NonRecordingSpan
 from opentelemetry.trace import SpanContext as OtelSpanContext
 from opentelemetry.trace import Tracer as OtelTracer
 from opentelemetry.trace import (
     TracerProvider,
     get_current_span,
+    invalid_span_context,
     set_span_in_context,
     use_span,
 )
@@ -473,7 +474,7 @@ class ScopeManagerShim(ScopeManager):
         """
 
         span = get_current_span()
-        if span.get_span_context() == INVALID_SPAN_CONTEXT:
+        if span.get_span_context() == invalid_span_context:
             return None
 
         try:
@@ -575,7 +576,7 @@ class TracerShim(Tracer):
 
         current_span = get_current_span()
 
-        if child_of is None and current_span is not INVALID_SPAN_CONTEXT:
+        if child_of is None and current_span is not invalid_span_context:
             child_of = SpanShim(None, None, current_span)
 
         span = self.start_span(
@@ -719,6 +720,6 @@ class TracerShim(Tracer):
         if span is not None:
             otel_context = span.get_span_context()
         else:
-            otel_context = INVALID_SPAN_CONTEXT
+            otel_context = invalid_span_context
 
         return SpanContextShim(otel_context)

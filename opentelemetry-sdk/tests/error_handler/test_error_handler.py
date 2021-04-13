@@ -20,7 +20,7 @@ from unittest.mock import Mock, patch
 from opentelemetry.sdk.error_handler import (
     ErrorHandler,
     GlobalErrorHandler,
-    logger,
+    _logger,
 )
 
 
@@ -28,7 +28,7 @@ class TestErrorHandler(TestCase):
     @patch("opentelemetry.sdk.error_handler.iter_entry_points")
     def test_default_error_handler(self, mock_iter_entry_points):
 
-        with self.assertLogs(logger, ERROR):
+        with self.assertLogs(_logger, ERROR):
             with GlobalErrorHandler():
                 raise Exception("some exception")
 
@@ -97,7 +97,7 @@ class TestErrorHandler(TestCase):
 
         error = ZeroDivisionError()
 
-        with self.assertLogs(logger, ERROR):
+        with self.assertLogs(_logger, ERROR):
             with GlobalErrorHandler():
                 raise error
 

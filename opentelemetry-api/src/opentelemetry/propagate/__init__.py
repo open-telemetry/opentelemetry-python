@@ -78,7 +78,7 @@ from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.propagators import composite, textmap
 
-logger = getLogger(__name__)
+_logger = getLogger(__name__)
 
 
 def extract(
@@ -139,7 +139,7 @@ try:
         )
 
 except Exception:  # pylint: disable=broad-except
-    logger.exception("Failed to load configured propagators")
+    _logger.exception("Failed to load configured propagators")
     raise
 
 _HTTP_TEXT_FORMAT = composite.CompositeHTTPPropagator(propagators)  # type: ignore

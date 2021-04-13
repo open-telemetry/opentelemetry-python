@@ -19,7 +19,7 @@ from typing import Dict, List
 
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.zipkin.encoder import (
-    DEFAULT_MAX_TAG_VALUE_LENGTH,
+    _DEFAULT_MAX_TAG_VALUE_LENGTH,
     Encoder,
 )
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
@@ -85,7 +85,7 @@ class CommonEncoderTestCases:
             encoder = self.get_encoder()
 
             self.assertEqual(
-                DEFAULT_MAX_TAG_VALUE_LENGTH, encoder.max_tag_value_length
+                _DEFAULT_MAX_TAG_VALUE_LENGTH, encoder.max_tag_value_length
             )
 
         def test_constructor_max_tag_value_length(self):

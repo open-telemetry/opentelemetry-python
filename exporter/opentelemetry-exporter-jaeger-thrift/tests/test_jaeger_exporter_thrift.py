@@ -198,7 +198,7 @@ class TestJaegerExporter(unittest.TestCase):
     def test_all_otlp_span_kinds_are_mapped(self):
         for kind in SpanKind:
             self.assertIn(
-                kind, jaeger_exporter.translate.OTLP_JAEGER_SPAN_KIND
+                kind, jaeger_exporter.translate._otlp_jaeger_span_kind
             )
 
     # pylint: disable=too-many-locals
@@ -436,12 +436,12 @@ class TestJaegerExporter(unittest.TestCase):
                         vStr="internal",
                     ),
                     jaeger.Tag(
-                        key=jaeger_exporter.translate.NAME_KEY,
+                        key=jaeger_exporter.translate._name_key,
                         vType=jaeger.TagType.STRING,
                         vStr="name",
                     ),
                     jaeger.Tag(
-                        key=jaeger_exporter.translate.VERSION_KEY,
+                        key=jaeger_exporter.translate._version_key,
                         vType=jaeger.TagType.STRING,
                         vStr="version",
                     ),

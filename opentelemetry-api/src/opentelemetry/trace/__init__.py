@@ -86,23 +86,11 @@ from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_TRACER_PROVIDER
 from opentelemetry.trace.propagation import (
     SPAN_KEY,
-    get_current_span,
-    set_span_in_context,
 )
 from opentelemetry.trace.span import (
-    DEFAULT_TRACE_OPTIONS,
-    DEFAULT_TRACE_STATE,
-    INVALID_SPAN,
-    INVALID_SPAN_CONTEXT,
-    INVALID_SPAN_ID,
-    INVALID_TRACE_ID,
-    NonRecordingSpan,
     Span,
     SpanContext,
-    TraceFlags,
-    TraceState,
-    format_span_id,
-    format_trace_id,
+    invalid_span,
 )
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
@@ -417,7 +405,7 @@ class _DefaultTracer(Tracer):
         set_status_on_exception: bool = True,
     ) -> "Span":
         # pylint: disable=unused-argument,no-self-use
-        return INVALID_SPAN
+        return invalid_span
 
     @contextmanager  # type: ignore
     def start_as_current_span(
@@ -433,7 +421,7 @@ class _DefaultTracer(Tracer):
         end_on_exit: bool = True,
     ) -> Iterator["Span"]:
         # pylint: disable=unused-argument,no-self-use
-        yield INVALID_SPAN
+        yield invalid_span
 
 
 _TRACER_PROVIDER = None
@@ -542,32 +530,3 @@ def use_span(
     finally:
         if end_on_exit:
             span.end()
-
-
-__all__ = [
-    "DEFAULT_TRACE_OPTIONS",
-    "DEFAULT_TRACE_STATE",
-    "INVALID_SPAN",
-    "INVALID_SPAN_CONTEXT",
-    "INVALID_SPAN_ID",
-    "INVALID_TRACE_ID",
-    "NonRecordingSpan",
-    "Link",
-    "Span",
-    "SpanContext",
-    "SpanKind",
-    "TraceFlags",
-    "TraceState",
-    "TracerProvider",
-    "Tracer",
-    "format_span_id",
-    "format_trace_id",
-    "get_current_span",
-    "get_tracer",
-    "get_tracer_provider",
-    "set_tracer_provider",
-    "set_span_in_context",
-    "use_span",
-    "Status",
-    "StatusCode",
-]

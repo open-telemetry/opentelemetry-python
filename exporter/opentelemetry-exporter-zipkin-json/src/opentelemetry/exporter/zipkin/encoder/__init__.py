@@ -35,11 +35,11 @@ from opentelemetry.trace import (
 
 EncodedLocalEndpointT = TypeVar("EncodedLocalEndpointT")
 
-DEFAULT_MAX_TAG_VALUE_LENGTH = 128
-NAME_KEY = "otel.library.name"
-VERSION_KEY = "otel.library.version"
+_DEFAULT_MAX_TAG_VALUE_LENGTH = 128
+_name_key = "otel.library.name"
+_version_key = "otel.library.version"
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 class Protocol(Enum):
@@ -64,7 +64,7 @@ class Encoder(abc.ABC):
     """
 
     def __init__(
-        self, max_tag_value_length: int = DEFAULT_MAX_TAG_VALUE_LENGTH
+        self, max_tag_value_length: int = _DEFAULT_MAX_TAG_VALUE_LENGTH
     ):
         self.max_tag_value_length = max_tag_value_length
 
@@ -137,10 +137,12 @@ class Encoder(abc.ABC):
                     attribute_value
                 )
                 if not value:
-                    logger.warning("Could not serialize tag %s", attribute_key)
+                    _logger.warning(
+                        "Could not serialize tag %s", attribute_key
+                    )
                     continue
             else:
-                logger.warning("Could not serialize tag %s", attribute_key)
+                _logger.warning("Could not serialize tag %s", attribute_key)
                 continue
 
             if (
@@ -199,8 +201,8 @@ class Encoder(abc.ABC):
         if span.instrumentation_info is not None:
             tags.update(
                 {
-                    NAME_KEY: span.instrumentation_info.name,
-                    VERSION_KEY: span.instrumentation_info.version,
+                    _name_key: span.instrumentation_info.name,
+                    _version_key: span.instrumentation_info.version,
                 }
             )
         if span.status.status_code is not StatusCode.UNSET:

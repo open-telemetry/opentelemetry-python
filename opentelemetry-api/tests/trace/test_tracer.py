@@ -33,5 +33,5 @@ class TestTracer(unittest.TestCase):
     def test_get_current_span(self):
         with self.tracer.start_as_current_span("test") as span:
             trace.get_current_span().set_attribute("test", "test")
-            self.assertEqual(span, trace.INVALID_SPAN)
+            self.assertEqual(span, trace.invalid_span)
             self.assertFalse(hasattr("span", "attributes"))

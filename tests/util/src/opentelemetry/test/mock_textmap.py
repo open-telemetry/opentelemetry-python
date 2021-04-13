@@ -70,7 +70,7 @@ class MockTextMapPropagator(TextMapPropagator):
         span_id_list = getter.get(carrier, self.SPAN_ID_KEY)
 
         if not trace_id_list or not span_id_list:
-            return trace.set_span_in_context(trace.INVALID_SPAN)
+            return trace.set_span_in_context(trace.invalid_span)
 
         return trace.set_span_in_context(
             trace.NonRecordingSpan(

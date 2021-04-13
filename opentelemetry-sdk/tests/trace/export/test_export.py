@@ -124,7 +124,7 @@ class TestSimpleSpanProcessor(unittest.TestCase):
 
     def test_simple_span_processor_not_sampled(self):
         tracer_provider = trace.TracerProvider(
-            sampler=trace.sampling.ALWAYS_OFF
+            sampler=trace.sampling.always_off
         )
         tracer = tracer_provider.get_tracer(__name__)
 
@@ -333,7 +333,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
 
     def test_batch_span_processor_not_sampled(self):
         tracer_provider = trace.TracerProvider(
-            sampler=trace.sampling.ALWAYS_OFF
+            sampler=trace.sampling.always_off
         )
         tracer = tracer_provider.get_tracer(__name__)
         spans_names_list = []
@@ -481,7 +481,7 @@ class TestConsoleSpanExporter(unittest.TestCase):
         exporter = export.ConsoleSpanExporter()
         # Mocking stdout interferes with debugging and test reporting, mock on
         # the exporter instance instead.
-        span = trace._Span("span name", trace_api.INVALID_SPAN_CONTEXT)
+        span = trace._Span("span name", trace_api.invalid_span_context)
         with mock.patch.object(exporter, "out") as mock_stdout:
             exporter.export([span])
         mock_stdout.write.assert_called_once_with(span.to_json() + os.linesep)

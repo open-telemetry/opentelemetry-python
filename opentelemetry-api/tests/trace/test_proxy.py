@@ -17,7 +17,7 @@
 import unittest
 
 from opentelemetry import trace
-from opentelemetry.trace.span import INVALID_SPAN_CONTEXT, NonRecordingSpan
+from opentelemetry.trace.span import NonRecordingSpan, invalid_span_context
 
 
 class TestProvider(trace._DefaultTracerProvider):
@@ -29,7 +29,7 @@ class TestProvider(trace._DefaultTracerProvider):
 
 class TestTracer(trace._DefaultTracer):
     def start_span(self, *args, **kwargs):
-        return TestSpan(INVALID_SPAN_CONTEXT)
+        return TestSpan(invalid_span_context)
 
 
 class TestSpan(NonRecordingSpan):

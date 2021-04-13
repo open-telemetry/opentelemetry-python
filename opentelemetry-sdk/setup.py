@@ -16,14 +16,12 @@ import os
 
 import setuptools
 
-BASE_DIR = os.path.dirname(__file__)
-VERSION_FILENAME = os.path.join(
-    BASE_DIR, "src", "opentelemetry", "sdk", "version.py"
-)
-PACKAGE_INFO = {}
-with open(VERSION_FILENAME) as f:
-    exec(f.read(), PACKAGE_INFO)
+package_info = {}
+with open(
+    os.path.join(
+        os.path.dirname(__file__), "src", "opentelemetry", "sdk", "version.py"
+    )
+) as f:
+    exec(f.read(), package_info)
 
-setuptools.setup(
-    version=PACKAGE_INFO["__version__"],
-)
+setuptools.setup(version=package_info["__version__"],)

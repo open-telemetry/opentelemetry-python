@@ -549,7 +549,7 @@ class TestShim(TestCase):
             carrier = {}
 
             ctx = self.shim.extract(opentracing.Format.HTTP_HEADERS, carrier)
-            self.assertEqual(ctx.unwrap(), trace.INVALID_SPAN_CONTEXT)
+            self.assertEqual(ctx.unwrap(), trace.invalid_span_context)
         finally:
             set_global_textmap(_old_propagator)
 

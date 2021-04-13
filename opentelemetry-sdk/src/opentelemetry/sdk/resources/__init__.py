@@ -69,7 +69,7 @@ from opentelemetry.semconv.resource import ResourceAttributes
 
 LabelValue = typing.Union[str, bool, int, float]
 Attributes = typing.Dict[str, LabelValue]
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
@@ -152,7 +152,7 @@ class Resource:
         """
         if not attributes:
             attributes = {}
-        resource = _DEFAULT_RESOURCE.merge(
+        resource = _default_resource.merge(
             OTELResourceDetector().detect()
         ).merge(Resource(attributes))
         if not resource.attributes.get(SERVICE_NAME, None):
@@ -169,7 +169,7 @@ class Resource:
 
     @staticmethod
     def get_empty() -> "Resource":
-        return _EMPTY_RESOURCE
+        return _empty_resource
 
     @property
     def attributes(self) -> Attributes:
@@ -200,8 +200,8 @@ class Resource:
         return hash(dumps(self._attributes, sort_keys=True))
 
 
-_EMPTY_RESOURCE = Resource({})
-_DEFAULT_RESOURCE = Resource(
+_empty_resource = Resource({})
+_default_resource = Resource(
     {
         TELEMETRY_SDK_LANGUAGE: "python",
         TELEMETRY_SDK_NAME: "opentelemetry",
@@ -246,7 +246,7 @@ def get_aggregated_resources(
     :param timeout: Number of seconds to wait for each detector to return
     :return:
     """
-    final_resource = initial_resource or _EMPTY_RESOURCE
+    final_resource = initial_resource or _empty_resource
     detectors = [OTELResourceDetector()] + detectors
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
@@ -259,10 +259,10 @@ def get_aggregated_resources(
             except Exception as ex:
                 if detector.raise_on_error:
                     raise ex
-                logger.warning(
+                _logger.warning(
                     "Exception %s in detector %s, ignoring", ex, detector
                 )
-                detected_resources = _EMPTY_RESOURCE
+                detected_resources = _empty_resource
             finally:
                 final_resource = final_resource.merge(detected_resources)
     return final_resource

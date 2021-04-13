@@ -60,12 +60,12 @@ class TestResources(unittest.TestCase):
         os.environ[resources.OTEL_RESOURCE_ATTRIBUTES] = ""
 
         resource = resources.Resource.get_empty()
-        self.assertEqual(resource, resources._EMPTY_RESOURCE)
+        self.assertEqual(resource, resources._empty_resource)
 
         resource = resources.Resource.create(None)
         self.assertEqual(
             resource,
-            resources._DEFAULT_RESOURCE.merge(
+            resources._default_resource.merge(
                 resources.Resource({resources.SERVICE_NAME: "unknown_service"})
             ),
         )
@@ -73,7 +73,7 @@ class TestResources(unittest.TestCase):
         resource = resources.Resource.create({})
         self.assertEqual(
             resource,
-            resources._DEFAULT_RESOURCE.merge(
+            resources._default_resource.merge(
                 resources.Resource({resources.SERVICE_NAME: "unknown_service"})
             ),
         )

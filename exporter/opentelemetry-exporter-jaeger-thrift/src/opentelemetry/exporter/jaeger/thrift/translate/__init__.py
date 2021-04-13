@@ -22,7 +22,7 @@ from opentelemetry.sdk.trace import ReadableSpan, StatusCode
 from opentelemetry.trace import SpanKind
 from opentelemetry.util import types
 
-OTLP_JAEGER_SPAN_KIND = {
+_otlp_jaeger_span_kind = {
     SpanKind.CLIENT: "client",
     SpanKind.SERVER: "server",
     SpanKind.CONSUMER: "consumer",
@@ -30,8 +30,8 @@ OTLP_JAEGER_SPAN_KIND = {
     SpanKind.INTERNAL: "internal",
 }
 
-NAME_KEY = "otel.library.name"
-VERSION_KEY = "otel.library.version"
+_name_key = "otel.library.name"
+_version_key = "otel.library.version"
 
 
 def _nsec_to_usec_round(nsec: int) -> int:
@@ -211,14 +211,14 @@ class ThriftTranslator(Translator):
                 )
 
         translated.append(
-            _get_string_tag("span.kind", OTLP_JAEGER_SPAN_KIND[span.kind])
+            _get_string_tag("span.kind", _otlp_jaeger_span_kind[span.kind])
         )
 
         # Instrumentation info tags
         if span.instrumentation_info:
-            name = _get_string_tag(NAME_KEY, span.instrumentation_info.name)
+            name = _get_string_tag(_name_key, span.instrumentation_info.name)
             version = _get_string_tag(
-                VERSION_KEY, span.instrumentation_info.version
+                _version_key, span.instrumentation_info.version
             )
             translated.extend([name, version])
 

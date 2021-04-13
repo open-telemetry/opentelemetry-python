@@ -33,14 +33,14 @@ handler that handles ``ZeroDivisionError``:
     from opentelemetry.sdk.error_handler import ErrorHandler
     from logging import getLogger
 
-    logger = getLogger(__name__)
+    _logger = getLogger(__name__)
 
 
     class ErrorHandler0(ErrorHandler, ZeroDivisionError):
 
         def _handle(self, error: Exception, *args, **kwargs):
 
-            logger.exception("ErrorHandler0 handling a ZeroDivisionError")
+            _logger.exception("ErrorHandler0 handling a ZeroDivisionError")
 
 To use the global error handler, just instantiate it as a context manager where
 you want exceptions to be handled:
@@ -64,7 +64,7 @@ from logging import getLogger
 
 from pkg_resources import iter_entry_points
 
-logger = getLogger(__name__)
+_logger = getLogger(__name__)
 
 
 class ErrorHandler(ABC):
@@ -85,7 +85,7 @@ class _DefaultErrorHandler(ErrorHandler):
     # pylint: disable=useless-return
     def _handle(self, error: Exception, *args, **kwargs):
 
-        logger.exception("Error handled by default error handler: ")
+        _logger.exception("Error handled by default error handler: ")
         return None
 
 
@@ -134,7 +134,7 @@ class GlobalErrorHandler:
                 # pylint: disable=broad-except
                 except Exception as error_handling_error:
 
-                    logger.exception(
+                    _logger.exception(
                         "%s error while handling error"
                         " %s by error handler %s",
                         error_handling_error.__class__.__name__,

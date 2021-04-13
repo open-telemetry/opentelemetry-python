@@ -369,4 +369,4 @@ class TestB3Format(unittest.TestCase):
         carrier = {}
         new_ctx = FORMAT.extract(carrier, old_ctx)
         self.assertIsNotNone(new_ctx)
-        self.assertEqual(new_ctx["current-span"], trace_api.INVALID_SPAN)
+        self.assertEqual(new_ctx["current-span"], trace_api.invalid_span)

@@ -104,7 +104,7 @@ class TestTraceContextFormat(unittest.TestCase):
                 },
             )
         )
-        self.assertEqual(span.get_span_context(), trace.INVALID_SPAN_CONTEXT)
+        self.assertEqual(span.get_span_context(), trace.invalid_span_context)
 
     def test_invalid_parent_id(self):
         """If the parent id is invalid, we must ignore the full traceparent
@@ -134,7 +134,7 @@ class TestTraceContextFormat(unittest.TestCase):
                 },
             )
         )
-        self.assertEqual(span.get_span_context(), trace.INVALID_SPAN_CONTEXT)
+        self.assertEqual(span.get_span_context(), trace.invalid_span_context)
 
     def test_no_send_empty_tracestate(self):
         """If the tracestate is empty, do not set the header.
@@ -172,12 +172,12 @@ class TestTraceContextFormat(unittest.TestCase):
                 },
             )
         )
-        self.assertEqual(span.get_span_context(), trace.INVALID_SPAN_CONTEXT)
+        self.assertEqual(span.get_span_context(), trace.invalid_span_context)
 
     def test_propagate_invalid_context(self):
         """Do not propagate invalid trace context."""
         output = {}  # type:typing.Dict[str, str]
-        ctx = trace.set_span_in_context(trace.INVALID_SPAN)
+        ctx = trace.set_span_in_context(trace.invalid_span)
         FORMAT.inject(output, context=ctx)
         self.assertFalse("traceparent" in output)
 
@@ -241,7 +241,7 @@ class TestTraceContextFormat(unittest.TestCase):
             span.get_span_context().trace_state["foo-_*/bar"], "bar4"
         )
 
-    @patch("opentelemetry.trace.INVALID_SPAN_CONTEXT")
+    @patch("opentelemetry.trace.invalid_span_context")
     @patch("opentelemetry.trace.get_current_span")
     def test_fields(self, mock_get_current_span, mock_invalid_span_context):
 

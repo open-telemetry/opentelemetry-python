@@ -540,14 +540,14 @@ class NonRecordingSpan(Span):
 
 INVALID_SPAN_ID = 0x0000000000000000
 INVALID_TRACE_ID = 0x00000000000000000000000000000000
-INVALID_SPAN_CONTEXT = SpanContext(
+invalid_span_context = SpanContext(
     trace_id=INVALID_TRACE_ID,
     span_id=INVALID_SPAN_ID,
     is_remote=False,
     trace_flags=DEFAULT_TRACE_OPTIONS,
     trace_state=DEFAULT_TRACE_STATE,
 )
-INVALID_SPAN = NonRecordingSpan(INVALID_SPAN_CONTEXT)
+invalid_span = NonRecordingSpan(invalid_span_context)
 
 
 def format_trace_id(trace_id: int) -> str:

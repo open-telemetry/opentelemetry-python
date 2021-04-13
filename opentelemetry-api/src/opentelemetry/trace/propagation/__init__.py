@@ -15,7 +15,7 @@ from typing import Optional
 
 from opentelemetry.context import get_value, set_value
 from opentelemetry.context.context import Context
-from opentelemetry.trace.span import INVALID_SPAN, Span
+from opentelemetry.trace.span import Span, invalid_span
 
 SPAN_KEY = "current-span"
 
@@ -42,9 +42,9 @@ def get_current_span(context: Optional[Context] = None) -> Span:
             default current context is used instead.
 
     Returns:
-        The Span set in the context if it exists. INVALID_SPAN otherwise.
+        The Span set in the context if it exists. invalid_span otherwise.
     """
     span = get_value(SPAN_KEY, context=context)
     if span is None or not isinstance(span, Span):
-        return INVALID_SPAN
+        return invalid_span
     return span

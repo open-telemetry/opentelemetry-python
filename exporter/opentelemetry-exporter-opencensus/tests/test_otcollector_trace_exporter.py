@@ -23,7 +23,7 @@ import opentelemetry.exporter.opencensus.util as utils
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.opencensus.trace_exporter import (
     OpenCensusSpanExporter,
-    translate_to_collector,
+    _translate_to_collector,
 )
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
@@ -79,7 +79,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
 
     # pylint: disable=too-many-locals
     # pylint: disable=too-many-statements
-    def test_translate_to_collector(self):
+    def test__translate_to_collector(self):
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
         span_id = 0x34BF92DEEFC58C92
         parent_id = 0x1111111111111111
@@ -164,7 +164,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
         otel_spans[1].end(end_time=end_times[1])
         otel_spans[2].start(start_time=start_times[2])
         otel_spans[2].end(end_time=end_times[2])
-        output_spans = translate_to_collector(otel_spans)
+        output_spans = _translate_to_collector(otel_spans)
 
         self.assertEqual(len(output_spans), 3)
         self.assertEqual(
