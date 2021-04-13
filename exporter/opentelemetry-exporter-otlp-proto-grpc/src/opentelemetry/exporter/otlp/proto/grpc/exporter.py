@@ -194,8 +194,14 @@ class OTLPExporterMixin(
         super().__init__()
 
         endpoint = endpoint or environ.get(
-            OTEL_EXPORTER_OTLP_ENDPOINT, "localhost:4317"
+            OTEL_EXPORTER_OTLP_ENDPOINT, "http://localhost:4317"
         )
+
+        if endpoint.startswith("http://"):
+            insecure = True
+
+        # strip the scheme before using endpoint
+        endpoint = endpoint.split("://")[-1]
 
         self._headers = headers or environ.get(OTEL_EXPORTER_OTLP_HEADERS)
         if isinstance(self._headers, str):
