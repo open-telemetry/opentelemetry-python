@@ -266,9 +266,7 @@ class TraceIdRatioBased(Sampler):
         if decision is Decision.DROP:
             attributes = None
         return SamplingResult(
-            decision,
-            attributes,
-            _get_parent_trace_state(parent_context),
+            decision, attributes, _get_parent_trace_state(parent_context),
         )
 
     def get_description(self) -> str:
@@ -402,10 +400,8 @@ def _get_from_env_or_default() -> Sampler:
     return _KNOWN_SAMPLERS[trace_sampler]
 
 
-def _get_parent_trace_state(parent_context) -> TraceState:
-    parent_span_context = get_current_span(
-        parent_context
-    ).get_span_context()
+def _get_parent_trace_state(parent_context) -> "TraceState":
+    parent_span_context = get_current_span(parent_context).get_span_context()
     if parent_span_context is None or not parent_span_context.is_valid:
         return None
     else:
