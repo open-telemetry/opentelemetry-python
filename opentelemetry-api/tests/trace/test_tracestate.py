@@ -107,5 +107,5 @@ class TestTraceContextFormat(unittest.TestCase):
         header_list = [",".join(entries)]
         state = TraceState.from_header(header_list)
 
-        self.assertTrue('foo' in state)
-        self.assertFalse('bar' in state)
+        self.assertTrue("foo" in state)
+        self.assertFalse("bar" in state)
