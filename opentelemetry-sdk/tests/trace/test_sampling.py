@@ -207,7 +207,6 @@ class TestSampler(unittest.TestCase):
         self.assertIsNone(default_off.trace_state)
 
     def test_probability_sampler(self):
-        trace_state = trace.TraceState([("key", "value")])
         sampler = sampling.TraceIdRatioBased(0.5)
 
         # Check that we sample based on the trace ID if the parent context is
