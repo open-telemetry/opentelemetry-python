@@ -231,6 +231,9 @@ class TraceState(typing.Mapping[str, str]):
                     "Invalid key/value pair (%s, %s) found.", key, value
                 )
 
+    def __contains__(self, item):
+        return item in self._dict
+
     def __getitem__(self, key: str) -> typing.Optional[str]:  # type: ignore
         return self._dict.get(key)
 
