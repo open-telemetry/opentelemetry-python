@@ -27,11 +27,14 @@ A `StaticSampler` always returns the same sampling result regardless of the cond
 
 A `TraceIdRatioBased` sampler makes a random sampling result based on the sampling probability given.
 
-If the span being sampled has a parent, `ParentBased` will respect the parent delegate sampler. Otherwise, it returns the sampling result from the given root sampler.
+If the span being sampled has a parent, `ParentBased` will respect the parent delegate sampler. Otherwise, it returns the sampling result from the given root sampler. 
 
 Currently, sampling results are always made during the creation of the span. However, this might not always be the case in the future (see `OTEP #115 <https://github.com/open-telemetry/oteps/pull/115>`_).
 
 Custom samplers can be created by subclassing `Sampler` and implementing `Sampler.should_sample` as well as `Sampler.get_description`.
+
+Samplers are able to modify the `TraceState` of the parent of the span being created. For custom samplers, it is suggested to implement `Sampler.should_sample` to utilize the
+parent span context's `TraceState` and pass into the `SamplingResult` instead of the explicit `trace_state` field passed into the parameter of `should_sample`.
 
 To use a sampler, pass it into the tracer provider constructor. For example:
 
@@ -197,7 +200,11 @@ class StaticSampler(Sampler):
     ) -> "SamplingResult":
         if self._decision is Decision.DROP:
             attributes = None
-        return SamplingResult(self._decision, attributes, trace_state)
+        return SamplingResult(
+            self._decision,
+            attributes,
+            _get_parent_trace_state(parent_context),
+        )
 
     def get_description(self) -> str:
         if self._decision is Decision.DROP:
@@ -258,7 +265,11 @@ class TraceIdRatioBased(Sampler):
             decision = Decision.RECORD_AND_SAMPLE
         if decision is Decision.DROP:
             attributes = None
-        return SamplingResult(decision, attributes, trace_state)
+        return SamplingResult(
+            decision,
+            attributes,
+            _get_parent_trace_state(parent_context),
+        )
 
     def get_description(self) -> str:
         return "TraceIdRatioBased{{{}}}".format(self._rate)
@@ -329,7 +340,6 @@ class ParentBased(Sampler):
             kind=kind,
             attributes=attributes,
             links=links,
-            trace_state=trace_state,
         )
 
     def get_description(self):
@@ -390,3 +400,13 @@ def _get_from_env_or_default() -> Sampler:
         return _KNOWN_SAMPLERS[trace_sampler](rate)
 
     return _KNOWN_SAMPLERS[trace_sampler]
+
+
+def _get_parent_trace_state(parent_context) -> TraceState:
+    parent_span_context = get_current_span(
+        parent_context
+    ).get_span_context()
+    if parent_span_context is None or not parent_span_context.is_valid:
+        return None
+    else:
+        return parent_span_context.trace_state
