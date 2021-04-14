@@ -96,3 +96,16 @@ class TestTraceContextFormat(unittest.TestCase):
         foo_place = entries.index(("foo", "bar33"))  # type: ignore
         prev_first_place = entries.index(("1a-2f@foo", "bar1"))  # type: ignore
         self.assertLessEqual(foo_place, prev_first_place)
+
+    def test_trace_contains(self):
+        entries = [
+            "1a-2f@foo=bar1",
+            "1a-_*/2b@foo=bar2",
+            "foo=bar3",
+            "foo-_*/bar=bar4",
+        ]
+        header_list = [",".join(entries)]
+        state = TraceState.from_header(header_list)
+
+        self.assertTrue('foo' in state)
+        self.assertFalse('bar' in state)
