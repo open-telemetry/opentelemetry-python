@@ -19,7 +19,7 @@ is as follows:
 
 | Tracing | Metrics | Logging |
 | ------- | ------- | ------- |
-| Stable    | Alpha   | Not Yet Implemented |
+| 1.0    | Alpha   | Not Yet Implemented |
 
 The current release can be found [here](https://github.com/open-telemetry/opentelemetry-python/releases)
 
