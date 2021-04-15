@@ -33,8 +33,8 @@ Currently, sampling results are always made during the creation of the span. How
 
 Custom samplers can be created by subclassing `Sampler` and implementing `Sampler.should_sample` as well as `Sampler.get_description`.
 
-Samplers are able to modify the TraceState of the parent of the span being created. For custom samplers, it is suggested to implement `Sampler.should_sample` to utilize the
-parent span context's `TraceState` and pass into the `SamplingResult` instead of the explicit `trace_state` field passed into the parameter of `should_sample`.
+Samplers are able to modify the `opentelemetry.trace.span.TraceState` of the parent of the span being created. For custom samplers, it is suggested to implement `Sampler.should_sample` to utilize the
+parent span context's `opentelemetry.trace.span.TraceState` and pass into the `SamplingResult` instead of the explicit `trace_state` field passed into the parameter of `should_sample`.
 
 To use a sampler, pass it into the tracer provider constructor. For example:
 
@@ -400,9 +400,8 @@ def _get_from_env_or_default() -> Sampler:
     return _KNOWN_SAMPLERS[trace_sampler]
 
 
-def _get_parent_trace_state(parent_context) -> "TraceState":
+def _get_parent_trace_state(parent_context) -> Optional["TraceState"]:
     parent_span_context = get_current_span(parent_context).get_span_context()
     if parent_span_context is None or not parent_span_context.is_valid:
         return None
-    else:
-        return parent_span_context.trace_state
+    return parent_span_context.trace_state

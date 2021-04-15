@@ -107,7 +107,7 @@ class TestSampler(unittest.TestCase):
                 self.assertEqual(
                     sample_result.attributes, {"sampled.expect": "true"}
                 )
-                if context:
+                if context is not None:
                     self.assertEqual(sample_result.trace_state, trace_state)
                 else:
                     self.assertIsNone(sample_result.trace_state)
@@ -127,7 +127,7 @@ class TestSampler(unittest.TestCase):
                 )
                 self.assertFalse(sample_result.decision.is_sampled())
                 self.assertEqual(sample_result.attributes, {})
-                if context:
+                if context is not None:
                     self.assertEqual(sample_result.trace_state, trace_state)
                 else:
                     self.assertIsNone(sample_result.trace_state)
@@ -221,7 +221,7 @@ class TestSampler(unittest.TestCase):
         )
         self.assertTrue(sampled_result.decision.is_sampled())
         self.assertEqual(sampled_result.attributes, {"sampled.expect": "true"})
-        self.assertFalse(sampled_result.trace_state)
+        self.assertIsNone(sampled_result.trace_state)
 
         not_sampled_result = sampler.should_sample(
             None,
@@ -232,7 +232,7 @@ class TestSampler(unittest.TestCase):
         )
         self.assertFalse(not_sampled_result.decision.is_sampled())
         self.assertEqual(not_sampled_result.attributes, {})
-        self.assertFalse(not_sampled_result.trace_state)
+        self.assertIsNone(sampled_result.trace_state)
 
     def test_probability_sampler_zero(self):
         default_off = sampling.TraceIdRatioBased(0.0)
