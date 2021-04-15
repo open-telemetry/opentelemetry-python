@@ -66,17 +66,17 @@ class TestSamplingResult(unittest.TestCase):
 
 class TestSampler(unittest.TestCase):
     def _create_parent(
-        self, trace_flags: trace.TraceFlags, is_remote=False
+        self, trace_flags: trace.TraceFlags, is_remote=False, trace_state=None
     ) -> typing.Optional[context_api.Context]:
         if trace_flags is None:
             return None
         return trace.set_span_in_context(
-            self._create_parent_span(trace_flags, is_remote)
+            self._create_parent_span(trace_flags, is_remote, trace_state)
         )
 
     @staticmethod
     def _create_parent_span(
-        trace_flags: trace.TraceFlags, is_remote=False
+        trace_flags: trace.TraceFlags, is_remote=False, trace_state=None
     ) -> trace.NonRecordingSpan:
         return trace.NonRecordingSpan(
             trace.SpanContext(
@@ -84,6 +84,7 @@ class TestSampler(unittest.TestCase):
                 0xDEADBEF0,
                 is_remote=is_remote,
                 trace_flags=trace_flags,
+                trace_state=trace_state,
             )
         )
 
@@ -93,59 +94,65 @@ class TestSampler(unittest.TestCase):
 
         for trace_flags in test_data:
             with self.subTest(trace_flags=trace_flags):
-                context = self._create_parent(trace_flags)
+                context = self._create_parent(trace_flags, False, trace_state)
                 sample_result = sampling.ALWAYS_ON.should_sample(
                     context,
                     0xDEADBEF1,
                     "sampling on",
+                    trace.SpanKind.INTERNAL,
                     attributes={"sampled.expect": "true"},
-                    trace_state=trace_state,
                 )
 
                 self.assertTrue(sample_result.decision.is_sampled())
                 self.assertEqual(
                     sample_result.attributes, {"sampled.expect": "true"}
                 )
-                self.assertEqual(sample_result.trace_state, trace_state)
+                if context is not None:
+                    self.assertEqual(sample_result.trace_state, trace_state)
+                else:
+                    self.assertIsNone(sample_result.trace_state)
 
     def test_always_off(self):
         trace_state = trace.TraceState([("key", "value")])
         test_data = (TO_DEFAULT, TO_SAMPLED, None)
         for trace_flags in test_data:
             with self.subTest(trace_flags=trace_flags):
-                context = self._create_parent(trace_flags)
+                context = self._create_parent(trace_flags, False, trace_state)
                 sample_result = sampling.ALWAYS_OFF.should_sample(
                     context,
                     0xDEADBEF1,
                     "sampling off",
+                    trace.SpanKind.INTERNAL,
                     attributes={"sampled.expect": "false"},
-                    trace_state=trace_state,
                 )
                 self.assertFalse(sample_result.decision.is_sampled())
                 self.assertEqual(sample_result.attributes, {})
-                self.assertEqual(sample_result.trace_state, trace_state)
+                if context is not None:
+                    self.assertEqual(sample_result.trace_state, trace_state)
+                else:
+                    self.assertIsNone(sample_result.trace_state)
 
     def test_default_on(self):
         trace_state = trace.TraceState([("key", "value")])
-        context = self._create_parent(trace_flags=TO_DEFAULT)
+        context = self._create_parent(TO_DEFAULT, False, trace_state)
         sample_result = sampling.DEFAULT_ON.should_sample(
             context,
             0xDEADBEF1,
             "unsampled parent, sampling on",
+            trace.SpanKind.INTERNAL,
             attributes={"sampled.expect": "false"},
-            trace_state=trace_state,
         )
         self.assertFalse(sample_result.decision.is_sampled())
         self.assertEqual(sample_result.attributes, {})
         self.assertEqual(sample_result.trace_state, trace_state)
 
-        context = self._create_parent(trace_flags=TO_SAMPLED)
+        context = self._create_parent(TO_SAMPLED, False, trace_state)
         sample_result = sampling.DEFAULT_ON.should_sample(
             context,
             0xDEADBEF1,
             "sampled parent, sampling on",
+            trace.SpanKind.INTERNAL,
             attributes={"sampled.expect": "true"},
-            trace_state=trace_state,
         )
         self.assertTrue(sample_result.decision.is_sampled())
         self.assertEqual(sample_result.attributes, {"sampled.expect": "true"})
@@ -155,34 +162,34 @@ class TestSampler(unittest.TestCase):
             None,
             0xDEADBEF1,
             "no parent, sampling on",
+            trace.SpanKind.INTERNAL,
             attributes={"sampled.expect": "true"},
-            trace_state=trace_state,
         )
         self.assertTrue(sample_result.decision.is_sampled())
         self.assertEqual(sample_result.attributes, {"sampled.expect": "true"})
-        self.assertEqual(sample_result.trace_state, trace_state)
+        self.assertIsNone(sample_result.trace_state)
 
     def test_default_off(self):
         trace_state = trace.TraceState([("key", "value")])
-        context = self._create_parent(trace_flags=TO_DEFAULT)
+        context = self._create_parent(TO_DEFAULT, False, trace_state)
         sample_result = sampling.DEFAULT_OFF.should_sample(
             context,
             0xDEADBEF1,
             "unsampled parent, sampling off",
+            trace.SpanKind.INTERNAL,
             attributes={"sampled.expect", "false"},
-            trace_state=trace_state,
         )
         self.assertFalse(sample_result.decision.is_sampled())
         self.assertEqual(sample_result.attributes, {})
         self.assertEqual(sample_result.trace_state, trace_state)
 
-        context = self._create_parent(trace_flags=TO_SAMPLED)
+        context = self._create_parent(TO_SAMPLED, False, trace_state)
         sample_result = sampling.DEFAULT_OFF.should_sample(
             context,
             0xDEADBEF1,
             "sampled parent, sampling on",
+            trace.SpanKind.INTERNAL,
             attributes={"sampled.expect": "true"},
-            trace_state=trace_state,
         )
         self.assertTrue(sample_result.decision.is_sampled())
         self.assertEqual(sample_result.attributes, {"sampled.expect": "true"})
@@ -192,40 +199,40 @@ class TestSampler(unittest.TestCase):
             None,
             0xDEADBEF1,
             "unsampled parent, sampling off",
+            trace.SpanKind.INTERNAL,
             attributes={"sampled.expect": "false"},
-            trace_state=trace_state,
         )
         self.assertFalse(default_off.decision.is_sampled())
         self.assertEqual(default_off.attributes, {})
-        self.assertEqual(default_off.trace_state, trace_state)
+        self.assertIsNone(default_off.trace_state)
 
     def test_probability_sampler(self):
-        trace_state = trace.TraceState([("key", "value")])
         sampler = sampling.TraceIdRatioBased(0.5)
 
         # Check that we sample based on the trace ID if the parent context is
         # null
+        # trace_state should also be empty since it is based off of parent
         sampled_result = sampler.should_sample(
             None,
             0x7FFFFFFFFFFFFFFF,
             "sampled true",
+            trace.SpanKind.INTERNAL,
             attributes={"sampled.expect": "true"},
-            trace_state=trace_state,
         )
         self.assertTrue(sampled_result.decision.is_sampled())
         self.assertEqual(sampled_result.attributes, {"sampled.expect": "true"})
-        self.assertEqual(sampled_result.trace_state, trace_state)
+        self.assertIsNone(sampled_result.trace_state)
 
         not_sampled_result = sampler.should_sample(
             None,
             0x8000000000000000,
             "sampled false",
+            trace.SpanKind.INTERNAL,
             attributes={"sampled.expect": "false"},
-            trace_state=trace_state,
         )
         self.assertFalse(not_sampled_result.decision.is_sampled())
         self.assertEqual(not_sampled_result.attributes, {})
-        self.assertEqual(not_sampled_result.trace_state, trace_state)
+        self.assertIsNone(sampled_result.trace_state)
 
     def test_probability_sampler_zero(self):
         default_off = sampling.TraceIdRatioBased(0.0)
@@ -317,22 +324,26 @@ class TestSampler(unittest.TestCase):
         sampler = sampling.ParentBased(sampling.ALWAYS_ON)
         # Check that the sampling decision matches the parent context if given
         with parent_sampling_context(
-            self._create_parent_span(trace_flags=TO_DEFAULT)
+            self._create_parent_span(
+                trace_flags=TO_DEFAULT, trace_state=trace_state,
+            )
         ) as context:
             # local, not sampled
             not_sampled_result = sampler.should_sample(
                 context,
                 0x7FFFFFFFFFFFFFFF,
                 "unsampled parent, sampling on",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "false"},
-                trace_state=trace_state,
             )
             self.assertFalse(not_sampled_result.decision.is_sampled())
             self.assertEqual(not_sampled_result.attributes, {})
             self.assertEqual(not_sampled_result.trace_state, trace_state)
 
         with parent_sampling_context(
-            self._create_parent_span(trace_flags=TO_DEFAULT)
+            self._create_parent_span(
+                trace_flags=TO_DEFAULT, trace_state=trace_state,
+            )
         ) as context:
             sampler = sampling.ParentBased(
                 root=sampling.ALWAYS_OFF,
@@ -343,15 +354,17 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x7FFFFFFFFFFFFFFF,
                 "unsampled parent, sampling on",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "false"},
-                trace_state=trace_state,
             )
             self.assertTrue(sampled_result.decision.is_sampled())
             self.assertEqual(sampled_result.attributes, {"sampled": "false"})
             self.assertEqual(sampled_result.trace_state, trace_state)
 
         with parent_sampling_context(
-            self._create_parent_span(trace_flags=TO_SAMPLED)
+            self._create_parent_span(
+                trace_flags=TO_SAMPLED, trace_state=trace_state,
+            )
         ) as context:
             sampler = sampling.ParentBased(sampling.ALWAYS_OFF)
             # local, sampled
@@ -359,6 +372,7 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x8000000000000000,
                 "sampled parent, sampling off",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "true"},
                 trace_state=trace_state,
             )
@@ -367,7 +381,9 @@ class TestSampler(unittest.TestCase):
             self.assertEqual(sampled_result.trace_state, trace_state)
 
         with parent_sampling_context(
-            self._create_parent_span(trace_flags=TO_SAMPLED)
+            self._create_parent_span(
+                trace_flags=TO_SAMPLED, trace_state=trace_state,
+            )
         ) as context:
             sampler = sampling.ParentBased(
                 root=sampling.ALWAYS_ON,
@@ -378,6 +394,7 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x7FFFFFFFFFFFFFFF,
                 "unsampled parent, sampling on",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "false"},
                 trace_state=trace_state,
             )
@@ -386,7 +403,11 @@ class TestSampler(unittest.TestCase):
             self.assertEqual(not_sampled_result.trace_state, trace_state)
 
         with parent_sampling_context(
-            self._create_parent_span(trace_flags=TO_DEFAULT, is_remote=True)
+            self._create_parent_span(
+                trace_flags=TO_DEFAULT,
+                is_remote=True,
+                trace_state=trace_state,
+            )
         ) as context:
             sampler = sampling.ParentBased(sampling.ALWAYS_ON)
             # remote, not sampled
@@ -394,6 +415,7 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x7FFFFFFFFFFFFFFF,
                 "unsampled parent, sampling on",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "false"},
                 trace_state=trace_state,
             )
@@ -402,7 +424,11 @@ class TestSampler(unittest.TestCase):
             self.assertEqual(not_sampled_result.trace_state, trace_state)
 
         with parent_sampling_context(
-            self._create_parent_span(trace_flags=TO_DEFAULT, is_remote=True)
+            self._create_parent_span(
+                trace_flags=TO_DEFAULT,
+                is_remote=True,
+                trace_state=trace_state,
+            )
         ) as context:
             sampler = sampling.ParentBased(
                 root=sampling.ALWAYS_OFF,
@@ -413,15 +439,19 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x7FFFFFFFFFFFFFFF,
                 "unsampled parent, sampling on",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "false"},
-                trace_state=trace_state,
             )
             self.assertTrue(sampled_result.decision.is_sampled())
             self.assertEqual(sampled_result.attributes, {"sampled": "false"})
             self.assertEqual(sampled_result.trace_state, trace_state)
 
         with parent_sampling_context(
-            self._create_parent_span(trace_flags=TO_SAMPLED, is_remote=True)
+            self._create_parent_span(
+                trace_flags=TO_SAMPLED,
+                is_remote=True,
+                trace_state=trace_state,
+            )
         ) as context:
             sampler = sampling.ParentBased(sampling.ALWAYS_OFF)
             # remote, sampled
@@ -429,15 +459,19 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x8000000000000000,
                 "sampled parent, sampling off",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "true"},
-                trace_state=trace_state,
             )
             self.assertTrue(sampled_result.decision.is_sampled())
             self.assertEqual(sampled_result.attributes, {"sampled": "true"})
             self.assertEqual(sampled_result.trace_state, trace_state)
 
         with parent_sampling_context(
-            self._create_parent_span(trace_flags=TO_SAMPLED, is_remote=True)
+            self._create_parent_span(
+                trace_flags=TO_SAMPLED,
+                is_remote=True,
+                trace_state=trace_state,
+            )
         ) as context:
             sampler = sampling.ParentBased(
                 root=sampling.ALWAYS_ON,
@@ -448,8 +482,8 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x7FFFFFFFFFFFFFFF,
                 "unsampled parent, sampling on",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "false"},
-                trace_state=trace_state,
             )
             self.assertFalse(not_sampled_result.decision.is_sampled())
             self.assertEqual(not_sampled_result.attributes, {})
@@ -462,12 +496,12 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x8000000000000000,
                 "parent, sampling off",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "false"},
-                trace_state=trace_state,
             )
             self.assertFalse(not_sampled_result.decision.is_sampled())
             self.assertEqual(not_sampled_result.attributes, {})
-            self.assertEqual(not_sampled_result.trace_state, trace_state)
+            self.assertIsNone(not_sampled_result.trace_state)
 
         with parent_sampling_context(trace.INVALID_SPAN) as context:
             sampler = sampling.ParentBased(sampling.ALWAYS_ON)
@@ -475,12 +509,13 @@ class TestSampler(unittest.TestCase):
                 context,
                 0x8000000000000000,
                 "no parent, sampling on",
+                trace.SpanKind.INTERNAL,
                 attributes={"sampled": "true"},
                 trace_state=trace_state,
             )
             self.assertTrue(sampled_result.decision.is_sampled())
             self.assertEqual(sampled_result.attributes, {"sampled": "true"})
-            self.assertEqual(sampled_result.trace_state, trace_state)
+            self.assertIsNone(sampled_result.trace_state)
 
     def test_parent_based_explicit_parent_context(self):
         @contextlib.contextmanager
