@@ -234,7 +234,7 @@ class TraceState(typing.Mapping[str, str]):
     def __contains__(self, item: object) -> bool:
         return item in self._dict
 
-    def __getitem__(self, key: str) -> typing.Optional[str]:  # type: ignore
+    def __getitem__(self, key: str) -> str:
         return self._dict[key]
 
     def __iter__(self) -> typing.Iterator[str]:
