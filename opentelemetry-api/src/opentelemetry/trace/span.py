@@ -235,7 +235,7 @@ class TraceState(typing.Mapping[str, str]):
         return item in self._dict
 
     def __getitem__(self, key: str) -> typing.Optional[str]:  # type: ignore
-        return self._dict.get(key)
+        return self._dict[key]
 
     def __iter__(self) -> typing.Iterator[str]:
         return iter(self._dict)

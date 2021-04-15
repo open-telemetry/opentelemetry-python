@@ -109,3 +109,6 @@ class TestTraceContextFormat(unittest.TestCase):
 
         self.assertTrue("foo" in state)
         self.assertFalse("bar" in state)
+        self.assertIsNone(state.get("bar"))
+        with self.assertRaises(KeyError):
+            state["bar"]  # pylint:disable=W0104
