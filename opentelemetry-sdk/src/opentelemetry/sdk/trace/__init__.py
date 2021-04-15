@@ -905,20 +905,17 @@ class Tracer(trace_api.Tracer):
         if parent_span_context is None or not parent_span_context.is_valid:
             parent_span_context = None
             trace_id = self.id_generator.generate_trace_id()
-            trace_flags = None
-            trace_state = None
         else:
             trace_id = parent_span_context.trace_id
-            trace_flags = parent_span_context.trace_flags
-            trace_state = parent_span_context.trace_state
 
         # The sampler decides whether to create a real or no-op span at the
         # time of span creation. No-op spans do not record events, and are not
         # exported.
         # The sampler may also add attributes to the newly-created span, e.g.
         # to include information about the sampling result.
+        # The sampler may also modify the parent span context's tracestate
         sampling_result = self.sampler.should_sample(
-            context, trace_id, name, attributes, links, trace_state
+            context, trace_id, name, kind, attributes, links
         )
 
         trace_flags = (
