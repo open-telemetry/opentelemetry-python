@@ -208,8 +208,10 @@ class TestOTLPSpanExporter(TestCase):
     def test_no_credentials_error(
         self, mock_ssl_channel, mock_secure, mock_stub
     ):
-        OTLPSpanExporter(insecure=False)
+        OTLPSpanExporter(endpoint="https://localhost:4317")
         self.assertTrue(mock_ssl_channel.called)
+        self.assertTrue(mock_secure.called)
+        self.assertTrue("localhost:4317" in mock_secure.call_args[0])
 
     @patch.dict(
         "os.environ",

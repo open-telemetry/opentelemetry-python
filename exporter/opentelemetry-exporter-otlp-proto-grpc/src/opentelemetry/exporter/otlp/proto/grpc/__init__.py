@@ -57,7 +57,7 @@ You can configure the exporter with the following environment variables:
     trace.set_tracer_provider(TracerProvider(resource=resource))
     tracer = trace.get_tracer(__name__)
 
-    otlp_exporter = OTLPSpanExporter(endpoint="localhost:4317", insecure=True)
+    otlp_exporter = OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True)
 
     span_processor = BatchSpanProcessor(otlp_exporter)
 

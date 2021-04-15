@@ -22,6 +22,8 @@ from time import sleep
 from typing import Any, Callable, Dict, Generic, List, Optional
 from typing import Sequence as TypingSequence
 from typing import Text, TypeVar
+from urllib import parse
+from urllib.parse import urlparse
 
 from backoff import expo
 from google.rpc.error_details_pb2 import RetryInfo
@@ -197,11 +199,15 @@ class OTLPExporterMixin(
             OTEL_EXPORTER_OTLP_ENDPOINT, "http://localhost:4317"
         )
 
-        if endpoint.startswith("http://"):
-            insecure = True
+        parsed_url = urlparse(endpoint)
 
-        # strip the scheme before using endpoint
-        endpoint = endpoint.split("://")[-1]
+        if endpoint is None:
+            if parsed_url.scheme == "https":
+                insecure = False
+            else:
+                insecure = True
+
+        endpoint = parsed_url.netloc
 
         self._headers = headers or environ.get(OTEL_EXPORTER_OTLP_HEADERS)
         if isinstance(self._headers, str):
