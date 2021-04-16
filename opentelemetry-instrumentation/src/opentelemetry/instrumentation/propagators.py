@@ -13,8 +13,8 @@
 # limitations under the License.
 
 """
-This module implements experimental propagators to inject trace response context
-into HTTP responses. This is useful for server side frameworks that start traces
+This module implements experimental propagators to inject trace context
+into response carriers. This is useful for server side frameworks that start traces
 when server requests and want to share the trace context with the client so the
 client can add it's spans to the same trace.
 
@@ -44,7 +44,13 @@ def set_global_response_propagator(propagator):
     _RESPONSE_PROPAGATOR = propagator
 
 
-class DictHeaderSetter:
+class Setter(ABC):
+    @abstractmethod
+    def set(self, carrier, key, value):
+        """Inject the provided key value pair in carrier."""
+
+
+class DictHeaderSetter(Setter):
     def set(self, carrier, key, value):  # pylint: disable=no-self-use
         old_value = carrier.get(key, "")
         if old_value:
@@ -52,15 +58,31 @@ class DictHeaderSetter:
         carrier[key] = value
 
 
-default_setter = DictHeaderSetter()
+class FuncSetter(Setter):
+    """FuncSetter coverts a function into a valid Setter. Any function that can
+    set values in a carrier can be converted into a Setter by using FuncSetter.
+    This is useful when injecting trace context into non-dict objects such
+    HTTP Response objects for different framework.
 
+    For example, it can be used to create a setter for Falcon response object as:
 
-class FuncSetter:
+        setter = FuncSetter(falcon.api.Response.append_header)
+
+    and then used with the propagator as:
+
+        propagator.inject(falcon_response, setter=setter)
+
+    This would essentially make the propagator call `falcon_response.append_header(key, value)`
+    """
+
     def __init__(self, func):
         self._func = func
 
     def set(self, carrier, key, value):
         self._func(carrier, key, value)
+
+
+default_setter = DictHeaderSetter()
 
 
 class ResponsePropagator(ABC):
@@ -100,5 +122,7 @@ class TraceResponsePropagator(ResponsePropagator):
             ),
         )
         setter.set(
-            carrier, _HTTP_HEADER_ACCESS_CONTROL_EXPOSE_HEADERS, header_name,
+            carrier,
+            _HTTP_HEADER_ACCESS_CONTROL_EXPOSE_HEADERS,
+            header_name,
         )
