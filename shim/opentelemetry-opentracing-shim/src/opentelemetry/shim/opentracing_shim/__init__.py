@@ -681,7 +681,11 @@ class TracerShim(Tracer):
 
         propagator = get_global_textmap()
 
-        ctx = set_span_in_context(NonRecordingSpan(span_context.unwrap()))
+        span = span_context.unwrap() if span_context else None
+        if isinstance(span, OtelSpanContext):
+            span = NonRecordingSpan(span)
+
+        ctx = set_span_in_context(span)
         propagator.inject(carrier, context=ctx)
 
     def extract(self, format: object, carrier: object):
