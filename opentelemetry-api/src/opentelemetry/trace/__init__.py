@@ -134,7 +134,9 @@ class Link(_LinkBase):
     """
 
     def __init__(
-        self, context: "SpanContext", attributes: types.Attributes = None,
+        self,
+        context: "SpanContext",
+        attributes: types.Attributes = None,
     ) -> None:
         super().__init__(context)
         self._attributes = attributes
@@ -393,9 +395,7 @@ class ProxyTracer(Tracer):
     def start_span(self, *args, **kwargs) -> Span:  # type: ignore
         return self._tracer.start_span(*args, **kwargs)  # type: ignore
 
-    def start_as_current_span(  # type: ignore
-        self, *args, **kwargs
-    ) -> Span:
+    def start_as_current_span(self, *args, **kwargs) -> Span:  # type: ignore
         return self._tracer.start_as_current_span(*args, **kwargs)  # type: ignore
 
 

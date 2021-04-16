@@ -266,7 +266,9 @@ class TraceIdRatioBased(Sampler):
         if decision is Decision.DROP:
             attributes = None
         return SamplingResult(
-            decision, attributes, _get_parent_trace_state(parent_context),
+            decision,
+            attributes,
+            _get_parent_trace_state(parent_context),
         )
 
     def get_description(self) -> str:
@@ -341,15 +343,12 @@ class ParentBased(Sampler):
         )
 
     def get_description(self):
-        return (
-            "ParentBased{{root:{},remoteParentSampled:{},remoteParentNotSampled:{},"
-            "localParentSampled:{},localParentNotSampled:{}}}".format(
-                self._root.get_description(),
-                self._remote_parent_sampled.get_description(),
-                self._remote_parent_not_sampled.get_description(),
-                self._local_parent_sampled.get_description(),
-                self._local_parent_not_sampled.get_description(),
-            )
+        return "ParentBased{{root:{},remoteParentSampled:{},remoteParentNotSampled:{}," "localParentSampled:{},localParentNotSampled:{}}}".format(
+            self._root.get_description(),
+            self._remote_parent_sampled.get_description(),
+            self._remote_parent_not_sampled.get_description(),
+            self._local_parent_sampled.get_description(),
+            self._local_parent_not_sampled.get_description(),
         )
 
 
