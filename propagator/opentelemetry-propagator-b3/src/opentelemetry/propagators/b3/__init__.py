@@ -139,7 +139,9 @@ class B3Format(TextMapPropagator):
 
         sampled = (trace.TraceFlags.SAMPLED & span_context.trace_flags) != 0
         setter.set(
-            carrier, self.TRACE_ID_KEY, format_trace_id(span_context.trace_id),
+            carrier,
+            self.TRACE_ID_KEY,
+            format_trace_id(span_context.trace_id),
         )
         setter.set(
             carrier, self.SPAN_ID_KEY, format_span_id(span_context.span_id)

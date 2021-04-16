@@ -273,7 +273,8 @@ class TestOTLPSpanExporter(TestCase):
     # pylint: disable=no-self-use
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict(
-        "os.environ", {OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip"},
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip"},
     )
     def test_otlp_exporter_otlp_compression_precendence(
         self, mock_insecure_channel
@@ -457,10 +458,12 @@ class TestOTLPSpanExporter(TestCase):
         )
 
         self.assertEqual(
-            status.code, code_expected,
+            status.code,
+            code_expected,
         )
         self.assertEqual(
-            status.deprecated_code, deprecated_code_expected,
+            status.deprecated_code,
+            deprecated_code_expected,
         )
 
     def test_span_status_translate(self):
