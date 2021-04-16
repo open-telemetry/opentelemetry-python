@@ -35,7 +35,8 @@ OTLPSpanExporter._stub = MockTraceServiceStub
 
 simple_span_processor = SimpleSpanProcessor(OTLPSpanExporter())
 tracer = TracerProvider(
-    active_span_processor=simple_span_processor, sampler=sampling.DEFAULT_ON,
+    active_span_processor=simple_span_processor,
+    sampler=sampling.DEFAULT_ON,
 ).get_tracer("resource_usage_tracer")
 
 starttime = time.time()
