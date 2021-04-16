@@ -38,7 +38,7 @@ def init_tracing():
     # This uses insecure connection for the purpose of example. Please see the
     # OTLP Exporter documentation for other options.
     span_processor = BatchSpanProcessor(
-        OTLPSpanExporter(endpoint="localhost:4317", insecure=True)
+        OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True)
     )
     trace.get_tracer_provider().add_span_processor(span_processor)
 
