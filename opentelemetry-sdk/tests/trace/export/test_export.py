@@ -365,7 +365,8 @@ class TestBatchSpanProcessor(unittest.TestCase):
             destination=spans_names_list, export_event=export_event
         )
         span_processor = export.BatchSpanProcessor(
-            my_exporter, schedule_delay_millis=50,
+            my_exporter,
+            schedule_delay_millis=50,
         )
 
         # create single span
@@ -391,7 +392,8 @@ class TestBatchSpanProcessor(unittest.TestCase):
         )
 
         span_processor = export.BatchSpanProcessor(
-            my_exporter, schedule_delay_millis=50,
+            my_exporter,
+            schedule_delay_millis=50,
         )
 
         with mock.patch.object(span_processor.condition, "wait") as mock_wait:
@@ -424,7 +426,10 @@ class TestBatchSpanProcessor(unittest.TestCase):
 
         # negative max_queue_size
         self.assertRaises(
-            ValueError, export.BatchSpanProcessor, None, max_queue_size=-500,
+            ValueError,
+            export.BatchSpanProcessor,
+            None,
+            max_queue_size=-500,
         )
 
         # zero schedule_delay_millis

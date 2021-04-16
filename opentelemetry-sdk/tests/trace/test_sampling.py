@@ -315,7 +315,8 @@ class TestSampler(unittest.TestCase):
         # the highest theoretical sampling rate. If this test fails the test
         # above is wrong.
         self.assertLess(
-            almost_almost_always_on.bound, 0xFFFFFFFFFFFFFFFF,
+            almost_almost_always_on.bound,
+            0xFFFFFFFFFFFFFFFF,
         )
 
     # pylint:disable=too-many-statements
@@ -325,7 +326,8 @@ class TestSampler(unittest.TestCase):
         # Check that the sampling decision matches the parent context if given
         with parent_sampling_context(
             self._create_parent_span(
-                trace_flags=TO_DEFAULT, trace_state=trace_state,
+                trace_flags=TO_DEFAULT,
+                trace_state=trace_state,
             )
         ) as context:
             # local, not sampled
@@ -342,7 +344,8 @@ class TestSampler(unittest.TestCase):
 
         with parent_sampling_context(
             self._create_parent_span(
-                trace_flags=TO_DEFAULT, trace_state=trace_state,
+                trace_flags=TO_DEFAULT,
+                trace_state=trace_state,
             )
         ) as context:
             sampler = sampling.ParentBased(
@@ -363,7 +366,8 @@ class TestSampler(unittest.TestCase):
 
         with parent_sampling_context(
             self._create_parent_span(
-                trace_flags=TO_SAMPLED, trace_state=trace_state,
+                trace_flags=TO_SAMPLED,
+                trace_state=trace_state,
             )
         ) as context:
             sampler = sampling.ParentBased(sampling.ALWAYS_OFF)
@@ -382,7 +386,8 @@ class TestSampler(unittest.TestCase):
 
         with parent_sampling_context(
             self._create_parent_span(
-                trace_flags=TO_SAMPLED, trace_state=trace_state,
+                trace_flags=TO_SAMPLED,
+                trace_state=trace_state,
             )
         ) as context:
             sampler = sampling.ParentBased(
