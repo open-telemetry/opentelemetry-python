@@ -10,6 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `py.typed` file to every package. This should resolve a bunch of mypy
   errors for users.
   ([#1720](https://github.com/open-telemetry/opentelemetry-python/pull/1720))
+- Added `SpanKind` to `should_sample` parameters, suggest using parent span context's tracestate
+  instead of manually passed in tracestate in `should_sample`
+  ([#1764](https://github.com/open-telemetry/opentelemetry-python/pull/1764))
 
 ### Changed
 - Adjust `B3Format` propagator to be spec compliant by not modifying context
