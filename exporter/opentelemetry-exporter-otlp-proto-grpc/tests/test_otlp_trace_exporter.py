@@ -236,6 +236,49 @@ class TestOTLPSpanExporter(TestCase):
 
     # pylint: disable=no-self-use
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
+    def test_otlp_exporter_endpoint(self, mock_secure, mock_insecure):
+        """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
+        endpoints = [
+            (
+                "http://localhost:4317",
+                None,
+                mock_insecure,
+            ),
+            (
+                "localhost:4317",
+                None,
+                mock_insecure,
+            ),
+            (
+                "localhost:4317",
+                False,
+                mock_secure,
+            ),
+            (
+                "https://localhost:4317",
+                None,
+                mock_secure,
+            ),
+            (
+                "https://localhost:4317",
+                True,
+                mock_insecure,
+            ),
+        ]
+        for endpoint, insecure, mock_method in endpoints:
+            OTLPSpanExporter(endpoint=endpoint, insecure=insecure)
+            self.assertEqual(
+                1,
+                mock_method.call_count,
+                "expected {} to be called for {} {}".format(
+                    mock_method, endpoint, insecure
+                ),
+            )
+            mock_method.reset_mock()
+
+    # pylint: disable=no-self-use
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
     def test_otlp_exporter_otlp_compression_envvar(
         self, mock_insecure_channel

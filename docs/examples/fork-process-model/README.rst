@@ -31,7 +31,7 @@ Gunicorn post_fork hook
 
         trace.set_tracer_provider(TracerProvider(resource=resource))
         span_processor = BatchSpanProcessor(
-            OTLPSpanExporter(endpoint="localhost:4317")
+            OTLPSpanExporter(endpoint="http://localhost:4317")
         )
         trace.get_tracer_provider().add_span_processor(span_processor)
 
@@ -58,7 +58,7 @@ uWSGI postfork decorator
 
         trace.set_tracer_provider(TracerProvider(resource=resource))
         span_processor = BatchSpanProcessor(
-            OTLPSpanExporter(endpoint="localhost:4317")
+            OTLPSpanExporter(endpoint="http://localhost:4317")
         )
         trace.get_tracer_provider().add_span_processor(span_processor)
 
