@@ -208,10 +208,8 @@ class TestOTLPSpanExporter(TestCase):
     def test_no_credentials_error(
         self, mock_ssl_channel, mock_secure, mock_stub
     ):
-        OTLPSpanExporter(endpoint="https://localhost:4317")
+        OTLPSpanExporter(insecure=False)
         self.assertTrue(mock_ssl_channel.called)
-        self.assertTrue(mock_secure.called)
-        self.assertTrue("localhost:4317" in mock_secure.call_args[0])
 
     @patch.dict(
         "os.environ",
@@ -235,6 +233,49 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(
             exporter._headers, (("key3", "value3"), ("key4", "value4"))
         )
+
+    # pylint: disable=no-self-use
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
+    def test_otlp_exporter_endpoint(self, mock_secure, mock_insecure):
+        """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
+        endpoints = [
+            (
+                "http://localhost:4317",
+                None,
+                mock_insecure,
+            ),
+            (
+                "localhost:4317",
+                None,
+                mock_insecure,
+            ),
+            (
+                "localhost:4317",
+                False,
+                mock_secure,
+            ),
+            (
+                "https://localhost:4317",
+                None,
+                mock_secure,
+            ),
+            (
+                "https://localhost:4317",
+                True,
+                mock_insecure,
+            ),
+        ]
+        for endpoint, insecure, mock_method in endpoints:
+            OTLPSpanExporter(endpoint=endpoint, insecure=insecure)
+            self.assertEqual(
+                1,
+                mock_method.call_count,
+                "expected {} to be called for {} {}".format(
+                    mock_method, endpoint, insecure
+                ),
+            )
+            mock_method.reset_mock()
 
     # pylint: disable=no-self-use
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
