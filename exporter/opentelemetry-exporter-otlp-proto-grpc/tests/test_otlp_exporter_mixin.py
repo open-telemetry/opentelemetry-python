@@ -42,6 +42,8 @@ class TestOTLPExporterMixin(TestCase):
                 ),
                 Compression.Gzip,
             )
-            self.assertIsNone(environ_to_compression("missing_key"),)
+            self.assertIsNone(
+                environ_to_compression("missing_key"),
+            )
             with self.assertRaises(InvalidCompressionValueException):
                 environ_to_compression("test_invalid")

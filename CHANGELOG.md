@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added ProxyTracerProvider and ProxyTracer implementations to allow fetching provider
   and tracer instances before a global provider is set up.
   ([#1726](https://github.com/open-telemetry/opentelemetry-python/pull/1726))
+- Added `__contains__` to `opentelementry.trace.span.TraceState`.
+  ([#1773](https://github.com/open-telemetry/opentelemetry-python/pull/1773))
 - `opentelemetry-opentracing-shim` Fix an issue in the shim where a Span was being wrapped
   in a NonRecordingSpan when it wasn't necessary.
   ([#1776](https://github.com/open-telemetry/opentelemetry-python/pull/1776))

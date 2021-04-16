@@ -42,7 +42,10 @@ def _load_provider(
                 ),
             )
         )
-        return cast(Provider, entry_point.load()(),)
+        return cast(
+            Provider,
+            entry_point.load()(),
+        )
     except Exception:  # pylint: disable=broad-except
         logger.error("Failed to load configured provider %s", provider)
         raise

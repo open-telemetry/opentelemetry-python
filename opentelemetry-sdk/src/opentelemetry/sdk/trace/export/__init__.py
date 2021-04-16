@@ -258,7 +258,9 @@ class BatchSpanProcessor(SpanProcessor):
         self._notify_flush_request_finished(flush_request)
         self._notify_flush_request_finished(shutdown_flush_request)
 
-    def _get_and_unset_flush_request(self,) -> typing.Optional[_FlushRequest]:
+    def _get_and_unset_flush_request(
+        self,
+    ) -> typing.Optional[_FlushRequest]:
         """Returns the current flush request and makes it invisible to the
         worker thread for subsequent calls.
         """
@@ -316,8 +318,8 @@ class BatchSpanProcessor(SpanProcessor):
 
     def _export_batch(self) -> int:
         """Exports at most max_export_batch_size spans and returns the number of
-         exported spans.
-         """
+        exported spans.
+        """
         idx = 0
         # currently only a single thread acts as consumer, so queue.pop() will
         # not raise an exception

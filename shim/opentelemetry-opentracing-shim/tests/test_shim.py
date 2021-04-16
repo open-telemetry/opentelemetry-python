@@ -623,7 +623,8 @@ class TestShim(TestCase):
             ) as opentelemetry_span:
 
                 self.assertIs(
-                    span_shim.unwrap().context, opentelemetry_span.parent,
+                    span_shim.unwrap().context,
+                    opentelemetry_span.parent,
                 )
 
         with (
@@ -633,5 +634,6 @@ class TestShim(TestCase):
             with self.shim.start_active_span("TestSpan17") as scope:
 
                 self.assertIs(
-                    scope.span.unwrap().parent, opentelemetry_span.context,
+                    scope.span.unwrap().parent,
+                    opentelemetry_span.context,
                 )
