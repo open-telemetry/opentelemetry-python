@@ -46,13 +46,10 @@ class OpenCensusSpanExporter(SpanExporter):
     """
 
     def __init__(
-        self,
-        endpoint=DEFAULT_ENDPOINT,
-        host_name=None,
-        client=None,
+        self, endpoint=DEFAULT_ENDPOINT, host_name=None, client=None,
     ):
         tracer_provider = trace.get_tracer_provider()
-        service_name = (
+        self.service_name = (
             tracer_provider.resource.attributes[SERVICE_NAME]
             if getattr(tracer_provider, "resource", None)
             else Resource.create().attributes.get(SERVICE_NAME)
@@ -69,8 +66,14 @@ class OpenCensusSpanExporter(SpanExporter):
         self.node = utils.get_node(service_name, host_name)
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        if spans:
+            service_name = spans[0].resource.attributes.get(SERVICE_NAME)
+            if service_name:
+                self.service_name = service_name
+        
         try:
             responses = self.client.Export(self.generate_span_requests(spans))
+
 
             # Read response
             for _ in responses:
