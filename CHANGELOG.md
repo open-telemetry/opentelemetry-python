@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1720](https://github.com/open-telemetry/opentelemetry-python/pull/1720))
 - Add auto generated trace and resource attributes semantic conventions
   ([#1759](https://github.com/open-telemetry/opentelemetry-python/pull/1759))
+- Added `SpanKind` to `should_sample` parameters, suggest using parent span context's tracestate
+  instead of manually passed in tracestate in `should_sample`
+  ([#1764](https://github.com/open-telemetry/opentelemetry-python/pull/1764))
 
 ### Changed
 - Adjust `B3Format` propagator to be spec compliant by not modifying context
@@ -26,7 +29,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added ProxyTracerProvider and ProxyTracer implementations to allow fetching provider
   and tracer instances before a global provider is set up.
   ([#1726](https://github.com/open-telemetry/opentelemetry-python/pull/1726))
-
+- Added `__contains__` to `opentelementry.trace.span.TraceState`.
+  ([#1773](https://github.com/open-telemetry/opentelemetry-python/pull/1773))
+- `opentelemetry-opentracing-shim` Fix an issue in the shim where a Span was being wrapped
+  in a NonRecordingSpan when it wasn't necessary.
+  ([#1776](https://github.com/open-telemetry/opentelemetry-python/pull/1776))
+- OTLP Exporter now uses the scheme in the endpoint to determine whether to establish
+  a secure connection or not.
+  ([#1771](https://github.com/open-telemetry/opentelemetry-python/pull/1771))
 
 ## [1.0.0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.0.0) - 2021-03-26
 ### Added

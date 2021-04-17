@@ -27,7 +27,8 @@ class TestFlask(unittest.TestCase):
         dirpath = os.path.dirname(os.path.realpath(__file__))
         server_script = "{}/../flask_example.py".format(dirpath)
         server = subprocess.Popen(
-            [sys.executable, server_script], stdout=subprocess.PIPE,
+            [sys.executable, server_script],
+            stdout=subprocess.PIPE,
         )
         retry_strategy = Retry(total=10, backoff_factor=1)
         adapter = HTTPAdapter(max_retries=retry_strategy)

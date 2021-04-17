@@ -258,7 +258,9 @@ class TestJaegerExporter(unittest.TestCase):
 
         default_tags = [
             jaeger.Tag(
-                key="span.kind", vType=jaeger.TagType.STRING, vStr="internal",
+                key="span.kind",
+                vType=jaeger.TagType.STRING,
+                vStr="internal",
             ),
         ]
 
@@ -522,7 +524,8 @@ class TestJaegerExporter(unittest.TestCase):
         spans = translate._translate(ThriftTranslator())
 
         batch = jaeger.Batch(
-            spans=spans, process=jaeger.Process(serviceName="xxx"),
+            spans=spans,
+            process=jaeger.Process(serviceName="xxx"),
         )
 
         agent_client.emit(batch)

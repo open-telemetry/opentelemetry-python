@@ -33,6 +33,9 @@ Currently, sampling results are always made during the creation of the span. How
 
 Custom samplers can be created by subclassing `Sampler` and implementing `Sampler.should_sample` as well as `Sampler.get_description`.
 
+Samplers are able to modify the `opentelemetry.trace.span.TraceState` of the parent of the span being created. For custom samplers, it is suggested to implement `Sampler.should_sample` to utilize the
+parent span context's `opentelemetry.trace.span.TraceState` and pass into the `SamplingResult` instead of the explicit trace_state field passed into the parameter of `Sampler.should_sample`.
+
 To use a sampler, pass it into the tracer provider constructor. For example:
 
 .. code:: python
@@ -108,7 +111,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
-from opentelemetry.trace import Link, get_current_span
+from opentelemetry.trace import Link, SpanKind, get_current_span
 from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
 
@@ -167,6 +170,7 @@ class Sampler(abc.ABC):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
+        kind: SpanKind = None,
         attributes: Attributes = None,
         links: Sequence["Link"] = None,
         trace_state: "TraceState" = None,
@@ -189,13 +193,18 @@ class StaticSampler(Sampler):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
+        kind: SpanKind = None,
         attributes: Attributes = None,
         links: Sequence["Link"] = None,
         trace_state: "TraceState" = None,
     ) -> "SamplingResult":
         if self._decision is Decision.DROP:
             attributes = None
-        return SamplingResult(self._decision, attributes, trace_state)
+        return SamplingResult(
+            self._decision,
+            attributes,
+            _get_parent_trace_state(parent_context),
+        )
 
     def get_description(self) -> str:
         if self._decision is Decision.DROP:
@@ -246,6 +255,7 @@ class TraceIdRatioBased(Sampler):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
+        kind: SpanKind = None,
         attributes: Attributes = None,
         links: Sequence["Link"] = None,
         trace_state: "TraceState" = None,
@@ -255,7 +265,11 @@ class TraceIdRatioBased(Sampler):
             decision = Decision.RECORD_AND_SAMPLE
         if decision is Decision.DROP:
             attributes = None
-        return SamplingResult(decision, attributes, trace_state)
+        return SamplingResult(
+            decision,
+            attributes,
+            _get_parent_trace_state(parent_context),
+        )
 
     def get_description(self) -> str:
         return "TraceIdRatioBased{{{}}}".format(self._rate)
@@ -296,6 +310,7 @@ class ParentBased(Sampler):
         parent_context: Optional["Context"],
         trace_id: int,
         name: str,
+        kind: SpanKind = None,
         attributes: Attributes = None,
         links: Sequence["Link"] = None,
         trace_state: "TraceState" = None,
@@ -322,21 +337,18 @@ class ParentBased(Sampler):
             parent_context=parent_context,
             trace_id=trace_id,
             name=name,
+            kind=kind,
             attributes=attributes,
             links=links,
-            trace_state=trace_state,
         )
 
     def get_description(self):
-        return (
-            "ParentBased{{root:{},remoteParentSampled:{},remoteParentNotSampled:{},"
-            "localParentSampled:{},localParentNotSampled:{}}}".format(
-                self._root.get_description(),
-                self._remote_parent_sampled.get_description(),
-                self._remote_parent_not_sampled.get_description(),
-                self._local_parent_sampled.get_description(),
-                self._local_parent_not_sampled.get_description(),
-            )
+        return "ParentBased{{root:{},remoteParentSampled:{},remoteParentNotSampled:{}," "localParentSampled:{},localParentNotSampled:{}}}".format(
+            self._root.get_description(),
+            self._remote_parent_sampled.get_description(),
+            self._remote_parent_not_sampled.get_description(),
+            self._local_parent_sampled.get_description(),
+            self._local_parent_not_sampled.get_description(),
         )
 
 
@@ -385,3 +397,10 @@ def _get_from_env_or_default() -> Sampler:
         return _KNOWN_SAMPLERS[trace_sampler](rate)
 
     return _KNOWN_SAMPLERS[trace_sampler]
+
+
+def _get_parent_trace_state(parent_context) -> Optional["TraceState"]:
+    parent_span_context = get_current_span(parent_context).get_span_context()
+    if parent_span_context is None or not parent_span_context.is_valid:
+        return None
+    return parent_span_context.trace_state

@@ -33,7 +33,9 @@ class TestContextVarsContext(ContextTestCases.BaseTest):
     def setUp(self) -> None:
         super(TestContextVarsContext, self).setUp()
         self.mock_runtime = patch.object(
-            context, "_RUNTIME_CONTEXT", ContextVarsRuntimeContext(),
+            context,
+            "_RUNTIME_CONTEXT",
+            ContextVarsRuntimeContext(),
         )
         self.mock_runtime.start()
 
