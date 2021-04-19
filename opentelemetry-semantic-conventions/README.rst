@@ -1,10 +1,12 @@
-OpenTelemetry Python Semantic Conventions
-=========================================
+OpenTelemetry Semantic Conventions
+==================================
 
 |pypi|
 
 .. |pypi| image:: https://badge.fury.io/py/opentelemetry-semantic-conventions.svg
    :target: https://pypi.org/project/opentelemetry-semantic-conventions/
+
+This library contains generated code for the semantic conventions defined by the OpenTelemetry specification.
 
 Installation
 ------------
