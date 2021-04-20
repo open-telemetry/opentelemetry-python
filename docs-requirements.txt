@@ -5,6 +5,7 @@ sphinx-autodoc-typehints
 # Need to install the api/sdk in the venv for autodoc. Modifying sys.path
 # doesn't work for pkg_resources.
 ./opentelemetry-api
+./opentelemetry-semantic-conventions
 ./opentelemetry-sdk
 ./opentelemetry-instrumentation
 
