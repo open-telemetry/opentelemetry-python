@@ -1,4 +1,10 @@
-# Getting Started with OpenTelemetry Python
+---
+title: "Getting Started"
+weight: 22
+description: >
+  <img width="35" src="https://raw.github.com/open-telemetry/opentelemetry.io/main/iconography/32x32/Python_SDK.svg"></img>
+  A language-specific implementation of OpenTelemetry in Python.
+---
 
 This guide walks you through instrumenting a Python application with `opentelemetry-python`.
 
