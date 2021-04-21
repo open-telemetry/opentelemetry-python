@@ -13,4 +13,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "1.0.1.dev0"
+__version__ = "1.2.0.dev0"
