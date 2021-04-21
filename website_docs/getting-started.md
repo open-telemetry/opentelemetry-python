@@ -1,9 +1,6 @@
 ---
 title: "Getting Started"
 weight: 22
-description: >
-  <img width="35" src="https://raw.github.com/open-telemetry/opentelemetry.io/main/iconography/32x32/Python_SDK.svg"></img>
-  A language-specific implementation of OpenTelemetry in Python.
 ---
 
 This guide walks you through instrumenting a Python application with `opentelemetry-python`.
@@ -41,10 +38,11 @@ from opentelemetry.sdk.trace.export import (
     SimpleSpanProcessor,
 )
 
-trace.set_tracer_provider(TracerProvider())
-trace.get_tracer_provider().add_span_processor(
-    SimpleSpanProcessor(ConsoleSpanExporter())
-)
+provider = TracerProvider()
+processor = SimpleSpanProcessor(ConsoleSpanExporter())
+provider.add_span_processor(processor)
+trace.set_tracer_provider(provider)
+
 
 tracer = trace.get_tracer(__name__)
 
@@ -299,8 +297,7 @@ Start the Collector locally to see how the Collector works in practice. Write th
 ```
 # /tmp/otel-collector-config.yaml
 receivers:
-    opencensus:
-        endpoint: 0.0.0.0:55678
+    otlp:
 exporters:
     logging:
         loglevel: debug
@@ -310,7 +307,7 @@ processors:
 service:
     pipelines:
         traces:
-            receivers: [opencensus]
+            receivers: [otlp]
             exporters: [logging]
             processors: [batch, queued_retry]
 ```
@@ -318,9 +315,9 @@ service:
 Then start the Docker container:
 
 ```
-docker run -p 55678:55678 \
+docker run -p 4317:4317 \
     -v /tmp/otel-collector-config.yaml:/etc/otel-collector-config.yaml \
-    omnition/opentelemetry-collector-contrib:latest \
+    otel/opentelemetry-collector:latest \
     --config=/etc/otel-collector-config.yaml
 ```
 
@@ -345,7 +342,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 span_exporter = OTLPSpanExporter(
     # optional
-    # endpoint:="myCollectorURL:55678",
+    # endpoint:="myCollectorURL:4317",
     # credentials=ChannelCredentials(credentials),
     # headers=(("metadata", "metadata")),
 )
