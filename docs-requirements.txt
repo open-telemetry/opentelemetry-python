@@ -7,7 +7,6 @@ sphinx-autodoc-typehints
 ./opentelemetry-api
 ./opentelemetry-semantic-conventions
 ./opentelemetry-sdk
-./opentelemetry-instrumentation
 
 # Required by ext packages
 asgiref~=3.0

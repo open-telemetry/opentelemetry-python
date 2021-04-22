@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.1.0...HEAD)
 
+### Removed
+- Moved `opentelemetry-instrumentation` to contrib repository
+  ([#1675](https://github.com/open-telemetry/opentelemetry-python/pull/1675))
+
 ## [1.1.0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.1.0) - 2021-04-20
 
 ### Added
