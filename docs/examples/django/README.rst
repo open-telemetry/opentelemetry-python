@@ -46,7 +46,8 @@ Clone the ``opentelemetry-python`` repository and go to ``opentelemetry-python/d
 Once there, open the ``manage.py`` file. The call to ``DjangoInstrumentor().instrument()``
 in ``main`` is all that is needed to make the app be instrumented.
 
-Run the Django app with ``python manage.py runserver``.
+Run the Django app with ``python manage.py runserver --noreload``.
+The ``--noreload`` flag is needed to avoid Django from running ``main`` twice.
 
 Execution of the client
 .......................
@@ -104,6 +105,14 @@ Disabling Django Instrumentation
 Django's instrumentation can be disabled by setting the following environment variable.
 
 #. ``export OTEL_PYTHON_DJANGO_INSTRUMENT=False``
+
+Auto Instrumentation
+--------------------
+
+This same example can be run using auto instrumentation. Comment out the call
+to ``DjangoInstrumento().instrument()`` in ``main``, then Run the django app
+with ``opentelemetry-instrumentation python manage.py runserver --noreload``.
+Repeat the steps with the client, the result should be the same.
 
 References
 ----------
