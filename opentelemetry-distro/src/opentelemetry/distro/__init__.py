@@ -147,6 +147,7 @@ def _initialize_components():
 
 
 class Configurator(BaseConfigurator):
+
     # pylint: disable=no-self-use
     def _configure(self, **kwargs):
         _initialize_components()
