@@ -217,8 +217,7 @@ Start the Collector locally to see how the Collector works in practice. Write th
 
     # /tmp/otel-collector-config.yaml
     receivers:
-        opencensus:
-            endpoint: 0.0.0.0:55678
+        otlp:
     exporters:
         logging:
             loglevel: debug
@@ -228,7 +227,7 @@ Start the Collector locally to see how the Collector works in practice. Write th
     service:
         pipelines:
             traces:
-                receivers: [opencensus]
+                receivers: [otlp]
                 exporters: [logging]
                 processors: [batch, queued_retry]
 
@@ -236,9 +235,9 @@ Then start the Docker container:
 
 .. code-block:: sh
 
-    docker run -p 55678:55678 \
+    docker run -p 4317:4317 \
         -v /tmp/otel-collector-config.yaml:/etc/otel-collector-config.yaml \
-        omnition/opentelemetry-collector-contrib:latest \
+        otel/opentelemetry-collector:latest \
         --config=/etc/otel-collector-config.yaml
 
 Install the OpenTelemetry Collector exporter:
