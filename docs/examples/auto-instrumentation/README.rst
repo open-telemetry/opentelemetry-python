@@ -37,7 +37,9 @@ Manually instrumented server
     def server_request():
         with tracer.start_as_current_span(
             "server_request",
-            context=propagators.extract(request.headers),
+            context=extract(request.headers),
+            kind=trace.SpanKind.SERVER,
+            attributes=collect_request_attributes(request.environ),
         ):
             print(request.args.get("param"))
             return "served"
