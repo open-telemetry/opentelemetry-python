@@ -131,6 +131,12 @@ class ZipkinExporter(SpanExporter):
         )
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
+        # After the call to Shutdown subsequent calls to Export are
+        # not allowed and should return a Failure result
+        if self._done:
+            logger.warning("Exporter already shutdown, ignoring batch")
+            return SpanExportResult.FAILURE
+
         # Populate service_name from first span
         # We restrict any SpanProcessor to be only associated with a single
         # TracerProvider, so it is safe to assume that all Spans in a single
@@ -143,6 +149,7 @@ class ZipkinExporter(SpanExporter):
         result = self._session.post(
             url=self.endpoint,
             data=self.encoder.serialize(spans, self.local_node),
+            timeout=self._timeout,
         )
 
         if result.status_code not in REQUESTS_SUCCESS_STATUS_CODES:
@@ -155,4 +162,8 @@ class ZipkinExporter(SpanExporter):
         return SpanExportResult.SUCCESS
 
     def shutdown(self) -> None:
-        pass
+        if self._done:
+            logger.warning("Exporter already shutdown, ignoring call")
+            return
+        self._session.close()
+        self._done = True
