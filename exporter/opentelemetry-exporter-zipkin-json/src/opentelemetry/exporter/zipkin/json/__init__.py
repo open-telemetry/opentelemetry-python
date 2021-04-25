@@ -126,7 +126,9 @@ class ZipkinExporter(SpanExporter):
             {"Content-Type": self.encoder.content_type()}
         )
         self._done = False
-        self._timeout = timeout or int(environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT, 10))
+        self._timeout = timeout or int(
+            environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT, 10)
+        )
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
         # Populate service_name from first span

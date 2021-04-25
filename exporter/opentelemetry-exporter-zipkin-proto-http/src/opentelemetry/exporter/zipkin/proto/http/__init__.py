@@ -120,7 +120,9 @@ class ZipkinExporter(SpanExporter):
             {"Content-Type": self.encoder.content_type()}
         )
         self._done = False
-        self._timeout = timeout or int(environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT, 10))
+        self._timeout = timeout or int(
+            environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT, 10)
+        )
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
         # After the call to Shutdown subsequent calls to Export are
@@ -140,7 +142,7 @@ class ZipkinExporter(SpanExporter):
         result = self._session.post(
             url=self.endpoint,
             data=self.encoder.serialize(spans, self.local_node),
-            timeout=self._timeout
+            timeout=self._timeout,
         )
 
         if result.status_code not in REQUESTS_SUCCESS_STATUS_CODES:
