@@ -122,6 +122,14 @@ Zipkin collector endpoint to which the exporter will send data. This may
 include a path (e.g. ``http://example.com:9411/api/v2/spans``).
 """
 
+OTEL_EXPORTER_ZIPKIN_TIMEOUT = "OTEL_EXPORTER_ZIPKIN_TIMEOUT"
+"""
+.. envvar:: OTEL_EXPORTER_ZIPKIN_ENDPOINT
+
+Maximum time the Zipkin exporter will wait for each batch export, the default
+timeout is 10s.
+"""
+
 OTEL_EXPORTER_OTLP_PROTOCOL = "OTEL_EXPORTER_OTLP_PROTOCOL"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_PROTOCOL

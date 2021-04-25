@@ -120,7 +120,7 @@ class TestZipkinExporter(unittest.TestCase):
         )
         self.assertEqual(exporter.local_node.port, local_node_port)
 
-    @patch("requests.post")
+    @patch("requests.Session.post")
     def test_export_success(self, mock_post):
         mock_post.return_value = MockResponse(200)
         spans = []
@@ -128,7 +128,7 @@ class TestZipkinExporter(unittest.TestCase):
         status = exporter.export(spans)
         self.assertEqual(SpanExportResult.SUCCESS, status)
 
-    @patch("requests.post")
+    @patch("requests.Session.post")
     def test_export_invalid_response(self, mock_post):
         mock_post.return_value = MockResponse(404)
         spans = []
@@ -136,7 +136,7 @@ class TestZipkinExporter(unittest.TestCase):
         status = exporter.export(spans)
         self.assertEqual(SpanExportResult.FAILURE, status)
 
-    @patch("requests.post")
+    @patch("requests.Session.post")
     def test_export_span_service_name(self, mock_post):
         mock_post.return_value = MockResponse(200)
         resource = Resource.create({SERVICE_NAME: "test"})

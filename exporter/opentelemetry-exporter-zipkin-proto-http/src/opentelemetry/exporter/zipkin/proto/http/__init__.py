@@ -81,6 +81,7 @@ from opentelemetry.exporter.zipkin.proto.http.v2 import ProtobufEncoder
 from opentelemetry.exporter.zipkin.node_endpoint import IpInput, NodeEndpoint
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_ZIPKIN_ENDPOINT,
+    OTEL_EXPORTER_ZIPKIN_TIMEOUT,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
@@ -100,6 +101,7 @@ class ZipkinExporter(SpanExporter):
         local_node_ipv6: IpInput = None,
         local_node_port: Optional[int] = None,
         max_tag_value_length: Optional[int] = None,
+        timeout: Optional[int] = None,
     ):
         self.local_node = NodeEndpoint(
             local_node_ipv4, local_node_ipv6, local_node_port
@@ -113,7 +115,19 @@ class ZipkinExporter(SpanExporter):
 
         self.encoder = ProtobufEncoder(max_tag_value_length)
 
+        self._session = requests.Session()
+        self._session.headers.update(
+            {"Content-Type": self.encoder.content_type()}
+        )
+        self._done = False
+        self._timeout = timeout or int(environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT, 10))
+
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
+        # After the call to Shutdown subsequent calls to Export are
+        # not allowed and should return a Failure result
+        if self._done:
+            logger.warning("Exporter already shutdown, ignoring batch")
+            return SpanExportResult.FAILURE
         # Populate service_name from first span
         # We restrict any SpanProcessor to be only associated with a single
         # TracerProvider, so it is safe to assume that all Spans in a single
@@ -123,10 +137,10 @@ class ZipkinExporter(SpanExporter):
             service_name = spans[0].resource.attributes.get(SERVICE_NAME)
             if service_name:
                 self.local_node.service_name = service_name
-        result = requests.post(
+        result = self._session.post(
             url=self.endpoint,
             data=self.encoder.serialize(spans, self.local_node),
-            headers={"Content-Type": self.encoder.content_type()},
+            timeout=self._timeout
         )
 
         if result.status_code not in REQUESTS_SUCCESS_STATUS_CODES:
@@ -139,4 +153,8 @@ class ZipkinExporter(SpanExporter):
         return SpanExportResult.SUCCESS
 
     def shutdown(self) -> None:
-        pass
+        if self._done:
+            logger.warning("Exporter already shutdown, ignoring call")
+            return
+        self._session.close()
+        self._done = True
