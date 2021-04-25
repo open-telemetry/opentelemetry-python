@@ -47,6 +47,7 @@ collector endpoint using HTTP and supports v2 protobuf.
         # local_node_ipv6="2001:db8::c001",
         # local_node_port=31313,
         # max_tag_value_length=256
+        # timeout=5 (in seconds)
     )
 
     # Create a BatchSpanProcessor and add the exporter to it
@@ -61,6 +62,7 @@ collector endpoint using HTTP and supports v2 protobuf.
 The exporter supports the following environment variable for configuration:
 
 - :envvar:`OTEL_EXPORTER_ZIPKIN_ENDPOINT`
+- :envvar:`OTEL_EXPORTER_ZIPKIN_TIMEOUT`
 
 API
 ---
@@ -103,6 +105,21 @@ class ZipkinExporter(SpanExporter):
         max_tag_value_length: Optional[int] = None,
         timeout: Optional[int] = None,
     ):
+        """Zipkin exporter.
+
+        Args:
+            version: The protocol version to be used.
+            endpoint: The endpoint of the Zipkin collector.
+            local_node_ipv4: Primary IPv4 address associated with this connection.
+            local_node_ipv6: Primary IPv6 address associated with this connection.
+            local_node_port: Depending on context, this could be a listen port or the
+                client-side of a socket.
+            max_tag_value_length: Max length string attribute values can have.
+            timeout: Maximum time the Zipkin exporter will wait for each batch export.
+
+            The tuple (local_node_ipv4, local_node_ipv6, local_node_port) is used to represent
+            the network context of a node in the service graph.
+        """
         self.local_node = NodeEndpoint(
             local_node_ipv4, local_node_ipv6, local_node_port
         )
@@ -115,19 +132,19 @@ class ZipkinExporter(SpanExporter):
 
         self.encoder = ProtobufEncoder(max_tag_value_length)
 
-        self._session = requests.Session()
-        self._session.headers.update(
+        self.session = requests.Session()
+        self.session.headers.update(
             {"Content-Type": self.encoder.content_type()}
         )
-        self._done = False
-        self._timeout = timeout or int(
+        self.done = False
+        self.timeout = timeout or int(
             environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT, 10)
         )
 
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
         # After the call to Shutdown subsequent calls to Export are
         # not allowed and should return a Failure result
-        if self._done:
+        if self.done:
             logger.warning("Exporter already shutdown, ignoring batch")
             return SpanExportResult.FAILURE
         # Populate service_name from first span
@@ -139,10 +156,10 @@ class ZipkinExporter(SpanExporter):
             service_name = spans[0].resource.attributes.get(SERVICE_NAME)
             if service_name:
                 self.local_node.service_name = service_name
-        result = self._session.post(
+        result = self.session.post(
             url=self.endpoint,
             data=self.encoder.serialize(spans, self.local_node),
-            timeout=self._timeout,
+            timeout=self.timeout,
         )
 
         if result.status_code not in REQUESTS_SUCCESS_STATUS_CODES:
@@ -155,8 +172,8 @@ class ZipkinExporter(SpanExporter):
         return SpanExportResult.SUCCESS
 
     def shutdown(self) -> None:
-        if self._done:
+        if self.done:
             logger.warning("Exporter already shutdown, ignoring call")
             return
-        self._session.close()
-        self._done = True
+        self.session.close()
+        self.done = True
