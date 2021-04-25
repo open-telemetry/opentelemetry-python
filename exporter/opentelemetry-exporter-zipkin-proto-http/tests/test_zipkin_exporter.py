@@ -26,6 +26,7 @@ from opentelemetry.exporter.zipkin.proto.http import (
 from opentelemetry.exporter.zipkin.proto.http.v2 import ProtobufEncoder
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_ZIPKIN_ENDPOINT,
+    OTEL_EXPORTER_ZIPKIN_TIMEOUT,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider, _Span
@@ -181,7 +182,7 @@ class TestZipkinExporter(unittest.TestCase):
         status = exporter.export(spans)
         self.assertEqual(SpanExportResult.SUCCESS, status)
         mock_post.assert_called_with(
-            url="http://localhost:9411/api/v2/spans", data="[]", timeout=2
+            url="http://localhost:9411/api/v2/spans", data=b"", timeout=2
         )
 
 
