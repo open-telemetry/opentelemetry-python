@@ -24,7 +24,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 span_exporter = OTLPSpanExporter(
     # optional
-    # endpoint:="myCollectorURL:55678",
+    # endpoint:="myCollectorURL:4317",
     # credentials=ChannelCredentials(credentials),
     # headers=(("metadata", "metadata")),
 )
