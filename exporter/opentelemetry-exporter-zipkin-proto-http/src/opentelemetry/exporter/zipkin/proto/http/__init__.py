@@ -136,7 +136,7 @@ class ZipkinExporter(SpanExporter):
         self.session.headers.update(
             {"Content-Type": self.encoder.content_type()}
         )
-        self.done = False
+        self._closed = False
         self.timeout = timeout or int(
             environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT, 10)
         )
@@ -144,7 +144,7 @@ class ZipkinExporter(SpanExporter):
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
         # After the call to Shutdown subsequent calls to Export are
         # not allowed and should return a Failure result
-        if self.done:
+        if self._closed:
             logger.warning("Exporter already shutdown, ignoring batch")
             return SpanExportResult.FAILURE
         # Populate service_name from first span
@@ -172,8 +172,8 @@ class ZipkinExporter(SpanExporter):
         return SpanExportResult.SUCCESS
 
     def shutdown(self) -> None:
-        if self.done:
+        if self._closed:
             logger.warning("Exporter already shutdown, ignoring call")
             return
         self.session.close()
-        self.done = True
+        self._closed = True
