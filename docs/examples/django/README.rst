@@ -126,8 +126,8 @@ first install uWSGI in the previous virtual environment:
 ```
 pip install uwsgi
 ```
-Once that is done, run the server with `uwsgi` from the directory that
-contains `instrumentation_example`:
+Once that is done, run the server with ``uwsgi`` from the directory that
+contains ``instrumentation_example``:
 
 ```
 opentelemetry-instrument uwsgi --http :8000 --module instrumentation_example.wsgi
