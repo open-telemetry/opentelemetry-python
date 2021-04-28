@@ -34,6 +34,9 @@ Execution
 Execution of the Django app
 ...........................
 
+This example uses Django features intended for development environment.
+The ``runserver`` option should not be used for production environments.
+
 Set these environment variables first:
 
 #. ``export DJANGO_SETTINGS_MODULE=instrumentation_example.settings``
