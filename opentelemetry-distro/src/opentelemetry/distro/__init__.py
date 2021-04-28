@@ -147,6 +147,8 @@ def _initialize_components():
 
 
 class Configurator(BaseConfigurator):
+
+    # pylint: disable=no-self-use
     def _configure(self, **kwargs):
         _initialize_components()
 
@@ -157,5 +159,6 @@ class OpenTelemetryDistro(BaseDistro):
     configuration out of the box.
     """
 
+    # pylint: disable=no-self-use
     def _configure(self, **kwargs):
         os.environ.setdefault(OTEL_TRACES_EXPORTER, "otlp_proto_grpc_span")
