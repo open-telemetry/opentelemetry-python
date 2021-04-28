@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.1.0...HEAD)
 
+### Added
+- Added example for running Django with auto instrumentation
+  ([#1803](https://github.com/open-telemetry/opentelemetry-python/pull/1803))
+
 ### Removed
 - Moved `opentelemetry-instrumentation` to contrib repository
   ([#1797](https://github.com/open-telemetry/opentelemetry-python/pull/1797))
