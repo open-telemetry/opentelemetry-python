@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1764](https://github.com/open-telemetry/opentelemetry-python/pull/1764))
 - Added experimental HTTP back propagators.
   ([#1762](https://github.com/open-telemetry/opentelemetry-python/pull/1762))
+- Zipkin exporter: Add support for timeout and implement shutdown
+  ([#1799](https://github.com/open-telemetry/opentelemetry-python/pull/1799))
 
 ### Changed
 - Adjust `B3Format` propagator to be spec compliant by not modifying context

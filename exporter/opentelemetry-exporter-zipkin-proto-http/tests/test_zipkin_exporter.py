@@ -26,6 +26,7 @@ from opentelemetry.exporter.zipkin.proto.http import (
 from opentelemetry.exporter.zipkin.proto.http.v2 import ProtobufEncoder
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_ZIPKIN_ENDPOINT,
+    OTEL_EXPORTER_ZIPKIN_TIMEOUT,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider, _Span
@@ -50,8 +51,8 @@ class TestZipkinExporter(unittest.TestCase):
         )
 
     def tearDown(self):
-        if OTEL_EXPORTER_ZIPKIN_ENDPOINT in os.environ:
-            del os.environ[OTEL_EXPORTER_ZIPKIN_ENDPOINT]
+        os.environ.pop(OTEL_EXPORTER_ZIPKIN_ENDPOINT, None)
+        os.environ.pop(OTEL_EXPORTER_ZIPKIN_TIMEOUT, None)
 
     def test_constructor_default(self):
         exporter = ZipkinExporter()
@@ -65,6 +66,7 @@ class TestZipkinExporter(unittest.TestCase):
     def test_constructor_env_vars(self):
         os_endpoint = "https://foo:9911/path"
         os.environ[OTEL_EXPORTER_ZIPKIN_ENDPOINT] = os_endpoint
+        os.environ[OTEL_EXPORTER_ZIPKIN_TIMEOUT] = "15"
 
         exporter = ZipkinExporter()
 
@@ -73,6 +75,7 @@ class TestZipkinExporter(unittest.TestCase):
         self.assertEqual(exporter.local_node.ipv4, None)
         self.assertEqual(exporter.local_node.ipv6, None)
         self.assertEqual(exporter.local_node.port, None)
+        self.assertEqual(exporter.timeout, 15)
 
     def test_constructor_protocol_endpoint(self):
         """Test the constructor for the common usage of providing the
@@ -94,12 +97,14 @@ class TestZipkinExporter(unittest.TestCase):
         """
         os_endpoint = "https://os.env.param:9911/path"
         os.environ[OTEL_EXPORTER_ZIPKIN_ENDPOINT] = os_endpoint
+        os.environ[OTEL_EXPORTER_ZIPKIN_TIMEOUT] = "15"
 
         constructor_param_endpoint = "https://constructor.param:9911/path"
         local_node_ipv4 = "192.168.0.1"
         local_node_ipv6 = "2001:db8::1000"
         local_node_port = 30301
         max_tag_value_length = 56
+        timeout_param = 20
 
         exporter = ZipkinExporter(
             constructor_param_endpoint,
@@ -107,6 +112,7 @@ class TestZipkinExporter(unittest.TestCase):
             local_node_ipv6,
             local_node_port,
             max_tag_value_length,
+            timeout_param,
         )
 
         self.assertIsInstance(exporter.encoder, ProtobufEncoder)
@@ -119,8 +125,11 @@ class TestZipkinExporter(unittest.TestCase):
             exporter.local_node.ipv6, ipaddress.IPv6Address(local_node_ipv6)
         )
         self.assertEqual(exporter.local_node.port, local_node_port)
+        # Assert timeout passed in constructor is prioritized over env
+        # when both are set.
+        self.assertEqual(exporter.timeout, 20)
 
-    @patch("requests.post")
+    @patch("requests.Session.post")
     def test_export_success(self, mock_post):
         mock_post.return_value = MockResponse(200)
         spans = []
@@ -128,7 +137,7 @@ class TestZipkinExporter(unittest.TestCase):
         status = exporter.export(spans)
         self.assertEqual(SpanExportResult.SUCCESS, status)
 
-    @patch("requests.post")
+    @patch("requests.Session.post")
     def test_export_invalid_response(self, mock_post):
         mock_post.return_value = MockResponse(404)
         spans = []
@@ -136,7 +145,7 @@ class TestZipkinExporter(unittest.TestCase):
         status = exporter.export(spans)
         self.assertEqual(SpanExportResult.FAILURE, status)
 
-    @patch("requests.post")
+    @patch("requests.Session.post")
     def test_export_span_service_name(self, mock_post):
         mock_post.return_value = MockResponse(200)
         resource = Resource.create({SERVICE_NAME: "test"})
@@ -151,6 +160,30 @@ class TestZipkinExporter(unittest.TestCase):
         exporter = ZipkinExporter()
         exporter.export([span])
         self.assertEqual(exporter.local_node.service_name, "test")
+
+    @patch("requests.Session.post")
+    def test_export_shutdown(self, mock_post):
+        mock_post.return_value = MockResponse(200)
+        spans = []
+        exporter = ZipkinExporter()
+        status = exporter.export(spans)
+        self.assertEqual(SpanExportResult.SUCCESS, status)
+
+        exporter.shutdown()
+        # Any call to .export() post shutdown should return failure
+        status = exporter.export(spans)
+        self.assertEqual(SpanExportResult.FAILURE, status)
+
+    @patch("requests.Session.post")
+    def test_export_timeout(self, mock_post):
+        mock_post.return_value = MockResponse(200)
+        spans = []
+        exporter = ZipkinExporter(timeout=2)
+        status = exporter.export(spans)
+        self.assertEqual(SpanExportResult.SUCCESS, status)
+        mock_post.assert_called_with(
+            url="http://localhost:9411/api/v2/spans", data=b"", timeout=2
+        )
 
 
 class TestZipkinNodeEndpoint(unittest.TestCase):

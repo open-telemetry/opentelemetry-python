@@ -47,6 +47,7 @@ collector endpoint using HTTP and supports v2 protobuf.
         # local_node_ipv6="2001:db8::c001",
         # local_node_port=31313,
         # max_tag_value_length=256
+        # timeout=5 (in seconds)
     )
 
     # Create a BatchSpanProcessor and add the exporter to it
@@ -61,6 +62,7 @@ collector endpoint using HTTP and supports v2 protobuf.
 The exporter supports the following environment variable for configuration:
 
 - :envvar:`OTEL_EXPORTER_ZIPKIN_ENDPOINT`
+- :envvar:`OTEL_EXPORTER_ZIPKIN_TIMEOUT`
 
 API
 ---
@@ -81,6 +83,7 @@ from opentelemetry.exporter.zipkin.proto.http.v2 import ProtobufEncoder
 from opentelemetry.exporter.zipkin.node_endpoint import IpInput, NodeEndpoint
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_ZIPKIN_ENDPOINT,
+    OTEL_EXPORTER_ZIPKIN_TIMEOUT,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
@@ -100,7 +103,24 @@ class ZipkinExporter(SpanExporter):
         local_node_ipv6: IpInput = None,
         local_node_port: Optional[int] = None,
         max_tag_value_length: Optional[int] = None,
+        timeout: Optional[int] = None,
     ):
+        """Zipkin exporter.
+
+        Args:
+            version: The protocol version to be used.
+            endpoint: The endpoint of the Zipkin collector.
+            local_node_ipv4: Primary IPv4 address associated with this connection.
+            local_node_ipv6: Primary IPv6 address associated with this connection.
+            local_node_port: Depending on context, this could be a listen port or the
+                client-side of a socket.
+            max_tag_value_length: Max length string attribute values can have.
+            timeout: Maximum time the Zipkin exporter will wait for each batch export.
+                The default value is 10s.
+
+            The tuple (local_node_ipv4, local_node_ipv6, local_node_port) is used to represent
+            the network context of a node in the service graph.
+        """
         self.local_node = NodeEndpoint(
             local_node_ipv4, local_node_ipv6, local_node_port
         )
@@ -113,7 +133,21 @@ class ZipkinExporter(SpanExporter):
 
         self.encoder = ProtobufEncoder(max_tag_value_length)
 
+        self.session = requests.Session()
+        self.session.headers.update(
+            {"Content-Type": self.encoder.content_type()}
+        )
+        self._closed = False
+        self.timeout = timeout or int(
+            environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT, 10)
+        )
+
     def export(self, spans: Sequence[Span]) -> SpanExportResult:
+        # After the call to Shutdown subsequent calls to Export are
+        # not allowed and should return a Failure result
+        if self._closed:
+            logger.warning("Exporter already shutdown, ignoring batch")
+            return SpanExportResult.FAILURE
         # Populate service_name from first span
         # We restrict any SpanProcessor to be only associated with a single
         # TracerProvider, so it is safe to assume that all Spans in a single
@@ -123,10 +157,10 @@ class ZipkinExporter(SpanExporter):
             service_name = spans[0].resource.attributes.get(SERVICE_NAME)
             if service_name:
                 self.local_node.service_name = service_name
-        result = requests.post(
+        result = self.session.post(
             url=self.endpoint,
             data=self.encoder.serialize(spans, self.local_node),
-            headers={"Content-Type": self.encoder.content_type()},
+            timeout=self.timeout,
         )
 
         if result.status_code not in REQUESTS_SUCCESS_STATUS_CODES:
@@ -139,4 +173,8 @@ class ZipkinExporter(SpanExporter):
         return SpanExportResult.SUCCESS
 
     def shutdown(self) -> None:
-        pass
+        if self._closed:
+            logger.warning("Exporter already shutdown, ignoring call")
+            return
+        self.session.close()
+        self._closed = True
