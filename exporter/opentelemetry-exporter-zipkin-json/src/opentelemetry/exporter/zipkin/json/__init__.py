@@ -119,6 +119,7 @@ class ZipkinExporter(SpanExporter):
                 client-side of a socket.
             max_tag_value_length: Max length string attribute values can have.
             timeout: Maximum time the Zipkin exporter will wait for each batch export.
+                The default value is 10s.
 
             The tuple (local_node_ipv4, local_node_ipv6, local_node_port) is used to represent
             the network context of a node in the service graph.
