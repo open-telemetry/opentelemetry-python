@@ -117,6 +117,26 @@ to ``DjangoInstrumento().instrument()`` in ``main``, then Run the django app
 with ``opentelemetry-instrumentation python manage.py runserver --noreload``.
 Repeat the steps with the client, the result should be the same.
 
+Usage with Auto Instrumentation and uWSGI
+-----------------------------------------
+
+uWSGI and Django can be used together with auto instrumentation. To do so,
+first install uWSGI in the previous virtual environment:
+
+```
+pip install uwsgi
+```
+Once that is done, run the server with ``uwsgi`` from the directory that
+contains ``instrumentation_example``:
+
+```
+opentelemetry-instrument uwsgi --http :8000 --module instrumentation_example.wsgi
+```
+
+This should start one uWSGI worker in your console. Open up a browser and point
+it to ``localhost:8000``. This request should display a span exported in the
+server console.
+
 References
 ----------
 
