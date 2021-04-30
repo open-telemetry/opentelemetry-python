@@ -206,3 +206,23 @@ similar to the following example:
 
 You can see that both outputs are the same because automatic instrumentation does
 exactly what manual instrumentation does.
+
+Instrumentation while debugging
+===============================
+
+The debug mode can be enabled in the Flask app like this:
+
+
+.. code:: python
+
+    if __name__ == "__main__":
+        app.run(port=8082, debug=True)
+
+The debug mode can break instrumentation from happening because it enables a
+reloader. To run instrumentation while the debug mode is enabled, set the
+``use_reloader`` option to ``False``:
+
+.. code:: python
+
+    if __name__ == "__main__":
+        app.run(port=8082, debug=True, use_reloader=False)
