@@ -218,18 +218,20 @@ Start the Collector locally to see how the Collector works in practice. Write th
     # /tmp/otel-collector-config.yaml
     receivers:
         otlp:
+            protocols:
+                grpc:
+                http:
     exporters:
         logging:
             loglevel: debug
     processors:
         batch:
-        queued_retry:
     service:
         pipelines:
             traces:
                 receivers: [otlp]
                 exporters: [logging]
-                processors: [batch, queued_retry]
+                processors: [batch]
 
 Then start the Docker container:
 
