@@ -84,6 +84,6 @@ class CompositePropagator(textmap.TextMapPropagator):
         return composite_fields
 
 
-@deprecated(version="1.2.0", reason="You should use CompositePropagator")
+@deprecated(version="1.2.0", reason="You should use CompositePropagator")  # type: ignore
 class CompositeHTTPPropagator(CompositePropagator):
     """Alias for CompositePropagator"""
