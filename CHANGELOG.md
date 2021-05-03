@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added example for running Django with auto instrumentation
   ([#1803](https://github.com/open-telemetry/opentelemetry-python/pull/1803))
 
+### Changed
+- Rename CompositeHTTPPropagator to CompositePropagator as per specification.
+  ([#1807](https://github.com/open-telemetry/opentelemetry-python/pull/1807))
+
 ### Removed
 - Moved `opentelemetry-instrumentation` to contrib repository
   ([#1797](https://github.com/open-telemetry/opentelemetry-python/pull/1797))
