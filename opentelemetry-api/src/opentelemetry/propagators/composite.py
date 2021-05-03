@@ -13,6 +13,7 @@
 # limitations under the License.
 import logging
 import typing
+from deprecated import deprecated
 
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
@@ -20,8 +21,8 @@ from opentelemetry.propagators import textmap
 logger = logging.getLogger(__name__)
 
 
-class CompositeHTTPPropagator(textmap.TextMapPropagator):
-    """CompositeHTTPPropagator provides a mechanism for combining multiple
+class CompositePropagator(textmap.TextMapPropagator):
+    """CompositePropagator provides a mechanism for combining multiple
     propagators into a single one.
 
     Args:
@@ -80,3 +81,8 @@ class CompositeHTTPPropagator(textmap.TextMapPropagator):
                 composite_fields.add(field)
 
         return composite_fields
+
+
+@deprecated(version="1.2.0", reason="You should use CompositePropagator")
+class CompositeHTTPPropagator(CompositePropagator):
+    """Alias for CompositePropagator"""

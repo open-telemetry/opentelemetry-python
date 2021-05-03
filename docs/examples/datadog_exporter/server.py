@@ -21,7 +21,7 @@ from opentelemetry.exporter.datadog import (
 )
 from opentelemetry.exporter.datadog.propagator import DatadogFormat
 from opentelemetry.propagate import get_global_textmap, set_global_textmap
-from opentelemetry.propagators.composite import CompositeHTTPPropagator
+from opentelemetry.propagators.composite import CompositePropagator
 from opentelemetry.sdk.trace import TracerProvider
 
 app = Flask(__name__)
@@ -38,13 +38,11 @@ trace.get_tracer_provider().add_span_processor(
 
 # append Datadog format for propagation to and from Datadog instrumented services
 global_textmap = get_global_textmap()
-if isinstance(global_textmap, CompositeHTTPPropagator) and not any(
+if isinstance(global_textmap, CompositePropagator) and not any(
     isinstance(p, DatadogFormat) for p in global_textmap._propagators
 ):
     set_global_textmap(
-        CompositeHTTPPropagator(
-            global_textmap._propagators + [DatadogFormat()]
-        )
+        CompositePropagator(global_textmap._propagators + [DatadogFormat()])
     )
 else:
     set_global_textmap(DatadogFormat())
