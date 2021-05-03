@@ -13,6 +13,7 @@
 # limitations under the License.
 import logging
 import typing
+
 from deprecated import deprecated
 
 from opentelemetry.context.context import Context
