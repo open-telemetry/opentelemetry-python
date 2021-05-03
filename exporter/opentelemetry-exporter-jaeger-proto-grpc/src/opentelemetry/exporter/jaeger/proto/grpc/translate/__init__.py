@@ -318,10 +318,18 @@ class ProtobufTranslator(Translator):
     def _extract_refs(
         self, span: ReadableSpan
     ) -> Optional[Sequence[model_pb2.SpanRef]]:
-        if not span.links:
-            return None
 
         refs = []
+        if span.parent:
+            ctx = span.get_span_context()
+            parent_id = span.parent.span_id
+            parent_ref = model_pb2.SpanRef(
+                ref_type=model_pb2.SpanRefType.CHILD_OF,
+                trace_id=_trace_id_to_bytes(ctx.trace_id),
+                span_id=_span_id_to_bytes(parent_id),
+            )
+            refs.append(parent_ref)
+
         for link in span.links:
             trace_id = link.context.trace_id
             span_id = link.context.span_id
