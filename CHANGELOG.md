@@ -7,15 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.1.0...HEAD)
 
 ### Added
-- Added example for running Django with auto instrumentation
+- Added example for running Django with auto instrumentation.
   ([#1803](https://github.com/open-telemetry/opentelemetry-python/pull/1803))
 
 ### Changed
+- Fixed OTLP gRPC exporter silently failing if scheme is not specified in endpoint.
+  ([#1806](https://github.com/open-telemetry/opentelemetry-python/pull/1806))
 - Rename CompositeHTTPPropagator to CompositePropagator as per specification.
   ([#1807](https://github.com/open-telemetry/opentelemetry-python/pull/1807))
 
 ### Removed
-- Moved `opentelemetry-instrumentation` to contrib repository
+- Moved `opentelemetry-instrumentation` to contrib repository.
   ([#1797](https://github.com/open-telemetry/opentelemetry-python/pull/1797))
 
 ## [1.1.0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.1.0) - 2021-04-20
