@@ -10,6 +10,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added example for running Django with auto instrumentation
   ([#1803](https://github.com/open-telemetry/opentelemetry-python/pull/1803))
 
+### Changed
+- Propagators use the root context as default for `extract` and do not modify
+  the context if extracting from carrier does not work.
+  ([#1811](https://github.com/open-telemetry/opentelemetry-python/pull/1811))
+
 ### Removed
 - Moved `opentelemetry-instrumentation` to contrib repository
   ([#1797](https://github.com/open-telemetry/opentelemetry-python/pull/1797))
