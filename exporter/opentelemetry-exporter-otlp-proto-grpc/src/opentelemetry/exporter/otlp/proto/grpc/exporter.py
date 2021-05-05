@@ -225,7 +225,8 @@ class OTLPExporterMixin(
             else:
                 insecure = True
 
-        endpoint = parsed_url.netloc
+        if parsed_url.netloc:
+            endpoint = parsed_url.netloc
 
         self._headers = headers or environ.get(OTEL_EXPORTER_OTLP_HEADERS)
         if isinstance(self._headers, str):

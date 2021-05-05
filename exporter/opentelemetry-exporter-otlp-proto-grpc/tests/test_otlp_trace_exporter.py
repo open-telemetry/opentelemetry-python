@@ -244,6 +244,7 @@ class TestOTLPSpanExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
     def test_otlp_exporter_endpoint(self, mock_secure, mock_insecure):
         """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
+        expected_endpoint = "localhost:4317"
         endpoints = [
             (
                 "http://localhost:4317",
@@ -278,6 +279,13 @@ class TestOTLPSpanExporter(TestCase):
                 mock_method.call_count,
                 "expected {} to be called for {} {}".format(
                     mock_method, endpoint, insecure
+                ),
+            )
+            self.assertEqual(
+                expected_endpoint,
+                mock_method.call_args[0][0],
+                "expected {} got {} {}".format(
+                    expected_endpoint, mock_method.call_args[0][0], endpoint
                 ),
             )
             mock_method.reset_mock()
