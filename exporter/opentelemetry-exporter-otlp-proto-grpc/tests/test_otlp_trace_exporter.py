@@ -541,7 +541,7 @@ class TestOTLPSpanExporter(TestCase):
             Status.STATUS_CODE_ERROR,
             Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR,
         )
-        
+
     def test_translate_key_values(self):
         bool_value = _translate_key_values("bool_type", False)
         self.assertTrue(isinstance(bool_value, KeyValue))
@@ -577,6 +577,18 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(arr_value.values[0].string_value, "asd")
         self.assertTrue(isinstance(arr_value.values[1], AnyValue))
         self.assertEqual(arr_value.values[1].string_value, "123")
+
+        map_value = _translate_key_values(
+            "map_type", {"asd": "123", "def": "456"}
+        )
+        self.assertTrue(isinstance(map_value, KeyValue))
+        self.assertEqual(map_value.key, "map_type")
+        self.assertTrue(isinstance(map_value.value, AnyValue))
+        self.assertTrue(isinstance(map_value.value.kvlist_value, KeyValueList))
+        kvlist_value = map_value.value.kvlist_value
+        self.assertTrue(isinstance(kvlist_value.values[0], KeyValue))
+        self.assertEqual(kvlist_value.values[0].key, "asd")
+        self.assertEqual(kvlist_value.values[0].value.string_value, "123")
 
 
 def _create_span_with_status(status: SDKStatus):

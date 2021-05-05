@@ -37,7 +37,12 @@ from grpc import (
     ssl_channel_credentials,
 )
 
-from opentelemetry.proto.common.v1.common_pb2 import AnyValue, ArrayValue, KeyValue
+from opentelemetry.proto.common.v1.common_pb2 import (
+    AnyValue,
+    ArrayValue,
+    KeyValue,
+    KeyValueList,
+)
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
@@ -97,12 +102,18 @@ def _translate_value(value: Any) -> KeyValue:
 
     elif isinstance(value, Sequence):
         any_value = AnyValue(
-            array_value=ArrayValue(
-                values=[_translate_value(v) for v in value]))
+            array_value=ArrayValue(values=[_translate_value(v) for v in value])
+        )
 
     # Tracing specs currently does not support Mapping type attributes
     elif isinstance(value, Mapping):
-        any_value = AnyValue(kvlist_value=value)
+        any_value = AnyValue(
+            kvlist_value=KeyValueList(
+                values=[
+                    _translate_key_values(str(k), v) for k, v in value.items()
+                ]
+            )
+        )
 
     else:
         raise Exception(

@@ -16,7 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 - Fixed sequence values in OTLP exporter not translating
-  ([#1797](https://github.com/open-telemetry/opentelemetry-python/pull/1797))
+  ([#1818](https://github.com/open-telemetry/opentelemetry-python/pull/1818))
 
 ## [1.1.0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.1.0) - 2021-04-20
 
