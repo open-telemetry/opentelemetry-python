@@ -550,6 +550,7 @@ class TestOTLPSpanExporter(TestCase):
             Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR,
         )
 
+    # pylint:disable=no-member
     def test_translate_key_values(self):
         bool_value = _translate_key_values("bool_type", False)
         self.assertTrue(isinstance(bool_value, KeyValue))
