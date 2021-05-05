@@ -22,6 +22,9 @@ from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
+from opentelemetry.exporter.otlp.proto.grpc.exporter import (
+    _translate_key_values,
+)
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
@@ -35,8 +38,10 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
 )
 from opentelemetry.proto.common.v1.common_pb2 import (
     AnyValue,
+    ArrayValue,
     InstrumentationLibrary,
     KeyValue,
+    KeyValueList,
 )
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
@@ -536,6 +541,42 @@ class TestOTLPSpanExporter(TestCase):
             Status.STATUS_CODE_ERROR,
             Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR,
         )
+        
+    def test_translate_key_values(self):
+        bool_value = _translate_key_values("bool_type", False)
+        self.assertTrue(isinstance(bool_value, KeyValue))
+        self.assertEqual(bool_value.key, "bool_type")
+        self.assertTrue(isinstance(bool_value.value, AnyValue))
+        self.assertFalse(bool_value.value.bool_value)
+
+        str_value = _translate_key_values("str_type", "str")
+        self.assertTrue(isinstance(str_value, KeyValue))
+        self.assertEqual(str_value.key, "str_type")
+        self.assertTrue(isinstance(str_value.value, AnyValue))
+        self.assertEqual(str_value.value.string_value, "str")
+
+        int_value = _translate_key_values("int_type", 2)
+        self.assertTrue(isinstance(int_value, KeyValue))
+        self.assertEqual(int_value.key, "int_type")
+        self.assertTrue(isinstance(int_value.value, AnyValue))
+        self.assertEqual(int_value.value.int_value, 2)
+
+        double_value = _translate_key_values("double_type", 3.2)
+        self.assertTrue(isinstance(double_value, KeyValue))
+        self.assertEqual(double_value.key, "double_type")
+        self.assertTrue(isinstance(double_value.value, AnyValue))
+        self.assertEqual(double_value.value.double_value, 3.2)
+
+        seq_value = _translate_key_values("seq_type", ["asd", "123"])
+        self.assertTrue(isinstance(seq_value, KeyValue))
+        self.assertEqual(seq_value.key, "seq_type")
+        self.assertTrue(isinstance(seq_value.value, AnyValue))
+        self.assertTrue(isinstance(seq_value.value.array_value, ArrayValue))
+        arr_value = seq_value.value.array_value
+        self.assertTrue(isinstance(arr_value.values[0], AnyValue))
+        self.assertEqual(arr_value.values[0].string_value, "asd")
+        self.assertTrue(isinstance(arr_value.values[1], AnyValue))
+        self.assertEqual(arr_value.values[1].string_value, "123")
 
 
 def _create_span_with_status(status: SDKStatus):
