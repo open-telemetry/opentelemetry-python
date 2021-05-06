@@ -20,7 +20,7 @@ package will setup all the required entry points.
 
 .. code:: sh
 
-    $ pip install opentelemetry-distro[otlp]
+    $ pip install opentelemetry-distro[otlp] opentelemetry-instrumentation
 
 Start the Collector locally to see data being exported. Write the following file:
 
@@ -70,4 +70,35 @@ Lastly, run the ``no_configuration.py`` with the auto-instrumentation:
 
     $ opentelemetry-instrument python no_configuration.py
 
-The resulting span will appear in the output from the collector.
+The resulting span will appear in the output from the collector and look similar to this:
+
+.. code-block:: sh
+
+               Resource labels:
+                    -> telemetry.sdk.language: STRING(python)
+                    -> telemetry.sdk.name: STRING(opentelemetry)
+                    -> telemetry.sdk.version: STRING(1.1.0)
+                    -> service.name: STRING(unknown_service)
+               InstrumentationLibrarySpans #0
+               InstrumentationLibrary __main__
+               Span #0
+                   Trace ID       : db3c99e5bfc50ef8be1773c3765e8845
+                   Parent ID      : 0677126a4d110cb8
+                   ID             : 3163b3022808ed1b
+                   Name           : bar
+                   Kind           : SPAN_KIND_INTERNAL
+                   Start time     : 2021-05-06 22:54:51.23063 +0000 UTC
+                   End time       : 2021-05-06 22:54:51.230684 +0000 UTC
+                   Status code    : STATUS_CODE_UNSET
+                   Status message :
+               Span #1
+                   Trace ID       : db3c99e5bfc50ef8be1773c3765e8845
+                   Parent ID      :
+                   ID             : 0677126a4d110cb8
+                   Name           : foo
+                   Kind           : SPAN_KIND_INTERNAL
+                   Start time     : 2021-05-06 22:54:51.230549 +0000 UTC
+                   End time       : 2021-05-06 22:54:51.230706 +0000 UTC
+                   Status code    : STATUS_CODE_UNSET
+                   Status message :
+
