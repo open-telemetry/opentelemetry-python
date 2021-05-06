@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Added example for running Django with auto instrumentation.
   ([#1803](https://github.com/open-telemetry/opentelemetry-python/pull/1803))
+- Added `B3SingleFormat` and `B3MultiFormat` propagators to the `opentelemetry-propagator-b3` package.
+  ([#1823](https://github.com/open-telemetry/opentelemetry-python/pull/1823))
 
 ### Changed
 - Fixed OTLP gRPC exporter silently failing if scheme is not specified in endpoint.
@@ -18,6 +20,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Propagators use the root context as default for `extract` and do not modify
   the context if extracting from carrier does not work.
   ([#1811](https://github.com/open-telemetry/opentelemetry-python/pull/1811))
+- Fixed `b3` propagator entrypoint to point to `B3SingleFormat` propagator.
+  ([#1823](https://github.com/open-telemetry/opentelemetry-python/pull/1823))
+- Added `b3multi` propagator entrypoint to point to `B3MultiFormat` propagator.
+  ([#1823](https://github.com/open-telemetry/opentelemetry-python/pull/1823))
 
 ### Removed
 - Moved `opentelemetry-instrumentation` to contrib repository.
