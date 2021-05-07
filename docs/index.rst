@@ -32,6 +32,8 @@ In addition, there are several extension packages which can be installed separat
 
     pip install opentelemetry-exporter-{exporter}
     pip install opentelemetry-instrumentation-{instrumentation}
+    
+Note: If you have installed python3-pip, you command will be `pip3` instead of `pip`.
 
 These are for exporter and instrumentation packages respectively.
 Some packages can be found in :scm_web:`instrumentation <instrumentation/>` and :scm_web:`exporter <exporter/>`
