@@ -1,0 +1,31 @@
+name: Public API check
+
+on:
+  pull_request:
+
+jobs:
+  commentPR:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: mshick/add-pr-comment@v1
+        with:
+          message: |
+            **comment**
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
+          repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
+          allow-repeats: false # This is the default
+#   publicAPICheck:
+# 
+#   runs-on: ubuntu-latest
+# 
+#   steps:
+#   - name: Checkout
+#   uses: actions/checkout@v2
+#   - name: Set up Python
+#   uses: actions/setup-python@v2
+#   with:
+#     python-version: 3.8
+#   - name: Install tox
+#   run: pip install -U tox-factor
+#   - name: Public API Check
+#   run: tox -e public-symbols-check
