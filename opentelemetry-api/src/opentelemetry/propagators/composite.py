@@ -88,3 +88,4 @@ class CompositePropagator(textmap.TextMapPropagator):
 class CompositeHTTPPropagator(CompositePropagator):
     """CompositeHTTPPropagator provides a mechanism for combining multiple
     propagators into a single one.
+    """
