@@ -1,4 +1,4 @@
-Opentelemetry Jaeger Exporters
+OpenTelemetry Jaeger Exporters
 ==============================
 
 .. automodule:: opentelemetry.exporter.jaeger
