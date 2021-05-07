@@ -1,4 +1,4 @@
-Opentelemetry OTLP Exporters
+OpenTelemetry OTLP Exporters
 ============================
 
 .. automodule:: opentelemetry.exporter.otlp
