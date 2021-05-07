@@ -218,3 +218,20 @@ OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES = (
 """
 .. envvar:: OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES
 """
+
+OTEL_SERVICE_NAME = "OTEL_SERVICE_NAME"
+"""
+.. envvar:: OTEL_SERVICE_NAME
+
+Convenience environment variable for setting the service name resource attribute.
+The following two environment variables have the same effect
+
+.. code-block:: console
+
+    OTEL_SERVICE_NAME=my-python-service
+
+    OTEL_RESOURCE_ATTRIBUTES=service.name=my-python-service
+
+
+If both are set, :envvar:`OTEL_SERVICE_NAME` takes precedence.
+"""
