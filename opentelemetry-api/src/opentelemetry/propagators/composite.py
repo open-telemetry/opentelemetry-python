@@ -86,4 +86,5 @@ class CompositePropagator(textmap.TextMapPropagator):
 
 @deprecated(version="1.2.0", reason="You should use CompositePropagator")  # type: ignore
 class CompositeHTTPPropagator(CompositePropagator):
-    """Alias for CompositePropagator"""
+    """CompositeHTTPPropagator provides a mechanism for combining multiple
+    propagators into a single one.
