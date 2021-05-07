@@ -132,7 +132,6 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 
 - [Aaron Abbott](https://github.com/aabmass), Google
 - [Diego Hurtado](https://github.com/ocelotl)
-- [Hector Hernandez](https://github.com/hectorhdzg), Microsoft
 - [Owais Lone](https://github.com/owais), Splunk
 - [Srikanth Chekuri](https://github.com/lonewolf3739)
 
