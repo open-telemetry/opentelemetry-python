@@ -15,6 +15,7 @@
 import os
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
+from random import randint
 from unittest import TestCase
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -130,7 +131,9 @@ class TestOTLPSpanExporter(TestCase):
         event_mock = Mock(
             **{
                 "timestamp": 1591240820506462784,
-                "attributes": OrderedDict([("a", 1), ("b", False)]),
+                "attributes": OrderedDict(
+                    [("a", 1), ("b", False), ("c", "ve" * 1200)]
+                ),
             }
         )
 
@@ -145,16 +148,22 @@ class TestOTLPSpanExporter(TestCase):
                     "trace_id": 67545097771067222548457157018666467027,
                 }
             ),
-            resource=SDKResource(OrderedDict([("a", 1), ("b", False)])),
+            resource=SDKResource(
+                OrderedDict([("a", 1), ("b", False), ("c", "vr" * 500)])
+            ),
             parent=Mock(**{"span_id": 12345}),
-            attributes=OrderedDict([("a", 1), ("b", True)]),
+            attributes=OrderedDict(
+                [("a", 1), ("b", True), ("c", "vs" * 1000)]
+            ),
             events=[event_mock],
             links=[
                 Mock(
                     **{
                         "context.trace_id": 1,
                         "context.span_id": 2,
-                        "attributes": OrderedDict([("a", 1), ("b", False)]),
+                        "attributes": OrderedDict(
+                            [("a", 1), ("b", False), ("c", "vl" * 700)]
+                        ),
                         "kind": OTLPSpan.SpanKind.SPAN_KIND_INTERNAL,  # pylint: disable=no-member
                     }
                 )
@@ -401,6 +410,12 @@ class TestOTLPSpanExporter(TestCase):
                             KeyValue(
                                 key="b", value=AnyValue(bool_value=False)
                             ),
+                            KeyValue(
+                                key="c",
+                                value=AnyValue(
+                                    string_value="vr" * 500,
+                                ),
+                            ),
                         ]
                     ),
                     instrumentation_library_spans=[
@@ -438,6 +453,12 @@ class TestOTLPSpanExporter(TestCase):
                                             key="b",
                                             value=AnyValue(bool_value=True),
                                         ),
+                                        KeyValue(
+                                            key="c",
+                                            value=AnyValue(
+                                                string_value="vs" * 1000,
+                                            ),
+                                        ),
                                     ],
                                     events=[
                                         OTLPSpan.Event(
@@ -454,6 +475,13 @@ class TestOTLPSpanExporter(TestCase):
                                                     key="b",
                                                     value=AnyValue(
                                                         bool_value=False
+                                                    ),
+                                                ),
+                                                KeyValue(
+                                                    key="c",
+                                                    value=AnyValue(
+                                                        string_value="ve"
+                                                        * 1200,
                                                     ),
                                                 ),
                                             ],
@@ -479,6 +507,13 @@ class TestOTLPSpanExporter(TestCase):
                                                         bool_value=False
                                                     ),
                                                 ),
+                                                KeyValue(
+                                                    key="c",
+                                                    value=AnyValue(
+                                                        string_value="vl"
+                                                        * 700,
+                                                    ),
+                                                ),
                                             ],
                                         )
                                     ],
@@ -492,6 +527,40 @@ class TestOTLPSpanExporter(TestCase):
 
         # pylint: disable=protected-access
         self.assertEqual(expected, self.exporter._translate_data([self.span]))
+
+    def test_max_attr_value_length(self):
+        max_length = randint(0, 100)
+        exporter = OTLPSpanExporter(
+            insecure=True, max_attr_value_length=max_length
+        )
+        resource_spans = exporter._translate_data(  # pylint: disable=protected-access,no-member
+            [self.span]
+        ).resource_spans
+        self.assertEqual(len(resource_spans), 1)
+        self.assertEqual(len(resource_spans[0].resource.attributes), 3)
+        self.assertEqual(
+            len(resource_spans[0].resource.attributes[2].value.string_value),
+            max_length,
+        )
+
+        self.assertEqual(
+            len(resource_spans[0].instrumentation_library_spans), 1
+        )
+        span = resource_spans[0].instrumentation_library_spans[0].spans[0]
+        self.assertEqual(len(span.attributes), 3)
+        self.assertEqual(
+            len(span.attributes[2].value.string_value), max_length
+        )
+
+        self.assertEqual(len(span.links), 1)
+        self.assertEqual(
+            len(span.links[0].attributes[2].value.string_value), max_length
+        )
+
+        self.assertEqual(len(span.events), 1)
+        self.assertEqual(
+            len(span.events[0].attributes[2].value.string_value), max_length
+        )
 
     def _check_translated_status(
         self,

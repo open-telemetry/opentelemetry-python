@@ -70,6 +70,7 @@ class OTLPSpanExporter(
         headers: Headers to send when exporting
         timeout: Backend request timeout in seconds
         compression: gRPC compression method to use
+        max_attr_value_length: Max length string attribute values can have. Set to None to disable.
     """
 
     _result = SpanExportResult
@@ -83,7 +84,10 @@ class OTLPSpanExporter(
         headers: Optional[Sequence] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
+        max_attr_value_length: Optional[int] = None,
     ):
+        self._max_attr_value_length = max_attr_value_length
+
         if (
             not insecure
             and environ.get(OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE) is not None
@@ -161,7 +165,9 @@ class OTLPSpanExporter(
 
                 try:
                     self._collector_span_kwargs["attributes"].append(
-                        _translate_key_values(key, value)
+                        _translate_key_values(
+                            key, value, self._max_attr_value_length
+                        )
                     )
                 except Exception as error:  # pylint: disable=broad-except
                     logger.exception(error)
@@ -180,7 +186,9 @@ class OTLPSpanExporter(
                 for key, value in sdk_span_event.attributes.items():
                     try:
                         collector_span_event.attributes.append(
-                            _translate_key_values(key, value)
+                            _translate_key_values(
+                                key, value, self._max_attr_value_length
+                            )
                         )
                     # pylint: disable=broad-except
                     except Exception as error:
@@ -206,7 +214,9 @@ class OTLPSpanExporter(
                 for key, value in sdk_span_link.attributes.items():
                     try:
                         collector_span_link.attributes.append(
-                            _translate_key_values(key, value)
+                            _translate_key_values(
+                                key, value, self._max_attr_value_length
+                            )
                         )
                     # pylint: disable=broad-except
                     except Exception as error:
@@ -287,6 +297,7 @@ class OTLPSpanExporter(
                 sdk_resource_instrumentation_library_spans,
                 ResourceSpans,
                 "spans",
+                max_attr_value_length=self._max_attr_value_length,
             )
         )
 

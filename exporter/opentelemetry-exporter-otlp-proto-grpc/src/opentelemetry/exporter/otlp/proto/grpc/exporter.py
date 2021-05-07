@@ -81,12 +81,16 @@ def environ_to_compression(environ_key: str) -> Optional[Compression]:
     return _ENVIRON_TO_COMPRESSION[environ_value]
 
 
-def _translate_key_values(key: Text, value: Any) -> KeyValue:
+def _translate_key_values(
+    key: Text, value: Any, max_attr_value_length: Optional[int]
+) -> KeyValue:
 
     if isinstance(value, bool):
         any_value = AnyValue(bool_value=value)
 
     elif isinstance(value, str):
+        if max_attr_value_length is not None:
+            value = value[:max_attr_value_length]
         any_value = AnyValue(string_value=value)
 
     elif isinstance(value, int):
@@ -115,6 +119,7 @@ def get_resource_data(
     ],
     resource_class: Callable[..., TypingResourceT],
     name: str,
+    max_attr_value_length=None,
 ) -> List[TypingResourceT]:
 
     resource_data = []
@@ -131,7 +136,7 @@ def get_resource_data(
             try:
                 # pylint: disable=no-member
                 collector_resource.attributes.append(
-                    _translate_key_values(key, value)
+                    _translate_key_values(key, value, max_attr_value_length)
                 )
             except Exception as error:  # pylint: disable=broad-except
                 logger.exception(error)
