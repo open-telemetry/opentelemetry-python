@@ -1,5 +1,5 @@
-OpenTracing Shim Example
-==========================
+OpenTracing Shim
+================
 
 This example shows how to use the :doc:`opentelemetry-opentracing-shim
 package <../../shim/opentracing_shim/opentracing_shim>`
