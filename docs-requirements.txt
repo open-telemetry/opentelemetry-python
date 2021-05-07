@@ -1,4 +1,4 @@
-sphinx~=3.5
+sphinx~=3.5.4
 sphinx-rtd-theme~=0.5
 sphinx-autodoc-typehints
 # used to generate docs for the website
