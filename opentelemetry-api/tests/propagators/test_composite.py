@@ -17,7 +17,7 @@
 import unittest
 from unittest.mock import Mock
 
-from opentelemetry.propagators.composite import CompositeHTTPPropagator
+from opentelemetry.propagators.composite import CompositePropagator
 
 
 def get_as_list(dict_object, key):
@@ -67,7 +67,7 @@ class TestCompositePropagator(unittest.TestCase):
         )
 
     def test_no_propagators(self):
-        propagator = CompositeHTTPPropagator([])
+        propagator = CompositePropagator([])
         new_carrier = {}
         propagator.inject(new_carrier)
         self.assertEqual(new_carrier, {})
@@ -78,7 +78,7 @@ class TestCompositePropagator(unittest.TestCase):
         self.assertEqual(context, {})
 
     def test_single_propagator(self):
-        propagator = CompositeHTTPPropagator([self.mock_propagator_0])
+        propagator = CompositePropagator([self.mock_propagator_0])
 
         new_carrier = {}
         propagator.inject(new_carrier)
@@ -90,7 +90,7 @@ class TestCompositePropagator(unittest.TestCase):
         self.assertEqual(context, {"mock-0": "context"})
 
     def test_multiple_propagators(self):
-        propagator = CompositeHTTPPropagator(
+        propagator = CompositePropagator(
             [self.mock_propagator_0, self.mock_propagator_1]
         )
 
@@ -106,7 +106,7 @@ class TestCompositePropagator(unittest.TestCase):
     def test_multiple_propagators_same_key(self):
         # test that when multiple propagators extract/inject the same
         # key, the later propagator values are extracted/injected
-        propagator = CompositeHTTPPropagator(
+        propagator = CompositePropagator(
             [self.mock_propagator_0, self.mock_propagator_2]
         )
 
@@ -120,7 +120,7 @@ class TestCompositePropagator(unittest.TestCase):
         self.assertEqual(context, {"mock-0": "context2"})
 
     def test_fields(self):
-        propagator = CompositeHTTPPropagator(
+        propagator = CompositePropagator(
             [
                 self.mock_propagator_0,
                 self.mock_propagator_1,
