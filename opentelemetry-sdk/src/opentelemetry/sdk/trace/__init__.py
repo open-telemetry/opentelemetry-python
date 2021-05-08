@@ -58,12 +58,23 @@ from opentelemetry.util._time import _time_ns
 
 logger = logging.getLogger(__name__)
 
-SPAN_ATTRIBUTE_COUNT_LIMIT = int(
-    environ.get(OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, 128)
+
+_DEFAULT_SPAN_LIMIT = "128"
+
+
+def _get_limit_from_env(limit_name) -> Optional[int]:
+    value = environ.get(limit_name, _DEFAULT_SPAN_LIMIT).strip().lower()
+    if value == "none":
+        return None
+    return int(value)
+
+
+SPAN_ATTRIBUTE_COUNT_LIMIT = _get_limit_from_env(
+    OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
 )
 
-_SPAN_EVENT_COUNT_LIMIT = int(environ.get(OTEL_SPAN_EVENT_COUNT_LIMIT, 128))
-_SPAN_LINK_COUNT_LIMIT = int(environ.get(OTEL_SPAN_LINK_COUNT_LIMIT, 128))
+_SPAN_EVENT_COUNT_LIMIT = _get_limit_from_env(OTEL_SPAN_EVENT_COUNT_LIMIT)
+_SPAN_LINK_COUNT_LIMIT = _get_limit_from_env(OTEL_SPAN_LINK_COUNT_LIMIT)
 _VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
 # pylint: disable=protected-access
 _TRACE_SAMPLER = sampling._get_from_env_or_default()

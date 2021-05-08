@@ -18,6 +18,7 @@ import subprocess
 import unittest
 from importlib import reload
 from logging import ERROR, WARNING
+from random import randint
 from typing import Optional
 from unittest import mock
 
@@ -1303,3 +1304,40 @@ class TestSpanLimits(unittest.TestCase):
 
             self.assertEqual(len(root.attributes), 10)
             self.assertEqual(len(root.events), 20)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT: "none",
+            OTEL_SPAN_EVENT_COUNT_LIMIT: "none",
+            OTEL_SPAN_LINK_COUNT_LIMIT: "none",
+        },
+    )
+    def test_span_environment_limits_set_to_none(self):
+        # pylint: disable=protected-access
+        num_links = num_attrs_events = int(
+            trace._DEFAULT_SPAN_LIMIT
+        ) + randint(1, 100)
+        reload(trace)
+        tracer = new_tracer()
+        id_generator = RandomIdGenerator()
+        some_links = [
+            trace_api.Link(
+                trace_api.SpanContext(
+                    trace_id=id_generator.generate_trace_id(),
+                    span_id=id_generator.generate_span_id(),
+                    is_remote=False,
+                )
+            )
+            for _ in range(num_links)
+        ]
+        with tracer.start_as_current_span("root", links=some_links) as root:
+            self.assertEqual(len(root.links), num_links)
+
+        with tracer.start_as_current_span("root") as root:
+            for idx in range(num_attrs_events):
+                root.set_attribute("my_attribute_{}".format(idx), 0)
+                root.add_event("my_event_{}".format(idx))
+
+            self.assertEqual(len(root.attributes), num_attrs_events)
+            self.assertEqual(len(root.events), num_attrs_events)

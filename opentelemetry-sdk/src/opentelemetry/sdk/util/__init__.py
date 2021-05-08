@@ -81,7 +81,7 @@ class BoundedList(Sequence):
     @classmethod
     def from_seq(cls, maxlen, seq):
         seq = tuple(seq)
-        if len(seq) > maxlen:
+        if maxlen is not None and len(seq) > maxlen:
             raise ValueError
         bounded_list = cls(maxlen)
         # pylint: disable=protected-access
@@ -97,10 +97,11 @@ class BoundedDict(MutableMapping):
     """
 
     def __init__(self, maxlen):
-        if not isinstance(maxlen, int):
-            raise ValueError
-        if maxlen < 0:
-            raise ValueError
+        if maxlen is not None:
+            if not isinstance(maxlen, int):
+                raise ValueError
+            if maxlen < 0:
+                raise ValueError
         self.maxlen = maxlen
         self.dropped = 0
         self._dict = OrderedDict()  # type: OrderedDict
@@ -122,7 +123,7 @@ class BoundedDict(MutableMapping):
 
             if key in self._dict:
                 del self._dict[key]
-            elif len(self._dict) == self.maxlen:
+            elif self.maxlen is not None and len(self._dict) == self.maxlen:
                 del self._dict[next(iter(self._dict.keys()))]
                 self.dropped += 1
             self._dict[key] = value
@@ -140,7 +141,7 @@ class BoundedDict(MutableMapping):
     @classmethod
     def from_map(cls, maxlen, mapping):
         mapping = OrderedDict(mapping)
-        if len(mapping) > maxlen:
+        if maxlen is not None and len(mapping) > maxlen:
             raise ValueError
         bounded_dict = cls(maxlen)
         # pylint: disable=protected-access
