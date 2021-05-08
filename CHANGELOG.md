@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1806](https://github.com/open-telemetry/opentelemetry-python/pull/1806))
 - Rename CompositeHTTPPropagator to CompositePropagator as per specification.
   ([#1807](https://github.com/open-telemetry/opentelemetry-python/pull/1807))
+- Propagators use the root context as default for `extract` and do not modify
+  the context if extracting from carrier does not work.
+  ([#1811](https://github.com/open-telemetry/opentelemetry-python/pull/1811))
 
 ### Removed
 - Moved `opentelemetry-instrumentation` to contrib repository.

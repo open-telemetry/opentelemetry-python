@@ -19,7 +19,7 @@ import opentelemetry.propagators.b3 as b3_format  # pylint: disable=no-name-in-m
 import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.id_generator as id_generator
 import opentelemetry.trace as trace_api
-from opentelemetry.context import get_current
+from opentelemetry.context import Context, get_current
 from opentelemetry.propagators.textmap import DefaultGetter
 
 FORMAT = b3_format.B3Format()
@@ -219,7 +219,7 @@ class TestB3Format(unittest.TestCase):
 
     def test_derived_ctx_is_returned_for_success(self):
         """Ensure returned context is derived from the given context."""
-        old_ctx = {"k1": "v1"}
+        old_ctx = Context({"k1": "v1"})
         new_ctx = FORMAT.extract(
             {
                 FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
@@ -229,17 +229,19 @@ class TestB3Format(unittest.TestCase):
             old_ctx,
         )
         self.assertIn("current-span", new_ctx)
-        for key, value in old_ctx.items():
+        for key, value in old_ctx.items():  # pylint:disable=no-member
             self.assertIn(key, new_ctx)
+            # pylint:disable=unsubscriptable-object
             self.assertEqual(new_ctx[key], value)
 
     def test_derived_ctx_is_returned_for_failure(self):
         """Ensure returned context is derived from the given context."""
-        old_ctx = {"k2": "v2"}
+        old_ctx = Context({"k2": "v2"})
         new_ctx = FORMAT.extract({}, old_ctx)
         self.assertNotIn("current-span", new_ctx)
-        for key, value in old_ctx.items():
+        for key, value in old_ctx.items():  # pylint:disable=no-member
             self.assertIn(key, new_ctx)
+            # pylint:disable=unsubscriptable-object
             self.assertEqual(new_ctx[key], value)
 
     def test_64bit_trace_id(self):
@@ -258,18 +260,24 @@ class TestB3Format(unittest.TestCase):
             new_carrier[FORMAT.TRACE_ID_KEY], "0" * 16 + trace_id_64_bit
         )
 
-    def test_extract_invalid_single_header(self):
+    def test_extract_invalid_single_header_to_explicit_ctx(self):
         """Given unparsable header, do not modify context"""
-        old_ctx = {}
+        old_ctx = Context({"k1": "v1"})
 
         carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
         new_ctx = FORMAT.extract(carrier, old_ctx)
 
         self.assertDictEqual(new_ctx, old_ctx)
 
-    def test_extract_missing_trace_id(self):
+    def test_extract_invalid_single_header_to_implicit_ctx(self):
+        carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
+        new_ctx = FORMAT.extract(carrier)
+
+        self.assertDictEqual(Context(), new_ctx)
+
+    def test_extract_missing_trace_id_to_explicit_ctx(self):
         """Given no trace ID, do not modify context"""
-        old_ctx = {}
+        old_ctx = Context({"k1": "v1"})
 
         carrier = {
             FORMAT.SPAN_ID_KEY: self.serialized_span_id,
@@ -279,9 +287,18 @@ class TestB3Format(unittest.TestCase):
 
         self.assertDictEqual(new_ctx, old_ctx)
 
-    def test_extract_invalid_trace_id(self):
+    def test_extract_missing_trace_id_to_implicit_ctx(self):
+        carrier = {
+            FORMAT.SPAN_ID_KEY: self.serialized_span_id,
+            FORMAT.FLAGS_KEY: "1",
+        }
+        new_ctx = FORMAT.extract(carrier)
+
+        self.assertDictEqual(Context(), new_ctx)
+
+    def test_extract_invalid_trace_id_to_explicit_ctx(self):
         """Given invalid trace ID, do not modify context"""
-        old_ctx = {}
+        old_ctx = Context({"k1": "v1"})
 
         carrier = {
             FORMAT.TRACE_ID_KEY: "abc123",
@@ -292,9 +309,19 @@ class TestB3Format(unittest.TestCase):
 
         self.assertDictEqual(new_ctx, old_ctx)
 
-    def test_extract_invalid_span_id(self):
+    def test_extract_invalid_trace_id_to_implicit_ctx(self):
+        carrier = {
+            FORMAT.TRACE_ID_KEY: "abc123",
+            FORMAT.SPAN_ID_KEY: self.serialized_span_id,
+            FORMAT.FLAGS_KEY: "1",
+        }
+        new_ctx = FORMAT.extract(carrier)
+
+        self.assertDictEqual(Context(), new_ctx)
+
+    def test_extract_invalid_span_id_to_explicit_ctx(self):
         """Given invalid span ID, do not modify context"""
-        old_ctx = {}
+        old_ctx = Context({"k1": "v1"})
 
         carrier = {
             FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
@@ -305,9 +332,19 @@ class TestB3Format(unittest.TestCase):
 
         self.assertDictEqual(new_ctx, old_ctx)
 
-    def test_extract_missing_span_id(self):
+    def test_extract_invalid_span_id_to_implicit_ctx(self):
+        carrier = {
+            FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
+            FORMAT.SPAN_ID_KEY: "abc123",
+            FORMAT.FLAGS_KEY: "1",
+        }
+        new_ctx = FORMAT.extract(carrier)
+
+        self.assertDictEqual(Context(), new_ctx)
+
+    def test_extract_missing_span_id_to_explicit_ctx(self):
         """Given no span ID, do not modify context"""
-        old_ctx = {}
+        old_ctx = Context({"k1": "v1"})
 
         carrier = {
             FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
@@ -317,14 +354,27 @@ class TestB3Format(unittest.TestCase):
 
         self.assertDictEqual(new_ctx, old_ctx)
 
-    def test_extract_empty_carrier(self):
+    def test_extract_missing_span_id_to_implicit_ctx(self):
+        carrier = {
+            FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
+            FORMAT.FLAGS_KEY: "1",
+        }
+        new_ctx = FORMAT.extract(carrier)
+
+        self.assertDictEqual(Context(), new_ctx)
+
+    def test_extract_empty_carrier_to_explicit_ctx(self):
         """Given no headers at all, do not modify context"""
-        old_ctx = {}
+        old_ctx = Context({"k1": "v1"})
 
         carrier = {}
         new_ctx = FORMAT.extract(carrier, old_ctx)
 
         self.assertDictEqual(new_ctx, old_ctx)
+
+    def test_extract_empty_carrier_to_implicit_ctx(self):
+        new_ctx = FORMAT.extract({})
+        self.assertDictEqual(Context(), new_ctx)
 
     @staticmethod
     def test_inject_empty_context():
@@ -368,5 +418,4 @@ class TestB3Format(unittest.TestCase):
 
         carrier = {}
         new_ctx = FORMAT.extract(carrier, old_ctx)
-        self.assertIsNotNone(new_ctx)
-        self.assertEqual(new_ctx["current-span"], trace_api.INVALID_SPAN)
+        self.assertDictEqual(Context(), new_ctx)
