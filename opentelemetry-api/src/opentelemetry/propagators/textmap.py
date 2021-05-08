@@ -150,7 +150,7 @@ class TextMapPropagator(abc.ABC):
                 used to construct a Context. This object
                 must be paired with an appropriate getter
                 which understands how to extract a value from it.
-            context: an optional Context to use. Defaults to current
+            context: an optional Context to use. Defaults to root
                 context if not set.
         Returns:
             A Context with configuration found in the carrier.

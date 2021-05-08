@@ -47,31 +47,26 @@ class JaegerPropagator(TextMapPropagator):
     ) -> Context:
 
         if context is None:
-            context = get_current()
+            context = Context()
         header = getter.get(carrier, self.TRACE_ID_KEY)
         if not header:
-            return trace.set_span_in_context(trace.INVALID_SPAN, context)
-        fields = _extract_first_element(header).split(":")
+            return context
 
         context = self._extract_baggage(getter, carrier, context)
-        if len(fields) != 4:
-            return trace.set_span_in_context(trace.INVALID_SPAN, context)
 
-        trace_id, span_id, _parent_id, flags = fields
+        trace_id, span_id, flags = _parse_trace_id_header(header)
         if (
             trace_id == trace.INVALID_TRACE_ID
             or span_id == trace.INVALID_SPAN_ID
         ):
-            return trace.set_span_in_context(trace.INVALID_SPAN, context)
+            return context
 
         span = trace.NonRecordingSpan(
             trace.SpanContext(
-                trace_id=int(trace_id, 16),
-                span_id=int(span_id, 16),
+                trace_id=trace_id,
+                span_id=span_id,
                 is_remote=True,
-                trace_flags=trace.TraceFlags(
-                    int(flags, 16) & trace.TraceFlags.SAMPLED
-                ),
+                trace_flags=trace.TraceFlags(flags & trace.TraceFlags.SAMPLED),
             )
         )
         return trace.set_span_in_context(span, context)
@@ -147,3 +142,35 @@ def _extract_first_element(
     if items is None:
         return None
     return next(iter(items), None)
+
+
+def _parse_trace_id_header(
+    items: typing.Iterable[CarrierT],
+) -> typing.Tuple[int]:
+    invalid_header_result = (trace.INVALID_TRACE_ID, trace.INVALID_SPAN_ID, 0)
+
+    header = _extract_first_element(items)
+    if header is None:
+        return invalid_header_result
+
+    fields = header.split(":")
+    if len(fields) != 4:
+        return invalid_header_result
+
+    trace_id_str, span_id_str, _parent_id_str, flags_str = fields
+    flags = _int_from_hex_str(flags_str, None)
+    if flags is None:
+        return invalid_header_result
+
+    trace_id = _int_from_hex_str(trace_id_str, trace.INVALID_TRACE_ID)
+    span_id = _int_from_hex_str(span_id_str, trace.INVALID_SPAN_ID)
+    return trace_id, span_id, flags
+
+
+def _int_from_hex_str(
+    identifier: str, default: typing.Optional[int]
+) -> typing.Optional[int]:
+    try:
+        return int(identifier, 16)
+    except ValueError:
+        return default
