@@ -96,7 +96,7 @@ def extract(
             used to construct a Context. This object
             must be paired with an appropriate getter
             which understands how to extract a value from it.
-        context: an optional Context to use. Defaults to current
+        context: an optional Context to use. Defaults to root
             context if not set.
     """
     return get_global_textmap().extract(carrier, context, getter=getter)

@@ -15,7 +15,7 @@
 import typing
 
 from opentelemetry import trace
-from opentelemetry.context import Context, get_current
+from opentelemetry.context import Context
 from opentelemetry.propagators.textmap import (
     CarrierT,
     Getter,
@@ -39,7 +39,7 @@ class NOOPTextMapPropagator(TextMapPropagator):
         context: typing.Optional[Context] = None,
         getter: Getter = default_getter,
     ) -> Context:
-        return get_current()
+        return Context()
 
     def inject(
         self,
@@ -66,11 +66,13 @@ class MockTextMapPropagator(TextMapPropagator):
         context: typing.Optional[Context] = None,
         getter: Getter = default_getter,
     ) -> Context:
+        if context is None:
+            context = Context()
         trace_id_list = getter.get(carrier, self.TRACE_ID_KEY)
         span_id_list = getter.get(carrier, self.SPAN_ID_KEY)
 
         if not trace_id_list or not span_id_list:
-            return trace.set_span_in_context(trace.INVALID_SPAN)
+            return context
 
         return trace.set_span_in_context(
             trace.NonRecordingSpan(
@@ -79,7 +81,8 @@ class MockTextMapPropagator(TextMapPropagator):
                     span_id=int(span_id_list[0]),
                     is_remote=True,
                 )
-            )
+            ),
+            context,
         )
 
     def inject(
