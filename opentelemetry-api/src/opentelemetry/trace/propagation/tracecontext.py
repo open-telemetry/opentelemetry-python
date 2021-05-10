@@ -43,14 +43,17 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
 
         See `opentelemetry.propagators.textmap.TextMapPropagator.extract`
         """
+        if context is None:
+            context = Context()
+
         header = getter.get(carrier, self._TRACEPARENT_HEADER_NAME)
 
         if not header:
-            return trace.set_span_in_context(trace.INVALID_SPAN, context)
+            return context
 
         match = re.search(self._TRACEPARENT_HEADER_FORMAT_RE, header[0])
         if not match:
-            return trace.set_span_in_context(trace.INVALID_SPAN, context)
+            return context
 
         version = match.group(1)
         trace_id = match.group(2)
@@ -58,13 +61,13 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         trace_flags = match.group(4)
 
         if trace_id == "0" * 32 or span_id == "0" * 16:
-            return trace.set_span_in_context(trace.INVALID_SPAN, context)
+            return context
 
         if version == "00":
             if match.group(5):
-                return trace.set_span_in_context(trace.INVALID_SPAN, context)
+                return context
         if version == "ff":
-            return trace.set_span_in_context(trace.INVALID_SPAN, context)
+            return context
 
         tracestate_headers = getter.get(carrier, self._TRACESTATE_HEADER_NAME)
         if tracestate_headers is None:
