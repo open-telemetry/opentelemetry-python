@@ -65,9 +65,7 @@ from json import dumps
 import pkg_resources
 
 from opentelemetry.sdk.environment_variables import OTEL_RESOURCE_ATTRIBUTES
-from opentelemetry.sdk.util import (
-    _filter_attributes,
-)
+from opentelemetry.sdk.util import _filter_attributes
 from opentelemetry.semconv.resource import ResourceAttributes
 
 LabelValue = typing.Union[str, bool, int, float]
