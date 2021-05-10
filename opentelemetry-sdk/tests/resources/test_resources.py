@@ -140,7 +140,7 @@ class TestResources(unittest.TestCase):
         )
 
     def test_invalid_resource_attribute_values(self):
-        resource = resources.Resource.create(
+        resource = resources.Resource(
             {
                 resources.SERVICE_NAME: "test",
                 "non-primitive-data-type": dict(),
@@ -151,8 +151,7 @@ class TestResources(unittest.TestCase):
             }
         )
         self.assertEqual(
-            resource.attributes.get(resources.SERVICE_NAME),
-            "test",
+            resource.attributes, {resources.SERVICE_NAME: "test",}
         )
         self.assertEqual(len(resource.attributes), 1)
 

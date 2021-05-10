@@ -143,7 +143,7 @@ class Resource:
 
     def __init__(self, attributes: Attributes):
         _filter_attributes(attributes)
-        self._attributes = _create_immutable_attributes(attributes)
+        self._attributes = attributes.copy()
 
     @staticmethod
     def create(attributes: typing.Optional[Attributes] = None) -> "Resource":
