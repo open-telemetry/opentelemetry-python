@@ -64,7 +64,6 @@ from json import dumps
 
 import pkg_resources
 
-
 from opentelemetry.sdk.environment_variables import (
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
