@@ -689,7 +689,10 @@ class Span(trace_api.Span, ReadableSpan):
                     try:
                         value = value.decode()
                     except ValueError:
-                        logger.warning("Byte attribute could not be decoded.")
+                        logger.warning(
+                            "Byte attribute could not be decoded for key `%s`.",
+                            key,
+                        )
                         return
                 self._attributes[key] = value
 
