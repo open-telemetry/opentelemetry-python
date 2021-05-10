@@ -106,14 +106,14 @@ def _translate_value(value: Any) -> KeyValue:
         )
 
     # Tracing specs currently does not support Mapping type attributes
-    elif isinstance(value, Mapping):
-        any_value = AnyValue(
-            kvlist_value=KeyValueList(
-                values=[
-                    _translate_key_values(str(k), v) for k, v in value.items()
-                ]
-            )
-        )
+    # elif isinstance(value, Mapping):
+    #     any_value = AnyValue(
+    #         kvlist_value=KeyValueList(
+    #             values=[
+    #                 _translate_key_values(str(k), v) for k, v in value.items()
+    #             ]
+    #         )
+    #     )
 
     else:
         raise Exception(
