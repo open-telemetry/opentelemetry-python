@@ -483,9 +483,13 @@ class ReadableSpan:
         if self.parent is not None:
             if isinstance(self.parent, Span):
                 ctx = self.parent.context
-                parent_id = trace_api.format_span_id(ctx.span_id)
+                parent_id = "0x{}".format(
+                    trace_api.format_span_id(ctx.span_id)
+                )
             elif isinstance(self.parent, SpanContext):
-                parent_id = trace_api.format_span_id(self.parent.span_id)
+                parent_id = "0x{}".format(
+                    trace_api.format_span_id(self.parent.span_id)
+                )
 
         start_time = None
         if self._start_time:

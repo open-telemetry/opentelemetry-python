@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1811](https://github.com/open-telemetry/opentelemetry-python/pull/1811))
 - Improve warning when failing to decode byte attribute
   ([#1810](https://github.com/open-telemetry/opentelemetry-python/pull/1810))
+- Fixed inconsistency in parent_id formatting from the ConsoleSpanExporter
+  ([#1833](https://github.com/open-telemetry/opentelemetry-python/pull/1833))
 
 ### Removed
 - Moved `opentelemetry-instrumentation` to contrib repository.
