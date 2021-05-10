@@ -288,10 +288,15 @@ class TestJaegerExporter(unittest.TestCase):
                 ],
                 references=[
                     model_pb2.SpanRef(
+                        ref_type=model_pb2.SpanRefType.CHILD_OF,
+                        trace_id=pb_translator._trace_id_to_bytes(trace_id),
+                        span_id=pb_translator._span_id_to_bytes(parent_id),
+                    ),
+                    model_pb2.SpanRef(
                         ref_type=model_pb2.SpanRefType.FOLLOWS_FROM,
                         trace_id=pb_translator._trace_id_to_bytes(trace_id),
                         span_id=pb_translator._span_id_to_bytes(other_id),
-                    )
+                    ),
                 ],
                 logs=[
                     model_pb2.Log(

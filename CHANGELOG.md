@@ -6,9 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.1.0...HEAD)
 
+### Changed
+- Include span parent in Jaeger gRPC export as `CHILD_OF` reference
+  ([#1809])(https://github.com/open-telemetry/opentelemetry-python/pull/1809)
+
 ### Added
 - Added example for running Django with auto instrumentation.
   ([#1803](https://github.com/open-telemetry/opentelemetry-python/pull/1803))
+- Added support for OTEL_SERVICE_NAME.
+  ([#1829](https://github.com/open-telemetry/opentelemetry-python/pull/1829))
 
 ### Changed
 - Fixed OTLP gRPC exporter silently failing if scheme is not specified in endpoint.
