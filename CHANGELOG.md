@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1823](https://github.com/open-telemetry/opentelemetry-python/pull/1823))
 - Added `b3multi` propagator entrypoint to point to `B3MultiFormat` propagator.
   ([#1823](https://github.com/open-telemetry/opentelemetry-python/pull/1823))
+- Improve warning when failing to decode byte attribute
+  ([#1810](https://github.com/open-telemetry/opentelemetry-python/pull/1810))
 
 ### Removed
 - Moved `opentelemetry-instrumentation` to contrib repository.
