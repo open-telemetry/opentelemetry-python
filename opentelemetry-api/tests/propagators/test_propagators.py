@@ -27,7 +27,7 @@ from opentelemetry.trace.propagation.tracecontext import (
 
 
 class TestPropagators(TestCase):
-    @patch("opentelemetry.propagators.composite.CompositeHTTPPropagator")
+    @patch("opentelemetry.propagators.composite.CompositePropagator")
     def test_default_composite_propagators(self, mock_compositehttppropagator):
         def test_propagators(propagators):
 
@@ -48,7 +48,7 @@ class TestPropagators(TestCase):
         reload(opentelemetry.propagate)
 
     @patch.dict(environ, {OTEL_PROPAGATORS: "a,b,c"})
-    @patch("opentelemetry.propagators.composite.CompositeHTTPPropagator")
+    @patch("opentelemetry.propagators.composite.CompositePropagator")
     @patch("pkg_resources.iter_entry_points")
     def test_non_default_propagators(
         self, mock_iter_entry_points, mock_compositehttppropagator

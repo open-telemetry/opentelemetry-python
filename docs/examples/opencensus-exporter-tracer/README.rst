@@ -1,5 +1,5 @@
-OpenTelemetry Collector Tracer OpenCensus Exporter Example
-==========================================================
+OpenCensus Exporter
+===================
 
 This example shows how to use the OpenCensus Exporter to export traces to the
 OpenTelemetry collector.
