@@ -91,6 +91,11 @@ def _filter_attributes(attributes: types.Attributes):
             if _is_valid_attribute_value(attr_value):
                 if isinstance(attr_value, MutableSequence):
                     attributes[attr_key] = tuple(attr_value)
+                if isinstance(attr_value, bytes):
+                    try:
+                        attributes[attr_key] = attr_value.decode()
+                    except ValueError:
+                        _logger.warning("Byte attribute could not be decoded.")
             else:
                 attributes.pop(attr_key)
 
