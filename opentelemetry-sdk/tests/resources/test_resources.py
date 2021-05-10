@@ -147,11 +147,14 @@ class TestResources(unittest.TestCase):
                 "invalid-byte-type-attribute": b"\xd8\xe1\xb7\xeb\xa8\xe5 \xd2\xb7\xe1",
                 "": "empty-key-value",
                 None: "null-key-value",
-                "another-non-primitive": uuid.uuid4()
+                "another-non-primitive": uuid.uuid4(),
             }
         )
         self.assertEqual(
-            resource.attributes, {resources.SERVICE_NAME: "test",}
+            resource.attributes,
+            {
+                resources.SERVICE_NAME: "test",
+            },
         )
         self.assertEqual(len(resource.attributes), 1)
 
