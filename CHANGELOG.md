@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed OTLP gRPC exporter silently failing if scheme is not specified in endpoint.
   ([#1806](https://github.com/open-telemetry/opentelemetry-python/pull/1806))
 - Fixed inconsistency in parent_id formatting from the ConsoleSpanExporter
-  ([#1806](https://github.com/open-telemetry/opentelemetry-python/pull/1806))
+  ([#1833](https://github.com/open-telemetry/opentelemetry-python/pull/1833))
 
 ### Removed
 - Moved `opentelemetry-instrumentation` to contrib repository.
