@@ -41,7 +41,6 @@ from opentelemetry.proto.common.v1.common_pb2 import (
     AnyValue,
     ArrayValue,
     KeyValue,
-    KeyValueList,
 )
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.sdk.environment_variables import (
