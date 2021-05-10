@@ -95,6 +95,7 @@ def _filter_attributes(attributes: types.Attributes):
                     try:
                         attributes[attr_key] = attr_value.decode()
                     except ValueError:
+                        attributes.pop(attr_key)
                         _logger.warning("Byte attribute could not be decoded.")
             else:
                 attributes.pop(attr_key)
