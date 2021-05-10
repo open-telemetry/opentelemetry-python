@@ -16,6 +16,7 @@
 
 import os
 import unittest
+import uuid
 from unittest import mock
 
 from opentelemetry.sdk import resources
@@ -137,6 +138,23 @@ class TestResources(unittest.TestCase):
             resource.attributes.get(resources.SERVICE_NAME),
             "unknown_service:test",
         )
+
+    def test_invalid_resource_attribute_values(self):
+        resource = resources.Resource.create(
+            {
+                resources.SERVICE_NAME: "test",
+                "non-primitive-data-type": dict(),
+                "invalid-byte-type-attribute": b"\xd8\xe1\xb7\xeb\xa8\xe5 \xd2\xb7\xe1",
+                "": "empty-key-value",
+                None: "null-key-value",
+                "another-non-primitive": uuid.uuid4()
+            }
+        )
+        self.assertEqual(
+            resource.attributes.get(resources.SERVICE_NAME),
+            "test",
+        )
+        self.assertEqual(len(resource.attributes), 1)
 
     def test_aggregated_resources_no_detectors(self):
         aggregated_resources = resources.get_aggregated_resources([])

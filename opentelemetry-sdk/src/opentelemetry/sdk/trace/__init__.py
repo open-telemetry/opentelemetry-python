@@ -48,7 +48,13 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
-from opentelemetry.sdk.util import BoundedDict, BoundedList
+from opentelemetry.sdk.util import (
+    BoundedDict,
+    BoundedList,
+    _create_immutable_attributes,
+    _filter_attributes,
+    _is_valid_attribute_value,
+)
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
 from opentelemetry.trace.propagation import SPAN_KEY
@@ -64,7 +70,6 @@ SPAN_ATTRIBUTE_COUNT_LIMIT = int(
 
 _SPAN_EVENT_COUNT_LIMIT = int(environ.get(OTEL_SPAN_EVENT_COUNT_LIMIT, 128))
 _SPAN_LINK_COUNT_LIMIT = int(environ.get(OTEL_SPAN_LINK_COUNT_LIMIT, 128))
-_VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
 # pylint: disable=protected-access
 _TRACE_SAMPLER = sampling._get_from_env_or_default()
 
@@ -315,72 +320,6 @@ class Event(EventBase):
         return self._attributes
 
 
-def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
-    """Checks if attribute value is valid.
-
-    An attribute value is valid if it is one of the valid types.
-    If the value is a sequence, it is only valid if all items in the sequence:
-      - are of the same valid type or None
-      - are not a sequence
-    """
-
-    if isinstance(value, Sequence):
-        if len(value) == 0:
-            return True
-
-        sequence_first_valid_type = None
-        for element in value:
-            if element is None:
-                continue
-            element_type = type(element)
-            if element_type not in _VALID_ATTR_VALUE_TYPES:
-                logger.warning(
-                    "Invalid type %s in attribute value sequence. Expected one of "
-                    "%s or None",
-                    element_type.__name__,
-                    [
-                        valid_type.__name__
-                        for valid_type in _VALID_ATTR_VALUE_TYPES
-                    ],
-                )
-                return False
-            # The type of the sequence must be homogeneous. The first non-None
-            # element determines the type of the sequence
-            if sequence_first_valid_type is None:
-                sequence_first_valid_type = element_type
-            elif not isinstance(element, sequence_first_valid_type):
-                logger.warning(
-                    "Mixed types %s and %s in attribute value sequence",
-                    sequence_first_valid_type.__name__,
-                    type(element).__name__,
-                )
-                return False
-
-    elif not isinstance(value, _VALID_ATTR_VALUE_TYPES):
-        logger.warning(
-            "Invalid type %s for attribute value. Expected one of %s or a "
-            "sequence of those types",
-            type(value).__name__,
-            [valid_type.__name__ for valid_type in _VALID_ATTR_VALUE_TYPES],
-        )
-        return False
-    return True
-
-
-def _filter_attribute_values(attributes: types.Attributes):
-    if attributes:
-        for attr_key, attr_value in list(attributes.items()):
-            if _is_valid_attribute_value(attr_value):
-                if isinstance(attr_value, MutableSequence):
-                    attributes[attr_key] = tuple(attr_value)
-            else:
-                attributes.pop(attr_key)
-
-
-def _create_immutable_attributes(attributes):
-    return MappingProxyType(attributes.copy() if attributes else {})
-
-
 def _check_span_ended(func):
     def wrapper(self, *args, **kwargs):
         already_ended = False
@@ -619,7 +558,7 @@ class Span(trace_api.Span, ReadableSpan):
         self._span_processor = span_processor
         self._lock = threading.Lock()
 
-        _filter_attribute_values(attributes)
+        _filter_attributes(attributes)
         if not attributes:
             self._attributes = self._new_attributes()
         else:
@@ -630,7 +569,7 @@ class Span(trace_api.Span, ReadableSpan):
         self._events = self._new_events()
         if events:
             for event in events:
-                _filter_attribute_values(event.attributes)
+                _filter_attributes(event.attributes)
                 # pylint: disable=protected-access
                 event._attributes = _create_immutable_attributes(
                     event.attributes
@@ -702,7 +641,7 @@ class Span(trace_api.Span, ReadableSpan):
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
     ) -> None:
-        _filter_attribute_values(attributes)
+        _filter_attributes(attributes)
         attributes = _create_immutable_attributes(attributes)
         self._add_event(
             Event(

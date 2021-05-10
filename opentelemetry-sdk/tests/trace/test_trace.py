@@ -35,7 +35,7 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.trace import Resource, sampling
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
-from opentelemetry.sdk.util import ns_to_iso_str
+from opentelemetry.sdk.util import _is_valid_attribute_value, ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import StatusCode
 from opentelemetry.util._time import _time_ns
@@ -647,32 +647,26 @@ class TestSpan(unittest.TestCase):
 
     def test_check_attribute_helper(self):
         # pylint: disable=protected-access
-        self.assertFalse(trace._is_valid_attribute_value([1, 2, 3.4, "ss", 4]))
-        self.assertFalse(
-            trace._is_valid_attribute_value([dict(), 1, 2, 3.4, 4])
-        )
-        self.assertFalse(
-            trace._is_valid_attribute_value(["sw", "lf", 3.4, "ss"])
-        )
-        self.assertFalse(trace._is_valid_attribute_value([1, 2, 3.4, 5]))
-        self.assertTrue(trace._is_valid_attribute_value([1, 2, 3, 5]))
-        self.assertTrue(trace._is_valid_attribute_value([1.2, 2.3, 3.4, 4.5]))
-        self.assertTrue(trace._is_valid_attribute_value([True, False]))
-        self.assertTrue(trace._is_valid_attribute_value(["ss", "dw", "fw"]))
-        self.assertTrue(trace._is_valid_attribute_value([]))
-        self.assertFalse(trace._is_valid_attribute_value(dict()))
-        self.assertTrue(trace._is_valid_attribute_value(True))
-        self.assertTrue(trace._is_valid_attribute_value("hi"))
-        self.assertTrue(trace._is_valid_attribute_value(3.4))
-        self.assertTrue(trace._is_valid_attribute_value(15))
+        self.assertFalse(_is_valid_attribute_value([1, 2, 3.4, "ss", 4]))
+        self.assertFalse(_is_valid_attribute_value([dict(), 1, 2, 3.4, 4]))
+        self.assertFalse(_is_valid_attribute_value(["sw", "lf", 3.4, "ss"]))
+        self.assertFalse(_is_valid_attribute_value([1, 2, 3.4, 5]))
+        self.assertTrue(_is_valid_attribute_value([1, 2, 3, 5]))
+        self.assertTrue(_is_valid_attribute_value([1.2, 2.3, 3.4, 4.5]))
+        self.assertTrue(_is_valid_attribute_value([True, False]))
+        self.assertTrue(_is_valid_attribute_value(["ss", "dw", "fw"]))
+        self.assertTrue(_is_valid_attribute_value([]))
+        self.assertFalse(_is_valid_attribute_value(dict()))
+        self.assertTrue(_is_valid_attribute_value(True))
+        self.assertTrue(_is_valid_attribute_value("hi"))
+        self.assertTrue(_is_valid_attribute_value(3.4))
+        self.assertTrue(_is_valid_attribute_value(15))
         # None in sequences are valid
-        self.assertTrue(trace._is_valid_attribute_value(["A", None, None]))
-        self.assertTrue(
-            trace._is_valid_attribute_value(["A", None, None, "B"])
-        )
-        self.assertTrue(trace._is_valid_attribute_value([None, None]))
-        self.assertFalse(trace._is_valid_attribute_value(["A", None, 1]))
-        self.assertFalse(trace._is_valid_attribute_value([None, "A", None, 1]))
+        self.assertTrue(_is_valid_attribute_value(["A", None, None]))
+        self.assertTrue(_is_valid_attribute_value(["A", None, None, "B"]))
+        self.assertTrue(_is_valid_attribute_value([None, None]))
+        self.assertFalse(_is_valid_attribute_value(["A", None, 1]))
+        self.assertFalse(_is_valid_attribute_value([None, "A", None, 1]))
 
     def test_sampling_attributes(self):
         sampling_attributes = {
