@@ -66,7 +66,6 @@ import pkg_resources
 
 from opentelemetry.sdk.environment_variables import OTEL_RESOURCE_ATTRIBUTES
 from opentelemetry.sdk.util import (
-    _create_immutable_attributes,
     _filter_attributes,
 )
 from opentelemetry.semconv.resource import ResourceAttributes
