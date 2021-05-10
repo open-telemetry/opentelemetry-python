@@ -50,6 +50,8 @@ class B3Format(TextMapPropagator):
         context: typing.Optional[Context] = None,
         getter: Getter = default_getter,
     ) -> Context:
+        if context is None:
+            context = Context()
         trace_id = trace.INVALID_TRACE_ID
         span_id = trace.INVALID_SPAN_ID
         sampled = "0"
@@ -97,8 +99,6 @@ class B3Format(TextMapPropagator):
             or self._trace_id_regex.fullmatch(trace_id) is None
             or self._span_id_regex.fullmatch(span_id) is None
         ):
-            if context is None:
-                return trace.set_span_in_context(trace.INVALID_SPAN, context)
             return context
 
         trace_id = int(trace_id, 16)

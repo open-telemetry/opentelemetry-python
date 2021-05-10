@@ -45,7 +45,7 @@ Manually instrumented server
             return "served"
 
 Server not instrumented manually
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 ``server_uninstrumented.py``
 
@@ -57,7 +57,7 @@ Server not instrumented manually
         return "served"
 
 Prepare
------------
+-------
 
 Execute the following example in a separate virtual environment.
 Run the following commands to prepare for auto-instrumentation:
@@ -69,7 +69,7 @@ Run the following commands to prepare for auto-instrumentation:
     $ source auto_instrumentation/bin/activate
 
 Install
-------------
+-------
 
 Run the following commands to install the appropriate packages. The
 ``opentelemetry-instrumentation`` package provides several 
@@ -90,7 +90,7 @@ a server as well as the process of executing an automatically
 instrumented server.
 
 Execute a manually instrumented server
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Execute the server in two separate consoles, one to run each of the 
 scripts that make up this example:
@@ -145,7 +145,7 @@ similar to the following example:
     }
 
 Execute an automatically instrumented server
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Stop the execution of ``server_instrumented.py`` with ``ctrl + c``
 and run the following command instead:
@@ -208,7 +208,7 @@ You can see that both outputs are the same because automatic instrumentation doe
 exactly what manual instrumentation does.
 
 Instrumentation while debugging
-===============================
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 The debug mode can be enabled in the Flask app like this:
 
@@ -226,3 +226,11 @@ reloader. To run instrumentation while the debug mode is enabled, set the
 
     if __name__ == "__main__":
         app.run(port=8082, debug=True, use_reloader=False)
+
+
+Additional resources 
+~~~~~~~~~~~~~~~~~~~~
+
+In order to send telemetry to an OpenTelemetry Collector without doing any
+additional configuration, read about the `OpenTelemetry Distro <../distro/README.html>`_
+package.
