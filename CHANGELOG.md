@@ -28,7 +28,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1810](https://github.com/open-telemetry/opentelemetry-python/pull/1810))
 - Fixed inconsistency in parent_id formatting from the ConsoleSpanExporter
   ([#1833](https://github.com/open-telemetry/opentelemetry-python/pull/1833))
-- Update Resource attributes to comply with Attributes specification
+- Apply validation of attributes to `Resource`, move attribute related logic to api/sdk package.
   ([#1834](https://github.com/open-telemetry/opentelemetry-python/pull/1834))
 
 ### Removed
