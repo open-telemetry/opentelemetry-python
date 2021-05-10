@@ -19,6 +19,7 @@ import unittest
 from unittest.mock import Mock, patch
 
 from opentelemetry import trace
+from opentelemetry.context import Context
 from opentelemetry.trace.propagation import tracecontext
 from opentelemetry.trace.span import TraceState
 
@@ -270,3 +271,51 @@ class TestTraceContextFormat(unittest.TestCase):
             inject_fields.add(mock_call[1][1])
 
         self.assertEqual(inject_fields, FORMAT.fields)
+
+    def test_extract_no_trace_parent_to_explicit_ctx(self):
+        carrier = {"tracestate": ["foo=1"]}
+        orig_ctx = Context({"k1": "v1"})
+
+        ctx = FORMAT.extract(carrier, orig_ctx)
+        self.assertDictEqual(orig_ctx, ctx)
+
+    def test_extract_no_trace_parent_to_implicit_ctx(self):
+        carrier = {"tracestate": ["foo=1"]}
+
+        ctx = FORMAT.extract(carrier)
+        self.assertDictEqual(Context(), ctx)
+
+    def test_extract_invalid_trace_parent_to_explicit_ctx(self):
+        trace_parent_headers = [
+            "invalid",
+            "00-00000000000000000000000000000000-1234567890123456-00",
+            "00-12345678901234567890123456789012-0000000000000000-00",
+            "00-12345678901234567890123456789012-1234567890123456-00-residue",
+        ]
+        for trace_parent in trace_parent_headers:
+            with self.subTest(trace_parent=trace_parent):
+                carrier = {
+                    "traceparent": [trace_parent],
+                    "tracestate": ["foo=1"],
+                }
+                orig_ctx = Context({"k1": "v1"})
+
+                ctx = FORMAT.extract(carrier, orig_ctx)
+                self.assertDictEqual(orig_ctx, ctx)
+
+    def test_extract_invalid_trace_parent_to_implicit_ctx(self):
+        trace_parent_headers = [
+            "invalid",
+            "00-00000000000000000000000000000000-1234567890123456-00",
+            "00-12345678901234567890123456789012-0000000000000000-00",
+            "00-12345678901234567890123456789012-1234567890123456-00-residue",
+        ]
+        for trace_parent in trace_parent_headers:
+            with self.subTest(trace_parent=trace_parent):
+                carrier = {
+                    "traceparent": [trace_parent],
+                    "tracestate": ["foo=1"],
+                }
+
+                ctx = FORMAT.extract(carrier)
+                self.assertDictEqual(Context(), ctx)

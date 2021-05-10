@@ -19,6 +19,7 @@ import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.id_generator as id_generator
 import opentelemetry.trace as trace_api
 from opentelemetry import baggage
+from opentelemetry.context import Context
 from opentelemetry.propagators import (  # pylint: disable=no-name-in-module
     jaeger,
 )
@@ -186,3 +187,45 @@ class TestJaegerPropagator(unittest.TestCase):
         for call in mock_setter.mock_calls:
             inject_fields.add(call[1][1])
         self.assertEqual(FORMAT.fields, inject_fields)
+
+    def test_extract_no_trace_id_to_explicit_ctx(self):
+        carrier = {}
+        orig_ctx = Context({"k1": "v1"})
+
+        ctx = FORMAT.extract(carrier, orig_ctx)
+        self.assertDictEqual(orig_ctx, ctx)
+
+    def test_extract_no_trace_id_to_implicit_ctx(self):
+        carrier = {}
+
+        ctx = FORMAT.extract(carrier)
+        self.assertDictEqual(Context(), ctx)
+
+    def test_extract_invalid_uber_trace_id_header_to_explicit_ctx(self):
+        trace_id_headers = [
+            "000000000000000000000000deadbeef:00000000deadbef0:00",
+            "00000000000000000000000000000000:00000000deadbef0:00:00",
+            "000000000000000000000000deadbeef:0000000000000000:00:00",
+            "000000000000000000000000deadbeef:0000000000000000:00:xyz",
+        ]
+        for trace_id_header in trace_id_headers:
+            with self.subTest(trace_id_header=trace_id_header):
+                carrier = {"uber-trace-id": trace_id_header}
+                orig_ctx = Context({"k1": "v1"})
+
+                ctx = FORMAT.extract(carrier, orig_ctx)
+                self.assertDictEqual(orig_ctx, ctx)
+
+    def test_extract_invalid_uber_trace_id_header_to_implicit_ctx(self):
+        trace_id_headers = [
+            "000000000000000000000000deadbeef:00000000deadbef0:00",
+            "00000000000000000000000000000000:00000000deadbef0:00:00",
+            "000000000000000000000000deadbeef:0000000000000000:00:00",
+            "000000000000000000000000deadbeef:0000000000000000:00:xyz",
+        ]
+        for trace_id_header in trace_id_headers:
+            with self.subTest(trace_id_header=trace_id_header):
+                carrier = {"uber-trace-id": trace_id_header}
+
+                ctx = FORMAT.extract(carrier)
+                self.assertDictEqual(Context(), ctx)

@@ -16,13 +16,13 @@
 API for propagation of context.
 
 The propagators for the
-``opentelemetry.propagators.composite.CompositeHTTPPropagator`` can be defined
+``opentelemetry.propagators.composite.CompositePropagator`` can be defined
 via configuration in the ``OTEL_PROPAGATORS`` environment variable. This
 variable should be set to a comma-separated string of names of values for the
 ``opentelemetry_propagator`` entry point. For example, setting
 ``OTEL_PROPAGATORS`` to ``tracecontext,baggage`` (which is the default value)
 would instantiate
-``opentelemetry.propagators.composite.CompositeHTTPPropagator`` with 2
+``opentelemetry.propagators.composite.CompositePropagator`` with 2
 propagators, one of type
 ``opentelemetry.trace.propagation.tracecontext.TraceContextTextMapPropagator``
 and other of type ``opentelemetry.baggage.propagation.W3CBaggagePropagator``.
@@ -96,7 +96,7 @@ def extract(
             used to construct a Context. This object
             must be paired with an appropriate getter
             which understands how to extract a value from it.
-        context: an optional Context to use. Defaults to current
+        context: an optional Context to use. Defaults to root
             context if not set.
     """
     return get_global_textmap().extract(carrier, context, getter=getter)
@@ -142,7 +142,7 @@ except Exception:  # pylint: disable=broad-except
     logger.exception("Failed to load configured propagators")
     raise
 
-_HTTP_TEXT_FORMAT = composite.CompositeHTTPPropagator(propagators)  # type: ignore
+_HTTP_TEXT_FORMAT = composite.CompositePropagator(propagators)  # type: ignore
 
 
 def get_global_textmap() -> textmap.TextMapPropagator:
