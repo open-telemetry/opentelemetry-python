@@ -1,4 +1,8 @@
 ---
+date: '2021-05-07T21:49:47.106Z'
+docname: getting-started
+images: {}
+path: /getting-started
 title: "Getting Started"
 weight: 22
 ---
@@ -183,10 +187,6 @@ python jaeger_example.py
 
 You can then visit the Jaeger UI, see your service under “services”, and find your traces!
 
-
-
-![image](images/jaeger_trace.png)
-
 ## Instrumentation example with Flask
 
 While the example in the previous section is great, it’s very manual. The following are common actions you might want to track and include as part of your distributed tracing.
@@ -298,18 +298,20 @@ Start the Collector locally to see how the Collector works in practice. Write th
 # /tmp/otel-collector-config.yaml
 receivers:
     otlp:
+        protocols:
+            grpc:
+            http:
 exporters:
     logging:
         loglevel: debug
 processors:
     batch:
-    queued_retry:
 service:
     pipelines:
         traces:
             receivers: [otlp]
             exporters: [logging]
-            processors: [batch, queued_retry]
+            processors: [batch]
 ```
 
 Then start the Docker container:
@@ -342,7 +344,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
 span_exporter = OTLPSpanExporter(
     # optional
-    # endpoint:="myCollectorURL:4317",
+    # endpoint="myCollectorURL:4317",
     # credentials=ChannelCredentials(credentials),
     # headers=(("metadata", "metadata")),
 )

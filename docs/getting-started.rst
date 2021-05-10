@@ -137,8 +137,6 @@ Finally, run the Python script:
 
 You can then visit the Jaeger UI, see your service under "services", and find your traces!
 
-.. image:: images/jaeger_trace.png
-
 Instrumentation example with Flask
 ------------------------------------
 
