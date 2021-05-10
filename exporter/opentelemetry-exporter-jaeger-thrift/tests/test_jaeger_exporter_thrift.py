@@ -370,11 +370,17 @@ class TestJaegerExporter(unittest.TestCase):
                 ],
                 references=[
                     jaeger.SpanRef(
+                        refType=jaeger.SpanRefType.CHILD_OF,
+                        traceIdHigh=trace_id_high,
+                        traceIdLow=trace_id_low,
+                        spanId=parent_id,
+                    ),
+                    jaeger.SpanRef(
                         refType=jaeger.SpanRefType.FOLLOWS_FROM,
                         traceIdHigh=trace_id_high,
                         traceIdLow=trace_id_low,
                         spanId=other_id,
-                    )
+                    ),
                 ],
                 logs=[
                     jaeger.Log(
@@ -414,6 +420,7 @@ class TestJaegerExporter(unittest.TestCase):
                 duration=durations[1] // 10 ** 3,
                 flags=0,
                 tags=default_tags,
+                references=[],
             ),
             jaeger.Span(
                 operationName=span_names[2],
@@ -446,6 +453,7 @@ class TestJaegerExporter(unittest.TestCase):
                         vStr="version",
                     ),
                 ],
+                references=[],
             ),
         ]
 

@@ -231,10 +231,18 @@ class ThriftTranslator(Translator):
     def _extract_refs(
         self, span: ReadableSpan
     ) -> Optional[Sequence[TCollector.SpanRef]]:
-        if not span.links:
-            return None
 
         refs = []
+        if span.parent:
+            ctx = span.get_span_context()
+            parent_id = span.parent.span_id
+            parent_ref = TCollector.SpanRef(
+                refType=TCollector.SpanRefType.CHILD_OF,
+                traceIdHigh=_get_trace_id_high(ctx.trace_id),
+                traceIdLow=_get_trace_id_low(ctx.trace_id),
+                spanId=_convert_int_to_i64(parent_id),
+            )
+            refs.append(parent_ref)
         for link in span.links:
             trace_id = link.context.trace_id
             span_id = link.context.span_id
