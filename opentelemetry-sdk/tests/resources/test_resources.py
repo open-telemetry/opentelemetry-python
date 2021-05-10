@@ -252,6 +252,20 @@ class TestResources(unittest.TestCase):
         self.assertEqual(resource_env_override.attributes["key1"], "value1")
         self.assertEqual(resource_env_override.attributes["key2"], "value2")
 
+    @mock.patch.dict(
+        os.environ,
+        {
+            resources.OTEL_SERVICE_NAME: "test-srv-name",
+            resources.OTEL_RESOURCE_ATTRIBUTES: "service.name=svc-name-from-resource",
+        },
+    )
+    def test_service_name_env(self):
+        resource = resources.Resource.create()
+        self.assertEqual(resource.attributes["service.name"], "test-srv-name")
+
+        resource = resources.Resource.create({"service.name": "from-code"})
+        self.assertEqual(resource.attributes["service.name"], "from-code")
+
 
 class TestOTELResourceDetector(unittest.TestCase):
     def setUp(self) -> None:
@@ -289,4 +303,29 @@ class TestOTELResourceDetector(unittest.TestCase):
         ] = "    k  = v  , k2   = v2 "
         self.assertEqual(
             detector.detect(), resources.Resource({"k": "v", "k2": "v2"})
+        )
+
+    @mock.patch.dict(
+        os.environ,
+        {resources.OTEL_SERVICE_NAME: "test-srv-name"},
+    )
+    def test_service_name_env(self):
+        detector = resources.OTELResourceDetector()
+        self.assertEqual(
+            detector.detect(),
+            resources.Resource({"service.name": "test-srv-name"}),
+        )
+
+    @mock.patch.dict(
+        os.environ,
+        {
+            resources.OTEL_SERVICE_NAME: "from-service-name",
+            resources.OTEL_RESOURCE_ATTRIBUTES: "service.name=from-resource-attrs",
+        },
+    )
+    def test_service_name_env_precedence(self):
+        detector = resources.OTELResourceDetector()
+        self.assertEqual(
+            detector.detect(),
+            resources.Resource({"service.name": "from-service-name"}),
         )

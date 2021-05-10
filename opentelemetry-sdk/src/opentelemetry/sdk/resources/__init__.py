@@ -64,7 +64,11 @@ from json import dumps
 
 import pkg_resources
 
-from opentelemetry.sdk.environment_variables import OTEL_RESOURCE_ATTRIBUTES
+
+from opentelemetry.sdk.environment_variables import (
+    OTEL_RESOURCE_ATTRIBUTES,
+    OTEL_SERVICE_NAME,
+)
 from opentelemetry.sdk.util import _filter_attributes
 from opentelemetry.semconv.resource import ResourceAttributes
 
@@ -233,6 +237,9 @@ class OTELResourceDetector(ResourceDetector):
                     item.split("=") for item in env_resources_items.split(",")
                 )
             }
+        service_name = os.environ.get(OTEL_SERVICE_NAME)
+        if service_name:
+            env_resource_map[SERVICE_NAME] = service_name
         return Resource(env_resource_map)
 
 
