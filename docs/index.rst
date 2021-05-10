@@ -72,7 +72,7 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
 
 .. toctree::
     :maxdepth: 1
-    :caption: OpenTelemetry Python Packages
+    :caption: Core Packages
     :name: packages
 
     api/api
@@ -80,7 +80,7 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
 
 .. toctree::
     :maxdepth: 2
-    :caption: OpenTelemetry Exporters
+    :caption: Exporters
     :name: exporters
     :glob:
 
@@ -88,7 +88,7 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
 
 .. toctree::
     :maxdepth: 2
-    :caption: OpenTelemetry Shims
+    :caption: Shims
     :name: Shims
     :glob:
 
@@ -96,7 +96,7 @@ install <https://pip.pypa.io/en/stable/reference/pip_install/#editable-installs>
 
 .. toctree::
     :maxdepth: 1
-    :caption: OpenTelemetry Python Performance
+    :caption: Performance
     :name: performance-tests
     :glob:
 

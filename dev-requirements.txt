@@ -4,9 +4,9 @@ isort~=5.8
 black~=20.8b1
 httpretty~=1.0
 mypy==0.812
-sphinx~=2.1
-sphinx-rtd-theme~=0.4
-sphinx-autodoc-typehints~=1.10.2
+sphinx~=3.5.4
+sphinx-rtd-theme~=0.5
+sphinx-autodoc-typehints
 pytest>=6.0
 pytest-cov>=2.8
 readme-renderer~=24.0
