@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1810](https://github.com/open-telemetry/opentelemetry-python/pull/1810))
 - Fixed inconsistency in parent_id formatting from the ConsoleSpanExporter
   ([#1833](https://github.com/open-telemetry/opentelemetry-python/pull/1833))
+- Update transient errors retry timeout and retryable status codes
+  ([#1842](https://github.com/open-telemetry/opentelemetry-python/pull/1842))
 
 ### Removed
 - Moved `opentelemetry-instrumentation` to contrib repository.
