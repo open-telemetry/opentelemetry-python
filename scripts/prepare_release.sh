@@ -16,9 +16,6 @@ echo "Using version ${VERSION}"
 
 
 # create the release branch
-git fetch origin main
-git checkout main
-git reset --hard origin/main
 git checkout -b release/${VERSION}
 git push origin release/${VERSION}
 
