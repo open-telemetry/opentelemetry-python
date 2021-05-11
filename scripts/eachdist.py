@@ -229,11 +229,11 @@ def parse_args(args=None):
     )
 
     releaseparser = subparsers.add_parser(
-        "release",
-        help="Prepares release, used by maintainers and CI",
+        "update_versions",
+        help="Updates version numbers, used by maintainers and CI",
     )
     releaseparser.set_defaults(func=release_args)
-    releaseparser.add_argument("--version", required=True)
+    releaseparser.add_argument("--versions", required=True)
     releaseparser.add_argument(
         "releaseargs", nargs=argparse.REMAINDER, help=extraargs_help("pytest")
     )
@@ -247,6 +247,21 @@ def parse_args(args=None):
         "--path",
         required=False,
         help="Format only this path instead of entire repository",
+    )
+
+    versionparser = subparsers.add_parser(
+        "version",
+        help="Get the version for a release",
+    )
+    versionparser.set_defaults(func=version_args)
+    versionparser.add_argument(
+        "--mode",
+        "-m",
+        default="DEFAULT",
+        help=cleandoc(
+            """Section of config file to use for target selection configuration.
+        See description of exec for available options."""
+        ),
     )
 
     return parser.parse_args(args)
@@ -589,29 +604,40 @@ def find(name, path):
     return None
 
 
-def update_version_files(targets, version):
+def filter_packages(targets, packages):
+    filtered_packages = []
+    for target in targets:
+        for pkg in packages:
+            if pkg in str(target):
+                filtered_packages.append(target)
+                break
+    return filtered_packages
+
+
+def update_version_files(targets, version, packages):
     print("updating version.py files")
+    targets = filter_packages(targets, packages)
     update_files(
         targets,
-        version,
         "version.py",
         "__version__ .*",
         '__version__ = "{}"'.format(version),
     )
 
 
-def update_dependencies(targets, version):
+def update_dependencies(targets, version, packages):
     print("updating dependencies")
-    update_files(
-        targets,
-        version,
-        "setup.cfg",
-        r"(opentelemetry-.*)==(.*)",
-        r"\1== " + version,
-    )
+    for pkg in packages:
+        package_name = pkg.split("/")[-1]
+        update_files(
+            targets,
+            "setup.cfg",
+            r"({}.*)==(.*)".format(package_name),
+            r"\1== " + version,
+        )
 
 
-def update_files(targets, version, filename, search, replace):
+def update_files(targets, filename, search, replace):
     errors = False
     for target in targets:
         curr_file = find(filename, target)
@@ -622,9 +648,8 @@ def update_files(targets, version, filename, search, replace):
         with open(curr_file) as _file:
             text = _file.read()
 
-        if version in text:
-            print("{} already contans version {}".format(curr_file, version))
-            errors = True
+        if replace in text:
+            print("{} already contains {}".format(curr_file, replace))
             continue
 
         with open(curr_file, "w") as _file:
@@ -639,10 +664,20 @@ def release_args(args):
 
     rootpath = find_projectroot()
     targets = list(find_targets_unordered(rootpath))
-    version = args.version
-    update_dependencies(targets, version)
-    update_version_files(targets, version)
-    update_changelogs(version)
+    cfg = ConfigParser()
+    cfg.read(str(find_projectroot() / "eachdist.ini"))
+    versions = args.versions
+    updated_versions = []
+    for group in versions.split(","):
+        mcfg = cfg[group]
+        version = mcfg["version"]
+        updated_versions.append(version)
+        packages = mcfg["packages"].split()
+        print("update {} packages to {}".format(group, version))
+        update_dependencies(targets, version, packages)
+        update_version_files(targets, version, packages)
+
+    update_changelogs("-".join(updated_versions))
 
 
 def test_args(args):
@@ -677,6 +712,12 @@ def format_args(args):
         cwd=format_dir,
         check=True,
     )
+
+
+def version_args(args):
+    cfg = ConfigParser()
+    cfg.read(str(find_projectroot() / "eachdist.ini"))
+    print(cfg[args.mode]["version"])
 
 
 def main():
