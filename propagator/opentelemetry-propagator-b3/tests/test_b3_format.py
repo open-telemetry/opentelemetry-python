@@ -13,21 +13,23 @@
 # limitations under the License.
 
 import unittest
+from abc import abstractclassmethod
 from unittest.mock import Mock
 
-import opentelemetry.propagators.b3 as b3_format  # pylint: disable=no-name-in-module,import-error
 import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.id_generator as id_generator
 import opentelemetry.trace as trace_api
 from opentelemetry.context import Context, get_current
+from opentelemetry.propagators.b3 import (  # pylint: disable=no-name-in-module,import-error
+    B3MultiFormat,
+    B3SingleFormat,
+)
 from opentelemetry.propagators.textmap import DefaultGetter
 
-FORMAT = b3_format.B3Format()
 
+def get_child_parent_new_carrier(old_carrier, propagator):
 
-def get_child_parent_new_carrier(old_carrier):
-
-    ctx = FORMAT.extract(old_carrier)
+    ctx = propagator.extract(old_carrier)
     parent_span_context = trace_api.get_current_span(ctx).get_span_context()
 
     parent = trace._Span("parent", parent_span_context)
@@ -45,24 +47,24 @@ def get_child_parent_new_carrier(old_carrier):
 
     new_carrier = {}
     ctx = trace_api.set_span_in_context(child)
-    FORMAT.inject(new_carrier, context=ctx)
+    propagator.inject(new_carrier, context=ctx)
 
     return child, parent, new_carrier
 
 
-class TestB3Format(unittest.TestCase):
-    # pylint: disable=too-many-public-methods
+class AbstractB3FormatTestCase:
+    # pylint: disable=too-many-public-methods,no-member,invalid-name
 
     @classmethod
     def setUpClass(cls):
         generator = id_generator.RandomIdGenerator()
-        cls.serialized_trace_id = b3_format.format_trace_id(
+        cls.serialized_trace_id = trace_api.format_trace_id(
             generator.generate_trace_id()
         )
-        cls.serialized_span_id = b3_format.format_span_id(
+        cls.serialized_span_id = trace_api.format_span_id(
             generator.generate_span_id()
         )
-        cls.serialized_parent_id = b3_format.format_span_id(
+        cls.serialized_parent_id = trace_api.format_span_id(
             generator.generate_span_id()
         )
 
@@ -74,56 +76,72 @@ class TestB3Format(unittest.TestCase):
         patcher.start()
         self.addCleanup(patcher.stop)
 
+    @classmethod
+    def get_child_parent_new_carrier(cls, old_carrier):
+        return get_child_parent_new_carrier(old_carrier, cls.get_propagator())
+
+    @abstractclassmethod
+    def get_propagator(cls):
+        pass
+
+    @abstractclassmethod
+    def get_trace_id(cls, carrier):
+        pass
+
+    def assertSampled(self, carrier):
+        pass
+
+    def assertNotSampled(self, carrier):
+        pass
+
     def test_extract_multi_header(self):
         """Test the extraction of B3 headers."""
-        child, parent, new_carrier = get_child_parent_new_carrier(
-            {
-                FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-                FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-                FORMAT.PARENT_SPAN_ID_KEY: self.serialized_parent_id,
-                FORMAT.SAMPLED_KEY: "1",
-            }
+        propagator = self.get_propagator()
+        context = {
+            propagator.TRACE_ID_KEY: self.serialized_trace_id,
+            propagator.SPAN_ID_KEY: self.serialized_span_id,
+            propagator.PARENT_SPAN_ID_KEY: self.serialized_parent_id,
+            propagator.SAMPLED_KEY: "1",
+        }
+        child, parent, _ = self.get_child_parent_new_carrier(context)
+
+        self.assertEqual(
+            context[propagator.TRACE_ID_KEY],
+            trace_api.format_trace_id(child.context.trace_id),
         )
 
         self.assertEqual(
-            new_carrier[FORMAT.TRACE_ID_KEY],
-            b3_format.format_trace_id(child.context.trace_id),
-        )
-        self.assertEqual(
-            new_carrier[FORMAT.SPAN_ID_KEY],
-            b3_format.format_span_id(child.context.span_id),
-        )
-        self.assertEqual(
-            new_carrier[FORMAT.PARENT_SPAN_ID_KEY],
-            b3_format.format_span_id(parent.context.span_id),
+            context[propagator.SPAN_ID_KEY],
+            trace_api.format_span_id(child.parent.span_id),
         )
         self.assertTrue(parent.context.is_remote)
-        self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
+        self.assertTrue(parent.context.trace_flags.sampled)
 
     def test_extract_single_header(self):
         """Test the extraction from a single b3 header."""
-        child, parent, new_carrier = get_child_parent_new_carrier(
+        propagator = self.get_propagator()
+        child, parent, _ = self.get_child_parent_new_carrier(
             {
-                FORMAT.SINGLE_HEADER_KEY: "{}-{}".format(
+                propagator.SINGLE_HEADER_KEY: "{}-{}".format(
                     self.serialized_trace_id, self.serialized_span_id
                 )
             }
         )
 
         self.assertEqual(
-            new_carrier[FORMAT.TRACE_ID_KEY],
-            b3_format.format_trace_id(child.context.trace_id),
+            self.serialized_trace_id,
+            trace_api.format_trace_id(child.context.trace_id),
         )
         self.assertEqual(
-            new_carrier[FORMAT.SPAN_ID_KEY],
-            b3_format.format_span_id(child.context.span_id),
+            self.serialized_span_id,
+            trace_api.format_span_id(child.parent.span_id),
         )
-        self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
         self.assertTrue(parent.context.is_remote)
+        self.assertTrue(parent.context.trace_flags.sampled)
 
-        child, parent, new_carrier = get_child_parent_new_carrier(
+        child, parent, _ = self.get_child_parent_new_carrier(
             {
-                FORMAT.SINGLE_HEADER_KEY: "{}-{}-1-{}".format(
+                propagator.SINGLE_HEADER_KEY: "{}-{}-1-{}".format(
                     self.serialized_trace_id,
                     self.serialized_span_id,
                     self.serialized_parent_id,
@@ -132,99 +150,100 @@ class TestB3Format(unittest.TestCase):
         )
 
         self.assertEqual(
-            new_carrier[FORMAT.TRACE_ID_KEY],
-            b3_format.format_trace_id(child.context.trace_id),
+            self.serialized_trace_id,
+            trace_api.format_trace_id(child.context.trace_id),
         )
         self.assertEqual(
-            new_carrier[FORMAT.SPAN_ID_KEY],
-            b3_format.format_span_id(child.context.span_id),
+            self.serialized_span_id,
+            trace_api.format_span_id(child.parent.span_id),
         )
-        self.assertEqual(
-            new_carrier[FORMAT.PARENT_SPAN_ID_KEY],
-            b3_format.format_span_id(parent.context.span_id),
-        )
+
         self.assertTrue(parent.context.is_remote)
-        self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
+        self.assertTrue(parent.context.trace_flags.sampled)
 
     def test_extract_header_precedence(self):
         """A single b3 header should take precedence over multiple
         headers.
         """
+        propagator = self.get_propagator()
         single_header_trace_id = self.serialized_trace_id[:-3] + "123"
 
-        _, _, new_carrier = get_child_parent_new_carrier(
+        _, _, new_carrier = self.get_child_parent_new_carrier(
             {
-                FORMAT.SINGLE_HEADER_KEY: "{}-{}".format(
+                propagator.SINGLE_HEADER_KEY: "{}-{}".format(
                     single_header_trace_id, self.serialized_span_id
                 ),
-                FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-                FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-                FORMAT.SAMPLED_KEY: "1",
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.SAMPLED_KEY: "1",
             }
         )
 
         self.assertEqual(
-            new_carrier[FORMAT.TRACE_ID_KEY], single_header_trace_id
+            self.get_trace_id(new_carrier), single_header_trace_id
         )
 
     def test_enabled_sampling(self):
         """Test b3 sample key variants that turn on sampling."""
+        propagator = self.get_propagator()
         for variant in ["1", "True", "true", "d"]:
-            _, _, new_carrier = get_child_parent_new_carrier(
+            _, _, new_carrier = self.get_child_parent_new_carrier(
                 {
-                    FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-                    FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-                    FORMAT.SAMPLED_KEY: variant,
+                    propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                    propagator.SPAN_ID_KEY: self.serialized_span_id,
+                    propagator.SAMPLED_KEY: variant,
                 }
             )
-
-            self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
+            self.assertSampled(new_carrier)
 
     def test_disabled_sampling(self):
         """Test b3 sample key variants that turn off sampling."""
+        propagator = self.get_propagator()
         for variant in ["0", "False", "false", None]:
-            _, _, new_carrier = get_child_parent_new_carrier(
+            _, _, new_carrier = self.get_child_parent_new_carrier(
                 {
-                    FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-                    FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-                    FORMAT.SAMPLED_KEY: variant,
+                    propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                    propagator.SPAN_ID_KEY: self.serialized_span_id,
+                    propagator.SAMPLED_KEY: variant,
                 }
             )
-
-            self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "0")
+            self.assertNotSampled(new_carrier)
 
     def test_flags(self):
         """x-b3-flags set to "1" should result in propagation."""
-        _, _, new_carrier = get_child_parent_new_carrier(
+        propagator = self.get_propagator()
+        _, _, new_carrier = self.get_child_parent_new_carrier(
             {
-                FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-                FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-                FORMAT.FLAGS_KEY: "1",
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.FLAGS_KEY: "1",
             }
         )
 
-        self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
+        self.assertSampled(new_carrier)
 
     def test_flags_and_sampling(self):
         """Propagate if b3 flags and sampling are set."""
-        _, _, new_carrier = get_child_parent_new_carrier(
+        propagator = self.get_propagator()
+        _, _, new_carrier = self.get_child_parent_new_carrier(
             {
-                FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-                FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-                FORMAT.FLAGS_KEY: "1",
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.FLAGS_KEY: "1",
             }
         )
 
-        self.assertEqual(new_carrier[FORMAT.SAMPLED_KEY], "1")
+        self.assertSampled(new_carrier)
 
     def test_derived_ctx_is_returned_for_success(self):
         """Ensure returned context is derived from the given context."""
         old_ctx = Context({"k1": "v1"})
-        new_ctx = FORMAT.extract(
+        propagator = self.get_propagator()
+        new_ctx = propagator.extract(
             {
-                FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-                FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-                FORMAT.FLAGS_KEY: "1",
+                propagator.TRACE_ID_KEY: self.serialized_trace_id,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.FLAGS_KEY: "1",
             },
             old_ctx,
         )
@@ -237,7 +256,7 @@ class TestB3Format(unittest.TestCase):
     def test_derived_ctx_is_returned_for_failure(self):
         """Ensure returned context is derived from the given context."""
         old_ctx = Context({"k2": "v2"})
-        new_ctx = FORMAT.extract({}, old_ctx)
+        new_ctx = self.get_propagator().extract({}, old_ctx)
         self.assertNotIn("current-span", new_ctx)
         for key, value in old_ctx.items():  # pylint:disable=no-member
             self.assertIn(key, new_ctx)
@@ -246,120 +265,131 @@ class TestB3Format(unittest.TestCase):
 
     def test_64bit_trace_id(self):
         """64 bit trace ids should be padded to 128 bit trace ids."""
+        propagator = self.get_propagator()
         trace_id_64_bit = self.serialized_trace_id[:16]
 
-        _, _, new_carrier = get_child_parent_new_carrier(
+        _, _, new_carrier = self.get_child_parent_new_carrier(
             {
-                FORMAT.TRACE_ID_KEY: trace_id_64_bit,
-                FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-                FORMAT.FLAGS_KEY: "1",
-            }
+                propagator.TRACE_ID_KEY: trace_id_64_bit,
+                propagator.SPAN_ID_KEY: self.serialized_span_id,
+                propagator.FLAGS_KEY: "1",
+            },
         )
 
         self.assertEqual(
-            new_carrier[FORMAT.TRACE_ID_KEY], "0" * 16 + trace_id_64_bit
+            self.get_trace_id(new_carrier), "0" * 16 + trace_id_64_bit
         )
 
     def test_extract_invalid_single_header_to_explicit_ctx(self):
         """Given unparsable header, do not modify context"""
         old_ctx = Context({"k1": "v1"})
+        propagator = self.get_propagator()
 
-        carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
-        new_ctx = FORMAT.extract(carrier, old_ctx)
+        carrier = {propagator.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
+        new_ctx = propagator.extract(carrier, old_ctx)
 
         self.assertDictEqual(new_ctx, old_ctx)
 
     def test_extract_invalid_single_header_to_implicit_ctx(self):
-        carrier = {FORMAT.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
-        new_ctx = FORMAT.extract(carrier)
+        propagator = self.get_propagator()
+        carrier = {propagator.SINGLE_HEADER_KEY: "0-1-2-3-4-5-6-7"}
+        new_ctx = propagator.extract(carrier)
 
         self.assertDictEqual(Context(), new_ctx)
 
     def test_extract_missing_trace_id_to_explicit_ctx(self):
         """Given no trace ID, do not modify context"""
         old_ctx = Context({"k1": "v1"})
+        propagator = self.get_propagator()
 
         carrier = {
-            FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-            FORMAT.FLAGS_KEY: "1",
+            propagator.SPAN_ID_KEY: self.serialized_span_id,
+            propagator.FLAGS_KEY: "1",
         }
-        new_ctx = FORMAT.extract(carrier, old_ctx)
+        new_ctx = propagator.extract(carrier, old_ctx)
 
         self.assertDictEqual(new_ctx, old_ctx)
 
     def test_extract_missing_trace_id_to_implicit_ctx(self):
+        propagator = self.get_propagator()
         carrier = {
-            FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-            FORMAT.FLAGS_KEY: "1",
+            propagator.SPAN_ID_KEY: self.serialized_span_id,
+            propagator.FLAGS_KEY: "1",
         }
-        new_ctx = FORMAT.extract(carrier)
+        new_ctx = propagator.extract(carrier)
 
         self.assertDictEqual(Context(), new_ctx)
 
     def test_extract_invalid_trace_id_to_explicit_ctx(self):
         """Given invalid trace ID, do not modify context"""
         old_ctx = Context({"k1": "v1"})
+        propagator = self.get_propagator()
 
         carrier = {
-            FORMAT.TRACE_ID_KEY: "abc123",
-            FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-            FORMAT.FLAGS_KEY: "1",
+            propagator.TRACE_ID_KEY: "abc123",
+            propagator.SPAN_ID_KEY: self.serialized_span_id,
+            propagator.FLAGS_KEY: "1",
         }
-        new_ctx = FORMAT.extract(carrier, old_ctx)
+        new_ctx = propagator.extract(carrier, old_ctx)
 
         self.assertDictEqual(new_ctx, old_ctx)
 
     def test_extract_invalid_trace_id_to_implicit_ctx(self):
+        propagator = self.get_propagator()
         carrier = {
-            FORMAT.TRACE_ID_KEY: "abc123",
-            FORMAT.SPAN_ID_KEY: self.serialized_span_id,
-            FORMAT.FLAGS_KEY: "1",
+            propagator.TRACE_ID_KEY: "abc123",
+            propagator.SPAN_ID_KEY: self.serialized_span_id,
+            propagator.FLAGS_KEY: "1",
         }
-        new_ctx = FORMAT.extract(carrier)
+        new_ctx = propagator.extract(carrier)
 
         self.assertDictEqual(Context(), new_ctx)
 
     def test_extract_invalid_span_id_to_explicit_ctx(self):
         """Given invalid span ID, do not modify context"""
         old_ctx = Context({"k1": "v1"})
+        propagator = self.get_propagator()
 
         carrier = {
-            FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-            FORMAT.SPAN_ID_KEY: "abc123",
-            FORMAT.FLAGS_KEY: "1",
+            propagator.TRACE_ID_KEY: self.serialized_trace_id,
+            propagator.SPAN_ID_KEY: "abc123",
+            propagator.FLAGS_KEY: "1",
         }
-        new_ctx = FORMAT.extract(carrier, old_ctx)
+        new_ctx = propagator.extract(carrier, old_ctx)
 
         self.assertDictEqual(new_ctx, old_ctx)
 
     def test_extract_invalid_span_id_to_implicit_ctx(self):
+        propagator = self.get_propagator()
         carrier = {
-            FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-            FORMAT.SPAN_ID_KEY: "abc123",
-            FORMAT.FLAGS_KEY: "1",
+            propagator.TRACE_ID_KEY: self.serialized_trace_id,
+            propagator.SPAN_ID_KEY: "abc123",
+            propagator.FLAGS_KEY: "1",
         }
-        new_ctx = FORMAT.extract(carrier)
+        new_ctx = propagator.extract(carrier)
 
         self.assertDictEqual(Context(), new_ctx)
 
     def test_extract_missing_span_id_to_explicit_ctx(self):
         """Given no span ID, do not modify context"""
         old_ctx = Context({"k1": "v1"})
+        propagator = self.get_propagator()
 
         carrier = {
-            FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-            FORMAT.FLAGS_KEY: "1",
+            propagator.TRACE_ID_KEY: self.serialized_trace_id,
+            propagator.FLAGS_KEY: "1",
         }
-        new_ctx = FORMAT.extract(carrier, old_ctx)
+        new_ctx = propagator.extract(carrier, old_ctx)
 
         self.assertDictEqual(new_ctx, old_ctx)
 
     def test_extract_missing_span_id_to_implicit_ctx(self):
+        propagator = self.get_propagator()
         carrier = {
-            FORMAT.TRACE_ID_KEY: self.serialized_trace_id,
-            FORMAT.FLAGS_KEY: "1",
+            propagator.TRACE_ID_KEY: self.serialized_trace_id,
+            propagator.FLAGS_KEY: "1",
         }
-        new_ctx = FORMAT.extract(carrier)
+        new_ctx = propagator.extract(carrier)
 
         self.assertDictEqual(Context(), new_ctx)
 
@@ -368,54 +398,90 @@ class TestB3Format(unittest.TestCase):
         old_ctx = Context({"k1": "v1"})
 
         carrier = {}
-        new_ctx = FORMAT.extract(carrier, old_ctx)
+        new_ctx = self.get_propagator().extract(carrier, old_ctx)
 
         self.assertDictEqual(new_ctx, old_ctx)
 
     def test_extract_empty_carrier_to_implicit_ctx(self):
-        new_ctx = FORMAT.extract({})
+        new_ctx = self.get_propagator().extract({})
         self.assertDictEqual(Context(), new_ctx)
 
-    @staticmethod
-    def test_inject_empty_context():
+    def test_inject_empty_context(self):
         """If the current context has no span, don't add headers"""
         new_carrier = {}
-        FORMAT.inject(new_carrier, get_current())
+        self.get_propagator().inject(new_carrier, get_current())
         assert len(new_carrier) == 0
 
-    @staticmethod
-    def test_default_span():
+    def test_default_span(self):
         """Make sure propagator does not crash when working with NonRecordingSpan"""
 
         class CarrierGetter(DefaultGetter):
             def get(self, carrier, key):
                 return carrier.get(key, None)
 
-        ctx = FORMAT.extract({}, getter=CarrierGetter())
-        FORMAT.inject({}, context=ctx)
+        propagator = self.get_propagator()
+        ctx = propagator.extract({}, getter=CarrierGetter())
+        propagator.inject({}, context=ctx)
 
     def test_fields(self):
         """Make sure the fields attribute returns the fields used in inject"""
 
+        propagator = self.get_propagator()
         tracer = trace.TracerProvider().get_tracer("sdk_tracer_provider")
 
         mock_setter = Mock()
 
         with tracer.start_as_current_span("parent"):
             with tracer.start_as_current_span("child"):
-                FORMAT.inject({}, setter=mock_setter)
+                propagator.inject({}, setter=mock_setter)
 
         inject_fields = set()
 
         for call in mock_setter.mock_calls:
             inject_fields.add(call[1][1])
 
-        self.assertEqual(FORMAT.fields, inject_fields)
+        self.assertEqual(propagator.fields, inject_fields)
 
     def test_extract_none_context(self):
         """Given no trace ID, do not modify context"""
         old_ctx = None
 
         carrier = {}
-        new_ctx = FORMAT.extract(carrier, old_ctx)
+        new_ctx = self.get_propagator().extract(carrier, old_ctx)
         self.assertDictEqual(Context(), new_ctx)
+
+
+class TestB3MultiFormat(AbstractB3FormatTestCase, unittest.TestCase):
+    @classmethod
+    def get_propagator(cls):
+        return B3MultiFormat()
+
+    @classmethod
+    def get_trace_id(cls, carrier):
+        return carrier[cls.get_propagator().TRACE_ID_KEY]
+
+    def assertSampled(self, carrier):
+        self.assertEqual(carrier[self.get_propagator().SAMPLED_KEY], "1")
+
+    def assertNotSampled(self, carrier):
+        self.assertEqual(carrier[self.get_propagator().SAMPLED_KEY], "0")
+
+
+class TestB3SingleFormat(AbstractB3FormatTestCase, unittest.TestCase):
+    @classmethod
+    def get_propagator(cls):
+        return B3SingleFormat()
+
+    @classmethod
+    def get_trace_id(cls, carrier):
+        return carrier[cls.get_propagator().SINGLE_HEADER_KEY].split("-")[0]
+
+    def assertSampled(self, carrier):
+        self.assertEqual(
+            carrier[self.get_propagator().SINGLE_HEADER_KEY].split("-")[2], "1"
+        )
+
+    def assertNotSampled(self, carrier):
+        self.assertEqual(
+            carrier[self.get_propagator().SINGLE_HEADER_KEY].split("-")[2], "0"
+        )
