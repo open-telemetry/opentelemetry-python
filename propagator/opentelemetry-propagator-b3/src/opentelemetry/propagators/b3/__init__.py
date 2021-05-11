@@ -15,6 +15,8 @@
 import typing
 from re import compile as re_compile
 
+from deprecated import deprecated
+
 import opentelemetry.trace as trace
 from opentelemetry.context import Context
 from opentelemetry.propagators.textmap import (
@@ -28,10 +30,11 @@ from opentelemetry.propagators.textmap import (
 from opentelemetry.trace import format_span_id, format_trace_id
 
 
-class B3Format(TextMapPropagator):
-    """Propagator for the B3 HTTP header format.
+class B3MultiFormat(TextMapPropagator):
+    """Propagator for the B3 HTTP multi-header format.
 
     See: https://github.com/openzipkin/b3-propagation
+         https://github.com/openzipkin/b3-propagation#multiple-headers
     """
 
     SINGLE_HEADER_KEY = "b3"
@@ -163,6 +166,53 @@ class B3Format(TextMapPropagator):
             self.PARENT_SPAN_ID_KEY,
             self.SAMPLED_KEY,
         }
+
+
+class B3SingleFormat(B3MultiFormat):
+    """Propagator for the B3 HTTP single-header format.
+
+    See: https://github.com/openzipkin/b3-propagation
+         https://github.com/openzipkin/b3-propagation#single-header
+    """
+
+    def inject(
+        self,
+        carrier: CarrierT,
+        context: typing.Optional[Context] = None,
+        setter: Setter = default_setter,
+    ) -> None:
+        span = trace.get_current_span(context=context)
+
+        span_context = span.get_span_context()
+        if span_context == trace.INVALID_SPAN_CONTEXT:
+            return
+
+        sampled = (trace.TraceFlags.SAMPLED & span_context.trace_flags) != 0
+
+        fields = [
+            format_trace_id(span_context.trace_id),
+            format_span_id(span_context.span_id),
+            "1" if sampled else "0",
+        ]
+
+        span_parent = getattr(span, "parent", None)
+        if span_parent:
+            fields.append(format_span_id(span_parent.span_id))
+
+        setter.set(carrier, self.SINGLE_HEADER_KEY, "-".join(fields))
+
+    @property
+    def fields(self) -> typing.Set[str]:
+        return {self.SINGLE_HEADER_KEY}
+
+
+class B3Format(B3MultiFormat):
+    @deprecated(
+        version="1.2.0",
+        reason="B3Format is deprecated in favor of B3MultiFormat",
+    )
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
 
 def _extract_first_element(
