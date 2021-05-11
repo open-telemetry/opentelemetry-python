@@ -15,7 +15,7 @@
 
 import logging
 from types import MappingProxyType
-from typing import MutableSequence, Sequence
+from typing import MutableSequence, Optional, Sequence, Tuple
 
 from opentelemetry.util import types
 
@@ -25,7 +25,9 @@ _VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
 _logger = logging.getLogger(__name__)
 
 
-def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
+def _clean_attribute_value(
+    value: types.AttributeValue, max_size: Optional[int]
+) -> Tuple[bool, Optional[types.AttributeValue]]:
     """Checks if attribute value is valid.
 
     An attribute value is valid if it is either:
@@ -33,15 +35,30 @@ def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
             point (IEEE 754-1985) or integer.
         - An array of primitive type values. The array MUST be homogeneous,
             i.e. it MUST NOT contain values of different types.
+
+    This function tries to clean attribute values according to the following rules:
+    - bytes are decoded to strings.
+    - When ``max_size`` argument is set, any string/bytes values longer than the value
+    are truncated to the specified max length.
+    - ``Sequence`` values other than strings such as lists are converted to immutable tuples.
+
+
+    If the attribute value is modified or converted to another type, the new value is returned
+    as the second return value.
+    If the attribute value is not modified, ``None`` is returned as the second return value.
     """
 
-    if isinstance(value, Sequence):
+    # pylint: disable=too-many-branches
+    modified = False
+    if isinstance(value, Sequence) and not isinstance(value, (str, bytes)):
         if len(value) == 0:
-            return True
+            return True, None
 
         sequence_first_valid_type = None
+        new_value = []
         for element in value:
             if element is None:
+                new_value.append(element)
                 continue
             element_type = type(element)
             if element_type not in _VALID_ATTR_VALUE_TYPES:
@@ -54,7 +71,7 @@ def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
                         for valid_type in _VALID_ATTR_VALUE_TYPES
                     ],
                 )
-                return False
+                return False, None
             # The type of the sequence must be homogeneous. The first non-None
             # element determines the type of the sequence
             if sequence_first_valid_type is None:
@@ -65,7 +82,23 @@ def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
                     sequence_first_valid_type.__name__,
                     type(element).__name__,
                 )
-                return False
+                return False, None
+            if max_size is not None and isinstance(element, str):
+                element = element[:max_size]
+                modified = True
+            new_value.append(element)
+        # Freeze mutable sequences defensively
+        if isinstance(value, MutableSequence):
+            modified = True
+        value = tuple(new_value)
+
+    elif isinstance(value, bytes):
+        try:
+            value = value.decode()
+            modified = True
+        except ValueError:
+            _logger.warning("Byte attribute could not be decoded.")
+            return False, None
 
     elif not isinstance(value, _VALID_ATTR_VALUE_TYPES):
         _logger.warning(
@@ -74,34 +107,38 @@ def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
             type(value).__name__,
             [valid_type.__name__ for valid_type in _VALID_ATTR_VALUE_TYPES],
         )
-        return False
-    return True
+        return False, None
+
+    if max_size is not None and isinstance(value, str):
+        value = value[:max_size]
+        modified = True
+    return True, value if modified else None
 
 
-def _filter_attributes(attributes: types.Attributes) -> None:
-    """Applies attribute validation rules and drops (key, value) pairs
+def _clean_attributes(
+    attributes: types.Attributes, max_size: Optional[int]
+) -> None:
+    """Applies attribute validation rules and truncates/drops (key, value) pairs
     that doesn't adhere to attributes specification.
 
     https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/common/common.md#attributes.
     """
-    if attributes:
-        for attr_key, attr_value in list(attributes.items()):
-            if not attr_key:
-                _logger.warning("invalid key `%s` (empty or null)", attr_key)
-                attributes.pop(attr_key)
-                continue
+    if not attributes:
+        return
 
-            if _is_valid_attribute_value(attr_value):
-                if isinstance(attr_value, MutableSequence):
-                    attributes[attr_key] = tuple(attr_value)
-                if isinstance(attr_value, bytes):
-                    try:
-                        attributes[attr_key] = attr_value.decode()
-                    except ValueError:
-                        attributes.pop(attr_key)
-                        _logger.warning("Byte attribute could not be decoded.")
-            else:
-                attributes.pop(attr_key)
+    for attr_key, attr_value in list(attributes.items()):
+        if not attr_key:
+            _logger.warning("invalid key `%s` (empty or null)", attr_key)
+            attributes.pop(attr_key)
+            continue
+
+        valid, cleaned_value = _clean_attribute_value(attr_value, max_size)
+        if not valid:
+            attributes.pop(attr_key)
+            continue
+
+        if cleaned_value is not None:
+            attributes[attr_key] = cleaned_value
 
 
 def _create_immutable_attributes(

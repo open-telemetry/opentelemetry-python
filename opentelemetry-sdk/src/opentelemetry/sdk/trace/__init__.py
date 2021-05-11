@@ -40,13 +40,14 @@ from typing import (
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
 from opentelemetry.attributes import (
+    _clean_attribute_value,
+    _clean_attributes,
     _create_immutable_attributes,
-    _filter_attributes,
-    _is_valid_attribute_value,
 )
 from opentelemetry.sdk import util
 from opentelemetry.sdk.environment_variables import (
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+    OTEL_SPAN_ATTRIBUTE_SIZE_LIMIT,
     OTEL_SPAN_EVENT_COUNT_LIMIT,
     OTEL_SPAN_LINK_COUNT_LIMIT,
 )
@@ -65,9 +66,10 @@ logger = logging.getLogger(__name__)
 _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_SPAN_EVENT_COUNT_LIMIT = 128
 _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT = 128
-
+_DEFAULT_OTEL_SPAN_ATTRIBUTE_SIZE_LIMIT = None
 
 _ENV_VALUE_UNSET = "unset"
+
 
 # pylint: disable=protected-access
 _TRACE_SAMPLER = sampling._get_from_env_or_default()
@@ -525,6 +527,9 @@ class SpanLimits:
         max_links: Maximum number of links that can be added to a Span.
             Environment variable: OTEL_SPAN_LINK_COUNT_LIMIT
             Default: {_DEFAULT_SPAN_LINK_COUNT_LIMIT}
+        max_attribute_size: Maximum length a string attribute can have.
+            Environment variable: OTEL_SPAN_LINK_COUNT_LIMIT
+            Default: {_DEFAULT_SPAN_LINK_COUNT_LIMIT}
     """
 
     UNSET = -1
@@ -532,12 +537,14 @@ class SpanLimits:
     max_attributes: int
     max_events: int
     max_links: int
+    max_attribute_size: Optional[int]
 
     def __init__(
         self,
         max_attributes: Optional[int] = None,
         max_events: Optional[int] = None,
         max_links: Optional[int] = None,
+        max_attribute_size: Optional[int] = None,
     ):
         self.max_attributes = self._from_env_if_absent(
             max_attributes,
@@ -555,9 +562,18 @@ class SpanLimits:
             _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT,
         )
 
+        self.max_attribute_size = self._from_env_if_absent(
+            max_attribute_size,
+            OTEL_SPAN_ATTRIBUTE_SIZE_LIMIT,
+            _DEFAULT_OTEL_SPAN_ATTRIBUTE_SIZE_LIMIT,
+        )
+
     def __repr__(self):
-        return "max_attributes={}, max_events={}, max_links={}".format(
-            self.max_attributes, self.max_events, self.max_links
+        return "max_attributes={}, max_events={}, max_links={}, max_attribute_size={}".format(
+            self.max_attributes,
+            self.max_events,
+            self.max_links,
+            self.max_attribute_size,
         )
 
     @classmethod
@@ -661,7 +677,7 @@ class Span(trace_api.Span, ReadableSpan):
         self._limits = limits
         self._lock = threading.Lock()
 
-        _filter_attributes(attributes)
+        _clean_attributes(attributes, self._limits.max_attribute_size)
         if not attributes:
             self._attributes = self._new_attributes()
         else:
@@ -672,7 +688,9 @@ class Span(trace_api.Span, ReadableSpan):
         self._events = self._new_events()
         if events:
             for event in events:
-                _filter_attributes(event.attributes)
+                _clean_attributes(
+                    event.attributes, self._limits.max_attribute_size
+                )
                 # pylint: disable=protected-access
                 event._attributes = _create_immutable_attributes(
                     event.attributes
@@ -683,6 +701,9 @@ class Span(trace_api.Span, ReadableSpan):
             self._links = self._new_links()
         else:
             self._links = BoundedList.from_seq(self._limits.max_links, links)
+
+        for link in self._links:
+            _clean_attributes(link.attributes, self._limits.max_attribute_size)
 
     def __repr__(self):
         return '{}(name="{}", context={})'.format(
@@ -710,25 +731,18 @@ class Span(trace_api.Span, ReadableSpan):
                 return
 
             for key, value in attributes.items():
-                if not _is_valid_attribute_value(value):
+                valid, cleaned = _clean_attribute_value(
+                    value, self._limits.max_attribute_size
+                )
+                if not valid:
                     continue
+
+                if cleaned is not None:
+                    value = cleaned
 
                 if not key:
                     logger.warning("invalid key `%s` (empty or null)", key)
                     continue
-
-                # Freeze mutable sequences defensively
-                if isinstance(value, MutableSequence):
-                    value = tuple(value)
-                if isinstance(value, bytes):
-                    try:
-                        value = value.decode()
-                    except ValueError:
-                        logger.warning(
-                            "Byte attribute could not be decoded for key `%s`.",
-                            key,
-                        )
-                        return
                 self._attributes[key] = value
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
@@ -744,7 +758,7 @@ class Span(trace_api.Span, ReadableSpan):
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
     ) -> None:
-        _filter_attributes(attributes)
+        _clean_attributes(attributes, self._limits.max_attribute_size)
         attributes = _create_immutable_attributes(attributes)
         self._add_event(
             Event(
@@ -1026,6 +1040,13 @@ class TracerProvider(trace_api.TracerProvider):
         self._atexit_handler = None
         if shutdown_on_exit:
             self._atexit_handler = atexit.register(self.shutdown)
+
+        if self._resource and self._limits.max_attribute_size:
+            resource_attributes = self._resource.attributes
+            _clean_attributes(
+                resource_attributes, self._limits.max_attribute_size
+            )
+            self._resource = Resource(resource_attributes)
 
     @property
     def resource(self) -> Resource:

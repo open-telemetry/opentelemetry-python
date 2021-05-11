@@ -64,7 +64,7 @@ from json import dumps
 
 import pkg_resources
 
-from opentelemetry.attributes import _filter_attributes
+from opentelemetry.attributes import _clean_attributes
 from opentelemetry.sdk.environment_variables import (
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
@@ -144,7 +144,7 @@ class Resource:
     def __init__(
         self, attributes: Attributes, schema_url: typing.Optional[str] = None
     ):
-        _filter_attributes(attributes)
+        _clean_attributes(attributes, None)
         self._attributes = attributes.copy()
         if schema_url is None:
             schema_url = ""

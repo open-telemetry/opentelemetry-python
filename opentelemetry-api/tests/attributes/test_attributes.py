@@ -17,42 +17,151 @@
 import unittest
 
 from opentelemetry.attributes import (
+    _clean_attribute_value,
+    _clean_attributes,
     _create_immutable_attributes,
-    _filter_attributes,
-    _is_valid_attribute_value,
 )
 
 
 class TestAttributes(unittest.TestCase):
-    def test_is_valid_attribute_value(self):
-        self.assertFalse(_is_valid_attribute_value([1, 2, 3.4, "ss", 4]))
-        self.assertFalse(_is_valid_attribute_value([dict(), 1, 2, 3.4, 4]))
-        self.assertFalse(_is_valid_attribute_value(["sw", "lf", 3.4, "ss"]))
-        self.assertFalse(_is_valid_attribute_value([1, 2, 3.4, 5]))
-        self.assertFalse(_is_valid_attribute_value(dict()))
-        self.assertTrue(_is_valid_attribute_value(True))
-        self.assertTrue(_is_valid_attribute_value("hi"))
-        self.assertTrue(_is_valid_attribute_value(3.4))
-        self.assertTrue(_is_valid_attribute_value(15))
-        self.assertTrue(_is_valid_attribute_value([1, 2, 3, 5]))
-        self.assertTrue(_is_valid_attribute_value([1.2, 2.3, 3.4, 4.5]))
-        self.assertTrue(_is_valid_attribute_value([True, False]))
-        self.assertTrue(_is_valid_attribute_value(["ss", "dw", "fw"]))
-        self.assertTrue(_is_valid_attribute_value([]))
-        # None in sequences are valid
-        self.assertTrue(_is_valid_attribute_value(["A", None, None]))
-        self.assertTrue(_is_valid_attribute_value(["A", None, None, "B"]))
-        self.assertTrue(_is_valid_attribute_value([None, None]))
-        self.assertFalse(_is_valid_attribute_value(["A", None, 1]))
-        self.assertFalse(_is_valid_attribute_value([None, "A", None, 1]))
+    def assertCleanAttr(self, value, valid):
+        # pylint: disable=protected-access
+        is_valid, cleaned = _clean_attribute_value(value, None)
+        self.assertEqual(is_valid, valid)
+        self.assertEqual(cleaned, value if valid else None)
 
-    def test_filter_attributes(self):
+    def test_validate_attribute_value(self):
+        test_cases = [
+            (
+                [1, 2, 3.4, "ss", 4],
+                False,
+            ),
+            (
+                [dict(), 1, 2, 3.4, 4],
+                False,
+            ),
+            (
+                ["sw", "lf", 3.4, "ss"],
+                False,
+            ),
+            (
+                [1, 2, 3.4, 5],
+                False,
+            ),
+            (
+                dict(),
+                False,
+            ),
+            (
+                True,
+                True,
+            ),
+            (
+                "hi",
+                True,
+            ),
+            (
+                3.4,
+                True,
+            ),
+            (
+                15,
+                True,
+            ),
+            (
+                (1, 2, 3, 5),
+                True,
+            ),
+            (
+                (1.2, 2.3, 3.4, 4.5),
+                True,
+            ),
+            (
+                (True, False),
+                True,
+            ),
+            (
+                ("ss", "dw", "fw"),
+                True,
+            ),
+            (
+                [],
+                True,
+            ),
+            # None in sequences are valid
+            (
+                ("A", None, None),
+                True,
+            ),
+            (
+                ("A", None, None, "B"),
+                True,
+            ),
+            (
+                (None, None),
+                True,
+            ),
+            (
+                ["A", None, 1],
+                False,
+            ),
+            (
+                [None, "A", None, 1],
+                False,
+            ),
+        ]
+
+        for value, want_valid in test_cases:
+            # pylint: disable=protected-access
+            got_valid, cleaned_value = _clean_attribute_value(value, None)
+            self.assertEqual(got_valid, want_valid)
+            self.assertIsNone(cleaned_value)
+
+    def test_clean_attribute_value_truncate(self):
+        test_cases = [
+            ("a" * 50, None, None),
+            ("a" * 50, "a" * 10, 10),
+            ("abc", "a", 1),
+            ("abc" * 50, "abcabcabca", 10),
+            ("abc" * 50, "abc" * 50, 1000),
+            ("abc" * 50, None, None),
+            ([1, 2, 3, 5], (1, 2, 3, 5), 10),
+            (
+                [1.2, 2.3],
+                (
+                    1.2,
+                    2.3,
+                ),
+                20,
+            ),
+            ([True, False], (True, False), 10),
+            ([], None, 10),
+            (True, None, 10),
+            (
+                3.4,
+                None,
+                True,
+            ),
+            (
+                15,
+                None,
+                True,
+            ),
+        ]
+
+        for value, expected, limit in test_cases:
+            # pylint: disable=protected-access
+            valid, cleaned = _clean_attribute_value(value, limit)
+            self.assertTrue(valid)
+            self.assertEqual(cleaned, expected)
+
+    def test_clean_attributes(self):
         attrs_with_invalid_keys = {
             "": "empty-key",
             None: "None-value",
             "attr-key": "attr-value",
         }
-        _filter_attributes(attrs_with_invalid_keys)
+        _clean_attributes(attrs_with_invalid_keys, None)
         self.assertTrue(len(attrs_with_invalid_keys), 1)
         self.assertEqual(attrs_with_invalid_keys, {"attr-key": "attr-value"})
 
@@ -66,7 +175,7 @@ class TestAttributes(unittest.TestCase):
             "boolkey": True,
             "valid-byte-string": b"hello-otel",
         }
-        _filter_attributes(attrs_with_invalid_values)
+        _clean_attributes(attrs_with_invalid_values, None)
         self.assertEqual(len(attrs_with_invalid_values), 5)
         self.assertEqual(
             attrs_with_invalid_values,

@@ -27,6 +27,7 @@ from opentelemetry.context import Context
 from opentelemetry.sdk import resources, trace
 from opentelemetry.sdk.environment_variables import (
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+    OTEL_SPAN_ATTRIBUTE_SIZE_LIMIT,
     OTEL_SPAN_EVENT_COUNT_LIMIT,
     OTEL_SPAN_LINK_COUNT_LIMIT,
     OTEL_TRACES_SAMPLER,
@@ -40,8 +41,10 @@ from opentelemetry.trace import StatusCode
 from opentelemetry.util._time import _time_ns
 
 
-def new_tracer(span_limits=None) -> trace_api.Tracer:
-    return trace.TracerProvider(span_limits=span_limits).get_tracer(__name__)
+def new_tracer(resource=None, span_limits=None) -> trace_api.Tracer:
+    return trace.TracerProvider(
+        resource=resource, span_limits=span_limits
+    ).get_tracer(__name__)
 
 
 class TestTracer(unittest.TestCase):
@@ -672,6 +675,58 @@ class TestSpan(unittest.TestCase):
             self.assertTrue(
                 isinstance(root.attributes["valid-byte-type-attribute"], str)
             )
+
+    @mock.patch.dict(
+        "os.environ",
+        {OTEL_SPAN_ATTRIBUTE_SIZE_LIMIT: "5"},
+    )
+    def test_invalid_attribute_truncate(self):
+        attributes = {
+            "k1": "v" * 20,
+            "k2": ["v" * 20, "v" * 8, "v" * 2],
+        }
+
+        id_generator = RandomIdGenerator()
+        other_context = trace_api.SpanContext(
+            trace_id=id_generator.generate_trace_id(),
+            span_id=id_generator.generate_span_id(),
+            is_remote=False,
+        )
+        links = (trace_api.Link(other_context, attributes.copy()),)
+
+        tracer = new_tracer(resource=Resource.create(attributes.copy()))
+        with tracer.start_as_current_span(
+            "root", links=links, attributes={"k3": "v" * 100}
+        ) as root:
+            root.set_attributes(attributes.copy())
+            root.add_event("v1", attributes.copy())
+
+            self.assertEqual(len(root.attributes), 3)
+            self.assertEqual(len(root.attributes["k1"]), 5)
+            self.assertEqual(len(root.attributes["k2"][0]), 5)
+            self.assertEqual(len(root.attributes["k2"][1]), 5)
+            self.assertEqual(len(root.attributes["k2"][2]), 2)
+            self.assertEqual(len(root.attributes["k3"]), 5)
+
+            resource_attributes = root.resource.attributes
+            self.assertEqual(len(resource_attributes["k1"]), 5)
+            self.assertEqual(len(resource_attributes["k2"][0]), 5)
+            self.assertEqual(len(resource_attributes["k2"][1]), 5)
+            self.assertEqual(len(resource_attributes["k2"][2]), 2)
+
+            self.assertEqual(len(root.events), 1)
+            event = root.events[0]
+            self.assertEqual(len(event.attributes["k1"]), 5)
+            self.assertEqual(len(event.attributes["k2"][0]), 5)
+            self.assertEqual(len(event.attributes["k2"][1]), 5)
+            self.assertEqual(len(event.attributes["k2"][2]), 2)
+
+            self.assertEqual(len(root.links), 1)
+            link = root.links[0]
+            self.assertEqual(len(link.attributes["k1"]), 5)
+            self.assertEqual(len(link.attributes["k2"][0]), 5)
+            self.assertEqual(len(link.attributes["k2"][1]), 5)
+            self.assertEqual(len(link.attributes["k2"][2]), 2)
 
     def test_sampling_attributes(self):
         sampling_attributes = {

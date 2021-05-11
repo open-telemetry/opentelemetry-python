@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.2.0-0.21b0...HEAD)
 
 ### Added 
+- Added support for OTEL_SPAN_ATTRIBUTE_SIZE_LIMIT.
+  ([#1847](https://github.com/open-telemetry/opentelemetry-python/pull/1847))
+
+### Added 
 - Allow span limits to be set programatically via TracerProvider.
   ([#1877](https://github.com/open-telemetry/opentelemetry-python/pull/1877))
 
