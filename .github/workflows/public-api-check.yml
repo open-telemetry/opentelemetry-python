@@ -49,14 +49,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Download result
-        uses: actions/download-artifact@v2
-        with:
-          name: result
+      # - name: Download result
+      # uses: actions/download-artifact@v2
+      # with:
+      # name: result
 
-          # - name: Store result in environment variable
-          # run: |
-          # echo "comment=$(<result)" >> $GITHUB_ENV
+      # - name: Store result in environment variable
+      # run: |
+      # echo "comment=$(<result)" >> $GITHUB_ENV
 
       - name: Add comment
         uses: actions/github-script@v2
