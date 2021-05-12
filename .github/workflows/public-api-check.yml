@@ -45,7 +45,7 @@ jobs:
         path: result
 
   commentPR:
-    needs: [publicAPICheck]
+    # needs: [publicAPICheck]
     runs-on: ubuntu-latest
 
     steps:
@@ -54,9 +54,9 @@ jobs:
         with:
           name: result
 
-      - name: Store result in environment variable
-        run: |
-          echo "comment=$(<result)" >> $GITHUB_ENV
+          # - name: Store result in environment variable
+          # run: |
+          # echo "comment=$(<result)" >> $GITHUB_ENV
 
       - name: Add comment
         uses: actions/github-script@v2
@@ -67,5 +67,6 @@ jobs:
               issue_number: ${{ github.event.number }},
               owner: context.repo.owner,
               repo: context.repo.repo,
-              body: '${{ env.comment }}'
+              # body: '${{ env.comment }}'
+              body: "test"
             })
