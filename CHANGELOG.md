@@ -4,11 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.1.0...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.2.0-0.21b0...HEAD)
 
-### Changed
-- Include span parent in Jaeger gRPC export as `CHILD_OF` reference
-  ([#1809])(https://github.com/open-telemetry/opentelemetry-python/pull/1809)
+## [1.2.0, 0.21b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.2.0-0.21b0) - 2021-05-11
 
 ### Added
 - Added example for running Django with auto instrumentation.
@@ -34,16 +32,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1810](https://github.com/open-telemetry/opentelemetry-python/pull/1810))
 - Fixed inconsistency in parent_id formatting from the ConsoleSpanExporter
   ([#1833](https://github.com/open-telemetry/opentelemetry-python/pull/1833))
+- Include span parent in Jaeger gRPC export as `CHILD_OF` reference
+  ([#1809])(https://github.com/open-telemetry/opentelemetry-python/pull/1809)
+- Fixed sequence values in OTLP exporter not translating
+  ([#1818](https://github.com/open-telemetry/opentelemetry-python/pull/1818))
 - Update transient errors retry timeout and retryable status codes
   ([#1842](https://github.com/open-telemetry/opentelemetry-python/pull/1842))
 
 ### Removed
 - Moved `opentelemetry-instrumentation` to contrib repository.
   ([#1797](https://github.com/open-telemetry/opentelemetry-python/pull/1797))
-
-### Changed
-- Fixed sequence values in OTLP exporter not translating
-  ([#1818](https://github.com/open-telemetry/opentelemetry-python/pull/1818))
 
 ## [1.1.0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.1.0) - 2021-04-20
 
