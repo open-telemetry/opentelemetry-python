@@ -18,25 +18,19 @@ from pathlib import Path
 from re import match
 
 from git import Repo
+from git.db import GitDB
 
-repo = Repo(getcwd())
+repo = Repo(getcwd(), odbt=GitDB)
 
-head_commit = repo.head.commit
-
-for branch in repo.branches:
-
-    if branch.commit == head_commit:
-        active_branch = branch.name
-
-diff_index = repo.commit("master").diff(active_branch)
-
-symbol = r"[a-zA-Z][_\w]+"
 
 file_path_symbols = {}
 
 
 def get_symbols(change_type, diff_lines_getter, prefix):
-    for diff_lines in diff_index.iter_change_type(change_type):
+    for diff_lines in (
+        repo.commit("main").
+        diff(repo.head.commit).iter_change_type(change_type)
+    ):
 
         b_file_path = diff_lines.b_blob.path
 
@@ -48,10 +42,10 @@ def get_symbols(change_type, diff_lines_getter, prefix):
 
         for diff_line in diff_lines_getter(diff_lines):
             matching_line = match(
-                r"{prefix}({symbol})\s=\s.+|"
-                r"{prefix}def\s({symbol})|"
-                r"{prefix}class\s({symbol})".format(
-                    symbol=symbol, prefix=prefix
+                r"{prefix}({symbol_re})\s=\s.+|"
+                r"{prefix}def\s({symbol_re})|"
+                r"{prefix}class\s({symbol_re})".format(
+                    symbol_re=r"[a-zA-Z][_\w]+", prefix=prefix
                 ),
                 diff_line,
             )
@@ -80,11 +74,7 @@ get_symbols("A", a_diff_lines_getter, r"")
 get_symbols("M", m_diff_lines_getter, r"\+")
 
 if file_path_symbols:
-    print(
-        "The {} branch adds the following public symbols:".format(
-            active_branch
-        )
-    )
+    print("This pull request adds the following public symbols:")
     print()
     for file_path, symbols in file_path_symbols.items():
         print("- {}".format(file_path))
@@ -98,6 +88,4 @@ if file_path_symbols:
         "private."
     )
 else:
-    print(
-        "The {} branch does not add any public symbols".format(active_branch)
-    )
+    print("This pull request does not add any public symbols")

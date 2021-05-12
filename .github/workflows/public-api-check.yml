@@ -4,28 +4,68 @@ on:
   pull_request:
 
 jobs:
-  commentPR:
+  publicAPICheck:
+
     runs-on: ubuntu-latest
+
     steps:
-      - uses: mshick/add-pr-comment@v1
+    - name: Checkout the repo
+      uses: actions/checkout@v2
+
+    - name: Fetch
+      run: git fetch
+
+    - name: Checkout main
+      run: git checkout main
+
+    - name: Set strategy
+      run: git config pull.rebase false
+
+    - name: Pull origin
+      run: git pull origin main
+
+    - name: Checkout PR
+      run: git checkout ${{ github.event.pull_request.head.sha }}
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.8
+
+    - name: Install tox
+      run: pip install -U tox-factor
+
+    - name: Public API Check
+      run: tox -qq -e public-symbols-check > result
+
+    - name: Upload result
+      uses: actions/upload-artifact@v2
+      with:
+        name: result
+        path: result
+
+  commentPR:
+    needs: [publicAPICheck]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download result
+        uses: actions/download-artifact@v2
         with:
-          message: |
-            **comment**
-          repo-token: ${{ secrets.GITHUB_TOKEN }}
-          repo-token-user-login: 'github-actions[bot]' # The user.login for temporary GitHub tokens
-          allow-repeats: false # This is the default
-#   publicAPICheck:
-# 
-#   runs-on: ubuntu-latest
-# 
-#   steps:
-#   - name: Checkout
-#   uses: actions/checkout@v2
-#   - name: Set up Python
-#   uses: actions/setup-python@v2
-#   with:
-#     python-version: 3.8
-#   - name: Install tox
-#   run: pip install -U tox-factor
-#   - name: Public API Check
-#   run: tox -e public-symbols-check
+          name: result
+
+      - name: Store result in environment variable
+        run: |
+          echo "comment=$(<result)" >> $GITHUB_ENV
+
+      - name: Add comment
+        uses: actions/github-script@v2
+        with:
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.createComment({
+              issue_number: ${{ github.event.number }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: '${{ env.comment }}'
+            })
