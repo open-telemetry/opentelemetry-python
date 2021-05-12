@@ -67,6 +67,5 @@ jobs:
               issue_number: ${{ github.event.number }},
               owner: context.repo.owner,
               repo: context.repo.repo,
-              # body: '${{ env.comment }}'
               body: "test"
             })
