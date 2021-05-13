@@ -3,36 +3,36 @@ name: Public API check
 on:
   pull_request:
 
-    jobs:
-      publicAPICheck:
+jobs:
+  publicAPICheck:
 
-        runs-on: ubuntu-latest
+    runs-on: ubuntu-latest
 
-        if: "!contains(github.event.pull_request.labels.*.name, 'Skip Public API check')"
+    if: "!contains(github.event.pull_request.labels.*.name, 'Skip Public API check')"
 
-        steps:
-          - name: Checkout the repo
-            uses: actions/checkout@v2
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
 
-          - name: Fetch
-            run: git fetch
+      - name: Fetch
+        run: git fetch
 
-          - name: Checkout main
-            run: git checkout main
+      - name: Checkout main
+        run: git checkout main
 
-          - name: Set strategy
-            run: git config pull.rebase false
+      - name: Set strategy
+        run: git config pull.rebase false
 
-          - name: Pull origin
-            run: git pull origin main
+      - name: Pull origin
+        run: git pull origin main
 
-          - name: Set up Python
-            uses: actions/setup-python@v2
-            with:
-              python-version: 3.8
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
 
-          - name: Install tox
-            run: pip install -U tox-factor
+      - name: Install tox
+        run: pip install -U tox-factor
 
-          - name: Public API Check
-            run: tox -qq -e public-symbols-check
+      - name: Public API Check
+        run: tox -qq -e public-symbols-check
