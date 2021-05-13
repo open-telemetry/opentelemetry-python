@@ -85,7 +85,9 @@ if file_path_symbols:
     print(
         "Please make sure that all of them are strictly necessary, if not, "
         "please consider prefixing them with an underscore to make them "
-        "private."
+        "private. After that, please label this PR with \"Skip Public API "
+        "check\"."
     )
+    exit(1)
 else:
     print("This pull request does not add any public symbols")
