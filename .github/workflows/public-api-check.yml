@@ -2,6 +2,9 @@ name: Public API check
 
 on:
   pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+    branches:
+      - main
 
 jobs:
   publicAPICheck:
