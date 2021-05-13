@@ -14,18 +14,6 @@ jobs:
     - name: Checkout the repo
       uses: actions/checkout@v2
 
-    - name: Fetch
-      run: git fetch
-
-    - name: Checkout main
-      run: git checkout main
-
-    - name: Set strategy
-      run: git config pull.rebase false
-
-    - name: Pull origin
-      run: git pull origin main
-
     - name: Checkout PR
       run: git checkout ${{ github.event.pull_request.head.sha }}
 
