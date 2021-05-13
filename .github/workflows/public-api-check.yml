@@ -26,6 +26,9 @@ jobs:
       - name: Pull origin
         run: git pull origin main
 
+      - name: Checkout pull request
+        run: git checkout ${{ github.event.pull_request.head.sha }}
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -35,4 +38,4 @@ jobs:
         run: pip install -U tox-factor
 
       - name: Public API Check
-        run: tox -q -e public-symbols-check
+        run: tox -e public-symbols-check
