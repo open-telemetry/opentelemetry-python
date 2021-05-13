@@ -8,6 +8,8 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    if: "!contains(github.event.pull_request.labels.*.name, 'Skip Public API check')"
+
     steps:
     - name: Checkout the repo
       uses: actions/checkout@v2
@@ -36,36 +38,4 @@ jobs:
       run: pip install -U tox-factor
 
     - name: Public API Check
-      run: tox -qq -e public-symbols-check > result
-
-    - name: Upload result
-      uses: actions/upload-artifact@v2
-      with:
-        name: result
-        path: result
-
-  commentPR:
-    # needs: [publicAPICheck]
-    runs-on: ubuntu-latest
-
-    steps:
-      # - name: Download result
-      # uses: actions/download-artifact@v2
-      # with:
-      # name: result
-
-      # - name: Store result in environment variable
-      # run: |
-      # echo "comment=$(<result)" >> $GITHUB_ENV
-
-      - name: Add comment
-        uses: actions/github-script@v2
-        with:
-          github-token: ${{secrets.GITHUB_TOKEN}}
-          script: |
-            github.issues.createComment({
-              issue_number: ${{ github.event.number }},
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: "test"
-            })
+      run: tox -qq -e public-symbols-check
