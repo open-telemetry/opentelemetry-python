@@ -35,4 +35,4 @@ jobs:
         run: pip install -U tox-factor
 
       - name: Public API Check
-        run: tox -qq -e public-symbols-check
+        run: tox -q -e public-symbols-check
