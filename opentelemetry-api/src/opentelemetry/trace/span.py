@@ -570,7 +570,3 @@ def format_span_id(span_id: int) -> str:
         The span ID as 16-byte hexadecimal string
     """
     return format(span_id, "016x")
-
-
-def var():
-    pass
