@@ -16,6 +16,7 @@ from difflib import unified_diff
 from os import getcwd
 from pathlib import Path
 from re import match
+from sys import exit
 
 from git import Repo
 from git.db import GitDB
@@ -28,8 +29,9 @@ file_path_symbols = {}
 
 def get_symbols(change_type, diff_lines_getter, prefix):
     for diff_lines in (
-        repo.commit("main").
-        diff(repo.head.commit).iter_change_type(change_type)
+        repo.commit("main")
+        .diff(repo.head.commit)
+        .iter_change_type(change_type)
     ):
 
         b_file_path = diff_lines.b_blob.path
