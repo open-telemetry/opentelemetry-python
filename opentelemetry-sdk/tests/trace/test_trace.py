@@ -257,9 +257,6 @@ class TestSpanCreation(unittest.TestCase):
             tracer1 = tracer_provider.get_tracer("")
         with self.assertLogs(level=ERROR):
             tracer2 = tracer_provider.get_tracer(None)
-        self.assertEqual(
-            tracer1.instrumentation_info, tracer2.instrumentation_info
-        )
 
         self.assertIsInstance(
             tracer1.instrumentation_info, InstrumentationInfo
@@ -277,6 +274,10 @@ class TestSpanCreation(unittest.TestCase):
         self.assertEqual(tracer2.instrumentation_info.version, "")
         self.assertEqual(tracer2.instrumentation_info.name, "")
 
+        self.assertEqual(
+            tracer1.instrumentation_info, tracer2.instrumentation_info
+        )
+        
     def test_span_processor_for_source(self):
         tracer_provider = trace.TracerProvider()
         tracer1 = tracer_provider.get_tracer("instr1")
