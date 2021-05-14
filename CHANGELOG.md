@@ -36,6 +36,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1809])(https://github.com/open-telemetry/opentelemetry-python/pull/1809)
 - Fixed sequence values in OTLP exporter not translating
   ([#1818](https://github.com/open-telemetry/opentelemetry-python/pull/1818))
+- Changed AttributeValue sequences to warn mypy users on adding None values to array
+  (TBD)
 
 ### Removed
 - Moved `opentelemetry-instrumentation` to contrib repository.
