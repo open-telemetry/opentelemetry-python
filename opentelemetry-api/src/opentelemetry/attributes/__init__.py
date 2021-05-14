@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# type: ignore
 
 import logging
 from types import MappingProxyType
@@ -77,7 +78,7 @@ def is_valid_attribute_value(value: types.AttributeValue) -> bool:
     return True
 
 
-def filter_attributes(attributes: types.Attributes):
+def filter_attributes(attributes: types.Attributes) -> None:
     """Applies attribute validation rules and drops (key, value) pairs
     that doesn't adhere to attributes specification.
 
@@ -103,5 +104,7 @@ def filter_attributes(attributes: types.Attributes):
                 attributes.pop(attr_key)
 
 
-def create_immutable_attributes(attributes):
+def create_immutable_attributes(
+    attributes: types.Attributes,
+) -> types.Attributes:
     return MappingProxyType(attributes.copy() if attributes else {})
