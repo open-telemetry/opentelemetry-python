@@ -13,11 +13,11 @@
 # limitations under the License.
 from typing import Optional
 
-from opentelemetry.context import get_value, set_value
+from opentelemetry.context import create_key, get_value, set_value
 from opentelemetry.context.context import Context
 from opentelemetry.trace.span import INVALID_SPAN, Span
 
-SPAN_KEY = "current-span"
+SPAN_KEY = create_key("current-span")
 
 
 def set_span_in_context(
