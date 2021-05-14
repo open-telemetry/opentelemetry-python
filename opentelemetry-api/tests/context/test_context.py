@@ -18,8 +18,10 @@ from opentelemetry import context
 from opentelemetry.context.context import Context
 
 
-def do_work() -> None:
-    context.attach(context.set_value("say", "bar"))
+def do_work() -> str:
+    key = context.create_key("say")
+    context.attach(context.set_value(key, "bar"))
+    return key
 
 
 class TestContext(unittest.TestCase):
@@ -36,19 +38,19 @@ class TestContext(unittest.TestCase):
         self.assertEqual(context.get_value(key2, context=second), "bar")
 
     def test_context(self):
-        key = context.create_key("say")
-        self.assertIsNone(context.get_value(key))
+        key1 = context.create_key("say")
+        self.assertIsNone(context.get_value(key1))
         empty = context.get_current()
-        second = context.set_value(key, "foo")
-        self.assertEqual(context.get_value(key, context=second), "foo")
+        second = context.set_value(key1, "foo")
+        self.assertEqual(context.get_value(key1, context=second), "foo")
 
-        do_work()
-        self.assertEqual(context.get_value(key), "bar")
+        key2 = do_work()
+        self.assertEqual(context.get_value(key2), "bar")
         third = context.get_current()
 
-        self.assertIsNone(context.get_value(key, context=empty))
-        self.assertEqual(context.get_value(key, context=second), "foo")
-        self.assertEqual(context.get_value(key, context=third), "bar")
+        self.assertIsNone(context.get_value(key1, context=empty))
+        self.assertEqual(context.get_value(key1, context=second), "foo")
+        self.assertEqual(context.get_value(key2, context=third), "bar")
 
     def test_set_value(self):
         first = context.set_value("a", "yyy")

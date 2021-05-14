@@ -28,7 +28,6 @@ from opentelemetry.propagators.textmap import DefaultGetter
 from opentelemetry.trace.propagation import SPAN_KEY
 
 
-
 def get_child_parent_new_carrier(old_carrier, propagator):
 
     ctx = propagator.extract(old_carrier)
