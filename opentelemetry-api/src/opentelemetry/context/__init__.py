@@ -72,11 +72,11 @@ def _load_runtime_context(func: _F) -> _F:
 def create_key(keyname: str) -> str:
     """To allow cross-cutting concern to control access to their local state,
     the RuntimeContext API provides a function which takes a keyname as input,
-    and returns a unique key string.
+    and returns a unique key.
     Args:
-        keyname: The key name for debugging purposes and is not unique.
+        keyname: The key name is for debugging purposes and is not unique.
     Returns:
-        A new unique string representing the newly created key.
+        A unique string representing the newly created key.
     """
     return str(uuid.uuid4())
 
