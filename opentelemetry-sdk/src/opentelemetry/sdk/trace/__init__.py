@@ -39,6 +39,11 @@ from typing import (
 
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
+from opentelemetry.attributes import (
+    create_immutable_attributes,
+    filter_attributes,
+    is_valid_attribute_value,
+)
 from opentelemetry.sdk import util
 from opentelemetry.sdk.environment_variables import (
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
@@ -48,13 +53,7 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
-from opentelemetry.sdk.util import (
-    BoundedDict,
-    BoundedList,
-    _create_immutable_attributes,
-    _filter_attributes,
-    _is_valid_attribute_value,
-)
+from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
 from opentelemetry.trace.propagation import SPAN_KEY
@@ -562,7 +561,7 @@ class Span(trace_api.Span, ReadableSpan):
         self._span_processor = span_processor
         self._lock = threading.Lock()
 
-        _filter_attributes(attributes)
+        filter_attributes(attributes)
         if not attributes:
             self._attributes = self._new_attributes()
         else:
@@ -573,9 +572,9 @@ class Span(trace_api.Span, ReadableSpan):
         self._events = self._new_events()
         if events:
             for event in events:
-                _filter_attributes(event.attributes)
+                filter_attributes(event.attributes)
                 # pylint: disable=protected-access
-                event._attributes = _create_immutable_attributes(
+                event._attributes = create_immutable_attributes(
                     event.attributes
                 )
                 self._events.append(event)
@@ -614,7 +613,7 @@ class Span(trace_api.Span, ReadableSpan):
                 return
 
             for key, value in attributes.items():
-                if not _is_valid_attribute_value(value):
+                if not is_valid_attribute_value(value):
                     continue
 
                 if not key:
@@ -648,8 +647,8 @@ class Span(trace_api.Span, ReadableSpan):
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
     ) -> None:
-        _filter_attributes(attributes)
-        attributes = _create_immutable_attributes(attributes)
+        filter_attributes(attributes)
+        attributes = create_immutable_attributes(attributes)
         self._add_event(
             Event(
                 name=name,

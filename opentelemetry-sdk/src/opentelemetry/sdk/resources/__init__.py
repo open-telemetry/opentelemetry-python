@@ -64,11 +64,11 @@ from json import dumps
 
 import pkg_resources
 
+from opentelemetry.attributes import filter_attributes
 from opentelemetry.sdk.environment_variables import (
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
 )
-from opentelemetry.sdk.util import _filter_attributes
 from opentelemetry.semconv.resource import ResourceAttributes
 
 LabelValue = typing.Union[str, bool, int, float]
@@ -142,7 +142,7 @@ class Resource:
     """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
 
     def __init__(self, attributes: Attributes):
-        _filter_attributes(attributes)
+        filter_attributes(attributes)
         self._attributes = attributes.copy()
 
     @staticmethod
