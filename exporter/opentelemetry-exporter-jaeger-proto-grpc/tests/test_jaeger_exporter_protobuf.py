@@ -32,6 +32,7 @@ from opentelemetry.sdk import trace
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_CERTIFICATE,
     OTEL_EXPORTER_JAEGER_ENDPOINT,
+    OTEL_EXPORTER_JAEGER_TIMEOUT,
     OTEL_RESOURCE_ATTRIBUTES,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
@@ -71,6 +72,7 @@ class TestJaegerExporter(unittest.TestCase):
                 OTEL_EXPORTER_JAEGER_CERTIFICATE: os.path.dirname(__file__)
                 + "/certs/cred.cert",
                 OTEL_RESOURCE_ATTRIBUTES: "service.name=my-opentelemetry-jaeger",
+                OTEL_EXPORTER_JAEGER_TIMEOUT: "5"
             },
         )
 
@@ -81,6 +83,7 @@ class TestJaegerExporter(unittest.TestCase):
         self.assertEqual(exporter.service_name, service)
         self.assertIsNotNone(exporter._collector_grpc_client)
         self.assertEqual(exporter.collector_endpoint, collector_endpoint)
+        self.assertEqual(exporter._timeout, 5)
         self.assertIsNotNone(exporter.credentials)
         env_patch.stop()
 

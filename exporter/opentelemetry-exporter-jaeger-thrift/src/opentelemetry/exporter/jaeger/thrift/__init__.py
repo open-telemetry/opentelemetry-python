@@ -67,6 +67,7 @@ You can configure the exporter with the following environment variables:
 - :envvar:`OTEL_EXPORTER_JAEGER_AGENT_PORT`
 - :envvar:`OTEL_EXPORTER_JAEGER_AGENT_HOST`
 - :envvar:`OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES`
+- :envvar:`OTEL_EXPORTER_JAEGER_TIMEOUT`
 
 API
 ---
@@ -95,12 +96,14 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_ENDPOINT,
     OTEL_EXPORTER_JAEGER_PASSWORD,
     OTEL_EXPORTER_JAEGER_USER,
+    OTEL_EXPORTER_JAEGER_TIMEOUT,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
 DEFAULT_AGENT_HOST_NAME = "localhost"
 DEFAULT_AGENT_PORT = 6831
+DEFAULT_EXPORT_TIMEOUT = 10
 
 logger = logging.getLogger(__name__)
 
@@ -119,6 +122,7 @@ class JaegerExporter(SpanExporter):
             required.
         max_tag_value_length: Max length string attribute values can have. Set to None to disable.
         udp_split_oversized_batches: Re-emit oversized batches in smaller chunks.
+        timeout: Maximum time the Jaeger exporter should wait for each batch export.
     """
 
     def __init__(
@@ -130,50 +134,33 @@ class JaegerExporter(SpanExporter):
         password: Optional[str] = None,
         max_tag_value_length: Optional[int] = None,
         udp_split_oversized_batches: bool = None,
+        timeout: Optional[int] = None,
     ):
         self._max_tag_value_length = max_tag_value_length
-        self.agent_host_name = _parameter_setter(
-            param=agent_host_name,
-            env_variable=environ.get(OTEL_EXPORTER_JAEGER_AGENT_HOST),
-            default=DEFAULT_AGENT_HOST_NAME,
+        self.agent_host_name = agent_host_name or environ.get(
+            OTEL_EXPORTER_JAEGER_AGENT_HOST, DEFAULT_AGENT_HOST_NAME
         )
 
-        environ_agent_port = environ.get(OTEL_EXPORTER_JAEGER_AGENT_PORT)
-        environ_agent_port = (
-            int(environ_agent_port) if environ_agent_port is not None else None
+        self.agent_port = agent_port or int(
+            environ.get(OTEL_EXPORTER_JAEGER_AGENT_PORT, DEFAULT_AGENT_PORT)
         )
 
-        self.agent_port = _parameter_setter(
-            param=agent_port,
-            env_variable=environ_agent_port,
-            default=DEFAULT_AGENT_PORT,
-        )
-        self.udp_split_oversized_batches = _parameter_setter(
-            param=udp_split_oversized_batches,
-            env_variable=environ.get(
-                OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES
-            ),
-            default=False,
+        self.udp_split_oversized_batches = (
+            udp_split_oversized_batches
+            or environ.get(OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES)
         )
         self._agent_client = AgentClientUDP(
             host_name=self.agent_host_name,
             port=self.agent_port,
             split_oversized_batches=self.udp_split_oversized_batches,
         )
-        self.collector_endpoint = _parameter_setter(
-            param=collector_endpoint,
-            env_variable=environ.get(OTEL_EXPORTER_JAEGER_ENDPOINT),
-            default=None,
+        self.collector_endpoint = collector_endpoint or environ.get(
+            OTEL_EXPORTER_JAEGER_ENDPOINT
         )
-        self.username = _parameter_setter(
-            param=username,
-            env_variable=environ.get(OTEL_EXPORTER_JAEGER_USER),
-            default=None,
-        )
-        self.password = _parameter_setter(
-            param=password,
-            env_variable=environ.get(OTEL_EXPORTER_JAEGER_PASSWORD),
-            default=None,
+        self.username = username or environ.get(OTEL_EXPORTER_JAEGER_USER)
+        self.password = password or environ.get(OTEL_EXPORTER_JAEGER_PASSWORD)
+        self._timeout = timeout or int(
+            environ.get(OTEL_EXPORTER_JAEGER_TIMEOUT, DEFAULT_EXPORT_TIMEOUT)
         )
         self._collector = None
         tracer_provider = trace.get_tracer_provider()
@@ -195,8 +182,10 @@ class JaegerExporter(SpanExporter):
         if self.username is not None and self.password is not None:
             auth = (self.username, self.password)
 
+        # Thrift HTTP Client expects timeout in millis
+        timeout_in_millis = self._timeout * 1000.0
         self._collector = Collector(
-            thrift_url=self.collector_endpoint, auth=auth
+            thrift_url=self.collector_endpoint, auth=auth, timeout_in_millis=timeout_in_millis
         )
         return self._collector
 
@@ -226,19 +215,3 @@ class JaegerExporter(SpanExporter):
 
     def shutdown(self):
         pass
-
-
-def _parameter_setter(param, env_variable, default):
-    """Returns value according to the provided data.
-
-    Args:
-        param: Constructor parameter value
-        env_variable: Environment variable related to the parameter
-        default: Constructor parameter default value
-    """
-    if param is None:
-        res = env_variable or default
-    else:
-        res = param
-
-    return res

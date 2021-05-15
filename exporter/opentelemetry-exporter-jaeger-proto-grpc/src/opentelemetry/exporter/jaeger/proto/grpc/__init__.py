@@ -56,6 +56,7 @@ You can configure the exporter with the following environment variables:
 
 - :envvar:`OTEL_EXPORTER_JAEGER_ENDPOINT`
 - :envvar:`OTEL_EXPORTER_JAEGER_CERTIFICATE`
+- :envvar:`OTEL_EXPORTER_JAEGER_TIMEOUT`
 
 API
 ---
@@ -68,7 +69,7 @@ import logging
 from os import environ
 from typing import Optional
 
-from grpc import ChannelCredentials, insecure_channel, secure_channel
+from grpc import ChannelCredentials, RpcError, insecure_channel, secure_channel
 
 from opentelemetry import trace
 from opentelemetry.exporter.jaeger.proto.grpc import util
@@ -85,11 +86,13 @@ from opentelemetry.exporter.jaeger.proto.grpc.translate import (
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_ENDPOINT,
+    OTEL_EXPORTER_JAEGER_TIMEOUT,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 
 DEFAULT_GRPC_COLLECTOR_ENDPOINT = "localhost:14250"
+DEFAULT_EXPORT_TIMEOUT = 10
 
 logger = logging.getLogger(__name__)
 
@@ -103,6 +106,7 @@ class JaegerExporter(SpanExporter):
         insecure: True if collector has no encryption or authentication
         credentials: Credentials for server authentication.
         max_tag_value_length: Max length string attribute values can have. Set to None to disable.
+        timeout: Maximum time the Jaeger exporter should wait for each batch export.
     """
 
     def __init__(
@@ -111,13 +115,15 @@ class JaegerExporter(SpanExporter):
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
         max_tag_value_length: Optional[int] = None,
+        timeout: Optional[int] = None,
     ):
         self._max_tag_value_length = max_tag_value_length
 
-        self.collector_endpoint = _parameter_setter(
-            param=collector_endpoint,
-            env_variable=environ.get(OTEL_EXPORTER_JAEGER_ENDPOINT),
-            default=None,
+        self.collector_endpoint = collector_endpoint or environ.get(
+            OTEL_EXPORTER_JAEGER_ENDPOINT, DEFAULT_GRPC_COLLECTOR_ENDPOINT
+        )
+        self._timeout = timeout or int(
+            environ.get(OTEL_EXPORTER_JAEGER_TIMEOUT, DEFAULT_EXPORT_TIMEOUT)
         )
         self._grpc_client = None
         self.insecure = insecure
@@ -131,16 +137,15 @@ class JaegerExporter(SpanExporter):
 
     @property
     def _collector_grpc_client(self) -> Optional[CollectorServiceStub]:
-        endpoint = self.collector_endpoint or DEFAULT_GRPC_COLLECTOR_ENDPOINT
 
         if self._grpc_client is None:
             if self.insecure:
                 self._grpc_client = CollectorServiceStub(
-                    insecure_channel(endpoint)
+                    insecure_channel(self.collector_endpoint)
                 )
             else:
                 self._grpc_client = CollectorServiceStub(
-                    secure_channel(endpoint, self.credentials)
+                    secure_channel(self.collector_endpoint, self.credentials)
                 )
         return self._grpc_client
 
@@ -161,25 +166,16 @@ class JaegerExporter(SpanExporter):
         jaeger_spans = translator._translate(pb_translator)
         batch = model_pb2.Batch(spans=jaeger_spans)
         request = PostSpansRequest(batch=batch)
-        self._collector_grpc_client.PostSpans(request)
-
-        return SpanExportResult.SUCCESS
+        try:
+            self._collector_grpc_client.PostSpans(
+                request, timeout=self._timeout
+            )
+            return SpanExportResult.SUCCESS
+        except RpcError as error:
+            logger.warning(
+                "Failed to export batch. Status code: %s", error.code()
+            )
+            return SpanExportResult.FAILURE
 
     def shutdown(self):
         pass
-
-
-def _parameter_setter(param, env_variable, default):
-    """Returns value according to the provided data.
-
-    Args:
-        param: Constructor parameter value
-        env_variable: Environment variable related to the parameter
-        default: Constructor parameter default value
-    """
-    if param is None:
-        res = env_variable or default
-    else:
-        res = param
-
-    return res

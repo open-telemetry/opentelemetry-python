@@ -101,14 +101,18 @@ class Collector:
     Args:
         thrift_url: URL of the Jaeger HTTP Thrift.
         auth: Auth tuple that contains username and password for Basic Auth.
+        timeout_in_millis: timeout for THttpClient.
     """
 
-    def __init__(self, thrift_url="", auth=None):
+    def __init__(self, thrift_url="", auth=None, timeout_in_millis=None):
         self.thrift_url = thrift_url
         self.auth = auth
         self.http_transport = THttpClient.THttpClient(
             uri_or_host=self.thrift_url
         )
+        if timeout_in_millis is not None:
+            self.http_transport.setTimeout(timeout_in_millis)
+
         self.protocol = TBinaryProtocol.TBinaryProtocol(self.http_transport)
 
         # set basic auth header
