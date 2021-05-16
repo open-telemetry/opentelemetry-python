@@ -61,8 +61,9 @@ class TestBoundedList(unittest.TestCase):
         self.assertEqual(len(tuple(blist)), list_len)
 
         # sequence too big
-        with self.assertRaises(ValueError):
-            BoundedList.from_seq(list_len / 2, self.base)
+        blist = BoundedList.from_seq(list_len // 2, base_copy)
+        self.assertEqual(len(blist), list_len // 2)
+        self.assertEqual(blist.dropped, list_len - (list_len // 2))
 
     def test_append_no_drop(self):
         """Append max capacity elements to the list without dropping elements."""
@@ -167,8 +168,10 @@ class TestBoundedDict(unittest.TestCase):
         self.assertEqual(len(tuple(bdict)), dic_len)
 
         # map too big
-        with self.assertRaises(ValueError):
-            BoundedDict.from_map(dic_len / 2, self.base)
+        half_len = dic_len // 2
+        bdict = BoundedDict.from_map(half_len, self.base)
+        self.assertEqual(len(tuple(bdict)), half_len)
+        self.assertEqual(bdict.dropped, dic_len - half_len)
 
     def test_bounded_dict(self):
         # create empty dict

@@ -21,8 +21,6 @@ from logging import ERROR, WARNING
 from typing import Optional
 from unittest import mock
 
-import pytest
-
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
 from opentelemetry.sdk import resources, trace
@@ -529,6 +527,26 @@ class TestSpanCreation(unittest.TestCase):
         with self.assertRaises(TypeError):
             # pylint: disable=abstract-class-instantiated
             trace.Span("name", mock.Mock(spec=trace_api.SpanContext))
+
+    def test_surplus_span_links(self):
+        # pylint: disable=protected-access
+        max_links = trace._SPAN_LINK_COUNT_LIMIT
+        links = [
+            trace_api.Link(trace_api.SpanContext(0x1, idx, is_remote=False))
+            for idx in range(0, 16 + max_links)
+        ]
+        tracer = new_tracer()
+        with tracer.start_as_current_span("span", links=links) as root:
+            self.assertEqual(len(root.links), max_links)
+
+    def test_surplus_span_attributes(self):
+        max_attrs = trace.SPAN_ATTRIBUTE_COUNT_LIMIT
+        attributes = {str(idx): idx for idx in range(0, 16 + max_attrs)}
+        tracer = new_tracer()
+        with tracer.start_as_current_span(
+            "span", attributes=attributes
+        ) as root:
+            self.assertEqual(len(root.attributes), max_attrs)
 
 
 class TestSpan(unittest.TestCase):
@@ -1295,11 +1313,15 @@ class TestSpanLimits(unittest.TestCase):
             )
             for _ in range(100)
         ]
-        with pytest.raises(ValueError):
-            with tracer.start_as_current_span("root", links=some_links):
-                pass
 
-        with tracer.start_as_current_span("root") as root:
+        some_attrs = {
+            "init_attribute_{}".format(idx): idx for idx in range(100)
+        }
+        with tracer.start_as_current_span(
+            "root", links=some_links, attributes=some_attrs
+        ) as root:
+            self.assertEqual(len(root.links), 30)
+            self.assertEqual(len(root.attributes), 10)
             for idx in range(100):
                 root.set_attribute("my_attribute_{}".format(idx), 0)
                 root.add_event("my_event_{}".format(idx))
