@@ -145,6 +145,10 @@ class JaegerExporter(SpanExporter):
             environ.get(OTEL_EXPORTER_JAEGER_AGENT_PORT, DEFAULT_AGENT_PORT)
         )
 
+        self._timeout = timeout or int(
+            environ.get(OTEL_EXPORTER_JAEGER_TIMEOUT, DEFAULT_EXPORT_TIMEOUT)
+        )
+
         self.udp_split_oversized_batches = (
             udp_split_oversized_batches
             or environ.get(OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES)
@@ -153,15 +157,13 @@ class JaegerExporter(SpanExporter):
             host_name=self.agent_host_name,
             port=self.agent_port,
             split_oversized_batches=self.udp_split_oversized_batches,
+            timeout=self._timeout,
         )
         self.collector_endpoint = collector_endpoint or environ.get(
             OTEL_EXPORTER_JAEGER_ENDPOINT
         )
         self.username = username or environ.get(OTEL_EXPORTER_JAEGER_USER)
         self.password = password or environ.get(OTEL_EXPORTER_JAEGER_PASSWORD)
-        self._timeout = timeout or int(
-            environ.get(OTEL_EXPORTER_JAEGER_TIMEOUT, DEFAULT_EXPORT_TIMEOUT)
-        )
         self._collector = None
         tracer_provider = trace.get_tracer_provider()
         self.service_name = (
@@ -185,7 +187,9 @@ class JaegerExporter(SpanExporter):
         # Thrift HTTP Client expects timeout in millis
         timeout_in_millis = self._timeout * 1000.0
         self._collector = Collector(
-            thrift_url=self.collector_endpoint, auth=auth, timeout_in_millis=timeout_in_millis
+            thrift_url=self.collector_endpoint,
+            auth=auth,
+            timeout_in_millis=timeout_in_millis,
         )
         return self._collector
 

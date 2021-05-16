@@ -72,7 +72,7 @@ class TestJaegerExporter(unittest.TestCase):
                 OTEL_EXPORTER_JAEGER_CERTIFICATE: os.path.dirname(__file__)
                 + "/certs/cred.cert",
                 OTEL_RESOURCE_ATTRIBUTES: "service.name=my-opentelemetry-jaeger",
-                OTEL_EXPORTER_JAEGER_TIMEOUT: "5"
+                OTEL_EXPORTER_JAEGER_TIMEOUT: "5",
             },
         )
 

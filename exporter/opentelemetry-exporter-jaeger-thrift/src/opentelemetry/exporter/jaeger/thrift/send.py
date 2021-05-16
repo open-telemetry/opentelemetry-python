@@ -47,6 +47,7 @@ class AgentClientUDP:
         max_packet_size=UDP_PACKET_MAX_LENGTH,
         client=agent.Client,
         split_oversized_batches=False,
+        timeout=None,
     ):
         self.address = (host_name, port)
         self.max_packet_size = max_packet_size
@@ -55,6 +56,7 @@ class AgentClientUDP:
             iprot=TCompactProtocol.TCompactProtocol(trans=self.buffer)
         )
         self.split_oversized_batches = split_oversized_batches
+        self.timeout = timeout
 
     def emit(self, batch: jaeger.Batch):
         """
@@ -92,6 +94,7 @@ class AgentClientUDP:
             return
 
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
+            udp_socket.settimeout(self.timeout)
             udp_socket.sendto(buff, self.address)
 
 
