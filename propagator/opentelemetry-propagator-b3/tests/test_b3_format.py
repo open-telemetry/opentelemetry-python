@@ -19,7 +19,7 @@ from unittest.mock import Mock
 import opentelemetry.sdk.trace as trace
 import opentelemetry.sdk.trace.id_generator as id_generator
 import opentelemetry.trace as trace_api
-from opentelemetry.context import Context, create_key, get_current
+from opentelemetry.context import Context, get_current
 from opentelemetry.propagators.b3 import (  # pylint: disable=no-name-in-module,import-error
     B3MultiFormat,
     B3SingleFormat,
