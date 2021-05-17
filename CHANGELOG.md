@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.2.0-0.21b0...HEAD)
+- Added support for CreateKey functionality.
+  ([#1853](https://github.com/open-telemetry/opentelemetry-python/pull/1853))
 
 ### Changed
 - Updated get_tracer to return an empty string when passed an invalid name
@@ -21,8 +23,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1823](https://github.com/open-telemetry/opentelemetry-python/pull/1823))
 - Added support for OTEL_SERVICE_NAME.
   ([#1829](https://github.com/open-telemetry/opentelemetry-python/pull/1829))
-- Added support for CreateKey functionality.
-  (TDB)
 
 ### Changed
 - Fixed OTLP gRPC exporter silently failing if scheme is not specified in endpoint.
