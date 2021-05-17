@@ -21,7 +21,13 @@ from enum import Enum
 from os import environ, linesep
 from typing import Optional
 
-from opentelemetry.context import Context, attach, detach, set_value
+from opentelemetry.context import (
+    Context,
+    attach,
+    create_key,
+    detach,
+    set_value,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_EXPORT_TIMEOUT,
     OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
@@ -32,6 +38,7 @@ from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
 from opentelemetry.util._time import _time_ns
 
 logger = logging.getLogger(__name__)
+EXPORT_KEY = create_key("suppress_instrumentation")
 
 
 class SpanExportResult(Enum):
@@ -86,7 +93,7 @@ class SimpleSpanProcessor(SpanProcessor):
     def on_end(self, span: ReadableSpan) -> None:
         if not span.context.trace_flags.sampled:
             return
-        token = attach(set_value("suppress_instrumentation", True))
+        token = attach(set_value(EXPORT_KEY, True))
         try:
             self.span_exporter.export((span,))
         # pylint: disable=broad-except
@@ -326,7 +333,7 @@ class BatchSpanProcessor(SpanProcessor):
         while idx < self.max_export_batch_size and self.queue:
             self.spans_list[idx] = self.queue.pop()
             idx += 1
-        token = attach(set_value("suppress_instrumentation", True))
+        token = attach(set_value(EXPORT_KEY, True))
         try:
             # Ignore type b/c the Optional[None]+slicing is too "clever"
             # for mypy

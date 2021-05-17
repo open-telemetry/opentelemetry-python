@@ -74,11 +74,11 @@ def create_key(keyname: str) -> str:
     the RuntimeContext API provides a function which takes a keyname as input,
     and returns a unique key.
     Args:
-        keyname: The key name is for debugging purposes and is not unique.
+        keyname: The key name is for debugging purposes and is not required to be unique.
     Returns:
         A unique string representing the newly created key.
     """
-    return keyname + '-' + str(uuid.uuid4())
+    return keyname + "-" + str(uuid.uuid4())
 
 
 def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
