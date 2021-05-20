@@ -95,8 +95,8 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES,
     OTEL_EXPORTER_JAEGER_ENDPOINT,
     OTEL_EXPORTER_JAEGER_PASSWORD,
-    OTEL_EXPORTER_JAEGER_USER,
     OTEL_EXPORTER_JAEGER_TIMEOUT,
+    OTEL_EXPORTER_JAEGER_USER,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
