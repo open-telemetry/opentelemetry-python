@@ -235,7 +235,7 @@ class OTLPExporterMixin(
                 key = key.strip().lower()
                 value = value.strip()
                 temp_headers.append(tuple([key, value]))
-            
+
             self._headers = tuple(temp_headers)
 
         self._timeout = timeout or int(
