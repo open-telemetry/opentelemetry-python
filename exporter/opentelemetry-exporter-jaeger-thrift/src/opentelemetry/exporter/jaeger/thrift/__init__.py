@@ -149,9 +149,8 @@ class JaegerExporter(SpanExporter):
             environ.get(OTEL_EXPORTER_JAEGER_TIMEOUT, DEFAULT_EXPORT_TIMEOUT)
         )
 
-        self.udp_split_oversized_batches = (
-            udp_split_oversized_batches
-            or bool(environ.get(OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES))
+        self.udp_split_oversized_batches = udp_split_oversized_batches or bool(
+            environ.get(OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES)
         )
         self._agent_client = AgentClientUDP(
             host_name=self.agent_host_name,
