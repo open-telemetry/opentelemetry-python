@@ -257,17 +257,25 @@ class TestSpanCreation(unittest.TestCase):
             tracer1 = tracer_provider.get_tracer("")
         with self.assertLogs(level=ERROR):
             tracer2 = tracer_provider.get_tracer(None)
-        self.assertEqual(
-            tracer1.instrumentation_info, tracer2.instrumentation_info
-        )
+
         self.assertIsInstance(
             tracer1.instrumentation_info, InstrumentationInfo
         )
         span1 = tracer1.start_span("foo")
         self.assertTrue(span1.is_recording())
         self.assertEqual(tracer1.instrumentation_info.version, "")
+        self.assertEqual(tracer1.instrumentation_info.name, "")
+
+        self.assertIsInstance(
+            tracer2.instrumentation_info, InstrumentationInfo
+        )
+        span2 = tracer2.start_span("bar")
+        self.assertTrue(span2.is_recording())
+        self.assertEqual(tracer2.instrumentation_info.version, "")
+        self.assertEqual(tracer2.instrumentation_info.name, "")
+
         self.assertEqual(
-            tracer1.instrumentation_info.name, "ERROR:MISSING MODULE NAME"
+            tracer1.instrumentation_info, tracer2.instrumentation_info
         )
 
     def test_span_processor_for_source(self):

@@ -935,7 +935,7 @@ class TracerProvider(trace_api.TracerProvider):
         instrumenting_library_version: str = "",
     ) -> "trace_api.Tracer":
         if not instrumenting_module_name:  # Reject empty strings too.
-            instrumenting_module_name = "ERROR:MISSING MODULE NAME"
+            instrumenting_module_name = ""
             logger.error("get_tracer called with missing module name.")
         return Tracer(
             self.sampler,
