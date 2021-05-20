@@ -157,7 +157,6 @@ class JaegerExporter(SpanExporter):
             host_name=self.agent_host_name,
             port=self.agent_port,
             split_oversized_batches=self.udp_split_oversized_batches,
-            timeout=self._timeout,
         )
         self.collector_endpoint = collector_endpoint or environ.get(
             OTEL_EXPORTER_JAEGER_ENDPOINT
@@ -187,7 +186,7 @@ class JaegerExporter(SpanExporter):
         # Thrift HTTP Client expects timeout in millis
         timeout_in_millis = self._timeout * 1000.0
         self._collector = Collector(
-            thrift_url=self.collector_endpoint,
+            collector_endpoint=self.collector_endpoint,
             auth=auth,
             timeout_in_millis=timeout_in_millis,
         )
