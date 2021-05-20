@@ -23,6 +23,8 @@ from thrift.transport import THttpClient, TTransport
 from opentelemetry.exporter.jaeger.thrift.gen.agent import Agent as agent
 from opentelemetry.exporter.jaeger.thrift.gen.jaeger import Collector as jaeger
 
+from opentelemetry.sdk.trace.export import SpanExportResult
+
 UDP_PACKET_MAX_LENGTH = 65000
 
 
@@ -47,7 +49,6 @@ class AgentClientUDP:
         max_packet_size=UDP_PACKET_MAX_LENGTH,
         client=agent.Client,
         split_oversized_batches=False,
-        timeout=None,
     ):
         self.address = (host_name, port)
         self.max_packet_size = max_packet_size
@@ -56,7 +57,6 @@ class AgentClientUDP:
             iprot=TCompactProtocol.TCompactProtocol(trans=self.buffer)
         )
         self.split_oversized_batches = split_oversized_batches
-        self.timeout = timeout
 
     def emit(self, batch: jaeger.Batch):
         """
@@ -94,24 +94,29 @@ class AgentClientUDP:
             return
 
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as udp_socket:
-            udp_socket.settimeout(self.timeout)
             udp_socket.sendto(buff, self.address)
 
 
 class Collector:
-    """Submits collected spans to Thrift HTTP server.
+    """Submits collected spans to Jaeger collector in jaeger.thrift
+    format over binary thrift protocol. This is recommend option in cases where
+    it is not feasible to deploy Jaeger Agent next to the application,
+    for example, when the application code is running as AWS Lambda function.
+    In these scenarios the Jaeger Clients can be configured to submit spans directly
+    to the Collectors over HTTP/HTTPS.
 
     Args:
-        thrift_url: URL of the Jaeger HTTP Thrift.
+        collector_endpoint: Endpoint used to send spans
+            directly to Collector the over HTTP.
         auth: Auth tuple that contains username and password for Basic Auth.
         timeout_in_millis: timeout for THttpClient.
     """
 
-    def __init__(self, thrift_url="", auth=None, timeout_in_millis=None):
-        self.thrift_url = thrift_url
+    def __init__(self, collector_endpoint, auth=None, timeout_in_millis=None):
+        self.collector_endpoint = collector_endpoint
         self.auth = auth
         self.http_transport = THttpClient.THttpClient(
-            uri_or_host=self.thrift_url
+            uri_or_host=self.collector_endpoint
         )
         if timeout_in_millis is not None:
             self.http_transport.setTimeout(timeout_in_millis)
