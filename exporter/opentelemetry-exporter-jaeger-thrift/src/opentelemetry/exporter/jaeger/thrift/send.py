@@ -23,8 +23,6 @@ from thrift.transport import THttpClient, TTransport
 from opentelemetry.exporter.jaeger.thrift.gen.agent import Agent as agent
 from opentelemetry.exporter.jaeger.thrift.gen.jaeger import Collector as jaeger
 
-from opentelemetry.sdk.trace.export import SpanExportResult
-
 UDP_PACKET_MAX_LENGTH = 65000
 
 
