@@ -51,6 +51,13 @@ class TestResources(unittest.TestCase):
         self.assertIsInstance(resource, resources.Resource)
         self.assertEqual(resource.attributes, expected_attributes)
 
+        schema_url = "https://opentelemetry.io/schemas/1.3.0"
+
+        resource = resources.Resource.create(attributes, schema_url)
+        self.assertIsInstance(resource, resources.Resource)
+        self.assertEqual(resource.attributes, expected_attributes)
+        self.assertEqual(resource.schema_url, schema_url)
+
         os.environ[resources.OTEL_RESOURCE_ATTRIBUTES] = "key=value"
         resource = resources.Resource.create(attributes)
         self.assertIsInstance(resource, resources.Resource)
@@ -69,6 +76,16 @@ class TestResources(unittest.TestCase):
                 resources.Resource({resources.SERVICE_NAME: "unknown_service"})
             ),
         )
+        self.assertEqual(resource.schema_url, "")
+
+        resource = resources.Resource.create(None, None)
+        self.assertEqual(
+            resource,
+            resources._DEFAULT_RESOURCE.merge(
+                resources.Resource({resources.SERVICE_NAME: "unknown_service"})
+            ),
+        )
+        self.assertEqual(resource.schema_url, "")
 
         resource = resources.Resource.create({})
         self.assertEqual(
@@ -77,6 +94,16 @@ class TestResources(unittest.TestCase):
                 resources.Resource({resources.SERVICE_NAME: "unknown_service"})
             ),
         )
+        self.assertEqual(resource.schema_url, "")
+
+        resource = resources.Resource.create({}, None)
+        self.assertEqual(
+            resource,
+            resources._DEFAULT_RESOURCE.merge(
+                resources.Resource({resources.SERVICE_NAME: "unknown_service"})
+            ),
+        )
+        self.assertEqual(resource.schema_url, "")
 
     def test_resource_merge(self):
         left = resources.Resource({"service": "ui"})
