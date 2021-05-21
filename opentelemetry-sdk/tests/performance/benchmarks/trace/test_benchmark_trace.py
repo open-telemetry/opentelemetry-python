@@ -23,7 +23,8 @@ tracer = trace.TracerProvider(
             "service.name": "A123456789",
             "service.version": "1.34567890",
             "service.instance.id": "123ab456-a123-12ab-12ab-12340a1abc12",
-        }
+        },
+        "",
     ),
 ).get_tracer("sdk_tracer_provider")
 

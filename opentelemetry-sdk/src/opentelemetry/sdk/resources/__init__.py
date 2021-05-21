@@ -140,11 +140,16 @@ _OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
 class Resource:
     """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
 
-    def __init__(self, attributes: Attributes):
+    def __init__(self, attributes: Attributes, schema_url: str):
         self._attributes = attributes.copy()
+        assert schema_url is not None
+        self._schema_url = schema_url
 
     @staticmethod
-    def create(attributes: typing.Optional[Attributes] = None) -> "Resource":
+    def create(
+        attributes: typing.Optional[Attributes] = None,
+        schema_url: typing.Optional[str] = None,
+    ) -> "Resource":
         """Creates a new `Resource` from attributes.
 
         Args:
@@ -155,9 +160,11 @@ class Resource:
         """
         if not attributes:
             attributes = {}
+        if not schema_url:
+            schema_url = ""
         resource = _DEFAULT_RESOURCE.merge(
             OTELResourceDetector().detect()
-        ).merge(Resource(attributes))
+        ).merge(Resource(attributes, schema_url))
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
             process_executable_name = resource.attributes.get(
@@ -166,7 +173,7 @@ class Resource:
             if process_executable_name:
                 default_service_name += ":" + process_executable_name
             resource = resource.merge(
-                Resource({SERVICE_NAME: default_service_name})
+                Resource({SERVICE_NAME: default_service_name}, schema_url)
             )
         return resource
 
@@ -177,6 +184,10 @@ class Resource:
     @property
     def attributes(self) -> Attributes:
         return self._attributes.copy()
+
+    @property
+    def schema_url(self) -> Attributes:
+        return self._schema_url
 
     def merge(self, other: "Resource") -> "Resource":
         """Merges this resource and an updating resource into a new `Resource`.
@@ -192,7 +203,19 @@ class Resource:
         """
         merged_attributes = self.attributes
         merged_attributes.update(other.attributes)
-        return Resource(merged_attributes)
+
+        if self.schema_url == "":
+            schema_url = other.schema_url
+        elif other.schema_url == "":
+            schema_url = self.schema_url
+        elif self.schema_url == other.schema_url:
+            schema_url = other.schema_url
+        else:
+            raise ValueError(
+                "The Schema URL of the old and updating resources are not empty and are different"
+            )
+
+        return Resource(merged_attributes, schema_url)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Resource):
@@ -203,13 +226,14 @@ class Resource:
         return hash(dumps(self._attributes, sort_keys=True))
 
 
-_EMPTY_RESOURCE = Resource({})
+_EMPTY_RESOURCE = Resource({}, "")
 _DEFAULT_RESOURCE = Resource(
     {
         TELEMETRY_SDK_LANGUAGE: "python",
         TELEMETRY_SDK_NAME: "opentelemetry",
         TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
-    }
+    },
+    "",
 )
 
 
@@ -237,7 +261,7 @@ class OTELResourceDetector(ResourceDetector):
         service_name = os.environ.get(OTEL_SERVICE_NAME)
         if service_name:
             env_resource_map[SERVICE_NAME] = service_name
-        return Resource(env_resource_map)
+        return Resource(env_resource_map, "")
 
 
 def get_aggregated_resources(

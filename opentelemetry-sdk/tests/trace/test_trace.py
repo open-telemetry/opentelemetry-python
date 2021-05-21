@@ -878,7 +878,7 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(end_time, span.end_time)
 
     def test_ended_span(self):
-        """"Events, attributes are not allowed after span is ended"""
+        """ "Events, attributes are not allowed after span is ended"""
 
         root = self.tracer.start_span("root")
 
@@ -1229,9 +1229,9 @@ class TestSpanProcessor(unittest.TestCase):
             is_remote=False,
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
-        parent = trace._Span("parent-name", context, resource=Resource({}))
+        parent = trace._Span("parent-name", context, resource=Resource({}, ""))
         span = trace._Span(
-            "span-name", context, resource=Resource({}), parent=parent
+            "span-name", context, resource=Resource({}, ""), parent=parent
         )
 
         self.assertEqual(
@@ -1268,7 +1268,7 @@ class TestSpanProcessor(unittest.TestCase):
             is_remote=False,
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
-        span = trace._Span("span-name", context, resource=Resource({}))
+        span = trace._Span("span-name", context, resource=Resource({}, ""))
         span.set_attribute("key", "value")
         span.add_event("event", {"key2": "value2"}, 123)
         date_str = ns_to_iso_str(123)
