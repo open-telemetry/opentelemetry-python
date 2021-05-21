@@ -404,13 +404,14 @@ class ScopeShim(Scope):
 
         detach(self._token)
 
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        """
+        Override the __exit__ method of `opentracing.scope.Scope` so we can report
+        exceptions correctly in opentelemetry specification format. """
+        self.close()
+
         if self._span_cm is not None:
-            # We don't have error information to pass to `__exit__()` so we
-            # pass `None` in all arguments. If the OpenTelemetry tracer
-            # implementation requires this information, the `__exit__()` method
-            # on `opentracing.Scope` should be overridden and modified to pass
-            # the relevant values to this `close()` method.
-            self._span_cm.__exit__(None, None, None)
+            self._span_cm.__exit__(exc_type, exc_val, exc_tb)
         else:
             self._span.unwrap().end()
 
