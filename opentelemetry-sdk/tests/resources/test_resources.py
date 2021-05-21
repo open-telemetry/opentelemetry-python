@@ -112,6 +112,31 @@ class TestResources(unittest.TestCase):
             left.merge(right),
             resources.Resource({"service": "ui", "host": "service-host"}),
         )
+        schema_urls = (
+            "https://opentelemetry.io/schemas/1.2.0",
+            "https://opentelemetry.io/schemas/1.3.0",
+        )
+
+        left = resources.Resource.create({}, None)
+        right = resources.Resource.create({}, None)
+        self.assertEqual(left.merge(right).schema_url, "")
+
+        left = resources.Resource.create({}, None)
+        right = resources.Resource.create({}, schema_urls[0])
+        self.assertEqual(left.merge(right).schema_url, schema_urls[0])
+
+        left = resources.Resource.create({}, schema_urls[0])
+        right = resources.Resource.create({}, None)
+        self.assertEqual(left.merge(right).schema_url, schema_urls[0])
+
+        left = resources.Resource.create({}, schema_urls[0])
+        right = resources.Resource.create({}, schema_urls[0])
+        self.assertEqual(left.merge(right).schema_url, schema_urls[0])
+
+        left = resources.Resource.create({}, schema_urls[0])
+        right = resources.Resource.create({}, schema_urls[1])
+        with self.assertRaises(ValueError):
+            left.merge(right)
 
     def test_resource_merge_empty_string(self):
         """Verify Resource.merge behavior with the empty string.
