@@ -180,7 +180,7 @@ class CommonEncoderTestCases:
                     is_remote=False,
                     trace_flags=TraceFlags(TraceFlags.SAMPLED),
                 ),
-                resource=trace.Resource({}),
+                resource=trace.Resource({}, ""),
             )
             span.start(start_time=start_time)
             span.set_attribute("string1", "v" * 500)
@@ -379,7 +379,7 @@ class CommonEncoderTestCases:
                         context=other_context, attributes={"key_bool": True}
                     ),
                 ),
-                resource=trace.Resource({}),
+                resource=trace.Resource({}, ""),
             )
             span1.start(start_time=start_times[0])
             span1.set_attribute("key_bool", False)
@@ -393,7 +393,7 @@ class CommonEncoderTestCases:
                 context=parent_span_context,
                 parent=None,
                 resource=trace.Resource(
-                    attributes={"key_resource": "some_resource"}
+                    attributes={"key_resource": "some_resource"}, schema_url=""
                 ),
             )
             span2.start(start_time=start_times[1])
@@ -405,7 +405,7 @@ class CommonEncoderTestCases:
                 context=other_context,
                 parent=None,
                 resource=trace.Resource(
-                    attributes={"key_resource": "some_resource"}
+                    attributes={"key_resource": "some_resource"}, schema_url=""
                 ),
             )
             span3.start(start_time=start_times[2])
@@ -416,7 +416,7 @@ class CommonEncoderTestCases:
                 name="test-span-3",
                 context=other_context,
                 parent=None,
-                resource=trace.Resource({}),
+                resource=trace.Resource({}, ""),
                 instrumentation_info=InstrumentationInfo(
                     name="name", version="version"
                 ),

@@ -44,7 +44,9 @@ class TestZipkinExporter(unittest.TestCase):
     def setUpClass(cls):
         trace.set_tracer_provider(
             TracerProvider(
-                resource=Resource({SERVICE_NAME: TEST_SERVICE_NAME})
+                resource=Resource(
+                    {SERVICE_NAME: TEST_SERVICE_NAME}, schema_url=""
+                )
             )
         )
 
