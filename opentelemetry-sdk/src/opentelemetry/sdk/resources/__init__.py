@@ -154,6 +154,7 @@ class Resource:
 
         Args:
             attributes: Optional zero or more key-value pairs.
+            schema_url: Optional URL pointing to the schema
 
         Returns:
             The newly-created Resource.
@@ -194,6 +195,10 @@ class Resource:
 
         If a key exists on both the old and updating resource, the value of the
         updating resource will override the old resource value.
+
+        The new `schema_url` will take an updated value only if the original
+        `schema_url` is empty. Attempting to merge two resources with
+        different, non-empty values for `schema_url` will result in an error.
 
         Args:
             other: The other resource to be merged.
