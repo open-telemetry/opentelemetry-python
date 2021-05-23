@@ -51,6 +51,9 @@ DEFAULT_TIMEOUT = 10  # in seconds
 
 
 class OTLPSpanExporter(SpanExporter):
+
+    _MAX_RETRY_TIMEOUT = 64
+
     def __init__(
         self,
         endpoint: Optional[str] = None,
@@ -119,11 +122,10 @@ class OTLPSpanExporter(SpanExporter):
             return SpanExportResult.FAILURE
 
         serialized_data = ProtobufEncoder.serialize(spans)
-        max_value = 64
 
-        for delay in expo(max_value=max_value):
+        for delay in expo(max_value=self._MAX_RETRY_TIMEOUT):
 
-            if delay == max_value:
+            if delay == self._MAX_RETRY_TIMEOUT:
                 return SpanExportResult.FAILURE
 
             resp = self._export(serialized_data)
