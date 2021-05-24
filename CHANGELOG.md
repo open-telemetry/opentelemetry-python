@@ -44,6 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1818](https://github.com/open-telemetry/opentelemetry-python/pull/1818))
 - Update transient errors retry timeout and retryable status codes
   ([#1842](https://github.com/open-telemetry/opentelemetry-python/pull/1842))
+- Apply validation of attributes to `Resource`, move attribute related logic to separate package.
+  ([#1834](https://github.com/open-telemetry/opentelemetry-python/pull/1834))
 - Fix start span behavior when excess links and attributes are included
   ([#1856](https://github.com/open-telemetry/opentelemetry-python/pull/1856))
 
