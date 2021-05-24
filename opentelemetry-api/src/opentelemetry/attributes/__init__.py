@@ -25,7 +25,7 @@ _VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
 _logger = logging.getLogger(__name__)
 
 
-def is_valid_attribute_value(value: types.AttributeValue) -> bool:
+def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
     """Checks if attribute value is valid.
 
     An attribute value is valid if it is either:
@@ -78,7 +78,7 @@ def is_valid_attribute_value(value: types.AttributeValue) -> bool:
     return True
 
 
-def filter_attributes(attributes: types.Attributes) -> None:
+def _filter_attributes(attributes: types.Attributes) -> None:
     """Applies attribute validation rules and drops (key, value) pairs
     that doesn't adhere to attributes specification.
 
@@ -91,7 +91,7 @@ def filter_attributes(attributes: types.Attributes) -> None:
                 attributes.pop(attr_key)
                 continue
 
-            if is_valid_attribute_value(attr_value):
+            if _is_valid_attribute_value(attr_value):
                 if isinstance(attr_value, MutableSequence):
                     attributes[attr_key] = tuple(attr_value)
                 if isinstance(attr_value, bytes):
@@ -104,7 +104,7 @@ def filter_attributes(attributes: types.Attributes) -> None:
                 attributes.pop(attr_key)
 
 
-def create_immutable_attributes(
+def _create_immutable_attributes(
     attributes: types.Attributes,
 ) -> types.Attributes:
     return MappingProxyType(attributes.copy() if attributes else {})
