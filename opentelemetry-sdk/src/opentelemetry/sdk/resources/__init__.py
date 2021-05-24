@@ -142,7 +142,6 @@ class Resource:
 
     def __init__(self, attributes: Attributes, schema_url: str):
         self._attributes = attributes.copy()
-        assert schema_url is not None
         self._schema_url = schema_url
 
     @staticmethod
