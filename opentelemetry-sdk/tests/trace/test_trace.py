@@ -671,35 +671,6 @@ class TestSpan(unittest.TestCase):
                 isinstance(root.attributes["valid-byte-type-attribute"], str)
             )
 
-    def test_check_attribute_helper(self):
-        # pylint: disable=protected-access
-        self.assertFalse(trace._is_valid_attribute_value([1, 2, 3.4, "ss", 4]))
-        self.assertFalse(
-            trace._is_valid_attribute_value([dict(), 1, 2, 3.4, 4])
-        )
-        self.assertFalse(
-            trace._is_valid_attribute_value(["sw", "lf", 3.4, "ss"])
-        )
-        self.assertFalse(trace._is_valid_attribute_value([1, 2, 3.4, 5]))
-        self.assertTrue(trace._is_valid_attribute_value([1, 2, 3, 5]))
-        self.assertTrue(trace._is_valid_attribute_value([1.2, 2.3, 3.4, 4.5]))
-        self.assertTrue(trace._is_valid_attribute_value([True, False]))
-        self.assertTrue(trace._is_valid_attribute_value(["ss", "dw", "fw"]))
-        self.assertTrue(trace._is_valid_attribute_value([]))
-        self.assertFalse(trace._is_valid_attribute_value(dict()))
-        self.assertTrue(trace._is_valid_attribute_value(True))
-        self.assertTrue(trace._is_valid_attribute_value("hi"))
-        self.assertTrue(trace._is_valid_attribute_value(3.4))
-        self.assertTrue(trace._is_valid_attribute_value(15))
-        # None in sequences are valid
-        self.assertTrue(trace._is_valid_attribute_value(["A", None, None]))
-        self.assertTrue(
-            trace._is_valid_attribute_value(["A", None, None, "B"])
-        )
-        self.assertTrue(trace._is_valid_attribute_value([None, None]))
-        self.assertFalse(trace._is_valid_attribute_value(["A", None, 1]))
-        self.assertFalse(trace._is_valid_attribute_value([None, "A", None, 1]))
-
     def test_sampling_attributes(self):
         sampling_attributes = {
             "sampler-attr": "sample-val",
