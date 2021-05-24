@@ -46,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1818](https://github.com/open-telemetry/opentelemetry-python/pull/1818))
 - Update transient errors retry timeout and retryable status codes
   ([#1842](https://github.com/open-telemetry/opentelemetry-python/pull/1842))
+- Fix start span behavior when excess links and attributes are included
+  ([#1856](https://github.com/open-telemetry/opentelemetry-python/pull/1856))
 
 ### Removed
 - Moved `opentelemetry-instrumentation` to contrib repository.
