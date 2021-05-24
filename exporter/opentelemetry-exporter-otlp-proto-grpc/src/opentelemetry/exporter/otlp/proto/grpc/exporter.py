@@ -231,11 +231,11 @@ class OTLPExporterMixin(
         if isinstance(self._headers, str):
             temp_headers = []
             for header_pair in self._headers.split(","):
-                for key, value in header_pair.split("=", maxsplit=1):
-                    key = key.strip().lower()
-                    value = value.strip()
-                    temp_headers.append(tuple(key, value))
-            
+                key, value = header_pair.split("=", maxsplit=1)
+                key = key.strip().lower()
+                value = value.strip()
+                temp_headers.append(tuple([key, value]))
+
             self._headers = tuple(temp_headers)
 
         self._timeout = timeout or int(
@@ -268,14 +268,11 @@ class OTLPExporterMixin(
         pass
 
     def _export(self, data: TypingSequence[SDKDataT]) -> ExportResultT:
+
+        max_value = 64
         # expo returns a generator that yields delay values which grow
         # exponentially. Once delay is greater than max_value, the yielded
         # value will remain constant.
-        # max_value is set to 900 (900 seconds is 15 minutes) to use the same
-        # value as used in the Go implementation.
-
-        max_value = 900
-
         for delay in expo(max_value=max_value):
 
             if delay == max_value:
@@ -295,8 +292,6 @@ class OTLPExporterMixin(
                 if error.code() in [
                     StatusCode.CANCELLED,
                     StatusCode.DEADLINE_EXCEEDED,
-                    StatusCode.PERMISSION_DENIED,
-                    StatusCode.UNAUTHENTICATED,
                     StatusCode.RESOURCE_EXHAUSTED,
                     StatusCode.ABORTED,
                     StatusCode.OUT_OF_RANGE,

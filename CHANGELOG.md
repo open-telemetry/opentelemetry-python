@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.2.0-0.21b0...HEAD)
 
+### Changed
+- Fixed exporter OTLP header parsing to match baggage header formatting.
+  (TBD)
+
 ## [1.2.0, 0.21b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.2.0-0.21b0) - 2021-05-11
 
 ### Added
@@ -36,9 +40,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1809])(https://github.com/open-telemetry/opentelemetry-python/pull/1809)
 - Fixed sequence values in OTLP exporter not translating
   ([#1818](https://github.com/open-telemetry/opentelemetry-python/pull/1818))
-- Update otel exporter OTLP header parsing to match spec
-  (TBD)
-  
+- Update transient errors retry timeout and retryable status codes
+  ([#1842](https://github.com/open-telemetry/opentelemetry-python/pull/1842))
+
 ### Removed
 - Moved `opentelemetry-instrumentation` to contrib repository.
   ([#1797](https://github.com/open-telemetry/opentelemetry-python/pull/1797))
