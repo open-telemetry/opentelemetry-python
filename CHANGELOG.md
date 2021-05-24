@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Updated get_tracer to return an empty string when passed an invalid name
   ([#1854](https://github.com/open-telemetry/opentelemetry-python/pull/1854))
+- Changed AttributeValue sequences to warn mypy users on adding None values to array
+  ([#1855](https://github.com/open-telemetry/opentelemetry-python/pull/1855))
 
 ## [1.2.0, 0.21b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.2.0-0.21b0) - 2021-05-11
 
@@ -44,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1842](https://github.com/open-telemetry/opentelemetry-python/pull/1842))
 - Apply validation of attributes to `Resource`, move attribute related logic to separate package.
   ([#1834](https://github.com/open-telemetry/opentelemetry-python/pull/1834))
+- Fix start span behavior when excess links and attributes are included
+  ([#1856](https://github.com/open-telemetry/opentelemetry-python/pull/1856))
 
 ### Removed
 - Moved `opentelemetry-instrumentation` to contrib repository.

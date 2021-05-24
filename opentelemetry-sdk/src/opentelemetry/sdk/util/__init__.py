@@ -81,11 +81,8 @@ class BoundedList(Sequence):
     @classmethod
     def from_seq(cls, maxlen, seq):
         seq = tuple(seq)
-        if len(seq) > maxlen:
-            raise ValueError
         bounded_list = cls(maxlen)
-        # pylint: disable=protected-access
-        bounded_list._dq = deque(seq, maxlen=maxlen)
+        bounded_list.extend(seq)
         return bounded_list
 
 
@@ -140,9 +137,7 @@ class BoundedDict(MutableMapping):
     @classmethod
     def from_map(cls, maxlen, mapping):
         mapping = OrderedDict(mapping)
-        if len(mapping) > maxlen:
-            raise ValueError
         bounded_dict = cls(maxlen)
-        # pylint: disable=protected-access
-        bounded_dict._dict = mapping
+        for key, value in mapping.items():
+            bounded_dict[key] = value
         return bounded_dict
