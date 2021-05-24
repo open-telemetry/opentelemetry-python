@@ -224,10 +224,13 @@ class Resource:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Resource):
             return False
-        return self._attributes == other._attributes
+        return (
+            self._attributes == other._attributes
+            and self._schema_url == other._schema_url
+        )
 
     def __hash__(self):
-        return hash(dumps(self._attributes, sort_keys=True))
+        return hash(dumps(self._attributes, sort_keys=True) + self._schema_url)
 
 
 _EMPTY_RESOURCE = Resource({}, "")
