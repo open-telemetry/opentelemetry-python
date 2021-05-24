@@ -549,6 +549,7 @@ class TestSpanCreation(unittest.TestCase):
             self.assertEqual(len(root.links), max_links)
 
     def test_surplus_span_attributes(self):
+        # pylint: disable=protected-access
         max_attrs = trace._Limits().max_attributes
         attributes = {str(idx): idx for idx in range(0, 16 + max_attrs)}
         tracer = new_tracer()

@@ -872,10 +872,6 @@ class Tracer(trace_api.Tracer):
         self.instrumentation_info = instrumentation_info
         self._limits = None
 
-    def _with_limits(self, limits: _Limits) -> "Tracer":
-        self._limits = limits
-        return self
-
     @contextmanager
     def start_as_current_span(
         self,
@@ -1023,7 +1019,7 @@ class TracerProvider(trace_api.TracerProvider):
         if not instrumenting_module_name:  # Reject empty strings too.
             instrumenting_module_name = ""
             logger.error("get_tracer called with missing module name.")
-        return Tracer(
+        tracer = Tracer(
             self.sampler,
             self.resource,
             self._active_span_processor,
@@ -1031,7 +1027,9 @@ class TracerProvider(trace_api.TracerProvider):
             InstrumentationInfo(
                 instrumenting_module_name, instrumenting_library_version
             ),
-        )._with_limits(self._limits)
+        )
+        tracer._limits = self._limits
+        return tracer
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Registers a new :class:`SpanProcessor` for this `TracerProvider`.
