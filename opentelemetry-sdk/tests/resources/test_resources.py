@@ -17,6 +17,7 @@
 import os
 import unittest
 from unittest import mock
+from logging import ERROR
 
 from opentelemetry.sdk import resources
 
@@ -143,7 +144,7 @@ class TestResources(unittest.TestCase):
 
         left = resources.Resource.create({}, schema_urls[0])
         right = resources.Resource.create({}, schema_urls[1])
-        with self.assertRaises(ValueError):
+        with self.assertLogs(level=ERROR):
             left.merge(right)
 
     def test_resource_merge_empty_string(self):
