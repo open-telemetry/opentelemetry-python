@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1854](https://github.com/open-telemetry/opentelemetry-python/pull/1854))
 - Changed AttributeValue sequences to warn mypy users on adding None values to array
   ([#1855](https://github.com/open-telemetry/opentelemetry-python/pull/1855))
-- `Resource` now has a `schema_url` field.
+- Added optional `schema_url` field to `Resource` class
   ([#1862](https://github.com/open-telemetry/opentelemetry-python/issues/1862))
 
 ## [1.2.0, 0.21b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.2.0-0.21b0) - 2021-05-11
