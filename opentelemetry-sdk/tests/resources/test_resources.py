@@ -16,8 +16,8 @@
 
 import os
 import unittest
-from unittest import mock
 from logging import ERROR
+from unittest import mock
 
 from opentelemetry.sdk import resources
 

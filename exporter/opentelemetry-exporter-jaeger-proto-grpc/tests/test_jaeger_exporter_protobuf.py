@@ -159,7 +159,7 @@ class TestJaegerExporter(unittest.TestCase):
                 links=(link,),
                 kind=trace_api.SpanKind.CLIENT,
                 resource=Resource(
-                    attributes={"key_resource": "some_resource"}, 
+                    attributes={"key_resource": "some_resource"},
                     schema_url="",
                 ),
             ),
