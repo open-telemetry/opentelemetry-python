@@ -234,8 +234,8 @@ class Resource:
         )
 
     def __hash__(self):
-        return hash(dumps(self._attributes, sort_keys=True)) + 31 * hash(
-            self._schema_url
+        return hash(
+            dumps(self._attributes, sort_keys=True) + "|" + self._schema_url
         )
 
 
