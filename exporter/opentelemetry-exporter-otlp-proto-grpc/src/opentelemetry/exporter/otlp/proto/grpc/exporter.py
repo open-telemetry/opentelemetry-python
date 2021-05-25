@@ -234,7 +234,7 @@ class OTLPExporterMixin(
                 key, value = header_pair.split("=", maxsplit=1)
                 key = key.strip().lower()
                 value = value.strip()
-                temp_headers.append(tuple([key, value]))
+                temp_headers.append((key, value,))
 
             self._headers = tuple(temp_headers)
 
