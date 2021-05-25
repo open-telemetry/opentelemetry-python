@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from difflib import unified_diff
-from os import getcwd
 from pathlib import Path
 from re import match
 from sys import exit
