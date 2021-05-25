@@ -86,7 +86,8 @@ API
 # pylint:disable=no-member
 
 import logging
-from typing import Optional, TypeVar, Union
+from types import TracebackType
+from typing import Optional, TypeVar, Union, Type
 
 from deprecated import deprecated
 from opentracing import (
@@ -98,7 +99,6 @@ from opentracing import (
     Tracer,
     UnsupportedFormatException,
 )
-
 from opentelemetry.baggage import get_baggage, set_baggage
 from opentelemetry.context import Context, attach, detach, get_value, set_value
 from opentelemetry.propagate import get_global_textmap
@@ -401,15 +401,21 @@ class ScopeShim(Scope):
             ends the associated span**, regardless of the value passed in
             *finish_on_close* when activating the span.
         """
-
-        detach(self._token)
+        self._end_span_scope(None, None, None)
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
         Override the __exit__ method of `opentracing.scope.Scope` so we can report
         exceptions correctly in opentelemetry specification format. """
-        self.close()
+        self._end_span_scope(exc_type, exc_val, exc_tb)
 
+    def _end_span_scope(
+            self,
+            exc_type: Optional[Type[BaseException]],
+            exc_val: Optional[BaseException],
+            exc_tb: Optional[TracebackType],
+    ) -> None:
+        detach(self._token)
         if self._span_cm is not None:
             self._span_cm.__exit__(exc_type, exc_val, exc_tb)
         else:
