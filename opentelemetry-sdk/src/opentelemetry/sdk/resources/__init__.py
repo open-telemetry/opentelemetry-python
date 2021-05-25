@@ -188,7 +188,7 @@ class Resource:
         return self._attributes.copy()
 
     @property
-    def schema_url(self) -> Attributes:
+    def schema_url(self) -> str:
         return self._schema_url
 
     def merge(self, other: "Resource") -> "Resource":
