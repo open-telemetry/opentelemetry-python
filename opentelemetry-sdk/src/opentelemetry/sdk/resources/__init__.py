@@ -197,9 +197,10 @@ class Resource:
         If a key exists on both the old and updating resource, the value of the
         updating resource will override the old resource value.
 
-        The new `schema_url` will take an updated value only if the original
+        The updating resource's `schema_url` will be used only if the old
         `schema_url` is empty. Attempting to merge two resources with
-        different, non-empty values for `schema_url` will result in an error.
+        different, non-empty values for `schema_url` will result in an error
+        and return an empty resource.
 
         Args:
             other: The other resource to be merged.
@@ -217,10 +218,10 @@ class Resource:
         elif self.schema_url == other.schema_url:
             schema_url = other.schema_url
         else:
-            schema_url = ""
             logger.error(
                 "Failed to merge resources: The Schema URL of the old and updating resources are not empty and are different"
             )
+            return _EMPTY_RESOURCE
 
         return Resource(merged_attributes, schema_url)
 
