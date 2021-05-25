@@ -75,7 +75,7 @@ get_symbols("A", a_diff_lines_getter, r"")
 get_symbols("M", m_diff_lines_getter, r"\+")
 
 if file_path_symbols:
-    print("This pull request adds the following public symbols:")
+    print("The code in this branch adds the following public symbols:")
     print()
     for file_path, symbols in file_path_symbols.items():
         print("- {}".format(file_path))
@@ -91,4 +91,4 @@ if file_path_symbols:
     )
     exit(1)
 else:
-    print("This pull request does not add any public symbols")
+    print("The code in this branch will not add any public symbols")
