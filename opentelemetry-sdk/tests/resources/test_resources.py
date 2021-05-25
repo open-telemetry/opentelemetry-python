@@ -52,6 +52,7 @@ class TestResources(unittest.TestCase):
         resource = resources.Resource.create(attributes)
         self.assertIsInstance(resource, resources.Resource)
         self.assertEqual(resource.attributes, expected_attributes)
+        self.assertEqual(resource.schema_url, "")
 
         schema_url = "https://opentelemetry.io/schemas/1.3.0"
 
@@ -146,7 +147,7 @@ class TestResources(unittest.TestCase):
         left = resources.Resource.create({}, schema_urls[0])
         right = resources.Resource.create({}, schema_urls[1])
         with self.assertLogs(level=ERROR):
-            left.merge(right)
+            self.assertEqual(left.merge(right).schema_url, "")
 
     def test_resource_merge_empty_string(self):
         """Verify Resource.merge behavior with the empty string.

@@ -217,7 +217,7 @@ class Resource:
         elif self.schema_url == other.schema_url:
             schema_url = other.schema_url
         else:
-            schema_url = "merge-conflict"
+            schema_url = ""
             logger.error(
                 "Failed to merge resources: The Schema URL of the old and updating resources are not empty and are different"
             )
