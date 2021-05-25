@@ -296,6 +296,41 @@ class TestResources(unittest.TestCase):
             ),
         )
 
+    def test_aggregated_resources_different_schema_urls(self):
+        resource_detector1 = mock.Mock(spec=resources.ResourceDetector)
+        resource_detector1.detect.return_value = resources.Resource(
+            {"key1": "value1"}, ""
+        )
+        resource_detector2 = mock.Mock(spec=resources.ResourceDetector)
+        resource_detector2.detect.return_value = resources.Resource(
+            {"key2": "value2", "key3": "value3"}, "url1"
+        )
+        resource_detector3 = mock.Mock(spec=resources.ResourceDetector)
+        resource_detector3.detect.return_value = resources.Resource(
+            {
+                "key2": "try_to_overwrite_existing_value",
+                "key3": "try_to_overwrite_existing_value",
+                "key4": "value4",
+            },
+            "url2",
+        )
+        self.assertEqual(
+            resources.get_aggregated_resources(
+                [resource_detector1, resource_detector2]
+            ),
+            resources.Resource(
+                {"key1": "value1", "key2": "value2", "key3": "value3"},
+                "url1",
+            ),
+        )
+        with self.assertLogs(level=ERROR):
+            self.assertEqual(
+                resources.get_aggregated_resources(
+                    [resource_detector2, resource_detector3]
+                ),
+                resources._EMPTY_RESOURCE,
+            )
+
     def test_resource_detector_ignore_error(self):
         resource_detector = mock.Mock(spec=resources.ResourceDetector)
         resource_detector.detect.side_effect = Exception()
