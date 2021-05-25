@@ -73,8 +73,9 @@ disable=missing-docstring,
       exec-used,
       super-with-arguments, # temp-pylint-upgrade
       isinstance-second-argument-not-valid-type, # temp-pylint-upgrade
-      raise-missing-from, # temp-pylint-upgrade 
-      unused-argument, # temp-pylint-upgrade 
+      raise-missing-from, # temp-pylint-upgrade
+      unused-argument, # temp-pylint-upgrade
+      redefined-builtin,
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option

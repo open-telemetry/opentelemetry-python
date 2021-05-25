@@ -1,0 +1,40 @@
+name: Public API check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+    branches:
+      - main
+
+jobs:
+  publicAPICheck:
+
+    runs-on: ubuntu-latest
+
+    if: "!contains(github.event.pull_request.labels.*.name, 'Skip Public API check')"
+
+    steps:
+      - name: Checkout the repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+
+      - name: Checkout main
+        run: git checkout main
+
+      - name: Pull origin
+        run: git pull --rebase=false origin main
+
+      - name: Checkout pull request
+        run: git checkout ${{ github.event.pull_request.head.sha }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+
+      - name: Install tox
+        run: pip install -U tox-factor
+
+      - name: Public API Check
+        run: tox -e public-symbols-check
