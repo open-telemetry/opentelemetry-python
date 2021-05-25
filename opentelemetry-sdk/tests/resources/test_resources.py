@@ -211,7 +211,8 @@ class TestResources(unittest.TestCase):
                 "": "empty-key-value",
                 None: "null-key-value",
                 "another-non-primitive": uuid.uuid4(),
-            }
+            },
+            "",
         )
         self.assertEqual(
             resource.attributes,
