@@ -38,7 +38,7 @@ from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
 from opentelemetry.util._time import _time_ns
 
 logger = logging.getLogger(__name__)
-EXPORT_KEY = create_key("suppress_instrumentation")
+_SUPPRESS_INSTRUMENTATION_KEY = create_key("suppress_instrumentation")
 
 
 class SpanExportResult(Enum):
@@ -93,7 +93,7 @@ class SimpleSpanProcessor(SpanProcessor):
     def on_end(self, span: ReadableSpan) -> None:
         if not span.context.trace_flags.sampled:
             return
-        token = attach(set_value(EXPORT_KEY, True))
+        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             self.span_exporter.export((span,))
         # pylint: disable=broad-except
@@ -333,7 +333,7 @@ class BatchSpanProcessor(SpanProcessor):
         while idx < self.max_export_batch_size and self.queue:
             self.spans_list[idx] = self.queue.pop()
             idx += 1
-        token = attach(set_value(EXPORT_KEY, True))
+        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             # Ignore type b/c the Optional[None]+slicing is too "clever"
             # for mypy
