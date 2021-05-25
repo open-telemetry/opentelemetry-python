@@ -22,11 +22,8 @@ jobs:
       - name: Checkout main
         run: git checkout main
 
-      - name: Set strategy
-        run: git config pull.rebase false
-
       - name: Pull origin
-        run: git pull origin main
+        run: git pull --rebase=false origin main
 
       - name: Checkout pull request
         run: git checkout ${{ github.event.pull_request.head.sha }}
