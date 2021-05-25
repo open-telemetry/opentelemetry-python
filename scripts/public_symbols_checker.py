@@ -21,7 +21,7 @@ from sys import exit
 from git import Repo
 from git.db import GitDB
 
-repo = Repo(getcwd(), odbt=GitDB)
+repo = Repo(__file__, odbt=GitDB, search_parent_directories=True)
 
 
 file_path_symbols = {}
