@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1823](https://github.com/open-telemetry/opentelemetry-python/pull/1823))
 - Added support for OTEL_SERVICE_NAME.
   ([#1829](https://github.com/open-telemetry/opentelemetry-python/pull/1829))
+- Lazily read/configure limits and allow limits to be unset.
+  ([#1839](https://github.com/open-telemetry/opentelemetry-python/pull/1839))
 
 ### Changed
 - Fixed OTLP gRPC exporter silently failing if scheme is not specified in endpoint.
@@ -46,6 +48,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1818](https://github.com/open-telemetry/opentelemetry-python/pull/1818))
 - Update transient errors retry timeout and retryable status codes
   ([#1842](https://github.com/open-telemetry/opentelemetry-python/pull/1842))
+- Apply validation of attributes to `Resource`, move attribute related logic to separate package.
+  ([#1834](https://github.com/open-telemetry/opentelemetry-python/pull/1834))
+- Fix start span behavior when excess links and attributes are included
+  ([#1856](https://github.com/open-telemetry/opentelemetry-python/pull/1856))
 
 ### Removed
 - Moved `opentelemetry-instrumentation` to contrib repository.
