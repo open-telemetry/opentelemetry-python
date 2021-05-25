@@ -39,6 +39,11 @@ from typing import (
 
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
+from opentelemetry.attributes import (
+    _create_immutable_attributes,
+    _filter_attributes,
+    _is_valid_attribute_value,
+)
 from opentelemetry.sdk import util
 from opentelemetry.sdk.environment_variables import (
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
@@ -51,20 +56,16 @@ from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.util import BoundedDict, BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
-from opentelemetry.trace.propagation import SPAN_KEY
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 from opentelemetry.util._time import _time_ns
 
 logger = logging.getLogger(__name__)
 
-SPAN_ATTRIBUTE_COUNT_LIMIT = int(
-    environ.get(OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, 128)
-)
+_DEFAULT_SPAN_EVENTS_LIMIT = 128
+_DEFAULT_SPAN_LINKS_LIMIT = 128
+_DEFAULT_SPAN_ATTRIBUTES_LIMIT = 128
 
-_SPAN_EVENT_COUNT_LIMIT = int(environ.get(OTEL_SPAN_EVENT_COUNT_LIMIT, 128))
-_SPAN_LINK_COUNT_LIMIT = int(environ.get(OTEL_SPAN_LINK_COUNT_LIMIT, 128))
-_VALID_ATTR_VALUE_TYPES = (bool, str, int, float)
 # pylint: disable=protected-access
 _TRACE_SAMPLER = sampling._get_from_env_or_default()
 
@@ -315,72 +316,6 @@ class Event(EventBase):
         return self._attributes
 
 
-def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
-    """Checks if attribute value is valid.
-
-    An attribute value is valid if it is one of the valid types.
-    If the value is a sequence, it is only valid if all items in the sequence:
-      - are of the same valid type or None
-      - are not a sequence
-    """
-
-    if isinstance(value, Sequence):
-        if len(value) == 0:
-            return True
-
-        sequence_first_valid_type = None
-        for element in value:
-            if element is None:
-                continue
-            element_type = type(element)
-            if element_type not in _VALID_ATTR_VALUE_TYPES:
-                logger.warning(
-                    "Invalid type %s in attribute value sequence. Expected one of "
-                    "%s or None",
-                    element_type.__name__,
-                    [
-                        valid_type.__name__
-                        for valid_type in _VALID_ATTR_VALUE_TYPES
-                    ],
-                )
-                return False
-            # The type of the sequence must be homogeneous. The first non-None
-            # element determines the type of the sequence
-            if sequence_first_valid_type is None:
-                sequence_first_valid_type = element_type
-            elif not isinstance(element, sequence_first_valid_type):
-                logger.warning(
-                    "Mixed types %s and %s in attribute value sequence",
-                    sequence_first_valid_type.__name__,
-                    type(element).__name__,
-                )
-                return False
-
-    elif not isinstance(value, _VALID_ATTR_VALUE_TYPES):
-        logger.warning(
-            "Invalid type %s for attribute value. Expected one of %s or a "
-            "sequence of those types",
-            type(value).__name__,
-            [valid_type.__name__ for valid_type in _VALID_ATTR_VALUE_TYPES],
-        )
-        return False
-    return True
-
-
-def _filter_attribute_values(attributes: types.Attributes):
-    if attributes:
-        for attr_key, attr_value in list(attributes.items()):
-            if _is_valid_attribute_value(attr_value):
-                if isinstance(attr_value, MutableSequence):
-                    attributes[attr_key] = tuple(attr_value)
-            else:
-                attributes.pop(attr_key)
-
-
-def _create_immutable_attributes(attributes):
-    return MappingProxyType(attributes.copy() if attributes else {})
-
-
 def _check_span_ended(func):
     def wrapper(self, *args, **kwargs):
         already_ended = False
@@ -564,6 +499,87 @@ class ReadableSpan:
         return f_links
 
 
+class _Limits:
+    """The limits that should be enforce on recorded data such as events, links, attributes etc.
+
+    This class does not enforce any limits itself. It only provides an a way read limits from env,
+    default values and in future from user provided arguments.
+
+    All limit must be either a non-negative integer or ``None``.
+    Setting a limit to ``None`` will not set any limits for that field/type.
+
+    Args:
+        max_events: Maximum number of events that can be added to a Span.
+        max_links: Maximum number of links that can be added to a Span.
+        max_attributes: Maximum number of attributes that can be added to a Span.
+    """
+
+    UNSET = -1
+
+    max_attributes: int
+    max_events: int
+    max_links: int
+
+    def __init__(
+        self,
+        max_attributes: Optional[int] = None,
+        max_events: Optional[int] = None,
+        max_links: Optional[int] = None,
+    ):
+        self.max_attributes = self._from_env_if_absent(
+            max_attributes,
+            OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+            _DEFAULT_SPAN_ATTRIBUTES_LIMIT,
+        )
+        self.max_events = self._from_env_if_absent(
+            max_events, OTEL_SPAN_EVENT_COUNT_LIMIT, _DEFAULT_SPAN_EVENTS_LIMIT
+        )
+        self.max_links = self._from_env_if_absent(
+            max_links, OTEL_SPAN_LINK_COUNT_LIMIT, _DEFAULT_SPAN_LINKS_LIMIT
+        )
+
+    def __repr__(self):
+        return "max_attributes={}, max_events={}, max_links={}".format(
+            self.max_attributes, self.max_events, self.max_links
+        )
+
+    @classmethod
+    def _from_env_if_absent(
+        cls, value: Optional[int], env_var: str, default: Optional[int]
+    ) -> Optional[int]:
+        if value is cls.UNSET:
+            return None
+
+        err_msg = "{0} must be a non-negative integer but got {}"
+
+        if value is None:
+            str_value = environ.get(env_var, "").strip().lower()
+            if not str_value:
+                return default
+            if str_value == "unset":
+                return None
+
+            try:
+                value = int(str_value)
+            except ValueError:
+                raise ValueError(err_msg.format(env_var, str_value))
+
+        if value < 0:
+            raise ValueError(err_msg.format(env_var, value))
+        return value
+
+
+_UnsetLimits = _Limits(
+    max_attributes=_Limits.UNSET,
+    max_events=_Limits.UNSET,
+    max_links=_Limits.UNSET,
+)
+
+SPAN_ATTRIBUTE_COUNT_LIMIT = _Limits._from_env_if_absent(
+    None, OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, _DEFAULT_SPAN_ATTRIBUTES_LIMIT
+)
+
+
 class Span(trace_api.Span, ReadableSpan):
     """See `opentelemetry.trace.Span`.
 
@@ -623,18 +639,18 @@ class Span(trace_api.Span, ReadableSpan):
         self._span_processor = span_processor
         self._lock = threading.Lock()
 
-        _filter_attribute_values(attributes)
+        _filter_attributes(attributes)
         if not attributes:
             self._attributes = self._new_attributes()
         else:
             self._attributes = BoundedDict.from_map(
-                SPAN_ATTRIBUTE_COUNT_LIMIT, attributes
+                self._limits.max_attributes, attributes
             )
 
         self._events = self._new_events()
         if events:
             for event in events:
-                _filter_attribute_values(event.attributes)
+                _filter_attributes(event.attributes)
                 # pylint: disable=protected-access
                 event._attributes = _create_immutable_attributes(
                     event.attributes
@@ -644,24 +660,21 @@ class Span(trace_api.Span, ReadableSpan):
         if links is None:
             self._links = self._new_links()
         else:
-            self._links = BoundedList.from_seq(_SPAN_LINK_COUNT_LIMIT, links)
+            self._links = BoundedList.from_seq(self._limits.max_links, links)
 
     def __repr__(self):
         return '{}(name="{}", context={})'.format(
             type(self).__name__, self._name, self._context
         )
 
-    @staticmethod
-    def _new_attributes():
-        return BoundedDict(SPAN_ATTRIBUTE_COUNT_LIMIT)
+    def _new_attributes(self):
+        return BoundedDict(self._limits.max_attributes)
 
-    @staticmethod
-    def _new_events():
-        return BoundedList(_SPAN_EVENT_COUNT_LIMIT)
+    def _new_events(self):
+        return BoundedList(self._limits.max_events)
 
-    @staticmethod
-    def _new_links():
-        return BoundedList(_SPAN_LINK_COUNT_LIMIT)
+    def _new_links(self):
+        return BoundedList(self._limits.max_links)
 
     def get_span_context(self):
         return self._context
@@ -709,7 +722,7 @@ class Span(trace_api.Span, ReadableSpan):
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
     ) -> None:
-        _filter_attribute_values(attributes)
+        _filter_attributes(attributes)
         attributes = _create_immutable_attributes(attributes)
         self._add_event(
             Event(
@@ -834,6 +847,10 @@ class _Span(Span):
     by other mechanisms than through the `Tracer`.
     """
 
+    def __init__(self, *args, limits=_UnsetLimits, **kwargs):
+        self._limits = limits
+        super().__init__(*args, **kwargs)
+
 
 class Tracer(trace_api.Tracer):
     """See `opentelemetry.trace.Tracer`."""
@@ -853,6 +870,7 @@ class Tracer(trace_api.Tracer):
         self.span_processor = span_processor
         self.id_generator = id_generator
         self.instrumentation_info = instrumentation_info
+        self._limits = None
 
     @contextmanager
     def start_as_current_span(
@@ -954,6 +972,7 @@ class Tracer(trace_api.Tracer):
                 instrumentation_info=self.instrumentation_info,
                 record_exception=record_exception,
                 set_status_on_exception=set_status_on_exception,
+                limits=self._limits,
             )
             span.start(start_time=start_time, parent_context=context)
         else:
@@ -983,6 +1002,7 @@ class TracerProvider(trace_api.TracerProvider):
             self.id_generator = id_generator
         self._resource = resource
         self.sampler = sampler
+        self._limits = _Limits()
         self._atexit_handler = None
         if shutdown_on_exit:
             self._atexit_handler = atexit.register(self.shutdown)
@@ -997,9 +1017,9 @@ class TracerProvider(trace_api.TracerProvider):
         instrumenting_library_version: str = "",
     ) -> "trace_api.Tracer":
         if not instrumenting_module_name:  # Reject empty strings too.
-            instrumenting_module_name = "ERROR:MISSING MODULE NAME"
+            instrumenting_module_name = ""
             logger.error("get_tracer called with missing module name.")
-        return Tracer(
+        tracer = Tracer(
             self.sampler,
             self.resource,
             self._active_span_processor,
@@ -1008,6 +1028,8 @@ class TracerProvider(trace_api.TracerProvider):
                 instrumenting_module_name, instrumenting_library_version
             ),
         )
+        tracer._limits = self._limits
+        return tracer
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Registers a new :class:`SpanProcessor` for this `TracerProvider`.

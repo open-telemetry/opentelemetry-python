@@ -20,10 +20,10 @@ AttributeValue = Union[
     bool,
     int,
     float,
-    Sequence[Optional[str]],
-    Sequence[Optional[bool]],
-    Sequence[Optional[int]],
-    Sequence[Optional[float]],
+    Sequence[str],
+    Sequence[bool],
+    Sequence[int],
+    Sequence[float],
 ]
 Attributes = Optional[Mapping[str, AttributeValue]]
 AttributesAsKey = Tuple[
