@@ -19,9 +19,6 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Fetch
-        run: git fetch
-
       - name: Checkout main
         run: git checkout main
 
