@@ -184,7 +184,7 @@ class TestResources(unittest.TestCase):
         attributes_copy = attributes.copy()
         attributes_copy.update(default_attributes)
 
-        resource = resources.Resource.create(attributes)
+        resource = resources.Resource.create(attributes, "")
         self.assertEqual(resource.attributes, attributes_copy)
 
         resource.attributes["has_bugs"] = False
@@ -192,6 +192,11 @@ class TestResources(unittest.TestCase):
 
         attributes["cost"] = 999.91
         self.assertEqual(resource.attributes, attributes_copy)
+
+        with self.assertRaises(AttributeError):
+            resource.schema_url = "bug"
+
+        self.assertEqual(resource.schema_url, "")
 
     def test_service_name_using_process_name(self):
         resource = resources.Resource.create(
