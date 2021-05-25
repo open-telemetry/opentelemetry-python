@@ -135,6 +135,14 @@ class TestBoundedList(unittest.TestCase):
         self.assertEqual(len(blist), list_len)
         self.assertEqual(blist.dropped, len(other_list))
 
+    def test_no_limit(self):
+        blist = BoundedList(maxlen=None)
+        for num in range(100):
+            blist.append(num)
+
+        for num in range(100):
+            self.assertEqual(blist[num], num)
+
 
 class TestBoundedDict(unittest.TestCase):
     base = collections.OrderedDict(
@@ -214,3 +222,11 @@ class TestBoundedDict(unittest.TestCase):
 
         with self.assertRaises(KeyError):
             _ = bdict["new-name"]
+
+    def test_no_limit_code(self):
+        bdict = BoundedDict(maxlen=None)
+        for num in range(100):
+            bdict[num] = num
+
+        for num in range(100):
+            self.assertEqual(bdict[num], num)
