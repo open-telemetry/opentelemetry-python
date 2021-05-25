@@ -64,6 +64,7 @@ from json import dumps
 
 import pkg_resources
 
+from opentelemetry.attributes import _filter_attributes
 from opentelemetry.sdk.environment_variables import (
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
@@ -141,6 +142,7 @@ class Resource:
     """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
 
     def __init__(self, attributes: Attributes, schema_url: str):
+        _filter_attributes(attributes)
         self._attributes = attributes.copy()
         self._schema_url = schema_url
 

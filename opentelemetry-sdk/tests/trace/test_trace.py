@@ -18,6 +18,7 @@ import subprocess
 import unittest
 from importlib import reload
 from logging import ERROR, WARNING
+from random import randint
 from typing import Optional
 from unittest import mock
 
@@ -538,7 +539,7 @@ class TestSpanCreation(unittest.TestCase):
 
     def test_surplus_span_links(self):
         # pylint: disable=protected-access
-        max_links = trace._SPAN_LINK_COUNT_LIMIT
+        max_links = trace._Limits().max_links
         links = [
             trace_api.Link(trace_api.SpanContext(0x1, idx, is_remote=False))
             for idx in range(0, 16 + max_links)
@@ -548,7 +549,8 @@ class TestSpanCreation(unittest.TestCase):
             self.assertEqual(len(root.links), max_links)
 
     def test_surplus_span_attributes(self):
-        max_attrs = trace.SPAN_ATTRIBUTE_COUNT_LIMIT
+        # pylint: disable=protected-access
+        max_attrs = trace._Limits().max_attributes
         attributes = {str(idx): idx for idx in range(0, 16 + max_attrs)}
         tracer = new_tracer()
         with tracer.start_as_current_span(
@@ -670,35 +672,6 @@ class TestSpan(unittest.TestCase):
             self.assertTrue(
                 isinstance(root.attributes["valid-byte-type-attribute"], str)
             )
-
-    def test_check_attribute_helper(self):
-        # pylint: disable=protected-access
-        self.assertFalse(trace._is_valid_attribute_value([1, 2, 3.4, "ss", 4]))
-        self.assertFalse(
-            trace._is_valid_attribute_value([dict(), 1, 2, 3.4, 4])
-        )
-        self.assertFalse(
-            trace._is_valid_attribute_value(["sw", "lf", 3.4, "ss"])
-        )
-        self.assertFalse(trace._is_valid_attribute_value([1, 2, 3.4, 5]))
-        self.assertTrue(trace._is_valid_attribute_value([1, 2, 3, 5]))
-        self.assertTrue(trace._is_valid_attribute_value([1.2, 2.3, 3.4, 4.5]))
-        self.assertTrue(trace._is_valid_attribute_value([True, False]))
-        self.assertTrue(trace._is_valid_attribute_value(["ss", "dw", "fw"]))
-        self.assertTrue(trace._is_valid_attribute_value([]))
-        self.assertFalse(trace._is_valid_attribute_value(dict()))
-        self.assertTrue(trace._is_valid_attribute_value(True))
-        self.assertTrue(trace._is_valid_attribute_value("hi"))
-        self.assertTrue(trace._is_valid_attribute_value(3.4))
-        self.assertTrue(trace._is_valid_attribute_value(15))
-        # None in sequences are valid
-        self.assertTrue(trace._is_valid_attribute_value(["A", None, None]))
-        self.assertTrue(
-            trace._is_valid_attribute_value(["A", None, None, "B"])
-        )
-        self.assertTrue(trace._is_valid_attribute_value([None, None]))
-        self.assertFalse(trace._is_valid_attribute_value(["A", None, 1]))
-        self.assertFalse(trace._is_valid_attribute_value([None, "A", None, 1]))
 
     def test_sampling_attributes(self):
         sampling_attributes = {
@@ -1299,6 +1272,50 @@ class TestSpanProcessor(unittest.TestCase):
 
 
 class TestSpanLimits(unittest.TestCase):
+    # pylint: disable=protected-access
+
+    def test_limits_defaults(self):
+        limits = trace._Limits()
+        self.assertEqual(
+            limits.max_attributes, trace._DEFAULT_SPAN_ATTRIBUTES_LIMIT
+        )
+        self.assertEqual(limits.max_events, trace._DEFAULT_SPAN_EVENTS_LIMIT)
+        self.assertEqual(limits.max_links, trace._DEFAULT_SPAN_LINKS_LIMIT)
+
+    def test_limits_values_code(self):
+        max_attributes, max_events, max_links = (
+            randint(0, 10000),
+            randint(0, 10000),
+            randint(0, 10000),
+        )
+        limits = trace._Limits(
+            max_attributes=max_attributes,
+            max_events=max_events,
+            max_links=max_links,
+        )
+        self.assertEqual(limits.max_attributes, max_attributes)
+        self.assertEqual(limits.max_events, max_events)
+        self.assertEqual(limits.max_links, max_links)
+
+    def test_limits_values_env(self):
+        max_attributes, max_events, max_links = (
+            randint(0, 10000),
+            randint(0, 10000),
+            randint(0, 10000),
+        )
+        with mock.patch.dict(
+            "os.environ",
+            {
+                OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT: str(max_attributes),
+                OTEL_SPAN_EVENT_COUNT_LIMIT: str(max_events),
+                OTEL_SPAN_LINK_COUNT_LIMIT: str(max_links),
+            },
+        ):
+            limits = trace._Limits()
+            self.assertEqual(limits.max_attributes, max_attributes)
+            self.assertEqual(limits.max_events, max_events)
+            self.assertEqual(limits.max_links, max_links)
+
     @mock.patch.dict(
         "os.environ",
         {
@@ -1307,8 +1324,7 @@ class TestSpanLimits(unittest.TestCase):
             OTEL_SPAN_LINK_COUNT_LIMIT: "30",
         },
     )
-    def test_span_environment_limits(self):
-        reload(trace)
+    def test_span_limits_env(self):
         tracer = new_tracer()
         id_generator = RandomIdGenerator()
         some_links = [
@@ -1336,3 +1352,45 @@ class TestSpanLimits(unittest.TestCase):
 
             self.assertEqual(len(root.attributes), 10)
             self.assertEqual(len(root.events), 20)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT: "unset",
+            OTEL_SPAN_EVENT_COUNT_LIMIT: "unset",
+            OTEL_SPAN_LINK_COUNT_LIMIT: "unset",
+        },
+    )
+    def test_span_no_limits_env(self):
+        num_links = int(trace._DEFAULT_SPAN_LINKS_LIMIT) + randint(1, 100)
+
+        tracer = new_tracer()
+        id_generator = RandomIdGenerator()
+        some_links = [
+            trace_api.Link(
+                trace_api.SpanContext(
+                    trace_id=id_generator.generate_trace_id(),
+                    span_id=id_generator.generate_span_id(),
+                    is_remote=False,
+                )
+            )
+            for _ in range(num_links)
+        ]
+        with tracer.start_as_current_span("root", links=some_links) as root:
+            self.assertEqual(len(root.links), num_links)
+
+        num_events = int(trace._DEFAULT_SPAN_EVENTS_LIMIT) + randint(1, 100)
+        with tracer.start_as_current_span("root") as root:
+            for idx in range(num_events):
+                root.add_event("my_event_{}".format(idx))
+
+            self.assertEqual(len(root.events), num_events)
+
+        num_attributes = int(trace._DEFAULT_SPAN_ATTRIBUTES_LIMIT) + randint(
+            1, 100
+        )
+        with tracer.start_as_current_span("root") as root:
+            for idx in range(num_attributes):
+                root.set_attribute("my_attribute_{}".format(idx), 0)
+
+            self.assertEqual(len(root.attributes), num_attributes)
