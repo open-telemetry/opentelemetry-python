@@ -142,10 +142,12 @@ class Resource:
     """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
 
     def __init__(
-        self, attributes: Attributes, schema_url: typing.Optional[str] = ""
+        self, attributes: Attributes, schema_url: typing.Optional[str] = None
     ):
         _filter_attributes(attributes)
         self._attributes = attributes.copy()
+        if schema_url is None:
+            schema_url = ""
         self._schema_url = schema_url
 
     @staticmethod
@@ -236,8 +238,8 @@ class Resource:
         )
 
     def __hash__(self):
-        return hash(dumps(self._attributes, sort_keys=True)) + 31 * hash(
-            self._schema_url
+        return hash(
+            f"{dumps(self._attributes, sort_keys=True)}|{self._schema_url}"
         )
 
 
