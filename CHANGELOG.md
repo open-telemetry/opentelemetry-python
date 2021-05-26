@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1854](https://github.com/open-telemetry/opentelemetry-python/pull/1854))
 - Changed AttributeValue sequences to warn mypy users on adding None values to array
   ([#1855](https://github.com/open-telemetry/opentelemetry-python/pull/1855))
+- Fixed exporter OTLP header parsing to match baggage header formatting.
+  ([#1869](https://github.com/open-telemetry/opentelemetry-python/pull/1869))
 - Update protos to latest version release 0.9.0
   ([#1873](https://github.com/open-telemetry/opentelemetry-python/pull/1873))
 
