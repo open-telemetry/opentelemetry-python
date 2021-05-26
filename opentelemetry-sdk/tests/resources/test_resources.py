@@ -16,6 +16,7 @@
 
 import os
 import unittest
+import uuid
 from unittest import mock
 
 from opentelemetry.sdk import resources
@@ -138,6 +139,25 @@ class TestResources(unittest.TestCase):
             "unknown_service:test",
         )
 
+    def test_invalid_resource_attribute_values(self):
+        resource = resources.Resource(
+            {
+                resources.SERVICE_NAME: "test",
+                "non-primitive-data-type": dict(),
+                "invalid-byte-type-attribute": b"\xd8\xe1\xb7\xeb\xa8\xe5 \xd2\xb7\xe1",
+                "": "empty-key-value",
+                None: "null-key-value",
+                "another-non-primitive": uuid.uuid4(),
+            }
+        )
+        self.assertEqual(
+            resource.attributes,
+            {
+                resources.SERVICE_NAME: "test",
+            },
+        )
+        self.assertEqual(len(resource.attributes), 1)
+
     def test_aggregated_resources_no_detectors(self):
         aggregated_resources = resources.get_aggregated_resources([])
         self.assertEqual(aggregated_resources, resources.Resource.get_empty())
@@ -232,6 +252,20 @@ class TestResources(unittest.TestCase):
         self.assertEqual(resource_env_override.attributes["key1"], "value1")
         self.assertEqual(resource_env_override.attributes["key2"], "value2")
 
+    @mock.patch.dict(
+        os.environ,
+        {
+            resources.OTEL_SERVICE_NAME: "test-srv-name",
+            resources.OTEL_RESOURCE_ATTRIBUTES: "service.name=svc-name-from-resource",
+        },
+    )
+    def test_service_name_env(self):
+        resource = resources.Resource.create()
+        self.assertEqual(resource.attributes["service.name"], "test-srv-name")
+
+        resource = resources.Resource.create({"service.name": "from-code"})
+        self.assertEqual(resource.attributes["service.name"], "from-code")
+
 
 class TestOTELResourceDetector(unittest.TestCase):
     def setUp(self) -> None:
@@ -269,4 +303,29 @@ class TestOTELResourceDetector(unittest.TestCase):
         ] = "    k  = v  , k2   = v2 "
         self.assertEqual(
             detector.detect(), resources.Resource({"k": "v", "k2": "v2"})
+        )
+
+    @mock.patch.dict(
+        os.environ,
+        {resources.OTEL_SERVICE_NAME: "test-srv-name"},
+    )
+    def test_service_name_env(self):
+        detector = resources.OTELResourceDetector()
+        self.assertEqual(
+            detector.detect(),
+            resources.Resource({"service.name": "test-srv-name"}),
+        )
+
+    @mock.patch.dict(
+        os.environ,
+        {
+            resources.OTEL_SERVICE_NAME: "from-service-name",
+            resources.OTEL_RESOURCE_ATTRIBUTES: "service.name=from-resource-attrs",
+        },
+    )
+    def test_service_name_env_precedence(self):
+        detector = resources.OTELResourceDetector()
+        self.assertEqual(
+            detector.detect(),
+            resources.Resource({"service.name": "from-service-name"}),
         )

@@ -4,11 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.1.0...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.2.0-0.21b0...HEAD)
+
+### Changed
+- Updated get_tracer to return an empty string when passed an invalid name
+  ([#1854](https://github.com/open-telemetry/opentelemetry-python/pull/1854))
+- Changed AttributeValue sequences to warn mypy users on adding None values to array
+  ([#1855](https://github.com/open-telemetry/opentelemetry-python/pull/1855))
+
+## [1.2.0, 0.21b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.2.0-0.21b0) - 2021-05-11
 
 ### Added
 - Added example for running Django with auto instrumentation.
   ([#1803](https://github.com/open-telemetry/opentelemetry-python/pull/1803))
+- Added `B3SingleFormat` and `B3MultiFormat` propagators to the `opentelemetry-propagator-b3` package.
+  ([#1823](https://github.com/open-telemetry/opentelemetry-python/pull/1823))
+- Added support for OTEL_SERVICE_NAME.
+  ([#1829](https://github.com/open-telemetry/opentelemetry-python/pull/1829))
+- Lazily read/configure limits and allow limits to be unset.
+  ([#1839](https://github.com/open-telemetry/opentelemetry-python/pull/1839))
 
 ### Changed
 - Fixed OTLP gRPC exporter silently failing if scheme is not specified in endpoint.
@@ -18,8 +32,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Propagators use the root context as default for `extract` and do not modify
   the context if extracting from carrier does not work.
   ([#1811](https://github.com/open-telemetry/opentelemetry-python/pull/1811))
+- Fixed `b3` propagator entrypoint to point to `B3SingleFormat` propagator.
+  ([#1823](https://github.com/open-telemetry/opentelemetry-python/pull/1823))
+- Added `b3multi` propagator entrypoint to point to `B3MultiFormat` propagator.
+  ([#1823](https://github.com/open-telemetry/opentelemetry-python/pull/1823))
 - Improve warning when failing to decode byte attribute
   ([#1810](https://github.com/open-telemetry/opentelemetry-python/pull/1810))
+- Fixed inconsistency in parent_id formatting from the ConsoleSpanExporter
+  ([#1833](https://github.com/open-telemetry/opentelemetry-python/pull/1833))
+- Include span parent in Jaeger gRPC export as `CHILD_OF` reference
+  ([#1809])(https://github.com/open-telemetry/opentelemetry-python/pull/1809)
+- Fixed sequence values in OTLP exporter not translating
+  ([#1818](https://github.com/open-telemetry/opentelemetry-python/pull/1818))
+- Update transient errors retry timeout and retryable status codes
+  ([#1842](https://github.com/open-telemetry/opentelemetry-python/pull/1842))
+- Apply validation of attributes to `Resource`, move attribute related logic to separate package.
+  ([#1834](https://github.com/open-telemetry/opentelemetry-python/pull/1834))
+- Fix start span behavior when excess links and attributes are included
+  ([#1856](https://github.com/open-telemetry/opentelemetry-python/pull/1856))
 
 ### Removed
 - Moved `opentelemetry-instrumentation` to contrib repository.

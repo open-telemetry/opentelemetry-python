@@ -37,7 +37,11 @@ from grpc import (
     ssl_channel_credentials,
 )
 
-from opentelemetry.proto.common.v1.common_pb2 import AnyValue, KeyValue
+from opentelemetry.proto.common.v1.common_pb2 import (
+    AnyValue,
+    ArrayValue,
+    KeyValue,
+)
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
@@ -81,7 +85,7 @@ def environ_to_compression(environ_key: str) -> Optional[Compression]:
     return _ENVIRON_TO_COMPRESSION[environ_value]
 
 
-def _translate_key_values(key: Text, value: Any) -> KeyValue:
+def _translate_value(value: Any) -> KeyValue:
 
     if isinstance(value, bool):
         any_value = AnyValue(bool_value=value)
@@ -96,17 +100,30 @@ def _translate_key_values(key: Text, value: Any) -> KeyValue:
         any_value = AnyValue(double_value=value)
 
     elif isinstance(value, Sequence):
-        any_value = AnyValue(array_value=value)
+        any_value = AnyValue(
+            array_value=ArrayValue(values=[_translate_value(v) for v in value])
+        )
 
-    elif isinstance(value, Mapping):
-        any_value = AnyValue(kvlist_value=value)
+    # Tracing specs currently does not support Mapping type attributes
+    # elif isinstance(value, Mapping):
+    #     any_value = AnyValue(
+    #         kvlist_value=KeyValueList(
+    #             values=[
+    #                 _translate_key_values(str(k), v) for k, v in value.items()
+    #             ]
+    #         )
+    #     )
 
     else:
         raise Exception(
             "Invalid type {} of value {}".format(type(value), value)
         )
 
-    return KeyValue(key=key, value=any_value)
+    return any_value
+
+
+def _translate_key_values(key: Text, value: Any) -> KeyValue:
+    return KeyValue(key=key, value=_translate_value(value))
 
 
 def get_resource_data(
@@ -245,14 +262,11 @@ class OTLPExporterMixin(
         pass
 
     def _export(self, data: TypingSequence[SDKDataT]) -> ExportResultT:
+
+        max_value = 64
         # expo returns a generator that yields delay values which grow
         # exponentially. Once delay is greater than max_value, the yielded
         # value will remain constant.
-        # max_value is set to 900 (900 seconds is 15 minutes) to use the same
-        # value as used in the Go implementation.
-
-        max_value = 900
-
         for delay in expo(max_value=max_value):
 
             if delay == max_value:
@@ -272,8 +286,6 @@ class OTLPExporterMixin(
                 if error.code() in [
                     StatusCode.CANCELLED,
                     StatusCode.DEADLINE_EXCEEDED,
-                    StatusCode.PERMISSION_DENIED,
-                    StatusCode.UNAUTHENTICATED,
                     StatusCode.RESOURCE_EXHAUSTED,
                     StatusCode.ABORTED,
                     StatusCode.OUT_OF_RANGE,
