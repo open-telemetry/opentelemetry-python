@@ -11,7 +11,7 @@ jobs:
 
     runs-on: ubuntu-latest
 
-    if: "!contains(github.event.pull_request.labels.*.name, 'Skip Public API check')"
+    if: "!contains(github.event.pull_request.labels.*.name, 'Approve Public API check')"
 
     steps:
       - name: Checkout the repo
