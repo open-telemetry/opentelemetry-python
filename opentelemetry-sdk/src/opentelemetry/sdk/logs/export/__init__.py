@@ -20,7 +20,7 @@ import threading
 from typing import Deque, List, Optional, Sequence
 
 from opentelemetry.context import attach, detach, set_value
-from opentelemetry.sdk.logs import LogData, LogPorcessor
+from opentelemetry.sdk.logs import LogData, LogProcessor
 from opentelemetry.util._time import _time_ns
 
 _logger = logging.getLogger(__name__)
@@ -61,7 +61,7 @@ class LogExporter(abc.ABC):
         """
 
 
-class SimpleLogPorcessor(LogPorcessor):
+class SimpleLogProcessor(LogProcessor):
     def __init__(self, exporter: LogExporter):
         self._exporter = exporter
         self._closed = False
@@ -95,7 +95,7 @@ class _FlushRequest:
         self.num_log_records = 0
 
 
-class BatchLogPorcessor(LogPorcessor):
+class BatchLogProcessor(LogProcessor):
     def __init__(
         self,
         exporter: LogExporter,

@@ -20,7 +20,7 @@ import threading
 from typing import Any, Callable, Optional, Tuple, Union
 
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util import _time_ns
+from opentelemetry.util._time import _time_ns
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import get_current_span
 from opentelemetry.trace.span import TraceFlags
