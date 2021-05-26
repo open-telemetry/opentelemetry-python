@@ -117,11 +117,11 @@ class TestResources(unittest.TestCase):
         self.assertEqual(resource.schema_url, "")
 
     def test_resource_merge(self):
-        left = resources.Resource({"service": "ui"}, "")
-        right = resources.Resource({"host": "service-host"}, "")
+        left = resources.Resource({"service": "ui"})
+        right = resources.Resource({"host": "service-host"})
         self.assertEqual(
             left.merge(right),
-            resources.Resource({"service": "ui", "host": "service-host"}, ""),
+            resources.Resource({"service": "ui", "host": "service-host"}),
         )
         schema_urls = (
             "https://opentelemetry.io/schemas/1.2.0",
@@ -156,15 +156,13 @@ class TestResources(unittest.TestCase):
         the exception of the empty string.
 
         """
-        left = resources.Resource({"service": "ui", "host": ""}, "")
+        left = resources.Resource({"service": "ui", "host": ""})
         right = resources.Resource(
-            {"host": "service-host", "service": "not-ui"}, ""
+            {"host": "service-host", "service": "not-ui"}
         )
         self.assertEqual(
             left.merge(right),
-            resources.Resource(
-                {"service": "not-ui", "host": "service-host"}, ""
-            ),
+            resources.Resource({"service": "not-ui", "host": "service-host"}),
         )
 
     def test_immutability(self):
@@ -185,7 +183,7 @@ class TestResources(unittest.TestCase):
         attributes_copy = attributes.copy()
         attributes_copy.update(default_attributes)
 
-        resource = resources.Resource.create(attributes, "")
+        resource = resources.Resource.create(attributes)
         self.assertEqual(resource.attributes, attributes_copy)
 
         resource.attributes["has_bugs"] = False
@@ -217,8 +215,7 @@ class TestResources(unittest.TestCase):
                 "": "empty-key-value",
                 None: "null-key-value",
                 "another-non-primitive": uuid.uuid4(),
-            },
-            "",
+            }
         )
         self.assertEqual(
             resource.attributes,
@@ -233,9 +230,7 @@ class TestResources(unittest.TestCase):
         self.assertEqual(aggregated_resources, resources.Resource.get_empty())
 
     def test_aggregated_resources_with_static_resource(self):
-        static_resource = resources.Resource(
-            {"static_key": "static_value"}, ""
-        )
+        static_resource = resources.Resource({"static_key": "static_value"})
 
         self.assertEqual(
             resources.get_aggregated_resources(
@@ -246,8 +241,7 @@ class TestResources(unittest.TestCase):
 
         resource_detector = mock.Mock(spec=resources.ResourceDetector)
         resource_detector.detect.return_value = resources.Resource(
-            {"static_key": "try_to_overwrite_existing_value", "key": "value"},
-            "",
+            {"static_key": "try_to_overwrite_existing_value", "key": "value"}
         )
         self.assertEqual(
             resources.get_aggregated_resources(
@@ -257,19 +251,18 @@ class TestResources(unittest.TestCase):
                 {
                     "static_key": "try_to_overwrite_existing_value",
                     "key": "value",
-                },
-                "",
+                }
             ),
         )
 
     def test_aggregated_resources_multiple_detectors(self):
         resource_detector1 = mock.Mock(spec=resources.ResourceDetector)
         resource_detector1.detect.return_value = resources.Resource(
-            {"key1": "value1"}, ""
+            {"key1": "value1"}
         )
         resource_detector2 = mock.Mock(spec=resources.ResourceDetector)
         resource_detector2.detect.return_value = resources.Resource(
-            {"key2": "value2", "key3": "value3"}, ""
+            {"key2": "value2", "key3": "value3"}
         )
         resource_detector3 = mock.Mock(spec=resources.ResourceDetector)
         resource_detector3.detect.return_value = resources.Resource(
@@ -277,8 +270,7 @@ class TestResources(unittest.TestCase):
                 "key2": "try_to_overwrite_existing_value",
                 "key3": "try_to_overwrite_existing_value",
                 "key4": "value4",
-            },
-            "",
+            }
         )
 
         self.assertEqual(
@@ -291,8 +283,7 @@ class TestResources(unittest.TestCase):
                     "key2": "try_to_overwrite_existing_value",
                     "key3": "try_to_overwrite_existing_value",
                     "key4": "value4",
-                },
-                "",
+                }
             ),
         )
 
@@ -393,18 +384,18 @@ class TestOTELResourceDetector(unittest.TestCase):
     def test_one(self):
         detector = resources.OTELResourceDetector()
         os.environ[resources.OTEL_RESOURCE_ATTRIBUTES] = "k=v"
-        self.assertEqual(detector.detect(), resources.Resource({"k": "v"}, ""))
+        self.assertEqual(detector.detect(), resources.Resource({"k": "v"}))
 
     def test_one_with_whitespace(self):
         detector = resources.OTELResourceDetector()
         os.environ[resources.OTEL_RESOURCE_ATTRIBUTES] = "    k  = v   "
-        self.assertEqual(detector.detect(), resources.Resource({"k": "v"}, ""))
+        self.assertEqual(detector.detect(), resources.Resource({"k": "v"}))
 
     def test_multiple(self):
         detector = resources.OTELResourceDetector()
         os.environ[resources.OTEL_RESOURCE_ATTRIBUTES] = "k=v,k2=v2"
         self.assertEqual(
-            detector.detect(), resources.Resource({"k": "v", "k2": "v2"}, "")
+            detector.detect(), resources.Resource({"k": "v", "k2": "v2"})
         )
 
     def test_multiple_with_whitespace(self):
@@ -413,7 +404,7 @@ class TestOTELResourceDetector(unittest.TestCase):
             resources.OTEL_RESOURCE_ATTRIBUTES
         ] = "    k  = v  , k2   = v2 "
         self.assertEqual(
-            detector.detect(), resources.Resource({"k": "v", "k2": "v2"}, "")
+            detector.detect(), resources.Resource({"k": "v", "k2": "v2"})
         )
 
     @mock.patch.dict(
@@ -424,7 +415,7 @@ class TestOTELResourceDetector(unittest.TestCase):
         detector = resources.OTELResourceDetector()
         self.assertEqual(
             detector.detect(),
-            resources.Resource({"service.name": "test-srv-name"}, ""),
+            resources.Resource({"service.name": "test-srv-name"}),
         )
 
     @mock.patch.dict(
@@ -438,5 +429,5 @@ class TestOTELResourceDetector(unittest.TestCase):
         detector = resources.OTELResourceDetector()
         self.assertEqual(
             detector.detect(),
-            resources.Resource({"service.name": "from-service-name"}, ""),
+            resources.Resource({"service.name": "from-service-name"}),
         )

@@ -159,21 +159,20 @@ class TestJaegerExporter(unittest.TestCase):
                 links=(link,),
                 kind=trace_api.SpanKind.CLIENT,
                 resource=Resource(
-                    attributes={"key_resource": "some_resource"},
-                    schema_url="",
+                    attributes={"key_resource": "some_resource"}
                 ),
             ),
             trace._Span(
                 name=span_names[1],
                 context=parent_span_context,
                 parent=None,
-                resource=Resource({}, ""),
+                resource=Resource({}),
             ),
             trace._Span(
                 name=span_names[2],
                 context=other_context,
                 parent=None,
-                resource=Resource({}, ""),
+                resource=Resource({}),
                 instrumentation_info=InstrumentationInfo(
                     name="name", version="version"
                 ),
@@ -400,8 +399,7 @@ class TestJaegerExporter(unittest.TestCase):
             resource=Resource(
                 attributes={
                     "key_resource": "some_resource some_resource some_more_resource"
-                },
-                schema_url="",
+                }
             ),
             context=trace_api.SpanContext(
                 trace_id=0x000000000000000000000000DEADBEEF,

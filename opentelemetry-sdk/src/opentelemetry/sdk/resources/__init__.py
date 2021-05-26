@@ -141,7 +141,9 @@ _OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
 class Resource:
     """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
 
-    def __init__(self, attributes: Attributes, schema_url: str):
+    def __init__(
+        self, attributes: Attributes, schema_url: typing.Optional[str] = ""
+    ):
         _filter_attributes(attributes)
         self._attributes = attributes.copy()
         self._schema_url = schema_url
@@ -239,14 +241,13 @@ class Resource:
         )
 
 
-_EMPTY_RESOURCE = Resource({}, "")
+_EMPTY_RESOURCE = Resource({})
 _DEFAULT_RESOURCE = Resource(
     {
         TELEMETRY_SDK_LANGUAGE: "python",
         TELEMETRY_SDK_NAME: "opentelemetry",
         TELEMETRY_SDK_VERSION: _OPENTELEMETRY_SDK_VERSION,
-    },
-    "",
+    }
 )
 
 
@@ -274,7 +275,7 @@ class OTELResourceDetector(ResourceDetector):
         service_name = os.environ.get(OTEL_SERVICE_NAME)
         if service_name:
             env_resource_map[SERVICE_NAME] = service_name
-        return Resource(env_resource_map, "")
+        return Resource(env_resource_map)
 
 
 def get_aggregated_resources(

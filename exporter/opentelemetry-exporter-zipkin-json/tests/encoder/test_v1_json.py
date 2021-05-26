@@ -187,7 +187,7 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                 trace_flags=TraceFlags(TraceFlags.SAMPLED),
             ),
             parent=trace_api.SpanContext(trace_id, parent_id, is_remote=False),
-            resource=trace.Resource({}, ""),
+            resource=trace.Resource({}),
         )
         otel_span.start(start_time=start_time)
         otel_span.end(end_time=end_time)

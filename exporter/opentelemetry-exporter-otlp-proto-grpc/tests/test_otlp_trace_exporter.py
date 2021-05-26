@@ -149,7 +149,7 @@ class TestOTLPSpanExporter(TestCase):
                     "trace_id": 67545097771067222548457157018666467027,
                 }
             ),
-            resource=SDKResource(OrderedDict([("a", 1), ("b", False)]), ""),
+            resource=SDKResource(OrderedDict([("a", 1), ("b", False)])),
             parent=Mock(**{"span_id": 12345}),
             attributes=OrderedDict([("a", 1), ("b", True)]),
             events=[event_mock],
