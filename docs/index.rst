@@ -35,7 +35,7 @@ In addition, there are several extension packages which can be installed separat
 
 These are for exporter and instrumentation packages respectively.
 The Jaeger, Zipkin, OTLP and OpenCensus Exporters can be found in the :scm_web:`exporter <exporter/>`
-directory of the repository. Instrumentations and additional exporters can be found at the 
+directory of the repository. Instrumentations and additional exporters can be found in the 
 `Contrib repo instrumentation <https://github.com/open-telemetry/opentelemetry-python-contrib/tree/main/instrumentation>`_
 and `Contrib repo exporter <https://github.com/open-telemetry/opentelemetry-python-contrib/tree/main/exporter>`_ directories.
 
