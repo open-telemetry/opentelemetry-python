@@ -1,4 +1,4 @@
-pylint==2.6.0
+pylint==2.7.1
 flake8~=3.7
 isort~=5.8
 black~=20.8b1
