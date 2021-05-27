@@ -301,15 +301,6 @@ def get_aggregated_resources(
             detector = detectors[detector_ind]
             try:
                 detected_resources = future.result(timeout=timeout)
-                if (
-                    final_resource.schema_url != ""
-                    and detected_resources.schema_url != ""
-                    and final_resource != detected_resources
-                ):
-                    logger.error(
-                        "Failed to aggregate resources: The Schema URL of the detectors are not empty and are different"
-                    )
-                    return _EMPTY_RESOURCE
             # pylint: disable=broad-except
             except Exception as ex:
                 if detector.raise_on_error:
