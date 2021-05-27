@@ -223,7 +223,9 @@ class Resource:
             schema_url = other.schema_url
         else:
             logger.error(
-                f"Failed to merge resources: The two schemas {self.schema_url} and {other.schema_url} are incompatible"
+                "Failed to merge resources: The two schemas %s and %s are incompatible",
+                self.schema_url,
+                other.schema_url,
             )
             return self
 
