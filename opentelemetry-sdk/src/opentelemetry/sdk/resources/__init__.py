@@ -204,7 +204,7 @@ class Resource:
         The updating resource's `schema_url` will be used only if the old
         `schema_url` is empty. Attempting to merge two resources with
         different, non-empty values for `schema_url` will result in an error
-        and return an empty resource.
+        and return the old resource.
 
         Args:
             other: The other resource to be merged.
