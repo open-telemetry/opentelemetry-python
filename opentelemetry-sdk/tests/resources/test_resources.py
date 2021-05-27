@@ -147,7 +147,7 @@ class TestResources(unittest.TestCase):
         left = resources.Resource.create({}, schema_urls[0])
         right = resources.Resource.create({}, schema_urls[1])
         with self.assertLogs(level=ERROR):
-            self.assertEqual(left.merge(right), resources._EMPTY_RESOURCE)
+            self.assertEqual(left.merge(right), left)
 
     def test_resource_merge_empty_string(self):
         """Verify Resource.merge behavior with the empty string.
@@ -319,7 +319,9 @@ class TestResources(unittest.TestCase):
                 resources.get_aggregated_resources(
                     [resource_detector2, resource_detector3]
                 ),
-                resources._EMPTY_RESOURCE,
+                resources.Resource(
+                    {"key2": "value2", "key3": "value3"}, "url1"
+                ),
             )
 
     def test_resource_detector_ignore_error(self):
