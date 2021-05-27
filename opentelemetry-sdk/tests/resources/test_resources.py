@@ -146,8 +146,10 @@ class TestResources(unittest.TestCase):
 
         left = resources.Resource.create({}, schema_urls[0])
         right = resources.Resource.create({}, schema_urls[1])
-        with self.assertLogs(level=ERROR):
+        with self.assertLogs(level=ERROR) as log_entry:
             self.assertEqual(left.merge(right), left)
+            self.assertIn(schema_urls[0], log_entry.output[0])
+            self.assertIn(schema_urls[1], log_entry.output[0])
 
     def test_resource_merge_empty_string(self):
         """Verify Resource.merge behavior with the empty string.
@@ -305,6 +307,15 @@ class TestResources(unittest.TestCase):
             },
             "url2",
         )
+        resource_detector4 = mock.Mock(spec=resources.ResourceDetector)
+        resource_detector4.detect.return_value = resources.Resource(
+            {
+                "key2": "try_to_overwrite_existing_value",
+                "key3": "try_to_overwrite_existing_value",
+                "key4": "value4",
+            },
+            "url1",
+        )
         self.assertEqual(
             resources.get_aggregated_resources(
                 [resource_detector1, resource_detector2]
@@ -314,7 +325,7 @@ class TestResources(unittest.TestCase):
                 "url1",
             ),
         )
-        with self.assertLogs(level=ERROR):
+        with self.assertLogs(level=ERROR) as log_entry:
             self.assertEqual(
                 resources.get_aggregated_resources(
                     [resource_detector2, resource_detector3]
@@ -323,6 +334,30 @@ class TestResources(unittest.TestCase):
                     {"key2": "value2", "key3": "value3"}, "url1"
                 ),
             )
+            self.assertIn("url1", log_entry.output[0])
+            self.assertIn("url2", log_entry.output[0])
+        with self.assertLogs(level=ERROR):
+            self.assertEqual(
+                resources.get_aggregated_resources(
+                    [
+                        resource_detector2,
+                        resource_detector3,
+                        resource_detector4,
+                        resource_detector1,
+                    ]
+                ),
+                resources.Resource(
+                    {
+                        "key1": "value1",
+                        "key2": "try_to_overwrite_existing_value",
+                        "key3": "try_to_overwrite_existing_value",
+                        "key4": "value4",
+                    },
+                    "url1",
+                ),
+            )
+            self.assertIn("url1", log_entry.output[0])
+            self.assertIn("url2", log_entry.output[0])
 
     def test_resource_detector_ignore_error(self):
         resource_detector = mock.Mock(spec=resources.ResourceDetector)
