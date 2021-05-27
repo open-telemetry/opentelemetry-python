@@ -185,7 +185,7 @@ class JaegerExporter(SpanExporter):
         # Thrift HTTP Client expects timeout in millis
         timeout_in_millis = self._timeout * 1000.0
         self._collector = Collector(
-            collector_endpoint=self.collector_endpoint,
+            thrift_url=self.collector_endpoint,
             auth=auth,
             timeout_in_millis=timeout_in_millis,
         )

@@ -104,17 +104,17 @@ class Collector:
     to the Collectors over HTTP/HTTPS.
 
     Args:
-        collector_endpoint: Endpoint used to send spans
+        thrift_url: Endpoint used to send spans
             directly to Collector the over HTTP.
         auth: Auth tuple that contains username and password for Basic Auth.
         timeout_in_millis: timeout for THttpClient.
     """
 
-    def __init__(self, collector_endpoint, auth=None, timeout_in_millis=None):
-        self.collector_endpoint = collector_endpoint
+    def __init__(self, thrift_url="", auth=None, timeout_in_millis=None):
+        self.thrift_url = thrift_url
         self.auth = auth
         self.http_transport = THttpClient.THttpClient(
-            uri_or_host=self.collector_endpoint
+            uri_or_host=self.thrift_url
         )
         if timeout_in_millis is not None:
             self.http_transport.setTimeout(timeout_in_millis)
