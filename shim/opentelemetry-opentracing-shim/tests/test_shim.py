@@ -477,10 +477,12 @@ class TestShim(TestCase):
         # Raise an exception while a span is active.
         with self.assertRaises(Exception):
             with self.shim.start_active_span("TestName") as scope:
-                raise Exception
+                raise Exception("bad thing")
 
         # Verify exception details have been added to span.
-        self.assertEqual(scope.span.unwrap().attributes["error"], True)
+        exc_event = scope.span.unwrap().events[0]
+        self.assertEqual(exc_event.name, "exception")
+        self.assertEqual(exc_event.attributes["exception.message"], "bad thing")
 
     def test_inject_http_headers(self):
         """Test `inject()` method for Format.HTTP_HEADERS."""

@@ -406,7 +406,8 @@ class ScopeShim(Scope):
     def __exit__(self, exc_type, exc_val, exc_tb):
         """
         Override the __exit__ method of `opentracing.scope.Scope` so we can report
-        exceptions correctly in opentelemetry specification format. """
+        exceptions correctly in opentelemetry specification format.
+        """
         self._end_span_scope(exc_type, exc_val, exc_tb)
 
     def _end_span_scope(
