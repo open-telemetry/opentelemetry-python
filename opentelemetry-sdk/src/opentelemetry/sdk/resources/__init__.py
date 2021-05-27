@@ -166,8 +166,6 @@ class Resource:
         """
         if not attributes:
             attributes = {}
-        if not schema_url:
-            schema_url = ""
         resource = _DEFAULT_RESOURCE.merge(
             OTELResourceDetector().detect()
         ).merge(Resource(attributes, schema_url))
