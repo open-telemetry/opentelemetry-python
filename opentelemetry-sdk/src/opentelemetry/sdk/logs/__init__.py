@@ -19,18 +19,22 @@ import logging
 import threading
 from typing import Any, Callable, Optional, Tuple, Union
 
+from opentelemetry.sdk.logs.severity import (
+    SeverityNumber,
+    std_to_opentelemetry,
+)
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.util._time import _time_ns
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import get_current_span
 from opentelemetry.trace.span import TraceFlags
+from opentelemetry.util._time import _time_ns
 from opentelemetry.util.types import Attributes
 
 
-class LogRecord:
-    """A LogRecord instance represents an event being logged.
+class OTELLogRecord:
+    """A OTELLogRecord instance represents an event being logged.
 
-    LogRecord instances are created every time something is logged.
+    OTELLogRecord instances are created every time something is logged.
     They contain all the information pertinent to the event being logged.
     """
 
@@ -41,7 +45,7 @@ class LogRecord:
         span_id: Optional[int] = None,
         trace_flags: Optional[TraceFlags] = None,
         severity_text: Optional[str] = None,
-        severity_number: Optional[int] = None,
+        severity_number: Optional[SeverityNumber] = None,
         name: Optional[str] = None,
         body: Optional[str] = None,
         resource: Optional[Resource] = None,
@@ -58,12 +62,48 @@ class LogRecord:
         self.resource = resource
         self.attributes = attributes
 
+    @classmethod
+    def from_log_record(
+        cls, record: logging.LogRecord, resource: Resource = None
+    ):
+        timestamp = int(record.created * 1e9)
+        span_context = get_current_span().get_span_context()
+        attributes: Attributes = {}  # TODO: attributes from record metadata
+        severity_number = std_to_opentelemetry(record.levelno)
+        return cls(
+            timestamp=timestamp,
+            trace_id=span_context.trace_id,
+            span_id=span_context.span_id,
+            trace_flags=span_context.trace_flags,
+            severity_text=record.levelname,
+            severity_number=severity_number,
+            body=record.msg,
+            resource=resource,
+            attributes=attributes,
+        )
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            self.timestamp == other.timestamp
+            and self.trace_id == other.trace_id
+            and self.span_id == other.span_id
+            and self.trace_flags == other.trace_flags
+            and self.severity_text == other.severity_text
+            and self.severity_number == other.severity_number
+            and self.name == other.name
+            and self.body == other.body
+            and self.resource == other.resource
+            and self.attributes == other.attributes
+        )
+
 
 class LogData:
     """Readable LogRecord data plus associated Resource and InstrumentationLibrary."""
 
     def __init__(
-        self, log_record: LogRecord, instrumentation_info: InstrumentationInfo
+        self,
+        log_record: OTELLogRecord,
+        instrumentation_info: InstrumentationInfo,
     ):
         self.log_record = log_record
         self.instrumentation_info = instrumentation_info
@@ -215,21 +255,9 @@ class LogEmitter(logging.Handler):
         self._instrumentation_info = instrumentation_info
 
     def emit(self, record: logging.LogRecord):
-        """Emits the OTEL :class:`LogRecord` by translating `logging.LogRecord`."""
-        timestamp = int(record.created * 1e9)
-        span_context = get_current_span().get_span_context()
-        attributes: Attributes = {}
-        log_record = LogRecord(
-            timestamp=timestamp,
-            trace_id=span_context.trace_id,
-            span_id=span_context.span_id,
-            trace_flags=span_context.trace_flags,
-            severity_text=record.levelname,
-            severity_number=record.levelno,
-            name=record.name,
-            body=record.msg,
-            resource=self._resource,
-            attributes=attributes,
+        """Emits the OTEL :class:`OTELLogRecord` by translating `logging.LogRecord`."""
+        log_record = OTELLogRecord.from_log_record(
+            record, resource=self._resource
         )
         log_data = LogData(log_record, self._instrumentation_info)
         self._multi_log_processor.emit(log_data)
