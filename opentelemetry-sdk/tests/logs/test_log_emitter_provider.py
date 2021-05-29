@@ -18,7 +18,6 @@ import logging
 import shutil
 import subprocess
 import threading
-import time
 import unittest
 from unittest.mock import MagicMock, Mock
 

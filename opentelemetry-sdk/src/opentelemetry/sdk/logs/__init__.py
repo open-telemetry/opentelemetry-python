@@ -77,7 +77,7 @@ class OTELLogRecord:
             trace_flags=span_context.trace_flags,
             severity_text=record.levelname,
             severity_number=severity_number,
-            body=record.msg,
+            body=record.getMessage(),
             resource=resource,
             attributes=attributes,
         )
