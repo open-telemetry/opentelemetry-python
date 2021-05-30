@@ -66,13 +66,13 @@ class SimpleLogProcessor(LogProcessor):
         self._exporter = exporter
         self._closed = False
 
-    def emit(self, data: LogData):
+    def emit(self, log_data: LogData):
         if self._closed:
             _logger.warning("Processor is already shutdown, ignoring call")
             return
         token = attach(set_value("suppress_instrumentation", True))
         try:
-            self._exporter.export((data,))
+            self._exporter.export((log_data,))
         except Exception:  # pylint: disable=broad-except
             _logger.exception("Exception while exporting logs.")
         detach(token)
