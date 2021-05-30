@@ -36,7 +36,7 @@ class InMemoryLogExporter(LogExporter):
         with self._lock:
             self._logs.clear()
 
-    def get_finished_logs(self) -> typing.Tuple[LogData]:
+    def get_finished_logs(self) -> typing.Tuple[LogData, ...]:
         with self._lock:
             return tuple(self._logs)
 

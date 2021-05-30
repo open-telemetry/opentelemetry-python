@@ -90,6 +90,8 @@ class OTELLogRecord:
         )
 
     def __eq__(self, other: object) -> bool:
+        if not isinstance(other, OTELLogRecord):
+            return NotImplemented
         return (
             self.timestamp == other.timestamp
             and self.trace_id == other.trace_id

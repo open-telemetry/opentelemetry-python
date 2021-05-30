@@ -111,7 +111,7 @@ class BatchLogProcessor(LogProcessor):
         self._worker_thread = threading.Thread(target=self.worker, daemon=True)
         self._condition = threading.Condition(threading.Lock())
         self._closed = False
-        self._flush_request = None  # type: _FlushRequest
+        self._flush_request = None  # type: Optional[_FlushRequest]
         self._log_records = [
             None
         ] * self._max_export_batch_size  # type: List[Optional[LogData]]
