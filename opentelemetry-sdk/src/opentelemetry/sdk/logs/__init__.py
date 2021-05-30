@@ -41,8 +41,9 @@ _logger = logging.getLogger(__name__)
 class OTELLogRecord:
     """A OTELLogRecord instance represents an event being logged.
 
-    OTELLogRecord instances are created every time something is logged.
-    They contain all the information pertinent to the event being logged.
+    OTELLogRecord instances are created and emitted via `LogEmitter`
+    every time something is logged. They contain all the information
+    pertinent to the event being logged.
     """
 
     def __init__(
@@ -119,9 +120,16 @@ class LogData:
 
 
 class LogProcessor(abc.ABC):
+    """Interface to hook the log record emitting action.
+
+    Log processors can be registered directly using
+    :func:`LogEmitterProvider.add_log_processor` and they are invoked
+    in the same order as they were registered.
+    """
+
     @abc.abstractmethod
     def emit(self, log_data: LogData):
-        """Emits the LogData"""
+        """Emits the `LogData`"""
 
     @abc.abstractmethod
     def shutdown(self):
@@ -142,6 +150,12 @@ class LogProcessor(abc.ABC):
 
 
 class SynchronousMultiLogProcessor(LogProcessor):
+    """Implementation of class:`LogProcessor` that forwards all received
+    events to a list of log processors sequentially.
+
+    The underlying log processors are called in sequential order as they were
+    added.
+    """
     def __init__(self):
         # use a tuple to avoid race conditions when adding a new log and
         # iterating through it on "emit".
@@ -187,6 +201,17 @@ class SynchronousMultiLogProcessor(LogProcessor):
 
 
 class ConcurrentMultiLogProcessor(LogProcessor):
+    """Implementation of :class:`LogProcessor` that forwards all received
+    events to a list of log processors in parallel.
+
+    Calls to the underlying log processors are forwarded in parallel by
+    submitting them to a thread pool executor and waiting until each log
+    processor finished its work.
+
+    Args:
+        num_threads: The number of threads managed by the thread pool executor
+            and thus defining how many log processors can work in parallel.
+    """
     def __init__(self, max_workers: int = 2):
         # use a tuple to avoid race conditions when adding a new log and
         # iterating through it on "emit".
@@ -250,6 +275,10 @@ class ConcurrentMultiLogProcessor(LogProcessor):
 
 
 class LogEmitter(logging.Handler):
+    """
+    A handler class which emits formatted logging records in
+    OpenTelemetry manner.
+    """
     def __init__(
         self,
         resource: Resource,
