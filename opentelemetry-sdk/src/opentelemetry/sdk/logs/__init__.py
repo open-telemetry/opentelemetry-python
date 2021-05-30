@@ -156,6 +156,7 @@ class SynchronousMultiLogProcessor(LogProcessor):
     The underlying log processors are called in sequential order as they were
     added.
     """
+
     def __init__(self):
         # use a tuple to avoid race conditions when adding a new log and
         # iterating through it on "emit".
@@ -212,6 +213,7 @@ class ConcurrentMultiLogProcessor(LogProcessor):
         num_threads: The number of threads managed by the thread pool executor
             and thus defining how many log processors can work in parallel.
     """
+
     def __init__(self, max_workers: int = 2):
         # use a tuple to avoid race conditions when adding a new log and
         # iterating through it on "emit".
@@ -279,6 +281,7 @@ class LogEmitter(logging.Handler):
     A handler class which emits formatted logging records in
     OpenTelemetry manner.
     """
+
     def __init__(
         self,
         resource: Resource,

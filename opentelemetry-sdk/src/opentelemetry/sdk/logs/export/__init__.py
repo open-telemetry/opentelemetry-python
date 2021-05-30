@@ -47,7 +47,7 @@ class LogExporter(abc.ABC):
         """Exports a batch of logs.
 
         Args:
-            batch: The list of `opentelemetry.logs.LogData` objects to be exported
+            batch: The list of `LogData` objects to be exported
 
         Returns:
             The result of the export

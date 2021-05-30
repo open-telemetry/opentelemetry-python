@@ -9,5 +9,6 @@ OpenTelemetry Python SDK
     metrics
     resources
     trace
+    logs
     error_handler
     environment_variables
