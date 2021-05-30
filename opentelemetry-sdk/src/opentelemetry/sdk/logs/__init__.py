@@ -16,9 +16,13 @@ import abc
 import atexit
 import concurrent.futures
 import logging
+import os
 import threading
-from typing import Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Tuple, Union, cast
 
+from opentelemetry.sdk.environment_variables import (
+    OTEL_PYTHON_LOG_EMITTER_PROVIDER,
+)
 from opentelemetry.sdk.logs.severity import (
     SeverityNumber,
     std_to_opentelemetry,
@@ -27,8 +31,11 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import get_current_span
 from opentelemetry.trace.span import TraceFlags
+from opentelemetry.util._providers import _load_provider
 from opentelemetry.util._time import _time_ns
 from opentelemetry.util.types import Attributes
+
+_logger = logging.getLogger(__name__)
 
 
 class OTELLogRecord:
@@ -322,7 +329,7 @@ class LogEmitterProvider:
         processors. This means that log processors further back in the list
         have less time to flush their logs.
         To have log processors flush their logs in parallel it is possible to
-        initialize the tracer provider with an instance of
+        initialize the log emitter provider with an instance of
         `ConcurrentMultiLogProcessor` at the cost of using multiple threads.
 
         Args:
@@ -334,3 +341,60 @@ class LogEmitterProvider:
             False otherwise.
         """
         return self._multi_log_processor.force_flush(timeout_millis)
+
+
+_LOG_EMITTER_PROVIDER = None
+
+
+def get_log_emitter_provider() -> LogEmitterProvider:
+    """Gets the current global :class:`~.LogEmitterProvider` object."""
+    global _LOG_EMITTER_PROVIDER  # pylint: disable=global-statement
+    if _LOG_EMITTER_PROVIDER is None:
+        if OTEL_PYTHON_LOG_EMITTER_PROVIDER not in os.environ:
+            _LOG_EMITTER_PROVIDER = LogEmitterProvider()
+            return _LOG_EMITTER_PROVIDER
+
+        _LOG_EMITTER_PROVIDER = cast(
+            "LogEmitterProvider",
+            _load_provider(
+                OTEL_PYTHON_LOG_EMITTER_PROVIDER, "log_emitter_provider"
+            ),
+        )
+
+    return _LOG_EMITTER_PROVIDER
+
+
+def set_log_emitter_provider(log_emitter_provider: LogEmitterProvider) -> None:
+    """Sets the current global :class:`~.LogEmitterProvider` object.
+
+    This can only be done once, a warning will be logged if any furter attempt
+    is made.
+    """
+    global _LOG_EMITTER_PROVIDER  # pylint: disable=global-statement
+
+    if _LOG_EMITTER_PROVIDER is not None:
+        _logger.warning(
+            "Overriding of current LogEmitterProvider is not allowed"
+        )
+        return
+
+    _LOG_EMITTER_PROVIDER = log_emitter_provider
+
+
+def get_log_emitter(
+    instrumenting_module_name: str,
+    instrumenting_library_version: str = "",
+    log_emitter_provider: Optional[LogEmitterProvider] = None,
+) -> LogEmitter:
+    """Returns a `LogEmitter` for use within a python process.
+
+    This function is a convenience wrapper for
+    opentelemetry.sdk.logs.LogEmitterProvider.get_log_emitter.
+
+    If log_emitter_provider param is omitted the current configured one is used.
+    """
+    if log_emitter_provider is None:
+        log_emitter_provider = get_log_emitter_provider()
+    return log_emitter_provider.get_log_emitter(
+        instrumenting_module_name, instrumenting_library_version
+    )

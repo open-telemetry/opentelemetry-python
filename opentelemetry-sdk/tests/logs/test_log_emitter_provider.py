@@ -21,7 +21,7 @@ import threading
 import unittest
 from unittest.mock import MagicMock, Mock
 
-from opentelemetry.sdk import trace
+from opentelemetry.sdk import logs, trace
 from opentelemetry.sdk.logs import (
     ConcurrentMultiLogProcessor,
     LogEmitterProvider,
@@ -65,7 +65,7 @@ class TestLogEmitterProvider(unittest.TestCase):
     def test_log_emitter_provider_defaults(self):
         provider = LogEmitterProvider()
         self.assertEqual(provider._resource, Resource.create())
-        self.assertIsInstance(provider._multi_log_processor, LogProcessor)
+        self.assertIsInstance(provider._multi_log_processor, logs.LogProcessor)
         self.assertIsNotNone(provider._at_exit_handler)
 
     def test_log_emitter_provider_emitter(self):
