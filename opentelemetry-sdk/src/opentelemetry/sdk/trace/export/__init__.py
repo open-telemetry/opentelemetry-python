@@ -28,6 +28,7 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
+from opentelemetry.instrumentation.utils import _SUPPRESS_INSTRUMENTATION_KEY
 from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_EXPORT_TIMEOUT,
     OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
@@ -38,7 +39,6 @@ from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
 from opentelemetry.util._time import _time_ns
 
 logger = logging.getLogger(__name__)
-_SUPPRESS_INSTRUMENTATION_KEY = create_key("suppress_instrumentation")
 
 
 class SpanExportResult(Enum):
