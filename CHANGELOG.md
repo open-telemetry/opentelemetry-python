@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1855](https://github.com/open-telemetry/opentelemetry-python/pull/1855))
 - Fixed exporter OTLP header parsing to match baggage header formatting.
   ([#1869](https://github.com/open-telemetry/opentelemetry-python/pull/1869))
+- Added optional `schema_url` field to `Resource` class
+  ([#1871](https://github.com/open-telemetry/opentelemetry-python/pull/1871))
 - Update protos to latest version release 0.9.0
   ([#1873](https://github.com/open-telemetry/opentelemetry-python/pull/1873))
 
