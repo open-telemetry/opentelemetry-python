@@ -19,7 +19,7 @@ if version_info.minor < 7:
     getLogger(__name__).warning(  # pylint: disable=logging-not-lazy
         "You are using Python 3.%s. This version does not support timestamps "
         "with nanosecond precision and the OpenTelemetry SDK will use "
-        "millisecond precision instead. Please refer to PEP 546 for more "
+        "millisecond precision instead. Please refer to PEP 564 for more "
         "information. Please upgrade to Python 3.7 or newer to use nanosecond "
         "precision." % version_info.minor
     )
