@@ -62,9 +62,12 @@ from opentelemetry.util._time import _time_ns
 
 logger = logging.getLogger(__name__)
 
-_DEFAULT_SPAN_EVENTS_LIMIT = 128
-_DEFAULT_SPAN_LINKS_LIMIT = 128
-_DEFAULT_SPAN_ATTRIBUTES_LIMIT = 128
+_DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT = 128
+_DEFAULT_OTEL_SPAN_EVENT_COUNT_LIMIT = 128
+_DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT = 128
+
+
+_ENV_VALUE_UNSET = "unset"
 
 # pylint: disable=protected-access
 _TRACE_SAMPLER = sampling._get_from_env_or_default()
@@ -499,19 +502,29 @@ class ReadableSpan:
         return f_links
 
 
-class _Limits:
+class SpanLimits:
     """The limits that should be enforce on recorded data such as events, links, attributes etc.
 
     This class does not enforce any limits itself. It only provides an a way read limits from env,
-    default values and in future from user provided arguments.
+    default values and from user provided arguments.
 
-    All limit must be either a non-negative integer or ``None``.
-    Setting a limit to ``None`` will not set any limits for that field/type.
+    All limit arguments must be either a non-negative integer, ``None`` or ``SpanLimits.UNSET``.
+
+    - All limit arguments are optional.
+    - If a limit argument is not set, the class will try to read it's value from the corresponding
+      environment variable.
+    - If the environment variable is not set, the default value for the limit is used.
 
     Args:
-        max_events: Maximum number of events that can be added to a Span.
-        max_links: Maximum number of links that can be added to a Span.
         max_attributes: Maximum number of attributes that can be added to a Span.
+            Environment variable: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
+            Default: {_DEFAULT_SPAN_ATTRIBUTE_COUNT_LIMIT}
+        max_events: Maximum number of events that can be added to a Span.
+            Environment variable: OTEL_SPAN_EVENT_COUNT_LIMIT
+            Default: {_DEFAULT_SPAN_EVENT_COUNT_LIMIT}
+        max_links: Maximum number of links that can be added to a Span.
+            Environment variable: OTEL_SPAN_LINK_COUNT_LIMIT
+            Default: {_DEFAULT_SPAN_LINK_COUNT_LIMIT}
     """
 
     UNSET = -1
@@ -529,13 +542,17 @@ class _Limits:
         self.max_attributes = self._from_env_if_absent(
             max_attributes,
             OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
-            _DEFAULT_SPAN_ATTRIBUTES_LIMIT,
+            _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
         )
         self.max_events = self._from_env_if_absent(
-            max_events, OTEL_SPAN_EVENT_COUNT_LIMIT, _DEFAULT_SPAN_EVENTS_LIMIT
+            max_events,
+            OTEL_SPAN_EVENT_COUNT_LIMIT,
+            _DEFAULT_OTEL_SPAN_EVENT_COUNT_LIMIT,
         )
         self.max_links = self._from_env_if_absent(
-            max_links, OTEL_SPAN_LINK_COUNT_LIMIT, _DEFAULT_SPAN_LINKS_LIMIT
+            max_links,
+            OTEL_SPAN_LINK_COUNT_LIMIT,
+            _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT,
         )
 
     def __repr__(self):
@@ -556,7 +573,7 @@ class _Limits:
             str_value = environ.get(env_var, "").strip().lower()
             if not str_value:
                 return default
-            if str_value == "unset":
+            if str_value == _ENV_VALUE_UNSET:
                 return None
 
             try:
@@ -569,14 +586,16 @@ class _Limits:
         return value
 
 
-_UnsetLimits = _Limits(
-    max_attributes=_Limits.UNSET,
-    max_events=_Limits.UNSET,
-    max_links=_Limits.UNSET,
+_UnsetLimits = SpanLimits(
+    max_attributes=SpanLimits.UNSET,
+    max_events=SpanLimits.UNSET,
+    max_links=SpanLimits.UNSET,
 )
 
-SPAN_ATTRIBUTE_COUNT_LIMIT = _Limits._from_env_if_absent(
-    None, OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT, _DEFAULT_SPAN_ATTRIBUTES_LIMIT
+SPAN_ATTRIBUTE_COUNT_LIMIT = SpanLimits._from_env_if_absent(
+    None,
+    OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+    _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
 )
 
 
@@ -599,6 +618,7 @@ class Span(trace_api.Span, ReadableSpan):
         links: Links to other spans to be exported
         span_processor: `SpanProcessor` to invoke when starting and ending
             this `Span`.
+        limits: `SpanLimits` instance that was passed to the `TracerProvider`
     """
 
     def __new__(cls, *args, **kwargs):
@@ -623,6 +643,7 @@ class Span(trace_api.Span, ReadableSpan):
         instrumentation_info: InstrumentationInfo = None,
         record_exception: bool = True,
         set_status_on_exception: bool = True,
+        limits=_UnsetLimits,
     ) -> None:
         super().__init__(
             name=name,
@@ -637,6 +658,7 @@ class Span(trace_api.Span, ReadableSpan):
         self._record_exception = record_exception
         self._set_status_on_exception = set_status_on_exception
         self._span_processor = span_processor
+        self._limits = limits
         self._lock = threading.Lock()
 
         _filter_attributes(attributes)
@@ -847,10 +869,6 @@ class _Span(Span):
     by other mechanisms than through the `Tracer`.
     """
 
-    def __init__(self, *args, limits=_UnsetLimits, **kwargs):
-        self._limits = limits
-        super().__init__(*args, **kwargs)
-
 
 class Tracer(trace_api.Tracer):
     """See `opentelemetry.trace.Tracer`."""
@@ -864,13 +882,14 @@ class Tracer(trace_api.Tracer):
         ],
         id_generator: IdGenerator,
         instrumentation_info: InstrumentationInfo,
+        span_limits: SpanLimits,
     ) -> None:
         self.sampler = sampler
         self.resource = resource
         self.span_processor = span_processor
         self.id_generator = id_generator
         self.instrumentation_info = instrumentation_info
-        self._limits = None
+        self._span_limits = span_limits
 
     @contextmanager
     def start_as_current_span(
@@ -972,7 +991,7 @@ class Tracer(trace_api.Tracer):
                 instrumentation_info=self.instrumentation_info,
                 record_exception=record_exception,
                 set_status_on_exception=set_status_on_exception,
-                limits=self._limits,
+                limits=self._span_limits,
             )
             span.start(start_time=start_time, parent_context=context)
         else:
@@ -992,6 +1011,7 @@ class TracerProvider(trace_api.TracerProvider):
             SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor
         ] = None,
         id_generator: IdGenerator = None,
+        span_limits: SpanLimits = None,
     ):
         self._active_span_processor = (
             active_span_processor or SynchronousMultiSpanProcessor()
@@ -1002,7 +1022,7 @@ class TracerProvider(trace_api.TracerProvider):
             self.id_generator = id_generator
         self._resource = resource
         self.sampler = sampler
-        self._limits = _Limits()
+        self._span_limits = span_limits or SpanLimits()
         self._atexit_handler = None
         if shutdown_on_exit:
             self._atexit_handler = atexit.register(self.shutdown)
@@ -1019,7 +1039,7 @@ class TracerProvider(trace_api.TracerProvider):
         if not instrumenting_module_name:  # Reject empty strings too.
             instrumenting_module_name = ""
             logger.error("get_tracer called with missing module name.")
-        tracer = Tracer(
+        return Tracer(
             self.sampler,
             self.resource,
             self._active_span_processor,
@@ -1027,9 +1047,8 @@ class TracerProvider(trace_api.TracerProvider):
             InstrumentationInfo(
                 instrumenting_module_name, instrumenting_library_version
             ),
+            self._span_limits,
         )
-        tracer._limits = self._limits
-        return tracer
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Registers a new :class:`SpanProcessor` for this `TracerProvider`.
