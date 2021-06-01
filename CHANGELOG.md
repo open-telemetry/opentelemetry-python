@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added support for CreateKey functionality.
   ([#1853](https://github.com/open-telemetry/opentelemetry-python/pull/1853))
 
+### Added 
+- Allow span limits to be set programatically via TracerProvider.
+  ([#1877](https://github.com/open-telemetry/opentelemetry-python/pull/1877))
+
 ### Changed
 - Updated get_tracer to return an empty string when passed an invalid name
   ([#1854](https://github.com/open-telemetry/opentelemetry-python/pull/1854))
@@ -15,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1855](https://github.com/open-telemetry/opentelemetry-python/pull/1855))
 - Fixed exporter OTLP header parsing to match baggage header formatting.
   ([#1869](https://github.com/open-telemetry/opentelemetry-python/pull/1869))
+- Added optional `schema_url` field to `Resource` class
+  ([#1871](https://github.com/open-telemetry/opentelemetry-python/pull/1871))
+- Update protos to latest version release 0.9.0
+  ([#1873](https://github.com/open-telemetry/opentelemetry-python/pull/1873))
 
 ## [1.2.0, 0.21b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.2.0-0.21b0) - 2021-05-11
 

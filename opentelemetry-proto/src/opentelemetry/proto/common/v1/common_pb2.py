@@ -18,7 +18,7 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   package='opentelemetry.proto.common.v1',
   syntax='proto3',
   serialized_options=b'\n io.opentelemetry.proto.common.v1B\013CommonProtoP\001Z>github.com/open-telemetry/opentelemetry-proto/gen/go/common/v1',
-  serialized_pb=b'\n*opentelemetry/proto/common/v1/common.proto\x12\x1dopentelemetry.proto.common.v1\"\xf5\x01\n\x08\x41nyValue\x12\x16\n\x0cstring_value\x18\x01 \x01(\tH\x00\x12\x14\n\nbool_value\x18\x02 \x01(\x08H\x00\x12\x13\n\tint_value\x18\x03 \x01(\x03H\x00\x12\x16\n\x0c\x64ouble_value\x18\x04 \x01(\x01H\x00\x12@\n\x0b\x61rray_value\x18\x05 \x01(\x0b\x32).opentelemetry.proto.common.v1.ArrayValueH\x00\x12\x43\n\x0ckvlist_value\x18\x06 \x01(\x0b\x32+.opentelemetry.proto.common.v1.KeyValueListH\x00\x42\x07\n\x05value\"E\n\nArrayValue\x12\x37\n\x06values\x18\x01 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.AnyValue\"G\n\x0cKeyValueList\x12\x37\n\x06values\x18\x01 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\"O\n\x08KeyValue\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x36\n\x05value\x18\x02 \x01(\x0b\x32\'.opentelemetry.proto.common.v1.AnyValue\",\n\x0eStringKeyValue\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t\"7\n\x16InstrumentationLibrary\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07version\x18\x02 \x01(\tBq\n io.opentelemetry.proto.common.v1B\x0b\x43ommonProtoP\x01Z>github.com/open-telemetry/opentelemetry-proto/gen/go/common/v1b\x06proto3'
+  serialized_pb=b'\n*opentelemetry/proto/common/v1/common.proto\x12\x1dopentelemetry.proto.common.v1\"\x8c\x02\n\x08\x41nyValue\x12\x16\n\x0cstring_value\x18\x01 \x01(\tH\x00\x12\x14\n\nbool_value\x18\x02 \x01(\x08H\x00\x12\x13\n\tint_value\x18\x03 \x01(\x03H\x00\x12\x16\n\x0c\x64ouble_value\x18\x04 \x01(\x01H\x00\x12@\n\x0b\x61rray_value\x18\x05 \x01(\x0b\x32).opentelemetry.proto.common.v1.ArrayValueH\x00\x12\x43\n\x0ckvlist_value\x18\x06 \x01(\x0b\x32+.opentelemetry.proto.common.v1.KeyValueListH\x00\x12\x15\n\x0b\x62ytes_value\x18\x07 \x01(\x0cH\x00\x42\x07\n\x05value\"E\n\nArrayValue\x12\x37\n\x06values\x18\x01 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.AnyValue\"G\n\x0cKeyValueList\x12\x37\n\x06values\x18\x01 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\"O\n\x08KeyValue\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x36\n\x05value\x18\x02 \x01(\x0b\x32\'.opentelemetry.proto.common.v1.AnyValue\"0\n\x0eStringKeyValue\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\r\n\x05value\x18\x02 \x01(\t:\x02\x18\x01\"7\n\x16InstrumentationLibrary\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07version\x18\x02 \x01(\tBq\n io.opentelemetry.proto.common.v1B\x0b\x43ommonProtoP\x01Z>github.com/open-telemetry/opentelemetry-proto/gen/go/common/v1b\x06proto3'
 )
 
 
@@ -73,6 +73,13 @@ _ANYVALUE = _descriptor.Descriptor(
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR),
+    _descriptor.FieldDescriptor(
+      name='bytes_value', full_name='opentelemetry.proto.common.v1.AnyValue.bytes_value', index=6,
+      number=7, type=12, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"",
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR),
   ],
   extensions=[
   ],
@@ -89,7 +96,7 @@ _ANYVALUE = _descriptor.Descriptor(
       index=0, containing_type=None, fields=[]),
   ],
   serialized_start=78,
-  serialized_end=323,
+  serialized_end=346,
 )
 
 
@@ -119,8 +126,8 @@ _ARRAYVALUE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=325,
-  serialized_end=394,
+  serialized_start=348,
+  serialized_end=417,
 )
 
 
@@ -150,8 +157,8 @@ _KEYVALUELIST = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=396,
-  serialized_end=467,
+  serialized_start=419,
+  serialized_end=490,
 )
 
 
@@ -188,8 +195,8 @@ _KEYVALUE = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=469,
-  serialized_end=548,
+  serialized_start=492,
+  serialized_end=571,
 )
 
 
@@ -220,14 +227,14 @@ _STRINGKEYVALUE = _descriptor.Descriptor(
   nested_types=[],
   enum_types=[
   ],
-  serialized_options=None,
+  serialized_options=b'\030\001',
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=550,
-  serialized_end=594,
+  serialized_start=573,
+  serialized_end=621,
 )
 
 
@@ -264,8 +271,8 @@ _INSTRUMENTATIONLIBRARY = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=596,
-  serialized_end=651,
+  serialized_start=623,
+  serialized_end=678,
 )
 
 _ANYVALUE.fields_by_name['array_value'].message_type = _ARRAYVALUE
@@ -288,6 +295,9 @@ _ANYVALUE.fields_by_name['array_value'].containing_oneof = _ANYVALUE.oneofs_by_n
 _ANYVALUE.oneofs_by_name['value'].fields.append(
   _ANYVALUE.fields_by_name['kvlist_value'])
 _ANYVALUE.fields_by_name['kvlist_value'].containing_oneof = _ANYVALUE.oneofs_by_name['value']
+_ANYVALUE.oneofs_by_name['value'].fields.append(
+  _ANYVALUE.fields_by_name['bytes_value'])
+_ANYVALUE.fields_by_name['bytes_value'].containing_oneof = _ANYVALUE.oneofs_by_name['value']
 _ARRAYVALUE.fields_by_name['values'].message_type = _ANYVALUE
 _KEYVALUELIST.fields_by_name['values'].message_type = _KEYVALUE
 _KEYVALUE.fields_by_name['value'].message_type = _ANYVALUE
@@ -343,4 +353,5 @@ _sym_db.RegisterMessage(InstrumentationLibrary)
 
 
 DESCRIPTOR._options = None
+_STRINGKEYVALUE._options = None
 # @@protoc_insertion_point(module_scope)

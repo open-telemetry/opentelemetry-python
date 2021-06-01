@@ -6,7 +6,7 @@ from opentelemetry.proto.collector.trace.v1 import trace_service_pb2 as opentele
 
 class TraceServiceStub(object):
     """Service that can be used to push spans between one Application instrumented with
-    OpenTelemetry and an collector, or between an collector and a central collector (in this
+    OpenTelemetry and a collector, or between a collector and a central collector (in this
     case spans are sent/received to/from multiple Applications).
     """
 
@@ -25,7 +25,7 @@ class TraceServiceStub(object):
 
 class TraceServiceServicer(object):
     """Service that can be used to push spans between one Application instrumented with
-    OpenTelemetry and an collector, or between an collector and a central collector (in this
+    OpenTelemetry and a collector, or between a collector and a central collector (in this
     case spans are sent/received to/from multiple Applications).
     """
 
@@ -54,7 +54,7 @@ def add_TraceServiceServicer_to_server(servicer, server):
  # This class is part of an EXPERIMENTAL API.
 class TraceService(object):
     """Service that can be used to push spans between one Application instrumented with
-    OpenTelemetry and an collector, or between an collector and a central collector (in this
+    OpenTelemetry and a collector, or between a collector and a central collector (in this
     case spans are sent/received to/from multiple Applications).
     """
 
