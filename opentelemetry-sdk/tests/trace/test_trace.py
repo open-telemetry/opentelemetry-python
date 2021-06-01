@@ -869,7 +869,7 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(end_time, span.end_time)
 
     def test_ended_span(self):
-        """"Events, attributes are not allowed after span is ended"""
+        """Events, attributes are not allowed after span is ended"""
 
         root = self.tracer.start_span("root")
 
