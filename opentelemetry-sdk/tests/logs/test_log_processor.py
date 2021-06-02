@@ -25,7 +25,7 @@ from opentelemetry.sdk.logs import (
     ConcurrentMultiLogProcessor,
     LogEmitterProvider,
     LogProcessor,
-    OTELLogRecord,
+    LogRecord,
     SynchronousMultiLogProcessor,
 )
 from opentelemetry.sdk.logs.severity import SeverityNumber
@@ -100,7 +100,7 @@ class MultiLogProcessorTestBase(ABC):
         pass
 
     def make_record(self):
-        return OTELLogRecord(
+        return LogRecord(
             timestamp=1622300111608942000,
             severity_text="WARNING",
             severity_number=SeverityNumber.WARN,

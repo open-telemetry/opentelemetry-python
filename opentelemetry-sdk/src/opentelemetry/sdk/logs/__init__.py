@@ -40,10 +40,10 @@ from opentelemetry.util.types import Attributes
 _logger = logging.getLogger(__name__)
 
 
-class OTELLogRecord:
-    """A OTELLogRecord instance represents an event being logged.
+class LogRecord:
+    """A LogRecord instance represents an event being logged.
 
-    OTELLogRecord instances are created and emitted via `LogEmitter`
+    LogRecord instances are created and emitted via `LogEmitter`
     every time something is logged. They contain all the information
     pertinent to the event being logged.
     """
@@ -73,7 +73,7 @@ class OTELLogRecord:
         self.attributes = attributes
 
     @classmethod
-    def from_log_record(
+    def from_std_log_record(
         cls, record: logging.LogRecord, resource: Resource = None
     ):
         timestamp = int(record.created * 1e9)
@@ -93,7 +93,7 @@ class OTELLogRecord:
         )
 
     def __eq__(self, other: object) -> bool:
-        if not isinstance(other, OTELLogRecord):
+        if not isinstance(other, LogRecord):
             return NotImplemented
         return (
             self.timestamp == other.timestamp
@@ -113,9 +113,7 @@ class LogData:
     """Readable LogRecord data plus associated Resource and InstrumentationLibrary."""
 
     def __init__(
-        self,
-        log_record: OTELLogRecord,
-        instrumentation_info: InstrumentationInfo,
+        self, log_record: LogRecord, instrumentation_info: InstrumentationInfo,
     ):
         self.log_record = log_record
         self.instrumentation_info = instrumentation_info
@@ -298,8 +296,8 @@ class LogEmitter(logging.Handler):
         self._instrumentation_info = instrumentation_info
 
     def emit(self, record: logging.LogRecord):
-        """Emits the OTEL :class:`OTELLogRecord` by translating `logging.LogRecord`."""
-        log_record = OTELLogRecord.from_log_record(
+        """Emits the OTEL :class:`LogRecord` by translating `logging.LogRecord`."""
+        log_record = LogRecord.from_std_log_record(
             record, resource=self._resource
         )
         log_data = LogData(log_record, self._instrumentation_info)
