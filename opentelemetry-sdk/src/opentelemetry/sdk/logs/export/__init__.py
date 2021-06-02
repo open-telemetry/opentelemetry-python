@@ -123,7 +123,7 @@ class BatchLogProcessor(LogProcessor):
         while not self._closed:
             with self._condition:
                 if self._closed:
-                    # shutdown may have been called, avoid furthur processing
+                    # shutdown may have been called, avoid further processing
                     break
                 flush_request = self._get_and_unset_flush_request()
                 if (
