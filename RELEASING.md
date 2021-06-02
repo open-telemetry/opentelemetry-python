@@ -59,6 +59,7 @@ This will ensure the docs are pointing at the stable release.
 ```bash
 git tag -d stable
 git tag stable
+git push --delete origin tagname
 git push origin stable
 ```
 

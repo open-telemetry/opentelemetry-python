@@ -4,13 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.2.0-0.21b0...HEAD)
-- Added support for CreateKey functionality.
-  ([#1853](https://github.com/open-telemetry/opentelemetry-python/pull/1853))
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.3.0-0.22b0...HEAD)
+
+## [1.3.0-0.22b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.3.0-0.22b0) - 2021-06-01
 
 ### Added 
 - Allow span limits to be set programatically via TracerProvider.
   ([#1877](https://github.com/open-telemetry/opentelemetry-python/pull/1877))
+- Added support for CreateKey functionality.
+  ([#1853](https://github.com/open-telemetry/opentelemetry-python/pull/1853))
 
 ### Changed
 - Updated get_tracer to return an empty string when passed an invalid name
