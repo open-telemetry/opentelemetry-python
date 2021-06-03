@@ -126,7 +126,7 @@ def _translate_key_values(key: Text, value: Any) -> KeyValue:
     return KeyValue(key=key, value=_translate_value(value))
 
 
-def get_resource_data(
+def _get_resource_data(
     sdk_resource_instrumentation_library_data: Dict[
         SDKResource, ResourceDataT
     ],
