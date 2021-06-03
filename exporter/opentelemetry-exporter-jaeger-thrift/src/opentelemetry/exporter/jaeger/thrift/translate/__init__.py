@@ -293,7 +293,6 @@ class ThriftTranslator(Translator):
         self, span: ReadableSpan
     ) -> Sequence[TCollector.Tag]:
         tags = []
-        print(span.dropped_attributes)
         if span.dropped_attributes:
             tags.append(_get_long_tag("otel.dropped_attributes_count", span.dropped_attributes))
         if span.dropped_events:
