@@ -289,15 +289,21 @@ class ThriftTranslator(Translator):
 
         return logs
 
-    def _dropped_tags(
-        self, span: ReadableSpan
-    ) -> Sequence[TCollector.Tag]:
+    def _dropped_tags(self, span: ReadableSpan) -> Sequence[TCollector.Tag]:
         tags = []
         if span.dropped_attributes:
-            tags.append(_get_long_tag("otel.dropped_attributes_count", span.dropped_attributes))
+            tags.append(
+                _get_long_tag(
+                    "otel.dropped_attributes_count", span.dropped_attributes
+                )
+            )
         if span.dropped_events:
-            tags.append(_get_long_tag("otel.dropped_events_count", span.dropped_events))
+            tags.append(
+                _get_long_tag("otel.dropped_events_count", span.dropped_events)
+            )
         if span.dropped_links:
-            tags.append(_get_long_tag("otel.dropped_links_count", span.dropped_links))
-        
+            tags.append(
+                _get_long_tag("otel.dropped_links_count", span.dropped_links)
+            )
+
         return tags
