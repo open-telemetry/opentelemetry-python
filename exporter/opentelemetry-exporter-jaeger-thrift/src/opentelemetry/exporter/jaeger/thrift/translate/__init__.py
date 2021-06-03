@@ -162,6 +162,9 @@ class ThriftTranslator(Translator):
         tags = self._extract_tags(span)
         refs = self._extract_refs(span)
         logs = self._extract_logs(span)
+        dropped_tags = self._dropped_tags(span)
+        if dropped_tags:
+            tags.extend(dropped_tags)
 
         flags = int(ctx.trace_flags)
 
@@ -285,3 +288,17 @@ class ThriftTranslator(Translator):
             )
 
         return logs
+
+    def _dropped_tags(
+        self, span: ReadableSpan
+    ) -> Sequence[TCollector.Tag]:
+        tags = []
+        print(span.dropped_attributes)
+        if span.dropped_attributes:
+            tags.append(_get_long_tag("otel.dropped_attributes_count", span.dropped_attributes))
+        if span.dropped_events:
+            tags.append(_get_long_tag("otel.dropped_events_count", span.dropped_events))
+        if span.dropped_links:
+            tags.append(_get_long_tag("otel.dropped_links_count", span.dropped_links))
+        
+        return tags

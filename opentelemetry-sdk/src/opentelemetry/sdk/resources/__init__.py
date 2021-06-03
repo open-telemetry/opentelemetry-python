@@ -193,6 +193,12 @@ class Resource:
     def schema_url(self) -> str:
         return self._schema_url
 
+    @property
+    def dropped_attributes(self) -> int:
+        if self._attributes:
+            return self._attributes.dropped
+        return 0
+
     def merge(self, other: "Resource") -> "Resource":
         """Merges this resource and an updating resource into a new `Resource`.
 

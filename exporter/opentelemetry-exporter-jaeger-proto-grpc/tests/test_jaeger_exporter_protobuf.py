@@ -471,9 +471,49 @@ class TestJaegerExporter(unittest.TestCase):
         exporter._grpc_client = client_mock
         exporter.export([span])
         self.assertEqual(exporter.service_name, "test")
+    
+    def test_dropped_values(self):
+        links = []
+        for i in range(129):
+            links.append(trace._Span(name="span{}".format(i),context=trace_api.INVALID_SPAN_CONTEXT))
+        span = trace._Span(
+            limits=trace.SpanLimits(),
+            name="span",
+            resource=Resource(
+                attributes={
+                    "key_resource": "some_resource some_resource some_more_resource"
+                }
+            ),
+            context=trace_api.SpanContext(
+                trace_id=0x000000000000000000000000DEADBEEF,
+                span_id=0x00000000DEADBEF0,
+                is_remote=False,
+            ),
+            links=links
+        )
 
+        span.start()
+        for i in range(130):
+            span.set_attribute("key{}".format(i), "value{}".format(i))
+        for i in range(131):
+            span.add_event("event{}".format(i))
 
-class MockResponse:
-    def __init__(self, status_code):
-        self.status_code = status_code
-        self.text = status_code
+        span.end()
+        translate = Translate([span])
+
+        # pylint: disable=protected-access
+        spans = translate._translate(pb_translator.ProtobufTranslator("svc"))
+        tags_by_keys = {
+            tag.key: tag.v_str or tag.v_int64
+            for tag in spans[0].tags
+        }
+        self.assertEqual(
+            1, tags_by_keys["otel.dropped_links_count"]
+        )
+        self.assertEqual(
+            2, tags_by_keys["otel.dropped_attributes_count"]
+        )
+        self.assertEqual(
+            3, tags_by_keys["otel.dropped_events_count"]
+        )
+

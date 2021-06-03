@@ -317,6 +317,12 @@ class Event(EventBase):
     @property
     def attributes(self) -> types.Attributes:
         return self._attributes
+    
+    @property
+    def dropped_attributes(self) -> int:
+        if self._attributes:
+            return self._attributes.dropped
+        return 0
 
 
 def _check_span_ended(func):
@@ -364,6 +370,24 @@ class ReadableSpan:
         self._links = links
         self._resource = resource
         self._status = status
+
+    @property
+    def dropped_attributes(self) -> int:
+        if self._attributes:
+            return self._attributes.dropped
+        return 0
+
+    @property
+    def dropped_events(self) -> int:
+        if self._events:
+            return self._events.dropped
+        return 0
+
+    @property
+    def dropped_links(self) -> int:
+        if self._links:
+            return self._links.dropped
+        return 0
 
     @property
     def name(self) -> str:

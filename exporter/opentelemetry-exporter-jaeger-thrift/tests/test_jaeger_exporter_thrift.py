@@ -559,7 +559,7 @@ class TestJaegerExporter(unittest.TestCase):
         # pylint: disable=protected-access
         spans = translate._translate(ThriftTranslator())
         tags_by_keys = {
-            tag.key: tag.vStr for tag in spans[0].tags if tag.vType == 0
+            tag.key: tag.vStr for tag in spans[0].tags if tag.vType == jaeger.TagType.STRING
         }
         self.assertEqual(
             "hello_world hello_world hello_world", tags_by_keys["key_string"]
@@ -576,11 +576,56 @@ class TestJaegerExporter(unittest.TestCase):
         # pylint: disable=protected-access
         spans = translate._translate(ThriftTranslator(max_tag_value_length=5))
         tags_by_keys = {
-            tag.key: tag.vStr for tag in spans[0].tags if tag.vType == 0
+            tag.key: tag.vStr for tag in spans[0].tags if tag.vType == jaeger.TagType.STRING
         }
         self.assertEqual("hello", tags_by_keys["key_string"])
         self.assertEqual("('tup", tags_by_keys["key_tuple"])
         self.assertEqual("some_", tags_by_keys["key_resource"])
+    
+    def test_dropped_values(self):
+        links = []
+        for i in range(129):
+            links.append(trace._Span(name="span{}".format(i),context=trace_api.INVALID_SPAN_CONTEXT))
+        span = trace._Span(
+            limits=trace.SpanLimits(),
+            name="span",
+            resource=Resource(
+                attributes={
+                    "key_resource": "some_resource some_resource some_more_resource"
+                }
+            ),
+            context=trace_api.SpanContext(
+                trace_id=0x000000000000000000000000DEADBEEF,
+                span_id=0x00000000DEADBEF0,
+                is_remote=False,
+            ),
+            links=links
+        )
+
+        span.start()
+        for i in range(130):
+            span.set_attribute("key{}".format(i), "value{}".format(i))
+        for i in range(131):
+            span.add_event("event{}".format(i))
+
+        span.end()
+        translate = Translate([span])
+
+        # pylint: disable=protected-access
+        spans = translate._translate(ThriftTranslator(max_tag_value_length=5))
+        tags_by_keys = {
+            tag.key: tag.vLong for tag in spans[0].tags if tag.vType == jaeger.TagType.LONG
+        }
+
+        self.assertEqual(
+            1, tags_by_keys["otel.dropped_links_count"]
+        )
+        self.assertEqual(
+            2, tags_by_keys["otel.dropped_attributes_count"]
+        )
+        self.assertEqual(
+            3, tags_by_keys["otel.dropped_events_count"]
+        )
 
     def test_agent_client_split(self):
         agent_client = jaeger_exporter.AgentClientUDP(
