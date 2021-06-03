@@ -28,7 +28,7 @@ jobs:
       matrix:
         python-version: [ py36, py37, py38, py39, pypy3 ]
         package: ["instrumentation", "core", "exporter", "propagator"]
-        os: [ ubuntu-latest ]
+        os: [ ubuntu-latest, windows-latest ]
     steps:
       - name: Checkout Core Repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v2
