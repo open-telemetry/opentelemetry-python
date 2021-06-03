@@ -38,6 +38,7 @@ from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.test.spantestutil import get_span_with_dropped_attributes_events_links
 from opentelemetry.trace.status import Status, StatusCode
 
 
@@ -473,32 +474,7 @@ class TestJaegerExporter(unittest.TestCase):
         self.assertEqual(exporter.service_name, "test")
     
     def test_dropped_values(self):
-        links = []
-        for i in range(129):
-            links.append(trace._Span(name="span{}".format(i),context=trace_api.INVALID_SPAN_CONTEXT))
-        span = trace._Span(
-            limits=trace.SpanLimits(),
-            name="span",
-            resource=Resource(
-                attributes={
-                    "key_resource": "some_resource some_resource some_more_resource"
-                }
-            ),
-            context=trace_api.SpanContext(
-                trace_id=0x000000000000000000000000DEADBEEF,
-                span_id=0x00000000DEADBEF0,
-                is_remote=False,
-            ),
-            links=links
-        )
-
-        span.start()
-        for i in range(130):
-            span.set_attribute("key{}".format(i), "value{}".format(i))
-        for i in range(131):
-            span.add_event("event{}".format(i))
-
-        span.end()
+        span = get_span_with_dropped_attributes_events_links()
         translate = Translate([span])
 
         # pylint: disable=protected-access
