@@ -32,6 +32,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_AGENT_PORT,
     OTEL_EXPORTER_JAEGER_ENDPOINT,
     OTEL_EXPORTER_JAEGER_PASSWORD,
+    OTEL_EXPORTER_JAEGER_TIMEOUT,
     OTEL_EXPORTER_JAEGER_USER,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME
@@ -149,6 +150,7 @@ class TestJaegerExporter(unittest.TestCase):
                 OTEL_EXPORTER_JAEGER_ENDPOINT: collector_endpoint,
                 OTEL_EXPORTER_JAEGER_USER: username,
                 OTEL_EXPORTER_JAEGER_PASSWORD: password,
+                OTEL_EXPORTER_JAEGER_TIMEOUT: "20",
             },
         )
 
@@ -165,6 +167,7 @@ class TestJaegerExporter(unittest.TestCase):
         self.assertEqual(exporter.service_name, service)
         self.assertEqual(exporter.agent_host_name, agent_host_name)
         self.assertEqual(exporter.agent_port, int(agent_port))
+        self.assertEqual(exporter._timeout, 20)
         self.assertTrue(exporter._collector_http_client is not None)
         self.assertEqual(exporter.collector_endpoint, collector_endpoint)
         self.assertEqual(exporter._collector_http_client.auth, auth)

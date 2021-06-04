@@ -41,6 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1829](https://github.com/open-telemetry/opentelemetry-python/pull/1829))
 - Lazily read/configure limits and allow limits to be unset.
   ([#1839](https://github.com/open-telemetry/opentelemetry-python/pull/1839))
+- Added support for OTEL_EXPORTER_JAEGER_TIMEOUT
+  ([#1863](https://github.com/open-telemetry/opentelemetry-python/pull/1863))
 
 ### Changed
 - Fixed OTLP gRPC exporter silently failing if scheme is not specified in endpoint.
