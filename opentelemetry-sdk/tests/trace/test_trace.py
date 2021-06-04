@@ -1447,7 +1447,6 @@ class TestSpanLimits(unittest.TestCase):
         )
     
     def test_dropped_attributes(self):
-        # nothing dropped
         span = get_span_with_dropped_attributes_events_links()
         self.assertEqual(1, span.dropped_links)
         self.assertEqual(2, span.dropped_attributes)
