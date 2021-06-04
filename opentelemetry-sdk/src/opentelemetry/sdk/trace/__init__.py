@@ -317,7 +317,7 @@ class Event(EventBase):
     @property
     def attributes(self) -> types.Attributes:
         return self._attributes
-    
+
     @property
     def dropped_attributes(self) -> int:
         if self._attributes:

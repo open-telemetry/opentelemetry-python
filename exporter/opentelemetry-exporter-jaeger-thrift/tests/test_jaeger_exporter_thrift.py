@@ -40,7 +40,9 @@ from opentelemetry.sdk.trace import Resource, TracerProvider
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCode
-from opentelemetry.test.spantestutil import get_span_with_dropped_attributes_events_links
+from opentelemetry.test.spantestutil import (
+    get_span_with_dropped_attributes_events_links,
+)
 
 
 class TestJaegerExporter(unittest.TestCase):

@@ -39,7 +39,9 @@ from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SpanExportResult
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.test.spantestutil import get_span_with_dropped_attributes_events_links
+from opentelemetry.test.spantestutil import (
+    get_span_with_dropped_attributes_events_links,
+)
 from opentelemetry.trace.status import Status, StatusCode
 
 
@@ -475,7 +477,7 @@ class TestJaegerExporter(unittest.TestCase):
         exporter._grpc_client = client_mock
         exporter.export([span])
         self.assertEqual(exporter.service_name, "test")
-    
+
     def test_dropped_values(self):
         span = get_span_with_dropped_attributes_events_links()
         translate = Translate([span])
@@ -483,16 +485,8 @@ class TestJaegerExporter(unittest.TestCase):
         # pylint: disable=protected-access
         spans = translate._translate(pb_translator.ProtobufTranslator("svc"))
         tags_by_keys = {
-            tag.key: tag.v_str or tag.v_int64
-            for tag in spans[0].tags
+            tag.key: tag.v_str or tag.v_int64 for tag in spans[0].tags
         }
-        self.assertEqual(
-            1, tags_by_keys["otel.dropped_links_count"]
-        )
-        self.assertEqual(
-            2, tags_by_keys["otel.dropped_attributes_count"]
-        )
-        self.assertEqual(
-            3, tags_by_keys["otel.dropped_events_count"]
-        )
-
+        self.assertEqual(1, tags_by_keys["otel.dropped_links_count"])
+        self.assertEqual(2, tags_by_keys["otel.dropped_attributes_count"])
+        self.assertEqual(3, tags_by_keys["otel.dropped_events_count"])
