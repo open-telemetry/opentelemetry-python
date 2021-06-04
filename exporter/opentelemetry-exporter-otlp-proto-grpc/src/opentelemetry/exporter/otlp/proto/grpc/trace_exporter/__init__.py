@@ -273,11 +273,17 @@ class OTLPSpanExporter(
             self._translate_links(sdk_span)
             self._translate_status(sdk_span)
             if sdk_span.dropped_attributes:
-                self._collector_span_kwargs["dropped_attributes_count"] = sdk_span.dropped_attributes
+                self._collector_span_kwargs[
+                    "dropped_attributes_count"
+                ] = sdk_span.dropped_attributes
             if sdk_span.dropped_events:
-                self._collector_span_kwargs["dropped_events_count"] = sdk_span.dropped_events
+                self._collector_span_kwargs[
+                    "dropped_events_count"
+                ] = sdk_span.dropped_events
             if sdk_span.dropped_links:
-                self._collector_span_kwargs["dropped_links_count"] = sdk_span.dropped_links
+                self._collector_span_kwargs[
+                    "dropped_links_count"
+                ] = sdk_span.dropped_links
 
             self._collector_span_kwargs["kind"] = getattr(
                 CollectorSpan.SpanKind,

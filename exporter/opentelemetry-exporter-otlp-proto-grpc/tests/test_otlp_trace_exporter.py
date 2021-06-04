@@ -68,7 +68,9 @@ from opentelemetry.sdk.trace.export import (
     SpanExportResult,
 )
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.test.spantestutil import get_span_with_dropped_attributes_events_links
+from opentelemetry.test.spantestutil import (
+    get_span_with_dropped_attributes_events_links,
+)
 
 THIS_DIR = os.path.dirname(__file__)
 
@@ -606,15 +608,27 @@ class TestOTLPSpanExporter(TestCase):
         span = get_span_with_dropped_attributes_events_links()
         # pylint:disable=protected-access
         translated = self.exporter._translate_data([span])
-        self.assertEqual(1, translated.resource_spans[0]
+        self.assertEqual(
+            1,
+            translated.resource_spans[0]
             .instrumentation_library_spans[0]
-            .spans[0].dropped_links_count)
-        self.assertEqual(2, translated.resource_spans[0]
+            .spans[0]
+            .dropped_links_count,
+        )
+        self.assertEqual(
+            2,
+            translated.resource_spans[0]
             .instrumentation_library_spans[0]
-            .spans[0].dropped_attributes_count)
-        self.assertEqual(3, translated.resource_spans[0]
+            .spans[0]
+            .dropped_attributes_count,
+        )
+        self.assertEqual(
+            3,
+            translated.resource_spans[0]
             .instrumentation_library_spans[0]
-            .spans[0].dropped_events_count)
+            .spans[0]
+            .dropped_events_count,
+        )
 
 
 def _create_span_with_status(status: SDKStatus):
