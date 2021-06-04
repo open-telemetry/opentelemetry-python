@@ -36,6 +36,7 @@ from opentelemetry.sdk.trace import Resource, sampling
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.test.spantestutil import get_span_with_dropped_attributes_events_links
 from opentelemetry.trace import StatusCode
 from opentelemetry.util._time import _time_ns
 
@@ -1444,3 +1445,10 @@ class TestSpanLimits(unittest.TestCase):
                 )
             )
         )
+    
+    def test_dropped_attributes(self):
+        # nothing dropped
+        span = get_span_with_dropped_attributes_events_links()
+        self.assertEqual(1, span.dropped_links)
+        self.assertEqual(2, span.dropped_attributes)
+        self.assertEqual(3, span.dropped_events)
