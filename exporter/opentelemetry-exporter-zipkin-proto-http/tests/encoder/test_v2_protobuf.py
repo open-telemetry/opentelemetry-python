@@ -245,6 +245,6 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
             .tags
         )
 
-        self.assertEqual("1", tags.get("otel.dropped_links_count"))
-        self.assertEqual("2", tags.get("otel.dropped_attributes_count"))
-        self.assertEqual("3", tags.get("otel.dropped_events_count"))
+        self.assertEqual("1", tags["otel.dropped_links_count"])
+        self.assertEqual("2", tags["otel.dropped_attributes_count"])
+        self.assertEqual("3", tags["otel.dropped_events_count"])
