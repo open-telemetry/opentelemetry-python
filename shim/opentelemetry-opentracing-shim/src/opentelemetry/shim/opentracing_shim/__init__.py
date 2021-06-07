@@ -102,8 +102,8 @@ from opentracing import (
 from opentelemetry.baggage import get_baggage, set_baggage
 from opentelemetry.context import (
     Context,
-    attach,
     _create_key,
+    attach,
     detach,
     get_value,
     set_value,
