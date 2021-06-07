@@ -4,11 +4,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.2.0-0.21b0...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.3.0-0.22b0...HEAD)
+
+## [1.3.0-0.22b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.3.0-0.22b0) - 2021-06-01
+
+### Added 
+- Allow span limits to be set programatically via TracerProvider.
+  ([#1877](https://github.com/open-telemetry/opentelemetry-python/pull/1877))
 
 ### Changed
 - Updated get_tracer to return an empty string when passed an invalid name
   ([#1854](https://github.com/open-telemetry/opentelemetry-python/pull/1854))
+- Changed AttributeValue sequences to warn mypy users on adding None values to array
+  ([#1855](https://github.com/open-telemetry/opentelemetry-python/pull/1855))
+- Fixed exporter OTLP header parsing to match baggage header formatting.
+  ([#1869](https://github.com/open-telemetry/opentelemetry-python/pull/1869))
+- Added optional `schema_url` field to `Resource` class
+  ([#1871](https://github.com/open-telemetry/opentelemetry-python/pull/1871))
+- Update protos to latest version release 0.9.0
+  ([#1873](https://github.com/open-telemetry/opentelemetry-python/pull/1873))
 
 ### Fixed
 - Updated `opentelementry-opentracing-shim` `ScopeShim` to report exceptions in
@@ -23,6 +37,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1823](https://github.com/open-telemetry/opentelemetry-python/pull/1823))
 - Added support for OTEL_SERVICE_NAME.
   ([#1829](https://github.com/open-telemetry/opentelemetry-python/pull/1829))
+- Lazily read/configure limits and allow limits to be unset.
+  ([#1839](https://github.com/open-telemetry/opentelemetry-python/pull/1839))
+- Added support for OTEL_EXPORTER_JAEGER_TIMEOUT
+  ([#1863](https://github.com/open-telemetry/opentelemetry-python/pull/1863))
 
 ### Changed
 - Fixed OTLP gRPC exporter silently failing if scheme is not specified in endpoint.
@@ -46,6 +64,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1818](https://github.com/open-telemetry/opentelemetry-python/pull/1818))
 - Update transient errors retry timeout and retryable status codes
   ([#1842](https://github.com/open-telemetry/opentelemetry-python/pull/1842))
+- Apply validation of attributes to `Resource`, move attribute related logic to separate package.
+  ([#1834](https://github.com/open-telemetry/opentelemetry-python/pull/1834))
+- Fix start span behavior when excess links and attributes are included
+  ([#1856](https://github.com/open-telemetry/opentelemetry-python/pull/1856))
 
 ### Removed
 - Moved `opentelemetry-instrumentation` to contrib repository.

@@ -16,6 +16,8 @@
 
 import os
 import unittest
+import uuid
+from logging import ERROR
 from unittest import mock
 
 from opentelemetry.sdk import resources
@@ -50,6 +52,14 @@ class TestResources(unittest.TestCase):
         resource = resources.Resource.create(attributes)
         self.assertIsInstance(resource, resources.Resource)
         self.assertEqual(resource.attributes, expected_attributes)
+        self.assertEqual(resource.schema_url, "")
+
+        schema_url = "https://opentelemetry.io/schemas/1.3.0"
+
+        resource = resources.Resource.create(attributes, schema_url)
+        self.assertIsInstance(resource, resources.Resource)
+        self.assertEqual(resource.attributes, expected_attributes)
+        self.assertEqual(resource.schema_url, schema_url)
 
         os.environ[resources.OTEL_RESOURCE_ATTRIBUTES] = "key=value"
         resource = resources.Resource.create(attributes)
@@ -66,17 +76,45 @@ class TestResources(unittest.TestCase):
         self.assertEqual(
             resource,
             resources._DEFAULT_RESOURCE.merge(
-                resources.Resource({resources.SERVICE_NAME: "unknown_service"})
+                resources.Resource(
+                    {resources.SERVICE_NAME: "unknown_service"}, ""
+                )
             ),
         )
+        self.assertEqual(resource.schema_url, "")
+
+        resource = resources.Resource.create(None, None)
+        self.assertEqual(
+            resource,
+            resources._DEFAULT_RESOURCE.merge(
+                resources.Resource(
+                    {resources.SERVICE_NAME: "unknown_service"}, ""
+                )
+            ),
+        )
+        self.assertEqual(resource.schema_url, "")
 
         resource = resources.Resource.create({})
         self.assertEqual(
             resource,
             resources._DEFAULT_RESOURCE.merge(
-                resources.Resource({resources.SERVICE_NAME: "unknown_service"})
+                resources.Resource(
+                    {resources.SERVICE_NAME: "unknown_service"}, ""
+                )
             ),
         )
+        self.assertEqual(resource.schema_url, "")
+
+        resource = resources.Resource.create({}, None)
+        self.assertEqual(
+            resource,
+            resources._DEFAULT_RESOURCE.merge(
+                resources.Resource(
+                    {resources.SERVICE_NAME: "unknown_service"}, ""
+                )
+            ),
+        )
+        self.assertEqual(resource.schema_url, "")
 
     def test_resource_merge(self):
         left = resources.Resource({"service": "ui"})
@@ -85,6 +123,33 @@ class TestResources(unittest.TestCase):
             left.merge(right),
             resources.Resource({"service": "ui", "host": "service-host"}),
         )
+        schema_urls = (
+            "https://opentelemetry.io/schemas/1.2.0",
+            "https://opentelemetry.io/schemas/1.3.0",
+        )
+
+        left = resources.Resource.create({}, None)
+        right = resources.Resource.create({}, None)
+        self.assertEqual(left.merge(right).schema_url, "")
+
+        left = resources.Resource.create({}, None)
+        right = resources.Resource.create({}, schema_urls[0])
+        self.assertEqual(left.merge(right).schema_url, schema_urls[0])
+
+        left = resources.Resource.create({}, schema_urls[0])
+        right = resources.Resource.create({}, None)
+        self.assertEqual(left.merge(right).schema_url, schema_urls[0])
+
+        left = resources.Resource.create({}, schema_urls[0])
+        right = resources.Resource.create({}, schema_urls[0])
+        self.assertEqual(left.merge(right).schema_url, schema_urls[0])
+
+        left = resources.Resource.create({}, schema_urls[0])
+        right = resources.Resource.create({}, schema_urls[1])
+        with self.assertLogs(level=ERROR) as log_entry:
+            self.assertEqual(left.merge(right), left)
+            self.assertIn(schema_urls[0], log_entry.output[0])
+            self.assertIn(schema_urls[1], log_entry.output[0])
 
     def test_resource_merge_empty_string(self):
         """Verify Resource.merge behavior with the empty string.
@@ -129,6 +194,11 @@ class TestResources(unittest.TestCase):
         attributes["cost"] = 999.91
         self.assertEqual(resource.attributes, attributes_copy)
 
+        with self.assertRaises(AttributeError):
+            resource.schema_url = "bug"
+
+        self.assertEqual(resource.schema_url, "")
+
     def test_service_name_using_process_name(self):
         resource = resources.Resource.create(
             {resources.PROCESS_EXECUTABLE_NAME: "test"}
@@ -137,6 +207,25 @@ class TestResources(unittest.TestCase):
             resource.attributes.get(resources.SERVICE_NAME),
             "unknown_service:test",
         )
+
+    def test_invalid_resource_attribute_values(self):
+        resource = resources.Resource(
+            {
+                resources.SERVICE_NAME: "test",
+                "non-primitive-data-type": dict(),
+                "invalid-byte-type-attribute": b"\xd8\xe1\xb7\xeb\xa8\xe5 \xd2\xb7\xe1",
+                "": "empty-key-value",
+                None: "null-key-value",
+                "another-non-primitive": uuid.uuid4(),
+            }
+        )
+        self.assertEqual(
+            resource.attributes,
+            {
+                resources.SERVICE_NAME: "test",
+            },
+        )
+        self.assertEqual(len(resource.attributes), 1)
 
     def test_aggregated_resources_no_detectors(self):
         aggregated_resources = resources.get_aggregated_resources([])
@@ -199,6 +288,76 @@ class TestResources(unittest.TestCase):
                 }
             ),
         )
+
+    def test_aggregated_resources_different_schema_urls(self):
+        resource_detector1 = mock.Mock(spec=resources.ResourceDetector)
+        resource_detector1.detect.return_value = resources.Resource(
+            {"key1": "value1"}, ""
+        )
+        resource_detector2 = mock.Mock(spec=resources.ResourceDetector)
+        resource_detector2.detect.return_value = resources.Resource(
+            {"key2": "value2", "key3": "value3"}, "url1"
+        )
+        resource_detector3 = mock.Mock(spec=resources.ResourceDetector)
+        resource_detector3.detect.return_value = resources.Resource(
+            {
+                "key2": "try_to_overwrite_existing_value",
+                "key3": "try_to_overwrite_existing_value",
+                "key4": "value4",
+            },
+            "url2",
+        )
+        resource_detector4 = mock.Mock(spec=resources.ResourceDetector)
+        resource_detector4.detect.return_value = resources.Resource(
+            {
+                "key2": "try_to_overwrite_existing_value",
+                "key3": "try_to_overwrite_existing_value",
+                "key4": "value4",
+            },
+            "url1",
+        )
+        self.assertEqual(
+            resources.get_aggregated_resources(
+                [resource_detector1, resource_detector2]
+            ),
+            resources.Resource(
+                {"key1": "value1", "key2": "value2", "key3": "value3"},
+                "url1",
+            ),
+        )
+        with self.assertLogs(level=ERROR) as log_entry:
+            self.assertEqual(
+                resources.get_aggregated_resources(
+                    [resource_detector2, resource_detector3]
+                ),
+                resources.Resource(
+                    {"key2": "value2", "key3": "value3"}, "url1"
+                ),
+            )
+            self.assertIn("url1", log_entry.output[0])
+            self.assertIn("url2", log_entry.output[0])
+        with self.assertLogs(level=ERROR):
+            self.assertEqual(
+                resources.get_aggregated_resources(
+                    [
+                        resource_detector2,
+                        resource_detector3,
+                        resource_detector4,
+                        resource_detector1,
+                    ]
+                ),
+                resources.Resource(
+                    {
+                        "key1": "value1",
+                        "key2": "try_to_overwrite_existing_value",
+                        "key3": "try_to_overwrite_existing_value",
+                        "key4": "value4",
+                    },
+                    "url1",
+                ),
+            )
+            self.assertIn("url1", log_entry.output[0])
+            self.assertIn("url2", log_entry.output[0])
 
     def test_resource_detector_ignore_error(self):
         resource_detector = mock.Mock(spec=resources.ResourceDetector)

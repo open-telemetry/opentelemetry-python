@@ -100,6 +100,8 @@ class ResourceLogs(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     RESOURCE_FIELD_NUMBER: builtins.int
     INSTRUMENTATION_LIBRARY_LOGS_FIELD_NUMBER: builtins.int
+    SCHEMA_URL_FIELD_NUMBER: builtins.int
+    schema_url: typing.Text = ...
     @property
     def resource(
         self,
@@ -119,6 +121,7 @@ class ResourceLogs(google.protobuf.message.Message):
         instrumentation_library_logs: typing.Optional[
             typing.Iterable[global___InstrumentationLibraryLogs]
         ] = ...,
+        schema_url: typing.Text = ...,
     ) -> None: ...
     def HasField(
         self, field_name: typing_extensions.Literal["resource", b"resource"]
@@ -130,6 +133,8 @@ class ResourceLogs(google.protobuf.message.Message):
             b"instrumentation_library_logs",
             "resource",
             b"resource",
+            "schema_url",
+            b"schema_url",
         ],
     ) -> None: ...
 
@@ -139,6 +144,8 @@ class InstrumentationLibraryLogs(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     INSTRUMENTATION_LIBRARY_FIELD_NUMBER: builtins.int
     LOGS_FIELD_NUMBER: builtins.int
+    SCHEMA_URL_FIELD_NUMBER: builtins.int
+    schema_url: typing.Text = ...
     @property
     def instrumentation_library(
         self,
@@ -156,6 +163,7 @@ class InstrumentationLibraryLogs(google.protobuf.message.Message):
             opentelemetry.proto.common.v1.common_pb2.InstrumentationLibrary
         ] = ...,
         logs: typing.Optional[typing.Iterable[global___LogRecord]] = ...,
+        schema_url: typing.Text = ...,
     ) -> None: ...
     def HasField(
         self,
@@ -170,6 +178,8 @@ class InstrumentationLibraryLogs(google.protobuf.message.Message):
             b"instrumentation_library",
             "logs",
             b"logs",
+            "schema_url",
+            b"schema_url",
         ],
     ) -> None: ...
 
