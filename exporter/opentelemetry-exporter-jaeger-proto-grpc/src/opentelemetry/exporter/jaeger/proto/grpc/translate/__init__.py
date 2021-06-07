@@ -240,9 +240,6 @@ class ProtobufTranslator(Translator):
         tags = self._extract_tags(span)
         refs = self._extract_refs(span)
         logs = self._extract_logs(span)
-        dropped_tags = self._dropped_tags(span)
-        if dropped_tags:
-            tags.extend(dropped_tags)
 
         flags = int(ctx.trace_flags)
 
@@ -316,6 +313,24 @@ class ProtobufTranslator(Translator):
         if not span.status.is_ok:
             translated.append(_get_bool_key_value("error", True))
 
+        if span.dropped_attributes:
+            translated.append(
+                _get_long_key_value(
+                    "otel.dropped_attributes_count", span.dropped_attributes
+                )
+            )
+        if span.dropped_events:
+            translated.append(
+                _get_long_key_value(
+                    "otel.dropped_events_count", span.dropped_events
+                )
+            )
+        if span.dropped_links:
+            translated.append(
+                _get_long_key_value(
+                    "otel.dropped_links_count", span.dropped_links
+                )
+            )
         return translated
 
     def _extract_refs(
@@ -371,28 +386,3 @@ class ProtobufTranslator(Translator):
             logs.append(model_pb2.Log(timestamp=event_ts, fields=fields))
 
         return logs
-
-    def _dropped_tags(
-        self, span: ReadableSpan
-    ) -> Sequence[model_pb2.KeyValue]:
-        tags = []
-        if span.dropped_attributes:
-            tags.append(
-                _get_long_key_value(
-                    "otel.dropped_attributes_count", span.dropped_attributes
-                )
-            )
-        if span.dropped_events:
-            tags.append(
-                _get_long_key_value(
-                    "otel.dropped_events_count", span.dropped_events
-                )
-            )
-        if span.dropped_links:
-            tags.append(
-                _get_long_key_value(
-                    "otel.dropped_links_count", span.dropped_links
-                )
-            )
-
-        return tags
