@@ -16,6 +16,7 @@
 # pylint:disable=no-member
 
 import time
+import traceback
 from unittest import TestCase
 from unittest.mock import Mock
 
@@ -475,14 +476,30 @@ class TestShim(TestCase):
         """
 
         # Raise an exception while a span is active.
-        with self.assertRaises(Exception):
+        with self.assertRaises(Exception) as exc_ctx:
             with self.shim.start_active_span("TestName") as scope:
                 raise Exception("bad thing")
 
+        ex = exc_ctx.exception
+        expected_stack = "".join(
+            traceback.format_exception(
+                etype=type(ex), value=ex, tb=ex.__traceback__
+            )
+        )
         # Verify exception details have been added to span.
         exc_event = scope.span.unwrap().events[0]
+
         self.assertEqual(exc_event.name, "exception")
-        self.assertEqual(exc_event.attributes["exception.message"], "bad thing")
+        self.assertEqual(
+            exc_event.attributes["exception.message"], "bad thing"
+        )
+        self.assertEqual(
+            exc_event.attributes["exception.type"], Exception.__name__
+        )
+        # cannot get the whole stacktrace so just assert exception part is contained
+        self.assertIn(
+            expected_stack, exc_event.attributes["exception.stacktrace"]
+        )
 
     def test_inject_http_headers(self):
         """Test `inject()` method for Format.HTTP_HEADERS."""

@@ -87,7 +87,7 @@ API
 
 import logging
 from types import TracebackType
-from typing import Optional, TypeVar, Union, Type
+from typing import Optional, Type, TypeVar, Union
 
 from deprecated import deprecated
 from opentracing import (
@@ -99,6 +99,7 @@ from opentracing import (
     Tracer,
     UnsupportedFormatException,
 )
+
 from opentelemetry.baggage import get_baggage, set_baggage
 from opentelemetry.context import Context, attach, detach, get_value, set_value
 from opentelemetry.propagate import get_global_textmap
@@ -411,10 +412,10 @@ class ScopeShim(Scope):
         self._end_span_scope(exc_type, exc_val, exc_tb)
 
     def _end_span_scope(
-            self,
-            exc_type: Optional[Type[BaseException]],
-            exc_val: Optional[BaseException],
-            exc_tb: Optional[TracebackType],
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
     ) -> None:
         detach(self._token)
         if self._span_cm is not None:
