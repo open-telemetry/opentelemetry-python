@@ -24,6 +24,8 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.logs.severity import SeverityNumber
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.severity import std_to_otlp
+from opentelemetry.trace import get_current_span
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._providers import _load_provider
 from opentelemetry.util.types import Attributes
@@ -111,6 +113,35 @@ class LogProcessor(abc.ABC):
         """
 
 
+class OTLPHandler(logging.Handler):
+    def __init__(self, level=logging.NOTSET, log_emitter=None) -> None:
+        super().__init__(level=level)
+        self._log_emitter = log_emitter or get_log_emitter("")
+
+    def _translate(self, record: logging.LogRecord) -> LogRecord:
+        timestamp = int(record.created * 1e9)
+        span_context = get_current_span().get_span_context()
+        attributes: Attributes = {}  # TODO: attributes from record metadata
+        severity_number = std_to_otlp(record.levelno)
+        return LogRecord(
+            timestamp=timestamp,
+            trace_id=span_context.trace_id,
+            span_id=span_context.span_id,
+            trace_flags=span_context.trace_flags,
+            severity_text=record.levelname,
+            severity_number=severity_number,
+            body=record.getMessage(),
+            resource=self._log_emitter.resource,
+            attributes=attributes,
+        )
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self._log_emitter.emit(self._translate(record))
+
+    def flush(self) -> None:
+        self._log_emitter.flush()
+
+
 class LogEmitter:
     # TODO: Add multi_log_processor
     def __init__(
@@ -120,6 +151,10 @@ class LogEmitter:
     ):
         self._resource = resource
         self._instrumentation_info = instrumentation_info
+
+    @property
+    def resource(self):
+        return self._resource
 
     def emit(self, record: LogRecord):
         # TODO: multi_log_processor.emit
