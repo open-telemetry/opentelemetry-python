@@ -14,7 +14,6 @@
 
 import unittest
 from unittest import mock
-from unittest.mock import patch
 
 import grpc
 from google.protobuf.timestamp_pb2 import Timestamp
@@ -35,7 +34,7 @@ from opentelemetry.trace import TraceFlags
 
 # pylint: disable=no-member
 class TestCollectorSpanExporter(unittest.TestCase):
-    @patch(
+    @mock.patch(
         "opentelemetry.exporter.opencensus.trace_exporter.trace._TRACER_PROVIDER",
         None,
     )
@@ -330,7 +329,7 @@ class TestCollectorSpanExporter(unittest.TestCase):
             getattr(output_identifier, "host_name"), "testHostName"
         )
 
-    @patch(
+    @mock.patch(
         "opentelemetry.exporter.opencensus.trace_exporter.trace._TRACER_PROVIDER",
         None,
     )
