@@ -35,8 +35,10 @@ from opentelemetry.trace import TraceFlags
 
 # pylint: disable=no-member
 class TestCollectorSpanExporter(unittest.TestCase):
-
-    @patch("opentelemetry.exporter.opencensus.trace_exporter.trace._TRACER_PROVIDER", None)
+    @patch(
+        "opentelemetry.exporter.opencensus.trace_exporter.trace._TRACER_PROVIDER",
+        None,
+    )
     def test_constructor(self):
         mock_get_node = mock.Mock()
         patch = mock.patch(
@@ -328,7 +330,10 @@ class TestCollectorSpanExporter(unittest.TestCase):
             getattr(output_identifier, "host_name"), "testHostName"
         )
 
-    @patch("opentelemetry.exporter.opencensus.trace_exporter.trace._TRACER_PROVIDER", None)
+    @patch(
+        "opentelemetry.exporter.opencensus.trace_exporter.trace._TRACER_PROVIDER",
+        None,
+    )
     def test_export_service_name(self):
         trace_api.set_tracer_provider(
             TracerProvider(
@@ -342,7 +347,9 @@ class TestCollectorSpanExporter(unittest.TestCase):
         collector_exporter = OpenCensusSpanExporter(
             client=mock_client, host_name=host_name
         )
-        self.assertEqual(collector_exporter.node.service_info.name, "testServiceName")
+        self.assertEqual(
+            collector_exporter.node.service_info.name, "testServiceName"
+        )
 
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
         span_id = 0x34BF92DEEFC58C92
