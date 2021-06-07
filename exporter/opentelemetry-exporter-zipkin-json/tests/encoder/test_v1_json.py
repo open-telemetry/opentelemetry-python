@@ -258,16 +258,10 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
         annotations = JsonV1Encoder()._encode_span(otel_span, "test")[
             "binaryAnnotations"
         ]
-        asserts = 0
-        for annotation in annotations:
-            if annotation.get("key") == "otel.dropped_links_count":
-                self.assertEqual("1", annotation.get("value"))
-                asserts += 1
-            if annotation.get("key") == "otel.dropped_attributes_count":
-                self.assertEqual("2", annotation.get("value"))
-                asserts += 1
-            if annotation.get("key") == "otel.dropped_events_count":
-                self.assertEqual("3", annotation.get("value"))
-                asserts += 1
-
-        self.assertEqual(3, asserts)
+        annotations = {
+            annotation["key"]: annotation["value"]
+            for annotation in annotations
+        }
+        self.assertEqual("1", annotations["otel.dropped_links_count"])
+        self.assertEqual("2", annotations["otel.dropped_attributes_count"])
+        self.assertEqual("3", annotations["otel.dropped_events_count"])

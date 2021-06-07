@@ -225,7 +225,7 @@ class ThriftTranslator(Translator):
         # Make sure to add "error" tag if span status is not OK
         if not span.status.is_ok:
             translated.append(_get_bool_tag("error", True))
-        
+
         if span.dropped_attributes:
             translated.append(
                 _get_long_tag(
