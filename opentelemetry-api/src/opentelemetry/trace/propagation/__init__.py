@@ -13,11 +13,11 @@
 # limitations under the License.
 from typing import Optional
 
-from opentelemetry.context import create_key, get_value, set_value
+from opentelemetry.context import _create_key, get_value, set_value
 from opentelemetry.context.context import Context
 from opentelemetry.trace.span import INVALID_SPAN, Span
 
-SPAN_KEY = create_key("current-span")
+_SPAN_KEY = _create_key("current-span")
 
 
 def set_span_in_context(
@@ -30,7 +30,7 @@ def set_span_in_context(
         context: a Context object. if one is not passed, the
             default current context is used instead.
     """
-    ctx = set_value(SPAN_KEY, span, context=context)
+    ctx = set_value(_SPAN_KEY, span, context=context)
     return ctx
 
 
@@ -44,7 +44,7 @@ def get_current_span(context: Optional[Context] = None) -> Span:
     Returns:
         The Span set in the context if it exists. INVALID_SPAN otherwise.
     """
-    span = get_value(SPAN_KEY, context=context)
+    span = get_value(_SPAN_KEY, context=context)
     if span is None or not isinstance(span, Span):
         return INVALID_SPAN
     return span

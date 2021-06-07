@@ -18,8 +18,8 @@ from opentelemetry import context
 from opentelemetry.context.context import Context
 
 
-def do_work() -> str:
-    key = context.create_key("say")
+def _do_work() -> str:
+    key = context._create_key("say")
     context.attach(context.set_value(key, "bar"))
     return key
 
@@ -29,8 +29,8 @@ class TestContext(unittest.TestCase):
         context.attach(Context())
 
     def test_context_key(self):
-        key1 = context.create_key("say")
-        key2 = context.create_key("say")
+        key1 = context._create_key("say")
+        key2 = context._create_key("say")
         self.assertNotEqual(key1, key2)
         first = context.set_value(key1, "foo")
         second = context.set_value(key2, "bar")
@@ -38,13 +38,13 @@ class TestContext(unittest.TestCase):
         self.assertEqual(context.get_value(key2, context=second), "bar")
 
     def test_context(self):
-        key1 = context.create_key("say")
+        key1 = context._create_key("say")
         self.assertIsNone(context.get_value(key1))
         empty = context.get_current()
         second = context.set_value(key1, "foo")
         self.assertEqual(context.get_value(key1, context=second), "foo")
 
-        key2 = do_work()
+        key2 = _do_work()
         self.assertEqual(context.get_value(key2), "bar")
         third = context.get_current()
 

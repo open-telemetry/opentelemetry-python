@@ -15,10 +15,10 @@
 import typing
 from types import MappingProxyType
 
-from opentelemetry.context import create_key, get_value, set_value
+from opentelemetry.context import _create_key, get_value, set_value
 from opentelemetry.context.context import Context
 
-_BAGGAGE_KEY = create_key("baggage")
+_BAGGAGE_KEY = _create_key("baggage")
 
 
 def get_all(
