@@ -66,9 +66,19 @@ class OpenCensusSpanExporter(SpanExporter):
         else:
             self.client = client
 
+        self.host_name = host_name
         self.node = utils.get_node(service_name, host_name)
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
+        # Populate service_name from first span
+        # We restrict any SpanProcessor to be only associated with a single
+        # TracerProvider, so it is safe to assume that all Spans in a single
+        # batch all originate from one TracerProvider (and in turn have all
+        # the same service_name)
+        if spans:
+            service_name = spans[0].resource.attributes.get(SERVICE_NAME)
+            if service_name:
+                self.node = utils.get_node(service_name, self.host_name)
         try:
             responses = self.client.Export(self.generate_span_requests(spans))
 
