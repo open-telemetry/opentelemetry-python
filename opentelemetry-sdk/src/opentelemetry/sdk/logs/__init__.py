@@ -14,7 +14,7 @@
 
 import abc
 import atexit
-from typing import Optional, Any
+from typing import Any, Optional
 
 from opentelemetry.sdk.logs.severity import SeverityNumber
 from opentelemetry.sdk.resources import Resource
@@ -65,7 +65,9 @@ class LogData:
     """Readable LogRecord data plus associated InstrumentationLibrary."""
 
     def __init__(
-        self, log_record: LogRecord, instrumentation_info: InstrumentationInfo,
+        self,
+        log_record: LogRecord,
+        instrumentation_info: InstrumentationInfo,
     ):
         self.log_record = log_record
         self.instrumentation_info = instrumentation_info
@@ -104,7 +106,9 @@ class LogProcessor(abc.ABC):
 class LogEmitter:
     # TODO: Add multi_log_processor
     def __init__(
-        self, resource: Resource, instrumentation_info: InstrumentationInfo,
+        self,
+        resource: Resource,
+        instrumentation_info: InstrumentationInfo,
     ):
         self._resource = resource
         self._instrumentation_info = instrumentation_info
