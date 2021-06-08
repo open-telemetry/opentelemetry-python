@@ -58,18 +58,7 @@ class LogRecord:
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, LogRecord):
             return NotImplemented
-        return (
-            self.timestamp == other.timestamp
-            and self.trace_id == other.trace_id
-            and self.span_id == other.span_id
-            and self.trace_flags == other.trace_flags
-            and self.severity_text == other.severity_text
-            and self.severity_number == other.severity_number
-            and self.name == other.name
-            and self.body == other.body
-            and self.resource == other.resource
-            and self.attributes == other.attributes
-        )
+        return self.__dict__ == other.__dict__
 
 
 class LogData:
