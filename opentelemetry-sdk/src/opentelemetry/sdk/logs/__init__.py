@@ -14,7 +14,7 @@
 
 import abc
 import atexit
-from typing import Optional
+from typing import Optional, Any
 
 from opentelemetry.sdk.logs.severity import SeverityNumber
 from opentelemetry.sdk.resources import Resource
@@ -40,7 +40,7 @@ class LogRecord:
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
         name: Optional[str] = None,
-        body: Optional[str] = None,
+        body: Optional[Any] = None,
         resource: Optional[Resource] = None,
         attributes: Optional[Attributes] = None,
     ):
