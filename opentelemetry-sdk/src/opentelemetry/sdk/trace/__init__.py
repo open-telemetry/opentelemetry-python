@@ -806,6 +806,11 @@ class Span(trace_api.Span, ReadableSpan):
 
     @_check_span_ended
     def set_status(self, status: trace_api.Status) -> None:
+        # Ignore future calls if status is already set to OK
+        # Ignore calls to set to StatusCode.UNSET
+        if self._status and self._status.status_code is StatusCode.OK \
+            or status.status_code is StatusCode.UNSET:
+            return
         self._status = status
 
     def __exit__(
