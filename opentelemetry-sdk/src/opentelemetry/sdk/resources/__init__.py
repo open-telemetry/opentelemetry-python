@@ -64,7 +64,7 @@ from json import dumps
 
 import pkg_resources
 
-from opentelemetry.attributes import _filter_attributes
+from opentelemetry.attributes import Attributed
 from opentelemetry.sdk.environment_variables import (
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
@@ -138,14 +138,13 @@ _OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
 ).version
 
 
-class Resource:
+class Resource(Attributed):
     """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
 
     def __init__(
         self, attributes: Attributes, schema_url: typing.Optional[str] = None
     ):
-        _filter_attributes(attributes)
-        self._attributes = attributes.copy()
+        super().__init__(attributes, filtered=True)
         if schema_url is None:
             schema_url = ""
         self._schema_url = schema_url
@@ -192,12 +191,6 @@ class Resource:
     @property
     def schema_url(self) -> str:
         return self._schema_url
-
-    @property
-    def dropped_attributes(self) -> int:
-        if self._attributes:
-            return self._attributes.dropped
-        return 0
 
     def merge(self, other: "Resource") -> "Resource":
         """Merges this resource and an updating resource into a new `Resource`.

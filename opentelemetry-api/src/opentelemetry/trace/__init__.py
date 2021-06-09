@@ -82,6 +82,7 @@ from logging import getLogger
 from typing import Iterator, Optional, Sequence, cast
 
 from opentelemetry import context as context_api
+from opentelemetry.attributes import Attributed
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_TRACER_PROVIDER
 from opentelemetry.trace.propagation import (
@@ -119,13 +120,8 @@ class _LinkBase(ABC):
     def context(self) -> "SpanContext":
         return self._context
 
-    @property
-    @abstractmethod
-    def attributes(self) -> types.Attributes:
-        pass
 
-
-class Link(_LinkBase):
+class Link(_LinkBase, Attributed):
     """A link to a `Span`.
 
     Args:
@@ -138,12 +134,8 @@ class Link(_LinkBase):
         context: "SpanContext",
         attributes: types.Attributes = None,
     ) -> None:
-        super().__init__(context)
-        self._attributes = attributes
-
-    @property
-    def attributes(self) -> types.Attributes:
-        return self._attributes
+        _LinkBase.__init__(self, context)
+        Attributed.__init__(self, attributes)
 
 
 _Links = Optional[Sequence[Link]]

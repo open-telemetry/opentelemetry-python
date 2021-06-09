@@ -40,8 +40,8 @@ from typing import (
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
 from opentelemetry.attributes import (
-    _create_immutable_attributes,
-    _filter_attributes,
+    Attributed,
+    _BoundedDict,
     _is_valid_attribute_value,
 )
 from opentelemetry.sdk import util
@@ -289,13 +289,8 @@ class EventBase(abc.ABC):
     def timestamp(self) -> int:
         return self._timestamp
 
-    @property
-    @abc.abstractmethod
-    def attributes(self) -> types.Attributes:
-        pass
 
-
-class Event(EventBase):
+class Event(EventBase, Attributed):
     """A text annotation with a set of attributes.
 
     Args:
@@ -310,19 +305,12 @@ class Event(EventBase):
         name: str,
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
+        limit: Optional[int] = _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
     ) -> None:
-        super().__init__(name, timestamp)
-        self._attributes = attributes
-
-    @property
-    def attributes(self) -> types.Attributes:
-        return self._attributes
-
-    @property
-    def dropped_attributes(self) -> int:
-        if self._attributes:
-            return self._attributes.dropped
-        return 0
+        EventBase.__init__(self, name, timestamp)
+        Attributed.__init__(
+            self, attributes, limit=limit, immutable=True, filtered=True
+        )
 
 
 def _check_span_ended(func):
@@ -340,7 +328,7 @@ def _check_span_ended(func):
     return wrapper
 
 
-class ReadableSpan:
+class ReadableSpan(Attributed):
     """Provides read-only access to span attributes"""
 
     def __init__(
@@ -358,6 +346,7 @@ class ReadableSpan:
         start_time: Optional[int] = None,
         end_time: Optional[int] = None,
     ) -> None:
+        super().__init__(attributes)
         self._name = name
         self._context = context
         self._kind = kind
@@ -365,17 +354,10 @@ class ReadableSpan:
         self._parent = parent
         self._start_time = start_time
         self._end_time = end_time
-        self._attributes = attributes
         self._events = events
         self._links = links
         self._resource = resource
         self._status = status
-
-    @property
-    def dropped_attributes(self) -> int:
-        if self._attributes:
-            return self._attributes.dropped
-        return 0
 
     @property
     def dropped_events(self) -> int:
@@ -498,7 +480,7 @@ class ReadableSpan:
 
     @staticmethod
     def _format_attributes(attributes):
-        if isinstance(attributes, BoundedDict):
+        if isinstance(attributes, _BoundedDict):
             return attributes._dict  # pylint: disable=protected-access
         if isinstance(attributes, MappingProxyType):
             return attributes.copy()
@@ -685,22 +667,13 @@ class Span(trace_api.Span, ReadableSpan):
         self._limits = limits
         self._lock = threading.Lock()
 
-        _filter_attributes(attributes)
-        if not attributes:
-            self._attributes = self._new_attributes()
-        else:
-            self._attributes = BoundedDict.from_map(
-                self._limits.max_attributes, attributes
-            )
+        Attributed.__init__(
+            self, attributes, limit=self._limits.max_attributes, filtered=True
+        )
 
         self._events = self._new_events()
         if events:
             for event in events:
-                _filter_attributes(event.attributes)
-                # pylint: disable=protected-access
-                event._attributes = _create_immutable_attributes(
-                    event.attributes
-                )
                 self._events.append(event)
 
         if links is None:
@@ -712,9 +685,6 @@ class Span(trace_api.Span, ReadableSpan):
         return '{}(name="{}", context={})'.format(
             type(self).__name__, self._name, self._context
         )
-
-    def _new_attributes(self):
-        return BoundedDict(self._limits.max_attributes)
 
     def _new_events(self):
         return BoundedList(self._limits.max_events)
@@ -768,13 +738,12 @@ class Span(trace_api.Span, ReadableSpan):
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
     ) -> None:
-        _filter_attributes(attributes)
-        attributes = _create_immutable_attributes(attributes)
         self._add_event(
             Event(
                 name=name,
                 attributes=attributes,
                 timestamp=_time_ns() if timestamp is None else timestamp,
+                limit=self._limits.max_attributes,
             )
         )
 

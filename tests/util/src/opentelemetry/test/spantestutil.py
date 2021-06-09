@@ -46,14 +46,17 @@ class SpanTestBase(unittest.TestCase):
 
 def get_span_with_dropped_attributes_events_links():
     attributes = {}
-    for i in range(130):
-        attributes["key{}".format(i)] = ["value{}".format(i)]
+    for index in range(130):
+        attributes["key{}".format(index)] = ["value{}".format(index)]
     links = []
-    for i in range(129):
+    for index in range(129):
         links.append(
-            trace_sdk._Span(
-                name="span{}".format(i),
-                context=trace_api.INVALID_SPAN_CONTEXT,
+            trace_api.Link(
+                trace_sdk._Span(
+                    name="span{}".format(index),
+                    context=trace_api.INVALID_SPAN_CONTEXT,
+                    attributes=attributes,
+                ).get_span_context(),
                 attributes=attributes,
             )
         )
@@ -73,7 +76,7 @@ def get_span_with_dropped_attributes_events_links():
     )
 
     span.start()
-    for i in range(131):
-        span.add_event("event{}".format(i), attributes=attributes)
+    for index in range(131):
+        span.add_event("event{}".format(index), attributes=attributes)
     span.end()
     return span

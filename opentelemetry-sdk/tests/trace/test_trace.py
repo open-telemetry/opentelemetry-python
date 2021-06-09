@@ -808,7 +808,7 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(
                 root.links[0].context.span_id, other_context1.span_id
             )
-            self.assertEqual(root.links[0].attributes, None)
+            self.assertEqual(0, len(root.links[0].attributes))
             self.assertEqual(
                 root.links[1].context.trace_id, other_context2.trace_id
             )
@@ -1453,3 +1453,6 @@ class TestSpanLimits(unittest.TestCase):
         self.assertEqual(1, span.dropped_links)
         self.assertEqual(2, span.dropped_attributes)
         self.assertEqual(3, span.dropped_events)
+        self.assertEqual(2, span.events[0].dropped_attributes)
+        self.assertEqual(2, span.links[0].dropped_attributes)
+        self.assertEqual(2, span.resource.dropped_attributes)
