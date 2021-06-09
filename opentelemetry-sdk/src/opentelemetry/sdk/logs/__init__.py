@@ -114,14 +114,17 @@ class LogProcessor(abc.ABC):
 
 
 class OTLPHandler(logging.Handler):
+    """A handler calss which writes logging records, in OTLP format, to
+    a network destination or file.
+    """
     def __init__(self, level=logging.NOTSET, log_emitter=None) -> None:
         super().__init__(level=level)
-        self._log_emitter = log_emitter or get_log_emitter("")
+        self._log_emitter = log_emitter or get_log_emitter(__name__)
 
     def _translate(self, record: logging.LogRecord) -> LogRecord:
         timestamp = int(record.created * 1e9)
         span_context = get_current_span().get_span_context()
-        attributes: Attributes = {}  # TODO: attributes from record metadata
+        attributes: Attributes = {}  # TODO: attributes (or resource attributes?) from record metadata
         severity_number = std_to_otlp(record.levelno)
         return LogRecord(
             timestamp=timestamp,
@@ -136,9 +139,17 @@ class OTLPHandler(logging.Handler):
         )
 
     def emit(self, record: logging.LogRecord) -> None:
+        """
+        Emit a record.
+
+        The record is translated to OTLP format, and then sent across the pipeline.
+        """
         self._log_emitter.emit(self._translate(record))
 
     def flush(self) -> None:
+        """
+        Flushes the logging output.
+        """
         self._log_emitter.flush()
 
 
