@@ -40,6 +40,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated `opentelementry-opentracing-shim` `ScopeShim` to report exceptions in
   opentelemetry specification format, rather than opentracing spec format.
 
+### Changed
+- Added descriptions to the env variables mentioned in the opentelemetry-specification
+  ([#1898](https://github.com/open-telemetry/opentelemetry-python/pull/1898))
+
 ## [1.2.0, 0.21b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.2.0-0.21b0) - 2021-05-11
 
 ### Added
@@ -107,7 +111,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1728](https://github.com/open-telemetry/opentelemetry-python/pull/1728))
 - Silence unnecessary warning when creating a new Status object without description.
   ([#1721](https://github.com/open-telemetry/opentelemetry-python/pull/1721))
-- Update bootstrap cmd to use exact version when installing instrumentation packages. 
+- Update bootstrap cmd to use exact version when installing instrumentation packages.
   ([#1722](https://github.com/open-telemetry/opentelemetry-python/pull/1722))
 - Fix B3 propagator to never return None.
   ([#1750](https://github.com/open-telemetry/opentelemetry-python/pull/1750))
@@ -139,7 +143,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1500](https://github.com/open-telemetry/opentelemetry-python/pull/1500))
 
 ### Changed
-- remove `service_name` from constructor of jaeger and opencensus exporters and 
+- remove `service_name` from constructor of jaeger and opencensus exporters and
   use of env variable `OTEL_PYTHON_SERVICE_NAME`
   ([#1669])(https://github.com/open-telemetry/opentelemetry-python/pull/1669)
 - Rename `IdsGenerator` to `IdGenerator`
@@ -207,7 +211,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.19b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.19b0) - 2021-03-26
 
 ### Changed
-- remove `service_name` from constructor of jaeger and opencensus exporters and 
+- remove `service_name` from constructor of jaeger and opencensus exporters and
   use of env variable `OTEL_PYTHON_SERVICE_NAME`
   ([#1669])(https://github.com/open-telemetry/opentelemetry-python/pull/1669)
 - Rename `IdsGenerator` to `IdGenerator`
@@ -364,8 +368,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1373](https://github.com/open-telemetry/opentelemetry-python/pull/1373))
 - Rename `Meter` to `Accumulator`
   ([#1372](https://github.com/open-telemetry/opentelemetry-python/pull/1372))
-- Fix `ParentBased` sampler for implicit parent spans. Fix also `trace_state` 
-  erasure for dropped spans or spans sampled by the `TraceIdRatioBased` sampler. 
+- Fix `ParentBased` sampler for implicit parent spans. Fix also `trace_state`
+  erasure for dropped spans or spans sampled by the `TraceIdRatioBased` sampler.
   ([#1394](https://github.com/open-telemetry/opentelemetry-python/pull/1394))
 
 ## [0.15b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v0.15b0) -2020-11-02
@@ -430,10 +434,10 @@ s
   ([#1143](https://github.com/open-telemetry/opentelemetry-python/pull/1143))
 - Zipkin exporter now accepts a ``max_tag_value_length`` attribute to customize the
   maximum allowed size a tag value can have.
-  ([#1151](https://github.com/open-telemetry/opentelemetry-python/pull/1151)) 
+  ([#1151](https://github.com/open-telemetry/opentelemetry-python/pull/1151))
 - Fixed OTLP events to Zipkin annotations translation.
   ([#1161](https://github.com/open-telemetry/opentelemetry-python/pull/1161))
-- Fixed bootstrap command to correctly install opentelemetry-instrumentation-falcon instead of opentelemetry-instrumentation-flask. 
+- Fixed bootstrap command to correctly install opentelemetry-instrumentation-falcon instead of opentelemetry-instrumentation-flask.
   ([#1138](https://github.com/open-telemetry/opentelemetry-python/pull/1138))
 - Update sampling result names
   ([#1128](https://github.com/open-telemetry/opentelemetry-python/pull/1128))
@@ -455,12 +459,12 @@ s
   ([#835](https://github.com/open-telemetry/opentelemetry-python/pull/835))
 - Add type hints to OTLP exporter
   ([#1121](https://github.com/open-telemetry/opentelemetry-python/pull/1121))
-- Add support for OTEL_EXPORTER_ZIPKIN_ENDPOINT env var. As part of this change, the 
+- Add support for OTEL_EXPORTER_ZIPKIN_ENDPOINT env var. As part of this change, the
   configuration of the ZipkinSpanExporter exposes a `url` argument to replace `host_name`,
   `port`, `protocol`, `endpoint`. This brings this implementation inline with other
-  implementations. 
+  implementations.
   ([#1064](https://github.com/open-telemetry/opentelemetry-python/pull/1064))
-- Zipkin exporter report instrumentation info. 
+- Zipkin exporter report instrumentation info.
   ([#1097](https://github.com/open-telemetry/opentelemetry-python/pull/1097))
 - Add status mapping to tags
   ([#1111](https://github.com/open-telemetry/opentelemetry-python/issues/1111))
@@ -513,7 +517,7 @@ s
   ([#904](https://github.com/open-telemetry/opentelemetry-python/pull/904))
 - Stop TracerProvider and MeterProvider from being overridden
   ([#959](https://github.com/open-telemetry/opentelemetry-python/pull/959))
-- Update default port to 55680 
+- Update default port to 55680
   ([#977](https://github.com/open-telemetry/opentelemetry-python/pull/977))
 - Add proper length zero padding to hex strings of traceId, spanId, parentId sent on the wire, for compatibility with jaeger-collector
   ([#908](https://github.com/open-telemetry/opentelemetry-python/pull/908))
