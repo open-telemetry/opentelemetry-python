@@ -64,7 +64,10 @@ from json import dumps
 
 import pkg_resources
 
-from opentelemetry.attributes import _create_immutable_attributes, _filter_attributes
+from opentelemetry.attributes import (
+    _create_immutable_attributes,
+    _filter_attributes,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
@@ -239,7 +242,7 @@ class Resource:
 
     def __hash__(self):
         return hash(
-            f"{dumps(self._attributes, sort_keys=True)}|{self._schema_url}"
+            f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"
         )
 
 
