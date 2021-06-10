@@ -49,10 +49,10 @@ Manually setting span context
 
 .. code-block:: python
 
-    from opentelemetry.sdk.trace.export import SimpleSpanProcessor, ConsoleSpanExporter
     from opentelemetry import trace
     from opentelemetry.trace import NonRecordingSpan, SpanContext, TraceFlags
     from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
     from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
     trace.set_tracer_provider(TracerProvider())
@@ -87,8 +87,7 @@ Using multiple tracer providers with different Resource
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.resources import Resource
-    from opentelemetry.sdk.trace.export import (ConsoleSpanExporter,
-                                                SimpleSpanProcessor)
+    from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
 
     # Global tracer provider which can be set only once
     trace.set_tracer_provider(
