@@ -43,7 +43,7 @@ OTEL_LOG_LEVEL = "OTEL_LOG_LEVEL"
 .. envvar:: OTEL_LOG_LEVEL
 
 The :envvar:`OTEL_LOG_LEVEL` environment variable sets the log level used by the SDK logger
-Default: info
+Default: "info"
 """
 
 OTEL_TRACES_SAMPLER = "OTEL_TRACES_SAMPLER"
@@ -70,21 +70,24 @@ OTEL_BSP_SCHEDULE_DELAY = "OTEL_BSP_SCHEDULE_DELAY"
 """
 .. envvar:: OTEL_BSP_SCHEDULE_DELAY
 
-The :envvar:`OTEL_BSP_SCHEDULE_DELAY` represents the delay interval between two consecutive exports
+The :envvar:`OTEL_BSP_SCHEDULE_DELAY` represents the delay interval between two consecutive exports.
+Default: 5000
 """
 
 OTEL_BSP_EXPORT_TIMEOUT = "OTEL_BSP_EXPORT_TIMEOUT"
 """
 .. envvar:: OTEL_BSP_EXPORT_TIMEOUT
 
-The :envvar:`OTEL_BSP_EXPORT_TIMEOUT` represents the maximum allowed time to export data
+The :envvar:`OTEL_BSP_EXPORT_TIMEOUT` represents the maximum allowed time to export data.
+Default: 30000
 """
 
 OTEL_BSP_MAX_QUEUE_SIZE = "OTEL_BSP_MAX_QUEUE_SIZE"
 """
 .. envvar:: OTEL_BSP_MAX_QUEUE_SIZE
 
-The :envvar:`OTEL_BSP_MAX_QUEUE_SIZE` represents the maximum queue size for the data export
+The :envvar:`OTEL_BSP_MAX_QUEUE_SIZE` represents the maximum queue size for the data export.
+Default: 2048
 """
 
 OTEL_BSP_MAX_EXPORT_BATCH_SIZE = "OTEL_BSP_MAX_EXPORT_BATCH_SIZE"
@@ -92,6 +95,7 @@ OTEL_BSP_MAX_EXPORT_BATCH_SIZE = "OTEL_BSP_MAX_EXPORT_BATCH_SIZE"
 .. envvar:: OTEL_BSP_MAX_EXPORT_BATCH_SIZE
 
 The :envvar:`OTEL_BSP_MAX_EXPORT_BATCH_SIZE` represents the maximum batch size for the data export.
+Default: 512
 """
 
 OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT = "OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT"
@@ -99,7 +103,7 @@ OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT = "OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT"
 .. envvar:: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
 
 The :envvar:`OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT` represents the maximum allowed span attribute count.
-Default value: 128
+Default: 128
 """
 
 OTEL_SPAN_EVENT_COUNT_LIMIT = "OTEL_SPAN_EVENT_COUNT_LIMIT"
@@ -107,7 +111,7 @@ OTEL_SPAN_EVENT_COUNT_LIMIT = "OTEL_SPAN_EVENT_COUNT_LIMIT"
 .. envvar:: OTEL_SPAN_EVENT_COUNT_LIMIT
 
 The :envvar:`OTEL_SPAN_EVENT_COUNT_LIMIT` represents the maximum allowed span event count.
-Default value: 128
+Default: 128
 """
 
 OTEL_SPAN_LINK_COUNT_LIMIT = "OTEL_SPAN_LINK_COUNT_LIMIT"
@@ -115,7 +119,7 @@ OTEL_SPAN_LINK_COUNT_LIMIT = "OTEL_SPAN_LINK_COUNT_LIMIT"
 .. envvar:: OTEL_SPAN_LINK_COUNT_LIMIT
 
 The :envvar:`OTEL_SPAN_LINK_COUNT_LIMIT` represents the maximum allowed span link count.
-Default value: 128
+Default: 128
 """
 
 OTEL_EXPORTER_JAEGER_AGENT_HOST = "OTEL_EXPORTER_JAEGER_AGENT_HOST"
@@ -123,7 +127,7 @@ OTEL_EXPORTER_JAEGER_AGENT_HOST = "OTEL_EXPORTER_JAEGER_AGENT_HOST"
 .. envvar:: OTEL_EXPORTER_JAEGER_AGENT_HOST
 
 The :envvar:`OTEL_EXPORTER_JAEGER_AGENT_HOST` represents the hostname for the Jaeger agent.
-Default value: localhost
+Default: "localhost"
 """
 
 OTEL_EXPORTER_JAEGER_AGENT_PORT = "OTEL_EXPORTER_JAEGER_AGENT_PORT"
@@ -131,7 +135,7 @@ OTEL_EXPORTER_JAEGER_AGENT_PORT = "OTEL_EXPORTER_JAEGER_AGENT_PORT"
 .. envvar:: OTEL_EXPORTER_JAEGER_AGENT_PORT
 
 The :envvar:`OTEL_EXPORTER_JAEGER_AGENT_PORT` represents the port for the Jaeger agent.
-Default value: 6832
+Default: 6832
 """
 
 OTEL_EXPORTER_JAEGER_ENDPOINT = "OTEL_EXPORTER_JAEGER_ENDPOINT"
@@ -139,7 +143,7 @@ OTEL_EXPORTER_JAEGER_ENDPOINT = "OTEL_EXPORTER_JAEGER_ENDPOINT"
 .. envvar:: OTEL_EXPORTER_JAEGER_ENDPOINT
 
 The :envvar:`OTEL_EXPORTER_JAEGER_ENDPOINT` represents the HTTP endpoint for Jaeger traces.
-Default value: http://localhost:14250
+Default: "http://localhost:14250"
 """
 
 OTEL_EXPORTER_JAEGER_USER = "OTEL_EXPORTER_JAEGER_USER"
@@ -160,8 +164,7 @@ OTEL_EXPORTER_JAEGER_TIMEOUT = "OTEL_EXPORTER_JAEGER_TIMEOUT"
 """
 .. envvar:: OTEL_EXPORTER_JAEGER_TIMEOUT
 
-Maximum time the Jaeger exporter will wait for each batch export, the default
-timeout is 10s.
+Maximum time the Jaeger exporter will wait for each batch export, the default timeout is 10s.
 """
 
 OTEL_EXPORTER_ZIPKIN_ENDPOINT = "OTEL_EXPORTER_ZIPKIN_ENDPOINT"
@@ -184,9 +187,8 @@ OTEL_EXPORTER_OTLP_PROTOCOL = "OTEL_EXPORTER_OTLP_PROTOCOL"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_PROTOCOL
 
-The :envvar:`OTEL_EXPORTER_OTLP_PROTOCOL` represents the the transport protocol.
-There is no specified default.
-
+The :envvar:`OTEL_EXPORTER_OTLP_PROTOCOL` represents the the transport protocol for the
+OTLP exporter.
 """
 
 OTEL_EXPORTER_OTLP_CERTIFICATE = "OTEL_EXPORTER_OTLP_CERTIFICATE"
@@ -194,17 +196,15 @@ OTEL_EXPORTER_OTLP_CERTIFICATE = "OTEL_EXPORTER_OTLP_CERTIFICATE"
 .. envvar:: OTEL_EXPORTER_OTLP_CERTIFICATE
 
 The :envvar:`OTEL_EXPORTER_OTLP_CERTIFICATE` stores the path to the certificate file for
-TLS credentials of gRPC client. Should only be used for a secure connection
-
+TLS credentials of gRPC client. Should only be used for a secure connection.
 """
 
 OTEL_EXPORTER_OTLP_HEADERS = "OTEL_EXPORTER_OTLP_HEADERS"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_HEADERS
 
-The :envvar:`OTEL_EXPORTER_OTLP_HEADERS` has the Key-value pairs to be used as headers
+The :envvar:`OTEL_EXPORTER_OTLP_HEADERS` contains the key-value pairs to be used as headers
 associated with gRPC or HTTP requests.
-
 """
 
 
@@ -230,7 +230,7 @@ OTEL_EXPORTER_OTLP_TIMEOUT = "OTEL_EXPORTER_OTLP_TIMEOUT"
 .. envvar:: OTEL_EXPORTER_OTLP_TIMEOUT
 
 The :envvar:`OTEL_EXPORTER_OTLP_TIMEOUT` is the maximum time the OTLP exporter will wait for each batch export.
-
+Default: 10s
 """
 
 OTEL_EXPORTER_OTLP_ENDPOINT = "OTEL_EXPORTER_OTLP_ENDPOINT"
@@ -240,17 +240,16 @@ OTEL_EXPORTER_OTLP_ENDPOINT = "OTEL_EXPORTER_OTLP_ENDPOINT"
 The :envvar:`OTEL_EXPORTER_OTLP_ENDPOINT` target to which the exporter is going to send spans or metrics.
 The endpoint MUST be a valid URL with scheme (http or https) and host, and MAY contain a port and path.
 A scheme of https indicates a secure connection.
-
+Default: "https://localhost:4317"
 """
 
 OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
 
-The :envvar:`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` target to which the exporter is going to send spans.
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` target to which the span exporter is going to send spans.
 The endpoint MUST be a valid URL with scheme (http or https) and host, and MAY contain a port and path.
 A scheme of https indicates a secure connection.
-
 """
 
 OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"
@@ -259,7 +258,6 @@ OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"
 
 The :envvar:`OTEL_EXPORTER_OTLP_PROTOCOL` represents the the transport protocol for spans.
 There is no specified default.
-
 """
 
 OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE = "OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE"
@@ -267,17 +265,15 @@ OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE = "OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE"
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE
 
 The :envvar:`OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE` stores the path to the certificate file for
-TLS credentials of gRPC client. Should only be used for a secure connection.
-
+TLS credentials of gRPC client for traces. Should only be used for a secure connection for tracing.
 """
 
 OTEL_EXPORTER_OTLP_TRACES_HEADERS = "OTEL_EXPORTER_OTLP_TRACES_HEADERS"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_HEADERS
 
-The :envvar:`OTEL_EXPORTER_OTLP_TRACES_HEADERS` has the Key-value pairs to be used as headers for spans
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_HEADERS` contains the key-value pairs to be used as headers for spans
 associated with gRPC or HTTP requests.
-
 """
 
 
@@ -293,13 +289,16 @@ OTEL_EXPORTER_OTLP_TRACES_TIMEOUT = "OTEL_EXPORTER_OTLP_TRACES_TIMEOUT"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_TIMEOUT
 
-The :envvar:`OTEL_EXPORTER_OTLP_TRACES_TIMEOUT` is the maximum time the OTLP exporter will wait for each batch export.
-
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_TIMEOUT` is the maximum time the OTLP exporter will
+wait for each batch export for spans.
 """
 
 OTEL_EXPORTER_JAEGER_CERTIFICATE = "OTEL_EXPORTER_JAEGER_CERTIFICATE"
 """
 .. envvar:: OTEL_EXPORTER_JAEGER_CERTIFICATE
+
+The :envvar:`OTEL_EXPORTER_JAEGER_CERTIFICATE` stores the path to the certificate file for
+TLS credentials of gRPC client for Jaeger. Should only be used for a secure connection with Jaeger.
 """
 
 OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES = (
@@ -307,6 +306,9 @@ OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES = (
 )
 """
 .. envvar:: OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES
+
+The :envvar:`OTEL_EXPORTER_JAEGER_AGENT_SPLIT_OVERSIZED_BATCHES` is a boolean flag to determine whether
+to split a large span batch to admire the udp packet size limit.
 """
 
 OTEL_SERVICE_NAME = "OTEL_SERVICE_NAME"
