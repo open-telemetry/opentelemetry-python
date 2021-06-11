@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.3.0-0.22b0...HEAD)
 
+### Changed
+- Updated `opentelemetry-opencensus-exporter` to use `service_name` of spans instead of resource
+  ([#1897](https://github.com/open-telemetry/opentelemetry-python/pull/1897))
+
 ## [1.3.0-0.22b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.3.0-0.22b0) - 2021-06-01
 
 ### Added 
@@ -25,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1871](https://github.com/open-telemetry/opentelemetry-python/pull/1871))
 - Update protos to latest version release 0.9.0
   ([#1873](https://github.com/open-telemetry/opentelemetry-python/pull/1873))
+
+### Fixed
+- Updated `opentelementry-opentracing-shim` `ScopeShim` to report exceptions in
+  opentelemetry specification format, rather than opentracing spec format.
 
 ## [1.2.0, 0.21b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.2.0-0.21b0) - 2021-05-11
 

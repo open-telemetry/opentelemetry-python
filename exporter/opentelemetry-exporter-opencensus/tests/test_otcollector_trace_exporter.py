@@ -34,6 +34,10 @@ from opentelemetry.trace import TraceFlags
 
 # pylint: disable=no-member
 class TestCollectorSpanExporter(unittest.TestCase):
+    @mock.patch(
+        "opentelemetry.exporter.opencensus.trace_exporter.trace._TRACER_PROVIDER",
+        None,
+    )
     def test_constructor(self):
         mock_get_node = mock.Mock()
         patch = mock.patch(
@@ -324,3 +328,46 @@ class TestCollectorSpanExporter(unittest.TestCase):
         self.assertEqual(
             getattr(output_identifier, "host_name"), "testHostName"
         )
+
+    @mock.patch(
+        "opentelemetry.exporter.opencensus.trace_exporter.trace._TRACER_PROVIDER",
+        None,
+    )
+    def test_export_service_name(self):
+        trace_api.set_tracer_provider(
+            TracerProvider(
+                resource=Resource.create({SERVICE_NAME: "testServiceName"})
+            )
+        )
+        mock_client = mock.MagicMock()
+        mock_export = mock.MagicMock()
+        mock_client.Export = mock_export
+        host_name = "testHostName"
+        collector_exporter = OpenCensusSpanExporter(
+            client=mock_client, host_name=host_name
+        )
+        self.assertEqual(
+            collector_exporter.node.service_info.name, "testServiceName"
+        )
+
+        trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
+        span_id = 0x34BF92DEEFC58C92
+        span_context = trace_api.SpanContext(
+            trace_id,
+            span_id,
+            is_remote=False,
+            trace_flags=TraceFlags(TraceFlags.SAMPLED),
+        )
+        resource = Resource.create({SERVICE_NAME: "test"})
+        otel_spans = [
+            trace._Span(
+                name="test1",
+                context=span_context,
+                kind=trace_api.SpanKind.CLIENT,
+                resource=resource,
+            )
+        ]
+
+        result_status = collector_exporter.export(otel_spans)
+        self.assertEqual(SpanExportResult.SUCCESS, result_status)
+        self.assertEqual(collector_exporter.node.service_info.name, "test")
