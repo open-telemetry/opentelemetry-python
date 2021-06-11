@@ -15,6 +15,7 @@
 import logging
 import threading
 import typing
+import uuid
 from functools import wraps
 from os import environ
 
@@ -66,6 +67,18 @@ def _load_runtime_context(func: _F) -> _F:
         return func(*args, **kwargs)  # type: ignore[misc]
 
     return typing.cast(_F, wrapper)  # type: ignore[misc]
+
+
+def create_key(keyname: str) -> str:
+    """To allow cross-cutting concern to control access to their local state,
+    the RuntimeContext API provides a function which takes a keyname as input,
+    and returns a unique key.
+    Args:
+        keyname: The key name is for debugging purposes and is not required to be unique.
+    Returns:
+        A unique string representing the newly created key.
+    """
+    return keyname + "-" + str(uuid.uuid4())
 
 
 def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
