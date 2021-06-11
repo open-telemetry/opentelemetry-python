@@ -55,7 +55,9 @@ class TestOTLPHandler(unittest.TestCase):
         logger = get_logger(log_emitter=emitter_mock)
         # Assert emit gets called for warning message
         logger.warning("Wanrning message")
-        log_record, *_ = emitter_mock.emit.call_args.args
+        args, _ = emitter_mock.emit.call_args_list[0]
+        log_record = args[0]
+
         self.assertIsNotNone(log_record)
         self.assertEqual(log_record.trace_id, INVALID_SPAN_CONTEXT.trace_id)
         self.assertEqual(log_record.span_id, INVALID_SPAN_CONTEXT.span_id)
