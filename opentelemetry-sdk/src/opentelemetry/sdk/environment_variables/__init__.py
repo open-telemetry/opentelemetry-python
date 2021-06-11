@@ -135,7 +135,7 @@ OTEL_EXPORTER_JAEGER_AGENT_PORT = "OTEL_EXPORTER_JAEGER_AGENT_PORT"
 .. envvar:: OTEL_EXPORTER_JAEGER_AGENT_PORT
 
 The :envvar:`OTEL_EXPORTER_JAEGER_AGENT_PORT` represents the port for the Jaeger agent.
-Default: 6832
+Default: 6831
 """
 
 OTEL_EXPORTER_JAEGER_ENDPOINT = "OTEL_EXPORTER_JAEGER_ENDPOINT"
@@ -164,7 +164,8 @@ OTEL_EXPORTER_JAEGER_TIMEOUT = "OTEL_EXPORTER_JAEGER_TIMEOUT"
 """
 .. envvar:: OTEL_EXPORTER_JAEGER_TIMEOUT
 
-Maximum time the Jaeger exporter will wait for each batch export, the default timeout is 10s.
+Maximum time the Jaeger exporter will wait for each batch export.
+Default: 10
 """
 
 OTEL_EXPORTER_ZIPKIN_ENDPOINT = "OTEL_EXPORTER_ZIPKIN_ENDPOINT"
@@ -179,8 +180,8 @@ OTEL_EXPORTER_ZIPKIN_TIMEOUT = "OTEL_EXPORTER_ZIPKIN_TIMEOUT"
 """
 .. envvar:: OTEL_EXPORTER_ZIPKIN_TIMEOUT
 
-Maximum time the Zipkin exporter will wait for each batch export, the default
-timeout is 10s.
+Maximum time (in seconds) the Zipkin exporter will wait for each batch export.
+Default: 10
 """
 
 OTEL_EXPORTER_OTLP_PROTOCOL = "OTEL_EXPORTER_OTLP_PROTOCOL"
@@ -230,7 +231,7 @@ OTEL_EXPORTER_OTLP_TIMEOUT = "OTEL_EXPORTER_OTLP_TIMEOUT"
 .. envvar:: OTEL_EXPORTER_OTLP_TIMEOUT
 
 The :envvar:`OTEL_EXPORTER_OTLP_TIMEOUT` is the maximum time the OTLP exporter will wait for each batch export.
-Default: 10s
+Default: 10
 """
 
 OTEL_EXPORTER_OTLP_ENDPOINT = "OTEL_EXPORTER_OTLP_ENDPOINT"
@@ -256,8 +257,7 @@ OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
 
-The :envvar:`OTEL_EXPORTER_OTLP_PROTOCOL` represents the the transport protocol for spans.
-There is no specified default.
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` represents the the transport protocol for spans.
 """
 
 OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE = "OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE"
