@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 - Updated `opentelemetry-opencensus-exporter` to use `service_name` of spans instead of resource
   ([#1897](https://github.com/open-telemetry/opentelemetry-python/pull/1897))
+- Ignore calls to `Span.set_status` with `StatusCode.UNSET` and also if previous status already
+  had `StatusCode.OK`.
+  ([#1902](https://github.com/open-telemetry/opentelemetry-python/pull/1902))
 
 ## [1.3.0-0.22b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.3.0-0.22b0) - 2021-06-01
 
