@@ -85,7 +85,7 @@ from opentelemetry import context as context_api
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_TRACER_PROVIDER
 from opentelemetry.trace.propagation import (
-    SPAN_KEY,
+    _SPAN_KEY,
     get_current_span,
     set_span_in_context,
 )
@@ -517,7 +517,7 @@ def use_span(
             this mechanism if it was previously set manually.
     """
     try:
-        token = context_api.attach(context_api.set_value(SPAN_KEY, span))
+        token = context_api.attach(context_api.set_value(_SPAN_KEY, span))
         try:
             yield span
         finally:
