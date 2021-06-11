@@ -71,6 +71,10 @@ class TestOTLPHandler(unittest.TestCase):
         with tracer.start_as_current_span("test") as span:
             logger.critical("Critical message within span")
 
+            print(emitter_mock.emit.call_args)
+            print(emitter_mock.emit.call_args.args)
+            print(emitter_mock.emit.call_args.kwargs)
+
             log_record, *_ = emitter_mock.emit.call_args.args
             self.assertEqual(log_record.body, "Critical message within span")
             self.assertEqual(log_record.severity_text, "CRITICAL")
