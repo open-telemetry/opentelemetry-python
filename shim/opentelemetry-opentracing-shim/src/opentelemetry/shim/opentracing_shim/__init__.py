@@ -102,8 +102,8 @@ from opentracing import (
 from opentelemetry.baggage import get_baggage, set_baggage
 from opentelemetry.context import (
     Context,
-    _create_key,
     attach,
+    create_key,
     detach,
     get_value,
     set_value,
@@ -124,7 +124,7 @@ from opentelemetry.util.types import Attributes
 
 ValueT = TypeVar("ValueT", int, float, bool, str)
 logger = logging.getLogger(__name__)
-_SHIM_KEY = _create_key("scope_shim")
+SHIM_KEY = create_key("scope_shim")
 
 
 def create_tracer(otel_tracer_provider: TracerProvider) -> "TracerShim":
@@ -356,7 +356,7 @@ class ScopeShim(Scope):
     ):
         super().__init__(manager, span)
         self._span_cm = span_cm
-        self._token = attach(set_value(_SHIM_KEY, self))
+        self._token = attach(set_value(SHIM_KEY, self))
 
     # TODO: Change type of `manager` argument to `opentracing.ScopeManager`? We
     # need to get rid of `manager.tracer` for this.
@@ -485,7 +485,7 @@ class ScopeManagerShim(ScopeManager):
             return None
 
         try:
-            return get_value(_SHIM_KEY)
+            return get_value(SHIM_KEY)
         except KeyError:
             span_context = SpanContextShim(span.get_span_context())
             wrapped_span = SpanShim(self._tracer, span_context, span)
