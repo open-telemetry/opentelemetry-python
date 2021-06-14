@@ -82,6 +82,9 @@ from logging import getLogger
 from typing import Iterator, Optional, Sequence, cast
 
 from opentelemetry import context as context_api
+from opentelemetry.attributes import (  # type: ignore
+    _create_immutable_attributes,
+)
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_TRACER_PROVIDER
 from opentelemetry.trace.propagation import (
@@ -126,7 +129,7 @@ class _LinkBase(ABC):
 
 
 class Link(_LinkBase):
-    """A link to a `Span`.
+    """A link to a `Span`. The attributes of a Link are immutable.
 
     Args:
         context: `SpanContext` of the `Span` to link to.
@@ -139,7 +142,9 @@ class Link(_LinkBase):
         attributes: types.Attributes = None,
     ) -> None:
         super().__init__(context)
-        self._attributes = attributes
+        self._attributes = _create_immutable_attributes(
+            attributes
+        )  # type: types.Attributes
 
     @property
     def attributes(self) -> types.Attributes:
