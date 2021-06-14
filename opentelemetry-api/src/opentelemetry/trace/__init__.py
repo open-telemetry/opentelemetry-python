@@ -82,8 +82,8 @@ from logging import getLogger
 from typing import Iterator, Optional, Sequence, cast
 
 from opentelemetry import context as context_api
-from opentelemetry.attributes import (
-    _create_immutable_attributes,  # type: ignore
+from opentelemetry.attributes import (  # type: ignore
+    _create_immutable_attributes,
 )
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_TRACER_PROVIDER
