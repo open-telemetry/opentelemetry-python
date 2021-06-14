@@ -805,7 +805,7 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(
                 root.links[0].context.span_id, other_context1.span_id
             )
-            self.assertEqual(root.links[0].attributes, None)
+            self.assertEqual(0, len(root.links[0].attributes))
             self.assertEqual(
                 root.links[1].context.trace_id, other_context2.trace_id
             )
@@ -813,6 +813,9 @@ class TestSpan(unittest.TestCase):
                 root.links[1].context.span_id, other_context2.span_id
             )
             self.assertEqual(root.links[1].attributes, {"name": "neighbor"})
+
+            with self.assertRaises(TypeError):
+                root.links[1].attributes["name"] = "new_neighbour"
 
     def test_update_name(self):
         with self.tracer.start_as_current_span("root") as root:

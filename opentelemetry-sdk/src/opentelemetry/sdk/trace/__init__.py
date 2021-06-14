@@ -296,7 +296,8 @@ class EventBase(abc.ABC):
 
 
 class Event(EventBase):
-    """A text annotation with a set of attributes.
+    """A text annotation with a set of attributes. The attributes of an event
+    are immutable.
 
     Args:
         name: Name of the event.
@@ -456,7 +457,7 @@ class ReadableSpan:
         f_span["attributes"] = self._format_attributes(self._attributes)
         f_span["events"] = self._format_events(self._events)
         f_span["links"] = self._format_links(self._links)
-        f_span["resource"] = self._resource.attributes
+        f_span["resource"] = self._format_attributes(self._resource.attributes)
 
         return json.dumps(f_span, indent=indent)
 
