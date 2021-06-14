@@ -188,7 +188,8 @@ class TestResources(unittest.TestCase):
         resource = resources.Resource.create(attributes)
         self.assertEqual(resource.attributes, attributes_copy)
 
-        resource.attributes["has_bugs"] = False
+        with self.assertRaises(TypeError):
+            resource.attributes["has_bugs"] = False
         self.assertEqual(resource.attributes, attributes_copy)
 
         attributes["cost"] = 999.91

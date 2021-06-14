@@ -12,6 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Ignore calls to `Span.set_status` with `StatusCode.UNSET` and also if previous status already
   had `StatusCode.OK`.
   ([#1902](https://github.com/open-telemetry/opentelemetry-python/pull/1902))
+- Attributes for `Link` and `Resource` are immutable as they are for `Event`, which means
+  any attempt to modify attributes directly will result in a `TypeError` exception.
+  ([#1909](https://github.com/open-telemetry/opentelemetry-python/pull/1909))
 
 ## [1.3.0-0.22b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.3.0-0.22b0) - 2021-06-01
 
