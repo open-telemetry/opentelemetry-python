@@ -6,6 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.3.0-0.22b0...HEAD)
 
+### Added
+- Add global LogEmitterProvider and convenience function get_log_emitter
+  ([#1901](https://github.com/open-telemetry/opentelemetry-python/pull/1901))
+
 ### Changed
 - Updated `opentelemetry-opencensus-exporter` to use `service_name` of spans instead of resource
   ([#1897](https://github.com/open-telemetry/opentelemetry-python/pull/1897))
