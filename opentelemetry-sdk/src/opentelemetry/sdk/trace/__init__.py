@@ -296,7 +296,8 @@ class EventBase(abc.ABC):
 
 
 class Event(EventBase):
-    """A text annotation with a set of attributes.
+    """A text annotation with a set of attributes. The attributes of an event
+    are immutable.
 
     Args:
         name: Name of the event.

@@ -127,7 +127,7 @@ class _LinkBase(ABC):
 
 
 class Link(_LinkBase):
-    """A link to a `Span`.
+    """A link to a `Span`. The attributes of a Link are immutable.
 
     Args:
         context: `SpanContext` of the `Span` to link to.
