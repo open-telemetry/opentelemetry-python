@@ -14,9 +14,11 @@
 
 # type: ignore
 
+import collections
 import unittest
 
 from opentelemetry.attributes import (
+    BoundedDict,
     _create_immutable_attributes,
     _filter_attributes,
     _is_valid_attribute_value,
@@ -85,3 +87,96 @@ class TestAttributes(unittest.TestCase):
         # TypeError: 'mappingproxy' object does not support item assignment
         with self.assertRaises(TypeError):
             immutable["pi"] = 1.34
+
+
+class TestBoundedDict(unittest.TestCase):
+    base = collections.OrderedDict(
+        [
+            ("name", "Firulais"),
+            ("age", 7),
+            ("weight", 13),
+            ("vaccinated", True),
+        ]
+    )
+
+    def test_negative_maxlen(self):
+        with self.assertRaises(ValueError):
+            BoundedDict(-1)
+
+    def test_from_map(self):
+        dic_len = len(self.base)
+        base_copy = collections.OrderedDict(self.base)
+        bdict = BoundedDict(dic_len, base_copy)
+
+        self.assertEqual(len(bdict), dic_len)
+
+        # modify base_copy and test that bdict is not changed
+        base_copy["name"] = "Bruno"
+        base_copy["age"] = 3
+
+        for key in self.base:
+            self.assertEqual(bdict[key], self.base[key])
+
+        # test that iter yields the correct number of elements
+        self.assertEqual(len(tuple(bdict)), dic_len)
+
+        # map too big
+        half_len = dic_len // 2
+        bdict = BoundedDict(half_len, self.base)
+        self.assertEqual(len(tuple(bdict)), half_len)
+        self.assertEqual(bdict.dropped, dic_len - half_len)
+
+    def test_bounded_dict(self):
+        # create empty dict
+        dic_len = len(self.base)
+        bdict = BoundedDict(dic_len, immutable=False)
+        self.assertEqual(len(bdict), 0)
+
+        # fill dict
+        for key in self.base:
+            bdict[key] = self.base[key]
+
+        self.assertEqual(len(bdict), dic_len)
+        self.assertEqual(bdict.dropped, 0)
+
+        for key in self.base:
+            self.assertEqual(bdict[key], self.base[key])
+
+        # test __iter__ in BoundedDict
+        for key in bdict:
+            self.assertEqual(bdict[key], self.base[key])
+
+        # updating an existing element should not drop
+        bdict["name"] = "Bruno"
+        self.assertEqual(bdict.dropped, 0)
+
+        # try to append more elements
+        for key in self.base:
+            bdict["new-" + key] = self.base[key]
+
+        self.assertEqual(len(bdict), dic_len)
+        self.assertEqual(bdict.dropped, dic_len)
+
+        # test that elements in the dict are the new ones
+        for key in self.base:
+            self.assertEqual(bdict["new-" + key], self.base[key])
+
+        # delete an element
+        del bdict["new-name"]
+        self.assertEqual(len(bdict), dic_len - 1)
+
+        with self.assertRaises(KeyError):
+            _ = bdict["new-name"]
+
+    def test_no_limit_code(self):
+        bdict = BoundedDict(maxlen=None, immutable=False)
+        for num in range(100):
+            bdict[num] = num
+
+        for num in range(100):
+            self.assertEqual(bdict[num], num)
+
+    def test_immutable(self):
+        bdict = BoundedDict()
+        with self.assertRaises(TypeError):
+            bdict["should-not-work"] = "dict immutable"

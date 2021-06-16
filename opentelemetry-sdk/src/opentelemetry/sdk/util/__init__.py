@@ -18,6 +18,8 @@ from collections import OrderedDict, deque
 from collections.abc import MutableMapping, Sequence
 from typing import Optional
 
+from deprecated import deprecated
+
 
 def ns_to_iso_str(nanoseconds):
     """Get an ISO 8601 string from time_ns value."""
@@ -91,6 +93,7 @@ class BoundedList(Sequence):
         return bounded_list
 
 
+@deprecated(version="1.4.0")  # type: ignore
 class BoundedDict(MutableMapping):
     """An ordered dict with a fixed max capacity.
 

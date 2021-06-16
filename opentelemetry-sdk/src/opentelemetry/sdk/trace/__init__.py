@@ -39,11 +39,7 @@ from typing import (
 
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
-from opentelemetry.attributes import (
-    _create_immutable_attributes,
-    _filter_attributes,
-    _is_valid_attribute_value,
-)
+from opentelemetry.attributes import BoundedDict, _is_valid_attribute_value
 from opentelemetry.sdk import util
 from opentelemetry.sdk.environment_variables import (
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
@@ -53,7 +49,7 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
-from opentelemetry.sdk.util import BoundedDict, BoundedList
+from opentelemetry.sdk.util import BoundedList
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import SpanContext
 from opentelemetry.trace.status import Status, StatusCode
@@ -65,6 +61,8 @@ logger = logging.getLogger(__name__)
 _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_SPAN_EVENT_COUNT_LIMIT = 128
 _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT = 128
+_DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT = 128
+_DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT = 128
 
 
 _ENV_VALUE_UNSET = "unset"
@@ -526,6 +524,10 @@ class SpanLimits:
         max_links: Maximum number of links that can be added to a Span.
             Environment variable: OTEL_SPAN_LINK_COUNT_LIMIT
             Default: {_DEFAULT_SPAN_LINK_COUNT_LIMIT}
+        max_event_attributes: Maximum number of attributes that can be added to an Event.
+            Default: {_DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT}
+        max_link_attributes: Maximum number of attributes that can be added to a Link.
+            Default: {_DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT}
     """
 
     UNSET = -1
@@ -533,12 +535,16 @@ class SpanLimits:
     max_attributes: int
     max_events: int
     max_links: int
+    max_event_attributes: int
+    max_link_attributes: int
 
     def __init__(
         self,
         max_attributes: Optional[int] = None,
         max_events: Optional[int] = None,
         max_links: Optional[int] = None,
+        max_event_attributes: Optional[int] = None,
+        max_link_attributes: Optional[int] = None,
     ):
         self.max_attributes = self._from_env_if_absent(
             max_attributes,
@@ -554,6 +560,16 @@ class SpanLimits:
             max_links,
             OTEL_SPAN_LINK_COUNT_LIMIT,
             _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT,
+        )
+        self.max_event_attributes = self._from_env_if_absent(
+            max_event_attributes,
+            OTEL_SPAN_LINK_COUNT_LIMIT,
+            _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
+        )
+        self.max_link_attributes = self._from_env_if_absent(
+            max_link_attributes,
+            OTEL_SPAN_LINK_COUNT_LIMIT,
+            _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
         )
 
     def __repr__(self):
@@ -591,6 +607,8 @@ _UnsetLimits = SpanLimits(
     max_attributes=SpanLimits.UNSET,
     max_events=SpanLimits.UNSET,
     max_links=SpanLimits.UNSET,
+    max_event_attributes=SpanLimits.UNSET,
+    max_link_attributes=SpanLimits.UNSET,
 )
 
 SPAN_ATTRIBUTE_COUNT_LIMIT = SpanLimits._from_env_if_absent(
@@ -661,22 +679,14 @@ class Span(trace_api.Span, ReadableSpan):
         self._span_processor = span_processor
         self._limits = limits
         self._lock = threading.Lock()
-
-        _filter_attributes(attributes)
-        if not attributes:
-            self._attributes = self._new_attributes()
-        else:
-            self._attributes = BoundedDict.from_map(
-                self._limits.max_attributes, attributes
-            )
-
+        self._attributes = BoundedDict(
+            self._limits.max_attributes, attributes, immutable=False
+        )
         self._events = self._new_events()
         if events:
             for event in events:
-                _filter_attributes(event.attributes)
-                # pylint: disable=protected-access
-                event._attributes = _create_immutable_attributes(
-                    event.attributes
+                event._attributes = BoundedDict(
+                    self._limits.max_event_attributes, event.attributes
                 )
                 self._events.append(event)
 
@@ -689,9 +699,6 @@ class Span(trace_api.Span, ReadableSpan):
         return '{}(name="{}", context={})'.format(
             type(self).__name__, self._name, self._context
         )
-
-    def _new_attributes(self):
-        return BoundedDict(self._limits.max_attributes)
 
     def _new_events(self):
         return BoundedList(self._limits.max_events)
@@ -745,13 +752,12 @@ class Span(trace_api.Span, ReadableSpan):
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
     ) -> None:
-        _filter_attributes(attributes)
-        attributes = _create_immutable_attributes(attributes)
+        attributes = BoundedDict(self._limits.max_event_attributes, attributes)
         self._add_event(
             Event(
                 name=name,
                 attributes=attributes,
-                timestamp=_time_ns() if timestamp is None else timestamp,
+                timestamp=timestamp,
             )
         )
 
