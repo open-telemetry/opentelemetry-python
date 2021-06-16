@@ -7,9 +7,11 @@ OpenTelemetry Collector Exporters
    :target: https://pypi.org/project/opentelemetry-exporter-otlp/
 
 This library is provided as a convenience to install all supported OpenTelemetry Collector Exporters. Currently it installs:
+
 * opentelemetry-exporter-otlp-proto-grpc
 
 In the future, additional packages will be available:
+
 * opentelemetry-exporter-otlp-proto-http
 * opentelemetry-exporter-otlp-json-http
 
