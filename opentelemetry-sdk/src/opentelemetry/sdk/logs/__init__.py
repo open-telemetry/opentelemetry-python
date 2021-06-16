@@ -114,7 +114,7 @@ class LogProcessor(abc.ABC):
 
 
 class OTLPHandler(logging.Handler):
-    """A handler calss which writes logging records, in OTLP format, to
+    """A handler class which writes logging records, in OTLP format, to
     a network destination or file.
     """
 
