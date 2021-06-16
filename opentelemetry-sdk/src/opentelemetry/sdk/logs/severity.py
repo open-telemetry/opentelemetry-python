@@ -105,7 +105,10 @@ _STD_TO_OTLP = {
 
 
 def std_to_otlp(levelno: int) -> SeverityNumber:
-    """Map python log levelno to OTLP log severity number."""
+    """
+    Map python log levelno as defined in https://docs.python.org/3/library/logging.html#logging-levels
+    to OTLP log severity number.
+    """
     if levelno < 10:
         return SeverityNumber.UNSPECIFIED
     if levelno > 53:
