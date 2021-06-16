@@ -21,10 +21,9 @@ from typing import Any, Optional, cast
 from opentelemetry.sdk.environment_variables import (
     OTEL_PYTHON_LOG_EMITTER_PROVIDER,
 )
-from opentelemetry.sdk.logs.severity import SeverityNumber
+from opentelemetry.sdk.logs.severity import SeverityNumber, std_to_otlp
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.sdk.util.severity import std_to_otlp
 from opentelemetry.trace import get_current_span
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._providers import _load_provider
@@ -189,6 +188,10 @@ class LogEmitterProvider:
         self._at_exit_handler = None
         if shutdown_on_exit:
             self._at_exit_handler = atexit.register(self.shutdown)
+
+    @property
+    def resource(self):
+        return self._resource
 
     def get_log_emitter(
         self,
