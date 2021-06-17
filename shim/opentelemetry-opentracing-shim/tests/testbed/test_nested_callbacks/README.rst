@@ -7,7 +7,7 @@ This example shows a ``Span`` for a top-level operation, and how it can be passe
 Implementation details:
 
 
-* For ``threading``, the ``Span`` is manually activatted it in each corotuine/task.
+* For ``threading``, the ``Span`` is manually activated in each coroutine/task.
 * For ``asyncio``, the active ``Span`` is not activated down the chain as the ``Context`` automatically propagates it.
 
 ``threading`` implementation:
