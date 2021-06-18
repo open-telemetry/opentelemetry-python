@@ -16,9 +16,9 @@ import abc
 import atexit
 import concurrent.futures
 import logging
-import threading
 import os
-from typing import Optional, cast, Tuple, Callable, Any, Union
+import threading
+from typing import Any, Callable, Optional, Tuple, Union, cast
 
 from opentelemetry.sdk.environment_variables import (
     OTEL_PYTHON_LOG_EMITTER_PROVIDER,
@@ -29,8 +29,8 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import get_current_span
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._providers import _load_provider
-from opentelemetry.util.types import Attributes
 from opentelemetry.util._time import _time_ns
+from opentelemetry.util.types import Attributes
 
 _logger = logging.getLogger(__name__)
 

@@ -26,8 +26,8 @@ from opentelemetry.sdk.logs import (
     LogEmitterProvider,
     LogProcessor,
     LogRecord,
-    SynchronousMultiLogProcessor,
     OTLPHandler,
+    SynchronousMultiLogProcessor,
 )
 from opentelemetry.sdk.logs.severity import SeverityNumber
 
