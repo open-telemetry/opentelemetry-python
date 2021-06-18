@@ -21,9 +21,10 @@ from typing import Any, Optional, cast
 from opentelemetry.sdk.environment_variables import (
     OTEL_PYTHON_LOG_EMITTER_PROVIDER,
 )
-from opentelemetry.sdk.logs.severity import SeverityNumber
+from opentelemetry.sdk.logs.severity import SeverityNumber, std_to_otlp
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.trace import get_current_span
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._providers import _load_provider
 from opentelemetry.util.types import Attributes
@@ -111,6 +112,48 @@ class LogProcessor(abc.ABC):
         """
 
 
+class OTLPHandler(logging.Handler):
+    """A handler class which writes logging records, in OTLP format, to
+    a network destination or file.
+    """
+
+    def __init__(self, level=logging.NOTSET, log_emitter=None) -> None:
+        super().__init__(level=level)
+        self._log_emitter = log_emitter or get_log_emitter(__name__)
+
+    def _translate(self, record: logging.LogRecord) -> LogRecord:
+        timestamp = int(record.created * 1e9)
+        span_context = get_current_span().get_span_context()
+        # TODO: attributes (or resource attributes?) from record metadata
+        attributes: Attributes = {}
+        severity_number = std_to_otlp(record.levelno)
+        return LogRecord(
+            timestamp=timestamp,
+            trace_id=span_context.trace_id,
+            span_id=span_context.span_id,
+            trace_flags=span_context.trace_flags,
+            severity_text=record.levelname,
+            severity_number=severity_number,
+            body=record.getMessage(),
+            resource=self._log_emitter.resource,
+            attributes=attributes,
+        )
+
+    def emit(self, record: logging.LogRecord) -> None:
+        """
+        Emit a record.
+
+        The record is translated to OTLP format, and then sent across the pipeline.
+        """
+        self._log_emitter.emit(self._translate(record))
+
+    def flush(self) -> None:
+        """
+        Flushes the logging output.
+        """
+        self._log_emitter.flush()
+
+
 class LogEmitter:
     # TODO: Add multi_log_processor
     def __init__(
@@ -120,6 +163,10 @@ class LogEmitter:
     ):
         self._resource = resource
         self._instrumentation_info = instrumentation_info
+
+    @property
+    def resource(self):
+        return self._resource
 
     def emit(self, record: LogRecord):
         # TODO: multi_log_processor.emit
@@ -141,6 +188,10 @@ class LogEmitterProvider:
         self._at_exit_handler = None
         if shutdown_on_exit:
             self._at_exit_handler = atexit.register(self.shutdown)
+
+    @property
+    def resource(self):
+        return self._resource
 
     def get_log_emitter(
         self,
