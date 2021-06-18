@@ -331,7 +331,7 @@ class LogEmitterProvider:
             self._at_exit_handler = atexit.register(self.shutdown)
 
     @property
-    def resource(self) -> Resource:
+    def resource(self):
         return self._resource
 
     def get_log_emitter(
