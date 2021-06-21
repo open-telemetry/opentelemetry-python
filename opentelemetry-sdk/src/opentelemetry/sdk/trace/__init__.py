@@ -567,8 +567,13 @@ class SpanLimits:
         )
 
     def __repr__(self):
-        return "max_attributes={}, max_events={}, max_links={}".format(
-            self.max_attributes, self.max_events, self.max_links
+        return "{}(max_attributes={}, max_events={}, max_links={}, max_event_attributes={}, max_link_attributes={})".format(
+            type(self).__name__,
+            self.max_attributes,
+            self.max_events,
+            self.max_links,
+            self.max_event_attributes,
+            self.max_link_attributes,
         )
 
     @classmethod
