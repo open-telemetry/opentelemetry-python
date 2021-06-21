@@ -124,10 +124,10 @@ class BoundedDict(MutableMapping):
         immutable: bool = True,
     ):
         if maxlen is not None:
-            if not isinstance(maxlen, int):
-                raise ValueError
-            if maxlen < 0:
-                raise ValueError
+            if not isinstance(maxlen, int) or maxlen < 0:
+                raise ValueError(
+                    "maxlen must be valid int greater or equal to 0"
+                )
         self.maxlen = maxlen
         self.dropped = 0
         self._dict = OrderedDict()  # type: OrderedDict
