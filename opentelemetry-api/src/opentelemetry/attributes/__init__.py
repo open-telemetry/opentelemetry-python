@@ -164,7 +164,8 @@ class BoundedDict(MutableMapping):
     def __delitem__(self, key):
         if getattr(self, "_immutable", False):
             raise TypeError
-        del self._dict[key]
+        with self._lock:
+            del self._dict[key]
 
     def __iter__(self):
         with self._lock:
