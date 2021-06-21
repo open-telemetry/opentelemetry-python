@@ -532,12 +532,6 @@ class SpanLimits:
 
     UNSET = -1
 
-    max_attributes: int
-    max_events: int
-    max_links: int
-    max_event_attributes: int
-    max_link_attributes: int
-
     def __init__(
         self,
         max_attributes: Optional[int] = None,
