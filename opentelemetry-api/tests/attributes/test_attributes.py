@@ -19,7 +19,6 @@ import unittest
 
 from opentelemetry.attributes import (
     BoundedDict,
-    _create_immutable_attributes,
     _filter_attributes,
     _is_valid_attribute_value,
 )
@@ -80,13 +79,6 @@ class TestAttributes(unittest.TestCase):
                 "valid-byte-string": "hello-otel",
             },
         )
-
-    def test_create_immutable_attributes(self):
-        attrs = {"key": "value", "pi": 3.14}
-        immutable = _create_immutable_attributes(attrs)
-        # TypeError: 'mappingproxy' object does not support item assignment
-        with self.assertRaises(TypeError):
-            immutable["pi"] = 1.34
 
 
 class TestBoundedDict(unittest.TestCase):

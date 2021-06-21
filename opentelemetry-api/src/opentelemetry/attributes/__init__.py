@@ -107,12 +107,6 @@ def _filter_attributes(attributes: types.Attributes) -> None:
                 attributes.pop(attr_key)
 
 
-def _create_immutable_attributes(
-    attributes: types.Attributes,
-) -> types.Attributes:
-    return MappingProxyType(attributes.copy() if attributes else {})
-
-
 _DEFAULT_LIMIT = 128
 
 
