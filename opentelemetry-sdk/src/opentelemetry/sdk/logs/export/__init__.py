@@ -68,10 +68,10 @@ class SimpleLogProcessor(LogProcessor):
 
     def __init__(self, exporter: LogExporter):
         self._exporter = exporter
-        self._closed = False
+        self._shutdown = False
 
     def emit(self, log_data: LogData):
-        if self._closed:
+        if self._shutdown:
             _logger.warning("Processor is already shutdown, ignoring call")
             return
         token = attach(set_value("suppress_instrumentation", True))
@@ -82,7 +82,7 @@ class SimpleLogProcessor(LogProcessor):
         detach(token)
 
     def shutdown(self):
-        self._closed = True
+        self._shutdown = True
         self._exporter.shutdown()
 
     def force_flush(
@@ -119,7 +119,7 @@ class BatchLogProcessor(LogProcessor):
         self._queue = collections.deque()  # type: Deque[LogData]
         self._worker_thread = threading.Thread(target=self.worker, daemon=True)
         self._condition = threading.Condition(threading.Lock())
-        self._closed = False
+        self._shutdown = False
         self._flush_request = None  # type: Optional[_FlushRequest]
         self._log_records = [
             None
@@ -129,9 +129,9 @@ class BatchLogProcessor(LogProcessor):
     def worker(self):
         timeout = self._schedule_delay_millis / 1e3
         flush_request = None  # type: Optional[_FlushRequest]
-        while not self._closed:
+        while not self._shutdown:
             with self._condition:
-                if self._closed:
+                if self._shutdown:
                     # shutdown may have been called, avoid further processing
                     break
                 flush_request = self._get_and_unset_flush_request()
@@ -147,7 +147,7 @@ class BatchLogProcessor(LogProcessor):
                         self._notify_flush_request_finished(flush_request)
                         flush_request = None
                         continue
-                    if self._closed:
+                    if self._shutdown:
                         break
 
             start_ns = _time_ns()
@@ -242,7 +242,7 @@ class BatchLogProcessor(LogProcessor):
         """Adds the `LogData` to queue and notifies the waiting threads
         when size of queue reaches max_export_batch_size.
         """
-        if self._closed:
+        if self._shutdown:
             return
         self._queue.appendleft(log_data)
         if len(self._queue) >= self._max_export_batch_size:
@@ -250,7 +250,7 @@ class BatchLogProcessor(LogProcessor):
                 self._condition.notify()
 
     def shutdown(self):
-        self._closed = True
+        self._shutdown = True
         with self._condition:
             self._condition.notify_all()
         self._worker_thread.join()
@@ -259,7 +259,7 @@ class BatchLogProcessor(LogProcessor):
     def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
         if timeout_millis is None:
             timeout_millis = self._export_timeout_millis
-        if self._closed:
+        if self._shutdown:
             return True
 
         with self._condition:
