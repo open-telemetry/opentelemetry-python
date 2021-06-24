@@ -82,7 +82,7 @@ from logging import getLogger
 from typing import Iterator, Optional, Sequence, cast
 
 from opentelemetry import context as context_api
-from opentelemetry.attributes import BoundedDict  # type: ignore
+from opentelemetry.attributes import BoundedAttributes  # type: ignore
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_TRACER_PROVIDER
 from opentelemetry.trace.propagation import (
@@ -140,7 +140,7 @@ class Link(_LinkBase):
         attributes: types.Attributes = None,
     ) -> None:
         super().__init__(context)
-        self._attributes = BoundedDict(
+        self._attributes = BoundedAttributes(
             attributes=attributes
         )  # type: types.Attributes
 

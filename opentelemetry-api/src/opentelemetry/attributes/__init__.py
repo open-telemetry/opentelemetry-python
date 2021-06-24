@@ -110,7 +110,7 @@ def _filter_attributes(attributes: types.Attributes) -> None:
 _DEFAULT_LIMIT = 128
 
 
-class BoundedDict(MutableMapping):
+class BoundedAttributes(MutableMapping):
     """An ordered dict with a fixed max capacity.
 
     Oldest elements are dropped when the dict is full and a new element is

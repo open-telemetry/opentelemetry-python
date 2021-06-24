@@ -39,7 +39,7 @@ from typing import (
 
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
-from opentelemetry.attributes import BoundedDict, _is_valid_attribute_value
+from opentelemetry.attributes import BoundedAttributes, _is_valid_attribute_value
 from opentelemetry.sdk import util
 from opentelemetry.sdk.environment_variables import (
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
@@ -473,7 +473,7 @@ class ReadableSpan:
 
     @staticmethod
     def _format_attributes(attributes):
-        if isinstance(attributes, BoundedDict):
+        if isinstance(attributes, BoundedAttributes):
             return attributes._dict  # pylint: disable=protected-access
         if isinstance(attributes, MappingProxyType):
             return attributes.copy()
@@ -678,13 +678,13 @@ class Span(trace_api.Span, ReadableSpan):
         self._span_processor = span_processor
         self._limits = limits
         self._lock = threading.Lock()
-        self._attributes = BoundedDict(
+        self._attributes = BoundedAttributes(
             self._limits.max_attributes, attributes, immutable=False
         )
         self._events = self._new_events()
         if events:
             for event in events:
-                event._attributes = BoundedDict(
+                event._attributes = BoundedAttributes(
                     self._limits.max_event_attributes, event.attributes
                 )
                 self._events.append(event)
@@ -751,7 +751,7 @@ class Span(trace_api.Span, ReadableSpan):
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
     ) -> None:
-        attributes = BoundedDict(self._limits.max_event_attributes, attributes)
+        attributes = BoundedAttributes(self._limits.max_event_attributes, attributes)
         self._add_event(
             Event(
                 name=name,

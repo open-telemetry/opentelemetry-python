@@ -18,7 +18,7 @@ import collections
 import unittest
 
 from opentelemetry.attributes import (
-    BoundedDict,
+    BoundedAttributes,
     _filter_attributes,
     _is_valid_attribute_value,
 )
@@ -81,7 +81,7 @@ class TestAttributes(unittest.TestCase):
         )
 
 
-class TestBoundedDict(unittest.TestCase):
+class TestBoundedAttributes(unittest.TestCase):
     base = collections.OrderedDict(
         [
             ("name", "Firulais"),
@@ -93,12 +93,12 @@ class TestBoundedDict(unittest.TestCase):
 
     def test_negative_maxlen(self):
         with self.assertRaises(ValueError):
-            BoundedDict(-1)
+            BoundedAttributes(-1)
 
     def test_from_map(self):
         dic_len = len(self.base)
         base_copy = collections.OrderedDict(self.base)
-        bdict = BoundedDict(dic_len, base_copy)
+        bdict = BoundedAttributes(dic_len, base_copy)
 
         self.assertEqual(len(bdict), dic_len)
 
@@ -114,14 +114,14 @@ class TestBoundedDict(unittest.TestCase):
 
         # map too big
         half_len = dic_len // 2
-        bdict = BoundedDict(half_len, self.base)
+        bdict = BoundedAttributes(half_len, self.base)
         self.assertEqual(len(tuple(bdict)), half_len)
         self.assertEqual(bdict.dropped, dic_len - half_len)
 
     def test_bounded_dict(self):
         # create empty dict
         dic_len = len(self.base)
-        bdict = BoundedDict(dic_len, immutable=False)
+        bdict = BoundedAttributes(dic_len, immutable=False)
         self.assertEqual(len(bdict), 0)
 
         # fill dict
@@ -134,7 +134,7 @@ class TestBoundedDict(unittest.TestCase):
         for key in self.base:
             self.assertEqual(bdict[key], self.base[key])
 
-        # test __iter__ in BoundedDict
+        # test __iter__ in BoundedAttributes
         for key in bdict:
             self.assertEqual(bdict[key], self.base[key])
 
@@ -161,7 +161,7 @@ class TestBoundedDict(unittest.TestCase):
             _ = bdict["new-name"]
 
     def test_no_limit_code(self):
-        bdict = BoundedDict(maxlen=None, immutable=False)
+        bdict = BoundedAttributes(maxlen=None, immutable=False)
         for num in range(100):
             bdict[num] = num
 
@@ -169,6 +169,6 @@ class TestBoundedDict(unittest.TestCase):
             self.assertEqual(bdict[num], num)
 
     def test_immutable(self):
-        bdict = BoundedDict()
+        bdict = BoundedAttributes()
         with self.assertRaises(TypeError):
             bdict["should-not-work"] = "dict immutable"
