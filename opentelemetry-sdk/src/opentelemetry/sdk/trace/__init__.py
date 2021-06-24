@@ -39,7 +39,10 @@ from typing import (
 
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
-from opentelemetry.attributes import BoundedAttributes, _is_valid_attribute_value
+from opentelemetry.attributes import (
+    BoundedAttributes,
+    _is_valid_attribute_value,
+)
 from opentelemetry.sdk import util
 from opentelemetry.sdk.environment_variables import (
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
@@ -751,7 +754,9 @@ class Span(trace_api.Span, ReadableSpan):
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
     ) -> None:
-        attributes = BoundedAttributes(self._limits.max_event_attributes, attributes)
+        attributes = BoundedAttributes(
+            self._limits.max_event_attributes, attributes
+        )
         self._add_event(
             Event(
                 name=name,
