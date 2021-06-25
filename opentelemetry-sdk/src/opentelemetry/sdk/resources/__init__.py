@@ -138,7 +138,7 @@ _OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
 ).version
 
 
-class Resource(Attributed):
+class Resource:
     """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
 
     def __init__(

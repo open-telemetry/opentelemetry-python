@@ -120,6 +120,11 @@ class _LinkBase(ABC):
     def context(self) -> "SpanContext":
         return self._context
 
+    @property
+    @abstractmethod
+    def attributes(self) -> types.Attributes:
+        pass
+
 
 class Link(_LinkBase):
     """A link to a `Span`. The attributes of a Link are immutable.

@@ -290,6 +290,10 @@ class EventBase(abc.ABC):
     def timestamp(self) -> int:
         return self._timestamp
 
+    @property
+    @abc.abstractmethod
+    def attributes(self) -> types.Attributes:
+        pass
 
 
 class Event(EventBase):
@@ -310,10 +314,12 @@ class Event(EventBase):
         timestamp: Optional[int] = None,
         limit: Optional[int] = _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
     ) -> None:
-        EventBase.__init__(self, name, timestamp)
-        Attributed.__init__(
-            self, attributes, limit=limit, immutable=True, filtered=True
-        )
+        super().__init__(name, timestamp)
+        self._attributes = attributes
+
+    @property
+    def attributes(self) -> types.Attributes:
+        return self._attributes
 
 
 def _check_span_ended(func):
@@ -331,7 +337,7 @@ def _check_span_ended(func):
     return wrapper
 
 
-class ReadableSpan(Attributed):
+class ReadableSpan:
     """Provides read-only access to span attributes"""
 
     def __init__(
@@ -349,7 +355,6 @@ class ReadableSpan(Attributed):
         start_time: Optional[int] = None,
         end_time: Optional[int] = None,
     ) -> None:
-        super().__init__(attributes)
         self._name = name
         self._context = context
         self._kind = kind
@@ -357,10 +362,17 @@ class ReadableSpan(Attributed):
         self._parent = parent
         self._start_time = start_time
         self._end_time = end_time
+        self._attributes = attributes
         self._events = events
         self._links = links
         self._resource = resource
         self._status = status
+
+    @property
+    def dropped_attributes(self) -> int:
+        if self._attributes:
+            return self._attributes.dropped
+        return 0
 
     @property
     def dropped_events(self) -> int:
