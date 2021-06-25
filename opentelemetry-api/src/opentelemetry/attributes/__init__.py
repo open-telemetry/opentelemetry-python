@@ -14,8 +14,11 @@
 # type: ignore
 
 import logging
+import threading
+from collections import OrderedDict
+from collections.abc import MutableMapping
 from types import MappingProxyType
-from typing import MutableSequence, Sequence
+from typing import MutableSequence, Optional, Sequence
 
 from opentelemetry.util import types
 
@@ -104,7 +107,72 @@ def _filter_attributes(attributes: types.Attributes) -> None:
                 attributes.pop(attr_key)
 
 
-def _create_immutable_attributes(
-    attributes: types.Attributes,
-) -> types.Attributes:
-    return MappingProxyType(attributes.copy() if attributes else {})
+_DEFAULT_LIMIT = 128
+
+
+class BoundedAttributes(MutableMapping):
+    """An ordered dict with a fixed max capacity.
+
+    Oldest elements are dropped when the dict is full and a new element is
+    added.
+    """
+
+    def __init__(
+        self,
+        maxlen: Optional[int] = _DEFAULT_LIMIT,
+        attributes: types.Attributes = None,
+        immutable: bool = True,
+    ):
+        if maxlen is not None:
+            if not isinstance(maxlen, int) or maxlen < 0:
+                raise ValueError(
+                    "maxlen must be valid int greater or equal to 0"
+                )
+        self.maxlen = maxlen
+        self.dropped = 0
+        self._dict = OrderedDict()  # type: OrderedDict
+        self._lock = threading.Lock()  # type: threading.Lock
+        if attributes:
+            _filter_attributes(attributes)
+            for key, value in attributes.items():
+                self[key] = value
+        self._immutable = immutable
+
+    def __repr__(self):
+        return "{}({}, maxlen={})".format(
+            type(self).__name__, dict(self._dict), self.maxlen
+        )
+
+    def __getitem__(self, key):
+        return self._dict[key]
+
+    def __setitem__(self, key, value):
+        if getattr(self, "_immutable", False):
+            raise TypeError
+        with self._lock:
+            if self.maxlen is not None and self.maxlen == 0:
+                self.dropped += 1
+                return
+
+            if key in self._dict:
+                del self._dict[key]
+            elif self.maxlen is not None and len(self._dict) == self.maxlen:
+                del self._dict[next(iter(self._dict.keys()))]
+                self.dropped += 1
+            self._dict[key] = value
+
+    def __delitem__(self, key):
+        if getattr(self, "_immutable", False):
+            raise TypeError
+        with self._lock:
+            del self._dict[key]
+
+    def __iter__(self):
+        with self._lock:
+            return iter(self._dict.copy())
+
+    def __len__(self):
+        return len(self._dict)
+
+    def copy(self):
+        return self._dict.copy()
