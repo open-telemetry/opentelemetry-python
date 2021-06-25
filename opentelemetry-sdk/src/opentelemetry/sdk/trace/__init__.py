@@ -40,8 +40,7 @@ from typing import (
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
 from opentelemetry.attributes import (
-    Attributed,
-    _BoundedDict,
+    BoundedAttributes,
     _is_valid_attribute_value,
 )
 from opentelemetry.sdk import util
@@ -65,6 +64,8 @@ logger = logging.getLogger(__name__)
 _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_SPAN_EVENT_COUNT_LIMIT = 128
 _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT = 128
+_DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT = 128
+_DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT = 128
 
 
 _ENV_VALUE_UNSET = "unset"
@@ -290,8 +291,10 @@ class EventBase(abc.ABC):
         return self._timestamp
 
 
-class Event(EventBase, Attributed):
-    """A text annotation with a set of attributes.
+
+class Event(EventBase):
+    """A text annotation with a set of attributes. The attributes of an event
+    are immutable.
 
     Args:
         name: Name of the event.
@@ -462,7 +465,7 @@ class ReadableSpan(Attributed):
         f_span["attributes"] = self._format_attributes(self._attributes)
         f_span["events"] = self._format_events(self._events)
         f_span["links"] = self._format_links(self._links)
-        f_span["resource"] = self._resource.attributes
+        f_span["resource"] = self._format_attributes(self._resource.attributes)
 
         return json.dumps(f_span, indent=indent)
 
@@ -480,7 +483,7 @@ class ReadableSpan(Attributed):
 
     @staticmethod
     def _format_attributes(attributes):
-        if isinstance(attributes, _BoundedDict):
+        if isinstance(attributes, BoundedAttributes):
             return attributes._dict  # pylint: disable=protected-access
         if isinstance(attributes, MappingProxyType):
             return attributes.copy()
@@ -531,19 +534,21 @@ class SpanLimits:
         max_links: Maximum number of links that can be added to a Span.
             Environment variable: OTEL_SPAN_LINK_COUNT_LIMIT
             Default: {_DEFAULT_SPAN_LINK_COUNT_LIMIT}
+        max_event_attributes: Maximum number of attributes that can be added to an Event.
+            Default: {_DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT}
+        max_link_attributes: Maximum number of attributes that can be added to a Link.
+            Default: {_DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT}
     """
 
     UNSET = -1
-
-    max_attributes: int
-    max_events: int
-    max_links: int
 
     def __init__(
         self,
         max_attributes: Optional[int] = None,
         max_events: Optional[int] = None,
         max_links: Optional[int] = None,
+        max_event_attributes: Optional[int] = None,
+        max_link_attributes: Optional[int] = None,
     ):
         self.max_attributes = self._from_env_if_absent(
             max_attributes,
@@ -560,10 +565,25 @@ class SpanLimits:
             OTEL_SPAN_LINK_COUNT_LIMIT,
             _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT,
         )
+        self.max_event_attributes = self._from_env_if_absent(
+            max_event_attributes,
+            OTEL_SPAN_LINK_COUNT_LIMIT,
+            _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
+        )
+        self.max_link_attributes = self._from_env_if_absent(
+            max_link_attributes,
+            OTEL_SPAN_LINK_COUNT_LIMIT,
+            _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
+        )
 
     def __repr__(self):
-        return "max_attributes={}, max_events={}, max_links={}".format(
-            self.max_attributes, self.max_events, self.max_links
+        return "{}(max_attributes={}, max_events={}, max_links={}, max_event_attributes={}, max_link_attributes={})".format(
+            type(self).__name__,
+            self.max_attributes,
+            self.max_events,
+            self.max_links,
+            self.max_event_attributes,
+            self.max_link_attributes,
         )
 
     @classmethod
@@ -596,6 +616,8 @@ _UnsetLimits = SpanLimits(
     max_attributes=SpanLimits.UNSET,
     max_events=SpanLimits.UNSET,
     max_links=SpanLimits.UNSET,
+    max_event_attributes=SpanLimits.UNSET,
+    max_link_attributes=SpanLimits.UNSET,
 )
 
 SPAN_ATTRIBUTE_COUNT_LIMIT = SpanLimits._from_env_if_absent(
@@ -666,14 +688,15 @@ class Span(trace_api.Span, ReadableSpan):
         self._span_processor = span_processor
         self._limits = limits
         self._lock = threading.Lock()
-
-        Attributed.__init__(
-            self, attributes, limit=self._limits.max_attributes, filtered=True
+        self._attributes = BoundedAttributes(
+            self._limits.max_attributes, attributes, immutable=False
         )
-
         self._events = self._new_events()
         if events:
             for event in events:
+                event._attributes = BoundedAttributes(
+                    self._limits.max_event_attributes, event.attributes
+                )
                 self._events.append(event)
 
         if links is None:
@@ -738,12 +761,14 @@ class Span(trace_api.Span, ReadableSpan):
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
     ) -> None:
+        attributes = BoundedAttributes(
+            self._limits.max_event_attributes, attributes
+        )
         self._add_event(
             Event(
                 name=name,
                 attributes=attributes,
-                timestamp=_time_ns() if timestamp is None else timestamp,
-                limit=self._limits.max_attributes,
+                timestamp=timestamp,
             )
         )
 
@@ -799,6 +824,14 @@ class Span(trace_api.Span, ReadableSpan):
 
     @_check_span_ended
     def set_status(self, status: trace_api.Status) -> None:
+        # Ignore future calls if status is already set to OK
+        # Ignore calls to set to StatusCode.UNSET
+        if (
+            self._status
+            and self._status.status_code is StatusCode.OK
+            or status.status_code is StatusCode.UNSET
+        ):
+            return
         self._status = status
 
     def __exit__(

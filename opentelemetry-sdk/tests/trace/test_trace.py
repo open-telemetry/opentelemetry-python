@@ -817,6 +817,9 @@ class TestSpan(unittest.TestCase):
             )
             self.assertEqual(root.links[1].attributes, {"name": "neighbor"})
 
+            with self.assertRaises(TypeError):
+                root.links[1].attributes["name"] = "new_neighbour"
+
     def test_update_name(self):
         with self.tracer.start_as_current_span("root") as root:
             # name
@@ -916,7 +919,6 @@ class TestSpan(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 with context as root:
                     raise AssertionError("unknown")
-
             self.assertIs(root.status.status_code, StatusCode.ERROR)
             self.assertEqual(
                 root.status.description, "AssertionError: unknown"
@@ -931,17 +933,52 @@ class TestSpan(unittest.TestCase):
             .start_as_current_span("root")
         )
 
-    def test_last_status_wins(self):
+    def test_status_cannot_override_ok(self):
         def error_status_test(context):
             with self.assertRaises(AssertionError):
                 with context as root:
                     root.set_status(trace_api.status.Status(StatusCode.OK))
                     raise AssertionError("unknown")
+            self.assertIs(root.status.status_code, StatusCode.OK)
+            self.assertIsNone(root.status.description)
 
+        error_status_test(
+            trace.TracerProvider().get_tracer(__name__).start_span("root")
+        )
+        error_status_test(
+            trace.TracerProvider()
+            .get_tracer(__name__)
+            .start_as_current_span("root")
+        )
+
+    def test_status_cannot_set_unset(self):
+        def unset_status_test(context):
+            with self.assertRaises(AssertionError):
+                with context as root:
+                    raise AssertionError("unknown")
+            root.set_status(trace_api.status.Status(StatusCode.UNSET))
             self.assertIs(root.status.status_code, StatusCode.ERROR)
             self.assertEqual(
                 root.status.description, "AssertionError: unknown"
             )
+
+        unset_status_test(
+            trace.TracerProvider().get_tracer(__name__).start_span("root")
+        )
+        unset_status_test(
+            trace.TracerProvider()
+            .get_tracer(__name__)
+            .start_as_current_span("root")
+        )
+
+    def test_last_status_wins(self):
+        def error_status_test(context):
+            with self.assertRaises(AssertionError):
+                with context as root:
+                    raise AssertionError("unknown")
+                root.set_status(trace_api.status.Status(StatusCode.OK))
+                self.assertIs(root.status.status_code, StatusCode.OK)
+                self.assertIsNone(root.status.description)
 
         error_status_test(
             trace.TracerProvider().get_tracer(__name__).start_span("root")

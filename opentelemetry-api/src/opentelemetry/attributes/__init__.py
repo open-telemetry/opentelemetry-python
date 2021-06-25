@@ -107,14 +107,10 @@ def _filter_attributes(attributes: types.Attributes) -> None:
                 attributes.pop(attr_key)
 
 
-def _create_immutable_attributes(
-    attributes: types.Attributes,
-) -> types.Attributes:
-    _filter_attributes(attributes)
-    return MappingProxyType(attributes.copy() if attributes else {})
+_DEFAULT_LIMIT = 128
 
 
-class _BoundedDict(MutableMapping):
+class BoundedAttributes(MutableMapping):
     """An ordered dict with a fixed max capacity.
 
     Oldest elements are dropped when the dict is full and a new element is
@@ -122,18 +118,25 @@ class _BoundedDict(MutableMapping):
     """
 
     def __init__(
-        self, maxlen: Optional[int], immutable: Optional[bool] = False
+        self,
+        maxlen: Optional[int] = _DEFAULT_LIMIT,
+        attributes: types.Attributes = None,
+        immutable: bool = True,
     ):
         if maxlen is not None:
-            if not isinstance(maxlen, int):
-                raise ValueError
-            if maxlen < 0:
-                raise ValueError
+            if not isinstance(maxlen, int) or maxlen < 0:
+                raise ValueError(
+                    "maxlen must be valid int greater or equal to 0"
+                )
         self.maxlen = maxlen
-        self._immutable = immutable
         self.dropped = 0
         self._dict = OrderedDict()  # type: OrderedDict
         self._lock = threading.Lock()  # type: threading.Lock
+        if attributes:
+            _filter_attributes(attributes)
+            for key, value in attributes.items():
+                self[key] = value
+        self._immutable = immutable
 
     def __repr__(self):
         return "{}({}, maxlen={})".format(
@@ -144,8 +147,8 @@ class _BoundedDict(MutableMapping):
         return self._dict[key]
 
     def __setitem__(self, key, value):
-        if self._immutable:
-            raise TypeError()
+        if getattr(self, "_immutable", False):
+            raise TypeError
         with self._lock:
             if self.maxlen is not None and self.maxlen == 0:
                 self.dropped += 1
@@ -159,9 +162,10 @@ class _BoundedDict(MutableMapping):
             self._dict[key] = value
 
     def __delitem__(self, key):
-        if self._immutable:
-            raise TypeError()
-        del self._dict[key]
+        if getattr(self, "_immutable", False):
+            raise TypeError
+        with self._lock:
+            del self._dict[key]
 
     def __iter__(self):
         with self._lock:
@@ -172,44 +176,3 @@ class _BoundedDict(MutableMapping):
 
     def copy(self):
         return self._dict.copy()
-
-    @classmethod
-    def from_map(cls, maxlen, immutable, mapping):
-        mapping = OrderedDict(mapping)
-        bounded_dict = cls(maxlen)
-        for key, value in mapping.items():
-            bounded_dict[key] = value
-        bounded_dict._immutable = immutable  # pylint: disable=protected-access
-        return bounded_dict
-
-
-class Attributed:
-    """The Attributed class is extended by all components
-    that provide attributes as part of their data models.
-    """
-
-    def __init__(
-        self,
-        attributes: types.Attributes = None,
-        filtered: bool = False,
-        limit: int = 128,  # TODO: this should not be hardcoded here
-        immutable: bool = False,
-    ) -> None:
-        if filtered:
-            _filter_attributes(attributes)
-        if attributes is None:
-            self._attributes = _BoundedDict(limit, immutable)
-        else:
-            self._attributes = _BoundedDict.from_map(
-                limit, immutable, attributes
-            )
-
-    @property
-    def attributes(self) -> types.Attributes:
-        return self._attributes
-
-    @property
-    def dropped_attributes(self) -> int:
-        if self._attributes:
-            return self._attributes.dropped
-        return 0
