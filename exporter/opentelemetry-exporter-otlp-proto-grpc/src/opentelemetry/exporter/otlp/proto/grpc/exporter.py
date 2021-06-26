@@ -229,9 +229,20 @@ class OTLPExporterMixin(
 
         self._headers = headers or environ.get(OTEL_EXPORTER_OTLP_HEADERS)
         if isinstance(self._headers, str):
-            self._headers = tuple(
-                tuple(item.split("=")) for item in self._headers.split(",")
-            )
+            temp_headers = []
+            for header_pair in self._headers.split(","):
+                key, value = header_pair.split("=", maxsplit=1)
+                key = key.strip().lower()
+                value = value.strip()
+                temp_headers.append(
+                    (
+                        key,
+                        value,
+                    )
+                )
+
+            self._headers = tuple(temp_headers)
+
         self._timeout = timeout or int(
             environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10)
         )

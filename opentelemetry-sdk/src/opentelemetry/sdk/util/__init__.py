@@ -16,6 +16,9 @@ import datetime
 import threading
 from collections import OrderedDict, deque
 from collections.abc import MutableMapping, Sequence
+from typing import Optional
+
+from deprecated import deprecated
 
 
 def ns_to_iso_str(nanoseconds):
@@ -45,7 +48,7 @@ class BoundedList(Sequence):
     not enough room.
     """
 
-    def __init__(self, maxlen):
+    def __init__(self, maxlen: Optional[int]):
         self.dropped = 0
         self._dq = deque(maxlen=maxlen)  # type: deque
         self._lock = threading.Lock()
@@ -67,28 +70,30 @@ class BoundedList(Sequence):
 
     def append(self, item):
         with self._lock:
-            if len(self._dq) == self._dq.maxlen:
+            if (
+                self._dq.maxlen is not None
+                and len(self._dq) == self._dq.maxlen
+            ):
                 self.dropped += 1
             self._dq.append(item)
 
     def extend(self, seq):
         with self._lock:
-            to_drop = len(seq) + len(self._dq) - self._dq.maxlen
-            if to_drop > 0:
-                self.dropped += to_drop
+            if self._dq.maxlen is not None:
+                to_drop = len(seq) + len(self._dq) - self._dq.maxlen
+                if to_drop > 0:
+                    self.dropped += to_drop
             self._dq.extend(seq)
 
     @classmethod
     def from_seq(cls, maxlen, seq):
         seq = tuple(seq)
-        if len(seq) > maxlen:
-            raise ValueError
         bounded_list = cls(maxlen)
-        # pylint: disable=protected-access
-        bounded_list._dq = deque(seq, maxlen=maxlen)
+        bounded_list.extend(seq)
         return bounded_list
 
 
+@deprecated(version="1.4.0")  # type: ignore
 class BoundedDict(MutableMapping):
     """An ordered dict with a fixed max capacity.
 
@@ -96,11 +101,12 @@ class BoundedDict(MutableMapping):
     added.
     """
 
-    def __init__(self, maxlen):
-        if not isinstance(maxlen, int):
-            raise ValueError
-        if maxlen < 0:
-            raise ValueError
+    def __init__(self, maxlen: Optional[int]):
+        if maxlen is not None:
+            if not isinstance(maxlen, int):
+                raise ValueError
+            if maxlen < 0:
+                raise ValueError
         self.maxlen = maxlen
         self.dropped = 0
         self._dict = OrderedDict()  # type: OrderedDict
@@ -116,13 +122,13 @@ class BoundedDict(MutableMapping):
 
     def __setitem__(self, key, value):
         with self._lock:
-            if self.maxlen == 0:
+            if self.maxlen is not None and self.maxlen == 0:
                 self.dropped += 1
                 return
 
             if key in self._dict:
                 del self._dict[key]
-            elif len(self._dict) == self.maxlen:
+            elif self.maxlen is not None and len(self._dict) == self.maxlen:
                 del self._dict[next(iter(self._dict.keys()))]
                 self.dropped += 1
             self._dict[key] = value
@@ -140,9 +146,7 @@ class BoundedDict(MutableMapping):
     @classmethod
     def from_map(cls, maxlen, mapping):
         mapping = OrderedDict(mapping)
-        if len(mapping) > maxlen:
-            raise ValueError
         bounded_dict = cls(maxlen)
-        # pylint: disable=protected-access
-        bounded_dict._dict = mapping
+        for key, value in mapping.items():
+            bounded_dict[key] = value
         return bounded_dict

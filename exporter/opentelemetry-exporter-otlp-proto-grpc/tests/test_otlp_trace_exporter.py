@@ -180,7 +180,7 @@ class TestOTLPSpanExporter(TestCase):
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "collector:4317",
             OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: THIS_DIR
             + "/fixtures/test.cert",
-            OTEL_EXPORTER_OTLP_TRACES_HEADERS: "key1=value1,key2=value2",
+            OTEL_EXPORTER_OTLP_TRACES_HEADERS: " key1=value1,KEY2 = value=2",
             OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip",
         },
@@ -195,7 +195,7 @@ class TestOTLPSpanExporter(TestCase):
         _, kwargs = mock_exporter_mixin.call_args_list[0]
 
         self.assertEqual(kwargs["endpoint"], "collector:4317")
-        self.assertEqual(kwargs["headers"], "key1=value1,key2=value2")
+        self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = value=2")
         self.assertEqual(kwargs["timeout"], 10)
         self.assertEqual(kwargs["compression"], Compression.Gzip)
         self.assertIsNotNone(kwargs["credentials"])
@@ -217,7 +217,7 @@ class TestOTLPSpanExporter(TestCase):
 
     @patch.dict(
         "os.environ",
-        {OTEL_EXPORTER_OTLP_TRACES_HEADERS: "key1=value1,key2=value2"},
+        {OTEL_EXPORTER_OTLP_TRACES_HEADERS: " key1=value1,KEY2 = VALUE=2 "},
     )
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
@@ -228,7 +228,7 @@ class TestOTLPSpanExporter(TestCase):
         exporter = OTLPSpanExporter()
         # pylint: disable=protected-access
         self.assertEqual(
-            exporter._headers, (("key1", "value1"), ("key2", "value2"))
+            exporter._headers, (("key1", "value1"), ("key2", "VALUE=2"))
         )
         exporter = OTLPSpanExporter(
             headers=(("key3", "value3"), ("key4", "value4"))

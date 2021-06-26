@@ -64,6 +64,7 @@ from json import dumps
 
 import pkg_resources
 
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.environment_variables import (
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
@@ -140,15 +141,24 @@ _OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
 class Resource:
     """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
 
-    def __init__(self, attributes: Attributes):
-        self._attributes = attributes.copy()
+    def __init__(
+        self, attributes: Attributes, schema_url: typing.Optional[str] = None
+    ):
+        self._attributes = BoundedAttributes(attributes=attributes)
+        if schema_url is None:
+            schema_url = ""
+        self._schema_url = schema_url
 
     @staticmethod
-    def create(attributes: typing.Optional[Attributes] = None) -> "Resource":
+    def create(
+        attributes: typing.Optional[Attributes] = None,
+        schema_url: typing.Optional[str] = None,
+    ) -> "Resource":
         """Creates a new `Resource` from attributes.
 
         Args:
             attributes: Optional zero or more key-value pairs.
+            schema_url: Optional URL pointing to the schema
 
         Returns:
             The newly-created Resource.
@@ -157,7 +167,7 @@ class Resource:
             attributes = {}
         resource = _DEFAULT_RESOURCE.merge(
             OTELResourceDetector().detect()
-        ).merge(Resource(attributes))
+        ).merge(Resource(attributes, schema_url))
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
             process_executable_name = resource.attributes.get(
@@ -166,7 +176,7 @@ class Resource:
             if process_executable_name:
                 default_service_name += ":" + process_executable_name
             resource = resource.merge(
-                Resource({SERVICE_NAME: default_service_name})
+                Resource({SERVICE_NAME: default_service_name}, schema_url)
             )
         return resource
 
@@ -176,7 +186,11 @@ class Resource:
 
     @property
     def attributes(self) -> Attributes:
-        return self._attributes.copy()
+        return self._attributes
+
+    @property
+    def schema_url(self) -> str:
+        return self._schema_url
 
     def merge(self, other: "Resource") -> "Resource":
         """Merges this resource and an updating resource into a new `Resource`.
@@ -184,23 +198,48 @@ class Resource:
         If a key exists on both the old and updating resource, the value of the
         updating resource will override the old resource value.
 
+        The updating resource's `schema_url` will be used only if the old
+        `schema_url` is empty. Attempting to merge two resources with
+        different, non-empty values for `schema_url` will result in an error
+        and return the old resource.
+
         Args:
             other: The other resource to be merged.
 
         Returns:
             The newly-created Resource.
         """
-        merged_attributes = self.attributes
+        merged_attributes = self.attributes.copy()
         merged_attributes.update(other.attributes)
-        return Resource(merged_attributes)
+
+        if self.schema_url == "":
+            schema_url = other.schema_url
+        elif other.schema_url == "":
+            schema_url = self.schema_url
+        elif self.schema_url == other.schema_url:
+            schema_url = other.schema_url
+        else:
+            logger.error(
+                "Failed to merge resources: The two schemas %s and %s are incompatible",
+                self.schema_url,
+                other.schema_url,
+            )
+            return self
+
+        return Resource(merged_attributes, schema_url)
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, Resource):
             return False
-        return self._attributes == other._attributes
+        return (
+            self._attributes == other._attributes
+            and self._schema_url == other._schema_url
+        )
 
     def __hash__(self):
-        return hash(dumps(self._attributes, sort_keys=True))
+        return hash(
+            f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"
+        )
 
 
 _EMPTY_RESOURCE = Resource({})
