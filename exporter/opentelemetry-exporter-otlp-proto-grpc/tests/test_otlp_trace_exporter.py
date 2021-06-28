@@ -22,6 +22,7 @@ from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     _translate_key_values,
 )
@@ -137,7 +138,7 @@ class TestOTLPSpanExporter(TestCase):
         event_mock = Mock(
             **{
                 "timestamp": 1591240820506462784,
-                "attributes": OrderedDict([("a", 1), ("b", False)]),
+                "attributes": BoundedAttributes(attributes={"a": 1, "b": False}),
             }
         )
 
@@ -154,14 +155,14 @@ class TestOTLPSpanExporter(TestCase):
             ),
             resource=SDKResource(OrderedDict([("a", 1), ("b", False)])),
             parent=Mock(**{"span_id": 12345}),
-            attributes=OrderedDict([("a", 1), ("b", True)]),
+            attributes=BoundedAttributes(attributes={"a": 1, "b": True}),
             events=[event_mock],
             links=[
                 Mock(
                     **{
                         "context.trace_id": 1,
                         "context.span_id": 2,
-                        "attributes": OrderedDict([("a", 1), ("b", False)]),
+                        "attributes": BoundedAttributes(attributes={"a":1, "b":False}),
                         "kind": OTLPSpan.SpanKind.SPAN_KIND_INTERNAL,  # pylint: disable=no-member
                     }
                 )
@@ -628,6 +629,22 @@ class TestOTLPSpanExporter(TestCase):
             .instrumentation_library_spans[0]
             .spans[0]
             .dropped_events_count,
+        )
+        self.assertEqual(
+            2,
+            translated.resource_spans[0]
+            .instrumentation_library_spans[0]
+            .spans[0]
+            .links[0]
+            .dropped_attributes_count,
+        )
+        self.assertEqual(
+            2,
+            translated.resource_spans[0]
+            .instrumentation_library_spans[0]
+            .spans[0]
+            .events[0]
+            .dropped_attributes_count,
         )
 
 
