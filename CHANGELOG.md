@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added `BoundedAttributes` to the API to make it available for `Link` which is defined in the
   API. Marked `BoundedDict` in the SDK as deprecated as a result.
   ([#1915](https://github.com/open-telemetry/opentelemetry-python/pull/1915))
+- Fix OTLP SpanExporter to distinguish spans based off Resource and InstrumentationInfo
+  ([#1915](https://github.com/open-telemetry/opentelemetry-python/pull/1915))
 
 ## [1.3.0-0.22b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.3.0-0.22b0) - 2021-06-01
 

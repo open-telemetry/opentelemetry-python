@@ -157,9 +157,7 @@ def get_resource_data(
             resource_class(
                 **{
                     "resource": collector_resource,
-                    "instrumentation_library_{}".format(name): [
-                        instrumentation_library_data
-                    ],
+                    "instrumentation_library_{}".format(name): instrumentation_library_data.values(),
                 }
             )
         )
