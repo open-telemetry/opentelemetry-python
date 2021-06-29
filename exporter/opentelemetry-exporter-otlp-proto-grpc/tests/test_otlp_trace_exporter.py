@@ -534,7 +534,6 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(expected, self.exporter._translate_data([self.span]))
 
     def test_translate_spans_multi(self):
-
         expected = ExportTraceServiceRequest(
             resource_spans=[
                 ResourceSpans(
@@ -636,8 +635,8 @@ class TestOTLPSpanExporter(TestCase):
                                 OTLPSpan(
                                     # pylint: disable=no-member
                                     name="c",
-                                    start_time_unix_nano=self.span.start_time,
-                                    end_time_unix_nano=self.span.end_time,
+                                    start_time_unix_nano=self.span3.start_time,
+                                    end_time_unix_nano=self.span3.end_time,
                                     trace_state="a=b,c=d",
                                     span_id=int.to_bytes(
                                         10217189687419569865, 8, "big"
@@ -656,7 +655,7 @@ class TestOTLPSpanExporter(TestCase):
                                     status=Status(code=0, message=""),
                                 )
                             ],
-                        )
+                        ),
                     ],
                 ),
                 ResourceSpans(
@@ -677,8 +676,8 @@ class TestOTLPSpanExporter(TestCase):
                                 OTLPSpan(
                                     # pylint: disable=no-member
                                     name="b",
-                                    start_time_unix_nano=self.span.start_time,
-                                    end_time_unix_nano=self.span.end_time,
+                                    start_time_unix_nano=self.span2.start_time,
+                                    end_time_unix_nano=self.span2.end_time,
                                     trace_state="a=b,c=d",
                                     span_id=int.to_bytes(
                                         10217189687419569865, 8, "big"
@@ -704,7 +703,10 @@ class TestOTLPSpanExporter(TestCase):
         )
 
         # pylint: disable=protected-access
-        self.assertEqual(expected, self.exporter._translate_data([self.span, self.span2, self.span3]))
+        self.assertEqual(
+            expected,
+            self.exporter._translate_data([self.span, self.span2, self.span3]),
+        )
 
     def _check_translated_status(
         self,

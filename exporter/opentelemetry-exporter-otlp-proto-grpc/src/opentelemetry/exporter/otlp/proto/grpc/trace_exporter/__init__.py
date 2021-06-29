@@ -236,30 +236,42 @@ class OTLPSpanExporter(
         sdk_resource_instrumentation_library_spans = {}
 
         for sdk_span in data:
-            instrumentation_library_spans_map = sdk_resource_instrumentation_library_spans.get(sdk_span.resource, {})
+            instrumentation_library_spans_map = (
+                sdk_resource_instrumentation_library_spans.get(
+                    sdk_span.resource, {}
+                )
+            )
             # If we haven't seen the Resource yet, add it to the map
             if not instrumentation_library_spans_map:
                 sdk_resource_instrumentation_library_spans[
                     sdk_span.resource
                 ] = instrumentation_library_spans_map
-            instrumentation_library_spans = instrumentation_library_spans_map.get(sdk_span.instrumentation_info)
+            instrumentation_library_spans = (
+                instrumentation_library_spans_map.get(
+                    sdk_span.instrumentation_info
+                )
+            )
             # If we haven't seen the InstrumentationInfo for this Resource yet, add it to the map
             if not instrumentation_library_spans:
                 if sdk_span.instrumentation_info is not None:
-                    instrumentation_library_spans_map[sdk_span.instrumentation_info] = (
-                        InstrumentationLibrarySpans(
-                            instrumentation_library=InstrumentationLibrary(
-                                name=sdk_span.instrumentation_info.name,
-                                version=sdk_span.instrumentation_info.version,
-                            )
+                    instrumentation_library_spans_map[
+                        sdk_span.instrumentation_info
+                    ] = InstrumentationLibrarySpans(
+                        instrumentation_library=InstrumentationLibrary(
+                            name=sdk_span.instrumentation_info.name,
+                            version=sdk_span.instrumentation_info.version,
                         )
                     )
                 else:
                     # If no InstrumentationInfo, store in None key
-                    instrumentation_library_spans_map[sdk_span.instrumentation_info] = (
-                        InstrumentationLibrarySpans()
-                    )
-            instrumentation_library_spans = instrumentation_library_spans_map.get(sdk_span.instrumentation_info)
+                    instrumentation_library_spans_map[
+                        sdk_span.instrumentation_info
+                    ] = InstrumentationLibrarySpans()
+            instrumentation_library_spans = (
+                instrumentation_library_spans_map.get(
+                    sdk_span.instrumentation_info
+                )
+            )
             self._collector_span_kwargs = {}
 
             self._translate_name(sdk_span)
@@ -279,7 +291,9 @@ class OTLPSpanExporter(
                 "SPAN_KIND_{}".format(sdk_span.kind.name),
             )
 
-            instrumentation_library_spans.spans.append(CollectorSpan(**self._collector_span_kwargs))
+            instrumentation_library_spans.spans.append(
+                CollectorSpan(**self._collector_span_kwargs)
+            )
 
         return ExportTraceServiceRequest(
             resource_spans=get_resource_data(
