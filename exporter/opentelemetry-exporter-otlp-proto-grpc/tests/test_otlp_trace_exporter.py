@@ -138,7 +138,9 @@ class TestOTLPSpanExporter(TestCase):
         event_mock = Mock(
             **{
                 "timestamp": 1591240820506462784,
-                "attributes": BoundedAttributes(attributes={"a": 1, "b": False}),
+                "attributes": BoundedAttributes(
+                    attributes={"a": 1, "b": False}
+                ),
             }
         )
 
@@ -162,7 +164,9 @@ class TestOTLPSpanExporter(TestCase):
                     **{
                         "context.trace_id": 1,
                         "context.span_id": 2,
-                        "attributes": BoundedAttributes(attributes={"a":1, "b":False}),
+                        "attributes": BoundedAttributes(
+                            attributes={"a": 1, "b": False}
+                        ),
                         "kind": OTLPSpan.SpanKind.SPAN_KIND_INTERNAL,  # pylint: disable=no-member
                     }
                 )

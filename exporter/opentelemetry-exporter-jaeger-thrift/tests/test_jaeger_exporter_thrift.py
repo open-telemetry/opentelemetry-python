@@ -45,6 +45,14 @@ from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCode
 
 
+def _translate_spans_with_dropped_attributes():
+    span = get_span_with_dropped_attributes_events_links()
+    translate = Translate([span])
+
+    # pylint: disable=protected-access
+    return translate._translate(ThriftTranslator(max_tag_value_length=5))
+
+
 class TestJaegerExporter(unittest.TestCase):
     def setUp(self):
         # create and save span to be used in tests
@@ -592,12 +600,8 @@ class TestJaegerExporter(unittest.TestCase):
         self.assertEqual("('tup", tags_by_keys["key_tuple"])
         self.assertEqual("some_", tags_by_keys["key_resource"])
 
-    def test_dropped_values(self):
-        span = get_span_with_dropped_attributes_events_links()
-        translate = Translate([span])
-
-        # pylint: disable=protected-access
-        spans = translate._translate(ThriftTranslator(max_tag_value_length=5))
+    def test_dropped_span_attributes(self):
+        spans = _translate_spans_with_dropped_attributes()
         tags_by_keys = {
             tag.key: tag.vLong
             for tag in spans[0].tags
@@ -607,6 +611,18 @@ class TestJaegerExporter(unittest.TestCase):
         self.assertEqual(1, tags_by_keys["otel.dropped_links_count"])
         self.assertEqual(2, tags_by_keys["otel.dropped_attributes_count"])
         self.assertEqual(3, tags_by_keys["otel.dropped_events_count"])
+
+    def test_dropped_event_attributes(self):
+        spans = _translate_spans_with_dropped_attributes()
+        tags_by_keys = {
+            tag.key: tag.vLong
+            for tag in spans[0].logs[0].fields
+            if tag.vType == jaeger.TagType.LONG
+        }
+        self.assertEqual(
+            2,
+            tags_by_keys["otel.dropped_attributes_count"],
+        )
 
     def test_agent_client_split(self):
         agent_client = jaeger_exporter.AgentClientUDP(

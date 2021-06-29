@@ -284,6 +284,15 @@ class ThriftTranslator(Translator):
                 if tag:
                     fields.append(tag)
 
+            if event.attributes.dropped:
+                fields.append(
+                    _translate_attribute(
+                        "otel.dropped_attributes_count",
+                        event.attributes.dropped,
+                        self._max_tag_value_length,
+                    )
+                )
+
             fields.append(
                 TCollector.Tag(
                     key="message",
