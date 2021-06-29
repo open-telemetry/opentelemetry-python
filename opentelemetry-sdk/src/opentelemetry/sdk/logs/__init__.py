@@ -213,7 +213,7 @@ class ConcurrentMultiLogProcessor(LogProcessor):
     def shutdown(self):
         self._submit_and_wait(lambda lp: lp.shutdown)
 
-    def force_flush(self, timeout_millis: int = 30000):
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Force flush the log processors in parallel.
 
         Args:
