@@ -114,7 +114,8 @@ class LogProcessor(abc.ABC):
             False if the timeout is exceeded, True otherwise.
         """
 
-
+# Temporary fix until https://github.com/PyCQA/pylint/issues/4098 is resolved
+# pylint:disable=no-member
 class SynchronousMultiLogProcessor(LogProcessor):
     """Implementation of class:`LogProcessor` that forwards all received
     events to a list of log processors sequentially.
@@ -308,6 +309,8 @@ class LogEmitter:
         log_data = LogData(record, self._instrumentation_info)
         self._multi_log_processor.emit(log_data)
 
+    # TODO: Should this flush everything in pipeline?
+    # Prior discussion https://github.com/open-telemetry/opentelemetry-python/pull/1916#discussion_r659945290
     def flush(self):
         """Ensure all logging output has been flushed."""
         self._multi_log_processor.force_flush()
