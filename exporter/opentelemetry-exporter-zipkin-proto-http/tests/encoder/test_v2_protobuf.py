@@ -236,7 +236,7 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
 
         self.assertEqual(actual_output, expected_output)
 
-    def test_dropped(self):
+    def test_dropped_span_attributes(self):
         otel_span = get_span_with_dropped_attributes_events_links()
         # pylint: disable=no-member
         tags = (

@@ -253,7 +253,7 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
             ),
         )
 
-    def test_dropped(self):
+    def test_dropped_span_attributes(self):
         otel_span = get_span_with_dropped_attributes_events_links()
         annotations = JsonV1Encoder()._encode_span(otel_span, "test")[
             "binaryAnnotations"
