@@ -18,6 +18,9 @@ from opentelemetry.exporter.zipkin.encoder import NAME_KEY, VERSION_KEY
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.exporter.zipkin.proto.http.v2 import ProtobufEncoder
 from opentelemetry.exporter.zipkin.proto.http.v2.gen import zipkin_pb2
+from opentelemetry.test.spantestutil import (
+    get_span_with_dropped_attributes_events_links,
+)
 from opentelemetry.trace import SpanKind
 
 from .common_tests import TEST_SERVICE_NAME, CommonEncoderTestCases
@@ -232,3 +235,16 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
         )
 
         self.assertEqual(actual_output, expected_output)
+
+    def test_dropped_span_attributes(self):
+        otel_span = get_span_with_dropped_attributes_events_links()
+        # pylint: disable=no-member
+        tags = (
+            ProtobufEncoder()
+            ._encode_span(otel_span, zipkin_pb2.Endpoint())
+            .tags
+        )
+
+        self.assertEqual("1", tags["otel.dropped_links_count"])
+        self.assertEqual("2", tags["otel.dropped_attributes_count"])
+        self.assertEqual("3", tags["otel.dropped_events_count"])
