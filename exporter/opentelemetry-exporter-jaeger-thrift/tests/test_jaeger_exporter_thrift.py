@@ -38,8 +38,19 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.resources import SERVICE_NAME
 from opentelemetry.sdk.trace import Resource, TracerProvider
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.test.spantestutil import (
+    get_span_with_dropped_attributes_events_links,
+)
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.status import Status, StatusCode
+
+
+def _translate_spans_with_dropped_attributes():
+    span = get_span_with_dropped_attributes_events_links()
+    translate = Translate([span])
+
+    # pylint: disable=protected-access
+    return translate._translate(ThriftTranslator(max_tag_value_length=5))
 
 
 class TestJaegerExporter(unittest.TestCase):
@@ -562,7 +573,9 @@ class TestJaegerExporter(unittest.TestCase):
         # pylint: disable=protected-access
         spans = translate._translate(ThriftTranslator())
         tags_by_keys = {
-            tag.key: tag.vStr for tag in spans[0].tags if tag.vType == 0
+            tag.key: tag.vStr
+            for tag in spans[0].tags
+            if tag.vType == jaeger.TagType.STRING
         }
         self.assertEqual(
             "hello_world hello_world hello_world", tags_by_keys["key_string"]
@@ -579,11 +592,37 @@ class TestJaegerExporter(unittest.TestCase):
         # pylint: disable=protected-access
         spans = translate._translate(ThriftTranslator(max_tag_value_length=5))
         tags_by_keys = {
-            tag.key: tag.vStr for tag in spans[0].tags if tag.vType == 0
+            tag.key: tag.vStr
+            for tag in spans[0].tags
+            if tag.vType == jaeger.TagType.STRING
         }
         self.assertEqual("hello", tags_by_keys["key_string"])
         self.assertEqual("('tup", tags_by_keys["key_tuple"])
         self.assertEqual("some_", tags_by_keys["key_resource"])
+
+    def test_dropped_span_attributes(self):
+        spans = _translate_spans_with_dropped_attributes()
+        tags_by_keys = {
+            tag.key: tag.vLong
+            for tag in spans[0].tags
+            if tag.vType == jaeger.TagType.LONG
+        }
+
+        self.assertEqual(1, tags_by_keys["otel.dropped_links_count"])
+        self.assertEqual(2, tags_by_keys["otel.dropped_attributes_count"])
+        self.assertEqual(3, tags_by_keys["otel.dropped_events_count"])
+
+    def test_dropped_event_attributes(self):
+        spans = _translate_spans_with_dropped_attributes()
+        tags_by_keys = {
+            tag.key: tag.vLong
+            for tag in spans[0].logs[0].fields
+            if tag.vType == jaeger.TagType.LONG
+        }
+        self.assertEqual(
+            2,
+            tags_by_keys["otel.dropped_attributes_count"],
+        )
 
     def test_agent_client_split(self):
         agent_client = jaeger_exporter.AgentClientUDP(
