@@ -52,11 +52,11 @@ Manually setting span context
     from opentelemetry import trace
     from opentelemetry.trace import NonRecordingSpan, SpanContext, TraceFlags
     from opentelemetry.sdk.trace import TracerProvider
-    from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
+    from opentelemetry.sdk.trace.export import ConsoleSpanExporter, BatchSpanProcessor
     from opentelemetry.trace.propagation.tracecontext import TraceContextTextMapPropagator
 
     trace.set_tracer_provider(TracerProvider())
-    trace.get_tracer_provider().add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
+    trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
 
     tracer = trace.get_tracer(__name__)
 
@@ -87,13 +87,13 @@ Using multiple tracer providers with different Resource
     from opentelemetry import trace
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.resources import Resource
-    from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
+    from opentelemetry.sdk.trace.export import ConsoleSpanExporter, BatchSpanProcessor
 
     # Global tracer provider which can be set only once
     trace.set_tracer_provider(
         TracerProvider(resource=Resource.create({"service.name": "service1"}))
     )
-    trace.get_tracer_provider().add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
+    trace.get_tracer_provider().add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
 
     tracer = trace.get_tracer(__name__)
     with tracer.start_as_current_span("some-name") as span:
@@ -104,7 +104,7 @@ Using multiple tracer providers with different Resource
     another_tracer_provider = TracerProvider(
         resource=Resource.create({"service.name": "service2"})
     )
-    another_tracer_provider.add_span_processor(SimpleSpanProcessor(ConsoleSpanExporter()))
+    another_tracer_provider.add_span_processor(BatchSpanProcessor(ConsoleSpanExporter()))
 
     another_tracer = trace.get_tracer(__name__, tracer_provider=another_tracer_provider)
     with another_tracer.start_as_current_span("name-here") as span:
