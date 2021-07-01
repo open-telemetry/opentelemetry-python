@@ -5,7 +5,7 @@ from rediscache import RedisCache
 from opentelemetry import trace
 from opentelemetry.exporter.jaeger.thrift import JaegerExporter
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
+from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.shim import opentracing_shim
 
 # Configure the tracer using the default implementation
@@ -17,7 +17,7 @@ jaeger_exporter = JaegerExporter(
     agent_host_name="localhost",
     agent_port=6831,
 )
-span_processor = SimpleSpanProcessor(jaeger_exporter)
+span_processor = BatchSpanProcessor(jaeger_exporter)
 tracer_provider.add_span_processor(span_processor)
 
 # Create an OpenTracing shim. This implements the OpenTracing tracer API, but
