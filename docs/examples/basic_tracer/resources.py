@@ -16,8 +16,8 @@ from opentelemetry import trace
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
-    ConsoleSpanExporter,
     BatchSpanProcessor,
+    ConsoleSpanExporter,
 )
 
 # Use Resource.create() instead of constructor directly

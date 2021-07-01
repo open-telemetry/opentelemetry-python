@@ -21,8 +21,8 @@ from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
-    ConsoleSpanExporter,
     BatchSpanProcessor,
+    ConsoleSpanExporter,
 )
 
 trace.set_tracer_provider(TracerProvider())
@@ -35,6 +35,7 @@ FlaskInstrumentor().instrument_app(app)
 RequestsInstrumentor().instrument()
 
 tracer = trace.get_tracer(__name__)
+
 
 @app.route("/")
 def hello():

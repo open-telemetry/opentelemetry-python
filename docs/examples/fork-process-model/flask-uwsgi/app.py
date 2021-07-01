@@ -31,6 +31,7 @@ FlaskInstrumentor().instrument_app(application)
 
 tracer = trace.get_tracer(__name__)
 
+
 @postfork
 def init_tracing():
     resource = Resource.create(attributes={"service.name": "api-service"})

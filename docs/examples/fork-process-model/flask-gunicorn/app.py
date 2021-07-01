@@ -24,6 +24,7 @@ FlaskInstrumentor().instrument_app(application)
 
 tracer = trace.get_tracer(__name__)
 
+
 def fib_slow(n):
     if n <= 1:
         return n
