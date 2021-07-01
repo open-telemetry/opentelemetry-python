@@ -87,7 +87,7 @@ class OTLPSpanExporter(SpanExporter):
             self._session.headers.update(
                 {"Content-Encoding": self._compression.value}
             )
-        self._closed = False
+        self._shutdown = False
 
     def _export(self, serialized_data: str):
         data = serialized_data
@@ -117,7 +117,7 @@ class OTLPSpanExporter(SpanExporter):
     def export(self, spans) -> SpanExportResult:
         # After the call to Shutdown subsequent calls to Export are
         # not allowed and should return a Failure result.
-        if self._closed:
+        if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring batch")
             return SpanExportResult.FAILURE
 
@@ -148,11 +148,11 @@ class OTLPSpanExporter(SpanExporter):
         return SpanExportResult.FAILURE
 
     def shutdown(self):
-        if self._closed:
+        if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring call")
             return
         self._session.close()
-        self._closed = True
+        self._shutdown = True
 
 
 def _headers_from_env() -> Optional[Dict[str, str]]:
