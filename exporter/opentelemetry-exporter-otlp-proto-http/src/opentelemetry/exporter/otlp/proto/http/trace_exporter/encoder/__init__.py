@@ -38,27 +38,23 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as PB2SPan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status as PB2Status
-from opentelemetry.sdk.trace import Event as SDKEvent
-from opentelemetry.sdk.trace import (
-    InstrumentationInfo as SDKInstrumentationInfo,
-)
-from opentelemetry.sdk.trace import Resource as SDKResource
+from opentelemetry.sdk.trace import Event
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.trace import Span as SDKSpan
-from opentelemetry.sdk.trace import SpanContext as SDKSpanContext
-from opentelemetry.trace import Link as SDKLink
-from opentelemetry.trace import SpanKind as SDKSpanKind
-from opentelemetry.trace import TraceState as SDKTraceState
-from opentelemetry.trace.status import Status as SDKStatus
-from opentelemetry.trace.status import StatusCode as SDKStatusCode
-from opentelemetry.util.types import Attributes as SDKAttributes
+from opentelemetry.trace import Link
+from opentelemetry.trace import SpanKind
+from opentelemetry.trace.span import SpanContext, TraceState, Status
+from opentelemetry.trace.status import StatusCode
+from opentelemetry.util.types import Attributes
 
 # pylint: disable=E1101
 _SPAN_KIND_MAP = {
-    SDKSpanKind.INTERNAL: PB2SPan.SpanKind.SPAN_KIND_INTERNAL,
-    SDKSpanKind.SERVER: PB2SPan.SpanKind.SPAN_KIND_SERVER,
-    SDKSpanKind.CLIENT: PB2SPan.SpanKind.SPAN_KIND_CLIENT,
-    SDKSpanKind.PRODUCER: PB2SPan.SpanKind.SPAN_KIND_PRODUCER,
-    SDKSpanKind.CONSUMER: PB2SPan.SpanKind.SPAN_KIND_CONSUMER,
+    SpanKind.INTERNAL: PB2SPan.SpanKind.SPAN_KIND_INTERNAL,
+    SpanKind.SERVER: PB2SPan.SpanKind.SPAN_KIND_SERVER,
+    SpanKind.CLIENT: PB2SPan.SpanKind.SPAN_KIND_CLIENT,
+    SpanKind.PRODUCER: PB2SPan.SpanKind.SPAN_KIND_PRODUCER,
+    SpanKind.CONSUMER: PB2SPan.SpanKind.SPAN_KIND_CONSUMER,
 }
 
 _logger = logging.getLogger(__name__)
@@ -136,11 +132,11 @@ def _encode_resource_spans(
 
 
 def _encode_span(sdk_span: SDKSpan) -> PB2SPan:
-    sdk_context = sdk_span.get_span_context()
+    span_context = sdk_span.get_span_context()
     return PB2SPan(
-        trace_id=_encode_trace_id(sdk_context.trace_id),
-        span_id=_encode_span_id(sdk_context.span_id),
-        trace_state=_encode_trace_state(sdk_context.trace_state),
+        trace_id=_encode_trace_id(span_context.trace_id),
+        span_id=_encode_span_id(span_context.span_id),
+        trace_state=_encode_trace_state(span_context.trace_state),
         parent_span_id=_encode_parent_id(sdk_span.parent),
         name=sdk_span.name,
         kind=_SPAN_KIND_MAP[sdk_span.kind],
@@ -154,17 +150,17 @@ def _encode_span(sdk_span: SDKSpan) -> PB2SPan:
 
 
 def _encode_events(
-    sdk_events: Sequence[SDKEvent],
+    events: Sequence[Event],
 ) -> Optional[List[PB2SPan.Event]]:
     pb2_events = None
-    if sdk_events:
+    if events:
         pb2_events = []
-        for sdk_event in sdk_events:
+        for event in events:
             encoded_event = PB2SPan.Event(
-                name=sdk_event.name,
-                time_unix_nano=sdk_event.timestamp,
+                name=event.name,
+                time_unix_nano=event.timestamp,
             )
-            for key, value in sdk_event.attributes.items():
+            for key, value in event.attributes.items():
                 try:
                     encoded_event.attributes.append(
                         _encode_key_value(key, value)
@@ -176,16 +172,16 @@ def _encode_events(
     return pb2_events
 
 
-def _encode_links(sdk_links: List[SDKLink]) -> List[PB2SPan.Link]:
+def _encode_links(links: List[Link]) -> List[PB2SPan.Link]:
     pb2_links = None
-    if sdk_links:
+    if links:
         pb2_links = []
-        for sdk_link in sdk_links:
+        for link in links:
             encoded_link = PB2SPan.Link(
-                trace_id=_encode_trace_id(sdk_link.context.trace_id),
-                span_id=_encode_span_id(sdk_link.context.span_id),
+                trace_id=_encode_trace_id(link.context.trace_id),
+                span_id=_encode_span_id(link.context.span_id),
             )
-            for key, value in sdk_link.attributes.items():
+            for key, value in link.attributes.items():
                 try:
                     encoded_link.attributes.append(
                         _encode_key_value(key, value)
@@ -197,34 +193,34 @@ def _encode_links(sdk_links: List[SDKLink]) -> List[PB2SPan.Link]:
     return pb2_links
 
 
-def _encode_status(sdk_status: SDKStatus) -> Optional[PB2Status]:
+def _encode_status(status: Status) -> Optional[PB2Status]:
     pb2_status = None
-    if sdk_status is not None:
+    if status is not None:
         deprecated_code = PB2Status.DEPRECATED_STATUS_CODE_OK
-        if sdk_status.status_code is SDKStatusCode.ERROR:
+        if status.status_code is StatusCode.ERROR:
             deprecated_code = PB2Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR
         pb2_status = PB2Status(
             deprecated_code=deprecated_code,
-            code=sdk_status.status_code.value,
-            message=sdk_status.description,
+            code=status.status_code.value,
+            message=status.description,
         )
     return pb2_status
 
 
-def _encode_trace_state(sdk_trace_state: SDKTraceState) -> Optional[str]:
+def _encode_trace_state(trace_state: TraceState) -> Optional[str]:
     pb2_trace_state = None
-    if sdk_trace_state is not None:
+    if trace_state is not None:
         pb2_trace_state = ",".join(
             [
                 "{}={}".format(key, value)
-                for key, value in (sdk_trace_state.items())
+                for key, value in (trace_state.items())
             ]
         )
     return pb2_trace_state
 
 
-def _encode_parent_id(context: Optional[SDKSpanContext]) -> Optional[bytes]:
-    if isinstance(context, SDKSpanContext):
+def _encode_parent_id(context: Optional[SpanContext]) -> Optional[bytes]:
+    if isinstance(context, SpanContext):
         encoded_parent_id = _encode_span_id(context.span_id)
     else:
         encoded_parent_id = None
@@ -232,23 +228,23 @@ def _encode_parent_id(context: Optional[SDKSpanContext]) -> Optional[bytes]:
 
 
 def _encode_attributes(
-    sdk_attributes: SDKAttributes,
+    attributes: Attributes,
 ) -> Optional[List[PB2KeyValue]]:
-    if sdk_attributes:
-        attributes = []
-        for key, value in sdk_attributes.items():
+    if attributes:
+        pb2_attributes = []
+        for key, value in attributes.items():
             try:
-                attributes.append(_encode_key_value(key, value))
+                pb2_attributes.append(_encode_key_value(key, value))
             except Exception as error:  # pylint: disable=broad-except
                 _logger.exception(error)
     else:
-        attributes = None
-    return attributes
+        pb2_attributes = None
+    return pb2_attributes
 
 
-def _encode_resource(sdk_resource: SDKResource) -> PB2Resource:
+def _encode_resource(resource: Resource) -> PB2Resource:
     pb2_resource = PB2Resource()
-    for key, value in sdk_resource.attributes.items():
+    for key, value in resource.attributes.items():
         try:
             # pylint: disable=no-member
             pb2_resource.attributes.append(_encode_key_value(key, value))
@@ -258,14 +254,14 @@ def _encode_resource(sdk_resource: SDKResource) -> PB2Resource:
 
 
 def _encode_instrumentation_library(
-    sdk_instrumentation_info: SDKInstrumentationInfo,
+    instrumentation_info: InstrumentationInfo,
 ) -> PB2InstrumentationLibrary:
-    if sdk_instrumentation_info is None:
+    if instrumentation_info is None:
         pb2_instrumentation_library = PB2InstrumentationLibrary()
     else:
         pb2_instrumentation_library = PB2InstrumentationLibrary(
-            name=sdk_instrumentation_info.name,
-            version=sdk_instrumentation_info.version,
+            name=instrumentation_info.name,
+            version=instrumentation_info.version,
         )
     return pb2_instrumentation_library
 
