@@ -64,7 +64,7 @@ _SPAN_KIND_MAP = {
 _logger = logging.getLogger(__name__)
 
 
-class ProtobufEncoder:
+class _ProtobufEncoder:
     _CONTENT_TYPE = "application/x-protobuf"
 
     @classmethod

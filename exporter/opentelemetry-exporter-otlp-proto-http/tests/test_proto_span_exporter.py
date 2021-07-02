@@ -22,8 +22,6 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_TIMEOUT,
     OTLPSpanExporter,
 )
-
-# from opentelemetry.exporter.otlp.encoder.protobuf import ProtobufEncoder
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_COMPRESSION,

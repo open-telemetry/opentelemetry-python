@@ -38,7 +38,7 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.trace_exporter.encoder import (
-    ProtobufEncoder,
+    _ProtobufEncoder,
 )
 
 
@@ -81,7 +81,7 @@ class OTLPSpanExporter(SpanExporter):
         self._session = requests.Session()
         self._session.headers.update(self._headers)
         self._session.headers.update(
-            {"Content-Type": ProtobufEncoder._CONTENT_TYPE}
+            {"Content-Type": _ProtobufEncoder._CONTENT_TYPE}
         )
         if self._compression is not Compression.NoCompression:
             self._session.headers.update(
@@ -121,7 +121,7 @@ class OTLPSpanExporter(SpanExporter):
             _logger.warning("Exporter already shutdown, ignoring batch")
             return SpanExportResult.FAILURE
 
-        serialized_data = ProtobufEncoder.serialize(spans)
+        serialized_data = _ProtobufEncoder.serialize(spans)
 
         for delay in expo(max_value=self._MAX_RETRY_TIMEOUT):
 

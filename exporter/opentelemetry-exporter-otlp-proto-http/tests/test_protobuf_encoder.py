@@ -19,10 +19,10 @@ from typing import List, Tuple
 
 from opentelemetry.exporter.otlp.proto.http.trace_exporter.encoder import (
     _SPAN_KIND_MAP,
-    ProtobufEncoder,
     _encode_span_id,
     _encode_status,
     _encode_trace_id,
+    _ProtobufEncoder,
 )
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest as PB2ExportTraceServiceRequest,
@@ -61,19 +61,19 @@ class TestProtobufEncoder(unittest.TestCase):
     def test_encode(self):
         otel_spans, expected_encoding = self.get_exhaustive_test_spans()
         self.assertEqual(
-            ProtobufEncoder().encode(otel_spans), expected_encoding
+            _ProtobufEncoder().encode(otel_spans), expected_encoding
         )
 
     def test_serialize(self):
         otel_spans, expected_encoding = self.get_exhaustive_test_spans()
         self.assertEqual(
-            ProtobufEncoder().serialize(otel_spans),
+            _ProtobufEncoder().serialize(otel_spans),
             expected_encoding.SerializeToString(),
         )
 
     def test_content_type(self):
         self.assertEqual(
-            ProtobufEncoder._CONTENT_TYPE, "application/x-protobuf"
+            _ProtobufEncoder._CONTENT_TYPE, "application/x-protobuf"
         )
 
     @staticmethod
