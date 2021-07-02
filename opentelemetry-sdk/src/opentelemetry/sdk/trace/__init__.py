@@ -312,6 +312,7 @@ class Event(EventBase):
         name: str,
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
+        limit: Optional[int] = _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
     ) -> None:
         super().__init__(name, timestamp)
         self._attributes = attributes
@@ -366,6 +367,24 @@ class ReadableSpan:
         self._links = links
         self._resource = resource
         self._status = status
+
+    @property
+    def dropped_attributes(self) -> int:
+        if self._attributes:
+            return self._attributes.dropped
+        return 0
+
+    @property
+    def dropped_events(self) -> int:
+        if self._events:
+            return self._events.dropped
+        return 0
+
+    @property
+    def dropped_links(self) -> int:
+        if self._links:
+            return self._links.dropped
+        return 0
 
     @property
     def name(self) -> str:
