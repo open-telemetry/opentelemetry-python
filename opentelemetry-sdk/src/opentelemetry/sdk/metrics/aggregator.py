@@ -21,9 +21,15 @@ _logger = getLogger(__name__)
 
 
 class Aggregator(ABC):
+    """Aggregator.
+
+    sdfsd
+    """
+
     @classmethod
     @abstractmethod
     def _get_value_name(cls):
+        """_get_value_name."""
         pass
 
     @abstractmethod
@@ -40,6 +46,10 @@ class Aggregator(ABC):
 
     @abstractmethod
     def _aggregate(self, new_value):
+        """_aggregate.
+
+        :param new_value:
+        """
         pass
 
 
@@ -63,7 +73,13 @@ class MinAggregator(Aggregator):
     def _get_initial_value(self):
         return inf
 
-    def _aggregate(self, value):
+    def _aggregate(self, value: int) -> int:
+        """_aggregate.
+
+        :param value:
+        :type value: int
+        :rtype: int
+        """
 
         return min(self._value, value)
 
@@ -169,9 +185,6 @@ class LastAggregator(Aggregator):
 
 
 class HistogramAggregator(Aggregator):
-    """
-    The rightmost bin is [], the other ones are [[.
-    """
 
     def __init__(self, buckets, *args, **kwargs):
 
