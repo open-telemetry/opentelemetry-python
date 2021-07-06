@@ -97,10 +97,6 @@ class ConsoleExporter(Exporter):
 
 class MemoryExporter(Exporter):
     """Implementation of `Exporter` that stores metrics in memory.
-
-    This class can be used for testing purposes. It stores exported metrics
-    in a list in memory that can be retrieved using the
-    :func:`.exported_metrics` property.
     """
 
     def __init__(self):

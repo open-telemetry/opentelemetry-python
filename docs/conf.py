@@ -21,6 +21,16 @@ from os.path import isdir, join
 # DJANGO_SETTINGS_MODULE or call settings.configure() before accessing settings.
 from django.conf import settings
 
+from opentelemetry.sdk.metrics.instrument import (
+    _Instrument,
+    _Synchronous,
+    _Asynchronous,
+    _Adding,
+    _Grouping,
+    _Monotonic,
+    _NonMonotonic,
+)
+
 settings.configure()
 
 
@@ -182,3 +192,21 @@ extlinks = {
     "scm_raw_web": (scm_raw_web + "/%s", "scm_raw_web"),
     "scm_web": (scm_web + "/%s", "scm_web"),
 }
+
+
+def skip_private_sdk_instrument_classes(app, what, name, obj, skip, options):
+
+    return obj in [
+        _Instrument,
+        _Synchronous,
+        _Asynchronous,
+        _Adding,
+        _Grouping,
+        _Monotonic,
+        _NonMonotonic,
+    ] or None
+
+
+def setup(app):
+    # app.connect("autodoc-skip-member", skip_private_sdk_instrument_classes)
+    pass
