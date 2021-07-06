@@ -30,6 +30,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 - Updated `opentelementry-opentracing-shim` `ScopeShim` to report exceptions in
   opentelemetry specification format, rather than opentracing spec format.
+  ([#1878](https://github.com/open-telemetry/opentelemetry-python/pull/1878))
 
 ## [1.3.0-0.22b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.3.0-0.22b0) - 2021-06-01
 
