@@ -114,6 +114,7 @@ class LogProcessor(abc.ABC):
             False if the timeout is exceeded, True otherwise.
         """
 
+
 # Temporary fix until https://github.com/PyCQA/pylint/issues/4098 is resolved
 # pylint:disable=no-member
 class SynchronousMultiLogProcessor(LogProcessor):
