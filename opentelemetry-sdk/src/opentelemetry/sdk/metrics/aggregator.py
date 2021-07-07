@@ -52,22 +52,36 @@ class Aggregator(ABC):
         """
         pass
 
-    def _initialize(self, type_, *args, **kwargs):
+    def _add_attributes(self, *args, **kwargs):
+        self._value = self._get_initial_value()
+
+    def _initialize(
+        self,
+        type_,
+        self_args,
+        self_kwargs,
+        parent_args,
+        parent_kwargs
+    ):
 
         if self.__class__ == type_:
-            self._value = self._get_initial_value()
+            self._add_attributes(*self_args, **self_kwargs)
             setattr(
                 self.__class__, "value", property(lambda self: self._value)
             )
 
         else:
-            setattr(self, type_._get_value_name(), type_())
-            super(type_, self).__init__(*args, **kwargs)
+            setattr(
+                self,
+                type_._get_value_name(),
+                type_(*self_args, **self_kwargs)
+            )
+            super(type_, self).__init__(*parent_args, **parent_kwargs)
 
 
 class MinAggregator(Aggregator):
-    def __init__(self, *args, **kwargs):
-        self._initialize(MinAggregator, *args, **kwargs)
+    def __init__(self, *parent_args, **parent_kwargs):
+        self._initialize(MinAggregator, [], {}, parent_args, parent_kwargs)
 
     @classmethod
     def _get_value_name(cls):
@@ -88,8 +102,8 @@ class MinAggregator(Aggregator):
 
 
 class MaxAggregator(Aggregator):
-    def __init__(self, *args, **kwargs):
-        self._initialize(MaxAggregator, *args, **kwargs)
+    def __init__(self, *parent_args, **parent_kwargs):
+        self._initialize(MaxAggregator, [], {}, parent_args, parent_kwargs)
 
     @classmethod
     def _get_value_name(cls):
@@ -104,8 +118,8 @@ class MaxAggregator(Aggregator):
 
 
 class SumAggregator(Aggregator):
-    def __init__(self, *args, **kwargs):
-        self._initialize(SumAggregator, *args, **kwargs)
+    def __init__(self, *parent_args, **parent_kwargs):
+        self._initialize(SumAggregator, [], {}, parent_args, parent_kwargs)
 
     @classmethod
     def _get_value_name(cls):
@@ -120,8 +134,8 @@ class SumAggregator(Aggregator):
 
 
 class CountAggregator(Aggregator):
-    def __init__(self, *args, **kwargs):
-        self._initialize(CountAggregator, *args, **kwargs)
+    def __init__(self, *parent_args, **parent_kwargs):
+        self._initialize(CountAggregator, [], {}, parent_args, parent_kwargs)
 
     @classmethod
     def _get_value_name(cls):
@@ -136,8 +150,8 @@ class CountAggregator(Aggregator):
 
 
 class LastAggregator(Aggregator):
-    def __init__(self, *args, **kwargs):
-        self._initialize(LastAggregator, *args, **kwargs)
+    def __init__(self, *parent_args, **parent_kwargs):
+        self._initialize(LastAggregator, [], {}, parent_args, parent_kwargs)
 
     @classmethod
     def _get_value_name(cls):
@@ -153,22 +167,14 @@ class LastAggregator(Aggregator):
 
 class HistogramAggregator(Aggregator):
 
-    def __init__(self, buckets, *args, **kwargs):
+    def __init__(self, buckets, *parent_args, **parent_kwargs):
+        self._initialize(
+            HistogramAggregator, [buckets], {}, parent_args, parent_kwargs
+        )
 
-        if self.__class__ == HistogramAggregator:
-            self._buckets = buckets
-            self._value = self._get_initial_value()
-            setattr(
-                self.__class__, "value", property(lambda self: self._value)
-            )
-
-        else:
-            setattr(
-                self,
-                HistogramAggregator._get_value_name(),
-                HistogramAggregator(buckets),
-            )
-            super().__init__(*args, **kwargs)
+    def _add_attributes(self, buckets):
+        self._buckets = buckets
+        return super()._add_attributes()
 
     @classmethod
     def _get_value_name(cls):
@@ -214,23 +220,22 @@ class HistogramAggregator(Aggregator):
 
 
 class BoundSetAggregator(Aggregator):
-    def __init__(self, lower_bound, upper_bound, *args, **kwargs):
 
-        if self.__class__ == BoundSetAggregator:
-            self._lower_bound = lower_bound
-            self._upper_bound = upper_bound
-            self._value = self._get_initial_value()
-            setattr(
-                self.__class__, "value", property(lambda self: self._value)
-            )
+    def __init__(
+        self, lower_bound, upper_bound, *parent_args, **parent_kwargs
+    ):
+        self._initialize(
+            BoundSetAggregator,
+            [lower_bound, upper_bound],
+            {},
+            parent_args,
+            parent_kwargs
+        )
 
-        else:
-            setattr(
-                self,
-                BoundSetAggregator._get_value_name(),
-                BoundSetAggregator(lower_bound, upper_bound),
-            )
-            super().__init__(*args, **kwargs)
+    def _add_attributes(self, lower_bound, upper_bound):
+        self._lower_bound = lower_bound
+        self._upper_bound = upper_bound
+        return super()._add_attributes()
 
     @classmethod
     def _get_value_name(cls):
