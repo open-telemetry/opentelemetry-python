@@ -52,19 +52,22 @@ class Aggregator(ABC):
         """
         pass
 
+    def _initialize(self, type_, *args, **kwargs):
 
-class MinAggregator(Aggregator):
-    def __init__(self, *args, **kwargs):
-
-        if self.__class__ == MinAggregator:
+        if self.__class__ == type_:
             self._value = self._get_initial_value()
             setattr(
                 self.__class__, "value", property(lambda self: self._value)
             )
 
         else:
-            setattr(self, MinAggregator._get_value_name(), MinAggregator())
-            super().__init__(*args, **kwargs)
+            setattr(self, type_._get_value_name(), type_())
+            super(type_, self).__init__(*args, **kwargs)
+
+
+class MinAggregator(Aggregator):
+    def __init__(self, *args, **kwargs):
+        self._initialize(MinAggregator, *args, **kwargs)
 
     @classmethod
     def _get_value_name(cls):
@@ -86,16 +89,7 @@ class MinAggregator(Aggregator):
 
 class MaxAggregator(Aggregator):
     def __init__(self, *args, **kwargs):
-
-        if self.__class__ == MaxAggregator:
-            self._value = self._get_initial_value()
-            setattr(
-                self.__class__, "value", property(lambda self: self._value)
-            )
-
-        else:
-            setattr(self, MaxAggregator._get_value_name(), MaxAggregator())
-            super().__init__(*args, **kwargs)
+        self._initialize(MaxAggregator, *args, **kwargs)
 
     @classmethod
     def _get_value_name(cls):
@@ -111,16 +105,7 @@ class MaxAggregator(Aggregator):
 
 class SumAggregator(Aggregator):
     def __init__(self, *args, **kwargs):
-
-        if self.__class__ == SumAggregator:
-            self._value = self._get_initial_value()
-            setattr(
-                self.__class__, "value", property(lambda self: self._value)
-            )
-
-        else:
-            setattr(self, SumAggregator._get_value_name(), SumAggregator())
-            super().__init__(*args, **kwargs)
+        self._initialize(SumAggregator, *args, **kwargs)
 
     @classmethod
     def _get_value_name(cls):
@@ -136,16 +121,7 @@ class SumAggregator(Aggregator):
 
 class CountAggregator(Aggregator):
     def __init__(self, *args, **kwargs):
-
-        if self.__class__ == CountAggregator:
-            self._value = self._get_initial_value()
-            setattr(
-                self.__class__, "value", property(lambda self: self._value)
-            )
-
-        else:
-            setattr(self, CountAggregator._get_value_name(), CountAggregator())
-            super().__init__(*args, **kwargs)
+        self._initialize(CountAggregator, *args, **kwargs)
 
     @classmethod
     def _get_value_name(cls):
@@ -161,16 +137,7 @@ class CountAggregator(Aggregator):
 
 class LastAggregator(Aggregator):
     def __init__(self, *args, **kwargs):
-
-        if self.__class__ == LastAggregator:
-            self._value = self._get_initial_value()
-            setattr(
-                self.__class__, "value", property(lambda self: self._value)
-            )
-
-        else:
-            setattr(self, LastAggregator._get_value_name(), LastAggregator())
-            super().__init__(*args, **kwargs)
+        self._initialize(LastAggregator, *args, **kwargs)
 
     @classmethod
     def _get_value_name(cls):
