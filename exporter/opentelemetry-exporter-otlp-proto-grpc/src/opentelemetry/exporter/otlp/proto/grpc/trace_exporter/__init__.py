@@ -175,6 +175,7 @@ class OTLPSpanExporter(
                 collector_span_event = CollectorSpan.Event(
                     name=sdk_span_event.name,
                     time_unix_nano=sdk_span_event.timestamp,
+                    dropped_attributes_count=sdk_span_event.attributes.dropped,
                 )
 
                 for key, value in sdk_span_event.attributes.items():
@@ -201,6 +202,7 @@ class OTLPSpanExporter(
                         sdk_span_link.context.trace_id.to_bytes(16, "big")
                     ),
                     span_id=(sdk_span_link.context.span_id.to_bytes(8, "big")),
+                    dropped_attributes_count=sdk_span_link.attributes.dropped,
                 )
 
                 for key, value in sdk_span_link.attributes.items():
@@ -285,6 +287,18 @@ class OTLPSpanExporter(
             self._translate_events(sdk_span)
             self._translate_links(sdk_span)
             self._translate_status(sdk_span)
+            if sdk_span.dropped_attributes:
+                self._collector_span_kwargs[
+                    "dropped_attributes_count"
+                ] = sdk_span.dropped_attributes
+            if sdk_span.dropped_events:
+                self._collector_span_kwargs[
+                    "dropped_events_count"
+                ] = sdk_span.dropped_events
+            if sdk_span.dropped_links:
+                self._collector_span_kwargs[
+                    "dropped_links_count"
+                ] = sdk_span.dropped_links
 
             self._collector_span_kwargs["kind"] = getattr(
                 CollectorSpan.SpanKind,
