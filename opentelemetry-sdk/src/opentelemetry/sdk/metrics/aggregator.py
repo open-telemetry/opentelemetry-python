@@ -21,15 +21,114 @@ _logger = getLogger(__name__)
 
 
 class Aggregator(ABC):
-    """Aggregator.
+    """Base class for aggregators.
 
-    sdfsd
+    There are 2 kinds of aggregator classes:
+
+    #. **Decomposable Aggregators classes**
+        This kind of aggregator class implements a *decomposable aggregation
+        function*.
+
+    #. **Composed Aggregators classes**
+        This kind of aggregators are composed from Decomposable Aggregators
+        classes.
+
+    This `Aggregator` class helps define Composable Aggregator classes. Every
+    necessary attribute and method in a Composable Aggregator class is
+    defined automatically by just inheriting from Decomposable Aggregator
+    classes.
+
+    Aggregator classes have 2 public attributes:
+
+    #. ``aggregate``
+
+        This function is called to aggregate a value.
+
+    #. ``value``
+
+        This is the value currently aggregated.
+
+    Decomposable Aggregator classes must implement the following methods:
+
+    .. code-block:: python
+
+        def __init__(self, *parent_args, **parent_kwargs):
+            ...
+
+        def _get_initial_value(self):
+            ...
+
+        def _aggregate(self, value):
+            ...
+
+        @classmethod
+        def _get_value_name(cls) -> str:
+            ...
+
+    If a Decomposable Aggregator class receives arguments during its
+    initialization, then it also must implement the following methods like
+    this:
+
+    .. code-block:: python
+
+        def __init__(
+            self,
+            self_arg_0,
+            self_arg_1,
+            self_kwarg_0=something,
+            self_kwarg_1=something,
+            *parent_args,
+            **parent_kwargs
+        ):
+            ...
+
+        def _add_attributes(
+            self,
+            self_arg_0,
+            self_arg_1,
+            self_kwarg_0=something,
+            self_kwarg_1=something,
+        ):
+            ...
+
+    For example, consider the following classes:
+
+    .. code-block:: python
+
+        class DecomposableAggregator0(Aggregator):
+
+            ...
+
+            @classmethod
+            def _get_value_name(cls):
+                return "decomposable_aggregator_0"
+
+
+        class DecomposableAggregator1(Aggregator):
+
+            ...
+
+            @classmethod
+            def _get_value_name(cls):
+                return "decomposable_aggregator_1"
+
+        class ComposedAggregator(
+            DecomposableAggregator0, DecomposableAggregator1
+        ):
+
+            ...
+
+            @classmethod
+            def _get_value_name(cls):
+                return "composed_aggregator"
+
+
+
     """
 
     @classmethod
     @abstractmethod
-    def _get_value_name(cls):
-        """_get_value_name."""
+    def _get_value_name(cls) -> str:
         pass
 
     @abstractmethod
@@ -54,6 +153,10 @@ class Aggregator(ABC):
 
     def _add_attributes(self, *args, **kwargs):
         self._value = self._get_initial_value()
+
+    @abstractmethod
+    def __init__(self, *parent_args, **parent_kwargs):
+        pass
 
     def _initialize(
         self,
@@ -260,14 +363,10 @@ class BoundSetAggregator(Aggregator):
 
 
 class MinMaxSumAggregator(MinAggregator, MaxAggregator, SumAggregator):
-    @classmethod
-    def _get_value_name(cls):
-        return "minmaxsum"
+    pass
 
 
 class MinMaxSumHistogramAggregator(
     MinAggregator, MaxAggregator, SumAggregator, HistogramAggregator
 ):
-    @classmethod
-    def _get_value_name(cls):
-        return "minmaxsum"
+    pass

@@ -27,6 +27,7 @@ from opentelemetry.sdk.metrics.aggregator import (
     MinMaxSumAggregator,
     MinMaxSumHistogramAggregator,
     SumAggregator,
+    Aggregator,
     _logger,
 )
 
@@ -344,3 +345,64 @@ class TestAggregator(TestCase):
         self.assertTrue(bucket_1.upper.inclusive)
         self.assertEqual(bucket_1.upper.value, 11)
         self.assertEqual(bucket_1.count, 1)
+
+    def test_aggregator_with_args_and_kwargs(self):
+        class ArgsAndKwargsAggregator(Aggregator):
+
+            def __init__(
+                self,
+                self_arg_a,
+                self_arg_b,
+                self_kwarg_a="a",
+                self_kwarg_b="b",
+                *parent_args,
+                **parent_kwargs
+            ):
+                self._initialize(
+                    ArgsAndKwargsAggregator,
+                    (self_arg_a, self_arg_b),
+                    {
+                        "self_kwarg_a": self_kwarg_a,
+                        "self_kwarg_b": self_kwarg_b
+                    },
+                    parent_args, parent_kwargs
+                )
+
+            def _add_attributes(
+                self,
+                self_arg_a,
+                self_arg_b,
+                self_kwarg_a="a",
+                self_kwarg_b="b"
+            ):
+                self._arg_a = self_arg_a
+                self._arg_b = self_arg_b
+                self._kwarg_a = self_kwarg_a
+                self._kwarg_b = self_kwarg_b
+                return super()._add_attributes()
+
+            @classmethod
+            def _get_value_name(cls):
+                return "args_and_kwargs"
+
+            def _get_initial_value(self):
+                return ""
+
+            def _aggregate(self, value):
+                return "".join(
+                    [
+                        self._arg_a,
+                        self._arg_b,
+                        self._kwarg_a,
+                        self._kwarg_b,
+                        value
+                    ]
+                )
+
+        args_and_kwargs_aggregator = ArgsAndKwargsAggregator(
+            "a", "b", self_kwarg_a="c", self_kwarg_b="d"
+        )
+
+        args_and_kwargs_aggregator.aggregate("e")
+
+        self.assertEqual(args_and_kwargs_aggregator.value, "abcde")
