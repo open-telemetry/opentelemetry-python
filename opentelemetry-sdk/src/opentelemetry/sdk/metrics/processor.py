@@ -28,9 +28,3 @@ class MeasurementProcessor(Processor):
     """
     FIXME
     """
-
-
-class MetricProcessor(Processor):
-    """
-    FIXME
-    """

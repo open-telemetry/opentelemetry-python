@@ -14,10 +14,11 @@
 
 from abc import ABC, abstractmethod
 from enum import Enum
+from threading import Event, Thread
 from typing import Sequence, Tuple
-from json import dumps
 
 from opentelemetry.metrics.instrument import Instrument
+from opentelemetry.metrics.meter import Meter
 from opentelemetry.sdk.metrics.aggregator import Aggregator
 from opentelemetry.sdk.resources import Resource
 
@@ -57,12 +58,6 @@ class Record:
     def resource(self):
         return self._resource
 
-    def __str__(self):
-        return dumps(
-            {key[1:]: value for key, value in self.__dict__.items()},
-            indent=4
-        )
-
 
 class Exporter(ABC):
     """Interface for exporting metrics.
@@ -85,6 +80,13 @@ class Exporter(ABC):
             The result of the export
         """
 
+    @abstractmethod
+    def shutdown(self) -> None:
+        """Shuts down the exporter.
+
+        Called when the SDK is shut down.
+        """
+
 
 class ConsoleExporter(Exporter):
     """Implementation of `Exporter` that prints metrics to the console.
@@ -95,6 +97,52 @@ class ConsoleExporter(Exporter):
 
     def export(self, records: Sequence[Record]) -> "Result":
         for record in records:
-            print(record)
-
+            print(
+                '{}(data="{}", labels="{}", value={}, resource={})'.format(
+                    type(self).__name__,
+                    record.instrument,
+                    record.labels,
+                    record.aggregator.checkpoint,
+                    record.resource.attributes,
+                )
+            )
         return Result.SUCCESS
+
+    def shutdown(self):
+        pass
+
+
+class PushExporter(Thread):
+    """A push based controller, used for collecting and exporting.
+
+    Uses a worker thread that periodically collects metrics for exporting,
+    exports them and performs some post-processing.
+
+    Args:
+        meter: The meter used to get records.
+        exporter: The exporter used to export records.
+        interval: The collect/export interval in seconds.
+    """
+
+    daemon = True
+
+    def __init__(self, meter: Meter, exporter: Exporter, interval: float):
+        super().__init__()
+        self._meter = meter
+        self._exporter = exporter
+        self._interval = interval
+        self._finished = Event()
+        self.start()
+
+    def run(self):
+        while not self._finished.wait(self._interval):
+            self._tick()
+
+    def shutdown(self):
+        self._finished.set()
+        # Run one more collection pass to flush metrics batched in the meter
+        self._tick()
+
+    def _tick(self):
+        with self._meter.get_records() as records:
+            self._exporter.export(records)
