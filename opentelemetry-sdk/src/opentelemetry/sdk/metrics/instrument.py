@@ -82,15 +82,13 @@ class _Synchronous(Synchronous, _Instrument):
 
 
 class _Asynchronous(Asynchronous, _Instrument):
-    def __init__(self, name, callback, unit=None, description=None):
+    def __init__(self, name, callback: Generator, unit=None, description=None):
         super().__init__(
             name,
             callback,
             unit=unit,
             description=description,
         )
-        if not isinstance(callback, Generator):
-            raise TypeError("callback must be a generator")
 
         self._callback = callback
 
