@@ -31,7 +31,7 @@ class Instrument(ABC):
     _name_regex = compile_(r"[a-zA-Z][-.\w]{0,62}", ASCII)
 
     @abstractmethod
-    def __init__(self, name, unit="", description=""):
+    def __init__(self, name, unit="", description="", *args, **kwargs):
 
         if self._name_regex.fullmatch(name) is None:
             raise Exception("Invalid instrument name {}".format(name))
@@ -46,12 +46,16 @@ class Synchronous(Instrument):
 
 class Asynchronous(Instrument):
     @abstractmethod
-    def __init__(self, name, callback, unit="", description=""):
+    def __init__(
+        self, name, callback, unit="", description="", *args, **kwargs
+    ):
 
         if not isinstance(callback, Callable):
             raise Exception("callback must be callable")
 
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name, unit=unit, description=description, *args, **kwargs
+        )
 
 
 class Adding(Instrument):

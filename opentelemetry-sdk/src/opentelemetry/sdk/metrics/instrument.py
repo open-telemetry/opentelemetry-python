@@ -42,10 +42,22 @@ from opentelemetry.metrics.instrument import (
 
 class _Instrument(Instrument):
     def __init__(
-        self, name, unit=None, description=None, aggregator_class=Aggregator
+        self,
+        name,
+        unit=None,
+        description=None,
+        aggregator_class=Aggregator,
+        *args,
+        **kwargs
     ):
 
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            *args,
+            **kwargs
+        )
 
         self._aggregator = aggregator_class()
         self._name = name
@@ -71,13 +83,21 @@ class _Instrument(Instrument):
 
 class _Synchronous(Synchronous, _Instrument):
     def __init__(
-        self, name, unit=None, description=None, aggregator_class=SumAggregator
+        self,
+        name,
+        unit=None,
+        description=None,
+        aggregator_class=SumAggregator,
+        *args,
+        **kwargs
     ):
         super().__init__(
             name,
             unit=unit,
             description=description,
-            aggregator_class=aggregator_class
+            aggregator_class=aggregator_class,
+            *args,
+            **kwargs
         )
 
 
@@ -88,14 +108,18 @@ class _Asynchronous(Asynchronous, _Instrument):
         callback: Generator,
         unit=None,
         description=None,
-        aggregator_class=LastAggregator
+        aggregator_class=LastAggregator,
+        *args,
+        **kwargs
     ):
         super().__init__(
             name,
             callback,
             unit=unit,
             description=description,
-            aggregator_class=aggregator_class
+            aggregator_class=aggregator_class,
+            *args,
+            **kwargs
         )
 
         self._callback = callback
@@ -147,13 +171,17 @@ class Histogram(Histogram, _Grouping, _Synchronous):
         name,
         unit=None,
         description=None,
-        aggregator_class=MinMaxSumCountAggregator
+        aggregator_class=MinMaxSumCountAggregator,
+        *args,
+        **kwargs
     ):
         super().__init__(
             name,
             unit=unit,
             description=description,
-            aggregator_class=aggregator_class
+            aggregator_class=aggregator_class,
+            *args,
+            **kwargs
         )
 
     def record(self, value, **attributes):
@@ -167,14 +195,16 @@ class ObservableGauge(ObservableGauge, _Grouping, _Asynchronous):
         callback,
         unit=None,
         description=None,
-        aggregator_class=MinMaxSumCountLastAggregator
+        aggregator_class=MinMaxSumCountLastAggregator,
+        *args,
+        **kwargs
     ):
-        from ipdb import set_trace
-        set_trace()
         super().__init__(
             name,
             callback,
             unit=unit,
             description=description,
-            aggregator_class=aggregator_class
+            aggregator_class=aggregator_class,
+            *args,
+            **kwargs
         )
