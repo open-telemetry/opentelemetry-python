@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.3.0-0.22b0...HEAD)
+- `opentelemetry-semantic-conventions` Generate semconv constants update for OTel Spec 1.5.0
+  ([#1946](https://github.com/open-telemetry/opentelemetry-python/pull/1946))
 
 ### Added
 - Dropped attributes/events/links count available exposed on ReadableSpans.
