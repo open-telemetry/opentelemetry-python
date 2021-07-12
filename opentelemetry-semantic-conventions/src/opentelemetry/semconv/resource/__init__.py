@@ -14,7 +14,6 @@
 
 from enum import Enum
 
-
 class ResourceAttributes:
     CLOUD_PROVIDER = "cloud.provider"
     """
@@ -37,9 +36,9 @@ class ResourceAttributes:
     Note: Availability zones are called "zones" on Google Cloud.
     """
 
-    CLOUD_INFRASTRUCTURE_SERVICE = "cloud.infrastructure_service"
+    CLOUD_PLATFORM = "cloud.platform"
     """
-    The cloud infrastructure resource in use.
+    The cloud platform in use.
     Note: The prefix of the service SHOULD match the one specified in `cloud.provider`.
     """
 
@@ -66,6 +65,11 @@ class ResourceAttributes:
     AWS_ECS_TASK_FAMILY = "aws.ecs.task.family"
     """
     The task definition family this task definition is a member of.
+    """
+
+    AWS_ECS_TASK_REVISION = "aws.ecs.task.revision"
+    """
+    The revision for this task definition.
     """
 
     AWS_EKS_CLUSTER_ARN = "aws.eks.cluster.arn"
@@ -126,25 +130,67 @@ class ResourceAttributes:
     Name of the [deployment environment](https://en.wikipedia.org/wiki/Deployment_environment) (aka deployment tier).
     """
 
+    DEVICE_ID = "device.id"
+    """
+    A unique identifier representing the device.
+    Note: The device identifier MUST only be defined using the values outlined below. This value is not an advertising identifier and MUST NOT be used as such. On iOS (Swift or Objective-C), this value MUST be equal to the [vendor identifier](https://developer.apple.com/documentation/uikit/uidevice/1620059-identifierforvendor). On Android (Java or Kotlin), this value MUST be equal to the Firebase Installation ID or a globally unique UUID which is persisted across sessions in your application. More information can be found [here](https://developer.android.com/training/articles/user-data-ids) on best practices and exact implementation details. Caution should be taken when storing personal data or anything which can identify a user. GDPR and data protection laws may apply, ensure you do your own due diligence.
+    """
+
+    DEVICE_MODEL_IDENTIFIER = "device.model.identifier"
+    """
+    The model identifier for the device.
+    Note: It's recommended this value represents a machine readable version of the model identifier rather than the market or consumer-friendly name of the device.
+    """
+
+    DEVICE_MODEL_NAME = "device.model.name"
+    """
+    The marketing name for the device model.
+    Note: It's recommended this value represents a human readable version of the device model rather than a machine readable alternative.
+    """
+
     FAAS_NAME = "faas.name"
     """
-    The name of the function being executed.
+    The name of the single function that this runtime instance executes.
+    Note: This is the name of the function as configured/deployed on the FaaS platform and is usually different from the name of the callback function (which may be stored in the [`code.namespace`/`code.function`](../../trace/semantic_conventions/span-general.md#source-code-attributes) span attributes).
     """
 
     FAAS_ID = "faas.id"
     """
-    The unique ID of the function being executed.
-    Note: For example, in AWS Lambda this field corresponds to the [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) value, in GCP to the URI of the resource, and in Azure to the [FunctionDirectory](https://github.com/Azure/azure-functions-host/wiki/Retrieving-information-about-the-currently-running-function) field.
+    The unique ID of the single function that this runtime instance executes.
+    Note: Depending on the cloud provider, use:
+
+* **AWS Lambda:** The function [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html).
+Take care not to use the "invoked ARN" directly but replace any
+[alias suffix](https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html) with the resolved function version, as the same runtime instance may be invokable with multiple
+different aliases.
+* **GCP:** The [URI of the resource](https://cloud.google.com/iam/docs/full-resource-names)
+* **Azure:** The [Fully Qualified Resource ID](https://docs.microsoft.com/en-us/rest/api/resources/resources/get-by-id).
+
+On some providers, it may not be possible to determine the full ID at startup,
+which is why this field cannot be made required. For example, on AWS the account ID
+part of the ARN is not available without calling another AWS API
+which may be deemed too slow for a short-running lambda function.
+As an alternative, consider setting `faas.id` as a span attribute instead.
     """
 
     FAAS_VERSION = "faas.version"
     """
-    The version string of the function being executed as defined in [Version Attributes](../../resource/semantic_conventions/README.md#version-attributes).
+    The immutable version of the function being executed.
+    Note: Depending on the cloud provider and platform, use:
+
+* **AWS Lambda:** The [function version](https://docs.aws.amazon.com/lambda/latest/dg/configuration-versions.html)
+  (an integer represented as a decimal string).
+* **Google Cloud Run:** The [revision](https://cloud.google.com/run/docs/managing/revisions)
+  (i.e., the function name plus the revision suffix).
+* **Google Cloud Functions:** The value of the
+  [`K_REVISION` environment variable](https://cloud.google.com/functions/docs/env-var#runtime_environment_variables_set_automatically).
+* **Azure Functions:** Not applicable. Do not set this attribute.
     """
 
     FAAS_INSTANCE = "faas.instance"
     """
-    The execution environment ID as a string.
+    The execution environment ID as a string, that will be potentially reused for other invocations to the same function/function version.
+    Note: * **AWS Lambda:** Use the (full) log stream name.
     """
 
     FAAS_MAX_MEMORY = "faas.max_memory"
@@ -293,6 +339,16 @@ class ResourceAttributes:
     Human readable (not intended to be parsed) OS version information, like e.g. reported by `ver` or `lsb_release -a` commands.
     """
 
+    OS_NAME = "os.name"
+    """
+    Human readable operating system name.
+    """
+
+    OS_VERSION = "os.version"
+    """
+    The version string of the operating system as defined in [Version Attributes](../../resource/semantic_conventions/README.md#version-attributes).
+    """
+
     PROCESS_PID = "process.pid"
     """
     Process identifier (PID).
@@ -386,6 +442,20 @@ class ResourceAttributes:
     The version string of the auto instrumentation agent, if used.
     """
 
+    WEBENGINE_NAME = "webengine.name"
+    """
+    The name of the web engine.
+    """
+
+    WEBENGINE_VERSION = "webengine.version"
+    """
+    The version of the web engine.
+    """
+
+    WEBENGINE_DESCRIPTION = "webengine.description"
+    """
+    Additional description of the web engine (e.g. detailed version and edition information).
+    """
 
 class CloudProviderValues(Enum):
     AWS = "aws"
@@ -398,7 +468,7 @@ class CloudProviderValues(Enum):
     """Google Cloud Platform."""
 
 
-class CloudInfrastructureServiceValues(Enum):
+class CloudPlatformValues(Enum):
     AWS_EC2 = "aws_ec2"
     """AWS Elastic Compute Cloud."""
 
@@ -411,13 +481,13 @@ class CloudInfrastructureServiceValues(Enum):
     AWS_LAMBDA = "aws_lambda"
     """AWS Lambda."""
 
-    AWS_ELASTICBEANSTALK = "aws_elastic_beanstalk"
+    AWS_ELASTIC_BEANSTALK = "aws_elastic_beanstalk"
     """AWS Elastic Beanstalk."""
 
     AZURE_VM = "azure_vm"
     """Azure Virtual Machines."""
 
-    AZURE_CONTAINERINSTANCES = "azure_container_instances"
+    AZURE_CONTAINER_INSTANCES = "azure_container_instances"
     """Azure Container Instances."""
 
     AZURE_AKS = "azure_aks"
@@ -426,22 +496,22 @@ class CloudInfrastructureServiceValues(Enum):
     AZURE_FUNCTIONS = "azure_functions"
     """Azure Functions."""
 
-    AZURE_APPSERVICE = "azure_app_service"
+    AZURE_APP_SERVICE = "azure_app_service"
     """Azure App Service."""
 
-    GCP_COMPUTEENGINE = "gcp_compute_engine"
+    GCP_COMPUTE_ENGINE = "gcp_compute_engine"
     """Google Cloud Compute Engine (GCE)."""
 
-    GCP_CLOUDRUN = "gcp_cloud_run"
+    GCP_CLOUD_RUN = "gcp_cloud_run"
     """Google Cloud Run."""
 
-    GCP_KUBERNETESENGINE = "gcp_kubernetes_engine"
+    GCP_KUBERNETES_ENGINE = "gcp_kubernetes_engine"
     """Google Cloud Kubernetes Engine (GKE)."""
 
-    GCP_CLOUDFUNCTIONS = "gcp_cloud_functions"
+    GCP_CLOUD_FUNCTIONS = "gcp_cloud_functions"
     """Google Cloud Functions (GCF)."""
 
-    GCP_APPENGINE = "gcp_app_engine"
+    GCP_APP_ENGINE = "gcp_app_engine"
     """Google Cloud App Engine (GAE)."""
 
 
@@ -477,37 +547,37 @@ class HostArchValues(Enum):
 
 
 class OsTypeValues(Enum):
-    WINDOWS = "WINDOWS"
+    WINDOWS = "windows"
     """Microsoft Windows."""
 
-    LINUX = "LINUX"
+    LINUX = "linux"
     """Linux."""
 
-    DARWIN = "DARWIN"
+    DARWIN = "darwin"
     """Apple Darwin."""
 
-    FREEBSD = "FREEBSD"
+    FREEBSD = "freebsd"
     """FreeBSD."""
 
-    NETBSD = "NETBSD"
+    NETBSD = "netbsd"
     """NetBSD."""
 
-    OPENBSD = "OPENBSD"
+    OPENBSD = "openbsd"
     """OpenBSD."""
 
-    DRAGONFLYBSD = "DRAGONFLYBSD"
+    DRAGONFLYBSD = "dragonflybsd"
     """DragonFly BSD."""
 
-    HPUX = "HPUX"
+    HPUX = "hpux"
     """HP-UX (Hewlett Packard Unix)."""
 
-    AIX = "AIX"
+    AIX = "aix"
     """AIX (Advanced Interactive eXecutive)."""
 
-    SOLARIS = "SOLARIS"
+    SOLARIS = "solaris"
     """Oracle Solaris."""
 
-    ZOS = "ZOS"
+    Z_OS = "z_os"
     """IBM z/OS."""
 
 
@@ -541,3 +611,4 @@ class TelemetrySdkLanguageValues(Enum):
 
     WEBJS = "webjs"
     """webjs."""
+
