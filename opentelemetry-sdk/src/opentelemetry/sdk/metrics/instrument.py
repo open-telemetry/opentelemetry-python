@@ -126,7 +126,8 @@ class _Asynchronous(Asynchronous, _Instrument):
 
     def observe(self):
         # FIXME make this limited by a timeout
-        return next(self._callback)
+        value, attributes = super().observe()
+        self._aggregator.aggregate(value, **attributes)
 
 
 class _Adding(Adding, _Instrument):
