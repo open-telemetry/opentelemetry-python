@@ -313,6 +313,24 @@ class ProtobufTranslator(Translator):
         if not span.status.is_ok:
             translated.append(_get_bool_key_value("error", True))
 
+        if span.dropped_attributes:
+            translated.append(
+                _get_long_key_value(
+                    "otel.dropped_attributes_count", span.dropped_attributes
+                )
+            )
+        if span.dropped_events:
+            translated.append(
+                _get_long_key_value(
+                    "otel.dropped_events_count", span.dropped_events
+                )
+            )
+        if span.dropped_links:
+            translated.append(
+                _get_long_key_value(
+                    "otel.dropped_links_count", span.dropped_links
+                )
+            )
         return translated
 
     def _extract_refs(
@@ -357,6 +375,15 @@ class ProtobufTranslator(Translator):
                 )
                 if tag:
                     fields.append(tag)
+
+            if event.attributes.dropped:
+                fields.append(
+                    _translate_attribute(
+                        "otel.dropped_attributes_count",
+                        event.attributes.dropped,
+                        self._max_tag_value_length,
+                    )
+                )
 
             fields.append(
                 _get_string_key_value(

@@ -22,6 +22,7 @@ from os import environ, linesep
 from typing import Optional
 
 from opentelemetry.context import Context, attach, detach, set_value
+from opentelemetry.instrumentation.utils import _SUPPRESS_INSTRUMENTATION_KEY
 from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_EXPORT_TIMEOUT,
     OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
@@ -86,7 +87,7 @@ class SimpleSpanProcessor(SpanProcessor):
     def on_end(self, span: ReadableSpan) -> None:
         if not span.context.trace_flags.sampled:
             return
-        token = attach(set_value("suppress_instrumentation", True))
+        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             self.span_exporter.export((span,))
         # pylint: disable=broad-except
@@ -326,7 +327,7 @@ class BatchSpanProcessor(SpanProcessor):
         while idx < self.max_export_batch_size and self.queue:
             self.spans_list[idx] = self.queue.pop()
             idx += 1
-        token = attach(set_value("suppress_instrumentation", True))
+        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             # Ignore type b/c the Optional[None]+slicing is too "clever"
             # for mypy

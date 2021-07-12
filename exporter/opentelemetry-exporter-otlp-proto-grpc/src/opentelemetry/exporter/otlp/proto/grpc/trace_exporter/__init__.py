@@ -175,6 +175,7 @@ class OTLPSpanExporter(
                 collector_span_event = CollectorSpan.Event(
                     name=sdk_span_event.name,
                     time_unix_nano=sdk_span_event.timestamp,
+                    dropped_attributes_count=sdk_span_event.attributes.dropped,
                 )
 
                 for key, value in sdk_span_event.attributes.items():
@@ -201,6 +202,7 @@ class OTLPSpanExporter(
                         sdk_span_link.context.trace_id.to_bytes(16, "big")
                     ),
                     span_id=(sdk_span_link.context.span_id.to_bytes(8, "big")),
+                    dropped_attributes_count=sdk_span_link.attributes.dropped,
                 )
 
                 for key, value in sdk_span_link.attributes.items():
@@ -236,29 +238,42 @@ class OTLPSpanExporter(
         sdk_resource_instrumentation_library_spans = {}
 
         for sdk_span in data:
-
-            if sdk_span.resource not in (
-                sdk_resource_instrumentation_library_spans.keys()
-            ):
-                if sdk_span.instrumentation_info is not None:
-                    instrumentation_library_spans = (
-                        InstrumentationLibrarySpans(
-                            instrumentation_library=InstrumentationLibrary(
-                                name=sdk_span.instrumentation_info.name,
-                                version=sdk_span.instrumentation_info.version,
-                            )
-                        )
-                    )
-
-                else:
-                    instrumentation_library_spans = (
-                        InstrumentationLibrarySpans()
-                    )
-
+            instrumentation_library_spans_map = (
+                sdk_resource_instrumentation_library_spans.get(
+                    sdk_span.resource, {}
+                )
+            )
+            # If we haven't seen the Resource yet, add it to the map
+            if not instrumentation_library_spans_map:
                 sdk_resource_instrumentation_library_spans[
                     sdk_span.resource
-                ] = instrumentation_library_spans
-
+                ] = instrumentation_library_spans_map
+            instrumentation_library_spans = (
+                instrumentation_library_spans_map.get(
+                    sdk_span.instrumentation_info
+                )
+            )
+            # If we haven't seen the InstrumentationInfo for this Resource yet, add it to the map
+            if not instrumentation_library_spans:
+                if sdk_span.instrumentation_info is not None:
+                    instrumentation_library_spans_map[
+                        sdk_span.instrumentation_info
+                    ] = InstrumentationLibrarySpans(
+                        instrumentation_library=InstrumentationLibrary(
+                            name=sdk_span.instrumentation_info.name,
+                            version=sdk_span.instrumentation_info.version,
+                        )
+                    )
+                else:
+                    # If no InstrumentationInfo, store in None key
+                    instrumentation_library_spans_map[
+                        sdk_span.instrumentation_info
+                    ] = InstrumentationLibrarySpans()
+            instrumentation_library_spans = (
+                instrumentation_library_spans_map.get(
+                    sdk_span.instrumentation_info
+                )
+            )
             self._collector_span_kwargs = {}
 
             self._translate_name(sdk_span)
@@ -272,15 +287,27 @@ class OTLPSpanExporter(
             self._translate_events(sdk_span)
             self._translate_links(sdk_span)
             self._translate_status(sdk_span)
+            if sdk_span.dropped_attributes:
+                self._collector_span_kwargs[
+                    "dropped_attributes_count"
+                ] = sdk_span.dropped_attributes
+            if sdk_span.dropped_events:
+                self._collector_span_kwargs[
+                    "dropped_events_count"
+                ] = sdk_span.dropped_events
+            if sdk_span.dropped_links:
+                self._collector_span_kwargs[
+                    "dropped_links_count"
+                ] = sdk_span.dropped_links
 
             self._collector_span_kwargs["kind"] = getattr(
                 CollectorSpan.SpanKind,
                 "SPAN_KIND_{}".format(sdk_span.kind.name),
             )
 
-            sdk_resource_instrumentation_library_spans[
-                sdk_span.resource
-            ].spans.append(CollectorSpan(**self._collector_span_kwargs))
+            instrumentation_library_spans.spans.append(
+                CollectorSpan(**self._collector_span_kwargs)
+            )
 
         return ExportTraceServiceRequest(
             resource_spans=get_resource_data(

@@ -17,8 +17,8 @@ from flask import Flask, request
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
+    BatchSpanProcessor,
     ConsoleSpanExporter,
-    SimpleSpanProcessor,
 )
 
 app = Flask(__name__)
@@ -26,7 +26,7 @@ app = Flask(__name__)
 trace.set_tracer_provider(TracerProvider())
 
 trace.get_tracer_provider().add_span_processor(
-    SimpleSpanProcessor(ConsoleSpanExporter())
+    BatchSpanProcessor(ConsoleSpanExporter())
 )
 
 

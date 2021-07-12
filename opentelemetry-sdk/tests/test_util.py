@@ -12,10 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import collections
 import unittest
 
-from opentelemetry.sdk.util import BoundedDict, BoundedList
+from opentelemetry.sdk.util import BoundedList
 
 
 class TestBoundedList(unittest.TestCase):
@@ -142,91 +141,3 @@ class TestBoundedList(unittest.TestCase):
 
         for num in range(100):
             self.assertEqual(blist[num], num)
-
-
-class TestBoundedDict(unittest.TestCase):
-    base = collections.OrderedDict(
-        [
-            ("name", "Firulais"),
-            ("age", 7),
-            ("weight", 13),
-            ("vaccinated", True),
-        ]
-    )
-
-    def test_negative_maxlen(self):
-        with self.assertRaises(ValueError):
-            BoundedDict(-1)
-
-    def test_from_map(self):
-        dic_len = len(self.base)
-        base_copy = collections.OrderedDict(self.base)
-        bdict = BoundedDict.from_map(dic_len, base_copy)
-
-        self.assertEqual(len(bdict), dic_len)
-
-        # modify base_copy and test that bdict is not changed
-        base_copy["name"] = "Bruno"
-        base_copy["age"] = 3
-
-        for key in self.base:
-            self.assertEqual(bdict[key], self.base[key])
-
-        # test that iter yields the correct number of elements
-        self.assertEqual(len(tuple(bdict)), dic_len)
-
-        # map too big
-        half_len = dic_len // 2
-        bdict = BoundedDict.from_map(half_len, self.base)
-        self.assertEqual(len(tuple(bdict)), half_len)
-        self.assertEqual(bdict.dropped, dic_len - half_len)
-
-    def test_bounded_dict(self):
-        # create empty dict
-        dic_len = len(self.base)
-        bdict = BoundedDict(dic_len)
-        self.assertEqual(len(bdict), 0)
-
-        # fill dict
-        for key in self.base:
-            bdict[key] = self.base[key]
-
-        self.assertEqual(len(bdict), dic_len)
-        self.assertEqual(bdict.dropped, 0)
-
-        for key in self.base:
-            self.assertEqual(bdict[key], self.base[key])
-
-        # test __iter__ in BoundedDict
-        for key in bdict:
-            self.assertEqual(bdict[key], self.base[key])
-
-        # updating an existing element should not drop
-        bdict["name"] = "Bruno"
-        self.assertEqual(bdict.dropped, 0)
-
-        # try to append more elements
-        for key in self.base:
-            bdict["new-" + key] = self.base[key]
-
-        self.assertEqual(len(bdict), dic_len)
-        self.assertEqual(bdict.dropped, dic_len)
-
-        # test that elements in the dict are the new ones
-        for key in self.base:
-            self.assertEqual(bdict["new-" + key], self.base[key])
-
-        # delete an element
-        del bdict["new-name"]
-        self.assertEqual(len(bdict), dic_len - 1)
-
-        with self.assertRaises(KeyError):
-            _ = bdict["new-name"]
-
-    def test_no_limit_code(self):
-        bdict = BoundedDict(maxlen=None)
-        for num in range(100):
-            bdict[num] = num
-
-        for num in range(100):
-            self.assertEqual(bdict[num], num)

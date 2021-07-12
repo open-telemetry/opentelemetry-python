@@ -22,6 +22,8 @@ application = flask.Flask(__name__)
 
 FlaskInstrumentor().instrument_app(application)
 
+tracer = trace.get_tracer(__name__)
+
 
 def fib_slow(n):
     if n <= 1:
@@ -39,7 +41,6 @@ def fib_fast(n):
 
 @application.route("/fibonacci")
 def fibonacci():
-    tracer = trace.get_tracer(__name__)
     n = int(request.args.get("n", 1))
     with tracer.start_as_current_span("root"):
         with tracer.start_as_current_span("fib_slow") as slow_span:
