@@ -64,7 +64,7 @@ from json import dumps
 
 import pkg_resources
 
-from opentelemetry.attributes import _filter_attributes
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.environment_variables import (
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
@@ -144,8 +144,7 @@ class Resource:
     def __init__(
         self, attributes: Attributes, schema_url: typing.Optional[str] = None
     ):
-        _filter_attributes(attributes)
-        self._attributes = attributes.copy()
+        self._attributes = BoundedAttributes(attributes=attributes)
         if schema_url is None:
             schema_url = ""
         self._schema_url = schema_url
@@ -187,7 +186,7 @@ class Resource:
 
     @property
     def attributes(self) -> Attributes:
-        return self._attributes.copy()
+        return self._attributes
 
     @property
     def schema_url(self) -> str:
@@ -210,7 +209,7 @@ class Resource:
         Returns:
             The newly-created Resource.
         """
-        merged_attributes = self.attributes
+        merged_attributes = self.attributes.copy()
         merged_attributes.update(other.attributes)
 
         if self.schema_url == "":
@@ -239,7 +238,7 @@ class Resource:
 
     def __hash__(self):
         return hash(
-            f"{dumps(self._attributes, sort_keys=True)}|{self._schema_url}"
+            f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"
         )
 
 

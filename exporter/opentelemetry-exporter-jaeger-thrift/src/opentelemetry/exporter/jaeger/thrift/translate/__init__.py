@@ -46,6 +46,11 @@ def _convert_int_to_i64(val):
     return val
 
 
+def _append_dropped(tags, key, val):
+    if val:
+        tags.append(_get_long_tag(key, val))
+
+
 class Translator(abc.ABC):
     def __init__(self, max_tag_value_length: Optional[int] = None):
         self._max_tag_value_length = max_tag_value_length
@@ -181,7 +186,7 @@ class ThriftTranslator(Translator):
         return jaeger_span
 
     def _extract_tags(self, span: ReadableSpan) -> Sequence[TCollector.Tag]:
-
+        # pylint: disable=too-many-branches
         translated = []
         if span.attributes:
             for key, value in span.attributes.items():
@@ -226,6 +231,18 @@ class ThriftTranslator(Translator):
         if not span.status.is_ok:
             translated.append(_get_bool_tag("error", True))
 
+        _append_dropped(
+            translated,
+            "otel.dropped_attributes_count",
+            span.dropped_attributes,
+        )
+        _append_dropped(
+            translated, "otel.dropped_events_count", span.dropped_events
+        )
+        _append_dropped(
+            translated, "otel.dropped_links_count", span.dropped_links
+        )
+
         return translated
 
     def _extract_refs(
@@ -268,6 +285,12 @@ class ThriftTranslator(Translator):
                 )
                 if tag:
                     fields.append(tag)
+
+            _append_dropped(
+                fields,
+                "otel.dropped_attributes_count",
+                event.attributes.dropped,
+            )
 
             fields.append(
                 TCollector.Tag(

@@ -36,6 +36,9 @@ from opentelemetry.sdk.trace import Resource, sampling
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.test.spantestutil import (
+    get_span_with_dropped_attributes_events_links,
+)
 from opentelemetry.trace import StatusCode
 from opentelemetry.util._time import _time_ns
 
@@ -805,7 +808,7 @@ class TestSpan(unittest.TestCase):
             self.assertEqual(
                 root.links[0].context.span_id, other_context1.span_id
             )
-            self.assertEqual(root.links[0].attributes, None)
+            self.assertEqual(0, len(root.links[0].attributes))
             self.assertEqual(
                 root.links[1].context.trace_id, other_context2.trace_id
             )
@@ -813,6 +816,9 @@ class TestSpan(unittest.TestCase):
                 root.links[1].context.span_id, other_context2.span_id
             )
             self.assertEqual(root.links[1].attributes, {"name": "neighbor"})
+
+            with self.assertRaises(TypeError):
+                root.links[1].attributes["name"] = "new_neighbour"
 
     def test_update_name(self):
         with self.tracer.start_as_current_span("root") as root:
@@ -913,7 +919,6 @@ class TestSpan(unittest.TestCase):
             with self.assertRaises(AssertionError):
                 with context as root:
                     raise AssertionError("unknown")
-
             self.assertIs(root.status.status_code, StatusCode.ERROR)
             self.assertEqual(
                 root.status.description, "AssertionError: unknown"
@@ -928,17 +933,52 @@ class TestSpan(unittest.TestCase):
             .start_as_current_span("root")
         )
 
-    def test_last_status_wins(self):
+    def test_status_cannot_override_ok(self):
         def error_status_test(context):
             with self.assertRaises(AssertionError):
                 with context as root:
                     root.set_status(trace_api.status.Status(StatusCode.OK))
                     raise AssertionError("unknown")
+            self.assertIs(root.status.status_code, StatusCode.OK)
+            self.assertIsNone(root.status.description)
 
+        error_status_test(
+            trace.TracerProvider().get_tracer(__name__).start_span("root")
+        )
+        error_status_test(
+            trace.TracerProvider()
+            .get_tracer(__name__)
+            .start_as_current_span("root")
+        )
+
+    def test_status_cannot_set_unset(self):
+        def unset_status_test(context):
+            with self.assertRaises(AssertionError):
+                with context as root:
+                    raise AssertionError("unknown")
+            root.set_status(trace_api.status.Status(StatusCode.UNSET))
             self.assertIs(root.status.status_code, StatusCode.ERROR)
             self.assertEqual(
                 root.status.description, "AssertionError: unknown"
             )
+
+        unset_status_test(
+            trace.TracerProvider().get_tracer(__name__).start_span("root")
+        )
+        unset_status_test(
+            trace.TracerProvider()
+            .get_tracer(__name__)
+            .start_as_current_span("root")
+        )
+
+    def test_last_status_wins(self):
+        def error_status_test(context):
+            with self.assertRaises(AssertionError):
+                with context as root:
+                    raise AssertionError("unknown")
+                root.set_status(trace_api.status.Status(StatusCode.OK))
+                self.assertIs(root.status.status_code, StatusCode.OK)
+                self.assertIsNone(root.status.description)
 
         error_status_test(
             trace.TracerProvider().get_tracer(__name__).start_span("root")
@@ -1444,3 +1484,12 @@ class TestSpanLimits(unittest.TestCase):
                 )
             )
         )
+
+    def test_dropped_attributes(self):
+        span = get_span_with_dropped_attributes_events_links()
+        self.assertEqual(1, span.dropped_links)
+        self.assertEqual(2, span.dropped_attributes)
+        self.assertEqual(3, span.dropped_events)
+        self.assertEqual(2, span.events[0].attributes.dropped)
+        self.assertEqual(2, span.links[0].attributes.dropped)
+        self.assertEqual(2, span.resource.attributes.dropped)

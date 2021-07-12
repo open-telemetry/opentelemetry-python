@@ -18,6 +18,9 @@ from opentelemetry.exporter.zipkin.encoder import NAME_KEY, VERSION_KEY
 from opentelemetry.exporter.zipkin.json.v1 import JsonV1Encoder
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk import trace
+from opentelemetry.test.spantestutil import (
+    get_span_with_dropped_attributes_events_links,
+)
 from opentelemetry.trace import TraceFlags, format_span_id, format_trace_id
 
 from .common_tests import TEST_SERVICE_NAME, CommonEncoderTestCases
@@ -249,3 +252,16 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                 [otel_span], NodeEndpoint()
             ),
         )
+
+    def test_dropped_span_attributes(self):
+        otel_span = get_span_with_dropped_attributes_events_links()
+        annotations = JsonV1Encoder()._encode_span(otel_span, "test")[
+            "binaryAnnotations"
+        ]
+        annotations = {
+            annotation["key"]: annotation["value"]
+            for annotation in annotations
+        }
+        self.assertEqual("1", annotations["otel.dropped_links_count"])
+        self.assertEqual("2", annotations["otel.dropped_attributes_count"])
+        self.assertEqual("3", annotations["otel.dropped_events_count"])
