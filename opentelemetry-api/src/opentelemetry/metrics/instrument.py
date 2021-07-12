@@ -57,6 +57,9 @@ class Asynchronous(Instrument):
             name, unit=unit, description=description, *args, **kwargs
         )
 
+    def observe(self):
+        return next(self._callback)
+
 
 class Adding(Instrument):
     pass
