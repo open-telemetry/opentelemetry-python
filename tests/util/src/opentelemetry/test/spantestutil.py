@@ -16,7 +16,8 @@ import unittest
 from importlib import reload
 
 from opentelemetry import trace as trace_api
-from opentelemetry.sdk.trace import TracerProvider, export
+from opentelemetry.sdk import trace as trace_sdk
+from opentelemetry.sdk.trace import Resource, TracerProvider, export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
@@ -41,3 +42,41 @@ class SpanTestBase(unittest.TestCase):
     def setUp(self):
         self.memory_exporter = _MEMORY_EXPORTER
         self.memory_exporter.clear()
+
+
+def get_span_with_dropped_attributes_events_links():
+    attributes = {}
+    for index in range(130):
+        attributes["key{}".format(index)] = ["value{}".format(index)]
+    links = []
+    for index in range(129):
+        links.append(
+            trace_api.Link(
+                trace_sdk._Span(
+                    name="span{}".format(index),
+                    context=trace_api.INVALID_SPAN_CONTEXT,
+                    attributes=attributes,
+                ).get_span_context(),
+                attributes=attributes,
+            )
+        )
+    span = trace_sdk._Span(
+        limits=trace_sdk.SpanLimits(),
+        name="span",
+        resource=Resource(
+            attributes=attributes,
+        ),
+        context=trace_api.SpanContext(
+            trace_id=0x000000000000000000000000DEADBEEF,
+            span_id=0x00000000DEADBEF0,
+            is_remote=False,
+        ),
+        links=links,
+        attributes=attributes,
+    )
+
+    span.start()
+    for index in range(131):
+        span.add_event("event{}".format(index), attributes=attributes)
+    span.end()
+    return span

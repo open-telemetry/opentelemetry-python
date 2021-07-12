@@ -22,6 +22,7 @@ from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     _translate_key_values,
 )
@@ -68,6 +69,9 @@ from opentelemetry.sdk.trace.export import (
     SpanExportResult,
 )
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.test.spantestutil import (
+    get_span_with_dropped_attributes_events_links,
+)
 
 THIS_DIR = os.path.dirname(__file__)
 
@@ -134,7 +138,9 @@ class TestOTLPSpanExporter(TestCase):
         event_mock = Mock(
             **{
                 "timestamp": 1591240820506462784,
-                "attributes": OrderedDict([("a", 1), ("b", False)]),
+                "attributes": BoundedAttributes(
+                    attributes={"a": 1, "b": False}
+                ),
             }
         )
 
@@ -151,14 +157,16 @@ class TestOTLPSpanExporter(TestCase):
             ),
             resource=SDKResource(OrderedDict([("a", 1), ("b", False)])),
             parent=Mock(**{"span_id": 12345}),
-            attributes=OrderedDict([("a", 1), ("b", True)]),
+            attributes=BoundedAttributes(attributes={"a": 1, "b": True}),
             events=[event_mock],
             links=[
                 Mock(
                     **{
                         "context.trace_id": 1,
                         "context.span_id": 2,
-                        "attributes": OrderedDict([("a", 1), ("b", False)]),
+                        "attributes": BoundedAttributes(
+                            attributes={"a": 1, "b": False}
+                        ),
                         "kind": OTLPSpan.SpanKind.SPAN_KIND_INTERNAL,  # pylint: disable=no-member
                     }
                 )
@@ -168,8 +176,44 @@ class TestOTLPSpanExporter(TestCase):
             ),
         )
 
+        self.span2 = _Span(
+            "b",
+            context=Mock(
+                **{
+                    "trace_state": OrderedDict([("a", "b"), ("c", "d")]),
+                    "span_id": 10217189687419569865,
+                    "trace_id": 67545097771067222548457157018666467027,
+                }
+            ),
+            resource=SDKResource(OrderedDict([("a", 2), ("b", False)])),
+            parent=Mock(**{"span_id": 12345}),
+            instrumentation_info=InstrumentationInfo(
+                name="name", version="version"
+            ),
+        )
+
+        self.span3 = _Span(
+            "c",
+            context=Mock(
+                **{
+                    "trace_state": OrderedDict([("a", "b"), ("c", "d")]),
+                    "span_id": 10217189687419569865,
+                    "trace_id": 67545097771067222548457157018666467027,
+                }
+            ),
+            resource=SDKResource(OrderedDict([("a", 1), ("b", False)])),
+            parent=Mock(**{"span_id": 12345}),
+            instrumentation_info=InstrumentationInfo(
+                name="name2", version="version2"
+            ),
+        )
+
         self.span.start()
         self.span.end()
+        self.span2.start()
+        self.span2.end()
+        self.span3.start()
+        self.span3.end()
 
     def tearDown(self):
         self.server.stop(None)
@@ -497,6 +541,181 @@ class TestOTLPSpanExporter(TestCase):
         # pylint: disable=protected-access
         self.assertEqual(expected, self.exporter._translate_data([self.span]))
 
+    def test_translate_spans_multi(self):
+        expected = ExportTraceServiceRequest(
+            resource_spans=[
+                ResourceSpans(
+                    resource=OTLPResource(
+                        attributes=[
+                            KeyValue(key="a", value=AnyValue(int_value=1)),
+                            KeyValue(
+                                key="b", value=AnyValue(bool_value=False)
+                            ),
+                        ]
+                    ),
+                    instrumentation_library_spans=[
+                        InstrumentationLibrarySpans(
+                            instrumentation_library=InstrumentationLibrary(
+                                name="name", version="version"
+                            ),
+                            spans=[
+                                OTLPSpan(
+                                    # pylint: disable=no-member
+                                    name="a",
+                                    start_time_unix_nano=self.span.start_time,
+                                    end_time_unix_nano=self.span.end_time,
+                                    trace_state="a=b,c=d",
+                                    span_id=int.to_bytes(
+                                        10217189687419569865, 8, "big"
+                                    ),
+                                    trace_id=int.to_bytes(
+                                        67545097771067222548457157018666467027,
+                                        16,
+                                        "big",
+                                    ),
+                                    parent_span_id=(
+                                        b"\000\000\000\000\000\00009"
+                                    ),
+                                    kind=(
+                                        OTLPSpan.SpanKind.SPAN_KIND_INTERNAL
+                                    ),
+                                    attributes=[
+                                        KeyValue(
+                                            key="a",
+                                            value=AnyValue(int_value=1),
+                                        ),
+                                        KeyValue(
+                                            key="b",
+                                            value=AnyValue(bool_value=True),
+                                        ),
+                                    ],
+                                    events=[
+                                        OTLPSpan.Event(
+                                            name="a",
+                                            time_unix_nano=1591240820506462784,
+                                            attributes=[
+                                                KeyValue(
+                                                    key="a",
+                                                    value=AnyValue(
+                                                        int_value=1
+                                                    ),
+                                                ),
+                                                KeyValue(
+                                                    key="b",
+                                                    value=AnyValue(
+                                                        bool_value=False
+                                                    ),
+                                                ),
+                                            ],
+                                        )
+                                    ],
+                                    status=Status(code=0, message=""),
+                                    links=[
+                                        OTLPSpan.Link(
+                                            trace_id=int.to_bytes(
+                                                1, 16, "big"
+                                            ),
+                                            span_id=int.to_bytes(2, 8, "big"),
+                                            attributes=[
+                                                KeyValue(
+                                                    key="a",
+                                                    value=AnyValue(
+                                                        int_value=1
+                                                    ),
+                                                ),
+                                                KeyValue(
+                                                    key="b",
+                                                    value=AnyValue(
+                                                        bool_value=False
+                                                    ),
+                                                ),
+                                            ],
+                                        )
+                                    ],
+                                )
+                            ],
+                        ),
+                        InstrumentationLibrarySpans(
+                            instrumentation_library=InstrumentationLibrary(
+                                name="name2", version="version2"
+                            ),
+                            spans=[
+                                OTLPSpan(
+                                    # pylint: disable=no-member
+                                    name="c",
+                                    start_time_unix_nano=self.span3.start_time,
+                                    end_time_unix_nano=self.span3.end_time,
+                                    trace_state="a=b,c=d",
+                                    span_id=int.to_bytes(
+                                        10217189687419569865, 8, "big"
+                                    ),
+                                    trace_id=int.to_bytes(
+                                        67545097771067222548457157018666467027,
+                                        16,
+                                        "big",
+                                    ),
+                                    parent_span_id=(
+                                        b"\000\000\000\000\000\00009"
+                                    ),
+                                    kind=(
+                                        OTLPSpan.SpanKind.SPAN_KIND_INTERNAL
+                                    ),
+                                    status=Status(code=0, message=""),
+                                )
+                            ],
+                        ),
+                    ],
+                ),
+                ResourceSpans(
+                    resource=OTLPResource(
+                        attributes=[
+                            KeyValue(key="a", value=AnyValue(int_value=2)),
+                            KeyValue(
+                                key="b", value=AnyValue(bool_value=False)
+                            ),
+                        ]
+                    ),
+                    instrumentation_library_spans=[
+                        InstrumentationLibrarySpans(
+                            instrumentation_library=InstrumentationLibrary(
+                                name="name", version="version"
+                            ),
+                            spans=[
+                                OTLPSpan(
+                                    # pylint: disable=no-member
+                                    name="b",
+                                    start_time_unix_nano=self.span2.start_time,
+                                    end_time_unix_nano=self.span2.end_time,
+                                    trace_state="a=b,c=d",
+                                    span_id=int.to_bytes(
+                                        10217189687419569865, 8, "big"
+                                    ),
+                                    trace_id=int.to_bytes(
+                                        67545097771067222548457157018666467027,
+                                        16,
+                                        "big",
+                                    ),
+                                    parent_span_id=(
+                                        b"\000\000\000\000\000\00009"
+                                    ),
+                                    kind=(
+                                        OTLPSpan.SpanKind.SPAN_KIND_INTERNAL
+                                    ),
+                                    status=Status(code=0, message=""),
+                                )
+                            ],
+                        )
+                    ],
+                ),
+            ]
+        )
+
+        # pylint: disable=protected-access
+        self.assertEqual(
+            expected,
+            self.exporter._translate_data([self.span, self.span2, self.span3]),
+        )
+
     def _check_translated_status(
         self,
         translated: ExportTraceServiceRequest,
@@ -600,6 +819,48 @@ class TestOTLPSpanExporter(TestCase):
         # self.assertTrue(isinstance(kvlist_value.values[0], KeyValue))
         # self.assertEqual(kvlist_value.values[0].key, "asd")
         # self.assertEqual(kvlist_value.values[0].value.string_value, "123")
+
+    def test_dropped_values(self):
+        span = get_span_with_dropped_attributes_events_links()
+        # pylint:disable=protected-access
+        translated = self.exporter._translate_data([span])
+        self.assertEqual(
+            1,
+            translated.resource_spans[0]
+            .instrumentation_library_spans[0]
+            .spans[0]
+            .dropped_links_count,
+        )
+        self.assertEqual(
+            2,
+            translated.resource_spans[0]
+            .instrumentation_library_spans[0]
+            .spans[0]
+            .dropped_attributes_count,
+        )
+        self.assertEqual(
+            3,
+            translated.resource_spans[0]
+            .instrumentation_library_spans[0]
+            .spans[0]
+            .dropped_events_count,
+        )
+        self.assertEqual(
+            2,
+            translated.resource_spans[0]
+            .instrumentation_library_spans[0]
+            .spans[0]
+            .links[0]
+            .dropped_attributes_count,
+        )
+        self.assertEqual(
+            2,
+            translated.resource_spans[0]
+            .instrumentation_library_spans[0]
+            .spans[0]
+            .events[0]
+            .dropped_attributes_count,
+        )
 
 
 def _create_span_with_status(status: SDKStatus):

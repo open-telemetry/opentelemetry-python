@@ -207,6 +207,20 @@ class Encoder(abc.ABC):
             tags.update({"otel.status_code": span.status.status_code.name})
             if span.status.status_code is StatusCode.ERROR:
                 tags.update({"error": span.status.description or ""})
+
+        if span.dropped_attributes:
+            tags.update(
+                {"otel.dropped_attributes_count": str(span.dropped_attributes)}
+            )
+
+        if span.dropped_events:
+            tags.update(
+                {"otel.dropped_events_count": str(span.dropped_events)}
+            )
+
+        if span.dropped_links:
+            tags.update({"otel.dropped_links_count": str(span.dropped_links)})
+
         return tags
 
     def _extract_annotations_from_events(

@@ -39,7 +39,7 @@ class TestFlask(unittest.TestCase):
             result = http.get("http://localhost:5000")
             self.assertEqual(result.status_code, 200)
 
-            sleep(0.1)
+            sleep(5)
         finally:
             server.terminate()
 
