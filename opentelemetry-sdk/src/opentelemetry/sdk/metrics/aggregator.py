@@ -370,3 +370,19 @@ class MinMaxSumHistogramAggregator(
     MinAggregator, MaxAggregator, SumAggregator, HistogramAggregator
 ):
     pass
+
+
+class MinMaxSumCountAggregator(
+    MinAggregator, MaxAggregator, SumAggregator, CountAggregator
+):
+    pass
+
+
+class MinMaxSumCountLastAggregator(
+    MinAggregator,
+    MaxAggregator,
+    SumAggregator,
+    CountAggregator,
+    LastAggregator
+):
+    pass
