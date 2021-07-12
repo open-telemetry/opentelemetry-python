@@ -22,16 +22,23 @@ class Process(Thread):
     def __init__(
         self,
         meter,
-        instruments,
+        views,
+        measurement_processors,
+        metric_processors,
         exporter
     ):
         self._meter = meter
-        self._instruments = instruments
+        self._views = views
+        self._measurement_processors = measurement_processors
+        self._metric_processors = metric_processors
         self._exporter = exporter
 
     @abstractmethod
     def stop(self, timeout=None):
         pass
+
+    def _process(self):
+        self._meter.collect_measurements()
 
 
 class IntervalProcess(Process):

@@ -16,6 +16,13 @@
 
 from typing import Generator
 
+from opentelemetry.sdk.metrics.aggregator import (
+    Aggregator,
+    SumAggregator,
+    LastAggregator,
+    MinMaxSumCountAggregator,
+    MinMaxSumCountLastAggregator,
+)
 from opentelemetry.metrics.instrument import (
     Adding,
     Asynchronous,
@@ -31,30 +38,16 @@ from opentelemetry.metrics.instrument import (
     Synchronous,
     UpDownCounter,
 )
-from opentelemetry.sdk.metrics.aggregator import SumAggregator
 
 
 class _Instrument(Instrument):
-    def __init__(self, name, unit=None, description=None):
+    def __init__(
+        self, name, unit=None, description=None, aggregator_class=Aggregator
+    ):
 
         super().__init__(name, unit=unit, description=description)
 
-        aggregator_class = None
-
-        if isinstance(self, Adding):
-            if isinstance(self, Synchronous):
-                aggregator_class = SumAggregator
-
-            elif isinstance(self, Asynchronous):
-                aggregator_class = None
-
-        elif isinstance(self, Histogram):
-            aggregator_class = None
-
-        elif isinstance(self, ObservableGauge):
-            aggregator_class = None
-
-        self._aggregator_class = aggregator_class
+        self._aggregator = aggregator_class()
         self._name = name
         self._unit = unit
         self._description = description
@@ -77,17 +70,32 @@ class _Instrument(Instrument):
 
 
 class _Synchronous(Synchronous, _Instrument):
-    def __init__(self, name, unit=None, description=None):
-        super().__init__(name, unit=unit, description=description)
+    def __init__(
+        self, name, unit=None, description=None, aggregator_class=SumAggregator
+    ):
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            aggregator_class=aggregator_class
+        )
 
 
 class _Asynchronous(Asynchronous, _Instrument):
-    def __init__(self, name, callback: Generator, unit=None, description=None):
+    def __init__(
+        self,
+        name,
+        callback: Generator,
+        unit=None,
+        description=None,
+        aggregator_class=LastAggregator
+    ):
         super().__init__(
             name,
             callback,
             unit=unit,
             description=description,
+            aggregator_class=aggregator_class
         )
 
         self._callback = callback
@@ -114,16 +122,13 @@ class _NonMonotonic(NonMonotonic, _Adding):
 
 
 class Counter(Counter, _Monotonic, _Synchronous):
-    def add(self, amount, **attributes):
-        with self._datas_lock:
-            for view_data in self._view_datas:
-                view_data.record(amount)
+    def add(self, value, **attributes):
+        self._aggregator.aggregate(value, **attributes)
 
 
 class UpDownCounter(UpDownCounter, _NonMonotonic, _Synchronous):
-    def add(self, amount, **attributes):
-        print("add")
-        return super().add(amount, **attributes)
+    def add(self, value, **attributes):
+        self._aggregator.aggregate(value, **attributes)
 
 
 class ObservableCounter(ObservableCounter, _Monotonic, _Asynchronous):
@@ -137,10 +142,39 @@ class ObservableUpDownCounter(
 
 
 class Histogram(Histogram, _Grouping, _Synchronous):
-    def record(self, amount, **attributes):
-        print("record")
-        return super().record(amount, **attributes)
+    def __init__(
+        self,
+        name,
+        unit=None,
+        description=None,
+        aggregator_class=MinMaxSumCountAggregator
+    ):
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            aggregator_class=aggregator_class
+        )
+
+    def record(self, value, **attributes):
+        self._aggregator.aggregate(value, **attributes)
 
 
 class ObservableGauge(ObservableGauge, _Grouping, _Asynchronous):
-    pass
+    def __init__(
+        self,
+        name,
+        callback,
+        unit=None,
+        description=None,
+        aggregator_class=MinMaxSumCountLastAggregator
+    ):
+        from ipdb import set_trace
+        set_trace()
+        super().__init__(
+            name,
+            callback,
+            unit=unit,
+            description=description,
+            aggregator_class=aggregator_class
+        )
