@@ -83,7 +83,7 @@ class TestInstrument(TestCase):
             "name", callback, unit="unit", description="description"
         )
         self.assertEqual(observable_counter.name, "name")
-        self.assertIs(observable_counter.callback, callback)
+        self.assertIs(observable_counter._callback, callback)
         self.assertEqual(observable_counter.unit, "unit")
         self.assertEqual(observable_counter.description, "description")
         self.assertIsInstance(observable_counter, SDKObservableCounter)
@@ -101,7 +101,7 @@ class TestInstrument(TestCase):
             )
         )
         self.assertEqual(observable_up_down_counter.name, "name")
-        self.assertIs(observable_up_down_counter.callback, callback)
+        self.assertIs(observable_up_down_counter._callback, callback)
         self.assertEqual(observable_up_down_counter.unit, "unit")
         self.assertEqual(observable_up_down_counter.description, "description")
         self.assertIsInstance(
@@ -134,7 +134,7 @@ class TestInstrument(TestCase):
             "name", callback, unit="unit", description="description"
         )
         self.assertEqual(observable_gauge.name, "name")
-        self.assertIs(observable_gauge.callback, callback)
+        self.assertIs(observable_gauge._callback, callback)
         self.assertEqual(observable_gauge.unit, "unit")
         self.assertEqual(observable_gauge.description, "description")
         self.assertIsInstance(observable_gauge, SDKObservableGauge)
