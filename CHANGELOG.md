@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1915](https://github.com/open-telemetry/opentelemetry-python/pull/1915))
 - Fix OTLP SpanExporter to distinguish spans based off Resource and InstrumentationInfo
   ([#1927](https://github.com/open-telemetry/opentelemetry-python/pull/1927))
+- Updating dependency for opentelemetry api/sdk packages to support major version instead of
+  pinning to specific versions.
+  ([#1933](https://github.com/open-telemetry/opentelemetry-python/pull/1933))
 
 ### Fixed
 - Updated `opentelementry-opentracing-shim` `ScopeShim` to report exceptions in
