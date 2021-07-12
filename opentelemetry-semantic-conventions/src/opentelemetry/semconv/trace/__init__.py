@@ -14,6 +14,7 @@
 
 from enum import Enum
 
+
 class SpanAttributes:
     AWS_LAMBDA_INVOKED_ARN = "aws.lambda.invoked_arn"
     """
@@ -111,7 +112,9 @@ class SpanAttributes:
     Whether or not the query is idempotent.
     """
 
-    DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT = "db.cassandra.speculative_execution_count"
+    DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT = (
+        "db.cassandra.speculative_execution_count"
+    )
     """
     The number of times a query was speculatively executed. Not set or `0` if the query was not executed speculatively.
     """
@@ -260,7 +263,9 @@ clear whether the exception will escape.
     The size of the request payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://tools.ietf.org/html/rfc7230#section-3.3.2) header. For requests using transport encoding, this should be the compressed size.
     """
 
-    HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED = "http.request_content_length_uncompressed"
+    HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED = (
+        "http.request_content_length_uncompressed"
+    )
     """
     The size of the uncompressed request payload body after transport decoding. Not set if transport encoding not used.
     """
@@ -270,7 +275,9 @@ clear whether the exception will escape.
     The size of the response payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://tools.ietf.org/html/rfc7230#section-3.3.2) header. For requests using transport encoding, this should be the compressed size.
     """
 
-    HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED = "http.response_content_length_uncompressed"
+    HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED = (
+        "http.response_content_length_uncompressed"
+    )
     """
     The size of the uncompressed response payload body after transport decoding. Not set if transport encoding not used.
     """
@@ -352,12 +359,16 @@ clear whether the exception will escape.
     The [conversation ID](#conversations) identifying the conversation to which the message belongs, represented as a string. Sometimes called "Correlation ID".
     """
 
-    MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES = "messaging.message_payload_size_bytes"
+    MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES = (
+        "messaging.message_payload_size_bytes"
+    )
     """
     The (uncompressed) size of the message payload in bytes. Also use this attribute if it is unknown whether the compressed or uncompressed payload size is reported.
     """
 
-    MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES = "messaging.message_payload_compressed_size_bytes"
+    MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES = (
+        "messaging.message_payload_compressed_size_bytes"
+    )
     """
     The compressed size of the message payload in bytes.
     """
@@ -472,17 +483,23 @@ clear whether the exception will escape.
     The JSON-serialized value of each item in the `ConsumedCapacity` response field.
     """
 
-    AWS_DYNAMODB_ITEM_COLLECTION_METRICS = "aws.dynamodb.item_collection_metrics"
+    AWS_DYNAMODB_ITEM_COLLECTION_METRICS = (
+        "aws.dynamodb.item_collection_metrics"
+    )
     """
     The JSON-serialized value of the `ItemCollectionMetrics` response field.
     """
 
-    AWS_DYNAMODB_PROVISIONED_READ_CAPACITY = "aws.dynamodb.provisioned_read_capacity"
+    AWS_DYNAMODB_PROVISIONED_READ_CAPACITY = (
+        "aws.dynamodb.provisioned_read_capacity"
+    )
     """
     The value of the `ProvisionedThroughput.ReadCapacityUnits` request parameter.
     """
 
-    AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY = "aws.dynamodb.provisioned_write_capacity"
+    AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY = (
+        "aws.dynamodb.provisioned_write_capacity"
+    )
     """
     The value of the `ProvisionedThroughput.WriteCapacityUnits` request parameter.
     """
@@ -517,12 +534,16 @@ clear whether the exception will escape.
     The value of the `Select` request parameter.
     """
 
-    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEXES = "aws.dynamodb.global_secondary_indexes"
+    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEXES = (
+        "aws.dynamodb.global_secondary_indexes"
+    )
     """
     The JSON-serialized value of each item of the `GlobalSecondaryIndexes` request field.
     """
 
-    AWS_DYNAMODB_LOCAL_SECONDARY_INDEXES = "aws.dynamodb.local_secondary_indexes"
+    AWS_DYNAMODB_LOCAL_SECONDARY_INDEXES = (
+        "aws.dynamodb.local_secondary_indexes"
+    )
     """
     The JSON-serialized value of each item of the `LocalSecondaryIndexes` request field.
     """
@@ -567,7 +588,9 @@ clear whether the exception will escape.
     The JSON-serialized value of each item in the `AttributeDefinitions` request field.
     """
 
-    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEX_UPDATES = "aws.dynamodb.global_secondary_index_updates"
+    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEX_UPDATES = (
+        "aws.dynamodb.global_secondary_index_updates"
+    )
     """
     The JSON-serialized value of each item in the the `GlobalSecondaryIndexUpdates` request field.
     """
@@ -632,6 +655,7 @@ clear whether the exception will escape.
     """
     `error.message` property of response if it is an error response.
     """
+
 
 class DbSystemValues(Enum):
     OTHER_SQL = "other_sql"
@@ -957,4 +981,3 @@ class RpcGrpcStatusCodeValues(Enum):
 
     UNAUTHENTICATED = 16
     """UNAUTHENTICATED."""
-

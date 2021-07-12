@@ -14,6 +14,7 @@
 
 from enum import Enum
 
+
 class ResourceAttributes:
     CLOUD_PROVIDER = "cloud.provider"
     """
@@ -457,6 +458,7 @@ As an alternative, consider setting `faas.id` as a span attribute instead.
     Additional description of the web engine (e.g. detailed version and edition information).
     """
 
+
 class CloudProviderValues(Enum):
     AWS = "aws"
     """Amazon Web Services."""
@@ -611,4 +613,3 @@ class TelemetrySdkLanguageValues(Enum):
 
     WEBJS = "webjs"
     """webjs."""
-
