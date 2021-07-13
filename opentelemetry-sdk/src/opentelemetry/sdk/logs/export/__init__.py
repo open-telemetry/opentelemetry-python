@@ -13,10 +13,17 @@
 # limitations under the License.
 
 import abc
+import collections
 import enum
-from typing import Sequence
+import logging
+import threading
+from typing import Deque, List, Optional, Sequence
 
-from opentelemetry.sdk.logs import LogData
+from opentelemetry.context import attach, detach, set_value
+from opentelemetry.sdk.logs import LogData, LogProcessor
+from opentelemetry.util._time import _time_ns
+
+_logger = logging.getLogger(__name__)
 
 
 class LogExportResult(enum.Enum):
@@ -51,3 +58,215 @@ class LogExporter(abc.ABC):
 
         Called when the SDK is shut down.
         """
+
+
+class SimpleLogProcessor(LogProcessor):
+    """This is an implementation of LogProcessor which passes
+    received logs in the export-friendly LogData representation to the
+    configured LogExporter, as soon as they are emitted.
+    """
+
+    def __init__(self, exporter: LogExporter):
+        self._exporter = exporter
+        self._shutdown = False
+
+    def emit(self, log_data: LogData):
+        if self._shutdown:
+            _logger.warning("Processor is already shutdown, ignoring call")
+            return
+        token = attach(set_value("suppress_instrumentation", True))
+        try:
+            self._exporter.export((log_data,))
+        except Exception:  # pylint: disable=broad-except
+            _logger.exception("Exception while exporting logs.")
+        detach(token)
+
+    def shutdown(self):
+        self._shutdown = True
+        self._exporter.shutdown()
+
+    def force_flush(
+        self, timeout_millis: int = 30000
+    ) -> bool:  # pylint: disable=no-self-use
+        return True
+
+
+class _FlushRequest:
+    __slots__ = ["event", "num_log_records"]
+
+    def __init__(self):
+        self.event = threading.Event()
+        self.num_log_records = 0
+
+
+class BatchLogProcessor(LogProcessor):
+    """This is an implementation of LogProcessor which creates batches of
+    received logs in the export-friendly LogData representation and
+    send to the configured LogExporter, as soon as they are emitted.
+    """
+
+    def __init__(
+        self,
+        exporter: LogExporter,
+        schedule_delay_millis: int = 5000,
+        max_export_batch_size: int = 512,
+        export_timeout_millis: int = 30000,
+    ):
+        self._exporter = exporter
+        self._schedule_delay_millis = schedule_delay_millis
+        self._max_export_batch_size = max_export_batch_size
+        self._export_timeout_millis = export_timeout_millis
+        self._queue = collections.deque()  # type: Deque[LogData]
+        self._worker_thread = threading.Thread(target=self.worker, daemon=True)
+        self._condition = threading.Condition(threading.Lock())
+        self._shutdown = False
+        self._flush_request = None  # type: Optional[_FlushRequest]
+        self._log_records = [
+            None
+        ] * self._max_export_batch_size  # type: List[Optional[LogData]]
+        self._worker_thread.start()
+
+    def worker(self):
+        timeout = self._schedule_delay_millis / 1e3
+        flush_request = None  # type: Optional[_FlushRequest]
+        while not self._shutdown:
+            with self._condition:
+                if self._shutdown:
+                    # shutdown may have been called, avoid further processing
+                    break
+                flush_request = self._get_and_unset_flush_request()
+                if (
+                    len(self._queue) < self._max_export_batch_size
+                    and self._flush_request is None
+                ):
+                    self._condition.wait(timeout)
+
+                    flush_request = self._get_and_unset_flush_request()
+                    if not self._queue:
+                        timeout = self._schedule_delay_millis / 1e3
+                        self._notify_flush_request_finished(flush_request)
+                        flush_request = None
+                        continue
+                    if self._shutdown:
+                        break
+
+            start_ns = _time_ns()
+            self._export(flush_request)
+            end_ns = _time_ns()
+            # subtract the duration of this export call to the next timeout
+            timeout = self._schedule_delay_millis / 1e3 - (
+                (end_ns - start_ns) / 1e9
+            )
+
+            self._notify_flush_request_finished(flush_request)
+            flush_request = None
+
+        # there might have been a new flush request while export was running
+        # and before the done flag switched to true
+        with self._condition:
+            shutdown_flush_request = self._get_and_unset_flush_request()
+
+        # flush the remaining logs
+        self._drain_queue()
+        self._notify_flush_request_finished(flush_request)
+        self._notify_flush_request_finished(shutdown_flush_request)
+
+    def _export(self, flush_request: Optional[_FlushRequest] = None):
+        """Exports logs considering the given flush_request.
+
+        If flush_request is not None then logs are exported in batches
+        until the number of exported logs reached or exceeded the num of logs in
+        flush_request, otherwise exports at max max_export_batch_size logs.
+        """
+        if flush_request is None:
+            self._export_batch()
+            return
+
+        num_log_records = flush_request.num_log_records
+        while self._queue:
+            exported = self._export_batch()
+            num_log_records -= exported
+
+            if num_log_records <= 0:
+                break
+
+    def _export_batch(self) -> int:
+        """Exports at most max_export_batch_size logs and returns the number of
+        exported logs.
+        """
+        idx = 0
+        while idx < self._max_export_batch_size and self._queue:
+            record = self._queue.pop()
+            self._log_records[idx] = record
+            idx += 1
+        token = attach(set_value("suppress_instrumentation", True))
+        try:
+            self._exporter.export(self._log_records[:idx])  # type: ignore
+        except Exception:  # pylint: disable=broad-except
+            _logger.exception("Exception while exporting logs.")
+        detach(token)
+
+        for index in range(idx):
+            self._log_records[index] = None
+        return idx
+
+    def _drain_queue(self):
+        """Export all elements until queue is empty.
+
+        Can only be called from the worker thread context because it invokes
+        `export` that is not thread safe.
+        """
+        while self._queue:
+            self._export_batch()
+
+    def _get_and_unset_flush_request(self) -> Optional[_FlushRequest]:
+        flush_request = self._flush_request
+        self._flush_request = None
+        if flush_request is not None:
+            flush_request.num_log_records = len(self._queue)
+        return flush_request
+
+    @staticmethod
+    def _notify_flush_request_finished(
+        flush_request: Optional[_FlushRequest] = None,
+    ):
+        if flush_request is not None:
+            flush_request.event.set()
+
+    def _get_or_create_flush_request(self) -> _FlushRequest:
+        if self._flush_request is None:
+            self._flush_request = _FlushRequest()
+        return self._flush_request
+
+    def emit(self, log_data: LogData) -> None:
+        """Adds the `LogData` to queue and notifies the waiting threads
+        when size of queue reaches max_export_batch_size.
+        """
+        if self._shutdown:
+            return
+        self._queue.appendleft(log_data)
+        if len(self._queue) >= self._max_export_batch_size:
+            with self._condition:
+                self._condition.notify()
+
+    def shutdown(self):
+        self._shutdown = True
+        with self._condition:
+            self._condition.notify_all()
+        self._worker_thread.join()
+        self._exporter.shutdown()
+
+    def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
+        if timeout_millis is None:
+            timeout_millis = self._export_timeout_millis
+        if self._shutdown:
+            return True
+
+        with self._condition:
+            flush_request = self._get_or_create_flush_request()
+            self._condition.notify_all()
+
+        ret = flush_request.event.wait()
+        if not ret:
+            _logger.warning("Timeout was exceeded in force_flush().")
+        return ret
