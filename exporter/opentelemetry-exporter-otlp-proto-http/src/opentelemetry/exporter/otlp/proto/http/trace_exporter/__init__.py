@@ -68,7 +68,7 @@ class OTLPSpanExporter(SpanExporter):
         )
         self._certificate_file = certificate_file or environ.get(
             OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
-            environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, False),
+            environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
         )
         self._headers = headers or _headers_from_env()
         self._timeout = timeout or int(
