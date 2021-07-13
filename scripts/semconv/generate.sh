@@ -4,7 +4,8 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOT_DIR="${SCRIPT_DIR}/../../"
 
 # freeze the spec version to make SemanticAttributes generation reproducible
-SPEC_VERSION=v1.1.0
+SPEC_VERSION=v1.5.0
+OTEL_SEMCONV_GEN_IMG_VERSION=0.4.1
 
 cd ${SCRIPT_DIR}
 
@@ -22,7 +23,7 @@ docker run --rm \
   -v ${SCRIPT_DIR}/opentelemetry-specification/semantic_conventions/trace:/source \
   -v ${SCRIPT_DIR}/templates:/templates \
   -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/trace/:/output \
-  otel/semconvgen:0.2.1 \
+  otel/semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
   -f /source code \
   --template /templates/semantic_attributes.j2 \
   --output /output/__init__.py \
@@ -31,8 +32,8 @@ docker run --rm \
 docker run --rm \
   -v ${SCRIPT_DIR}/opentelemetry-specification/semantic_conventions/resource:/source \
   -v ${SCRIPT_DIR}/templates:/templates \
-  -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/resources/:/output \
-  otel/semconvgen:0.2.1 \
+  -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/resource/:/output \
+  otel/semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
   -f /source code \
   --template /templates/semantic_attributes.j2 \
   --output /output/__init__.py \

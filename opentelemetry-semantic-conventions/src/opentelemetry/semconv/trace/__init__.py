@@ -16,6 +16,12 @@ from enum import Enum
 
 
 class SpanAttributes:
+    AWS_LAMBDA_INVOKED_ARN = "aws.lambda.invoked_arn"
+    """
+    The full invoked ARN as provided on the `Context` passed to the function (`Lambda-Runtime-Invoked-Function-Arn` header on the `/runtime/invocation/next` applicable).
+    Note: This may be different from `faas.id` if an alias is involved.
+    """
+
     DB_SYSTEM = "db.system"
     """
     An identifier for the database management system (DBMS) product being used. See below for a list of well-known identifiers.
@@ -450,9 +456,153 @@ clear whether the exception will escape.
     The line number in `code.filepath` best representing the operation. It SHOULD point within the code unit named in `code.function`.
     """
 
+    RPC_SYSTEM = "rpc.system"
+    """
+    The value `aws-api`.
+    """
+
+    RPC_SERVICE = "rpc.service"
+    """
+    The name of the service to which a request is made, as returned by the AWS SDK.
+    Note: This is the logical name of the service from the RPC interface perspective, which can be different from the name of any implementing class. The `code.namespace` attribute may be used to store the latter (despite the attribute name, it may include a class name; e.g., class with method actually executing the call on the server side, RPC client stub class on the client side).
+    """
+
+    RPC_METHOD = "rpc.method"
+    """
+    The name of the operation corresponding to the request, as returned by the AWS SDK.
+    Note: This is the logical name of the method from the RPC interface perspective, which can be different from the name of any implementing method/function. The `code.function` attribute may be used to store the latter (e.g., method actually executing the call on the server side, RPC client stub method on the client side).
+    """
+
+    AWS_DYNAMODB_TABLE_NAMES = "aws.dynamodb.table_names"
+    """
+    The keys in the `RequestItems` object field.
+    """
+
+    AWS_DYNAMODB_CONSUMED_CAPACITY = "aws.dynamodb.consumed_capacity"
+    """
+    The JSON-serialized value of each item in the `ConsumedCapacity` response field.
+    """
+
+    AWS_DYNAMODB_ITEM_COLLECTION_METRICS = (
+        "aws.dynamodb.item_collection_metrics"
+    )
+    """
+    The JSON-serialized value of the `ItemCollectionMetrics` response field.
+    """
+
+    AWS_DYNAMODB_PROVISIONED_READ_CAPACITY = (
+        "aws.dynamodb.provisioned_read_capacity"
+    )
+    """
+    The value of the `ProvisionedThroughput.ReadCapacityUnits` request parameter.
+    """
+
+    AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY = (
+        "aws.dynamodb.provisioned_write_capacity"
+    )
+    """
+    The value of the `ProvisionedThroughput.WriteCapacityUnits` request parameter.
+    """
+
+    AWS_DYNAMODB_CONSISTENT_READ = "aws.dynamodb.consistent_read"
+    """
+    The value of the `ConsistentRead` request parameter.
+    """
+
+    AWS_DYNAMODB_PROJECTION = "aws.dynamodb.projection"
+    """
+    The value of the `ProjectionExpression` request parameter.
+    """
+
+    AWS_DYNAMODB_LIMIT = "aws.dynamodb.limit"
+    """
+    The value of the `Limit` request parameter.
+    """
+
+    AWS_DYNAMODB_ATTRIBUTES_TO_GET = "aws.dynamodb.attributes_to_get"
+    """
+    The value of the `AttributesToGet` request parameter.
+    """
+
+    AWS_DYNAMODB_INDEX_NAME = "aws.dynamodb.index_name"
+    """
+    The value of the `IndexName` request parameter.
+    """
+
+    AWS_DYNAMODB_SELECT = "aws.dynamodb.select"
+    """
+    The value of the `Select` request parameter.
+    """
+
+    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEXES = (
+        "aws.dynamodb.global_secondary_indexes"
+    )
+    """
+    The JSON-serialized value of each item of the `GlobalSecondaryIndexes` request field.
+    """
+
+    AWS_DYNAMODB_LOCAL_SECONDARY_INDEXES = (
+        "aws.dynamodb.local_secondary_indexes"
+    )
+    """
+    The JSON-serialized value of each item of the `LocalSecondaryIndexes` request field.
+    """
+
+    AWS_DYNAMODB_EXCLUSIVE_START_TABLE = "aws.dynamodb.exclusive_start_table"
+    """
+    The value of the `ExclusiveStartTableName` request parameter.
+    """
+
+    AWS_DYNAMODB_TABLE_COUNT = "aws.dynamodb.table_count"
+    """
+    The the number of items in the `TableNames` response parameter.
+    """
+
+    AWS_DYNAMODB_SCAN_FORWARD = "aws.dynamodb.scan_forward"
+    """
+    The value of the `ScanIndexForward` request parameter.
+    """
+
+    AWS_DYNAMODB_SEGMENT = "aws.dynamodb.segment"
+    """
+    The value of the `Segment` request parameter.
+    """
+
+    AWS_DYNAMODB_TOTAL_SEGMENTS = "aws.dynamodb.total_segments"
+    """
+    The value of the `TotalSegments` request parameter.
+    """
+
+    AWS_DYNAMODB_COUNT = "aws.dynamodb.count"
+    """
+    The value of the `Count` response parameter.
+    """
+
+    AWS_DYNAMODB_SCANNED_COUNT = "aws.dynamodb.scanned_count"
+    """
+    The value of the `ScannedCount` response parameter.
+    """
+
+    AWS_DYNAMODB_ATTRIBUTE_DEFINITIONS = "aws.dynamodb.attribute_definitions"
+    """
+    The JSON-serialized value of each item in the `AttributeDefinitions` request field.
+    """
+
+    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEX_UPDATES = (
+        "aws.dynamodb.global_secondary_index_updates"
+    )
+    """
+    The JSON-serialized value of each item in the the `GlobalSecondaryIndexUpdates` request field.
+    """
+
     MESSAGING_OPERATION = "messaging.operation"
     """
     A string identifying the kind of message consumption as defined in the [Operation names](#operation-names) section above. If the operation is "send", this attribute MUST NOT be set, since the operation can be inferred from the span kind in that case.
+    """
+
+    MESSAGING_RABBITMQ_ROUTING_KEY = "messaging.rabbitmq.routing_key"
+    """
+    RabbitMQ message routing key.
     """
 
     MESSAGING_KAFKA_MESSAGE_KEY = "messaging.kafka.message_key"
@@ -481,24 +631,29 @@ clear whether the exception will escape.
     A boolean that is true if the message is a tombstone.
     """
 
-    RPC_SYSTEM = "rpc.system"
-    """
-    A string identifying the remoting system.
-    """
-
-    RPC_SERVICE = "rpc.service"
-    """
-    The full name of the service being called, including its package name, if applicable.
-    """
-
-    RPC_METHOD = "rpc.method"
-    """
-    The name of the method being called, must be equal to the $method part in the span name.
-    """
-
     RPC_GRPC_STATUS_CODE = "rpc.grpc.status_code"
     """
     The [numeric status code](https://github.com/grpc/grpc/blob/v1.33.2/doc/statuscodes.md) of the gRPC request.
+    """
+
+    RPC_JSONRPC_VERSION = "rpc.jsonrpc.version"
+    """
+    Protocol version as in `jsonrpc` property of request/response. Since JSON-RPC 1.0 does not specify this, the value can be omitted.
+    """
+
+    RPC_JSONRPC_REQUEST_ID = "rpc.jsonrpc.request_id"
+    """
+    `id` property of request or response. Since protocol allows id to be int, string, `null` or missing (for notifications), value is expected to be cast to string for simplicity. Use empty string in case of `null` value. Omit entirely if this is a notification.
+    """
+
+    RPC_JSONRPC_ERROR_CODE = "rpc.jsonrpc.error_code"
+    """
+    `error.code` property of response if it is an error response.
+    """
+
+    RPC_JSONRPC_ERROR_MESSAGE = "rpc.jsonrpc.error_message"
+    """
+    `error.message` property of response if it is an error response.
     """
 
 
@@ -638,18 +793,24 @@ class DbSystemValues(Enum):
     ELASTICSEARCH = "elasticsearch"
     """Elasticsearch."""
 
+    MEMCACHED = "memcached"
+    """Memcached."""
+
+    COCKROACHDB = "cockroachdb"
+    """CockroachDB."""
+
 
 class NetTransportValues(Enum):
-    IP_TCP = "IP.TCP"
-    """IP.TCP."""
+    IP_TCP = "ip_tcp"
+    """ip_tcp."""
 
-    IP_UDP = "IP.UDP"
-    """IP.UDP."""
+    IP_UDP = "ip_udp"
+    """ip_udp."""
 
-    IP = "IP"
+    IP = "ip"
     """Another IP-based protocol."""
 
-    UNIX = "Unix"
+    UNIX = "unix"
     """Unix Domain socket. See below."""
 
     PIPE = "pipe"
@@ -663,38 +824,38 @@ class NetTransportValues(Enum):
 
 
 class DbCassandraConsistencyLevelValues(Enum):
-    ALL = "ALL"
-    """ALL."""
+    ALL = "all"
+    """all."""
 
-    EACH_QUORUM = "EACH_QUORUM"
-    """EACH_QUORUM."""
+    EACH_QUORUM = "each_quorum"
+    """each_quorum."""
 
-    QUORUM = "QUORUM"
-    """QUORUM."""
+    QUORUM = "quorum"
+    """quorum."""
 
-    LOCAL_QUORUM = "LOCAL_QUORUM"
-    """LOCAL_QUORUM."""
+    LOCAL_QUORUM = "local_quorum"
+    """local_quorum."""
 
-    ONE = "ONE"
-    """ONE."""
+    ONE = "one"
+    """one."""
 
-    TWO = "TWO"
-    """TWO."""
+    TWO = "two"
+    """two."""
 
-    THREE = "THREE"
-    """THREE."""
+    THREE = "three"
+    """three."""
 
-    LOCAL_ONE = "LOCAL_ONE"
-    """LOCAL_ONE."""
+    LOCAL_ONE = "local_one"
+    """local_one."""
 
-    ANY = "ANY"
-    """ANY."""
+    ANY = "any"
+    """any."""
 
-    SERIAL = "SERIAL"
-    """SERIAL."""
+    SERIAL = "serial"
+    """serial."""
 
-    LOCAL_SERIAL = "LOCAL_SERIAL"
-    """LOCAL_SERIAL."""
+    LOCAL_SERIAL = "local_serial"
+    """local_serial."""
 
 
 class FaasTriggerValues(Enum):
@@ -755,7 +916,7 @@ class FaasInvokedProviderValues(Enum):
     """Amazon Web Services."""
 
     AZURE = "azure"
-    """Amazon Web Services."""
+    """Microsoft Azure."""
 
     GCP = "gcp"
     """Google Cloud Platform."""
