@@ -17,7 +17,6 @@ import logging
 import threading
 from collections import OrderedDict
 from collections.abc import MutableMapping
-from types import MappingProxyType
 from typing import MutableSequence, Optional, Sequence
 
 from opentelemetry.util import types
@@ -38,9 +37,10 @@ def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
             i.e. it MUST NOT contain values of different types.
     """
 
+    if isinstance(value, _VALID_ATTR_VALUE_TYPES):
+        return True
+
     if isinstance(value, Sequence):
-        if len(value) == 0:
-            return True
 
         sequence_first_valid_type = None
         for element in value:
@@ -69,16 +69,15 @@ def _is_valid_attribute_value(value: types.AttributeValue) -> bool:
                     type(element).__name__,
                 )
                 return False
+        return True
 
-    elif not isinstance(value, _VALID_ATTR_VALUE_TYPES):
-        _logger.warning(
-            "Invalid type %s for attribute value. Expected one of %s or a "
-            "sequence of those types",
-            type(value).__name__,
-            [valid_type.__name__ for valid_type in _VALID_ATTR_VALUE_TYPES],
-        )
-        return False
-    return True
+    _logger.warning(
+        "Invalid type %s for attribute value. Expected one of %s or a "
+        "sequence of those types",
+        type(value).__name__,
+        [valid_type.__name__ for valid_type in _VALID_ATTR_VALUE_TYPES],
+    )
+    return False
 
 
 def _filter_attributes(attributes: types.Attributes) -> None:
