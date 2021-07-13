@@ -48,7 +48,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         exporter = OTLPSpanExporter()
 
         self.assertEqual(exporter._endpoint, DEFAULT_ENDPOINT)
-        self.assertEqual(exporter._certificate_file, False)
+        self.assertEqual(exporter._certificate_file, True)
         self.assertEqual(exporter._timeout, DEFAULT_TIMEOUT)
         self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
         self.assertEqual(exporter._headers, {})
