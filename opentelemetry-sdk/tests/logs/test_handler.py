@@ -37,7 +37,7 @@ class TestOTLPHandler(unittest.TestCase):
         logger.debug("Debug message")
         self.assertEqual(emitter_mock.emit.call_count, 0)
         # Assert emit gets called for warning message
-        logger.warning("Wanrning message")
+        logger.warning("Warning message")
         self.assertEqual(emitter_mock.emit.call_count, 1)
 
     def test_handler_custom_log_level(self):
@@ -54,7 +54,7 @@ class TestOTLPHandler(unittest.TestCase):
         emitter_mock = Mock(spec=LogEmitter)
         logger = get_logger(log_emitter=emitter_mock)
         # Assert emit gets called for warning message
-        logger.warning("Wanrning message")
+        logger.warning("Warning message")
         args, _ = emitter_mock.emit.call_args_list[0]
         log_record = args[0]
 
