@@ -283,16 +283,11 @@ class OTLPHandler(logging.Handler):
         self,
         level=logging.NOTSET,
         log_emitter=None,
-        *,
-        attributes_key: Optional[str] = None,
     ) -> None:
         super().__init__(level=level)
         self._log_emitter = log_emitter or get_log_emitter(__name__)
-        self.attributes_key = attributes_key
 
     def _get_attributes(self, record: logging.LogRecord) -> Attributes:
-        if self.attributes_key is not None:
-            return vars(record)[self.attributes_key]
         return {
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }

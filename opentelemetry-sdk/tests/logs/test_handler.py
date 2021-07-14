@@ -77,30 +77,6 @@ class TestOTLPHandler(unittest.TestCase):
         self.assertIsNotNone(log_record)
         self.assertEqual(log_record.attributes, {"http.status_code": 200})
 
-    def test_log_record_user_attributes_key(self):
-        """Users can specify a key to extract attributes from"""
-        emitter_mock = Mock(spec=LogEmitter)
-        logger = logging.getLogger(__name__)
-        handler = OTLPHandler(
-            level=logging.NOTSET,
-            log_emitter=emitter_mock,
-            attributes_key="opentelemetry",
-        )
-        logger.addHandler(handler)
-        # Assert emit gets called for warning message
-        logger.warning(
-            "Warning message",
-            extra={
-                "opentelemetry": {"http.status_code": 200},
-                "ignored": True,
-            },
-        )
-        args, _ = emitter_mock.emit.call_args_list[0]
-        log_record = args[0]
-
-        self.assertIsNotNone(log_record)
-        self.assertEqual(log_record.attributes, {"http.status_code": 200})
-
     def test_log_record_trace_correlation(self):
         emitter_mock = Mock(spec=LogEmitter)
         logger = get_logger(log_emitter=emitter_mock)
