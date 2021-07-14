@@ -70,7 +70,7 @@ class TestOTLPHandler(unittest.TestCase):
         emitter_mock = Mock(spec=LogEmitter)
         logger = get_logger(log_emitter=emitter_mock)
         # Assert emit gets called for warning message
-        logger.warning("Wanrning message", extra={"http.status_code": 200})
+        logger.warning("Warning message", extra={"http.status_code": 200})
         args, _ = emitter_mock.emit.call_args_list[0]
         log_record = args[0]
 
@@ -89,7 +89,7 @@ class TestOTLPHandler(unittest.TestCase):
         logger.addHandler(handler)
         # Assert emit gets called for warning message
         logger.warning(
-            "Wanrning message",
+            "Warning message",
             extra={
                 "opentelemetry": {"http.status_code": 200},
                 "ignored": True,
