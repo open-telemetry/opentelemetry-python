@@ -66,7 +66,7 @@ class TestOTLPHandler(unittest.TestCase):
         )
 
     def test_log_record_user_attributes(self):
-        """Attributes can be injected into logs by adding them as attributes to the LogRecord"""
+        """Attributes can be injected into logs by adding them to the LogRecord"""
         emitter_mock = Mock(spec=LogEmitter)
         logger = get_logger(log_emitter=emitter_mock)
         # Assert emit gets called for warning message
