@@ -99,8 +99,10 @@ class TestOTLPHandler(unittest.TestCase):
         log_record = args[0]
 
         self.assertIsNotNone(log_record)
-        self.assertEqual(log_record.attributes, {"http.status_code": 200, "foobar": "WARNING"})
-
+        self.assertEqual(
+            log_record.attributes,
+            {"http.status_code": 200, "foobar": "WARNING"},
+        )
 
     def test_log_record_trace_correlation(self):
         emitter_mock = Mock(spec=LogEmitter)
