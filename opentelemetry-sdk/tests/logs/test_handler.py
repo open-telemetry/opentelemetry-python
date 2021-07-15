@@ -15,6 +15,7 @@
 import logging
 import unittest
 from unittest.mock import Mock
+from uuid import uuid4
 
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.logs import LogEmitter, OTLPHandler
@@ -76,6 +77,30 @@ class TestOTLPHandler(unittest.TestCase):
 
         self.assertIsNotNone(log_record)
         self.assertEqual(log_record.attributes, {"http.status_code": 200})
+
+    def test_log_record_include_LogRecord_attribute(self):
+        """Users can include LogRecord attributes by giving them a non-colliding name"""
+        emitter_mock = Mock(spec=LogEmitter)
+        # a unique logger to avoid messing with other tests
+        logger = logging.getLogger(str(uuid4()).replace("-", "."))
+        handler = OTLPHandler(level=logging.NOTSET, log_emitter=emitter_mock)
+        logger.addHandler(handler)
+
+        def filter(record: logging.LogRecord) -> bool:
+            record.foobar = record.levelname
+            return True
+
+        handler.addFilter(filter)
+
+        # Assert emit gets called for warning message
+        logger.warning("Warning message", extra={"http.status_code": 200})
+
+        args, _ = emitter_mock.emit.call_args_list[0]
+        log_record = args[0]
+
+        self.assertIsNotNone(log_record)
+        self.assertEqual(log_record.attributes, {"http.status_code": 200, "foobar": "WARNING"})
+
 
     def test_log_record_trace_correlation(self):
         emitter_mock = Mock(spec=LogEmitter)
