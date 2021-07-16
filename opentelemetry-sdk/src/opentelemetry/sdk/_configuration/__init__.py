@@ -32,7 +32,6 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
 
-
 _EXPORTER_OTLP = "otlp"
 _EXPORTER_OTLP_SPAN = "otlp_proto_grpc_span"
 
@@ -69,9 +68,7 @@ def _init_tracing(
 ):
     # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
     # from the env variable else defaults to "unknown_service"
-    provider = TracerProvider(
-        id_generator=id_generator(),
-    )
+    provider = TracerProvider(id_generator=id_generator(),)
     trace.set_tracer_provider(provider)
 
     for _, exporter_class in exporters.items():
