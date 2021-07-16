@@ -23,6 +23,7 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 
 Answer the following question based on these examples of changes that would require a Contrib Repo Change:
 - [The OTel specification](https://github.com/open-telemetry/opentelemetry-specification) has changed which prompted this PR to update the method interfaces of `opentelemetry-api/` or `opentelemetry-sdk/`
+- The method interfaces of `opentelemetry-instrumentation/` have changed
 - The method interfaces of `test/util` have changed
 - Scripts in `scripts/` that were copied over to the Contrib repo have changed
 - Configuration files that were copied over to the Contrib repo have changed (when consistency between repositories is applicable) such as in
