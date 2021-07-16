@@ -13,13 +13,10 @@
 # limitations under the License.
 #
 import os
-from logging import getLogger
 
 from opentelemetry.environment_variables import OTEL_TRACES_EXPORTER
 from opentelemetry.instrumentation.distro import BaseDistro
 from opentelemetry.sdk._configuration import _OTelSDKConfigurator
-
-logger = getLogger(__file__)
 
 
 class OpenTelemetryConfigurator(_OTelSDKConfigurator):

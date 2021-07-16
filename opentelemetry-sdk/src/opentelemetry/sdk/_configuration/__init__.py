@@ -17,8 +17,6 @@
 OpenTelemetry SDK Configurator for Easy Instrumentation with Distros
 """
 
-import os
-from logging import getLogger
 from os import environ
 from typing import Sequence, Tuple
 
@@ -33,8 +31,6 @@ from opentelemetry.instrumentation.configurator import BaseConfigurator
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
-
-logger = getLogger(__file__)
 
 
 _EXPORTER_OTLP = "otlp"
