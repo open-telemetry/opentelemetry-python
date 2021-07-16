@@ -68,7 +68,9 @@ def _init_tracing(
 ):
     # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
     # from the env variable else defaults to "unknown_service"
-    provider = TracerProvider(id_generator=id_generator(),)
+    provider = TracerProvider(
+        id_generator=id_generator(),
+    )
     trace.set_tracer_provider(provider)
 
     for _, exporter_class in exporters.items():
