@@ -105,16 +105,16 @@ Instrumentation package.
 Disabling Django Instrumentation
 --------------------------------
 
-Django's instrumentation can be disabled by setting the following environment variable.
+Django's instrumentation can be disabled by setting the following environment variable:
 
-#. ``export OTEL_PYTHON_DJANGO_INSTRUMENT=False``
+``export OTEL_PYTHON_DJANGO_INSTRUMENT=False``
 
 Auto Instrumentation
 --------------------
 
 This same example can be run using auto instrumentation. Comment out the call
 to ``DjangoInstrumento().instrument()`` in ``main``, then Run the django app
-with ``opentelemetry-instrumentation python manage.py runserver --noreload``.
+with ``opentelemetry-instrument python manage.py runserver --noreload``.
 Repeat the steps with the client, the result should be the same.
 
 Usage with Auto Instrumentation and uWSGI
@@ -123,15 +123,12 @@ Usage with Auto Instrumentation and uWSGI
 uWSGI and Django can be used together with auto instrumentation. To do so,
 first install uWSGI in the previous virtual environment:
 
-```
-pip install uwsgi
-```
+``pip install uwsgi``
+
 Once that is done, run the server with ``uwsgi`` from the directory that
 contains ``instrumentation_example``:
 
-```
-opentelemetry-instrument uwsgi --http :8000 --module instrumentation_example.wsgi
-```
+``opentelemetry-instrument uwsgi --http :8000 --module instrumentation_example.wsgi``
 
 This should start one uWSGI worker in your console. Open up a browser and point
 it to ``localhost:8000``. This request should display a span exported in the
