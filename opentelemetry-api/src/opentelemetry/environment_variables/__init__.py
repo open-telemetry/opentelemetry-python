@@ -11,33 +11,48 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# type: ignore
 
-OTEL_PROPAGATORS = "OTEL_PROPAGATORS"
-"""
-.. envvar:: OTEL_PROPAGATORS
-"""
+from logging import getLogger
+from sys import modules
 
-OTEL_PYTHON_CONTEXT = "OTEL_PYTHON_CONTEXT"
-"""
-.. envvar:: OTEL_PYTHON_CONTEXT
-"""
+from pkg_resources import iter_entry_points
 
-OTEL_PYTHON_DISABLED_INSTRUMENTATIONS = "OTEL_PYTHON_DISABLED_INSTRUMENTATIONS"
-"""
-.. envvar:: OTEL_PYTHON_DISABLED_INSTRUMENTATIONS
-"""
+_logger = getLogger(__name__)
 
-OTEL_PYTHON_ID_GENERATOR = "OTEL_PYTHON_ID_GENERATOR"
-"""
-.. envvar:: OTEL_PYTHON_ID_GENERATOR
-"""
+_loaded = False
 
-OTEL_TRACES_EXPORTER = "OTEL_TRACES_EXPORTER"
-"""
-.. envvar:: OTEL_TRACES_EXPORTER
-"""
+_current_module = modules[__name__]
+_current_module_attributes = set(dir(_current_module))
 
-OTEL_PYTHON_TRACER_PROVIDER = "OTEL_PYTHON_TRACER_PROVIDER"
-"""
-.. envvar:: OTEL_PYTHON_TRACER_PROVIDER
-"""
+if not _loaded:
+    for entry_point in iter_entry_points(
+        "opentelemetry_environment_variables"
+    ):
+
+        other_module = entry_point.load()
+
+        for attribute in dir(other_module):
+
+            if attribute.startswith("OTEL_"):
+
+                value = getattr(other_module, attribute)
+
+                if attribute in _current_module_attributes:
+                    # pylint: disable=logging-not-lazy
+                    # pylint: disable=logging-format-interpolation
+                    _logger.warning(
+                        "Overriding value of {} with {}".format(
+                            attribute, value
+                        )
+                    )
+
+                setattr(
+                    _current_module,
+                    attribute,
+                    getattr(other_module, attribute),
+                )
+
+                _current_module_attributes.add(attribute)
+
+_loaded = True

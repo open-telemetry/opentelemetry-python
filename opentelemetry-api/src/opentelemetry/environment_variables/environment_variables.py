@@ -11,18 +11,28 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# pylint: disable=no-name-in-module
 
-from os import environ
+OTEL_PROPAGATORS = "OTEL_PROPAGATORS"
+"""
+.. envvar:: OTEL_PROPAGATORS
+"""
 
-from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
+OTEL_PYTHON_CONTEXT = "OTEL_PYTHON_CONTEXT"
+"""
+.. envvar:: OTEL_PYTHON_CONTEXT
+"""
 
+OTEL_PYTHON_ID_GENERATOR = "OTEL_PYTHON_ID_GENERATOR"
+"""
+.. envvar:: OTEL_PYTHON_ID_GENERATOR
+"""
 
-def pytest_sessionstart(session):
-    # pylint: disable=unused-argument
-    environ[OTEL_PYTHON_CONTEXT] = "contextvars_context"
+OTEL_TRACES_EXPORTER = "OTEL_TRACES_EXPORTER"
+"""
+.. envvar:: OTEL_TRACES_EXPORTER
+"""
 
-
-def pytest_sessionfinish(session):
-    # pylint: disable=unused-argument
-    environ.pop(OTEL_PYTHON_CONTEXT)
+OTEL_PYTHON_TRACER_PROVIDER = "OTEL_PYTHON_TRACER_PROVIDER"
+"""
+.. envvar:: OTEL_PYTHON_TRACER_PROVIDER
+"""

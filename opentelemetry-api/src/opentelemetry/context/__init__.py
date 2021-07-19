@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# pylint: disable=no-name-in-module
 
 import logging
 import threading
@@ -22,7 +23,9 @@ from os import environ
 from pkg_resources import iter_entry_points
 
 from opentelemetry.context.context import Context, _RuntimeContext
-from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
+from opentelemetry.environment_variables import (
+    OTEL_PYTHON_CONTEXT,  # type: ignore
+)
 
 logger = logging.getLogger(__name__)
 _RUNTIME_CONTEXT = None  # type: typing.Optional[_RuntimeContext]
@@ -52,7 +55,7 @@ def _load_runtime_context(func: _F) -> _F:
                 default_context = "contextvars_context"
 
                 configured_context = environ.get(
-                    OTEL_PYTHON_CONTEXT, default_context
+                    OTEL_PYTHON_CONTEXT, default_context  # type: ignore
                 )  # type: str
                 try:
                     _RUNTIME_CONTEXT = next(

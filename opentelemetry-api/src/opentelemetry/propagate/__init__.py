@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# pylint: disable=no-name-in-module
 
 """
 API for propagation of context.
@@ -75,7 +76,9 @@ from os import environ
 from pkg_resources import iter_entry_points
 
 from opentelemetry.context.context import Context
-from opentelemetry.environment_variables import OTEL_PROPAGATORS
+from opentelemetry.environment_variables import (
+    OTEL_PROPAGATORS,  # type: ignore
+)
 from opentelemetry.propagators import composite, textmap
 
 logger = getLogger(__name__)
@@ -127,7 +130,7 @@ try:
 
     # Single use variable here to hack black and make lint pass
     environ_propagators = environ.get(
-        OTEL_PROPAGATORS,
+        OTEL_PROPAGATORS,  # type: ignore
         "tracecontext,baggage",
     )
 
