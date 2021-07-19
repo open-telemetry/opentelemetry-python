@@ -82,10 +82,11 @@ from logging import getLogger
 from typing import Iterator, Optional, Sequence, cast
 
 from opentelemetry import context as context_api
+from opentelemetry.attributes import BoundedAttributes  # type: ignore
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_TRACER_PROVIDER
 from opentelemetry.trace.propagation import (
-    SPAN_KEY,
+    _SPAN_KEY,
     get_current_span,
     set_span_in_context,
 )
@@ -126,7 +127,7 @@ class _LinkBase(ABC):
 
 
 class Link(_LinkBase):
-    """A link to a `Span`.
+    """A link to a `Span`. The attributes of a Link are immutable.
 
     Args:
         context: `SpanContext` of the `Span` to link to.
@@ -139,7 +140,9 @@ class Link(_LinkBase):
         attributes: types.Attributes = None,
     ) -> None:
         super().__init__(context)
-        self._attributes = attributes
+        self._attributes = BoundedAttributes(
+            attributes=attributes
+        )  # type: types.Attributes
 
     @property
     def attributes(self) -> types.Attributes:
@@ -517,7 +520,7 @@ def use_span(
             this mechanism if it was previously set manually.
     """
     try:
-        token = context_api.attach(context_api.set_value(SPAN_KEY, span))
+        token = context_api.attach(context_api.set_value(_SPAN_KEY, span))
         try:
             yield span
         finally:
