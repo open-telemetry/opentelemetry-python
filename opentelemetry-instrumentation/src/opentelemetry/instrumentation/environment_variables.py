@@ -11,18 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# pylint: disable=no-name-in-module
 
-from os import environ
-
-from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
-
-
-def pytest_sessionstart(session):
-    # pylint: disable=unused-argument
-    environ[OTEL_PYTHON_CONTEXT] = "contextvars_context"
-
-
-def pytest_sessionfinish(session):
-    # pylint: disable=unused-argument
-    environ.pop(OTEL_PYTHON_CONTEXT)
+OTEL_PYTHON_DISABLED_INSTRUMENTATIONS = "OTEL_PYTHON_DISABLED_INSTRUMENTATIONS"
+"""
+.. envvar:: OTEL_PYTHON_DISABLED_INSTRUMENTATIONS
+"""
