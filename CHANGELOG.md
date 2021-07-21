@@ -6,11 +6,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.4.0-0.23b0...HEAD)
 
-## [1.4.0-0.23b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.4.0-0.23b0) - 2021-07-18
-
-
-- `opentelemetry-semantic-conventions` Generate semconv constants update for OTel Spec 1.5.0
-  ([#1946](https://github.com/open-telemetry/opentelemetry-python/pull/1946))
+## [1.4.0-0.23b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.4.0-0.23b0) - 2021-07-21
 
 ### Added
 - Moved `opentelemetry-instrumentation` to core repository.
@@ -39,6 +35,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updating dependency for opentelemetry api/sdk packages to support major version instead of
   pinning to specific versions.
   ([#1933](https://github.com/open-telemetry/opentelemetry-python/pull/1933))
+- `opentelemetry-semantic-conventions` Generate semconv constants update for OTel Spec 1.5.0
+  ([#1946](https://github.com/open-telemetry/opentelemetry-python/pull/1946))
 
 ### Fixed
 - Updated `opentelementry-opentracing-shim` `ScopeShim` to report exceptions in
