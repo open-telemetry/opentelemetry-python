@@ -17,6 +17,7 @@ from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     OTLPExporterMixin,
     _translate_key_values,
     get_resource_data,
+    _translate_value,
 )
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
@@ -32,7 +33,8 @@ from opentelemetry.proto.logs.v1.logs_pb2 import (
 )
 from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord as PB2LogRecord
 from opentelemetry.sdk.logs import LogRecord as SDKLogRecord
-from opentelemetry.sdk.logs import LogExporter, LogExportResult
+from opentelemetry.sdk.logs import LogData
+from opentelemetry.sdk.logs.export import LogExporter, LogExportResult
 
 
 class OTLPLogExporter(
@@ -52,11 +54,6 @@ class OTLPLogExporter(
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
-        endpoint = "localhost:4317"
-        insecure = True
-        timeout = 10
-        compression = None
-
         super().__init__(
             **{
                 "endpoint": endpoint,
@@ -68,70 +65,93 @@ class OTLPLogExporter(
             }
         )
 
-    def _translate_name(self, log_data) -> None:
-        self._collector_log_kwargs["name"] = log_data.record.name
+    def _translate_name(self, log_data: LogData) -> None:
+        self._collector_log_kwargs["name"] = log_data.log_record.name
 
-    def _translate_time(self, log_data) -> None:
-        self._collector_log_kwargs["time_unix_nano"] = log_data.timestamp
+    def _translate_time(self, log_data: LogData) -> None:
+        self._collector_log_kwargs[
+            "time_unix_nano"
+        ] = log_data.log_record.timestamp
 
-    def _translate_span_id(self, log_data) -> None:
+    def _translate_span_id(self, log_data: LogData) -> None:
         self._collector_log_kwargs[
             "span_id"
-        ] = log_data.record.span_id.to_bytes(8, "big")
+        ] = log_data.log_record.span_id.to_bytes(8, "big")
 
-    def _translate_trace_id(self, log_data) -> None:
+    def _translate_trace_id(self, log_data: LogData) -> None:
         self._collector_log_kwargs[
             "trace_id"
-        ] = log_data.record.trace_id.to_bytes(16, "big")
+        ] = log_data.log_record.trace_id.to_bytes(16, "big")
 
-    def _translate_body(self, log_data):
-        self._collector_log_kwargs["body"] = log_data.record.body
+    def _translate_trace_flags(self, log_data: LogData) -> None:
+        self._collector_log_kwargs["flags"] = int(
+            log_data.log_record.trace_flags
+        )
 
-    def _translate_severity_text(self, log_data):
+    def _translate_body(self, log_data: LogData):
+        self._collector_log_kwargs["body"] = _translate_value(
+            log_data.log_record.body
+        )
+
+    def _translate_severity_text(self, log_data: LogData):
         self._collector_log_kwargs[
             "severity_text"
-        ] = log_data.record.severity_text
+        ] = log_data.log_record.severity_text
 
-    def _translate_attributes(self, log_data) -> None:
-        if log_data.record.attributes:
-
+    def _translate_attributes(self, log_data: LogData) -> None:
+        if log_data.log_record.attributes:
             self._collector_log_kwargs["attributes"] = []
-
-            for key, value in log_data.record.attributes.items():
-
+            for key, value in log_data.log_record.attributes.items():
                 try:
                     self._collector_log_kwargs["attributes"].append(
                         _translate_key_values(key, value)
                     )
-                except Exception as error:  # pylint: disable=broad-except
+                except Exception:  # pylint: disable=broad-except
                     pass
 
     def _translate_data(
-        self, data: Sequence[SDKLogRecord]
+        self, data: Sequence[LogData]
     ) -> ExportLogsServiceRequest:
         # pylint: disable=attribute-defined-outside-init
 
         sdk_resource_instrumentation_library_logs = {}
 
         for log_data in data:
+            resource = log_data.log_record.resource
 
-            if log_data.record.resource not in (
-                sdk_resource_instrumentation_library_logs.keys()
-            ):
+            instrumentation_library_logs_map = (
+                sdk_resource_instrumentation_library_logs.get(resource, {})
+            )
+            if not instrumentation_library_logs_map:
+                sdk_resource_instrumentation_library_logs[
+                    resource
+                ] = instrumentation_library_logs_map
+
+            instrumentation_library_logs = (
+                instrumentation_library_logs_map.get(
+                    log_data.instrumentation_info
+                )
+            )
+            if not instrumentation_library_logs:
                 if log_data.instrumentation_info is not None:
-                    instrumentation_library_logs = InstrumentationLibraryLogs(
+                    instrumentation_library_logs_map[
+                        log_data.instrumentation_info
+                    ] = InstrumentationLibraryLogs(
                         instrumentation_library=InstrumentationLibrary(
                             name=log_data.instrumentation_info.name,
                             version=log_data.instrumentation_info.version,
                         )
                     )
-
                 else:
-                    instrumentation_library_logs = InstrumentationLibraryLogs()
+                    instrumentation_library_logs_map[
+                        log_data.instrumentation_info
+                    ] = InstrumentationLibraryLogs()
 
-                sdk_resource_instrumentation_library_logs[
-                    log_data.resource
-                ] = instrumentation_library_logs
+            instrumentation_library_logs = (
+                instrumentation_library_logs_map.get(
+                    log_data.instrumentation_info
+                )
+            )
 
             self._collector_log_kwargs = {}
 
@@ -139,16 +159,19 @@ class OTLPLogExporter(
             self._translate_time(log_data)
             self._translate_span_id(log_data)
             self._translate_trace_id(log_data)
+            self._translate_trace_flags(log_data)
+            self._translate_body(log_data)
+            self._translate_severity_text(log_data)
             self._translate_attributes(log_data)
 
             self._collector_log_kwargs["severity_number"] = getattr(
                 SeverityNumber,
-                "SEVERITY_NUMBER_{}".format(log_data.resource.severity_text),
+                "SEVERITY_NUMBER_{}".format(log_data.log_record.severity_text),
             )
 
-            sdk_resource_instrumentation_library_logs[
-                log_data.resource
-            ].logs.append(PB2LogRecord(**self._collector_log_kwargs))
+            instrumentation_library_logs.logs.append(
+                PB2LogRecord(**self._collector_log_kwargs)
+            )
 
         return ExportLogsServiceRequest(
             resource_logs=get_resource_data(
@@ -158,5 +181,8 @@ class OTLPLogExporter(
             )
         )
 
-    def export(self, logs: Sequence[SDKLogRecord]) -> LogExportResult:
-        return self._export(logs)
+    def export(self, batch: Sequence[LogData]) -> LogExportResult:
+        return self._export(batch)
+
+    def shutdown(self) -> None:
+        pass
