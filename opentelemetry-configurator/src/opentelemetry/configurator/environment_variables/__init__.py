@@ -12,27 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-OTEL_PROPAGATORS = "OTEL_PROPAGATORS"
+OTEL_PYTHON_CONFIGURATORS = "OTEL_PYTHON_CONFIGURATORS"
 """
-.. envvar:: OTEL_PROPAGATORS
-"""
+.. envvar:: OTEL_PYTHON_CONFIGURATORS
 
-OTEL_PYTHON_CONTEXT = "OTEL_PYTHON_CONTEXT"
-"""
-.. envvar:: OTEL_PYTHON_CONTEXT
-"""
+Space-separated string of `opentelemetry-configurator` entry point names.
 
-OTEL_PYTHON_ID_GENERATOR = "OTEL_PYTHON_ID_GENERATOR"
-"""
-.. envvar:: OTEL_PYTHON_ID_GENERATOR
-"""
+Example: ``firstconfigurator secondconfigurator``
 
-OTEL_TRACES_EXPORTER = "OTEL_TRACES_EXPORTER"
-"""
-.. envvar:: OTEL_TRACES_EXPORTER
-"""
-
-OTEL_PYTHON_TRACER_PROVIDER = "OTEL_PYTHON_TRACER_PROVIDER"
-"""
-.. envvar:: OTEL_PYTHON_TRACER_PROVIDER
+This environment variable needs to be set only if there is more than one
+installed configurator. The configurators will be executed in the order defined
+in this environment variable.
 """

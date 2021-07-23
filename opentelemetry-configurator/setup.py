@@ -12,27 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-OTEL_PROPAGATORS = "OTEL_PROPAGATORS"
-"""
-.. envvar:: OTEL_PROPAGATORS
-"""
+import os
 
-OTEL_PYTHON_CONTEXT = "OTEL_PYTHON_CONTEXT"
-"""
-.. envvar:: OTEL_PYTHON_CONTEXT
-"""
+import setuptools
 
-OTEL_PYTHON_ID_GENERATOR = "OTEL_PYTHON_ID_GENERATOR"
-"""
-.. envvar:: OTEL_PYTHON_ID_GENERATOR
-"""
+BASE_DIR = os.path.dirname(__file__)
+VERSION_FILENAME = os.path.join(
+    BASE_DIR, "src", "opentelemetry", "configurator", "version.py"
+)
+PACKAGE_INFO = {}
+with open(VERSION_FILENAME) as f:
+    exec(f.read(), PACKAGE_INFO)
 
-OTEL_TRACES_EXPORTER = "OTEL_TRACES_EXPORTER"
-"""
-.. envvar:: OTEL_TRACES_EXPORTER
-"""
-
-OTEL_PYTHON_TRACER_PROVIDER = "OTEL_PYTHON_TRACER_PROVIDER"
-"""
-.. envvar:: OTEL_PYTHON_TRACER_PROVIDER
-"""
+setuptools.setup(
+    version=PACKAGE_INFO["__version__"],
+)

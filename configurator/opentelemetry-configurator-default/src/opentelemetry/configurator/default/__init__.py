@@ -12,27 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-OTEL_PROPAGATORS = "OTEL_PROPAGATORS"
-"""
-.. envvar:: OTEL_PROPAGATORS
-"""
 
-OTEL_PYTHON_CONTEXT = "OTEL_PYTHON_CONTEXT"
-"""
-.. envvar:: OTEL_PYTHON_CONTEXT
-"""
+from opentelemetry.configurator import BaseConfigurator
 
-OTEL_PYTHON_ID_GENERATOR = "OTEL_PYTHON_ID_GENERATOR"
-"""
-.. envvar:: OTEL_PYTHON_ID_GENERATOR
-"""
 
-OTEL_TRACES_EXPORTER = "OTEL_TRACES_EXPORTER"
-"""
-.. envvar:: OTEL_TRACES_EXPORTER
-"""
-
-OTEL_PYTHON_TRACER_PROVIDER = "OTEL_PYTHON_TRACER_PROVIDER"
-"""
-.. envvar:: OTEL_PYTHON_TRACER_PROVIDER
-"""
+class DefaultConfigurator(BaseConfigurator):
+    def configure(self):
+        # FIXME move old configuration code here
+        pass

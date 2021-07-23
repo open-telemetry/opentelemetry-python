@@ -11,28 +11,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+# type: ignore
 
-OTEL_PROPAGATORS = "OTEL_PROPAGATORS"
-"""
-.. envvar:: OTEL_PROPAGATORS
-"""
+from unittest import TestCase
 
-OTEL_PYTHON_CONTEXT = "OTEL_PYTHON_CONTEXT"
-"""
-.. envvar:: OTEL_PYTHON_CONTEXT
-"""
 
-OTEL_PYTHON_ID_GENERATOR = "OTEL_PYTHON_ID_GENERATOR"
-"""
-.. envvar:: OTEL_PYTHON_ID_GENERATOR
-"""
-
-OTEL_TRACES_EXPORTER = "OTEL_TRACES_EXPORTER"
-"""
-.. envvar:: OTEL_TRACES_EXPORTER
-"""
-
-OTEL_PYTHON_TRACER_PROVIDER = "OTEL_PYTHON_TRACER_PROVIDER"
-"""
-.. envvar:: OTEL_PYTHON_TRACER_PROVIDER
-"""
+class TestConfigurator(TestCase):
+    def test_case(self):
+        pass

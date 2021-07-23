@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.4.0-0.23b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.4.0-0.23b0) - 2021-07-21
 
 ### Added
+- Refactored Distros
+  ([#1966](https://github.com/open-telemetry/opentelemetry-python/pull/1966))
 - Moved `opentelemetry-instrumentation` to core repository.
   ([#1959](https://github.com/open-telemetry/opentelemetry-python/pull/1959))
 - Dropped attributes/events/links count available exposed on ReadableSpans.
