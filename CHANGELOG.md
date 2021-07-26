@@ -9,10 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   to let distros use its default implementation
   ([#1937](https://github.com/open-telemetry/opentelemetry-python/pull/1937))
 
-## [0.23.1] - 2021-07-26
+## [0.23.1](https://github.com/open-telemetry/opentelemetry-python/pull/1987) - 2021-07-26
 
 ### Changed
 - Fix opentelemetry-bootstrap dependency script.
+  ([#1987](https://github.com/open-telemetry/opentelemetry-python/pull/1987))
 
 ## [1.4.0-0.23b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.4.0-0.23b0) - 2021-07-21
 
