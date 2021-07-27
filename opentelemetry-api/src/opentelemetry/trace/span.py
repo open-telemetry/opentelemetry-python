@@ -393,6 +393,7 @@ DEFAULT_TRACE_STATE = TraceState.get_default()
 _TRACE_ID_BYTES = 16
 _TRACE_ID_HEX_LENGTH = 2 * _TRACE_ID_BYTES
 
+
 def _validate_trace_id(trace_id: int) -> bool:
     """Validates a trace_id.
 
@@ -408,6 +409,7 @@ def _validate_trace_id(trace_id: int) -> bool:
         return False
 
     return True
+
 
 class SpanContext(
     typing.Tuple[int, int, bool, "TraceFlags", "TraceState", bool]
@@ -438,7 +440,11 @@ class SpanContext(
         if trace_state is None:
             trace_state = DEFAULT_TRACE_STATE
 
-        is_valid = trace_id != INVALID_TRACE_ID and span_id != INVALID_SPAN_ID and _validate_trace_id(trace_id)
+        is_valid = (
+            trace_id != INVALID_TRACE_ID
+            and span_id != INVALID_SPAN_ID
+            and _validate_trace_id(trace_id)
+        )
 
         return tuple.__new__(
             cls,
