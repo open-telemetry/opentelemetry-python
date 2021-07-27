@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `opentelemetry-distro` & `opentelemetry-sdk` Moved Auto Instrumentation Configurator code to SDK
   to let distros use its default implementation
   ([#1937](https://github.com/open-telemetry/opentelemetry-python/pull/1937))
-- Add Trace ID validation to meet [TraceID spec](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#spancontext) ([#1992]((https://github.com/open-telemetry/opentelemetry-python/pull/1992)))
+- Add Trace ID validation to meet [TraceID spec](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#spancontext) ([#1992](https://github.com/open-telemetry/opentelemetry-python/pull/1992))
 
 ## [0.23.1](https://github.com/open-telemetry/opentelemetry-python/pull/1987) - 2021-07-26
 
