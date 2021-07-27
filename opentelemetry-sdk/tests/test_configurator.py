@@ -18,17 +18,17 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from opentelemetry import trace
-from opentelemetry.distro import (
-    EXPORTER_OTLP,
-    EXPORTER_OTLP_SPAN,
+from opentelemetry.environment_variables import (
+    OTEL_PYTHON_ID_GENERATOR,
+    OTEL_TRACES_EXPORTER,
+)
+from opentelemetry.sdk._configuration import (
+    _EXPORTER_OTLP,
+    _EXPORTER_OTLP_SPAN,
     _get_exporter_names,
     _get_id_generator,
     _import_id_generator,
     _init_tracing,
-)
-from opentelemetry.environment_variables import (
-    OTEL_PYTHON_ID_GENERATOR,
-    OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
@@ -87,10 +87,10 @@ class TestTraceInit(TestCase):
     def setUp(self):
         super()
         self.get_provider_patcher = patch(
-            "opentelemetry.distro.TracerProvider", Provider
+            "opentelemetry.sdk._configuration.TracerProvider", Provider
         )
         self.get_processor_patcher = patch(
-            "opentelemetry.distro.BatchSpanProcessor", Processor
+            "opentelemetry.sdk._configuration.BatchSpanProcessor", Processor
         )
         self.set_provider_patcher = patch(
             "opentelemetry.trace.set_tracer_provider"
@@ -143,8 +143,8 @@ class TestTraceInit(TestCase):
         )
 
     @patch.dict(environ, {OTEL_PYTHON_ID_GENERATOR: "custom_id_generator"})
-    @patch("opentelemetry.distro.IdGenerator", new=IdGenerator)
-    @patch("opentelemetry.distro.iter_entry_points")
+    @patch("opentelemetry.sdk._configuration.IdGenerator", new=IdGenerator)
+    @patch("opentelemetry.sdk._configuration.iter_entry_points")
     def test_trace_init_custom_id_generator(self, mock_iter_entry_points):
         mock_iter_entry_points.configure_mock(
             return_value=[
@@ -160,9 +160,9 @@ class TestTraceInit(TestCase):
 
 class TestExporterNames(TestCase):
     def test_otlp_exporter_overwrite(self):
-        for exporter in [EXPORTER_OTLP, EXPORTER_OTLP_SPAN]:
+        for exporter in [_EXPORTER_OTLP, _EXPORTER_OTLP_SPAN]:
             with patch.dict(environ, {OTEL_TRACES_EXPORTER: exporter}):
-                self.assertEqual(_get_exporter_names(), [EXPORTER_OTLP_SPAN])
+                self.assertEqual(_get_exporter_names(), [_EXPORTER_OTLP_SPAN])
 
     @patch.dict(environ, {OTEL_TRACES_EXPORTER: "jaeger,zipkin"})
     def test_multiple_exporters(self):

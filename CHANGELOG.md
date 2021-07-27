@@ -5,12 +5,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.4.0-0.23b0...HEAD)
+- `opentelemetry-distro` & `opentelemetry-sdk` Moved Auto Instrumentation Configurator code to SDK
+  to let distros use its default implementation
+  ([#1937](https://github.com/open-telemetry/opentelemetry-python/pull/1937))
 
-## [1.4.0-0.23b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.4.0-0.23b0) - 2021-07-18
+## [0.23.1](https://github.com/open-telemetry/opentelemetry-python/pull/1987) - 2021-07-26
 
+### Changed
+- Fix opentelemetry-bootstrap dependency script.
+  ([#1987](https://github.com/open-telemetry/opentelemetry-python/pull/1987))
 
-- `opentelemetry-semantic-conventions` Generate semconv constants update for OTel Spec 1.5.0
-  ([#1946](https://github.com/open-telemetry/opentelemetry-python/pull/1946))
+## [1.4.0-0.23b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.4.0-0.23b0) - 2021-07-21
 
 ### Added
 - Moved `opentelemetry-instrumentation` to core repository.
@@ -41,6 +46,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updating dependency for opentelemetry api/sdk packages to support major version instead of
   pinning to specific versions.
   ([#1933](https://github.com/open-telemetry/opentelemetry-python/pull/1933))
+- `opentelemetry-semantic-conventions` Generate semconv constants update for OTel Spec 1.5.0
+  ([#1946](https://github.com/open-telemetry/opentelemetry-python/pull/1946))
 
 ### Fixed
 - Updated `opentelementry-opentracing-shim` `ScopeShim` to report exceptions in
