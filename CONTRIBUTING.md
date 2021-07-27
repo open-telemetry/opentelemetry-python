@@ -45,18 +45,11 @@ during their normal contribution hours.
 
 ## Development
 
-To quickly get up and running, you can use the `scripts/eachdist.py` tool that
-ships with this project. First create a virtualenv and activate it.
-Then run `python scripts/eachdist.py develop` to install all required packages
-as well as the project's packages themselves (in `--editable` mode).
 
-Further, you'll want to clone the Contrib repo locally to resolve paths needed
+First, clone the Contrib repo locally to resolve paths needed
 to run tests. `git clone git@github.com:open-telemetry/opentelemetry-python-contrib.git opentelemetry-python-contrib`.
 
-You can then run `scripts/eachdist.py test` to test everything or
-`scripts/eachdist.py lint` to lint everything (fixing anything that is auto-fixable).
-
-Additionally, this project uses [`tox`](https://tox.readthedocs.io) to automate some aspects
+This project uses [`tox`](https://tox.readthedocs.io) to automate some aspects
 of development, including testing against multiple Python versions.
 
 You can run:
@@ -68,6 +61,16 @@ You can run:
 - `tox -e py37-test-core-api` to e.g. run the API unit tests under a specific
   Python version
 - `tox -e lint` to run lint checks on all code
+
+`tox -e lint` checks the style of the code. It uses [`black`](https://black.readthedocs.io/en/stable/), [`isort`](https://pycqa.github.io/isort/)
+and [`pylint`](http://pylint.pycqa.org/en/latest/) for this purpose. `black` and `isort`-related errors can be fixed automatically by following
+the next steps:
+
+1. `tox -e lint`
+2. `source .tox/lint/bin/activate`
+3. `black .`
+4. `isort .`
+5. `deactivate`
 
 We try to keep the amount of _public symbols_ in our code minimal. A public symbol is any Python identifier that does not start with an underscore.
 Every public symbol is something that has to be kept in order to maintain backwards compatibility, so we try to have as few as possible.
