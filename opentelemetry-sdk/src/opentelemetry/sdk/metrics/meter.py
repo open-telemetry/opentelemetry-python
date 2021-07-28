@@ -88,6 +88,12 @@ class Meter(Meter):
 
 
 class MeterProvider(MeterProvider):
+
+    def __init__(self):
+        super().__init__()
+
+        self._views = []
+
     def start_pipeline(self, exporter):
         pass
 
@@ -98,3 +104,18 @@ class MeterProvider(MeterProvider):
         schema_url=None,
     ) -> Meter:
         return Meter()
+
+    def register_view(
+        self,
+        name=None,
+        instrument_type=None,
+        instrument_name=None,
+        meter_name=None,
+        meter_version=None,
+        meter_schema_url=None,
+        metrics_stream_description=None,
+        metrics_stream_attribute_keys=None,
+        metrics_stream_extra_dimensions=None,
+        metrics_stream_aggregation=None
+    ):
+        pass
