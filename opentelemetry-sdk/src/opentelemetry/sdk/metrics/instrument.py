@@ -127,7 +127,7 @@ class _Asynchronous(Asynchronous, _Instrument):
     def observe(self):
         # FIXME make this limited by a timeout
         value, attributes = super().observe()
-        self._aggregator.aggregate(value, **attributes)
+        self._aggregator.aggregate(value)
 
 
 class _Adding(Adding, _Instrument):
@@ -148,12 +148,12 @@ class _NonMonotonic(NonMonotonic, _Adding):
 
 class Counter(Counter, _Monotonic, _Synchronous):
     def add(self, value, **attributes):
-        self._aggregator.aggregate(value, **attributes)
+        self._aggregator.aggregate(value)
 
 
 class UpDownCounter(UpDownCounter, _NonMonotonic, _Synchronous):
     def add(self, value, **attributes):
-        self._aggregator.aggregate(value, **attributes)
+        self._aggregator.aggregate(value)
 
 
 class ObservableCounter(ObservableCounter, _Monotonic, _Asynchronous):
@@ -186,7 +186,7 @@ class Histogram(Histogram, _Grouping, _Synchronous):
         )
 
     def record(self, value, **attributes):
-        self._aggregator.aggregate(value, **attributes)
+        self._aggregator.aggregate(value)
 
 
 class ObservableGauge(ObservableGauge, _Grouping, _Asynchronous):
