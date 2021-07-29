@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Moved `opentelemetry-instrumentation` to core repository.
   ([#1959](https://github.com/open-telemetry/opentelemetry-python/pull/1959))
+- Add support for OTLP Exporter Protobuf over HTTP
+  ([#1868](https://github.com/open-telemetry/opentelemetry-python/pull/1868))
 - Dropped attributes/events/links count available exposed on ReadableSpans.
   ([#1893](https://github.com/open-telemetry/opentelemetry-python/pull/1893))
 - Added dropped count to otlp, jaeger and zipkin exporters.
