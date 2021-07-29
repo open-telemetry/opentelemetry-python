@@ -390,26 +390,6 @@ class TraceState(typing.Mapping[str, str]):
 
 DEFAULT_TRACE_STATE = TraceState.get_default()
 
-_TRACE_ID_BYTES = 16
-_TRACE_ID_HEX_LENGTH = 2 * _TRACE_ID_BYTES
-
-
-def _validate_trace_id(trace_id: int) -> bool:
-    """Validates a trace_id.
-
-    Args:
-        trace_id: An int that is expected to corresponds to 16-bytes hexdecimal value
-
-    Returns:
-        True if trace_id is valid, False otherwise.
-    """
-    if not trace_id:
-        return False
-    if len(format(trace_id, "032x")) != _TRACE_ID_HEX_LENGTH:
-        return False
-
-    return True
-
 
 class SpanContext(
     typing.Tuple[int, int, bool, "TraceFlags", "TraceState", bool]
@@ -443,7 +423,7 @@ class SpanContext(
         is_valid = (
             trace_id != INVALID_TRACE_ID
             and span_id != INVALID_SPAN_ID
-            and _validate_trace_id(trace_id)
+            and trace_id < 2 ** 128 - 1
         )
 
         return tuple.__new__(
