@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     OTLPSpanExporter,
 )
 from opentelemetry.sdk.trace import TracerProvider
@@ -22,12 +22,10 @@ from opentelemetry.test.test_base import TestBase
 from . import BaseTestOTLPExporter, ExportStatusSpanProcessor
 
 
-class TestOTLPGRPCExporter(BaseTestOTLPExporter, TestBase):
+class TestOTLPHTTPExporter(BaseTestOTLPExporter, TestBase):
     # pylint: disable=no-self-use
     def get_span_processor(self):
-        return ExportStatusSpanProcessor(
-            OTLPSpanExporter(insecure=True, timeout=1)
-        )
+        return ExportStatusSpanProcessor(OTLPSpanExporter())
 
     def setUp(self):
         super().setUp()

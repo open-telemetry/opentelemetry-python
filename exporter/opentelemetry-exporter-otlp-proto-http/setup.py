@@ -11,5 +11,23 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 
-__version__ = "1.5.0.dev0"
+import setuptools
+
+BASE_DIR = os.path.dirname(__file__)
+VERSION_FILENAME = os.path.join(
+    BASE_DIR,
+    "src",
+    "opentelemetry",
+    "exporter",
+    "otlp",
+    "proto",
+    "http",
+    "version.py",
+)
+PACKAGE_INFO = {}
+with open(VERSION_FILENAME) as f:
+    exec(f.read(), PACKAGE_INFO)
+
+setuptools.setup(version=PACKAGE_INFO["__version__"])
