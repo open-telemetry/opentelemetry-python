@@ -9,10 +9,9 @@ OpenTelemetry Collector Exporters
 This library is provided as a convenience to install all supported OpenTelemetry Collector Exporters. Currently it installs:
 
 * opentelemetry-exporter-otlp-proto-grpc
+* opentelemetry-exporter-otlp-proto-http
 
 In the future, additional packages will be available:
-
-* opentelemetry-exporter-otlp-proto-http
 * opentelemetry-exporter-otlp-json-http
 
 To avoid unnecessary dependencies, users should install the specific package once they've determined their
