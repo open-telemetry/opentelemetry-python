@@ -17,7 +17,7 @@ import urllib.parse
 
 import opentelemetry.trace as trace
 from opentelemetry import baggage
-from opentelemetry.context import Context, get_current
+from opentelemetry.context import Context
 from opentelemetry.propagators.textmap import (
     CarrierT,
     Getter,

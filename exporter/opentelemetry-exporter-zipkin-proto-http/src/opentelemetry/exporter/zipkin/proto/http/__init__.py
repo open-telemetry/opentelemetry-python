@@ -74,11 +74,6 @@ from typing import Optional, Sequence
 
 import requests
 
-from opentelemetry.exporter.zipkin.encoder import (
-    DEFAULT_MAX_TAG_VALUE_LENGTH,
-    Encoder,
-    Protocol,
-)
 from opentelemetry.exporter.zipkin.proto.http.v2 import ProtobufEncoder
 from opentelemetry.exporter.zipkin.node_endpoint import IpInput, NodeEndpoint
 from opentelemetry.sdk.environment_variables import (

@@ -16,13 +16,12 @@
 
 import logging
 from abc import ABC, abstractmethod
-from collections.abc import Mapping, Sequence
+from collections.abc import Sequence
 from os import environ
 from time import sleep
 from typing import Any, Callable, Dict, Generic, List, Optional
 from typing import Sequence as TypingSequence
 from typing import Text, TypeVar
-from urllib import parse
 from urllib.parse import urlparse
 
 from backoff import expo
