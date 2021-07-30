@@ -53,8 +53,7 @@ def stop_loop_when(loop, cond_func, timeout=5.0):
 
 
 class TestAsyncio(unittest.TestCase):
-    @asyncio.coroutine
-    def task(self, name):
+    async def task(self, name):
         with self.tracer.start_as_current_span(name):
             context.set_value("say", "bar")
 
