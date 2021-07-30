@@ -165,20 +165,10 @@ class Resource:
         """
         if not attributes:
             attributes = {}
-        resource = _DEFAULT_RESOURCE.merge(
-            OTELResourceDetector().detect()
-        ).merge(Resource(attributes, schema_url))
-        if not resource.attributes.get(SERVICE_NAME, None):
-            default_service_name = "unknown_service"
-            process_executable_name = resource.attributes.get(
-                PROCESS_EXECUTABLE_NAME, None
-            )
-            if process_executable_name:
-                default_service_name += ":" + process_executable_name
-            resource = resource.merge(
-                Resource({SERVICE_NAME: default_service_name}, schema_url)
-            )
-        return resource
+
+        return get_aggregated_resources(
+            [], final_resource=Resource(attributes, schema_url)
+        )
 
     @staticmethod
     def get_empty() -> "Resource":
@@ -282,6 +272,7 @@ class OTELResourceDetector(ResourceDetector):
 def get_aggregated_resources(
     detectors: typing.List["ResourceDetector"],
     initial_resource: typing.Optional[Resource] = None,
+    final_resource: typing.Optional[Resource] = None,
     timeout=5,
 ) -> "Resource":
     """Retrieves resources from detectors in the order that they were passed
@@ -291,7 +282,11 @@ def get_aggregated_resources(
     :param timeout: Number of seconds to wait for each detector to return
     :return:
     """
-    final_resource = initial_resource or _EMPTY_RESOURCE
+    detectors_resource = (
+        _DEFAULT_RESOURCE.merge(initial_resource)
+        if initial_resource
+        else _DEFAULT_RESOURCE
+    )
     detectors = [OTELResourceDetector()] + detectors
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
@@ -309,5 +304,28 @@ def get_aggregated_resources(
                 )
                 detected_resources = _EMPTY_RESOURCE
             finally:
-                final_resource = final_resource.merge(detected_resources)
-    return final_resource
+                detectors_resource = detectors_resource.merge(
+                    detected_resources
+                )
+
+    merged_resource = (
+        detectors_resource.merge(final_resource)
+        if final_resource
+        else detectors_resource
+    )
+
+    if merged_resource.attributes.get(SERVICE_NAME):
+        return merged_resource
+
+    default_service_name = "unknown_service"
+
+    process_executable_name = merged_resource.attributes.get(
+        PROCESS_EXECUTABLE_NAME
+    )
+
+    if process_executable_name:
+        default_service_name += ":" + process_executable_name
+
+    return merged_resource.merge(
+        Resource({SERVICE_NAME: default_service_name})
+    )
