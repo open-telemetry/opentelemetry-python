@@ -83,6 +83,8 @@ class Counter(Monotonic, Synchronous):
         if amount < 0:
             raise Exception("Amount must be non-negative")
 
+        super().add(amount, **attributes)
+
 
 class DefaultCounter(Counter):
     def __init__(self, name, unit="", description=""):

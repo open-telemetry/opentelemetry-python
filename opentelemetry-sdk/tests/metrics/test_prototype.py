@@ -86,4 +86,7 @@ class TestPrototype(TestCase):
         store.process_order("customer2", potatoes=2)
         store.process_order("customer0", tomatoes=1)
 
-        
+        records = {}
+        TestExporter(records).export(meter.get_records())
+
+        self.assertEqual(records, {})

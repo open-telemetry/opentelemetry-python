@@ -59,14 +59,10 @@ class _Instrument(Instrument):
             **kwargs
         )
 
-        self._aggregator = aggregator_class()
+        self._aggregator_class = aggregator_class
         self._name = name
         self._unit = unit
         self._description = description
-
-    @property
-    def aggregator_class(self):
-        return self._aggregator_class
 
     @property
     def name(self):
@@ -101,9 +97,7 @@ class _Synchronous(Synchronous, _Instrument):
             **kwargs
         )
 
-    def add(self, value, **attributes):
-
-        super().add(value, **attributes)
+    def _add(self, value, **attributes):
 
         attributes = frozenset(attributes.items())
         if attributes not in self._attributes_aggregators.keys():
@@ -159,12 +153,12 @@ class _NonMonotonic(NonMonotonic, _Adding):
 
 class Counter(Counter, _Monotonic, _Synchronous):
     def add(self, value, **attributes):
-        super().add(value, **attributes)
+        super()._add(value, **attributes)
 
 
 class UpDownCounter(UpDownCounter, _NonMonotonic, _Synchronous):
     def add(self, value, **attributes):
-        super().add(value, **attributes)
+        super()._add(value, **attributes)
 
 
 class ObservableCounter(ObservableCounter, _Monotonic, _Asynchronous):
@@ -197,7 +191,7 @@ class Histogram(Histogram, _Grouping, _Synchronous):
         )
 
     def record(self, value, **attributes):
-        super().add(value, **attributes)
+        super()._add(value, **attributes)
 
 
 class ObservableGauge(ObservableGauge, _Grouping, _Asynchronous):
