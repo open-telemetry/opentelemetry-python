@@ -15,10 +15,26 @@
 
 from unittest import TestCase
 
+from opentelemetry.sdk.metrics.export import Exporter, Result
+
 from opentelemetry.sdk.metrics.meter import MeterProvider
 
 
 meter = MeterProvider().get_meter("meter")
+
+
+class TestExporter(Exporter):
+
+    def __init__(self, dictionary):
+        self.dictionary = dictionary
+
+    def export(self, records):
+
+        for record in records:
+
+            self.dictionary.update(record)
+
+        return Result.SUCCESS
 
 
 class Store:
@@ -69,3 +85,5 @@ class TestPrototype(TestCase):
         store.process_order("customer1", tomatoes=10)
         store.process_order("customer2", potatoes=2)
         store.process_order("customer0", tomatoes=1)
+
+        

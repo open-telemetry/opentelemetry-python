@@ -54,8 +54,32 @@ class Meter(Meter):
         self._views = []
         self._stateful = False
 
+    # FIXME find a better name for this function
+    def get_records(self):
+
+        records = []
+
+        for instrument in self._instruments:
+
+            records.append(
+                {
+                    attributes: aggregator.value
+                    for attributes, aggregator in
+                    instrument._attributes_aggregators.items()
+                }
+            )
+
+            instrument._attributes_aggregators.clear()
+
     def create_counter(self, name, unit=None, description=None) -> Counter:
-        return Counter(name, unit=unit, description=description)
+
+        counter = Counter(name, unit=unit, description=description)
+
+        self._instruments.append(
+            Counter(name, unit=unit, description=description)
+        )
+
+        return counter
 
     def create_up_down_counter(
         self, name, unit=None, description=None
@@ -88,14 +112,6 @@ class Meter(Meter):
 
 
 class MeterProvider(MeterProvider):
-
-    def __init__(self):
-        super().__init__()
-
-        self._views = []
-
-    def start_pipeline(self, exporter):
-        pass
 
     def get_meter(
         self,
