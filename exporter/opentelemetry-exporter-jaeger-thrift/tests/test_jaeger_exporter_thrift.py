@@ -62,9 +62,15 @@ class TestJaegerExporter(unittest.TestCase):
             is_remote=False,
         )
 
-        self._test_span = trace._Span("test_span", context=self.context)
-        self._test_span.start()
-        self._test_span.end()
+        self._test_span = trace._Span(
+            "test_span",
+            context=self.context,
+            # Use a fixed version because a longer/shorter version number
+            # might break tests that care about packet size.
+            resource=Resource.create({"telemetry.sdk.version": "0.0.0.dev0"}),
+        )
+        self._test_span.start(start_time=1)
+        self._test_span.end(end_time=3)
         # pylint: disable=protected-access
 
     @patch("opentelemetry.exporter.jaeger.thrift.trace._TRACER_PROVIDER", None)
