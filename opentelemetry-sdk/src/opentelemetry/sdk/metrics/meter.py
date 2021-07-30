@@ -71,13 +71,12 @@ class Meter(Meter):
 
             instrument._attributes_aggregators.clear()
 
+        return records
+
     def create_counter(self, name, unit=None, description=None) -> Counter:
 
         counter = Counter(name, unit=unit, description=description)
-
-        self._instruments.append(
-            Counter(name, unit=unit, description=description)
-        )
+        self._instruments.append(counter)
 
         return counter
 

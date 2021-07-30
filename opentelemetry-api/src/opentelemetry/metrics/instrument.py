@@ -113,6 +113,8 @@ class Counter(_Monotonic, Synchronous):
         # FIXME check that the amount is non negative
         pass
 
+        super().add(amount, **attributes)
+
 
 class DefaultCounter(Counter):
     def __init__(self, name, unit="", description=""):
