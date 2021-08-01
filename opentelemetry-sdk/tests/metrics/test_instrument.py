@@ -68,7 +68,7 @@ class TestInstrument(TestCase):
         self.assertIsInstance(counter, Adding)
         self.assertIsInstance(counter, Synchronous)
         self.assertIsInstance(counter, Instrument)
-        self.assertIsInstance(counter._aggregator, SumAggregator)
+        self.assertIs(counter._aggregator_class, SumAggregator)
 
     def test_create_up_down_counter(self):
         up_down_counter = SDKMeter().create_up_down_counter(
@@ -83,7 +83,7 @@ class TestInstrument(TestCase):
         self.assertIsInstance(up_down_counter, Adding)
         self.assertIsInstance(up_down_counter, Synchronous)
         self.assertIsInstance(up_down_counter, Instrument)
-        self.assertIsInstance(up_down_counter._aggregator, SumAggregator)
+        self.assertIs(up_down_counter._aggregator_class, SumAggregator)
 
     def test_create_observable_counter(self):
         callback = Mock()
@@ -100,7 +100,7 @@ class TestInstrument(TestCase):
         self.assertIsInstance(observable_counter, Adding)
         self.assertIsInstance(observable_counter, Asynchronous)
         self.assertIsInstance(observable_counter, Instrument)
-        self.assertIsInstance(observable_counter._aggregator, LastAggregator)
+        self.assertIs(observable_counter._aggregator_class, LastAggregator)
 
     def test_create_observable_up_down_counter(self):
         callback = Mock()
@@ -123,8 +123,8 @@ class TestInstrument(TestCase):
         self.assertIsInstance(observable_up_down_counter, Adding)
         self.assertIsInstance(observable_up_down_counter, Asynchronous)
         self.assertIsInstance(observable_up_down_counter, Instrument)
-        self.assertIsInstance(
-            observable_up_down_counter._aggregator, LastAggregator
+        self.assertIs(
+            observable_up_down_counter._aggregator_class, LastAggregator
         )
 
     def test_create_histogram(self):
@@ -138,7 +138,7 @@ class TestInstrument(TestCase):
         self.assertIsInstance(histogram, Histogram)
         self.assertIsInstance(histogram, Grouping)
         self.assertIsInstance(histogram, Synchronous)
-        self.assertIsInstance(histogram._aggregator, MinMaxSumCountAggregator)
+        self.assertIs(histogram._aggregator_class, MinMaxSumCountAggregator)
 
     def test_create_observable_gauge(self):
         callback = Mock()
@@ -154,6 +154,6 @@ class TestInstrument(TestCase):
         self.assertIsInstance(observable_gauge, Grouping)
         self.assertIsInstance(observable_gauge, Asynchronous)
         self.assertIsInstance(observable_gauge, Instrument)
-        self.assertIsInstance(
-            observable_gauge._aggregator, MinMaxSumCountLastAggregator
+        self.assertIs(
+            observable_gauge._aggregator_class, MinMaxSumCountLastAggregator
         )
