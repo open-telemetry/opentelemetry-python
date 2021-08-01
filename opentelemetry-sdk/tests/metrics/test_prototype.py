@@ -89,4 +89,53 @@ class TestPrototype(TestCase):
         records = {}
         TestExporter(records).export(meter.get_records())
 
-        self.assertEqual(records, {})
+        self.assertEqual(
+            records,
+            {
+                frozenset({('store', 'store'), ('customer', 'customer0')}): 14,
+                frozenset({('customer', 'customer1'), ('store', 'store')}): 30,
+                frozenset({('store', 'store'), ('customer', 'customer2')}): 2,
+                frozenset(
+                    {
+                        ('item', 'potato'),
+                        ('store', 'store'),
+                        ('customer', 'customer0')
+                    }
+                ): 2,
+                frozenset(
+                    {
+                        ('item', 'tomato'),
+                        ('store', 'store'),
+                        ('customer', 'customer0')
+                    }
+                ): 4,
+                frozenset(
+                    {
+                        ('item', 'potato'),
+                        ('customer', 'customer1'),
+                        ('store', 'store')
+                    }
+                ): 0,
+                frozenset(
+                    {
+                        ('customer', 'customer1'),
+                        ('item', 'tomato'),
+                        ('store', 'store')
+                    }
+                ): 10,
+                frozenset(
+                    {
+                        ('item', 'potato'),
+                        ('store', 'store'),
+                        ('customer', 'customer2')
+                    }
+                ): 2,
+                frozenset(
+                    {
+                        ('item', 'tomato'),
+                        ('store', 'store'),
+                        ('customer', 'customer2')
+                    }
+                ): 0
+            }
+        )
