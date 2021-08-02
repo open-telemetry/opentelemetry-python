@@ -391,6 +391,7 @@ class TraceState(typing.Mapping[str, str]):
 DEFAULT_TRACE_STATE = TraceState.get_default()
 _TRACE_ID_HEX_LENGTH = 2 ** 128 - 1
 
+
 class SpanContext(
     typing.Tuple[int, int, bool, "TraceFlags", "TraceState", bool]
 ):
