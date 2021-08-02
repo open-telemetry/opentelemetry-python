@@ -25,14 +25,12 @@ meter = MeterProvider().get_meter("meter")
 
 class TestExporter(Exporter):
 
-    def __init__(self, dictionary):
-        self.dictionary = dictionary
+    def __init__(self, records):
+        self.records = records
 
     def export(self, records):
 
-        for record in records:
-
-            self.dictionary.update(record)
+        self.records.update(records)
 
         return Result.SUCCESS
 
@@ -68,12 +66,14 @@ class Store:
             store=self.name,
             customer=customer
         )
-        self.items_sold.add(
-            potatoes, store=self.name, customer=customer, item="potato"
-        )
-        self.items_sold.add(
-            tomatoes, store=self.name, customer=customer, item="tomato"
-        )
+        if bool(potatoes):
+            self.items_sold.add(
+                potatoes, store=self.name, customer=customer, item="potato"
+            )
+        if bool(tomatoes):
+            self.items_sold.add(
+                tomatoes, store=self.name, customer=customer, item="tomato"
+            )
 
 
 store = Store("store")
@@ -81,6 +81,7 @@ store = Store("store")
 
 class TestPrototype(TestCase):
     def test_prototype(self):
+        self.maxDiff = None
         store.process_order("customer0", potatoes=2, tomatoes=3)
         store.process_order("customer1", tomatoes=10)
         store.process_order("customer2", potatoes=2)
@@ -92,50 +93,59 @@ class TestPrototype(TestCase):
         self.assertEqual(
             records,
             {
-                frozenset({('store', 'store'), ('customer', 'customer0')}): 14,
-                frozenset({('customer', 'customer1'), ('store', 'store')}): 30,
-                frozenset({('store', 'store'), ('customer', 'customer2')}): 2,
-                frozenset(
-                    {
-                        ('item', 'potato'),
-                        ('store', 'store'),
-                        ('customer', 'customer0')
+                "Counter": {
+                    "number_of_orders": {
+                        frozenset(
+                            {('store', 'store'), ('customer', 'customer0')}
+                        ): 2,
+                        frozenset(
+                            {('store', 'store'), ('customer', 'customer1')}
+                        ): 1,
+                        frozenset(
+                            {('store', 'store'), ('customer', 'customer2')}
+                        ): 1,
+                    },
+                    "amount": {
+                        frozenset(
+                            {('store', 'store'), ('customer', 'customer0')}
+                        ): 14,
+                        frozenset(
+                            {('customer', 'customer1'), ('store', 'store')}
+                        ): 30,
+                        frozenset(
+                            {('store', 'store'), ('customer', 'customer2')}
+                        ): 2,
+                    },
+                    "items_sold": {
+                        frozenset(
+                            {
+                                ('item', 'potato'),
+                                ('store', 'store'),
+                                ('customer', 'customer0')
+                            }
+                        ): 2,
+                        frozenset(
+                            {
+                                ('item', 'tomato'),
+                                ('store', 'store'),
+                                ('customer', 'customer0')
+                            }
+                        ): 4,
+                        frozenset(
+                            {
+                                ('customer', 'customer1'),
+                                ('item', 'tomato'),
+                                ('store', 'store')
+                            }
+                        ): 10,
+                        frozenset(
+                            {
+                                ('item', 'potato'),
+                                ('store', 'store'),
+                                ('customer', 'customer2')
+                            }
+                        ): 2,
                     }
-                ): 2,
-                frozenset(
-                    {
-                        ('item', 'tomato'),
-                        ('store', 'store'),
-                        ('customer', 'customer0')
-                    }
-                ): 4,
-                frozenset(
-                    {
-                        ('item', 'potato'),
-                        ('customer', 'customer1'),
-                        ('store', 'store')
-                    }
-                ): 0,
-                frozenset(
-                    {
-                        ('customer', 'customer1'),
-                        ('item', 'tomato'),
-                        ('store', 'store')
-                    }
-                ): 10,
-                frozenset(
-                    {
-                        ('item', 'potato'),
-                        ('store', 'store'),
-                        ('customer', 'customer2')
-                    }
-                ): 2,
-                frozenset(
-                    {
-                        ('item', 'tomato'),
-                        ('store', 'store'),
-                        ('customer', 'customer2')
-                    }
-                ): 0
+                }
             }
         )

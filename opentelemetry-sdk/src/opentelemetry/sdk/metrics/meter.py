@@ -50,63 +50,86 @@ class Meter(Meter):
 
         self._batch_map = {}
         self._lock = Lock()
-        self._instruments = []
+        self._instruments = {}
         self._views = []
         self._stateful = False
 
     # FIXME find a better name for this function
     def get_records(self):
 
-        records = []
+        instrument_records = {}
 
-        for instrument in self._instruments:
+        for instrument_class_name, instruments in self._instruments.items():
 
-            records.append(
-                {
+            instrument_records[instrument_class_name] = {}
+
+            for instrument_name, instrument in instruments.items():
+                instrument_records[instrument_class_name][instrument_name] = {
                     attributes: aggregator.value
                     for attributes, aggregator in
                     instrument._attributes_aggregators.items()
                 }
+
+                instrument._attributes_aggregators.clear()
+
+        return instrument_records
+
+    def _create_instrument(
+        self, instrument_class, name, unit=None, description=None
+    ):
+        if instrument_class.__name__ not in self._instruments.keys():
+            self._instruments[instrument_class.__name__] = {}
+
+        if name in self._instruments[instrument_class.__name__].keys():
+            raise Exception(
+                "Only one {}-typed instrument named {} can be created".format(
+                    instrument_class.__name__,
+                    name
+                )
             )
 
-            instrument._attributes_aggregators.clear()
+        instrument = instrument_class(name, unit=unit, description=description)
 
-        return records
+        self._instruments[instrument_class.__name__][name] = instrument
+
+        return instrument
 
     def create_counter(self, name, unit=None, description=None) -> Counter:
-
-        counter = Counter(name, unit=unit, description=description)
-        self._instruments.append(counter)
-
-        return counter
+        return self._create_instrument(
+            Counter, name, unit=unit, description=description
+        )
 
     def create_up_down_counter(
         self, name, unit=None, description=None
     ) -> UpDownCounter:
-        return UpDownCounter(name, unit=unit, description=description)
+        return self._create_instrument(
+            UpDownCounter, name, unit=unit, description=description
+        )
 
     def create_observable_counter(
         self, name, callback, unit=None, description=None
     ) -> ObservableCounter:
-        return ObservableCounter(
-            name, callback, unit=unit, description=description
+        return self._create_instrument(
+            ObservableCounter, name, unit=unit, description=description
         )
 
     def create_histogram(self, name, unit=None, description=None) -> Histogram:
-        return Histogram(name, unit=unit, description=description)
+        return self._create_instrument(
+            Histogram, name, unit=unit, description=description
+        )
 
     def create_observable_gauge(
         self, name, callback, unit=None, description=None
     ) -> ObservableGauge:
-        return ObservableGauge(
-            name, callback, unit=unit, description=description
+        return self._create_instrument(
+            ObservableGauge, name, unit=unit, description=description
         )
 
     def create_observable_up_down_counter(
         self, name, callback, unit=None, description=None
     ) -> ObservableUpDownCounter:
-        return ObservableUpDownCounter(
-            name, callback, unit=unit, description=description
+        return self._create_instrument(
+            ObservableUpDownCounter, name, unit=unit, description=description
         )
 
 
