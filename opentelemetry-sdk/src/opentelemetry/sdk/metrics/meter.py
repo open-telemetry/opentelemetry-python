@@ -70,8 +70,6 @@ class Meter(Meter):
                     instrument._attributes_aggregators.items()
                 }
 
-                instrument._attributes_aggregators.clear()
-
         return instrument_records
 
     def _create_instrument(
