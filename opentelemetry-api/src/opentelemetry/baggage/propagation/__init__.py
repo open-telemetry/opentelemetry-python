@@ -14,11 +14,18 @@
 #
 import typing
 from urllib.parse import quote_plus, unquote_plus
+from re import compile as compile_
 
 from opentelemetry.baggage import get_all, set_baggage
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
+
+_key = r"[!#-'*+-.0-9A-Z^-z|~]+"
+_key_regex = compile_(_key)
+_value = r"[!#-+.-:<-\[\]-~-]*"
+_value_regex = compile_(_value)
+_key_value_regex = compile_(r"\s*{}\s*=\s*{}\s*".format(_key, _value))
 
 
 class W3CBaggagePropagator(textmap.TextMapPropagator):
@@ -54,6 +61,12 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         baggage_entries = header.split(",")
         total_baggage_entries = self._MAX_PAIRS
         for entry in baggage_entries:
+
+            if _key_value_regex.match(entry) is None or (
+                total_baggage_entries <= 0
+            ):
+                return context
+            total_baggage_entries -= 1
             if len(entry) > self._MAX_PAIR_LENGTH:
                 continue
             try:
@@ -96,10 +109,17 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
 
 
 def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
-    return ",".join(
-        quote_plus(str(key)) + "=" + quote_plus(str(value))
-        for key, value in baggage_entries.items()
-    )
+
+    key_values = []
+
+    for key, value in baggage_entries.items():
+        # type: ignore
+        if _key_regex.match(key) is None or _value_regex.match(value) is None:
+            continue
+
+        key_values.append(quote_plus(str(key)) + "=" + quote_plus(str(value)))
+
+    return ",".join(key_values)
 
 
 def _extract_first_element(

@@ -82,9 +82,8 @@ class TestBaggagePropagation(unittest.TestCase):
         self.assertEqual(self._extract(header), expected)
 
     def test_invalid_header(self):
-        header = "header1"
-        expected = {}
-        self.assertEqual(self._extract(header), expected)
+        self.assertEqual(self._extract("header1"), {})
+        self.assertEqual(self._extract(" = "), {})
 
     def test_header_too_long(self):
         long_value = "s" * (W3CBaggagePropagator._MAX_HEADER_LENGTH + 1)
@@ -162,6 +161,9 @@ class TestBaggagePropagation(unittest.TestCase):
         values = {}
         output = self._inject(values)
         self.assertEqual(None, output)
+
+    def test_inject_invalid_entries(self):
+        self.assertEqual(None, self._inject({"key": "val ue"}))
 
     def test_inject(self):
         values = {
