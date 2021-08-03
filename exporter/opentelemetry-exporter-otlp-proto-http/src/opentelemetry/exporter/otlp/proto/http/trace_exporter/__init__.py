@@ -46,7 +46,7 @@ _logger = logging.getLogger(__name__)
 
 
 DEFAULT_COMPRESSION = Compression.NoCompression
-DEFAULT_ENDPOINT = "http://localhost:55681/v1/traces"
+DEFAULT_ENDPOINT = "http://localhost:4318/v1/traces"
 DEFAULT_TIMEOUT = 10  # in seconds
 
 

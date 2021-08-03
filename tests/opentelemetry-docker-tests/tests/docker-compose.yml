@@ -8,7 +8,7 @@ services:
         - "8888:8888"
         - "55678:55678"
   otcollector:
-    image: otel/opentelemetry-collector:0.22.0
+    image: otel/opentelemetry-collector:0.32.0
     ports:
         - "4317:4317"
-        - "55681:55681"
+        - "4318:4318"
