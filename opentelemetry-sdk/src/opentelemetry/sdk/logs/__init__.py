@@ -287,7 +287,8 @@ class OTLPHandler(logging.Handler):
         super().__init__(level=level)
         self._log_emitter = log_emitter or get_log_emitter(__name__)
 
-    def _get_attributes(self, record: logging.LogRecord) -> Attributes:
+    @staticmethod
+    def _get_attributes(record: logging.LogRecord) -> Attributes:
         return {
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }
