@@ -22,7 +22,7 @@ from opentelemetry.exporter.zipkin.encoder import Encoder
 from opentelemetry.exporter.zipkin.proto.http.v2.gen import zipkin_pb2
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk.trace import Event
-from opentelemetry.trace import Span, SpanContext, SpanKind
+from opentelemetry.trace import Span, SpanKind
 
 
 class ProtobufEncoder(Encoder):
