@@ -291,7 +291,7 @@ def get_aggregated_resources(
     :param timeout: Number of seconds to wait for each detector to return
     :return:
     """
-    detectors_merged_resource = initial_resource or _EMPTY_RESOURCE
+    detectors_merged_resource = initial_resource or Resource.create()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         futures = [executor.submit(detector.detect) for detector in detectors]
@@ -312,4 +312,4 @@ def get_aggregated_resources(
                     detected_resource
                 )
 
-    return Resource.create().merge(detectors_merged_resource)
+    return detectors_merged_resource

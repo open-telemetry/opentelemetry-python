@@ -239,18 +239,16 @@ class TestResources(unittest.TestCase):
             ),
         )
 
-    def test_aggregated_resources_with_static_resource(self):
+    def test_aggregated_resources_with_default_destroying_static_resource(
+        self,
+    ):
         static_resource = resources.Resource({"static_key": "static_value"})
 
         self.assertEqual(
             resources.get_aggregated_resources(
                 [], initial_resource=static_resource
             ),
-            resources._DEFAULT_RESOURCE.merge(
-                resources.Resource(
-                    {resources.SERVICE_NAME: "unknown_service"}, ""
-                )
-            ).merge(static_resource),
+            static_resource,
         )
 
         resource_detector = mock.Mock(spec=resources.ResourceDetector)
@@ -261,17 +259,11 @@ class TestResources(unittest.TestCase):
             resources.get_aggregated_resources(
                 [resource_detector], initial_resource=static_resource
             ),
-            resources._DEFAULT_RESOURCE.merge(
-                resources.Resource(
-                    {resources.SERVICE_NAME: "unknown_service"}, ""
-                )
-            ).merge(
-                resources.Resource(
-                    {
-                        "static_key": "try_to_overwrite_existing_value",
-                        "key": "value",
-                    }
-                )
+            resources.Resource(
+                {
+                    "static_key": "try_to_overwrite_existing_value",
+                    "key": "value",
+                }
             ),
         )
 
