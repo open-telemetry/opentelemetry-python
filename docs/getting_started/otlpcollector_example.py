@@ -13,7 +13,6 @@
 # limitations under the License.
 
 # otcollector.py
-import time
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (

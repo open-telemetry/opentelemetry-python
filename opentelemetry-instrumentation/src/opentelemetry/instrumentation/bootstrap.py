@@ -25,7 +25,6 @@ from opentelemetry.instrumentation.bootstrap_gen import (
     default_instrumentations,
     libraries,
 )
-from opentelemetry.instrumentation.version import __version__ as version
 
 logger = logging.getLogger(__file__)
 

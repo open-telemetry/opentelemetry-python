@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import time
-from unittest.mock import patch
 
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
