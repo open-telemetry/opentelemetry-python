@@ -17,7 +17,7 @@ from sys import version_info
 from opentelemetry.context.context import Context, _RuntimeContext
 
 if version_info < (3, 7):
-    import aiocontextvars  # pylint: disable=import-error
+    import aiocontextvars  # type: ignore # pylint: disable=import-error
 
     aiocontextvars  # pylint: disable=pointless-statement
 
