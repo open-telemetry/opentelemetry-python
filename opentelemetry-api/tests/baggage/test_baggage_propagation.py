@@ -163,7 +163,7 @@ class TestBaggagePropagation(unittest.TestCase):
         self.assertEqual(None, output)
 
     def test_inject_invalid_entries(self):
-        self.assertEqual(None, self._inject({"key": "val ue"}))
+        self.assertEqual("", self._inject({"key": "val ue"}))
 
     def test_inject(self):
         values = {

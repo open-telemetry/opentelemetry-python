@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import typing
 from urllib.parse import quote_plus, unquote_plus
+
 from logging import getLogger
 from re import compile as compile_
+from typing import Iterable, Mapping, Optional, Set
 
 from opentelemetry.baggage import get_all, set_baggage
 from opentelemetry.context import get_current
@@ -41,7 +42,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
     def extract(
         self,
         carrier: textmap.CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Optional[Context] = None,
         getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
         """Extract Baggage from the carrier.
@@ -91,7 +92,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
     def inject(
         self,
         carrier: textmap.CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Optional[Context] = None,
         setter: textmap.Setter = textmap.default_setter,
     ) -> None:
         """Injects Baggage into the carrier.
@@ -107,17 +108,16 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         setter.set(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
 
     @property
-    def fields(self) -> typing.Set[str]:
+    def fields(self) -> Set[str]:
         """Returns a set with the fields set in `inject`."""
         return {self._BAGGAGE_HEADER_NAME}
 
 
-def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
+def _format_baggage(baggage_entries: Mapping[str, object]) -> str:
 
     key_values = []
 
     for key, value in baggage_entries.items():
-        # type: ignore
 
         if _key_regex.fullmatch(key) is None or (
             _value_regex.fullmatch(str(value)) is None
@@ -129,12 +129,12 @@ def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
 
         key_values.append(quote_plus(str(key)) + "=" + quote_plus(str(value)))
 
-    return ",".join(key_values) or None
+    return ",".join(key_values)
 
 
 def _extract_first_element(
-    items: typing.Optional[typing.Iterable[textmap.CarrierT]],
-) -> typing.Optional[textmap.CarrierT]:
+    items: Optional[Iterable[textmap.CarrierT]],
+) -> Optional[textmap.CarrierT]:
     if items is None:
         return None
     return next(iter(items), None)
