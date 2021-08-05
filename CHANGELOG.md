@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `opentelemetry-sdk` `get_aggregated_resource()` returns default resource and service name
   whenever called
   ([#2013](https://github.com/open-telemetry/opentelemetry-python/pull/2013))
+- Add regexes to check W3C baggage keys and values
+  ([#2017](https://github.com/open-telemetry/opentelemetry-python/pull/2017))
 - `opentelemetry-distro` & `opentelemetry-sdk` Moved Auto Instrumentation Configurator code to SDK
   to let distros use its default implementation
   ([#1937](https://github.com/open-telemetry/opentelemetry-python/pull/1937))
