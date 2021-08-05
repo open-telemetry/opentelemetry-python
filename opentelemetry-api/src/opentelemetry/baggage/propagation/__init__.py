@@ -14,6 +14,7 @@
 #
 import typing
 from urllib.parse import quote_plus, unquote_plus
+from logging import getLogger
 from re import compile as compile_
 
 from opentelemetry.baggage import get_all, set_baggage
@@ -21,6 +22,7 @@ from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
 
+_logger = getLogger(__name__)
 _key = r"[!#-'*+-.0-9A-Z^-z|~]+"
 _key_regex = compile_(_key)
 _value = r"[!#-+.-:<-\[\]-~-]*"
@@ -68,10 +70,12 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
                 return context
             total_baggage_entries -= 1
             if len(entry) > self._MAX_PAIR_LENGTH:
+                _logger.warning("Entry %s has been discarded", entry)
                 continue
             try:
                 name, value = entry.split("=", 1)
             except Exception:  # pylint: disable=broad-except
+                _logger.warning("Entry %s has been discarded", entry)
                 continue
             context = set_baggage(
                 unquote_plus(name).strip(),
@@ -114,12 +118,18 @@ def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
 
     for key, value in baggage_entries.items():
         # type: ignore
-        if _key_regex.match(key) is None or _value_regex.match(value) is None:
+
+        if _key_regex.fullmatch(key) is None or (
+            _value_regex.fullmatch(str(value)) is None
+        ):
+            _logger.warning(
+                "Key %s and value %s have been discarded", key, value
+            )
             continue
 
         key_values.append(quote_plus(str(key)) + "=" + quote_plus(str(value)))
 
-    return ",".join(key_values)
+    return ",".join(key_values) or None
 
 
 def _extract_first_element(

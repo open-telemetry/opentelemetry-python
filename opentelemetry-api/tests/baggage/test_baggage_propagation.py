@@ -180,7 +180,6 @@ class TestBaggagePropagation(unittest.TestCase):
             "key2": "val3=4",
         }
         output = self._inject(values)
-        self.assertIn("key1=val1%2Cval2", output)
         self.assertIn("key2=val3%3D4", output)
 
     def test_inject_non_string_values(self):
