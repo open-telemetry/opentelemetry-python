@@ -28,7 +28,7 @@ jobs:
       matrix:
         python-version: [ py36, py37, py38, py39, pypy3 ]
         package: ["instrumentation", "core", "exporter", "propagator"]
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-18.04 ]
     steps:
       - name: Checkout Core Repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v2
@@ -81,7 +81,7 @@ jobs:
       matrix:
         tox-environment: [ "docker-tests", "lint", "docs", "mypy", "mypyinstalled", "tracecontext" ]
     name: ${{ matrix.tox-environment }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     steps:
       - name: Checkout Core Repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v2
@@ -119,7 +119,7 @@ jobs:
       matrix:
         python-version: [ py36, py37, py38, py39, pypy3 ]
         package: ["instrumentation", "exporter"]
-        os: [ ubuntu-20.04 ]
+        os: [ ubuntu-18.04 ]
     steps:
       - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
         uses: actions/checkout@v2
@@ -151,7 +151,7 @@ jobs:
       matrix:
         tox-environment: [ "docker-tests"]
     name: ${{ matrix.tox-environment }}
-    runs-on: ubuntu-20.04
+    runs-on: ubuntu-18.04
     steps:
       - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
         uses: actions/checkout@v2
