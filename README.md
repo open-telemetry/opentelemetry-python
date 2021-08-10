@@ -132,6 +132,7 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 
 - [Aaron Abbott](https://github.com/aabmass), Google
 - [Srikanth Chekuri](https://github.com/lonewolf3739)
+- [Nathaniel Ruiz Nowell](https://github.com/NathanielRN), AWS
 
 *For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver).*
 
