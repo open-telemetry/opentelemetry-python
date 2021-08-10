@@ -26,7 +26,6 @@ from opentelemetry.sdk.metrics.export.aggregate import Aggregator
 from opentelemetry.sdk.metrics.export.controller import PushController
 from opentelemetry.sdk.metrics.export.processor import Processor
 from opentelemetry.sdk.metrics.view import (
-    ViewData,
     ViewManager,
     get_default_aggregator,
 )
@@ -412,6 +411,8 @@ class Accumulator(metrics_api.Meter):
                             instrument, labels, aggregator
                         )
                         self.processor.process(accumulation)
+
+                    instrument.aggregators.clear()
 
     def record_batch(
         self,
