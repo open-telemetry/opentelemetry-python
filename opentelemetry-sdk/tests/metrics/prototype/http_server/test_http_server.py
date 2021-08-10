@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from random import uniform, randint
+from random import uniform, randint, choice
 
 
 servers = {}
@@ -61,4 +61,17 @@ def memory_usage(server):
 
 class Client:
 
-    def __init__(self)
+    process_id_counter = 0
+    port_counter = 5000
+
+    def __init__(self):
+
+        self.host_name = "hostname"
+        self.process_id = Client.process_id_counter
+        Client.process_id_counter = Client.process_id_counter + 1
+        self.type = choice(["Android", "iOS"])
+        self.http_flavor = "1.1"
+        self.port_counter = Client.port_counter
+        Client.port_counter = Client.port_counter + 1
+
+
