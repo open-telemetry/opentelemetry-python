@@ -73,5 +73,19 @@ class Client:
         self.http_flavor = "1.1"
         self.port_counter = Client.port_counter
         Client.port_counter = Client.port_counter + 1
+        self.ip_address = "1.2.3.4"
+
+    def get(self, server_address):
+        pass
+
+    def post(self, server_address):
+        pass
+
+    def put(self, server_address):
+        pass
 
 
+class Server:
+
+    def __init__(self):
+        self.ip_address = "5.6.7.8"
