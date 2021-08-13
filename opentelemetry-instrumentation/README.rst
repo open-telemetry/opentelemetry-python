@@ -56,7 +56,7 @@ this can be overriden when needed.
 The command supports the following configuration options as CLI arguments and environment vars:
 
 
-* ``--trace-exporter`` or ``OTEL_TRACE_EXPORTER``
+* ``--trace-exporter`` or ``OTEL_TRACES_EXPORTER``
 
 Used to specify which trace exporter to use. Can be set to one or more of the well-known exporter
 names (see below).
@@ -68,11 +68,14 @@ You can pass multiple values to configure multiple exporters e.g, ``zipkin,prome
 
 Well known trace exporter names:
 
-    - jaeger
+    - jaeger_proto
+    - jaeger_thrift
     - opencensus
     - otlp
     - otlp_proto_grpc_span
-    - zipkin
+    - otlp_proto_http_span
+    - zipkin_json
+    - zipkin_proto
 
 ``otlp`` is an alias for ``otlp_proto_grpc_span``.
 
@@ -102,7 +105,7 @@ The above command will pass ``--trace-exporter otlp`` to the instrument command 
 
 ::
 
-    opentelemetry-instrument --trace-exporter zipkin,otlp celery -A tasks worker --loglevel=info
+    opentelemetry-instrument --trace-exporter zipkin_json,otlp celery -A tasks worker --loglevel=info
 
 The above command will configure global trace provider, attach zipkin and otlp exporters to it and then
 start celery with the rest of the arguments. 
