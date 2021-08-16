@@ -532,7 +532,7 @@ class SpanLimits:
     All limit arguments must be either a non-negative integer, ``None`` or ``SpanLimits.UNSET``.
 
     - All limit arguments are optional.
-    - If a limit argument is not set, the class will try to read it's value from the corresponding
+    - If a limit argument is not set, the class will try to read its value from the corresponding
       environment variable.
     - If the environment variable is not set, the default value for the limit is used.
 
