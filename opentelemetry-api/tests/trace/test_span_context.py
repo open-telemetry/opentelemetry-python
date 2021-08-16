@@ -34,3 +34,12 @@ class TestSpanContext(unittest.TestCase):
         pickle_sc = pickle.loads(pickle.dumps(sc))
         self.assertEqual(sc.trace_id, pickle_sc.trace_id)
         self.assertEqual(sc.span_id, pickle_sc.span_id)
+
+        invalid_sc = trace.SpanContext(
+            9999999999999999999999999999999999999999999999999999999999999999999999999999,
+            9,
+            is_remote=False,
+            trace_flags=trace.DEFAULT_TRACE_OPTIONS,
+            trace_state=trace.DEFAULT_TRACE_STATE,
+        )
+        self.assertFalse(invalid_sc.is_valid)

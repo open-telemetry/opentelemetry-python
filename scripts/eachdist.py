@@ -11,6 +11,7 @@ from configparser import ConfigParser
 from datetime import datetime
 from inspect import cleandoc
 from itertools import chain
+from os.path import basename
 from pathlib import Path, PurePath
 
 DEFAULT_ALLSEP = " "
@@ -628,11 +629,10 @@ def update_version_files(targets, version, packages):
 def update_dependencies(targets, version, packages):
     print("updating dependencies")
     for pkg in packages:
-        package_name = pkg.split("/")[-1]
         update_files(
             targets,
             "setup.cfg",
-            r"({}.*)==(.*)".format(package_name),
+            r"({}.*)==(.*)".format(basename(pkg)),
             r"\1== " + version,
         )
 

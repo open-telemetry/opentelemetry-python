@@ -4,7 +4,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.3.0-0.22b0...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.4.0-0.23b0...HEAD)
+- Fix documentation on well known exporters and variable OTEL_TRACES_EXPORTER which were misnamed
+  ([#2023](https://github.com/open-telemetry/opentelemetry-python/pull/2023))
+- `opentelemetry-sdk` `get_aggregated_resource()` returns default resource and service name
+  whenever called
+  ([#2013](https://github.com/open-telemetry/opentelemetry-python/pull/2013))
+- `opentelemetry-distro` & `opentelemetry-sdk` Moved Auto Instrumentation Configurator code to SDK
+  to let distros use its default implementation
+  ([#1937](https://github.com/open-telemetry/opentelemetry-python/pull/1937))
+- Add Trace ID validation to meet [TraceID spec](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#spancontext) ([#1992](https://github.com/open-telemetry/opentelemetry-python/pull/1992))
+
+## [0.23.1](https://github.com/open-telemetry/opentelemetry-python/pull/1987) - 2021-07-26
+
+### Changed
+- Fix opentelemetry-bootstrap dependency script.
+  ([#1987](https://github.com/open-telemetry/opentelemetry-python/pull/1987))
+
+## [1.4.0-0.23b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.4.0-0.23b0) - 2021-07-21
+
+### Added
+- Moved `opentelemetry-instrumentation` to core repository.
+  ([#1959](https://github.com/open-telemetry/opentelemetry-python/pull/1959))
+- Add support for OTLP Exporter Protobuf over HTTP
+  ([#1868](https://github.com/open-telemetry/opentelemetry-python/pull/1868))
+- Dropped attributes/events/links count available exposed on ReadableSpans.
+  ([#1893](https://github.com/open-telemetry/opentelemetry-python/pull/1893))
+- Added dropped count to otlp, jaeger and zipkin exporters.
+  ([#1893](https://github.com/open-telemetry/opentelemetry-python/pull/1893))
 
 ### Added
 - Give OTLPHandler the ability to process attributes
@@ -37,6 +64,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updating dependency for opentelemetry api/sdk packages to support major version instead of
   pinning to specific versions.
   ([#1933](https://github.com/open-telemetry/opentelemetry-python/pull/1933))
+- `opentelemetry-semantic-conventions` Generate semconv constants update for OTel Spec 1.5.0
+  ([#1946](https://github.com/open-telemetry/opentelemetry-python/pull/1946))
 
 ### Fixed
 - Updated `opentelementry-opentracing-shim` `ScopeShim` to report exceptions in

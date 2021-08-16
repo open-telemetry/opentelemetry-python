@@ -8,8 +8,9 @@ sphinx-jekyll-builder
 # doesn't work for pkg_resources.
 ./opentelemetry-api
 ./opentelemetry-semantic-conventions
-./opentelemetry-python-contrib/opentelemetry-instrumentation
+./opentelemetry-instrumentation
 ./opentelemetry-sdk
+./opentelemetry-instrumentation
 
 # Required by instrumentation and exporter packages
 ddtrace>=0.34.0

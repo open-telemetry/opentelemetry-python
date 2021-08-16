@@ -23,6 +23,11 @@ from django.conf import settings
 
 settings.configure()
 
+
+source_dirs = [
+    os.path.abspath("../opentelemetry-instrumentation/src/"),
+]
+
 exp = "../exporter"
 exp_dirs = [
     os.path.abspath("/".join(["../exporter", f, "src"]))
@@ -37,7 +42,7 @@ shim_dirs = [
     if isdir(join(shim, f))
 ]
 
-sys.path[:0] = exp_dirs + shim_dirs
+sys.path[:0] = source_dirs + exp_dirs + shim_dirs
 
 # -- Project information -----------------------------------------------------
 

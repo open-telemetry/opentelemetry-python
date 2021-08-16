@@ -230,9 +230,18 @@ class TestResources(unittest.TestCase):
 
     def test_aggregated_resources_no_detectors(self):
         aggregated_resources = resources.get_aggregated_resources([])
-        self.assertEqual(aggregated_resources, resources.Resource.get_empty())
+        self.assertEqual(
+            aggregated_resources,
+            resources._DEFAULT_RESOURCE.merge(
+                resources.Resource(
+                    {resources.SERVICE_NAME: "unknown_service"}, ""
+                )
+            ),
+        )
 
-    def test_aggregated_resources_with_static_resource(self):
+    def test_aggregated_resources_with_default_destroying_static_resource(
+        self,
+    ):
         static_resource = resources.Resource({"static_key": "static_value"})
 
         self.assertEqual(
@@ -280,13 +289,19 @@ class TestResources(unittest.TestCase):
             resources.get_aggregated_resources(
                 [resource_detector1, resource_detector2, resource_detector3]
             ),
-            resources.Resource(
-                {
-                    "key1": "value1",
-                    "key2": "try_to_overwrite_existing_value",
-                    "key3": "try_to_overwrite_existing_value",
-                    "key4": "value4",
-                }
+            resources._DEFAULT_RESOURCE.merge(
+                resources.Resource(
+                    {resources.SERVICE_NAME: "unknown_service"}, ""
+                )
+            ).merge(
+                resources.Resource(
+                    {
+                        "key1": "value1",
+                        "key2": "try_to_overwrite_existing_value",
+                        "key3": "try_to_overwrite_existing_value",
+                        "key4": "value4",
+                    }
+                )
             ),
         )
 
@@ -321,9 +336,15 @@ class TestResources(unittest.TestCase):
             resources.get_aggregated_resources(
                 [resource_detector1, resource_detector2]
             ),
-            resources.Resource(
-                {"key1": "value1", "key2": "value2", "key3": "value3"},
-                "url1",
+            resources._DEFAULT_RESOURCE.merge(
+                resources.Resource(
+                    {resources.SERVICE_NAME: "unknown_service"}, ""
+                )
+            ).merge(
+                resources.Resource(
+                    {"key1": "value1", "key2": "value2", "key3": "value3"},
+                    "url1",
+                )
             ),
         )
         with self.assertLogs(level=ERROR) as log_entry:
@@ -331,8 +352,14 @@ class TestResources(unittest.TestCase):
                 resources.get_aggregated_resources(
                     [resource_detector2, resource_detector3]
                 ),
-                resources.Resource(
-                    {"key2": "value2", "key3": "value3"}, "url1"
+                resources._DEFAULT_RESOURCE.merge(
+                    resources.Resource(
+                        {resources.SERVICE_NAME: "unknown_service"}, ""
+                    )
+                ).merge(
+                    resources.Resource(
+                        {"key2": "value2", "key3": "value3"}, "url1"
+                    )
                 ),
             )
             self.assertIn("url1", log_entry.output[0])
@@ -347,14 +374,20 @@ class TestResources(unittest.TestCase):
                         resource_detector1,
                     ]
                 ),
-                resources.Resource(
-                    {
-                        "key1": "value1",
-                        "key2": "try_to_overwrite_existing_value",
-                        "key3": "try_to_overwrite_existing_value",
-                        "key4": "value4",
-                    },
-                    "url1",
+                resources._DEFAULT_RESOURCE.merge(
+                    resources.Resource(
+                        {resources.SERVICE_NAME: "unknown_service"}, ""
+                    )
+                ).merge(
+                    resources.Resource(
+                        {
+                            "key1": "value1",
+                            "key2": "try_to_overwrite_existing_value",
+                            "key3": "try_to_overwrite_existing_value",
+                            "key4": "value4",
+                        },
+                        "url1",
+                    )
                 ),
             )
             self.assertIn("url1", log_entry.output[0])
@@ -366,7 +399,11 @@ class TestResources(unittest.TestCase):
         resource_detector.raise_on_error = False
         self.assertEqual(
             resources.get_aggregated_resources([resource_detector]),
-            resources.Resource.get_empty(),
+            resources._DEFAULT_RESOURCE.merge(
+                resources.Resource(
+                    {resources.SERVICE_NAME: "unknown_service"}, ""
+                )
+            ),
         )
 
     def test_resource_detector_raise_error(self):

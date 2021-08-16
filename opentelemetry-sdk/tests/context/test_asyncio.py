@@ -14,6 +14,7 @@
 
 import asyncio
 import unittest
+from sys import version_info
 from unittest.mock import patch
 
 from opentelemetry import context
@@ -23,15 +24,12 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
 
-try:
-    import contextvars  # pylint: disable=unused-import
-
-    from opentelemetry.context.contextvars_context import (
-        ContextVarsRuntimeContext,
-    )
-except ImportError:
+if version_info.minor < 7:
     raise unittest.SkipTest("contextvars not available")
 
+from opentelemetry.context.contextvars_context import (  # pylint:disable=wrong-import-position
+    ContextVarsRuntimeContext,
+)
 
 _SPAN_NAMES = [
     "test_span1",
@@ -55,8 +53,7 @@ def stop_loop_when(loop, cond_func, timeout=5.0):
 
 
 class TestAsyncio(unittest.TestCase):
-    @asyncio.coroutine
-    def task(self, name):
+    async def task(self, name):
         with self.tracer.start_as_current_span(name):
             context.set_value("say", "bar")
 

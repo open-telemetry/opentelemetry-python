@@ -13,46 +13,27 @@
 # limitations under the License.
 
 from opentelemetry import trace
-from opentelemetry.context import attach, detach, set_value
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import SimpleSpanProcessor
 from opentelemetry.test.test_base import TestBase
 
-
-class ExportStatusSpanProcessor(SimpleSpanProcessor):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.export_status = []
-
-    def on_end(self, span):
-        token = attach(set_value("suppress_instrumentation", True))
-        self.export_status.append(self.span_exporter.export((span,)))
-        detach(token)
+from . import BaseTestOTLPExporter, ExportStatusSpanProcessor
 
 
-class TestOTLPExporter(TestBase):
+class TestOTLPGRPCExporter(BaseTestOTLPExporter, TestBase):
+    # pylint: disable=no-self-use
+    def get_span_processor(self):
+        return ExportStatusSpanProcessor(
+            OTLPSpanExporter(insecure=True, timeout=1)
+        )
+
     def setUp(self):
         super().setUp()
 
         trace.set_tracer_provider(TracerProvider())
         self.tracer = trace.get_tracer(__name__)
-        self.span_processor = ExportStatusSpanProcessor(
-            OTLPSpanExporter(insecure=True, timeout=1)
-        )
+        self.span_processor = self.get_span_processor()
 
         trace.get_tracer_provider().add_span_processor(self.span_processor)
-
-    def test_export(self):
-        with self.tracer.start_as_current_span("foo"):
-            with self.tracer.start_as_current_span("bar"):
-                with self.tracer.start_as_current_span("baz"):
-                    pass
-
-        self.assertTrue(len(self.span_processor.export_status), 3)
-
-        for export_status in self.span_processor.export_status:
-            self.assertEqual(export_status.name, "SUCCESS")
-            self.assertEqual(export_status.value, 0)

@@ -75,11 +75,7 @@ from typing import Optional, Sequence
 
 import requests
 
-from opentelemetry.exporter.zipkin.encoder import (
-    DEFAULT_MAX_TAG_VALUE_LENGTH,
-    Encoder,
-    Protocol,
-)
+from opentelemetry.exporter.zipkin.encoder import Protocol
 from opentelemetry.exporter.zipkin.json.v1 import JsonV1Encoder
 from opentelemetry.exporter.zipkin.json.v2 import JsonV2Encoder
 from opentelemetry.exporter.zipkin.node_endpoint import IpInput, NodeEndpoint
