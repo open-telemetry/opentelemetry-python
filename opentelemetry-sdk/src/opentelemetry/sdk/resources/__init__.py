@@ -291,15 +291,14 @@ def get_aggregated_resources(
     :param timeout: Number of seconds to wait for each detector to return
     :return:
     """
-    final_resource = initial_resource or _EMPTY_RESOURCE
-    detectors = [OTELResourceDetector()] + detectors
+    detectors_merged_resource = initial_resource or Resource.create()
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=4) as executor:
         futures = [executor.submit(detector.detect) for detector in detectors]
         for detector_ind, future in enumerate(futures):
             detector = detectors[detector_ind]
             try:
-                detected_resources = future.result(timeout=timeout)
+                detected_resource = future.result(timeout=timeout)
             # pylint: disable=broad-except
             except Exception as ex:
                 if detector.raise_on_error:
@@ -307,7 +306,10 @@ def get_aggregated_resources(
                 logger.warning(
                     "Exception %s in detector %s, ignoring", ex, detector
                 )
-                detected_resources = _EMPTY_RESOURCE
+                detected_resource = _EMPTY_RESOURCE
             finally:
-                final_resource = final_resource.merge(detected_resources)
-    return final_resource
+                detectors_merged_resource = detectors_merged_resource.merge(
+                    detected_resource
+                )
+
+    return detectors_merged_resource
