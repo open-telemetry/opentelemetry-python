@@ -16,15 +16,10 @@ from sys import version_info
 
 from opentelemetry.context.context import Context, _RuntimeContext
 
-if (3, 5, 3) <= version_info < (3, 7):
-    import aiocontextvars  # type: ignore # pylint:disable=import-error
+if version_info < (3, 7):
+    import aiocontextvars  # type: ignore # pylint: disable=import-error
 
-    aiocontextvars  # pylint:disable=pointless-statement
-
-elif (3, 4) < version_info <= (3, 5, 2):
-    import opentelemetry.context.aiocontextvarsfix  # pylint:disable=wrong-import-position
-
-    opentelemetry.context.aiocontextvarsfix  # pylint:disable=pointless-statement
+    aiocontextvars  # pylint: disable=pointless-statement
 
 
 class ContextVarsRuntimeContext(_RuntimeContext):
