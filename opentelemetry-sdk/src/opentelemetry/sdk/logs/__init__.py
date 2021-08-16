@@ -244,20 +244,59 @@ class ConcurrentMultiLogProcessor(LogProcessor):
         return True
 
 
+# skip natural LogRecord attributes
+# http://docs.python.org/library/logging.html#logrecord-attributes
+_RESERVED_ATTRS = frozenset(
+    (
+        "asctime",
+        "args",
+        "created",
+        "exc_info",
+        "exc_text",
+        "filename",
+        "funcName",
+        "getMessage",
+        "levelname",
+        "levelno",
+        "lineno",
+        "module",
+        "msecs",
+        "msg",
+        "name",
+        "pathname",
+        "process",
+        "processName",
+        "relativeCreated",
+        "stack_info",
+        "thread",
+        "threadName",
+    )
+)
+
+
 class OTLPHandler(logging.Handler):
     """A handler class which writes logging records, in OTLP format, to
     a network destination or file.
     """
 
-    def __init__(self, level=logging.NOTSET, log_emitter=None) -> None:
+    def __init__(
+        self,
+        level=logging.NOTSET,
+        log_emitter=None,
+    ) -> None:
         super().__init__(level=level)
         self._log_emitter = log_emitter or get_log_emitter(__name__)
+
+    @staticmethod
+    def _get_attributes(record: logging.LogRecord) -> Attributes:
+        return {
+            k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
+        }
 
     def _translate(self, record: logging.LogRecord) -> LogRecord:
         timestamp = int(record.created * 1e9)
         span_context = get_current_span().get_span_context()
-        # TODO: attributes (or resource attributes?) from record metadata
-        attributes: Attributes = {}
+        attributes = self._get_attributes(record)
         severity_number = std_to_otlp(record.levelno)
         return LogRecord(
             timestamp=timestamp,
