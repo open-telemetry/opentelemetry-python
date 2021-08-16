@@ -65,6 +65,18 @@ class TestOTLPHandler(unittest.TestCase):
             log_record.trace_flags, INVALID_SPAN_CONTEXT.trace_flags
         )
 
+    def test_log_record_user_attributes(self):
+        """Attributes can be injected into logs by adding them to the LogRecord"""
+        emitter_mock = Mock(spec=LogEmitter)
+        logger = get_logger(log_emitter=emitter_mock)
+        # Assert emit gets called for warning message
+        logger.warning("Warning message", extra={"http.status_code": 200})
+        args, _ = emitter_mock.emit.call_args_list[0]
+        log_record = args[0]
+
+        self.assertIsNotNone(log_record)
+        self.assertEqual(log_record.attributes, {"http.status_code": 200})
+
     def test_log_record_trace_correlation(self):
         emitter_mock = Mock(spec=LogEmitter)
         logger = get_logger(log_emitter=emitter_mock)
