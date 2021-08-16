@@ -608,7 +608,7 @@ clear whether the exception will escape.
     MESSAGING_KAFKA_MESSAGE_KEY = "messaging.kafka.message_key"
     """
     Message keys in Kafka are used for grouping alike messages to ensure they're processed on the same partition. They differ from `messaging.message_id` in that they're not unique. If the key is `null`, the attribute MUST NOT be set.
-    Note: If the key type is not string, it's string representation has to be supplied for the attribute. If the key has no unambiguous, canonical string form, don't include its value.
+    Note: If the key type is not string, its string representation has to be supplied for the attribute. If the key has no unambiguous, canonical string form, don't include its value.
     """
 
     MESSAGING_KAFKA_CONSUMER_GROUP = "messaging.kafka.consumer_group"
