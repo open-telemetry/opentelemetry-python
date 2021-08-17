@@ -1,91 +1,154 @@
-# Copyright The OpenTelemetry Authors
-#
-# Licensed under the Apache License, Version 2.0 (the "License");
-# you may not use this file except in compliance with the License.
-# You may obtain a copy of the License at
-#
-#     http://www.apache.org/licenses/LICENSE-2.0
-#
-# Unless required by applicable law or agreed to in writing, software
-# distributed under the License is distributed on an "AS IS" BASIS,
-# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-# See the License for the specific language governing permissions and
-# limitations under the License.
-
-from random import uniform, randint, choice
+from asyncio import sleep, gather, run, Queue, create_task
+from random import random, seed, choice
+from unittest import TestCase
 
 
-servers = {}
+seed(3)
 
 
-def check_server(function):
+async def main():
+    addresses_queues = {
+        32: Queue(),
+        33: Queue(),
+        34: Queue(),
+        35: Queue(),
+        36: Queue(),
+        37: Queue(),
+    }
 
-    def inner(server):
+    class Instrument:
 
-        if server not in servers.keys():
+        def __init__(self):
+            self.tasks = []
 
-            servers[server] = {}
+        def add(self, task):
+            self.tasks.append(task)
 
-            if function.__name__ not in servers[server].keys():
+        def pop(self):
+            self.tasks.pop()
 
-                servers[server][function.__name__] = 0
+    serving = Instrument()
 
-        servers[server][function.__name__] = (
-            servers[server][function.__name__] + function(server)
-        )
+    tester_queue = Queue()
 
-    return inner
+    class Push:
 
+        async def start(self):
 
-def temperature(server):
+            while True:
+                await sleep(1)
+                self.export()
+                await tester_queue.put(serving.tasks)
 
-    return round(uniform(-5, 100), 2)
+    class Exporter:
 
+        def export(self):
+            print("Exported tasks: {}".format(serving.tasks))
 
-def humidity(server):
-
-    return round(uniform(20, 30), 2)
-
-
-@check_server
-def cpu_usage(server):
-
-    return round(uniform(20, 30), 2)
-
-
-@check_server
-def memory_usage(server):
-
-    return randint(1000, 2000)
-
-
-class Client:
-
-    process_id_counter = 0
-    port_counter = 5000
-
-    def __init__(self):
-
-        self.host_name = "hostname"
-        self.process_id = Client.process_id_counter
-        Client.process_id_counter = Client.process_id_counter + 1
-        self.type = choice(["Android", "iOS"])
-        self.http_flavor = "1.1"
-        self.port_counter = Client.port_counter
-        Client.port_counter = Client.port_counter + 1
-        self.ip_address = "1.2.3.4"
-
-    def get(self, server_address):
+    class TheExporter(Push, Exporter):
         pass
 
-    def post(self, server_address):
-        pass
+    the_exporter = TheExporter()
 
-    def put(self, server_address):
-        pass
+    class Tester(TestCase):
+        def __init__(self):
+            pass
+
+        async def test(self):
+
+            result = await tester_queue.get()
+            assert result == [35, 34, 36]
+            tester_queue.task_done()
+
+            result = await tester_queue.get()
+            assert result == [35]
+            tester_queue.task_done()
+
+            result = await tester_queue.get()
+            assert result == []
+            tester_queue.task_done()
+
+    class Server:
+
+        active_tasks = 0
+
+        def __init__(self):
+            self.address = 32
+            self.queue = addresses_queues[self.address]
+
+        async def serve(self):
+
+            while True:
+
+                address = await self.queue.get()
+                Server.active_tasks = Server.active_tasks + 1
+                serving.add(address)
+                print("Real requests: {}".format(serving.tasks))
+                # This is to simulate the different amounts of time it takes
+                # for different requests to be processed by the server.
+                await sleep(random())
+                await addresses_queues[address].put(choice([200, 400]))
+                Server.active_tasks = Server.active_tasks - 1
+                serving.pop()
+                print("Real requests: {}".format(serving.tasks))
+                self.queue.task_done()
+
+    class Client:
+
+        def __init__(self, address):
+
+            self.address = address
+            self.queue = addresses_queues[self.address]
+            self.padding = "             " * (self.address - 33)
+
+        async def request(self):
+            # This is to simulate the different times at which requests are
+            # sent to the server.
+            await sleep(random())
+            print(
+                f"\033[{self.address}m{self.padding}"
+                f"client_{self.address} request starts"
+            )
+            await addresses_queues[32].put(self.address)
+
+            result = await self.queue.get()
+            print(
+                f"\033[{self.address}m{self.padding}"
+                f"client_{self.address} request ends"
+            )
+            print(
+                f"\033[{self.address}m{self.padding}"
+                f"client_{self.address} result: {result}"
+            )
+            self.queue.task_done()
+
+    server_0 = create_task(Server().serve())
+    server_1 = create_task(Server().serve())
+    server_2 = create_task(Server().serve())
+    exporter = create_task(the_exporter.start())
+
+    await gather(
+        *[
+            Client(33).request(),
+            Client(34).request(),
+            Client(35).request(),
+            Client(36).request(),
+            Client(37).request(),
+            Tester().test()
+        ]
+    )
+
+    for queue in addresses_queues.values():
+        await queue.join()
+
+    await tester_queue.join()
+
+    server_0.cancel()
+    server_1.cancel()
+    server_2.cancel()
+    exporter.cancel()
 
 
-class Server:
+if __name__ == "__main__":
 
-    def __init__(self):
-        self.ip_address = "5.6.7.8"
+    run(main())
