@@ -34,6 +34,9 @@ Gunicorn post_fork hook
             OTLPSpanExporter(endpoint="http://localhost:4317")
         )
         trace.get_tracer_provider().add_span_processor(span_processor)
+        
+        # For auto-instrumentaion
+        from opentelemetry.instrumentation.auto_instrumentation import sitecustomize
 
 
 uWSGI postfork decorator
@@ -61,6 +64,9 @@ uWSGI postfork decorator
             OTLPSpanExporter(endpoint="http://localhost:4317")
         )
         trace.get_tracer_provider().add_span_processor(span_processor)
+        
+        # For auto-instrumentaion
+        from opentelemetry.instrumentation.auto_instrumentation import sitecustomize
 
 
 The source code for the examples with Flask app are available :scm_web:`here <docs/examples/fork-process-model/>`.
