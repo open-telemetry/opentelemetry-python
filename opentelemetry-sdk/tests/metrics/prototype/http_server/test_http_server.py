@@ -51,8 +51,6 @@ async def main():
     the_exporter = TheExporter()
 
     class Tester(TestCase):
-        def __init__(self):
-            pass
 
         async def test_http_proto(self):
 
@@ -65,7 +63,7 @@ async def main():
             tester_queue.task_done()
 
             result = await tester_queue.get()
-            assert result == []
+            assert result == [5]
             tester_queue.task_done()
 
     class Server:
@@ -134,7 +132,7 @@ async def main():
             Client(35).request(),
             Client(36).request(),
             Client(37).request(),
-            Tester().test()
+            Tester().test_http_proto()
         ]
     )
 
@@ -149,6 +147,7 @@ async def main():
     exporter.cancel()
 
 
-if __name__ == "__main__":
+class TestHTTPServerClient(TestCase):
+    def test_case(self):
 
-    run(main())
+        run(main())
