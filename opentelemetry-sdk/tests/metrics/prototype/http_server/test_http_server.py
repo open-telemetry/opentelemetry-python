@@ -54,7 +54,7 @@ async def main():
         def __init__(self):
             pass
 
-        async def test(self):
+        async def test_http_proto(self):
 
             result = await tester_queue.get()
             assert result == [35, 34, 36]
