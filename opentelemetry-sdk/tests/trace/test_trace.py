@@ -27,6 +27,7 @@ from opentelemetry.context import Context
 from opentelemetry.sdk import resources, trace
 from opentelemetry.sdk.environment_variables import (
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+    OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_SPAN_EVENT_COUNT_LIMIT,
     OTEL_SPAN_LINK_COUNT_LIMIT,
     OTEL_TRACES_SAMPLER,
@@ -38,13 +39,10 @@ from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
+    new_tracer,
 )
 from opentelemetry.trace import StatusCode
 from opentelemetry.util._time import _time_ns
-
-
-def new_tracer(span_limits=None) -> trace_api.Tracer:
-    return trace.TracerProvider(span_limits=span_limits).get_tracer(__name__)
 
 
 class TestTracer(unittest.TestCase):
@@ -653,6 +651,7 @@ class TestSpan(unittest.TestCase):
             root.set_attribute(
                 "list-with-non-primitive-data-type", [dict(), 123]
             )
+            root.set_attribute("list-with-numeric-and-bool", [1, True])
 
             root.set_attribute("", 123)
             root.set_attribute(None, 123)
@@ -1314,6 +1313,15 @@ class TestSpanProcessor(unittest.TestCase):
 class TestSpanLimits(unittest.TestCase):
     # pylint: disable=protected-access
 
+    long_val = "v" * 1000
+
+    def _assert_attr_length(self, attr_val, max_len):
+        if isinstance(attr_val, str):
+            expected = self.long_val
+            if max_len is not None:
+                expected = expected[:max_len]
+            self.assertEqual(attr_val, expected)
+
     def test_limits_defaults(self):
         limits = trace.SpanLimits()
         self.assertEqual(
@@ -1326,9 +1334,11 @@ class TestSpanLimits(unittest.TestCase):
         self.assertEqual(
             limits.max_links, trace._DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT
         )
+        self.assertIsNone(limits.max_attribute_length)
 
     def test_limits_values_code(self):
-        max_attributes, max_events, max_links = (
+        max_attributes, max_events, max_links, max_attr_length = (
+            randint(0, 10000),
             randint(0, 10000),
             randint(0, 10000),
             randint(0, 10000),
@@ -1337,13 +1347,16 @@ class TestSpanLimits(unittest.TestCase):
             max_attributes=max_attributes,
             max_events=max_events,
             max_links=max_links,
+            max_attribute_length=max_attr_length,
         )
         self.assertEqual(limits.max_attributes, max_attributes)
         self.assertEqual(limits.max_events, max_events)
         self.assertEqual(limits.max_links, max_links)
+        self.assertEqual(limits.max_attribute_length, max_attr_length)
 
     def test_limits_values_env(self):
-        max_attributes, max_events, max_links = (
+        max_attributes, max_events, max_links, max_attr_length = (
+            randint(0, 10000),
             randint(0, 10000),
             randint(0, 10000),
             randint(0, 10000),
@@ -1354,6 +1367,7 @@ class TestSpanLimits(unittest.TestCase):
                 OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT: str(max_attributes),
                 OTEL_SPAN_EVENT_COUNT_LIMIT: str(max_events),
                 OTEL_SPAN_LINK_COUNT_LIMIT: str(max_links),
+                OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT: str(max_attr_length),
             },
         ):
             limits = trace.SpanLimits()
@@ -1361,7 +1375,9 @@ class TestSpanLimits(unittest.TestCase):
             self.assertEqual(limits.max_events, max_events)
             self.assertEqual(limits.max_links, max_links)
 
-    def _test_span_limits(self, tracer):
+    def _test_span_limits(
+        self, tracer, max_attrs, max_events, max_links, max_attr_len
+    ):
         id_generator = RandomIdGenerator()
         some_links = [
             trace_api.Link(
@@ -1369,25 +1385,48 @@ class TestSpanLimits(unittest.TestCase):
                     trace_id=id_generator.generate_trace_id(),
                     span_id=id_generator.generate_span_id(),
                     is_remote=False,
-                )
+                ),
+                attributes={"k": self.long_val},
             )
             for _ in range(100)
         ]
 
         some_attrs = {
-            "init_attribute_{}".format(idx): idx for idx in range(100)
+            "init_attribute_{}".format(idx): self.long_val
+            for idx in range(100)
         }
         with tracer.start_as_current_span(
             "root", links=some_links, attributes=some_attrs
         ) as root:
-            self.assertEqual(len(root.links), 30)
-            self.assertEqual(len(root.attributes), 10)
+            self.assertEqual(len(root.links), max_links)
+            self.assertEqual(len(root.attributes), max_attrs)
             for idx in range(100):
-                root.set_attribute("my_attribute_{}".format(idx), 0)
-                root.add_event("my_event_{}".format(idx))
+                root.set_attribute(
+                    "my_str_attribute_{}".format(idx), self.long_val
+                )
+                root.set_attribute(
+                    "my_byte_attribute_{}".format(idx), self.long_val.encode()
+                )
+                root.set_attribute(
+                    "my_int_attribute_{}".format(idx), self.long_val.encode()
+                )
+                root.add_event(
+                    "my_event_{}".format(idx), attributes={"k": self.long_val}
+                )
 
-            self.assertEqual(len(root.attributes), 10)
-            self.assertEqual(len(root.events), 20)
+            self.assertEqual(len(root.attributes), max_attrs)
+            self.assertEqual(len(root.events), max_events)
+
+            for link in root.links:
+                for attr_val in link.attributes.values():
+                    self._assert_attr_length(attr_val, max_attr_len)
+
+            for event in root.events:
+                for attr_val in event.attributes.values():
+                    self._assert_attr_length(attr_val, max_attr_len)
+
+            for attr_val in root.attributes.values():
+                self._assert_attr_length(attr_val, max_attr_len)
 
     def _test_span_no_limits(self, tracer):
         num_links = int(trace._DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT) + randint(
@@ -1413,7 +1452,9 @@ class TestSpanLimits(unittest.TestCase):
         )
         with tracer.start_as_current_span("root") as root:
             for idx in range(num_events):
-                root.add_event("my_event_{}".format(idx))
+                root.add_event(
+                    "my_event_{}".format(idx), attributes={"k": self.long_val}
+                )
 
             self.assertEqual(len(root.events), num_events)
 
@@ -1422,20 +1463,31 @@ class TestSpanLimits(unittest.TestCase):
         ) + randint(1, 100)
         with tracer.start_as_current_span("root") as root:
             for idx in range(num_attributes):
-                root.set_attribute("my_attribute_{}".format(idx), 0)
+                root.set_attribute(
+                    "my_attribute_{}".format(idx), self.long_val
+                )
 
             self.assertEqual(len(root.attributes), num_attributes)
+            for attr_val in root.attributes.values():
+                self.assertEqual(attr_val, self.long_val)
 
     @mock.patch.dict(
         "os.environ",
         {
-            OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT: "10",
-            OTEL_SPAN_EVENT_COUNT_LIMIT: "20",
-            OTEL_SPAN_LINK_COUNT_LIMIT: "30",
+            OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT: "13",
+            OTEL_SPAN_EVENT_COUNT_LIMIT: "7",
+            OTEL_SPAN_LINK_COUNT_LIMIT: "4",
+            OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT: "11",
         },
     )
     def test_span_limits_env(self):
-        self._test_span_limits(new_tracer())
+        self._test_span_limits(
+            new_tracer(),
+            max_attrs=13,
+            max_events=7,
+            max_links=4,
+            max_attr_len=11,
+        )
 
     @mock.patch.dict(
         "os.environ",
@@ -1443,24 +1495,39 @@ class TestSpanLimits(unittest.TestCase):
             OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT: "10",
             OTEL_SPAN_EVENT_COUNT_LIMIT: "20",
             OTEL_SPAN_LINK_COUNT_LIMIT: "30",
+            OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT: "40",
         },
     )
     def test_span_limits_default_to_env(self):
         self._test_span_limits(
             new_tracer(
                 span_limits=trace.SpanLimits(
-                    max_attributes=None, max_events=None, max_links=None
+                    max_attributes=None,
+                    max_events=None,
+                    max_links=None,
+                    max_attribute_length=None,
                 )
-            )
+            ),
+            max_attrs=10,
+            max_events=20,
+            max_links=30,
+            max_attr_len=40,
         )
 
     def test_span_limits_code(self):
         self._test_span_limits(
             new_tracer(
                 span_limits=trace.SpanLimits(
-                    max_attributes=10, max_events=20, max_links=30
+                    max_attributes=11,
+                    max_events=15,
+                    max_links=13,
+                    max_attribute_length=9,
                 )
-            )
+            ),
+            max_attrs=11,
+            max_events=15,
+            max_links=13,
+            max_attr_len=9,
         )
 
     @mock.patch.dict(
@@ -1469,6 +1536,7 @@ class TestSpanLimits(unittest.TestCase):
             OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT: "unset",
             OTEL_SPAN_EVENT_COUNT_LIMIT: "unset",
             OTEL_SPAN_LINK_COUNT_LIMIT: "unset",
+            OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT: "unset",
         },
     )
     def test_span_no_limits_env(self):
@@ -1481,6 +1549,7 @@ class TestSpanLimits(unittest.TestCase):
                     max_attributes=trace.SpanLimits.UNSET,
                     max_links=trace.SpanLimits.UNSET,
                     max_events=trace.SpanLimits.UNSET,
+                    max_attribute_length=trace.SpanLimits.UNSET,
                 )
             )
         )
