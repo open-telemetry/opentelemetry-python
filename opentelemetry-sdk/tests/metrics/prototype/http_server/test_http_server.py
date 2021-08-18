@@ -58,15 +58,15 @@ async def main():
         async def test_http_proto(self):
 
             result = await tester_queue.get()
-            assert result == [35, 34, 36]
+            assert result == 3
             tester_queue.task_done()
 
             result = await tester_queue.get()
-            assert result == [35]
+            assert result == 1
             tester_queue.task_done()
 
             result = await tester_queue.get()
-            assert result == []
+            assert result == 0
             tester_queue.task_done()
 
     class Server:
@@ -80,11 +80,9 @@ async def main():
             while True:
 
                 address = await self.queue.get()
-                from ipdb import set_trace
-                set_trace()
                 active_requests.add(1, request_type="active")
                 print(
-                    "Active Requests: {}".format(
+                    "Served active Requests: {}".format(
                         active_requests.value(request_type="active")
                     )
                 )
@@ -94,7 +92,7 @@ async def main():
                 await addresses_queues[address].put(choice([200, 400]))
                 active_requests.add(-1, request_type="active")
                 print(
-                    "Real requests: {}".format(
+                    "Served active requests: {}".format(
                         active_requests.value(request_type="active")
                     )
                 )
