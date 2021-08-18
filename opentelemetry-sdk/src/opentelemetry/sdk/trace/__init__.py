@@ -41,6 +41,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk import util
 from opentelemetry.sdk.environment_variables import (
+    OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
     OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
@@ -551,6 +552,8 @@ class SpanLimits:
             Default: {_DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT}
         max_attribute_length: Maximum length an attribute value can have. Values longer than
             the specified length will be truncated.
+        max_span_attribute_length: Maximum length a span attribute value can have. Values longer than
+            the specified length will be truncated.
     """
 
     UNSET = -1
@@ -563,6 +566,7 @@ class SpanLimits:
         max_event_attributes: Optional[int] = None,
         max_link_attributes: Optional[int] = None,
         max_attribute_length: Optional[int] = None,
+        max_span_attribute_length: Optional[int] = None,
     ):
         self.max_attributes = self._from_env_if_absent(
             max_attributes,
@@ -589,13 +593,20 @@ class SpanLimits:
             OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
             _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
         )
+
         self.max_attribute_length = self._from_env_if_absent(
             max_attribute_length,
+            OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+        )
+        self.max_span_attribute_length = self._from_env_if_absent(
+            max_span_attribute_length,
             OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+            # use global attribute length limit as default
+            self.max_attribute_length,
         )
 
     def __repr__(self):
-        return "{}(max_attributes={}, max_events={}, max_links={}, max_event_attributes={}, max_link_attributes={}, max_attribute_length={})".format(
+        return "{}(max_attributes={}, max_events={}, max_links={}, max_event_attributes={}, max_link_attributes={}, max_attribute_length={}, max_span_attribute_length={})".format(
             type(self).__name__,
             self.max_attributes,
             self.max_events,
@@ -603,6 +614,7 @@ class SpanLimits:
             self.max_event_attributes,
             self.max_link_attributes,
             self.max_attribute_length,
+            self.max_span_attribute_length,
         )
 
     @classmethod
@@ -638,6 +650,7 @@ _UnsetLimits = SpanLimits(
     max_event_attributes=SpanLimits.UNSET,
     max_link_attributes=SpanLimits.UNSET,
     max_attribute_length=SpanLimits.UNSET,
+    max_span_attribute_length=SpanLimits.UNSET,
 )
 
 # not remove for backward compat. please use SpanLimits instead.
@@ -713,7 +726,7 @@ class Span(trace_api.Span, ReadableSpan):
             self._limits.max_attributes,
             attributes,
             immutable=False,
-            max_value_len=self._limits.max_attribute_length,
+            max_value_len=self._limits.max_span_attribute_length,
         )
         self._events = self._new_events()
         if events:
