@@ -63,7 +63,7 @@ async def main():
             tester_queue.task_done()
 
             result = await tester_queue.get()
-            assert result == [5]
+            assert result == []
             tester_queue.task_done()
 
     class Server:
