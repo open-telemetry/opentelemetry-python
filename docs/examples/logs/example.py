@@ -5,7 +5,10 @@ from opentelemetry.exporter.otlp.proto.grpc.log_exporter import OTLPLogExporter
 from opentelemetry.sdk.logs import OTLPHandler, get_log_emitter_provider
 from opentelemetry.sdk.logs.export import SimpleLogProcessor
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import ConsoleSpanExporter, SimpleSpanProcessor
+from opentelemetry.sdk.trace.export import (
+    ConsoleSpanExporter,
+    SimpleSpanProcessor,
+)
 
 trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(
