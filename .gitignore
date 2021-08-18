@@ -24,6 +24,7 @@ __pycache__
 venv*/
 .venv*/
 opentelemetry-python-contrib/
+include
 # in case of symlink
 opentelemetry-python-contrib
 
