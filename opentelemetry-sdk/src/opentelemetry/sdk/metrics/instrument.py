@@ -113,13 +113,15 @@ class _Synchronous(Synchronous, _Instrument):
             "instrument_name": self._name,
             "meter_name": self._meter_name,
             "meter_version": self._meter_version,
-            "meter_schema_url": meter_schema_url,
+            "meter_schema_url": self._meter_schema_url,
         }
 
-        for view in self._views:
-            for key, value in key_values.items():
-                if value is not None and key_values[key] != value:
-                    return
+        if self._views:
+
+            for view in self._views:
+                for key, value in key_values.items():
+                    if value is not None and key_values[key] != value:
+                        return
 
         attributes = frozenset(attributes.items())
         if attributes not in self._attributes_aggregators.keys():
