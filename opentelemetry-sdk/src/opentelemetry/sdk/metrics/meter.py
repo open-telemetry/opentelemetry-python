@@ -104,6 +104,8 @@ class Meter(Meter):
             aggregator_class=aggregator_class
         )
 
+        instrument._views = self._views
+
         self._instruments[instrument_class.__name__][name] = instrument
 
         return instrument

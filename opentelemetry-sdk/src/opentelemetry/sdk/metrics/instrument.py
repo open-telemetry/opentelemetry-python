@@ -63,6 +63,10 @@ class _Instrument(Instrument):
         self._name = name
         self._unit = unit
         self._description = description
+        self._meter_name = None
+        self._meter_version = None
+        self._meter_schema_url = None
+        self._views = None
 
     @property
     def name(self):
@@ -103,6 +107,19 @@ class _Synchronous(Synchronous, _Instrument):
         )
 
     def _add(self, value, **attributes):
+
+        key_values = {
+            "instrument_type": self.__class__,
+            "instrument_name": self._name,
+            "meter_name": self._meter_name,
+            "meter_version": self._meter_version,
+            "meter_schema_url": meter_schema_url,
+        }
+
+        for view in self._views:
+            for key, value in key_values.items():
+                if value is not None and key_values[key] != value:
+                    return
 
         attributes = frozenset(attributes.items())
         if attributes not in self._attributes_aggregators.keys():
