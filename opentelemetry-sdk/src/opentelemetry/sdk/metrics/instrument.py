@@ -76,6 +76,11 @@ class _Instrument(Instrument):
     def description(self):
         return self._description
 
+    def value(self, **attributes):
+        return self._attributes_aggregators[
+            frozenset(attributes.items())
+        ]._value
+
 
 class _Synchronous(Synchronous, _Instrument):
     def __init__(

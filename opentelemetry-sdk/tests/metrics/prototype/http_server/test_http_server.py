@@ -2,6 +2,8 @@ from asyncio import sleep, gather, run, Queue, create_task
 from random import random, seed, choice
 from unittest import TestCase
 
+from opentelemetry.sdk.metrics.meter import MeterProvider
+
 
 seed(3)
 
@@ -16,18 +18,13 @@ async def main():
         37: Queue(),
     }
 
-    class Instrument:
+    meter = MeterProvider().get_meter("meter")
 
-        def __init__(self):
-            self.tasks = []
-
-        def add(self, task):
-            self.tasks.append(task)
-
-        def pop(self):
-            self.tasks.pop()
-
-    serving = Instrument()
+    active_requests = meter.create_up_down_counter(
+        "active_requests",
+        unit="active requests",
+        description="Currently active requests"
+    )
 
     tester_queue = Queue()
 
@@ -38,12 +35,18 @@ async def main():
             while True:
                 await sleep(1)
                 self.export()
-                await tester_queue.put(serving.tasks)
+                await tester_queue.put(
+                    active_requests.value(request_type="active")
+                )
 
     class Exporter:
 
         def export(self):
-            print("Exported tasks: {}".format(serving.tasks))
+            print(
+                "Exported active requests: {}".format(
+                    active_requests.value(request_type="active")
+                )
+            )
 
     class TheExporter(Push, Exporter):
         pass
@@ -68,8 +71,6 @@ async def main():
 
     class Server:
 
-        active_tasks = 0
-
         def __init__(self):
             self.address = 32
             self.queue = addresses_queues[self.address]
@@ -79,16 +80,24 @@ async def main():
             while True:
 
                 address = await self.queue.get()
-                Server.active_tasks = Server.active_tasks + 1
-                serving.add(address)
-                print("Real requests: {}".format(serving.tasks))
+                from ipdb import set_trace
+                set_trace()
+                active_requests.add(1, request_type="active")
+                print(
+                    "Active Requests: {}".format(
+                        active_requests.value(request_type="active")
+                    )
+                )
                 # This is to simulate the different amounts of time it takes
                 # for different requests to be processed by the server.
                 await sleep(random())
                 await addresses_queues[address].put(choice([200, 400]))
-                Server.active_tasks = Server.active_tasks - 1
-                serving.pop()
-                print("Real requests: {}".format(serving.tasks))
+                active_requests.add(-1, request_type="active")
+                print(
+                    "Real requests: {}".format(
+                        active_requests.value(request_type="active")
+                    )
+                )
                 self.queue.task_done()
 
     class Client:
@@ -151,3 +160,7 @@ class TestHTTPServerClient(TestCase):
     def test_case(self):
 
         run(main())
+
+
+if __name__ == "__main__":
+    run(main())
