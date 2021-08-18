@@ -39,13 +39,11 @@ from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
-    SimpleSpanProcessor,
+    BatchSpanProcessor,
 )
 
 provider = TracerProvider()
-# Note: Using SimpleSpanProcessor is strongly discouraged in production-grade
-# applications. Please use BatchSpanProcessor instead.
-processor = SimpleSpanProcessor(ConsoleSpanExporter())
+processor = BatchSpanProcessor(ConsoleSpanExporter())
 provider.add_span_processor(processor)
 trace.set_tracer_provider(provider)
 
@@ -56,6 +54,8 @@ with tracer.start_as_current_span("foo"):
     with tracer.start_as_current_span("bar"):
         with tracer.start_as_current_span("baz"):
             print("Hello world from OpenTelemetry Python!")
+
+provider.force_flush()
 ```
 
 When you run the script you can see the traces printed to your console:
