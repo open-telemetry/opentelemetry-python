@@ -1,8 +1,10 @@
 from asyncio import sleep, gather, run, Queue, create_task
-from random import random, seed, choice
+from random import random, seed, choice, randint
 from unittest import TestCase
 
 from opentelemetry.sdk.metrics.meter import MeterProvider
+
+from opentelemetry.sdk.metrics.aggregator import LastAggregator
 
 
 seed(3)
@@ -26,6 +28,20 @@ async def main():
         description="Currently active requests"
     )
 
+    humidity = meter.create_counter(
+        "humidity",
+        unit="percentage",
+        description="Server humidity",
+        aggregator_class=LastAggregator
+    )
+
+    temperature = meter.create_up_down_counter(
+        "temperature",
+        unit="F",
+        description="Server temperature",
+        aggregator_class=LastAggregator
+    )
+
     tester_queue = Queue()
 
     class Push:
@@ -36,7 +52,7 @@ async def main():
                 await sleep(1)
                 self.export()
                 await tester_queue.put(
-                    active_requests.value(request_type="active")
+                    active_requests.value(host_name="MachineA")
                 )
 
     class Exporter:
@@ -44,7 +60,7 @@ async def main():
         def export(self):
             print(
                 "Exported active requests: {}".format(
-                    active_requests.value(request_type="active")
+                    active_requests.value(host_name="MachineA")
                 )
             )
 
@@ -58,11 +74,11 @@ async def main():
         async def test_http_proto(self):
 
             result = await tester_queue.get()
-            assert result == 3
+            assert result == 2
             tester_queue.task_done()
 
             result = await tester_queue.get()
-            assert result == 1
+            assert result == 0
             tester_queue.task_done()
 
             result = await tester_queue.get()
@@ -80,20 +96,24 @@ async def main():
             while True:
 
                 address = await self.queue.get()
-                active_requests.add(1, request_type="active")
+                active_requests.add(
+                    1, host_name="MachineA"
+                )
+                humidity.add(randint(0, 100), host_name="MachineA")
+                temperature.add(randint(-20, 100), host_name="MachineA")
                 print(
                     "Served active Requests: {}".format(
-                        active_requests.value(request_type="active")
+                        active_requests.value(host_name="MachineA")
                     )
                 )
                 # This is to simulate the different amounts of time it takes
                 # for different requests to be processed by the server.
                 await sleep(random())
                 await addresses_queues[address].put(choice([200, 400]))
-                active_requests.add(-1, request_type="active")
+                active_requests.add(-1, host_name="MachineA")
                 print(
                     "Served active requests: {}".format(
-                        active_requests.value(request_type="active")
+                        active_requests.value(host_name="MachineA")
                     )
                 )
                 self.queue.task_done()

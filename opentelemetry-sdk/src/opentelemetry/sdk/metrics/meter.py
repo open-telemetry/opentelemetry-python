@@ -26,6 +26,12 @@ from opentelemetry.sdk.metrics.instrument import (
     UpDownCounter,
 )
 from opentelemetry.util.types import Attributes
+from opentelemetry.sdk.metrics.aggregator import (
+    SumAggregator,
+    LastAggregator,
+    MinMaxSumCountAggregator,
+    MinMaxSumCountLastAggregator
+)
 
 
 class Measurement(Measurement):
@@ -73,7 +79,12 @@ class Meter(Meter):
         return instrument_records
 
     def _create_instrument(
-        self, instrument_class, name, unit=None, description=None
+        self,
+        instrument_class,
+        name,
+        unit=None,
+        description=None,
+        aggregator_class=None
     ):
         if instrument_class.__name__ not in self._instruments.keys():
             self._instruments[instrument_class.__name__] = {}
@@ -86,48 +97,105 @@ class Meter(Meter):
                 )
             )
 
-        instrument = instrument_class(name, unit=unit, description=description)
+        instrument = instrument_class(
+            name,
+            unit=unit,
+            description=description,
+            aggregator_class=aggregator_class
+        )
 
         self._instruments[instrument_class.__name__][name] = instrument
 
         return instrument
 
-    def create_counter(self, name, unit=None, description=None) -> Counter:
+    def create_counter(
+        self,
+        name,
+        unit=None,
+        description=None,
+        aggregator_class=SumAggregator
+    ) -> Counter:
         return self._create_instrument(
-            Counter, name, unit=unit, description=description
+            Counter,
+            name,
+            unit=unit,
+            description=description,
+            aggregator_class=aggregator_class
         )
 
     def create_up_down_counter(
-        self, name, unit=None, description=None
+        self, name, unit=None, description=None, aggregator_class=SumAggregator
     ) -> UpDownCounter:
         return self._create_instrument(
-            UpDownCounter, name, unit=unit, description=description
+            UpDownCounter,
+            name,
+            unit=unit,
+            description=description,
+            aggregator_class=aggregator_class
         )
 
     def create_observable_counter(
-        self, name, callback, unit=None, description=None
+        self,
+        name,
+        callback,
+        unit=None,
+        description=None,
+        aggregator_class=LastAggregator
     ) -> ObservableCounter:
         return self._create_instrument(
-            ObservableCounter, name, unit=unit, description=description
+            ObservableCounter,
+            name,
+            callback,
+            unit=unit,
+            description=description,
+            aggregator_class=aggregator_class
         )
 
-    def create_histogram(self, name, unit=None, description=None) -> Histogram:
+    def create_histogram(
+        self,
+        name,
+        unit=None,
+        description=None,
+        aggregator_class=MinMaxSumCountAggregator,
+    ) -> Histogram:
         return self._create_instrument(
-            Histogram, name, unit=unit, description=description
+            Histogram,
+            name,
+            unit=unit,
+            description=description,
+            aggregator_class=aggregator_class
         )
 
     def create_observable_gauge(
-        self, name, callback, unit=None, description=None
+        self,
+        name,
+        callback,
+        unit=None,
+        description=None,
+        aggregator_class=MinMaxSumCountLastAggregator,
     ) -> ObservableGauge:
         return self._create_instrument(
-            ObservableGauge, name, unit=unit, description=description
+            ObservableGauge,
+            name,
+            unit=unit,
+            description=description,
+            aggregator_class=aggregator_class
         )
 
     def create_observable_up_down_counter(
-        self, name, callback, unit=None, description=None
+        self,
+        name,
+        callback,
+        unit=None,
+        description=None,
+        aggregator_class=LastAggregator
     ) -> ObservableUpDownCounter:
         return self._create_instrument(
-            ObservableUpDownCounter, name, unit=unit, description=description
+            ObservableUpDownCounter,
+            name,
+            unit=unit,
+            description=description,
+            aggregator_class=aggregator_class
         )
 
 
