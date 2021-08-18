@@ -43,6 +43,8 @@ from opentelemetry.sdk.trace.export import (
 )
 
 provider = TracerProvider()
+# Note: Using SimpleSpanProcessor is strongly discouraged in production-grade
+# applications. Please use BatchSpanProcessor instead.
 processor = SimpleSpanProcessor(ConsoleSpanExporter())
 provider.add_span_processor(processor)
 trace.set_tracer_provider(provider)
@@ -223,12 +225,12 @@ from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
-    SimpleSpanProcessor,
+    BatchSpanProcessor,
 )
 
 trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(
-    SimpleSpanProcessor(ConsoleSpanExporter())
+    BatchSpanProcessor(ConsoleSpanExporter())
 )
 
 app = flask.Flask(__name__)
@@ -244,7 +246,7 @@ def hello():
     return "hello"
 
 
-app.run(debug=True, port=5000)
+app.run(port=5000)
 ```
 
 Now run the script, hit the root URL ([http://localhost:5000/](http://localhost:5000/)) a few times, and watch your spans be emitted!
