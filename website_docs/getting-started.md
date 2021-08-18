@@ -55,6 +55,7 @@ with tracer.start_as_current_span("foo"):
         with tracer.start_as_current_span("baz"):
             print("Hello world from OpenTelemetry Python!")
 
+# Flush all ended spans that are yet to be written to stdout before process exit.
 provider.force_flush()
 ```
 
