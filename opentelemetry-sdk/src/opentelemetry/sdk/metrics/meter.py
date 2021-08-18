@@ -57,7 +57,7 @@ class Meter(Meter):
         self._batch_map = {}
         self._lock = Lock()
         self._instruments = {}
-        self._views = []
+        self._views = None
         self._stateful = False
 
     # FIXME find a better name for this function
@@ -201,13 +201,18 @@ class Meter(Meter):
 
 class MeterProvider(MeterProvider):
 
+    def __init__(self, *args, **kwargs):
+        self._views = []
+
     def get_meter(
         self,
         name,
         version=None,
         schema_url=None,
     ) -> Meter:
-        return Meter()
+        meter = Meter()
+        meter._views = self._views
+        return meter
 
     def register_view(
         self,
@@ -222,4 +227,42 @@ class MeterProvider(MeterProvider):
         metrics_stream_extra_dimensions=None,
         metrics_stream_aggregation=None
     ):
-        pass
+
+        if (
+            name is None
+            and instrument_type is None
+            and instrument_name is None
+            and meter_name is None
+            and meter_version is None
+            and meter_schema_url is None
+            and metrics_stream_description is None
+            and metrics_stream_attribute_keys is None
+            and metrics_stream_extra_dimensions is None
+            and metrics_stream_aggregation is None
+        ):
+            raise Exception("Some view criteria must be provided")
+
+        if name is None:
+            if instrument_name is None:
+                raise Exception(
+                    "view name or instrument name must be provided"
+                )
+
+            name = instrument_name
+
+        self._views.append(
+            {
+                "name": name,
+                "instrument_type": instrument_type,
+                "instrument_name": instrument_name,
+                "meter_name": meter_name,
+                "meter_version": meter_version,
+                "meter_schema_url": meter_schema_url,
+                "metrics_stream_description": metrics_stream_description,
+                "metrics_stream_attribute_keys": metrics_stream_attribute_keys,
+                "metrics_stream_extra_dimensions": (
+                    metrics_stream_extra_dimensions
+                ),
+                "metrics_stream_aggregation": metrics_stream_aggregation,
+            }
+        )
