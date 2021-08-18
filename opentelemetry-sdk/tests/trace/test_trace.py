@@ -1533,10 +1533,10 @@ class TestSpanLimits(unittest.TestCase):
     @mock.patch.dict(
         "os.environ",
         {
-            OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT: "unset",
-            OTEL_SPAN_EVENT_COUNT_LIMIT: "unset",
-            OTEL_SPAN_LINK_COUNT_LIMIT: "unset",
-            OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT: "unset",
+            OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT: "",
+            OTEL_SPAN_EVENT_COUNT_LIMIT: "",
+            OTEL_SPAN_LINK_COUNT_LIMIT: "",
+            OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT: "",
         },
     )
     def test_span_no_limits_env(self):
