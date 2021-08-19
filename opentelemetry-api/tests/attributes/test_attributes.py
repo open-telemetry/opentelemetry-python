@@ -31,6 +31,16 @@ class TestAttributes(unittest.TestCase):
     def assertInvalid(self, value, key="k"):
         self.assertIsNone(_clean_attribute(key, value, None))
 
+    def test_attribute_key_validation(self):
+        # only non-empty strings are valid keys
+        self.assertInvalid(1, "")
+        self.assertInvalid(1, 1)
+        self.assertInvalid(1, {})
+        self.assertInvalid(1, [])
+        self.assertInvalid(1, b"1")
+        self.assertValid(1, "k")
+        self.assertValid(1, "1")
+
     def test_clean_attribute(self):
         self.assertInvalid([1, 2, 3.4, "ss", 4])
         self.assertInvalid([dict(), 1, 2, 3.4, 4])
@@ -142,10 +152,10 @@ class TestBoundedAttributes(unittest.TestCase):
     def test_no_limit_code(self):
         bdict = BoundedAttributes(maxlen=None, immutable=False)
         for num in range(100):
-            bdict[num] = num
+            bdict[str(num)] = num
 
         for num in range(100):
-            self.assertEqual(bdict[num], num)
+            self.assertEqual(bdict[str(num)], num)
 
     def test_immutable(self):
         bdict = BoundedAttributes()

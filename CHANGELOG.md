@@ -22,7 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2044](https://github.com/open-telemetry/opentelemetry-python/pull/2044))
 - `opentelemetry-sdk` Treat limit even vars set to empty values as unset/unlimited.
   ([#2044](https://github.com/open-telemetry/opentelemetry-python/pull/2054))
-
+- `opentelemetry-api` Attribute keys must be non-empty strings.
+  ([#2057](https://github.com/open-telemetry/opentelemetry-python/pull/2057))
 
 ## [0.23.1](https://github.com/open-telemetry/opentelemetry-python/pull/1987) - 2021-07-26
 
