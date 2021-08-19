@@ -69,11 +69,7 @@ async def main():
         async def test_http_proto(self):
 
             result = await tester_queue.get()
-            assert result == 2
-            tester_queue.task_done()
-
-            result = await tester_queue.get()
-            assert result == 0
+            assert result == 3
             tester_queue.task_done()
 
             result = await tester_queue.get()
