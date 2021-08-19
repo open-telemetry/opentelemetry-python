@@ -14,8 +14,8 @@
 
 from abc import ABC, abstractmethod
 from enum import Enum
-from typing import Sequence, Tuple
 from json import dumps
+from typing import Sequence, Tuple
 
 from opentelemetry.metrics.instrument import Instrument
 from opentelemetry.sdk.metrics.aggregator import Aggregator
@@ -59,8 +59,7 @@ class Record:
 
     def __str__(self):
         return dumps(
-            {key[1:]: value for key, value in self.__dict__.items()},
-            indent=4
+            {key[1:]: value for key, value in self.__dict__.items()}, indent=4
         )
 
 

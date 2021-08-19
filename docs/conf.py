@@ -22,13 +22,13 @@ from os.path import isdir, join
 from django.conf import settings
 
 from opentelemetry.sdk.metrics.instrument import (
-    _Instrument,
-    _Synchronous,
-    _Asynchronous,
     _Adding,
+    _Asynchronous,
     _Grouping,
+    _Instrument,
     _Monotonic,
     _NonMonotonic,
+    _Synchronous,
 )
 
 settings.configure()
@@ -196,15 +196,19 @@ extlinks = {
 
 def skip_private_sdk_instrument_classes(app, what, name, obj, skip, options):
 
-    return obj in [
-        _Instrument,
-        _Synchronous,
-        _Asynchronous,
-        _Adding,
-        _Grouping,
-        _Monotonic,
-        _NonMonotonic,
-    ] or None
+    return (
+        obj
+        in [
+            _Instrument,
+            _Synchronous,
+            _Asynchronous,
+            _Adding,
+            _Grouping,
+            _Monotonic,
+            _NonMonotonic,
+        ]
+        or None
+    )
 
 
 def setup(app):

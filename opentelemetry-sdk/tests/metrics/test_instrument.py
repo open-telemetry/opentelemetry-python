@@ -16,12 +16,6 @@
 from unittest import TestCase
 from unittest.mock import Mock
 
-from opentelemetry.sdk.metrics.aggregator import (
-    SumAggregator,
-    LastAggregator,
-    MinMaxSumCountAggregator,
-    MinMaxSumCountLastAggregator,
-)
 from opentelemetry.metrics.instrument import (
     Adding,
     Asynchronous,
@@ -36,6 +30,12 @@ from opentelemetry.metrics.instrument import (
     ObservableUpDownCounter,
     Synchronous,
     UpDownCounter,
+)
+from opentelemetry.sdk.metrics.aggregator import (
+    LastAggregator,
+    MinMaxSumCountAggregator,
+    MinMaxSumCountLastAggregator,
+    SumAggregator,
 )
 from opentelemetry.sdk.metrics.instrument import Counter as SDKCounter
 from opentelemetry.sdk.metrics.instrument import Histogram as SDKHistogram
