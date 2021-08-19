@@ -81,6 +81,7 @@ class Meter(Meter):
         self,
         instrument_class,
         name,
+        callback=None,
         unit=None,
         description=None,
         aggregator_class=None,
@@ -95,12 +96,24 @@ class Meter(Meter):
                 )
             )
 
-        instrument = instrument_class(
-            name,
-            unit=unit,
-            description=description,
-            aggregator_class=aggregator_class,
-        )
+        if callback is None:
+
+            instrument = instrument_class(
+                name,
+                unit=unit,
+                description=description,
+                aggregator_class=aggregator_class,
+            )
+
+        else:
+
+            instrument = instrument_class(
+                name,
+                callback,
+                unit=unit,
+                description=description,
+                aggregator_class=aggregator_class,
+            )
 
         instrument._views = self._views
 
@@ -173,6 +186,7 @@ class Meter(Meter):
         return self._create_instrument(
             ObservableGauge,
             name,
+            callback=callback,
             unit=unit,
             description=description,
             aggregator_class=aggregator_class,
@@ -189,6 +203,7 @@ class Meter(Meter):
         return self._create_instrument(
             ObservableUpDownCounter,
             name,
+            callback=callback,
             unit=unit,
             description=description,
             aggregator_class=aggregator_class,
