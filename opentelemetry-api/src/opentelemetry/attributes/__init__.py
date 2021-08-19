@@ -47,8 +47,8 @@ def _clean_attribute(
         - It needs to be encoded/decoded e.g, bytes to strings.
     """
 
-    if key is None or key == "":
-        _logger.warning("invalid key `%s` (empty or null)", key)
+    if not (key and isinstance(key, str)):
+        _logger.warning("invalid key `%s`. must be non-empty string.", key)
         return None
 
     if isinstance(value, _VALID_ATTR_VALUE_TYPES):
@@ -118,7 +118,7 @@ def _clean_attribute_value(
     if isinstance(value, bytes):
         try:
             value = value.decode()
-        except ValueError:
+        except UnicodeDecodeError:
             _logger.warning("Byte attribute could not be decoded.")
             return None
 
