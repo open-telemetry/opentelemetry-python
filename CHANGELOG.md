@@ -22,6 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2044](https://github.com/open-telemetry/opentelemetry-python/pull/2044))
 - `opentelemetry-sdk` Add support for `OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` env var
   ([#2056](https://github.com/open-telemetry/opentelemetry-python/pull/2056))
+
 ## [0.23.1](https://github.com/open-telemetry/opentelemetry-python/pull/1987) - 2021-07-26
 
 ### Changed

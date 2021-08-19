@@ -593,6 +593,10 @@ class SpanLimits:
             OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
             _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
         )
+        self.max_attribute_length = self._from_env_if_absent(
+            max_attribute_length,
+            OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+        )
 
         self.max_attribute_length = self._from_env_if_absent(
             max_attribute_length,
