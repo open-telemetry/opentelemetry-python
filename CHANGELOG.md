@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2044](https://github.com/open-telemetry/opentelemetry-python/pull/2044))
 - `opentelemetry-sdk` Fixed bugs (#2041, #2042 & #2045) in Span Limits
   ([#2044](https://github.com/open-telemetry/opentelemetry-python/pull/2044))
+- `opentelemetry-api` Attribute keys must be non-empty strings.
+  ([#2057](https://github.com/open-telemetry/opentelemetry-python/pull/2057))
 
 ## [0.23.1](https://github.com/open-telemetry/opentelemetry-python/pull/1987) - 2021-07-26
 
