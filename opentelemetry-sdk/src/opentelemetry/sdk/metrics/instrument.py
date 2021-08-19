@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=function-redefined,too-many-ancestors
+# pylint: disable=function-redefined,too-many-ancestors,protected-access
 
 from typing import Generator
 
@@ -44,10 +44,10 @@ class _Instrument(Instrument):
     def __init__(
         self,
         name,
+        *args,
         unit=None,
         description=None,
         aggregator_class=Aggregator,
-        *args,
         **kwargs
     ):
 
@@ -86,19 +86,19 @@ class _Synchronous(Synchronous, _Instrument):
     def __init__(
         self,
         name,
+        *args,
         unit=None,
         description=None,
         aggregator_class=SumAggregator,
-        *args,
         **kwargs
     ):
         self._attributes_aggregators = {}
         super().__init__(
             name,
+            *args,
             unit=unit,
             description=description,
             aggregator_class=aggregator_class,
-            *args,
             **kwargs
         )
 
@@ -114,14 +114,15 @@ class _Synchronous(Synchronous, _Instrument):
 
         if self._views:
 
-            for view in self._views:
-                for key, value in key_values.items():
-                    if value is not None and key_values[key] != value:
+            for _ in self._views:
+                for key, attribute in key_values.items():
+                    if attribute is not None and key_values[key] != value:
                         return
 
         attributes = frozenset(attributes.items())
         if attributes not in self._attributes_aggregators.keys():
 
+            # pylint: disable=abstract-class-instantiated
             self._attributes_aggregators[attributes] = self._aggregator_class()
         self._attributes_aggregators[attributes].aggregate(value)
 
@@ -131,19 +132,19 @@ class _Asynchronous(Asynchronous, _Instrument):
         self,
         name,
         callback: Generator,
+        *args,
         unit=None,
         description=None,
         aggregator_class=LastAggregator,
-        *args,
         **kwargs
     ):
         super().__init__(
             name,
             callback,
+            *args,
             unit=unit,
             description=description,
             aggregator_class=aggregator_class,
-            *args,
             **kwargs
         )
 
@@ -195,18 +196,18 @@ class Histogram(Histogram, _Grouping, _Synchronous):
     def __init__(
         self,
         name,
+        *args,
         unit=None,
         description=None,
         aggregator_class=MinMaxSumCountAggregator,
-        *args,
         **kwargs
     ):
         super().__init__(
             name,
+            *args,
             unit=unit,
             description=description,
             aggregator_class=aggregator_class,
-            *args,
             **kwargs
         )
 
@@ -219,18 +220,18 @@ class ObservableGauge(ObservableGauge, _Grouping, _Asynchronous):
         self,
         name,
         callback,
+        *args,
         unit=None,
         description=None,
         aggregator_class=MinMaxSumCountLastAggregator,
-        *args,
         **kwargs
     ):
         super().__init__(
             name,
             callback,
+            *args,
             unit=unit,
             description=description,
             aggregator_class=aggregator_class,
-            *args,
             **kwargs
         )
