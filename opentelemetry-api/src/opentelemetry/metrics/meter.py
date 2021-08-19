@@ -162,10 +162,6 @@ class DefaultMeter(Meter):
 
 
 class MeterProvider(ABC):
-    """
-    var
-    """
-
     @abstractmethod
     def get_meter(
         self,
@@ -173,9 +169,6 @@ class MeterProvider(ABC):
         version=None,
         schema_url=None,
     ) -> Meter:
-        """
-        vpas
-        """
         pass
 
 
