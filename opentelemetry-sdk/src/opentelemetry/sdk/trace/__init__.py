@@ -553,7 +553,7 @@ class SpanLimits:
             the specified length will be truncated.
     """
 
-    UNSET = "unset"
+    UNSET = -1
 
     def __init__(
         self,
