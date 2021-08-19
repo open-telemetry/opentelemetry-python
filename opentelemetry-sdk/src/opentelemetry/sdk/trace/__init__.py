@@ -536,6 +536,12 @@ class SpanLimits:
       environment variable.
     - If the environment variable is not set, the default value for the limit is used.
 
+    Limit precedence:
+    
+    - If a model specific limit is set, it will be used.
+    - Else if the model specific limit has a default value, the default value will be used.
+    - Else if model specific limit has a corresponding global limit, the global limit will be used. 
+
     Args:
         max_attributes: Maximum number of attributes that can be added to a Span.
             Environment variable: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
@@ -592,10 +598,6 @@ class SpanLimits:
             max_link_attributes,
             OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
             _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
-        )
-        self.max_attribute_length = self._from_env_if_absent(
-            max_attribute_length,
-            OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
         )
 
         self.max_attribute_length = self._from_env_if_absent(
