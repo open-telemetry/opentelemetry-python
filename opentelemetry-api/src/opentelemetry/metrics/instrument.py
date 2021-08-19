@@ -31,7 +31,7 @@ class Instrument(ABC):
     _name_regex = compile_(r"[a-zA-Z][-.\w]{0,62}", ASCII)
 
     @abstractmethod
-    def __init__(self, name, unit="", description="", *args, **kwargs):
+    def __init__(self, name, *args, unit="", description="", **kwargs):
 
         if self._name_regex.fullmatch(name) is None:
             raise Exception("Invalid instrument name {}".format(name))
@@ -47,7 +47,7 @@ class Synchronous(Instrument):
 class Asynchronous(Instrument):
     @abstractmethod
     def __init__(
-        self, name, callback, unit="", description="", *args, **kwargs
+        self, name, callback, *args, unit="", description="", **kwargs
     ):
 
         if not isinstance(callback, Callable):
@@ -58,7 +58,7 @@ class Asynchronous(Instrument):
         )
 
     def observe(self):
-        return next(self._callback)
+        return next(self._callback)  # pylint: disable=no-member
 
 
 class Adding(Instrument):
@@ -83,7 +83,7 @@ class Counter(Monotonic, Synchronous):
         if amount < 0:
             raise Exception("Amount must be non-negative")
 
-        super().add(amount, **attributes)
+        super().add(amount, **attributes)  # pylint: disable=no-member
 
 
 class DefaultCounter(Counter):

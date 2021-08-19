@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=arguments-differ
+# pylint: disable=super-init-not-called
+# pylint: disable=protected-access
+# pylint: disable=attribute-defined-outside-init
+
 from abc import ABC, abstractmethod
 from logging import getLogger
 from math import inf
@@ -141,14 +146,11 @@ class Aggregator(ABC):
 
         else:
             for parent_class in self.__class__.__bases__:
+                # pylint: disable=no-member
                 getattr(self, parent_class._get_value_name()).aggregate(value)
 
     @abstractmethod
     def _aggregate(self, new_value):
-        """_aggregate.
-
-        :param new_value:
-        """
         pass
 
     def _add_attributes(self, *args, **kwargs):
@@ -298,7 +300,7 @@ class HistogramAggregator(Aggregator):
 
         for bucket in self._value:
             if value < bucket.lower.value:
-                _logger.warning("Value %s below lower histogram bound" % value)
+                _logger.warning("Value %s below lower histogram bound", value)
                 break
 
             if (bucket.upper.inclusive and value <= bucket.upper.value) or (
@@ -309,7 +311,7 @@ class HistogramAggregator(Aggregator):
 
         else:
 
-            _logger.warning("Value %s over upper histogram bound" % value)
+            _logger.warning("Value %s over upper histogram bound", value)
 
         return self._value
 
