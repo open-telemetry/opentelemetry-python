@@ -29,7 +29,6 @@ from typing import (
     Callable,
     Dict,
     Iterator,
-    MutableSequence,
     Optional,
     Sequence,
     Tuple,
@@ -39,13 +38,13 @@ from typing import (
 
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
-from opentelemetry.attributes import (
-    BoundedAttributes,
-    _is_valid_attribute_value,
-)
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk import util
 from opentelemetry.sdk.environment_variables import (
+    OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
+    OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+    OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_SPAN_EVENT_COUNT_LIMIT,
     OTEL_SPAN_LINK_COUNT_LIMIT,
 )
@@ -550,6 +549,8 @@ class SpanLimits:
             Default: {_DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT}
         max_link_attributes: Maximum number of attributes that can be added to a Link.
             Default: {_DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT}
+        max_attribute_length: Maximum length an attribute value can have. Values longer than
+            the specified length will be truncated.
     """
 
     UNSET = -1
@@ -561,6 +562,7 @@ class SpanLimits:
         max_links: Optional[int] = None,
         max_event_attributes: Optional[int] = None,
         max_link_attributes: Optional[int] = None,
+        max_attribute_length: Optional[int] = None,
     ):
         self.max_attributes = self._from_env_if_absent(
             max_attributes,
@@ -579,28 +581,33 @@ class SpanLimits:
         )
         self.max_event_attributes = self._from_env_if_absent(
             max_event_attributes,
-            OTEL_SPAN_LINK_COUNT_LIMIT,
+            OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
             _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
         )
         self.max_link_attributes = self._from_env_if_absent(
             max_link_attributes,
-            OTEL_SPAN_LINK_COUNT_LIMIT,
+            OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
             _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
+        )
+        self.max_attribute_length = self._from_env_if_absent(
+            max_attribute_length,
+            OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT,
         )
 
     def __repr__(self):
-        return "{}(max_attributes={}, max_events={}, max_links={}, max_event_attributes={}, max_link_attributes={})".format(
+        return "{}(max_attributes={}, max_events={}, max_links={}, max_event_attributes={}, max_link_attributes={}, max_attribute_length={})".format(
             type(self).__name__,
             self.max_attributes,
             self.max_events,
             self.max_links,
             self.max_event_attributes,
             self.max_link_attributes,
+            self.max_attribute_length,
         )
 
     @classmethod
     def _from_env_if_absent(
-        cls, value: Optional[int], env_var: str, default: Optional[int]
+        cls, value: Optional[int], env_var: str, default: Optional[int] = None
     ) -> Optional[int]:
         if value is cls.UNSET:
             return None
@@ -630,8 +637,10 @@ _UnsetLimits = SpanLimits(
     max_links=SpanLimits.UNSET,
     max_event_attributes=SpanLimits.UNSET,
     max_link_attributes=SpanLimits.UNSET,
+    max_attribute_length=SpanLimits.UNSET,
 )
 
+# not remove for backward compat. please use SpanLimits instead.
 SPAN_ATTRIBUTE_COUNT_LIMIT = SpanLimits._from_env_if_absent(
     None,
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
@@ -701,19 +710,30 @@ class Span(trace_api.Span, ReadableSpan):
         self._limits = limits
         self._lock = threading.Lock()
         self._attributes = BoundedAttributes(
-            self._limits.max_attributes, attributes, immutable=False
+            self._limits.max_attributes,
+            attributes,
+            immutable=False,
+            max_value_len=self._limits.max_attribute_length,
         )
         self._events = self._new_events()
         if events:
             for event in events:
                 event._attributes = BoundedAttributes(
-                    self._limits.max_event_attributes, event.attributes
+                    self._limits.max_event_attributes,
+                    event.attributes,
+                    max_value_len=self._limits.max_attribute_length,
                 )
                 self._events.append(event)
 
         if links is None:
             self._links = self._new_links()
         else:
+            for link in links:
+                link._attributes = BoundedAttributes(
+                    self._limits.max_link_attributes,
+                    link.attributes,
+                    max_value_len=self._limits.max_attribute_length,
+                )
             self._links = BoundedList.from_seq(self._limits.max_links, links)
 
     def __repr__(self):
@@ -739,25 +759,6 @@ class Span(trace_api.Span, ReadableSpan):
                 return
 
             for key, value in attributes.items():
-                if not _is_valid_attribute_value(value):
-                    continue
-
-                if not key:
-                    logger.warning("invalid key `%s` (empty or null)", key)
-                    continue
-
-                # Freeze mutable sequences defensively
-                if isinstance(value, MutableSequence):
-                    value = tuple(value)
-                if isinstance(value, bytes):
-                    try:
-                        value = value.decode()
-                    except ValueError:
-                        logger.warning(
-                            "Byte attribute could not be decoded for key `%s`.",
-                            key,
-                        )
-                        return
                 self._attributes[key] = value
 
     def set_attribute(self, key: str, value: types.AttributeValue) -> None:
@@ -774,7 +775,9 @@ class Span(trace_api.Span, ReadableSpan):
         timestamp: Optional[int] = None,
     ) -> None:
         attributes = BoundedAttributes(
-            self._limits.max_event_attributes, attributes
+            self._limits.max_event_attributes,
+            attributes,
+            max_value_len=self._limits.max_attribute_length,
         )
         self._add_event(
             Event(
@@ -1062,6 +1065,12 @@ class TracerProvider(trace_api.TracerProvider):
         self.sampler = sampler
         self._span_limits = span_limits or SpanLimits()
         self._atexit_handler = None
+
+        self._resource._attributes = BoundedAttributes(
+            self._span_limits.max_attributes,
+            self._resource._attributes,
+            max_value_len=self._span_limits.max_attribute_length,
+        )
         if shutdown_on_exit:
             self._atexit_handler = atexit.register(self.shutdown)
 
