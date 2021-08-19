@@ -1,11 +1,9 @@
-from asyncio import sleep, gather, run, Queue, create_task
-from random import random, seed, choice, randint
+from asyncio import Queue, create_task, gather, run, sleep
+from random import choice, randint, random, seed
 from unittest import TestCase
 
-from opentelemetry.sdk.metrics.meter import MeterProvider
-
 from opentelemetry.sdk.metrics.aggregator import LastAggregator
-
+from opentelemetry.sdk.metrics.meter import MeterProvider
 
 seed(3)
 
@@ -25,27 +23,26 @@ async def main():
     active_requests = meter.create_up_down_counter(
         "active_requests",
         unit="active requests",
-        description="Currently active requests"
+        description="Currently active requests",
     )
 
     humidity = meter.create_counter(
         "humidity",
         unit="percentage",
         description="Server humidity",
-        aggregator_class=LastAggregator
+        aggregator_class=LastAggregator,
     )
 
     temperature = meter.create_up_down_counter(
         "temperature",
         unit="F",
         description="Server temperature",
-        aggregator_class=LastAggregator
+        aggregator_class=LastAggregator,
     )
 
     tester_queue = Queue()
 
     class Push:
-
         async def start(self):
 
             while True:
@@ -56,7 +53,6 @@ async def main():
                 )
 
     class Exporter:
-
         def export(self):
             print(
                 "Exported active requests: {}".format(
@@ -70,7 +66,6 @@ async def main():
     the_exporter = TheExporter()
 
     class Tester(TestCase):
-
         async def test_http_proto(self):
 
             result = await tester_queue.get()
@@ -86,7 +81,6 @@ async def main():
             tester_queue.task_done()
 
     class Server:
-
         def __init__(self):
             self.address = 32
             self.queue = addresses_queues[self.address]
@@ -96,9 +90,7 @@ async def main():
             while True:
 
                 address = await self.queue.get()
-                active_requests.add(
-                    1, host_name="MachineA"
-                )
+                active_requests.add(1, host_name="MachineA")
                 humidity.add(randint(0, 100), host_name="MachineA")
                 temperature.add(randint(-20, 100), host_name="MachineA")
                 print(
@@ -119,7 +111,6 @@ async def main():
                 self.queue.task_done()
 
     class Client:
-
         def __init__(self, address):
 
             self.address = address
@@ -159,7 +150,7 @@ async def main():
             Client(35).request(),
             Client(36).request(),
             Client(37).request(),
-            Tester().test_http_proto()
+            Tester().test_http_proto(),
         ]
     )
 

@@ -17,6 +17,12 @@
 from threading import Lock
 
 from opentelemetry.metrics.meter import Measurement, Meter, MeterProvider
+from opentelemetry.sdk.metrics.aggregator import (
+    LastAggregator,
+    MinMaxSumCountAggregator,
+    MinMaxSumCountLastAggregator,
+    SumAggregator,
+)
 from opentelemetry.sdk.metrics.instrument import (
     Counter,
     Histogram,
@@ -26,12 +32,6 @@ from opentelemetry.sdk.metrics.instrument import (
     UpDownCounter,
 )
 from opentelemetry.util.types import Attributes
-from opentelemetry.sdk.metrics.aggregator import (
-    SumAggregator,
-    LastAggregator,
-    MinMaxSumCountAggregator,
-    MinMaxSumCountLastAggregator
-)
 
 
 class Measurement(Measurement):
@@ -72,8 +72,7 @@ class Meter(Meter):
             for instrument_name, instrument in instruments.items():
                 instrument_records[instrument_class_name][instrument_name] = {
                     attributes: aggregator.value
-                    for attributes, aggregator in
-                    instrument._attributes_aggregators.items()
+                    for attributes, aggregator in instrument._attributes_aggregators.items()
                 }
 
         return instrument_records
@@ -84,7 +83,7 @@ class Meter(Meter):
         name,
         unit=None,
         description=None,
-        aggregator_class=None
+        aggregator_class=None,
     ):
         if instrument_class.__name__ not in self._instruments.keys():
             self._instruments[instrument_class.__name__] = {}
@@ -92,8 +91,7 @@ class Meter(Meter):
         if name in self._instruments[instrument_class.__name__].keys():
             raise Exception(
                 "Only one {}-typed instrument named {} can be created".format(
-                    instrument_class.__name__,
-                    name
+                    instrument_class.__name__, name
                 )
             )
 
@@ -101,7 +99,7 @@ class Meter(Meter):
             name,
             unit=unit,
             description=description,
-            aggregator_class=aggregator_class
+            aggregator_class=aggregator_class,
         )
 
         instrument._views = self._views
@@ -111,18 +109,14 @@ class Meter(Meter):
         return instrument
 
     def create_counter(
-        self,
-        name,
-        unit=None,
-        description=None,
-        aggregator_class=SumAggregator
+        self, name, unit=None, description=None, aggregator_class=SumAggregator
     ) -> Counter:
         return self._create_instrument(
             Counter,
             name,
             unit=unit,
             description=description,
-            aggregator_class=aggregator_class
+            aggregator_class=aggregator_class,
         )
 
     def create_up_down_counter(
@@ -133,7 +127,7 @@ class Meter(Meter):
             name,
             unit=unit,
             description=description,
-            aggregator_class=aggregator_class
+            aggregator_class=aggregator_class,
         )
 
     def create_observable_counter(
@@ -142,7 +136,7 @@ class Meter(Meter):
         callback,
         unit=None,
         description=None,
-        aggregator_class=LastAggregator
+        aggregator_class=LastAggregator,
     ) -> ObservableCounter:
         return self._create_instrument(
             ObservableCounter,
@@ -150,7 +144,7 @@ class Meter(Meter):
             callback,
             unit=unit,
             description=description,
-            aggregator_class=aggregator_class
+            aggregator_class=aggregator_class,
         )
 
     def create_histogram(
@@ -165,7 +159,7 @@ class Meter(Meter):
             name,
             unit=unit,
             description=description,
-            aggregator_class=aggregator_class
+            aggregator_class=aggregator_class,
         )
 
     def create_observable_gauge(
@@ -181,7 +175,7 @@ class Meter(Meter):
             name,
             unit=unit,
             description=description,
-            aggregator_class=aggregator_class
+            aggregator_class=aggregator_class,
         )
 
     def create_observable_up_down_counter(
@@ -190,19 +184,18 @@ class Meter(Meter):
         callback,
         unit=None,
         description=None,
-        aggregator_class=LastAggregator
+        aggregator_class=LastAggregator,
     ) -> ObservableUpDownCounter:
         return self._create_instrument(
             ObservableUpDownCounter,
             name,
             unit=unit,
             description=description,
-            aggregator_class=aggregator_class
+            aggregator_class=aggregator_class,
         )
 
 
 class MeterProvider(MeterProvider):
-
     def __init__(self, *args, **kwargs):
         self._views = []
 
@@ -227,7 +220,7 @@ class MeterProvider(MeterProvider):
         metrics_stream_description=None,
         metrics_stream_attribute_keys=None,
         metrics_stream_extra_dimensions=None,
-        metrics_stream_aggregation=None
+        metrics_stream_aggregation=None,
     ):
 
         if (

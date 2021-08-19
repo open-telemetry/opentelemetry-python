@@ -159,12 +159,7 @@ class Aggregator(ABC):
         pass
 
     def _initialize(
-        self,
-        type_,
-        self_args,
-        self_kwargs,
-        parent_args,
-        parent_kwargs
+        self, type_, self_args, self_kwargs, parent_args, parent_kwargs
     ):
 
         if self.__class__ == type_:
@@ -175,9 +170,7 @@ class Aggregator(ABC):
 
         else:
             setattr(
-                self,
-                type_._get_value_name(),
-                type_(*self_args, **self_kwargs)
+                self, type_._get_value_name(), type_(*self_args, **self_kwargs)
             )
             super(type_, self).__init__(*parent_args, **parent_kwargs)
 
@@ -269,7 +262,6 @@ class LastAggregator(Aggregator):
 
 
 class HistogramAggregator(Aggregator):
-
     def __init__(self, buckets, *parent_args, **parent_kwargs):
         self._initialize(
             HistogramAggregator, [buckets], {}, parent_args, parent_kwargs
@@ -323,7 +315,6 @@ class HistogramAggregator(Aggregator):
 
 
 class BoundSetAggregator(Aggregator):
-
     def __init__(
         self, lower_bound, upper_bound, *parent_args, **parent_kwargs
     ):
@@ -332,7 +323,7 @@ class BoundSetAggregator(Aggregator):
             [lower_bound, upper_bound],
             {},
             parent_args,
-            parent_kwargs
+            parent_kwargs,
         )
 
     def _add_attributes(self, lower_bound, upper_bound):
@@ -383,6 +374,6 @@ class MinMaxSumCountLastAggregator(
     MaxAggregator,
     SumAggregator,
     CountAggregator,
-    LastAggregator
+    LastAggregator,
 ):
     pass

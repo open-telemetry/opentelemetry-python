@@ -13,12 +13,11 @@
 # limitations under the License.
 
 
+from io import StringIO
 from unittest import TestCase
 from unittest.mock import patch
-from io import StringIO
 
 from opentelemetry.sdk.metrics.export import ConsoleExporter, Record
-
 
 records = """{
     "instrument": "a",
@@ -36,7 +35,6 @@ records = """{
 
 
 class TestExport(TestCase):
-
     def test_console_exporter(self):
 
         with patch("sys.stdout", new=StringIO()) as stdout:
@@ -46,7 +44,4 @@ class TestExport(TestCase):
                     Record("e", "f", "g", "h"),
                 ]
             )
-            self.assertEqual(
-                stdout.getvalue(),
-                records
-            )
+            self.assertEqual(stdout.getvalue(), records)

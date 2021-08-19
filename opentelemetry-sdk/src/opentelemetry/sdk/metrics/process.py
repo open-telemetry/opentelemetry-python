@@ -12,20 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from ABC import abstractmethod
 from threading import Thread
 from time import sleep
 
+from ABC import abstractmethod
+
 
 class Process(Thread):
-
     def __init__(
-        self,
-        meter,
-        views,
-        measurement_processors,
-        metric_processors,
-        exporter
+        self, meter, views, measurement_processors, metric_processors, exporter
     ):
         self._meter = meter
         self._views = views
@@ -42,14 +37,7 @@ class Process(Thread):
 
 
 class IntervalProcess(Process):
-
-    def __init__(
-        self,
-        meter,
-        instruments,
-        interval,
-        exporter
-    ):
+    def __init__(self, meter, instruments, interval, exporter):
         super().__init__(meter, instruments)
         self._interval = interval
         self._stopped = False

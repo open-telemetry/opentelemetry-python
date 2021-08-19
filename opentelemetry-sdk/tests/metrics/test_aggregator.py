@@ -18,6 +18,7 @@ from math import inf
 from unittest import TestCase
 
 from opentelemetry.sdk.metrics.aggregator import (
+    Aggregator,
     BoundSetAggregator,
     CountAggregator,
     HistogramAggregator,
@@ -27,7 +28,6 @@ from opentelemetry.sdk.metrics.aggregator import (
     MinMaxSumAggregator,
     MinMaxSumHistogramAggregator,
     SumAggregator,
-    Aggregator,
     _logger,
 )
 
@@ -348,7 +348,6 @@ class TestAggregator(TestCase):
 
     def test_aggregator_with_args_and_kwargs(self):
         class ArgsAndKwargsAggregator(Aggregator):
-
             def __init__(
                 self,
                 self_arg_a,
@@ -363,9 +362,10 @@ class TestAggregator(TestCase):
                     (self_arg_a, self_arg_b),
                     {
                         "self_kwarg_a": self_kwarg_a,
-                        "self_kwarg_b": self_kwarg_b
+                        "self_kwarg_b": self_kwarg_b,
                     },
-                    parent_args, parent_kwargs
+                    parent_args,
+                    parent_kwargs,
                 )
 
             def _add_attributes(
@@ -373,7 +373,7 @@ class TestAggregator(TestCase):
                 self_arg_a,
                 self_arg_b,
                 self_kwarg_a="a",
-                self_kwarg_b="b"
+                self_kwarg_b="b",
             ):
                 self._arg_a = self_arg_a
                 self._arg_b = self_arg_b
@@ -395,7 +395,7 @@ class TestAggregator(TestCase):
                         self._arg_b,
                         self._kwarg_a,
                         self._kwarg_b,
-                        value
+                        value,
                     ]
                 )
 

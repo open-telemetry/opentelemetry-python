@@ -16,13 +16,6 @@
 
 from typing import Generator
 
-from opentelemetry.sdk.metrics.aggregator import (
-    Aggregator,
-    SumAggregator,
-    LastAggregator,
-    MinMaxSumCountAggregator,
-    MinMaxSumCountLastAggregator,
-)
 from opentelemetry.metrics.instrument import (
     Adding,
     Asynchronous,
@@ -38,6 +31,13 @@ from opentelemetry.metrics.instrument import (
     Synchronous,
     UpDownCounter,
 )
+from opentelemetry.sdk.metrics.aggregator import (
+    Aggregator,
+    LastAggregator,
+    MinMaxSumCountAggregator,
+    MinMaxSumCountLastAggregator,
+    SumAggregator,
+)
 
 
 class _Instrument(Instrument):
@@ -52,11 +52,7 @@ class _Instrument(Instrument):
     ):
 
         super().__init__(
-            name,
-            unit=unit,
-            description=description,
-            *args,
-            **kwargs
+            name, unit=unit, description=description, *args, **kwargs
         )
 
         self._aggregator_class = aggregator_class
