@@ -58,8 +58,6 @@ async def main():
     class Exporter:
 
         def export(self):
-            from ipdb import set_trace
-            set_trace
             print(
                 "Exported active requests: {}".format(
                     active_requests.value(host_name="MachineA")
