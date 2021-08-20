@@ -165,7 +165,9 @@ async def main():
 
 
 class TestHTTPServerClient(TestCase):
-    @mark.skipif(version_info.minor == 6)
+    @mark.skipif(
+        version_info.minor == 6, reason="create_task does not exist in 3.6"
+    )
     def test_case(self):
 
         run(main())
