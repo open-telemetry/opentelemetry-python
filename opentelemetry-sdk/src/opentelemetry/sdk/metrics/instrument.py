@@ -13,6 +13,8 @@
 # limitations under the License.
 
 # pylint: disable=function-redefined,too-many-ancestors,protected-access
+# pylint: disable=arguments-differ,useless-super-delegation
+# type:ignore
 
 from typing import Generator
 
@@ -77,7 +79,7 @@ class _Instrument(Instrument):
         return self._description
 
     def value(self, **attributes):
-        return self._attributes_aggregators[
+        return self._attributes_aggregators[  # pylint: disable=no-member
             frozenset(attributes.items())
         ]._value
 
@@ -152,8 +154,8 @@ class _Asynchronous(Asynchronous, _Instrument):
 
     def observe(self):
         # FIXME make this limited by a timeout
-        value, attributes = super().observe()
-        self._aggregator.aggregate(value)
+        value, _ = super().observe()
+        self._aggregator.aggregate(value)  # pylint: disable=no-member
 
 
 class _Adding(Adding, _Instrument):

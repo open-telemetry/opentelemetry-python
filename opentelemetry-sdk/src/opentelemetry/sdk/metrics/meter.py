@@ -13,6 +13,7 @@
 # limitations under the License.
 
 # pylint: disable=function-redefined,too-many-ancestors,arguments-differ
+# pylint: disable=protected-access
 
 from threading import Lock
 
@@ -238,6 +239,7 @@ class MeterProvider(MeterProvider):
         metrics_stream_aggregation=None,
     ):
 
+        # pylint: disable=too-many-boolean-expressions
         if (
             name is None
             and instrument_type is None

@@ -174,6 +174,7 @@ class Aggregator(ABC):
             setattr(
                 self, type_._get_value_name(), type_(*self_args, **self_kwargs)
             )
+            # pylint: disable=bad-super-call
             super(type_, self).__init__(*parent_args, **parent_kwargs)
 
 
@@ -344,10 +345,10 @@ class BoundSetAggregator(Aggregator):
     def _aggregate(self, value):
 
         if value < self._lower_bound:
-            _logger.warning("Value %s below lower set bound" % value)
+            _logger.warning("Value %s below lower set bound", value)
 
         elif value > self._upper_bound:
-            _logger.warning("Value %s over upper set bound" % value)
+            _logger.warning("Value %s over upper set bound", value)
 
         else:
             self._value.add(value)
@@ -371,6 +372,7 @@ class MinMaxSumCountAggregator(
     pass
 
 
+# pylint: disable=too-many-ancestors
 class MinMaxSumCountLastAggregator(
     MinAggregator,
     MaxAggregator,
