@@ -10,4 +10,3 @@ OpenTelemetry Python SDK
     trace
     error_handler
     environment_variables
-    metrics
