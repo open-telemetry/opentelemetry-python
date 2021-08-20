@@ -1,6 +1,9 @@
 from asyncio import Queue, create_task, gather, run, sleep
 from random import choice, randint, random, seed
+from sys import version_info
 from unittest import TestCase
+
+from pytest import mark
 
 from opentelemetry.sdk.metrics.aggregator import LastAggregator
 from opentelemetry.sdk.metrics.meter import MeterProvider
@@ -162,6 +165,8 @@ async def main():
 
 
 class TestHTTPServerClient(TestCase):
+
+    @mark.skipif(version_info.minor == 6)
     def test_case(self):
 
         run(main())
