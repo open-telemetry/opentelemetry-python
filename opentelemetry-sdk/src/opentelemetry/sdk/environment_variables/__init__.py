@@ -348,8 +348,8 @@ OTEL_SERVICE_NAME = "OTEL_SERVICE_NAME"
 """
 .. envvar:: OTEL_SERVICE_NAME
 
-Convenience environment variable for setting the service name resource
-attribute. The following two environment variables have the same effect
+Convenience environment variable for setting the service name resource attribute.
+The following two environment variables have the same effect
 
 .. code-block:: console
 
@@ -359,40 +359,4 @@ attribute. The following two environment variables have the same effect
 
 
 If both are set, :envvar:`OTEL_SERVICE_NAME` takes precedence.
-"""
-
-OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE = "OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE"
-"""
-.. envvar:: OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE
-
-"""
-
-OTEL_EXPORTER_OTLP_METRIC_ENDPOINT = "OTEL_EXPORTER_OTLP_METRIC_ENDPOINT"
-"""
-.. envvar:: OTEL_EXPORTER_OTLP_METRIC_ENDPOINT
-
-"""
-
-OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE = "OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE"
-"""
-.. envvar:: OTEL_EXPORTER_OTLP_METRIC_CERTIFICATE
-
-"""
-
-OTEL_EXPORTER_OTLP_METRIC_INSECURE = "OTEL_EXPORTER_OTLP_METRIC_INSECURE"
-"""
-.. envvar:: OTEL_EXPORTER_OTLP_METRIC_INSECURE
-
-"""
-
-OTEL_EXPORTER_OTLP_METRIC_TIMEOUT = "OTEL_EXPORTER_OTLP_METRIC_TIMEOUT"
-"""
-.. envvar:: OTEL_EXPORTER_OTLP_METRIC_TIMEOUT
-
-"""
-
-OTEL_EXPORTER_OTLP_METRIC_HEADERS = "OTEL_EXPORTER_OTLP_METRIC_HEADERS"
-"""
-.. envvar:: OTEL_EXPORTER_OTLP_METRIC_HEADERS
-
 """
