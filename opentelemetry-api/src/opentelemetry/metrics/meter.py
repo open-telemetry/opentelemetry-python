@@ -15,6 +15,7 @@
 # pylint: disable=abstract-class-instantiated
 # pylint: disable=too-many-ancestors
 # pylint: disable=useless-super-delegation
+# type:ignore
 
 
 from abc import ABC, abstractmethod
