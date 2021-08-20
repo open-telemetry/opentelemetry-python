@@ -1,4 +1,4 @@
-from asyncio import Queue, create_task, gather, run, sleep
+from asyncio import Queue, gather, run, sleep
 from random import choice, randint, random, seed
 from sys import version_info
 from unittest import TestCase
@@ -136,6 +136,8 @@ async def main():
                 f"client_{self.address} result: {result}"
             )
             self.queue.task_done()
+
+    from asyncio import create_task
 
     server_0 = create_task(Server().serve())
     server_1 = create_task(Server().serve())
