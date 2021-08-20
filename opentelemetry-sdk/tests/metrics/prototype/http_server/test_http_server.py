@@ -1,4 +1,4 @@
-from asyncio import Queue, gather, run, sleep
+from asyncio import Queue, gather, sleep
 from random import choice, randint, random, seed
 from sys import version_info
 from unittest import TestCase
@@ -168,12 +168,11 @@ async def main():
 
 class TestHTTPServerClient(TestCase):
     @mark.skipif(
-        version_info.minor == 6, reason="create_task does not exist in 3.6"
+        version_info.minor == 6,
+        reason="create_task and run do not exist in 3.6"
     )
     def test_case(self):
 
+        from asyncio import run
+
         run(main())
-
-
-if __name__ == "__main__":
-    run(main())
