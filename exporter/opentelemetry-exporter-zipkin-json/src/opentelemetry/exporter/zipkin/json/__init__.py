@@ -173,7 +173,6 @@ class ZipkinExporter(SpanExporter):
                 self.local_node.service_name = service_name
         result = self.session.post(
             url=self.endpoint,
-            verify=False,
             data=self.encoder.serialize(spans, self.local_node),
             timeout=self.timeout,
         )
