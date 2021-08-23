@@ -63,6 +63,9 @@ The exporter supports the following environment variable for configuration:
 
 - :envvar:`OTEL_EXPORTER_ZIPKIN_ENDPOINT`
 - :envvar:`OTEL_EXPORTER_ZIPKIN_TIMEOUT`
+- :envvar:`OTEL_EXPORTER_ZIPKIN_CA_CERTIFICATE`
+- :envvar:`OTEL_EXPORTER_ZIPKIN_CLIENT_CERIFICATE`
+- :envvar:`OTEL_EXPORTER_ZIPKIN_CLIENT_KEY'
 
 API
 ---
@@ -79,6 +82,9 @@ from opentelemetry.exporter.zipkin.node_endpoint import IpInput, NodeEndpoint
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_ZIPKIN_ENDPOINT,
     OTEL_EXPORTER_ZIPKIN_TIMEOUT,
+    OTEL_EXPORTER_ZIPKIN_CA_CERIFICATE,
+    OTEL_EXPORTER_ZIPKIN_CLIENT_CERIFICATE,
+    OTEL_EXPORTER_ZIPKIN_CLIENT_KEY,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
@@ -132,6 +138,10 @@ class ZipkinExporter(SpanExporter):
         self.session.headers.update(
             {"Content-Type": self.encoder.content_type()}
         )
+        self.session.verify = environ.get(
+            OTEL_EXPORTER_ZIPKIN_CA_CERIFICATE, False)
+        self.session.cert = (environ.get(OTEL_EXPORTER_ZIPKIN_CLIENT_CERIFICATE, None), environ.get(
+            OTEL_EXPORTER_ZIPKIN_CLIENT_KEY, None))
         self._closed = False
         self.timeout = timeout or int(
             environ.get(OTEL_EXPORTER_ZIPKIN_TIMEOUT, 10)
