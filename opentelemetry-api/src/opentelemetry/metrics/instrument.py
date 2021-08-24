@@ -38,8 +38,11 @@ class Instrument(ABC):
         if self._name_regex.fullmatch(name) is None:
             raise Exception("Invalid instrument name {}".format(name))
 
-        if len(unit) > 63 or any(ord(character) > 127 for character in unit):
+        if len(unit) > 63:
             raise Exception("unit must be 63 characters or shorter")
+
+        if any(ord(character) > 127 for character in unit):
+            raise Exception("unit must only contain ASCII characters")
 
 
 class Synchronous(Instrument):
