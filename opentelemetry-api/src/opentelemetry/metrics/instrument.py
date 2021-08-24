@@ -40,6 +40,9 @@ class Instrument(ABC):
         # FIXME check that the unit is 63 characters or shorter
         # FIXME check that the unit contains only ASCII characters
 
+        if any(ord(character) > 127 for character in unit):
+            raise Exception("unit must only contain ASCII characters")
+
 
 class Synchronous(Instrument):
     pass

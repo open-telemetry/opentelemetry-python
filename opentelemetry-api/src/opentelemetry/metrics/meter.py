@@ -59,34 +59,34 @@ class Meter(ABC):
 
     # FIXME make unit and description be "" if unit or description are None
     @abstractmethod
-    def create_counter(self, name, unit=None, description=None) -> Counter:
+    def create_counter(self, name, unit="", description="") -> Counter:
         pass
 
     @abstractmethod
     def create_up_down_counter(
-        self, name, unit=None, description=None
+        self, name, unit="", description=""
     ) -> UpDownCounter:
         pass
 
     @abstractmethod
     def create_observable_counter(
-        self, name, callback, unit=None, description=None
+        self, name, callback, unit="", description=""
     ) -> ObservableCounter:
         pass
 
     @abstractmethod
-    def create_histogram(self, name, unit=None, description=None) -> Histogram:
+    def create_histogram(self, name, unit="", description="") -> Histogram:
         pass
 
     @abstractmethod
     def create_observable_gauge(
-        self, name, callback, unit=None, description=None
+        self, name, callback, unit="", description=""
     ) -> ObservableGauge:
         pass
 
     @abstractmethod
     def create_observable_up_down_counter(
-        self, name, callback, unit=None, description=None
+        self, name, callback, unit="", description=""
     ) -> ObservableUpDownCounter:
         pass
 
@@ -94,7 +94,7 @@ class Meter(ABC):
     def check_unique_name(checker):
         def wrapper_0(method):
             @wraps(method)
-            def wrapper_1(self, name, unit=None, description=None):
+            def wrapper_1(self, name, unit="", description=""):
                 checker(self, name)
                 return method(self, name, unit=unit, description=description)
 
@@ -115,18 +115,18 @@ class DefaultMeter(Meter):
         self._instrument_names.add(name)
 
     @Meter.check_unique_name(_instrument_name_checker)
-    def create_counter(self, name, unit=None, description=None) -> Counter:
+    def create_counter(self, name, unit="", description="") -> Counter:
         return DefaultCounter(name, unit=unit, description=description)
 
     @Meter.check_unique_name(_instrument_name_checker)
     def create_up_down_counter(
-        self, name, unit=None, description=None
+        self, name, unit="", description=""
     ) -> UpDownCounter:
         return DefaultUpDownCounter(name, unit=unit, description=description)
 
     @Meter.check_unique_name(_instrument_name_checker)
     def create_observable_counter(
-        self, name, callback, unit=None, description=None
+        self, name, callback, unit="", description=""
     ) -> ObservableCounter:
         return DefaultObservableCounter(
             name,
@@ -136,12 +136,12 @@ class DefaultMeter(Meter):
         )
 
     @Meter.check_unique_name(_instrument_name_checker)
-    def create_histogram(self, name, unit=None, description=None) -> Histogram:
+    def create_histogram(self, name, unit="", description="") -> Histogram:
         return DefaultHistogram(name, unit=unit, description=description)
 
     @Meter.check_unique_name(_instrument_name_checker)
     def create_observable_gauge(
-        self, name, callback, unit=None, description=None
+        self, name, callback, unit="", description=""
     ) -> ObservableGauge:
         return DefaultObservableGauge(  # pylint: disable=abstract-class-instantiated
             name,
@@ -152,7 +152,7 @@ class DefaultMeter(Meter):
 
     @Meter.check_unique_name(_instrument_name_checker)
     def create_observable_up_down_counter(
-        self, name, callback, unit=None, description=None
+        self, name, callback, unit="", description=""
     ) -> ObservableUpDownCounter:
         return DefaultObservableUpDownCounter(  # pylint: disable=abstract-class-instantiated
             name,
