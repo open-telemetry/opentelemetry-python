@@ -68,7 +68,7 @@ _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT = 128
 
 
-_ENV_VALUE_UNSET = "unset"
+_ENV_VALUE_UNSET = ""
 
 # pylint: disable=protected-access
 _TRACE_SAMPLER = sampling._get_from_env_or_default()
@@ -534,7 +534,7 @@ class SpanLimits:
     - All limit arguments are optional.
     - If a limit argument is not set, the class will try to read its value from the corresponding
       environment variable.
-    - If the environment variable is not set, the default value for the limit is used.
+    - If the environment variable is not set, the default value, if any, will be used.
 
     Limit precedence:
     
@@ -627,15 +627,18 @@ class SpanLimits:
     def _from_env_if_absent(
         cls, value: Optional[int], env_var: str, default: Optional[int] = None
     ) -> Optional[int]:
-        if value is cls.UNSET:
+        if value == cls.UNSET:
             return None
 
         err_msg = "{0} must be a non-negative integer but got {}"
 
+        # if no value is provided for the limit, try to load it from env
         if value is None:
-            str_value = environ.get(env_var, "").strip().lower()
-            if not str_value:
+            # return default value if env var is not set
+            if env_var not in environ:
                 return default
+
+            str_value = environ.get(env_var, "").strip().lower()
             if str_value == _ENV_VALUE_UNSET:
                 return None
 
