@@ -29,7 +29,15 @@ from opentelemetry.environment_variables import (
 logger = getLogger(__file__)
 
 
-def parse_args():
+def load_config_from_cli_args(args):
+    if args.trace_exporter:
+        environ[OTEL_TRACES_EXPORTER] = args.trace_exporter
+    if args.id_generator:
+        environ[OTEL_PYTHON_ID_GENERATOR] = args.id_generator
+
+
+def run() -> None:
+
     parser = argparse.ArgumentParser(
         description="""
         opentelemetry-instrument automatically instruments a Python
@@ -68,18 +76,9 @@ def parse_args():
         help="Arguments for your application.",
         nargs=argparse.REMAINDER,
     )
-    return parser.parse_args()
 
+    args = parser.parse_args()
 
-def load_config_from_cli_args(args):
-    if args.trace_exporter:
-        environ[OTEL_TRACES_EXPORTER] = args.trace_exporter
-    if args.id_generator:
-        environ[OTEL_PYTHON_ID_GENERATOR] = args.id_generator
-
-
-def run() -> None:
-    args = parse_args()
     load_config_from_cli_args(args)
 
     python_path = environ.get("PYTHONPATH")
