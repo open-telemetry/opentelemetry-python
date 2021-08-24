@@ -537,10 +537,10 @@ class SpanLimits:
     - If the environment variable is not set, the default value, if any, will be used.
 
     Limit precedence:
-    
+
     - If a model specific limit is set, it will be used.
     - Else if the model specific limit has a default value, the default value will be used.
-    - Else if model specific limit has a corresponding global limit, the global limit will be used. 
+    - Else if model specific limit has a corresponding global limit, the global limit will be used.
 
     Args:
         max_attributes: Maximum number of attributes that can be added to a Span.
