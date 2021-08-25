@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# pylint: disable=no-name-in-module
 
 """
 The OpenTelemetry tracing API describes the classes used to generate
@@ -85,9 +84,7 @@ from typing import Iterator, Optional, Sequence, cast
 from opentelemetry import context as context_api
 from opentelemetry.attributes import BoundedAttributes  # type: ignore
 from opentelemetry.context.context import Context
-from opentelemetry.environment_variables import (  # type: ignore
-    OTEL_PYTHON_TRACER_PROVIDER,
-)
+from opentelemetry.environment_variables import OTEL_PYTHON_TRACER_PROVIDER
 from opentelemetry.trace.propagation import (
     _SPAN_KEY,
     get_current_span,
@@ -496,7 +493,7 @@ def get_tracer_provider() -> TracerProvider:
 
         _TRACER_PROVIDER = cast(  # type: ignore
             "TracerProvider",
-            _load_provider(OTEL_PYTHON_TRACER_PROVIDER, "tracer_provider"),  # type: ignore
+            _load_provider(OTEL_PYTHON_TRACER_PROVIDER, "tracer_provider"),
         )
     return _TRACER_PROVIDER
 

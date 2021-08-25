@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# pylint: disable=no-name-in-module
 
 import sys
 from logging import getLogger
@@ -21,13 +20,13 @@ from re import sub
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry.environment_variables import (
-    OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
-)
 from opentelemetry.instrumentation.dependencies import (
     get_dist_dependency_conflicts,
 )
 from opentelemetry.instrumentation.distro import BaseDistro, DefaultDistro
+from opentelemetry.instrumentation.environment_variables import (
+    OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
+)
 
 logger = getLogger(__file__)
 
