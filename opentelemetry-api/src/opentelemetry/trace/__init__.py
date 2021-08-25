@@ -486,7 +486,7 @@ def get_tracer_provider() -> TracerProvider:
     if _TRACER_PROVIDER is None:
         # if a global tracer provider has not been set either via code or env
         # vars, return a proxy tracer provider
-        if OTEL_PYTHON_TRACER_PROVIDER not in os.environ:  # type: ignore
+        if OTEL_PYTHON_TRACER_PROVIDER not in os.environ:
             if not _PROXY_TRACER_PROVIDER:
                 _PROXY_TRACER_PROVIDER = ProxyTracerProvider()
             return _PROXY_TRACER_PROVIDER
