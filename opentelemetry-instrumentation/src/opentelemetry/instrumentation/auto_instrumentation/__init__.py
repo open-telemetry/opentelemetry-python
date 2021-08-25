@@ -15,13 +15,13 @@
 # limitations under the License.
 # pylint: disable=no-name-in-module
 
-from argparse import ArgumentParser, REMAINDER
+from argparse import REMAINDER, ArgumentParser
 from logging import getLogger
 from os import environ, execl, getcwd
 from os.path import abspath, dirname, pathsep
 from shutil import which
-from pkg_resources import iter_entry_points
 
+from pkg_resources import iter_entry_points
 
 _logger = getLogger(__file__)
 

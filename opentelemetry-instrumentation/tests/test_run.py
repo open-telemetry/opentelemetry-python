@@ -113,7 +113,7 @@ class TestArgs(TestCase):
 
         with patch(
             "sys.argv",
-            ["instrument", "--OTEL_TRACES_EXPORTER", "jaeger", "1", "2"]
+            ["instrument", "--OTEL_TRACES_EXPORTER", "jaeger", "1", "2"],
         ):
             auto_instrumentation.run()
             self.assertEqual(environ.get(OTEL_TRACES_EXPORTER), "jaeger")
