@@ -20,20 +20,10 @@ from logging import getLogger
 from os import environ, execl, getcwd
 from os.path import abspath, dirname, pathsep
 from shutil import which
-
-from opentelemetry.environment_variables import (
-    OTEL_PYTHON_ID_GENERATOR,
-    OTEL_TRACES_EXPORTER,
-)
-
-logger = getLogger(__file__)
+from pkg_resources import iter_entry_points
 
 
-def load_config_from_cli_args(args):
-    if args.trace_exporter:
-        environ[OTEL_TRACES_EXPORTER] = args.trace_exporter
-    if args.id_generator:
-        environ[OTEL_PYTHON_ID_GENERATOR] = args.id_generator
+_logger = getLogger(__file__)
 
 
 def run() -> None:
@@ -45,41 +35,30 @@ def run() -> None:
         """
     )
 
-    parser.add_argument(
-        "--trace-exporter",
-        required=False,
-        help="""
-        Uses the specified exporter to export spans.
-        Accepts multiple exporters as comma separated values.
+    otel_environment_variables = []
 
-        Examples:
+    for entry_point in iter_entry_points(
+        "opentelemetry_environment_variables"
+    ):
+        environment_variable_module = entry_point.load()
 
-            --trace-exporter=jaeger
-        """,
-    )
+        for attribute in dir(environment_variable_module):
 
-    parser.add_argument(
-        "--id-generator",
-        required=False,
-        help="""
-        The IDs Generator to be used with the Tracer Provider.
+            if attribute.startswith("OTEL_"):
 
-        Examples:
-
-            --id-generator=random
-        """,
-    )
-
-    parser.add_argument("command", help="Your Python application.")
-    parser.add_argument(
-        "command_args",
-        help="Arguments for your application.",
-        nargs=argparse.REMAINDER,
-    )
+                parser.add_argument(
+                    f"--{attribute}",
+                    required=False,
+                )
+                otel_environment_variables.append(attribute)
 
     args = parser.parse_args()
 
-    load_config_from_cli_args(args)
+    for otel_environment_variable in otel_environment_variables:
+        value = getattr(args, otel_environment_variable)
+        if value is not None:
+
+            environ[otel_environment_variable] = value
 
     python_path = environ.get("PYTHONPATH")
 
