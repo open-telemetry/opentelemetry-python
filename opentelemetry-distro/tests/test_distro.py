@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # type: ignore
-# pylint: disable=no-name-in-module
 
 import os
 from unittest import TestCase
