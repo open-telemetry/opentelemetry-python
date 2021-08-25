@@ -15,7 +15,7 @@
 # limitations under the License.
 # pylint: disable=no-name-in-module
 
-import argparse
+from argparse import ArgumentParser, REMAINDER
 from logging import getLogger
 from os import environ, execl, getcwd
 from os.path import abspath, dirname, pathsep
@@ -28,7 +28,7 @@ _logger = getLogger(__file__)
 
 def run() -> None:
 
-    parser = argparse.ArgumentParser(
+    parser = ArgumentParser(
         description="""
         opentelemetry-instrument automatically instruments a Python
         program and its dependencies and then runs the program.
@@ -51,6 +51,13 @@ def run() -> None:
                     required=False,
                 )
                 otel_environment_variables.append(attribute)
+
+    parser.add_argument("command", help="Your Python application.")
+    parser.add_argument(
+        "command_args",
+        help="Arguments for your application.",
+        nargs=REMAINDER,
+    )
 
     args = parser.parse_args()
 
