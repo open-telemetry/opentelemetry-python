@@ -80,6 +80,7 @@ commands that help automatically instruments a program.
     $ pip install opentelemetry-sdk
     $ pip install opentelemetry-instrumentation
     $ pip install opentelemetry-instrumentation-flask
+    $ pip install flask
     $ pip install requests
 
 Execute

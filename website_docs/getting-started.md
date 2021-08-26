@@ -39,11 +39,11 @@ from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
-    SimpleSpanProcessor,
+    BatchSpanProcessor,
 )
 
 provider = TracerProvider()
-processor = SimpleSpanProcessor(ConsoleSpanExporter())
+processor = BatchSpanProcessor(ConsoleSpanExporter())
 provider.add_span_processor(processor)
 trace.set_tracer_provider(provider)
 
@@ -54,6 +54,9 @@ with tracer.start_as_current_span("foo"):
     with tracer.start_as_current_span("bar"):
         with tracer.start_as_current_span("baz"):
             print("Hello world from OpenTelemetry Python!")
+
+# Flush all ended spans that are yet to be written to stdout before process exit.
+provider.force_flush()
 ```
 
 When you run the script you can see the traces printed to your console:
@@ -223,12 +226,12 @@ from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
-    SimpleSpanProcessor,
+    BatchSpanProcessor,
 )
 
 trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(
-    SimpleSpanProcessor(ConsoleSpanExporter())
+    BatchSpanProcessor(ConsoleSpanExporter())
 )
 
 app = flask.Flask(__name__)
@@ -244,7 +247,7 @@ def hello():
     return "hello"
 
 
-app.run(debug=True, port=5000)
+app.run(port=5000)
 ```
 
 Now run the script, hit the root URL ([http://localhost:5000/](http://localhost:5000/)) a few times, and watch your spans be emitted!

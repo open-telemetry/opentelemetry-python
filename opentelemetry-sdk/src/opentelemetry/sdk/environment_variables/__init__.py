@@ -98,12 +98,45 @@ The :envvar:`OTEL_BSP_MAX_EXPORT_BATCH_SIZE` represents the maximum batch size f
 Default: 512
 """
 
+OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT = "OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT"
+"""
+.. envvar:: OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT
+
+The :envvar:`OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT` represents the maximum allowed attribute length.
+"""
+
+OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT = "OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT"
+"""
+.. envvar:: OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT
+
+The :envvar:`OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT` represents the maximum allowed event attribute count.
+Default: 128
+"""
+
+OTEL_LINK_ATTRIBUTE_COUNT_LIMIT = "OTEL_LINK_ATTRIBUTE_COUNT_LIMIT"
+"""
+.. envvar:: OTEL_LINK_ATTRIBUTE_COUNT_LIMIT
+
+The :envvar:`OTEL_LINK_ATTRIBUTE_COUNT_LIMIT` represents the maximum allowed link attribute count.
+Default: 128
+"""
+
 OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT = "OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT"
 """
 .. envvar:: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
 
 The :envvar:`OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT` represents the maximum allowed span attribute count.
 Default: 128
+"""
+
+OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT = (
+    "OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT"
+)
+"""
+.. envvar:: OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT
+
+The :envvar:`OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT` represents the maximum allowed length
+span attribute values can have. This takes precedence over :envvar:`OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT`.
 """
 
 OTEL_SPAN_EVENT_COUNT_LIMIT = "OTEL_SPAN_EVENT_COUNT_LIMIT"
