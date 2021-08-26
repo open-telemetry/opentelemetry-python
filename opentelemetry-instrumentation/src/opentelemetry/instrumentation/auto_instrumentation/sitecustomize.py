@@ -28,7 +28,7 @@ from opentelemetry.instrumentation.dependencies import (
 )
 from opentelemetry.instrumentation.distro import BaseDistro, DefaultDistro
 
-logger = getLogger(__file__)
+_logger = getLogger(__file__)
 
 
 def _load_distros() -> BaseDistro:
@@ -36,17 +36,17 @@ def _load_distros() -> BaseDistro:
         try:
             distro = entry_point.load()()
             if not isinstance(distro, BaseDistro):
-                logger.debug(
+                _logger.debug(
                     "%s is not an OpenTelemetry Distro. Skipping",
                     entry_point.name,
                 )
                 continue
-            logger.debug(
+            _logger.debug(
                 "Distribution %s will be configured", entry_point.name
             )
             return distro
         except Exception as exc:  # pylint: disable=broad-except
-            logger.exception(
+            _logger.exception(
                 "Distribution %s configuration failed", entry_point.name
             )
             raise exc
@@ -62,7 +62,7 @@ def _load_instrumentors(distro):
 
     for entry_point in iter_entry_points("opentelemetry_instrumentor"):
         if entry_point.name in package_to_exclude:
-            logger.debug(
+            _logger.debug(
                 "Instrumentation skipped for library %s", entry_point.name
             )
             continue
@@ -70,7 +70,7 @@ def _load_instrumentors(distro):
         try:
             conflict = get_dist_dependency_conflicts(entry_point.dist)
             if conflict:
-                logger.debug(
+                _logger.debug(
                     "Skipping instrumentation %s: %s",
                     entry_point.name,
                     conflict,
@@ -79,9 +79,9 @@ def _load_instrumentors(distro):
 
             # tell instrumentation to not run dep checks again as we already did it above
             distro.load_instrumentor(entry_point, skip_dep_check=True)
-            logger.debug("Instrumented %s", entry_point.name)
+            _logger.debug("Instrumented %s", entry_point.name)
         except Exception as exc:  # pylint: disable=broad-except
-            logger.exception("Instrumenting of %s failed", entry_point.name)
+            _logger.exception("Instrumenting of %s failed", entry_point.name)
             raise exc
 
 
@@ -89,7 +89,7 @@ def _load_configurators():
     configured = None
     for entry_point in iter_entry_points("opentelemetry_configurator"):
         if configured is not None:
-            logger.warning(
+            _logger.warning(
                 "Configuration of %s not loaded, %s already loaded",
                 entry_point.name,
                 configured,
@@ -99,18 +99,18 @@ def _load_configurators():
             entry_point.load()().configure()  # type: ignore
             configured = entry_point.name
         except Exception as exc:  # pylint: disable=broad-except
-            logger.exception("Configuration of %s failed", entry_point.name)
+            _logger.exception("Configuration of %s failed", entry_point.name)
             raise exc
 
 
-def initialize():
+def _initialize():
     try:
         distro = _load_distros()
         distro.configure()
         _load_configurators()
         _load_instrumentors(distro)
     except Exception:  # pylint: disable=broad-except
-        logger.exception("Failed to auto initialize opentelemetry")
+        _logger.exception("Failed to auto initialize opentelemetry")
     finally:
         environ["PYTHONPATH"] = sub(
             r"{}{}?".format(dirname(abspath(__file__)), pathsep),
@@ -119,17 +119,17 @@ def initialize():
         )
 
 
-if (
-    hasattr(sys, "argv")
-    and sys.argv[0].split(path.sep)[-1] == "celery"
-    and "worker" in sys.argv[1:]
-):
-    from celery.signals import worker_process_init  # pylint:disable=E0401
+if __name__ == "sitecustomize":
+    if (
+        hasattr(sys, "argv")
+        and sys.argv[0].split(path.sep)[-1] == "celery"
+        and "worker" in sys.argv[1:]
+    ):
+        from celery.signals import worker_process_init  # pylint:disable=E0401
 
-    @worker_process_init.connect(weak=False)
-    def init_celery(*args, **kwargs):
-        initialize()
+        @worker_process_init.connect(weak=False)
+        def init_celery(*args, **kwargs):
+            _initialize()
 
-
-else:
-    initialize()
+    else:
+        _initialize()
