@@ -12,18 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import typing
+from typing import Optional, Mapping
 from types import MappingProxyType
+from logging import getLogger
+from re import compile as compile_
 
 from opentelemetry.context import create_key, get_value, set_value
 from opentelemetry.context.context import Context
 
 _BAGGAGE_KEY = create_key("baggage")
+_logger = getLogger(__name__)
+
+_key_regex = compile_(r"[!#-'*+-.0-9A-Z^-z|~]+")
+_value_regex = compile_(r"[!#-+.-:<-\[\]-~-]*")
 
 
 def get_all(
-    context: typing.Optional[Context] = None,
-) -> typing.Mapping[str, object]:
+    context: Optional[Context] = None,
+) -> Mapping[str, object]:
     """Returns the name/value pairs in the Baggage
 
     Args:
@@ -39,8 +45,8 @@ def get_all(
 
 
 def get_baggage(
-    name: str, context: typing.Optional[Context] = None
-) -> typing.Optional[object]:
+    name: str, context: Optional[Context] = None
+) -> Optional[object]:
     """Provides access to the value for a name/value pair in the
     Baggage
 
@@ -56,7 +62,7 @@ def get_baggage(
 
 
 def set_baggage(
-    name: str, value: object, context: typing.Optional[Context] = None
+    name: str, value: object, context: Optional[Context] = None
 ) -> Context:
     """Sets a value in the Baggage
 
@@ -68,13 +74,20 @@ def set_baggage(
     Returns:
         A Context with the value updated
     """
+    if _key_regex.fullmatch(name) is None or (
+        _value_regex.fullmatch(str(value)) is None
+    ):
+        _logger.warning(
+            "name %s and value %s have been discarded", name, value
+        )
+        return
     baggage = dict(get_all(context=context))
     baggage[name] = value
     return set_value(_BAGGAGE_KEY, baggage, context=context)
 
 
 def remove_baggage(
-    name: str, context: typing.Optional[Context] = None
+    name: str, context: Optional[Context] = None
 ) -> Context:
     """Removes a value from the Baggage
 
@@ -91,7 +104,7 @@ def remove_baggage(
     return set_value(_BAGGAGE_KEY, baggage, context=context)
 
 
-def clear(context: typing.Optional[Context] = None) -> Context:
+def clear(context: Optional[Context] = None) -> Context:
     """Removes all values from the Baggage
 
     Args:

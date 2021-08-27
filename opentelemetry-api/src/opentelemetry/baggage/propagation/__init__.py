@@ -24,11 +24,8 @@ from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
 
 _logger = getLogger(__name__)
-_key = r"[!#-'*+-.0-9A-Z^-z|~]+"
-_key_regex = compile_(_key)
-_value = r"[!#-+.-:<-\[\]-~-]*"
-_value_regex = compile_(_value)
-_key_value_regex = compile_(r"\s*{}\s*=\s*{}\s*".format(_key, _value))
+_key_regex = compile_(r"[!#-'*+-.0-9A-Z^-z|~]+")
+_value_regex = compile_(r"[!#-+.-:<-\[\]-~-]*")
 
 
 class W3CBaggagePropagator(textmap.TextMapPropagator):
@@ -65,9 +62,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         total_baggage_entries = self._MAX_PAIRS
         for entry in baggage_entries:
 
-            if _key_value_regex.match(entry) is None or (
-                total_baggage_entries <= 0
-            ):
+            if total_baggage_entries <= 0:
                 return context
             total_baggage_entries -= 1
             if len(entry) > self._MAX_PAIR_LENGTH:
