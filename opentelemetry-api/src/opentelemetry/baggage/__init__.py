@@ -88,7 +88,9 @@ def set_baggage(
     return set_value(_BAGGAGE_KEY, baggage, context=context)
 
 
-def remove_baggage(name: str, context: Optional[Context] = None) -> Context:
+def remove_baggage(
+    name: str, context: Optional[Context] = None
+) -> Optional[Context]:
     """Removes a value from the Baggage
 
     Args:
