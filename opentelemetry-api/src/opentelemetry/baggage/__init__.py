@@ -76,7 +76,7 @@ def set_baggage(
     Returns:
         A Context with the value updated
     """
-    if _key_regex.fullmatch(name) is None or (
+    if _key_regex.fullmatch(str(name)) is None or (
         _value_regex.fullmatch(str(value)) is None
     ):
         _logger.warning(
