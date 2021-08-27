@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, Mapping
-from types import MappingProxyType
 from logging import getLogger
 from re import compile as compile_
+from types import MappingProxyType
+from typing import Mapping, Optional
 
 from opentelemetry.context import create_key, get_value, set_value
 from opentelemetry.context.context import Context
@@ -23,6 +23,8 @@ from opentelemetry.context.context import Context
 _BAGGAGE_KEY = create_key("baggage")
 _logger = getLogger(__name__)
 
+# The following regular expressions are taken from
+# https://github.com/open-telemetry/opentelemetry-go/blob/4bf6150fa94e18bdf01c96ed78ee6d1c76f8e308/baggage/baggage.go#L36-L55
 _key_regex = compile_(r"[!#-'*+-.0-9A-Z^-z|~]+")
 _value_regex = compile_(r"[!#-+.-:<-\[\]-~-]*")
 
@@ -80,15 +82,13 @@ def set_baggage(
         _logger.warning(
             "name %s and value %s have been discarded", name, value
         )
-        return
+        return None
     baggage = dict(get_all(context=context))
     baggage[name] = value
     return set_value(_BAGGAGE_KEY, baggage, context=context)
 
 
-def remove_baggage(
-    name: str, context: Optional[Context] = None
-) -> Context:
+def remove_baggage(name: str, context: Optional[Context] = None) -> Context:
     """Removes a value from the Baggage
 
     Args:

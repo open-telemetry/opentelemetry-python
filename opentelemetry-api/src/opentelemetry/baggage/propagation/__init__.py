@@ -24,6 +24,9 @@ from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
 
 _logger = getLogger(__name__)
+
+# The following regexes are taken from
+# https://github.com/open-telemetry/opentelemetry-go/blob/4bf6150fa94e18bdf01c96ed78ee6d1c76f8e308/baggage/baggage.go#L36-L55
 _key_regex = compile_(r"[!#-'*+-.0-9A-Z^-z|~]+")
 _value_regex = compile_(r"[!#-+.-:<-\[\]-~-]*")
 
