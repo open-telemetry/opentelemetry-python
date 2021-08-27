@@ -65,7 +65,7 @@ def get_baggage(
 
 def set_baggage(
     name: str, value: object, context: Optional[Context] = None
-) -> Context:
+) -> Optional[Context]:
     """Sets a value in the Baggage
 
     Args:

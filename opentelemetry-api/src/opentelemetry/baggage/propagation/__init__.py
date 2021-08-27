@@ -66,7 +66,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         for entry in baggage_entries:
 
             if total_baggage_entries <= 0:
-                return context
+                return context  # type: ignore
             total_baggage_entries -= 1
             if len(entry) > self._MAX_PAIR_LENGTH:
                 _logger.warning("Entry %s has been discarded", entry)
@@ -85,7 +85,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
             if total_baggage_entries == 0:
                 break
 
-        return context
+        return context  # type: ignore
 
     def inject(
         self,
