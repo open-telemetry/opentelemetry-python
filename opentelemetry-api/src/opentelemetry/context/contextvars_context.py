@@ -44,7 +44,7 @@ class ContextVarsRuntimeContext(_RuntimeContext):
         return self._current_context.set(context)
 
     def get_current(self) -> Context:
-        """Returns the current `Context` object. """
+        """Returns the current `Context` object."""
         return self._current_context.get()
 
     def detach(self, token: object) -> None:
