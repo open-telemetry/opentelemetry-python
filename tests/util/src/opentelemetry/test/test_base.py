@@ -49,11 +49,15 @@ class TestBase(unittest.TestCase):
             self, self.memory_exporter.get_finished_spans()
         )
 
-    def assertSpanInstrumentationInfo(self, span, module):
+    def assertSpanInstrumentationInfo(  # pylint: disable=C0103
+        self, span, module
+    ):
         self.assertEqual(span.instrumentation_info.name, module.__name__)
         self.assertEqual(span.instrumentation_info.version, module.__version__)
 
-    def assertSpanHasAttributes(self, span, attributes):
+    def assertSpanHasAttributes(  # pylint: disable=C0103
+        self, span, attributes
+    ):
         for key, val in attributes.items():
             self.assertIn(key, span.attributes)
             self.assertEqual(val, span.attributes[key])
@@ -112,9 +116,11 @@ class FinishedTestSpans(list):
             if span.name == name:
                 return span
         self.test.fail("Did not find span with name {}".format(name))
+        return None
 
     def by_attr(self, key, value):
         for span in self:
             if span.attributes.get(key) == value:
                 return span
         self.test.fail("Did not find span with attrs {}={}".format(key, value))
+        return None
