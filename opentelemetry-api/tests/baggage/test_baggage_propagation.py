@@ -118,6 +118,29 @@ class TestBaggagePropagation(unittest.TestCase):
             {"key/key": "value/value"},
         )
 
+    def test_header_max_entries_skip_invalid_entry(self):
+
+        self.assertEqual(
+            self._extract(
+                ",".join(
+                    [
+                        f"key{index}=value{index}"
+                        if index != 2
+                        else (
+                            f"key{index}="
+                            f"value{'s' * (W3CBaggagePropagator._MAX_PAIR_LENGTH + 1)}"
+                        )
+                        for index in range(W3CBaggagePropagator._MAX_PAIRS + 1)
+                    ]
+                )
+            ),
+            {
+                f"key{index}": f"value{index}"
+                for index in range(W3CBaggagePropagator._MAX_PAIRS + 1)
+                if index != 2
+            },
+        )
+
     def test_inject_no_baggage_entries(self):
         values = {}
         output = self._inject(values)
