@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: 2319247930d8aed1c67a10c72fe3c1d0481fdbc6
+  CONTRIB_REPO_SHA: 8a2955d307d42377be2a9331a31e9a0c711eeeae
 
 jobs:
   build:
@@ -20,7 +20,7 @@ jobs:
       py37: 3.7
       py38: 3.8
       py39: 3.9
-      pypy3: pypy3
+      pypy3: pypy-3.7
       RUN_MATRIX_COMBINATION: ${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
@@ -42,6 +42,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ env[matrix.python-version] }}
+          architecture: 'x64'
       - name: Install tox
         run: pip install -U tox-factor
       - name: Cache tox environment
@@ -51,7 +52,7 @@ jobs:
           path: |
             .tox
             ~/.cache/pip
-          key: v1-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
+          key: v2-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
       # tox fails on windows and Python3.6 when tox dir is reused between builds so we remove it
       - name: fix for windows + py3.6
         if: ${{ matrix.os == 'windows-2019' && matrix.python-version == 'py36' }} 
@@ -102,6 +103,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
+          architecture: 'x64'
       - name: Install tox
         run: pip install -U tox
       - name: Cache tox environment
@@ -111,7 +113,7 @@ jobs:
           path: |
             .tox
             ~/.cache/pip
-          key: v1-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
+          key: v2-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
       - name: run tox
         run: tox -e ${{ matrix.tox-environment }}
   contrib-build:
@@ -144,6 +146,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ env[matrix.python-version] }}
+          architecture: 'x64'
       - name: Install tox
         run: pip install -U tox-factor
       - name: Cache tox environment
@@ -153,7 +156,7 @@ jobs:
           path: |
             .tox
             ~/.cache/pip
-          key: v1-tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
+          key: v2-tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
       - name: run tox
         run: tox -f ${{ matrix.python-version }}-${{ matrix.package }}
   contrib-misc:
@@ -178,6 +181,7 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
+          architecture: 'x64'
       - name: Install tox
         run: pip install -U tox
       - name: Cache tox environment
@@ -187,6 +191,6 @@ jobs:
           path: |
             .tox
             ~/.cache/pip
-          key: v1-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
+          key: v2-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
       - name: run tox
         run: tox -e ${{ matrix.tox-environment }}
