@@ -24,6 +24,8 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 
 
 class TestBase(unittest.TestCase):
+    # pylint: disable=C0103
+
     @classmethod
     def setUpClass(cls):
         cls.original_tracer_provider = trace_api.get_tracer_provider()
@@ -48,16 +50,12 @@ class TestBase(unittest.TestCase):
         return FinishedTestSpans(
             self, self.memory_exporter.get_finished_spans()
         )
-
-    def assertSpanInstrumentationInfo(  # pylint: disable=C0103
-        self, span, module
-    ):
+      
+    def assertEqualSpanInstrumentationInfo(self, span, module):
         self.assertEqual(span.instrumentation_info.name, module.__name__)
         self.assertEqual(span.instrumentation_info.version, module.__version__)
 
-    def assertSpanHasAttributes(  # pylint: disable=C0103
-        self, span, attributes
-    ):
+    def assertSpanHasAttributes(self, span, attributes):
         for key, val in attributes.items():
             self.assertIn(key, span.attributes)
             self.assertEqual(val, span.attributes[key])
