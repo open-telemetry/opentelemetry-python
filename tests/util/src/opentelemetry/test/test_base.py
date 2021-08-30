@@ -44,11 +44,11 @@ class TestBase(unittest.TestCase):
     def setUp(self):
         self.memory_exporter.clear()
 
-    def check_span_instrumentation_info(self, span, module):
+    def assertSpanInstrumentationInfo(self, span, module):
         self.assertEqual(span.instrumentation_info.name, module.__name__)
         self.assertEqual(span.instrumentation_info.version, module.__version__)
 
-    def assert_span_has_attributes(self, span, attributes):
+    def assertSpanHasAttributes(self, span, attributes):
         for key, val in attributes.items():
             self.assertIn(key, span.attributes)
             self.assertEqual(val, span.attributes[key])
