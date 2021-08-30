@@ -76,15 +76,15 @@ def set_baggage(
     Returns:
         A Context with the value updated
     """
+    baggage = dict(get_all(context=context))
     if _key_regex.fullmatch(str(name)) is None or (
         _value_regex.fullmatch(str(value)) is None
     ):
         _logger.warning(
             "name %s and value %s have been discarded", name, value
         )
-        return None
-    baggage = dict(get_all(context=context))
-    baggage[name] = value
+    else:
+        baggage[name] = value
     return set_value(_BAGGAGE_KEY, baggage, context=context)
 
 

@@ -38,6 +38,8 @@ class TestBaggagePropagation(unittest.TestCase):
         """Test helper"""
         ctx = get_current()
         for k, v in values.items():
+            from ipdb import set_trace
+            set_trace()
             ctx = baggage.set_baggage(k, v, context=ctx)
         output = {}
         self.propagator.inject(output, context=ctx)
