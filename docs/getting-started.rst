@@ -1,5 +1,5 @@
 Getting Started 
-=================
+===============
 
 This guide walks you through instrumenting a Python application with ``opentelemetry-python``.
 
