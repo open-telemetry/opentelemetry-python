@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 import typing
-import urllib.parse
+from urllib.parse import quote_plus, unquote
 
 from opentelemetry import baggage
 from opentelemetry.context import get_current
@@ -64,8 +64,8 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
             except Exception:  # pylint: disable=broad-except
                 continue
             context = baggage.set_baggage(
-                urllib.parse.unquote(name).strip(),
-                urllib.parse.unquote(value).strip(),
+                unquote(name).strip(),
+                unquote(value).strip(),
                 context=context,
             )
 
@@ -97,7 +97,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
 
 def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
     return ",".join(
-        key + "=" + urllib.parse.quote_plus(str(value))
+        quote_plus(str(key)) + "=" + quote_plus(str(value))
         for key, value in baggage_entries.items()
     )
 

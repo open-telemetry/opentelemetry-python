@@ -18,7 +18,10 @@ import unittest
 from unittest.mock import Mock, patch
 
 from opentelemetry import baggage
-from opentelemetry.baggage.propagation import W3CBaggagePropagator
+from opentelemetry.baggage.propagation import (
+    W3CBaggagePropagator,
+    _format_baggage,
+)
 from opentelemetry.context import get_current
 
 
@@ -154,3 +157,12 @@ class TestBaggagePropagation(unittest.TestCase):
             inject_fields.add(mock_call[1][1])
 
         self.assertEqual(inject_fields, self.propagator.fields)
+
+    def test__format_baggage(self):
+        self.assertEqual(
+            _format_baggage({"key key": "value value"}), "key+key=value+value"
+        )
+        self.assertEqual(
+            _format_baggage({"key/key": "value/value"}),
+            "key%2Fkey=value%2Fvalue",
+        )
