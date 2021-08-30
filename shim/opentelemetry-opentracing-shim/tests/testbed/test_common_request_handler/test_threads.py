@@ -115,8 +115,7 @@ class TestThreads(OpenTelemetryTestCase):
         parent_span = get_one_by_operation_name(spans, "parent")
         self.assertIsNotNone(parent_span)
 
-        spans = [s for s in spans if s.name == "send"]
+        spans = [s for s in spans if s != parent_span]
+        self.assertEqual(len(spans), 2)
         for span in spans:
-            if span == parent_span:
-                continue
             self.assertIsChildOf(span, parent_span)
