@@ -28,7 +28,7 @@ jobs:
       matrix:
         python-version: [ py36, py37, py38, py39, pypy3 ]
         package: ["instrumentation", "core", "exporter", "propagator"]
-        os: [ ubuntu-latest, windows-latest ]
+        os: [ ubuntu-20.04, windows-2019 ]
     steps:
       - name: Checkout Core Repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v2
@@ -54,7 +54,7 @@ jobs:
           key: v1-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
       # tox fails on windows and Python3.6 when tox dir is reused between builds so we remove it
       - name: fix for windows + py3.6
-        if: ${{ matrix.os == 'windows-latest' && matrix.python-version == 'py36' }} 
+        if: ${{ matrix.os == 'windows-2019' && matrix.python-version == 'py36' }} 
         shell: pwsh
         run: Remove-Item .\.tox\ -Force -Recurse -ErrorAction Ignore
       - name: run tox
@@ -88,7 +88,7 @@ jobs:
       matrix:
         tox-environment: [ "docker-tests", "lint", "docs", "mypy", "mypyinstalled", "tracecontext" ]
     name: ${{ matrix.tox-environment }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout Core Repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v2
@@ -128,7 +128,7 @@ jobs:
       matrix:
         python-version: [ py36, py37, py38, py39, pypy3 ]
         package: ["instrumentation", "exporter"]
-        os: [ ubuntu-latest ]
+        os: [ ubuntu-20.04]
     steps:
       - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
         uses: actions/checkout@v2
@@ -162,7 +162,7 @@ jobs:
       matrix:
         tox-environment: [ "docker-tests"]
     name: ${{ matrix.tox-environment }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
         uses: actions/checkout@v2
