@@ -13,9 +13,9 @@
 # limitations under the License.
 #
 import typing
-from urllib.parse import quote_plus, unquote
+from urllib.parse import quote_plus, unquote_plus
 
-from opentelemetry import baggage
+from opentelemetry.baggage import get_all, set_baggage
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
@@ -63,9 +63,9 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
                 name, value = entry.split("=", 1)
             except Exception:  # pylint: disable=broad-except
                 continue
-            context = baggage.set_baggage(
-                unquote(name).strip(),
-                unquote(value).strip(),
+            context = set_baggage(
+                unquote_plus(name).strip(),
+                unquote_plus(value).strip(),
                 context=context,
             )
 
@@ -82,7 +82,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         See
         `opentelemetry.propagators.textmap.TextMapPropagator.inject`
         """
-        baggage_entries = baggage.get_all(context=context)
+        baggage_entries = get_all(context=context)
         if not baggage_entries:
             return
 

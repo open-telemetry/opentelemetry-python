@@ -109,6 +109,16 @@ class TestBaggagePropagation(unittest.TestCase):
         expected = {"key1": "value1", "key3": "value3"}
         self.assertEqual(self._extract(header), expected)
 
+    def test_extract_unquote_plus(self):
+        self.assertEqual(
+            self._extract("key+key=value+value"),
+            {"key key": "value value"}
+        )
+        self.assertEqual(
+            self._extract("key%2Fkey=value%2Fvalue"),
+            {"key/key": "value/value"}
+        )
+
     def test_inject_no_baggage_entries(self):
         values = {}
         output = self._inject(values)
@@ -143,7 +153,7 @@ class TestBaggagePropagation(unittest.TestCase):
         self.assertIn("key2=123", output)
         self.assertIn("key3=123.567", output)
 
-    @patch("opentelemetry.baggage.propagation.baggage")
+    @patch("opentelemetry.baggage.propagation.get_all")
     @patch("opentelemetry.baggage.propagation._format_baggage")
     def test_fields(self, mock_format_baggage, mock_baggage):
 
