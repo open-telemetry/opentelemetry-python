@@ -111,12 +111,11 @@ class TestBaggagePropagation(unittest.TestCase):
 
     def test_extract_unquote_plus(self):
         self.assertEqual(
-            self._extract("key+key=value+value"),
-            {"key key": "value value"}
+            self._extract("key+key=value+value"), {"key key": "value value"}
         )
         self.assertEqual(
             self._extract("key%2Fkey=value%2Fvalue"),
-            {"key/key": "value/value"}
+            {"key/key": "value/value"},
         )
 
     def test_inject_no_baggage_entries(self):
