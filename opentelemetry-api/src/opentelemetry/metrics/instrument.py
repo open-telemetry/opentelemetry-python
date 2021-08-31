@@ -84,7 +84,7 @@ class NonMonotonic(Adding):
 
 class Counter(Monotonic, Synchronous):
     @abstractmethod
-    def add(self, amount, **attributes):
+    def add(self, amount, /, **attributes):
         if amount < 0:
             raise Exception("Amount must be non-negative")
 
@@ -95,13 +95,13 @@ class DefaultCounter(Counter):
     def __init__(self, name, unit="", description=""):
         super().__init__(name, unit=unit, description=description)
 
-    def add(self, amount, **attributes):
+    def add(self, amount, /, **attributes):
         return super().add(amount, **attributes)
 
 
 class UpDownCounter(NonMonotonic, Synchronous):
     @abstractmethod
-    def add(self, amount, **attributes):
+    def add(self, amount, /, **attributes):
         pass
 
 
@@ -109,7 +109,7 @@ class DefaultUpDownCounter(UpDownCounter):
     def __init__(self, name, unit="", description=""):
         super().__init__(name, unit=unit, description=description)
 
-    def add(self, amount, **attributes):
+    def add(self, amount, /, **attributes):
         return super().add(amount, **attributes)
 
 
@@ -133,7 +133,7 @@ class DefaultObservableUpDownCounter(ObservableUpDownCounter):
 
 class Histogram(Grouping, Synchronous):
     @abstractmethod
-    def record(self, amount, **attributes):
+    def record(self, amount, /, **attributes):
         pass
 
 
@@ -141,7 +141,7 @@ class DefaultHistogram(Histogram):
     def __init__(self, name, unit="", description=""):
         super().__init__(name, unit=unit, description=description)
 
-    def record(self, amount, **attributes):
+    def record(self, amount, /, **attributes):
         return super().record(amount, **attributes)
 
 
