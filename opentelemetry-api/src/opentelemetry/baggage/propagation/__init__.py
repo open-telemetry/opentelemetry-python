@@ -54,9 +54,6 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         baggage_entries = header.split(",")
         total_baggage_entries = self._MAX_PAIRS
         for entry in baggage_entries:
-            if total_baggage_entries <= 0:
-                return context
-            total_baggage_entries -= 1
             if len(entry) > self._MAX_PAIR_LENGTH:
                 continue
             try:
@@ -68,6 +65,9 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
                 unquote_plus(value).strip(),
                 context=context,
             )
+            total_baggage_entries -= 1
+            if total_baggage_entries == 0:
+                break
 
         return context
 
