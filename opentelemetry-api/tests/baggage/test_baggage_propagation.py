@@ -146,10 +146,7 @@ class TestBaggagePropagation(unittest.TestCase):
                     [
                         f"key{index}=value{index}"
                         if index != 2
-                        else (
-                            f"key{index}x"
-                            f"value{index}"
-                        )
+                        else f"key{index}xvalue{index}"
                         for index in range(W3CBaggagePropagator._MAX_PAIRS + 1)
                     ]
                 )
