@@ -1,11 +1,12 @@
 ---
-date: '2021-05-07T21:49:47.106Z'
+date: '2021-08-30T16:49:17.700Z'
 docname: getting-started
 images: {}
 path: /getting-started
-title: "Getting Started"
-weight: 22
+title: Getting Started
 ---
+
+# Getting Started
 
 This guide walks you through instrumenting a Python application with `opentelemetry-python`.
 
@@ -38,8 +39,8 @@ The following example script emits a trace containing three named spans: â€œfooâ
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
-    ConsoleSpanExporter,
     BatchSpanProcessor,
+    ConsoleSpanExporter,
 )
 
 provider = TracerProvider()
@@ -54,9 +55,6 @@ with tracer.start_as_current_span("foo"):
     with tracer.start_as_current_span("bar"):
         with tracer.start_as_current_span("baz"):
             print("Hello world from OpenTelemetry Python!")
-
-# Flush all ended spans that are yet to be written to stdout before process exit.
-provider.force_flush()
 ```
 
 When you run the script you can see the traces printed to your console:
@@ -225,8 +223,8 @@ from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.instrumentation.requests import RequestsInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
-    ConsoleSpanExporter,
     BatchSpanProcessor,
+    ConsoleSpanExporter,
 )
 
 trace.set_tracer_provider(TracerProvider())
@@ -238,16 +236,17 @@ app = flask.Flask(__name__)
 FlaskInstrumentor().instrument_app(app)
 RequestsInstrumentor().instrument()
 
+tracer = trace.get_tracer(__name__)
+
 
 @app.route("/")
 def hello():
-    tracer = trace.get_tracer(__name__)
     with tracer.start_as_current_span("example-request"):
         requests.get("http://www.example.com")
     return "hello"
 
 
-app.run(port=5000)
+app.run(debug=True, port=5000)
 ```
 
 Now run the script, hit the root URL ([http://localhost:5000/](http://localhost:5000/)) a few times, and watch your spans be emitted!
@@ -336,7 +335,6 @@ Finally, execute the following script:
 
 ```
 # otcollector.py
-import time
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
