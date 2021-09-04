@@ -137,6 +137,9 @@ class TestBoundedAttributes(unittest.TestCase):
 
         self.assertEqual(len(bdict), dic_len)
         self.assertEqual(bdict.dropped, dic_len)
+        # Invalid values shouldn't be considered for `dropped`
+        bdict["invalid-seq"] = [None, 1, "2"]
+        self.assertEqual(bdict.dropped, dic_len)
 
         # test that elements in the dict are the new ones
         for key in self.base:
