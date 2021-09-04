@@ -176,7 +176,9 @@ class BoundedAttributes(MutableMapping):
             if value is not None:
                 if key in self._dict:
                     del self._dict[key]
-                elif self.maxlen is not None and len(self._dict) == self.maxlen:
+                elif (
+                    self.maxlen is not None and len(self._dict) == self.maxlen
+                ):
                     self._dict.popitem(last=False)
                     self.dropped += 1
 
