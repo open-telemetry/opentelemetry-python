@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `opentelemetry-semantic-conventions` Update to semantic conventions v1.6.1
   ([#2077](https://github.com/open-telemetry/opentelemetry-python/pull/2077))
+- Do not count invalid attributes for dropped
+  ([#2096](https://github.com/open-telemetry/opentelemetry-python/pull/2096))
 - Fix propagation bug caused by counting skipped entries
   ([#2071](https://github.com/open-telemetry/opentelemetry-python/pull/2071))
 
