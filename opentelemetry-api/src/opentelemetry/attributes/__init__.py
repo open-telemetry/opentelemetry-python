@@ -59,13 +59,9 @@ def _clean_attribute(
         cleaned_seq = []
 
         for element in value:
-            # None is considered valid in any sequence
+            element = _clean_attribute_value(element, max_len)
             if element is None:
                 cleaned_seq.append(element)
-
-            element = _clean_attribute_value(element, max_len)
-            # reject invalid elements
-            if element is None:
                 continue
 
             element_type = type(element)
