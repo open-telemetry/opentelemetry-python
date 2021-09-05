@@ -15,12 +15,14 @@
 import abc
 import collections
 import enum
+import json
 import logging
 import threading
 from typing import Deque, List, Optional, Sequence
 
 from opentelemetry.context import attach, detach, set_value
 from opentelemetry.sdk.logs import LogData, LogProcessor
+from opentelemetry.trace import format_span_id, format_trace_id
 from opentelemetry.util._time import _time_ns
 
 _logger = logging.getLogger(__name__)
@@ -58,6 +60,37 @@ class LogExporter(abc.ABC):
 
         Called when the SDK is shut down.
         """
+
+
+class ConsoleExporter(LogExporter):
+    def export(self, batch: Sequence[LogData]):
+        for i in batch:
+            res = {}
+            if i.log_record.resource:
+                res = repr(i.log_record.resource.attributes)
+            print(
+                json.dumps(
+                    {
+                        "body": i.log_record.body,
+                        "name": i.log_record.name,
+                        "severity_number": repr(i.log_record.severity_number),
+                        "severity_text": i.log_record.severity_text,
+                        "attributes": i.log_record.attributes,
+                        "timestamp": i.log_record.timestamp,
+                        "trace_id": "0x{}".format(
+                            format_trace_id(i.log_record.trace_id)
+                        ),
+                        "span_id": "0x{}".format(
+                            format_span_id(i.log_record.span_id)
+                        ),
+                        "trace_flags": i.log_record.trace_flags,
+                        "resource": res,
+                    }
+                )
+            )
+
+    def shutdown(self):
+        pass
 
 
 class SimpleLogProcessor(LogProcessor):
