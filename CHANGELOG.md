@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2077](https://github.com/open-telemetry/opentelemetry-python/pull/2077))
 - Fix propagation bug caused by counting skipped entries
   ([#2071](https://github.com/open-telemetry/opentelemetry-python/pull/2071))
+- Fix incorrect headers parsing via environment variables
+  ([#2103](https://github.com/open-telemetry/opentelemetry-python/pull/2103))
 
 ## [1.5.0-0.24b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.5.0-0.24b0) - 2021-08-26
 
