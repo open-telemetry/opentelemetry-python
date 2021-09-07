@@ -85,7 +85,7 @@ class ConsoleExporter(LogExporter):
                         ),
                         "trace_flags": i.log_record.trace_flags,
                         "resource": res,
-                    }
+                    }, indent=4
                 )
             )
 
