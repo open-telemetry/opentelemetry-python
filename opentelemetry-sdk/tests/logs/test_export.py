@@ -35,7 +35,6 @@ from opentelemetry.sdk.logs.export import (
 from opentelemetry.sdk.logs.export.in_memory_log_exporter import (
     InMemoryLogExporter,
 )
-from opentelemetry.sdk.logs.severity import SeverityNumber
 from opentelemetry.sdk.logs.severity import SeverityNumber as SDKSeverityNumber
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
