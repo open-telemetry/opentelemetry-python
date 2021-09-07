@@ -35,7 +35,7 @@ from opentelemetry.sdk.logs.export import (
 from opentelemetry.sdk.logs.export.in_memory_log_exporter import (
     InMemoryLogExporter,
 )
-from opentelemetry.sdk.logs.severity import SeverityNumber as SDKSeverityNumber
+from opentelemetry.sdk.logs.severity import SeverityNumber
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import TraceFlags
@@ -280,7 +280,7 @@ class TestConsoleExporter(unittest.TestCase):
                 span_id=5213367945872657620,
                 trace_flags=TraceFlags(0x01),
                 severity_text="WARN",
-                severity_number=SDKSeverityNumber.WARN,
+                severity_number=SeverityNumber.WARN,
                 name="name",
                 body="Zhengzhou, We have a heaviest rains in 1000 years",
                 resource=SDKResource({"key": "value"}),
