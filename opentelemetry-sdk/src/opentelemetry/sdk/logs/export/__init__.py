@@ -76,7 +76,7 @@ class ConsoleExporter(LogExporter):
                         "severity_number": repr(i.log_record.severity_number),
                         "severity_text": i.log_record.severity_text,
                         "attributes": i.log_record.attributes,
-                        "timestamp": i.log_record.timestamp,
+                        "timestamp": ns_to_iso_str(i.log_record.timestamp),
                         "trace_id": "0x{}".format(
                             format_trace_id(i.log_record.trace_id)
                         ),
