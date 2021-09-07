@@ -14,17 +14,32 @@
 
 # pylint: disable=protected-access
 import logging
+import os
+import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from opentelemetry.sdk import trace
-from opentelemetry.sdk.logs import LogEmitterProvider, OTLPHandler
-from opentelemetry.sdk.logs.export import BatchLogProcessor, SimpleLogProcessor
+from opentelemetry.sdk.logs import (
+    LogData,
+    LogEmitterProvider,
+    LogRecord,
+    OTLPHandler,
+)
+from opentelemetry.sdk.logs.export import (
+    BatchLogProcessor,
+    ConsoleExporter,
+    SimpleLogProcessor,
+)
 from opentelemetry.sdk.logs.export.in_memory_log_exporter import (
     InMemoryLogExporter,
 )
 from opentelemetry.sdk.logs.severity import SeverityNumber
+from opentelemetry.sdk.logs.severity import SeverityNumber as SDKSeverityNumber
+from opentelemetry.sdk.resources import Resource as SDKResource
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.trace import TraceFlags
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
 
 
@@ -254,3 +269,55 @@ class TestBatchLogProcessor(unittest.TestCase):
 
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 2415)
+
+
+class TestConsoleExporter(unittest.TestCase):
+    def test_export(self):  # pylint: disable=no-self-use
+        """Check that the console exporter prints log records."""
+        log_data = LogData(
+            log_record=LogRecord(
+                timestamp=int(time.time() * 1e9),
+                trace_id=2604504634922341076776623263868986797,
+                span_id=5213367945872657620,
+                trace_flags=TraceFlags(0x01),
+                severity_text="WARN",
+                severity_number=SDKSeverityNumber.WARN,
+                name="name",
+                body="Zhengzhou, We have a heaviest rains in 1000 years",
+                resource=SDKResource({"key": "value"}),
+                attributes={"a": 1, "b": "c"},
+            ),
+            instrumentation_info=InstrumentationInfo(
+                "first_name", "first_version"
+            ),
+        )
+        exporter = ConsoleExporter()
+        # Mocking stdout interferes with debugging and test reporting, mock on
+        # the exporter instance instead.
+
+        with patch.object(exporter, "out") as mock_stdout:
+            exporter.export([log_data])
+        mock_stdout.write.assert_called_once_with(
+            log_data.log_record.to_json() + os.linesep
+        )
+
+        self.assertEqual(mock_stdout.write.call_count, 1)
+        self.assertEqual(mock_stdout.flush.call_count, 1)
+
+    def test_export_custom(self):  # pylint: disable=no-self-use
+        """Check that console exporter uses custom io, formatter."""
+        mock_record_str = Mock(str)
+
+        def formatter(record):  # pylint: disable=unused-argument
+            return mock_record_str
+
+        mock_stdout = Mock()
+        exporter = ConsoleExporter(out=mock_stdout, formatter=formatter)
+        log_data = LogData(
+            log_record=LogRecord(),
+            instrumentation_info=InstrumentationInfo(
+                "first_name", "first_version"
+            ),
+        )
+        exporter.export([log_data])
+        mock_stdout.write.assert_called_once_with(mock_record_str)

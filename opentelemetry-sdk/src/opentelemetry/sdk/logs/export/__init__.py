@@ -15,14 +15,14 @@
 import abc
 import collections
 import enum
-import json
 import logging
+import sys
 import threading
-from typing import Deque, List, Optional, Sequence
+from os import linesep
+from typing import IO, Callable, Deque, List, Optional, Sequence
 
 from opentelemetry.context import attach, detach, set_value
-from opentelemetry.sdk.logs import LogData, LogProcessor
-from opentelemetry.trace import format_span_id, format_trace_id
+from opentelemetry.sdk.logs import LogData, LogProcessor, LogRecord
 from opentelemetry.util._time import _time_ns
 
 _logger = logging.getLogger(__name__)
@@ -63,31 +63,27 @@ class LogExporter(abc.ABC):
 
 
 class ConsoleExporter(LogExporter):
+    """Implementation of :class:`LogExporter` that prints log records to the
+    console.
+
+    This class can be used for diagnostic purposes. It prints the exported
+    log records to the console STDOUT.
+    """
+
+    def __init__(
+        self,
+        out: IO = sys.stdout,
+        formatter: Callable[[LogRecord], str] = lambda record: record.to_json()
+        + linesep,
+    ):
+        self.out = out
+        self.formatter = formatter
+
     def export(self, batch: Sequence[LogData]):
-        for i in batch:
-            res = {}
-            if i.log_record.resource:
-                res = repr(i.log_record.resource.attributes)
-            print(
-                json.dumps(
-                    {
-                        "body": i.log_record.body,
-                        "name": i.log_record.name,
-                        "severity_number": repr(i.log_record.severity_number),
-                        "severity_text": i.log_record.severity_text,
-                        "attributes": i.log_record.attributes,
-                        "timestamp": ns_to_iso_str(i.log_record.timestamp),
-                        "trace_id": "0x{}".format(
-                            format_trace_id(i.log_record.trace_id)
-                        ),
-                        "span_id": "0x{}".format(
-                            format_span_id(i.log_record.span_id)
-                        ),
-                        "trace_flags": i.log_record.trace_flags,
-                        "resource": res,
-                    }, indent=4
-                )
-            )
+        for data in batch:
+            self.out.write(self.formatter(data.log_record))
+        self.out.flush()
+        return LogExportResult.SUCCESS
 
     def shutdown(self):
         pass
