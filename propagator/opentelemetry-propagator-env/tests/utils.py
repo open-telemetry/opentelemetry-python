@@ -1,6 +1,5 @@
 import opentelemetry
 from opentelemetry import trace
-from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.trace.span import NonRecordingSpan
 from opentelemetry.trace.span import SpanContext
 from opentelemetry.trace.span import format_span_id
