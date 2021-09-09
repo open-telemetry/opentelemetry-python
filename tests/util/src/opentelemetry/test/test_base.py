@@ -24,6 +24,8 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 
 
 class TestBase(unittest.TestCase):
+    # pylint: disable=C0103
+
     @classmethod
     def setUpClass(cls):
         cls.original_tracer_provider = trace_api.get_tracer_provider()
@@ -44,16 +46,27 @@ class TestBase(unittest.TestCase):
     def setUp(self):
         self.memory_exporter.clear()
 
-    def check_span_instrumentation_info(self, span, module):
+    def get_finished_spans(self):
+        return FinishedTestSpans(
+            self, self.memory_exporter.get_finished_spans()
+        )
+
+    def assertEqualSpanInstrumentationInfo(self, span, module):
         self.assertEqual(span.instrumentation_info.name, module.__name__)
         self.assertEqual(span.instrumentation_info.version, module.__version__)
 
-    def assert_span_has_attributes(self, span, attributes):
+    def assertSpanHasAttributes(self, span, attributes):
         for key, val in attributes.items():
             self.assertIn(key, span.attributes)
             self.assertEqual(val, span.attributes[key])
 
     def sorted_spans(self, spans):  # pylint: disable=R0201
+        """
+        Sorts spans by span creation time.
+
+        Note: This method should not be used to sort spans in a deterministic way as the
+        order depends on timing precision provided by the platform.
+        """
         return sorted(
             spans,
             key=lambda s: s._start_time,  # pylint: disable=W0212
@@ -89,3 +102,23 @@ class TestBase(unittest.TestCase):
             yield
         finally:
             logging.disable(logging.NOTSET)
+
+
+class FinishedTestSpans(list):
+    def __init__(self, test, spans):
+        super().__init__(spans)
+        self.test = test
+
+    def by_name(self, name):
+        for span in self:
+            if span.name == name:
+                return span
+        self.test.fail("Did not find span with name {}".format(name))
+        return None
+
+    def by_attr(self, key, value):
+        for span in self:
+            if span.attributes.get(key) == value:
+                return span
+        self.test.fail("Did not find span with attrs {}={}".format(key, value))
+        return None
