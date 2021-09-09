@@ -172,14 +172,16 @@ class BoundedAttributes(MutableMapping):
                 self.dropped += 1
                 return
 
-            if key in self._dict:
-                del self._dict[key]
-            elif self.maxlen is not None and len(self._dict) == self.maxlen:
-                del self._dict[next(iter(self._dict.keys()))]
-                self.dropped += 1
-
             value = _clean_attribute(key, value, self.max_value_len)
             if value is not None:
+                if key in self._dict:
+                    del self._dict[key]
+                elif (
+                    self.maxlen is not None and len(self._dict) == self.maxlen
+                ):
+                    self._dict.popitem(last=False)
+                    self.dropped += 1
+
                 self._dict[key] = value
 
     def __delitem__(self, key):
