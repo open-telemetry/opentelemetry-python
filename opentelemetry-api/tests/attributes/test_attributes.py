@@ -69,6 +69,25 @@ class TestAttributes(unittest.TestCase):
         self.assertInvalid("value", "")
         self.assertInvalid("value", None)
 
+    def test_sequence_attr_decode(self):
+        seq = [
+            None,
+            b"Content-Disposition",
+            b"Content-Type",
+            b"\x81",
+            b"Keep-Alive",
+        ]
+        expected = [
+            None,
+            "Content-Disposition",
+            "Content-Type",
+            None,
+            "Keep-Alive",
+        ]
+        self.assertEqual(
+            _clean_attribute("headers", seq, None), tuple(expected)
+        )
+
 
 class TestBoundedAttributes(unittest.TestCase):
     base = collections.OrderedDict(
