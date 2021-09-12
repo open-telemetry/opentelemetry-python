@@ -50,7 +50,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
-from opentelemetry.util._env import parse_headers
+from opentelemetry.util.re import parse_headers
 
 logger = logging.getLogger(__name__)
 SDKDataT = TypeVar("SDKDataT")

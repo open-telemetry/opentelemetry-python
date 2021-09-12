@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import logging
-import re
+from re import compile, split
 from typing import Mapping
 
 _logger = logging.getLogger(__name__)
@@ -28,13 +28,18 @@ _KEY_FORMAT = (
 # A value contains a URL encoded UTF-8 string.
 _VALUE_FORMAT = r"[\x21\x23-\x2b\x2d-\x3a\x3c-\x5b\x5d-\x7e]*"
 _HEADER_FORMAT = _KEY_FORMAT + _OWS + r"=" + _OWS + _VALUE_FORMAT
-_HEADER_PATTERN = re.compile(_HEADER_FORMAT)
-_DELIMITER_PATTERN = re.compile(r"[ \t]*,[ \t]*")
+_HEADER_PATTERN = compile(_HEADER_FORMAT)
+_DELIMITER_PATTERN = compile(r"[ \t]*,[ \t]*")
 
 
-def parse_headers(headers_string: str) -> Mapping[str, str]:
+def parse_headers(s: str) -> Mapping[str, str]:
+    """
+    Parse ``s`` (a ``str`` instance containing HTTP headers). Uses W3C Baggage
+    HTTP header format https://www.w3.org/TR/baggage/#baggage-http-header-format, except that
+    additional semi-colon delimited metadata is not supported.
+    """
     headers = {}
-    for header in re.split(_DELIMITER_PATTERN, headers_string):
+    for header in split(_DELIMITER_PATTERN, s):
         if not header:  # empty string
             continue
         match = _HEADER_PATTERN.fullmatch(header.strip())

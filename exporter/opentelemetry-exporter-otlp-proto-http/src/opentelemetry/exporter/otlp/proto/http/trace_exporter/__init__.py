@@ -40,7 +40,7 @@ from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.trace_exporter.encoder import (
     _ProtobufEncoder,
 )
-from opentelemetry.util._env import parse_headers
+from opentelemetry.util.re import parse_headers
 
 
 _logger = logging.getLogger(__name__)
