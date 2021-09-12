@@ -31,7 +31,7 @@ _HEADER_FORMAT = _KEY_FORMAT + _OWS + r"=" + _OWS + _VALUE_FORMAT
 _HEADER_PATTERN = compile(_HEADER_FORMAT)
 _DELIMITER_PATTERN = compile(r"[ \t]*,[ \t]*")
 
-
+# pylint: disable=invalid-name
 def parse_headers(s: str) -> Mapping[str, str]:
     """
     Parse ``s`` (a ``str`` instance containing HTTP headers). Uses W3C Baggage
