@@ -69,6 +69,25 @@ class TestAttributes(unittest.TestCase):
         self.assertInvalid("value", "")
         self.assertInvalid("value", None)
 
+    def test_sequence_attr_decode(self):
+        seq = [
+            None,
+            b"Content-Disposition",
+            b"Content-Type",
+            b"\x81",
+            b"Keep-Alive",
+        ]
+        expected = [
+            None,
+            "Content-Disposition",
+            "Content-Type",
+            None,
+            "Keep-Alive",
+        ]
+        self.assertEqual(
+            _clean_attribute("headers", seq, None), tuple(expected)
+        )
+
 
 class TestBoundedAttributes(unittest.TestCase):
     base = collections.OrderedDict(
@@ -136,6 +155,9 @@ class TestBoundedAttributes(unittest.TestCase):
             bdict["new-" + key] = self.base[key]
 
         self.assertEqual(len(bdict), dic_len)
+        self.assertEqual(bdict.dropped, dic_len)
+        # Invalid values shouldn't be considered for `dropped`
+        bdict["invalid-seq"] = [None, 1, "2"]
         self.assertEqual(bdict.dropped, dic_len)
 
         # test that elements in the dict are the new ones
