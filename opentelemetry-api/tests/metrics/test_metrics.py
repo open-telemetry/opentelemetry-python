@@ -22,7 +22,6 @@ class TestMeterProvider(TestCase):
         """
 
 
-
     def test_get_meter_provider(self):
         """
         Test that a global `MeterProvider` can be get.
