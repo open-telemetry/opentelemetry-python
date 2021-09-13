@@ -22,6 +22,7 @@ from abc import ABC, abstractmethod
 from functools import wraps
 from logging import getLogger
 from typing import cast
+from os import environ
 
 from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics.instrument import (
@@ -200,11 +201,18 @@ def set_meter_provider(meter_provider: MeterProvider) -> None:
 def get_meter_provider() -> MeterProvider:
     """Gets the current global :class:`~.MeterProvider` object."""
     global _METER_PROVIDER  # pylint: disable=global-statement
+    global _PROXY_METER_PROVIDER
 
     if _METER_PROVIDER is None:
-        _METER_PROVIDER = cast(
+        # if a global meter provider has not been set either via code or env
+        # vars, return a proxy meter provider
+        if OTEL_PYTHON_METER_PROVIDER not in environ:
+            if not _PROXY_METER_PROVIDER:
+                _PROXY_METER_PROVIDER = _ProxyTracerProvider()
+            return _PROXY_METER_PROVIDER
+
+        _METER_PROVIDER = cast(  # type: ignore
             "MeterProvider",
             _load_provider(OTEL_PYTHON_METER_PROVIDER, "meter_provider"),
         )
-
     return _METER_PROVIDER
