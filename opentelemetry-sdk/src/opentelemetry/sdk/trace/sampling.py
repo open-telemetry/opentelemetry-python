@@ -221,8 +221,7 @@ ALWAYS_ON = StaticSampler(Decision.RECORD_AND_SAMPLE)
 
 class TraceIdRatioBased(Sampler):
     """
-    Sampler that makes sampling decisions probabalistically based on `rate`,
-    while also respecting the parent span sampling decision.
+    Sampler that makes sampling decisions probabilistically based on `rate`.
 
     Args:
         rate: Probability (between 0 and 1) that a span will be sampled
