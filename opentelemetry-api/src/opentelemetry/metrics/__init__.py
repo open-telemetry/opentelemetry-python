@@ -19,10 +19,10 @@
 
 
 from abc import ABC, abstractmethod
-from functools import wraps
 from logging import getLogger
 from typing import cast
 from os import environ
+from typing import Optional
 
 from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics.instrument import (
@@ -56,76 +56,145 @@ class DefaultMeasurement(Measurement):
         super().__init__(value, **attributes)
 
 
+class MeterProvider(ABC):
+    @abstractmethod
+    def get_meter(
+        self,
+        name,
+        version=None,
+        schema_url=None,
+    ) -> "Meter":
+        pass
+
+
+class _DefaultMeterProvider(MeterProvider):
+    def get_meter(
+        self,
+        name,
+        version=None,
+        schema_url=None,
+    ) -> "Meter":
+        return _DefaultMeter()
+
+
+class ProxyMeterProvider(MeterProvider):
+    def get_meter(
+        self,
+        instrumenting_module_name: str,
+        instrumenting_library_version: str = "",
+    ) -> "Meter":
+        if _METER_PROVIDER:
+            return _METER_PROVIDER.get_meter(
+                instrumenting_module_name, instrumenting_library_version
+            )
+        return ProxyMeter(
+            instrumenting_module_name, instrumenting_library_version
+        )
+
+
 class Meter(ABC):
-
-    # FIXME make unit and description be "" if unit or description are None
-    @abstractmethod
-    def create_counter(self, name, unit="", description="") -> Counter:
-        pass
-
-    @abstractmethod
-    def create_up_down_counter(
-        self, name, unit="", description=""
-    ) -> UpDownCounter:
-        pass
-
-    @abstractmethod
-    def create_observable_counter(
-        self, name, callback, unit="", description=""
-    ) -> ObservableCounter:
-        pass
-
-    @abstractmethod
-    def create_histogram(self, name, unit="", description="") -> Histogram:
-        pass
-
-    @abstractmethod
-    def create_observable_gauge(
-        self, name, callback, unit="", description=""
-    ) -> ObservableGauge:
-        pass
-
-    @abstractmethod
-    def create_observable_up_down_counter(
-        self, name, callback, unit="", description=""
-    ) -> ObservableUpDownCounter:
-        pass
-
-    @staticmethod
-    def check_unique_name(checker):
-        def wrapper_0(method):
-            @wraps(method)
-            def wrapper_1(self, name, unit="", description=""):
-                checker(self, name)
-                return method(self, name, unit=unit, description=description)
-
-            return wrapper_1
-
-        return wrapper_0
-
-
-class DefaultMeter(Meter):
     def __init__(self):
         self._instrument_names = set()
 
-    def _instrument_name_checker(self, name):
+    def _check_instrument_name(self, name):
 
         if name in self._instrument_names:
             raise Exception("Instrument name {} has been used already")
 
         self._instrument_names.add(name)
 
-    @Meter.check_unique_name(_instrument_name_checker)
+    @abstractmethod
     def create_counter(self, name, unit="", description="") -> Counter:
-        return DefaultCounter(name, unit=unit, description=description)
+        self._check_instrument_name(name)
 
-    @Meter.check_unique_name(_instrument_name_checker)
+    @abstractmethod
     def create_up_down_counter(
         self, name, unit="", description=""
     ) -> UpDownCounter:
+        self._check_instrument_name(name)
+
+    @abstractmethod
+    def create_observable_counter(
+        self, name, callback, unit="", description=""
+    ) -> ObservableCounter:
+        self._check_instrument_name(name)
+
+    @abstractmethod
+    def create_histogram(self, name, unit="", description="") -> Histogram:
+        self._check_instrument_name(name)
+
+    @abstractmethod
+    def create_observable_gauge(
+        self, name, callback, unit="", description=""
+    ) -> ObservableGauge:
+        self._check_instrument_name(name)
+
+    @abstractmethod
+    def create_observable_up_down_counter(
+        self, name, callback, unit="", description=""
+    ) -> ObservableUpDownCounter:
+        self._check_instrument_name(name)
+
+
+class ProxyMeter(Meter):
+    # pylint: disable=W0222,signature-differs
+    def __init__(
+        self,
+        instrumenting_module_name: str,
+        instrumenting_library_version: str,
+    ):
+        self._instrumenting_module_name = instrumenting_module_name
+        self._instrumenting_library_version = instrumenting_library_version
+        self._real_meter: Optional[Meter] = None
+        self._noop_meter = _DefaultMeter()
+
+    @property
+    def _meter(self) -> Meter:
+        if self._real_meter is not None:
+            return self._real_meter
+
+        if _METER_PROVIDER:
+            self._real_meter = _METER_PROVIDER.get_meter(
+                self._instrumenting_module_name,
+                self._instrumenting_library_version,
+            )
+            return self._real_meter
+        return self._noop_meter
+
+    def create_counter(self, *args, **kwargs) -> Counter:
+        return self._meter.create_counter(*args, **kwargs)
+
+    def create_up_down_counter(self, *args, **kwargs) -> UpDownCounter:
+        return self._meter.create_up_down_counter(*args, **kwargs)
+
+    def create_observable_counter(self, *args, **kwargs) -> ObservableCounter:
+        return self._meter.create_observable_counter(*args, **kwargs)
+
+    def create_histogram(self, *args, **kwargs) -> Histogram:
+        return self._meter.create_histogram(*args, **kwargs)
+
+    def create_observable_gauge(self, *args, **kwargs) -> ObservableGauge:
+        return self._meter.create_observable_gauge(*args, **kwargs)
+
+    def create_observable_up_down_counter(
+        self, *args, **kwargs
+    ) -> ObservableUpDownCounter:
+        return self._meter.create_observable_up_down_counter(*args, **kwargs)
+
+
+class _DefaultMeter(Meter):
+    def create_counter(self, name, unit="", description="") -> Counter:
+        super().create_counter(name, unit=unit, description=description)
+        return DefaultCounter(name, unit=unit, description=description)
+
+    def create_up_down_counter(
+        self, name, unit="", description=""
+    ) -> UpDownCounter:
+        super().create_up_down_counter(
+            name, unit=unit, description=description
+        )
         return DefaultUpDownCounter(name, unit=unit, description=description)
 
-    @Meter.check_unique_name(_instrument_name_checker)
     def create_observable_counter(
         self, name, callback, unit="", description=""
     ) -> ObservableCounter:
@@ -136,26 +205,23 @@ class DefaultMeter(Meter):
             description=description,
         )
 
-    @Meter.check_unique_name(_instrument_name_checker)
     def create_histogram(self, name, unit="", description="") -> Histogram:
         return DefaultHistogram(name, unit=unit, description=description)
 
-    @Meter.check_unique_name(_instrument_name_checker)
     def create_observable_gauge(
         self, name, callback, unit="", description=""
     ) -> ObservableGauge:
-        return DefaultObservableGauge(  # pylint: disable=abstract-class-instantiated
+        return DefaultObservableGauge(
             name,
             callback,
             unit=unit,
             description=description,
         )
 
-    @Meter.check_unique_name(_instrument_name_checker)
     def create_observable_up_down_counter(
         self, name, callback, unit="", description=""
     ) -> ObservableUpDownCounter:
-        return DefaultObservableUpDownCounter(  # pylint: disable=abstract-class-instantiated
+        return DefaultObservableUpDownCounter(
             name,
             callback,
             unit=unit,
@@ -163,32 +229,35 @@ class DefaultMeter(Meter):
         )
 
 
-class MeterProvider(ABC):
-    @abstractmethod
-    def get_meter(
-        self,
-        name,
-        version=None,
-        schema_url=None,
-    ) -> Meter:
-        pass
-
-
-class DefaultMeterProvider(MeterProvider):
-    def get_meter(
-        self,
-        name,
-        version=None,
-        schema_url=None,
-    ) -> Meter:
-        return DefaultMeter()
-
-
 _METER_PROVIDER = None
+_PROXY_METER_PROVIDER = None
+
+
+def get_meter(
+    instrumenting_module_name: str,
+    instrumenting_library_version: str = "",
+    meter_provider: Optional[MeterProvider] = None,
+) -> "Meter":
+    """Returns a `Meter` for use by the given instrumentation library.
+
+    This function is a convenience wrapper for
+    opentelemetry.trace.MeterProvider.get_meter.
+
+    If meter_provider is omitted the current configured one is used.
+    """
+    if meter_provider is None:
+        meter_provider = get_meter_provider()
+    return meter_provider.get_meter(
+        instrumenting_module_name, instrumenting_library_version
+    )
 
 
 def set_meter_provider(meter_provider: MeterProvider) -> None:
-    """Sets the current global :class:`~.MeterProvider` object."""
+    """Sets the current global :class:`~.MeterProvider` object.
+
+    This can only be done once, a warning will be logged if any furter attempt
+    is made.
+    """
     global _METER_PROVIDER  # pylint: disable=global-statement
 
     if _METER_PROVIDER is not None:
@@ -200,15 +269,14 @@ def set_meter_provider(meter_provider: MeterProvider) -> None:
 
 def get_meter_provider() -> MeterProvider:
     """Gets the current global :class:`~.MeterProvider` object."""
-    global _METER_PROVIDER  # pylint: disable=global-statement
+    # pylint: disable=global-statement
+    global _METER_PROVIDER
     global _PROXY_METER_PROVIDER
 
     if _METER_PROVIDER is None:
-        # if a global meter provider has not been set either via code or env
-        # vars, return a proxy meter provider
         if OTEL_PYTHON_METER_PROVIDER not in environ:
             if not _PROXY_METER_PROVIDER:
-                _PROXY_METER_PROVIDER = _ProxyTracerProvider()
+                _PROXY_METER_PROVIDER = ProxyMeterProvider()
             return _PROXY_METER_PROVIDER
 
         _METER_PROVIDER = cast(  # type: ignore

@@ -417,8 +417,7 @@ class _DefaultTracer(Tracer):
         links: _Links = None,
         start_time: Optional[int] = None,
         record_exception: bool = True,
-        set_status_on_exception: bool = True,
-    ) -> "Span":
+     -> "Span":
         # pylint: disable=unused-argument,no-self-use
         return INVALID_SPAN
 
