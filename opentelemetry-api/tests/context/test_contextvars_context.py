@@ -12,20 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
-from sys import version_info
 from unittest.mock import patch
 
 from opentelemetry import context
+from opentelemetry.context.contextvars_context import ContextVarsRuntimeContext
 
 from .base_context import ContextTestCases
-
-if version_info.minor < 7:
-    raise unittest.SkipTest("contextvars not available")
-
-from opentelemetry.context.contextvars_context import (  # pylint:disable=wrong-import-position
-    ContextVarsRuntimeContext,
-)
 
 
 class TestContextVarsContext(ContextTestCases.BaseTest):

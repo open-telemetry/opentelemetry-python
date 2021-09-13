@@ -60,6 +60,9 @@ def _load_instrumentors(distro):
         # to handle users entering "requests , flask" or "requests, flask" with spaces
         package_to_exclude = [x.strip() for x in package_to_exclude]
 
+    for entry_point in iter_entry_points("opentelemetry_pre_instrument"):
+        entry_point.load()()
+
     for entry_point in iter_entry_points("opentelemetry_instrumentor"):
         if entry_point.name in package_to_exclude:
             logger.debug(
@@ -83,6 +86,9 @@ def _load_instrumentors(distro):
         except Exception as exc:  # pylint: disable=broad-except
             logger.exception("Instrumenting of %s failed", entry_point.name)
             raise exc
+
+    for entry_point in iter_entry_points("opentelemetry_post_instrument"):
+        entry_point.load()()
 
 
 def _load_configurators():

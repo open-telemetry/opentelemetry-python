@@ -16,7 +16,7 @@
 This module implements experimental propagators to inject trace context
 into response carriers. This is useful for server side frameworks that start traces
 when server requests and want to share the trace context with the client so the
-client can add it's spans to the same trace.
+client can add its spans to the same trace.
 
 This is part of an upcoming W3C spec and will eventually make it to the Otel spec.
 
