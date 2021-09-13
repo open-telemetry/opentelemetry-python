@@ -14,8 +14,6 @@ Tasks
 MeterProvider
 .............
 
-#. Test MeterProvider is stateful
-#. Test MeterProvider is accessible from a central place
 #. Test the API provides a way to set and get a global default MeterProvider
 #. Test that it is possible to create any number of MeterProviders
 #. Test that the MeterProvider provides get_meter
