@@ -109,22 +109,22 @@ class TestTracecontextEnvPropagator(unittest.TestCase):
 
     def test_extract_context_when_no_trace_details_in_w3c_format(self):
         extracted_context_w3c = self.env_propagator_w3c_obj.extract_context()
-        self.assertEqual(extracted_context_w3c , {})
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context_w3c), opentelemetry.trace.span.INVALID_SPAN)
 
     @mock.patch.dict(os.environ, {'traceparent': '00-123-136eec09c948be26-1'})
     def test_extract_context_when_traceid_format_does_not_match_regex_for_w3c(self):
         extracted_context = self.env_propagator_w3c_obj.extract_context()
-        self.assertEqual(extracted_context , {})
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
 
     @mock.patch.dict(os.environ, {'traceparent': '00-8128c50fd8653b5d98fea4de58eca772-136e-1'})
     def test_extract_context_when_spanid_format_does_not_match_regex_for_w3c(self):
         extracted_context = self.env_propagator_w3c_obj.extract_context()
-        self.assertEqual(extracted_context , {})
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
 
     @mock.patch.dict(os.environ, {'traceparent': '00-123-136-1'})
     def test_extract_context_when_traceid_and_spanid_format_do_not_match_regex_for_w3c(self):
         extracted_context = self.env_propagator_w3c_obj.extract_context()
-        self.assertEqual(extracted_context , {})
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
 
     @mock.patch.dict(os.environ, {'traceparent': '00-8128c50fd8653b5d98fea4de58eca772-136eec09c948be26-01'})
     @mock.patch.dict(os.environ, {'tracestate': 'congo=t61rcWkgMzE'})
@@ -189,23 +189,23 @@ class TestTracecontextEnvPropagator(unittest.TestCase):
     @mock.patch.dict(os.environ, {"traceparent": "00-8128ca772-136eec06-01"})
     def test_extract_when_invalid_w3cformat_in_environment_variable(self):
         extracted_context = self.env_propagator_w3c_obj.extract(getter = getter, carrier = os.environ)
-        self.assertEqual(extracted_context , {})
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
 
     @mock.patch.dict(os.environ, {"traceparent": "00-8128c50fd8653b5d98fea4de58eca772-136eec06-01"})
     def test_extract_w3cformat_with_invalid_span_id(self):
         extracted_context = self.env_propagator_w3c_obj.extract(getter = getter, carrier = os.environ)
-        self.assertEqual(extracted_context , {})
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
 
     @mock.patch.dict(os.environ, {"traceparent": "00-8128c50fd8653b5d-136eec06ae45ae57-01"})
     def test_extract_w3cformat_with_trace_id_having_16_hex_char(self):
         extracted_context = self.env_propagator_w3c_obj.extract(getter = getter, carrier = os.environ)
-        self.assertEqual(extracted_context , {})
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
 
     @mock.patch.dict(os.environ, {"traceparent": "00-8128c50fd865ca77-136eec06-01"})
     def test_extract_w3cformat_with_invalid_trace_id_and_span_id(self):
         extracted_context = self.env_propagator_w3c_obj.extract(getter = getter, carrier = os.environ)
-        self.assertEqual(extracted_context , {})
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
 
     def test_extract_when_no_trace_details_in_w3c_format(self):
         extracted_context = self.env_propagator_w3c_obj.extract(getter = getter, carrier = os.environ)
-        self.assertEqual(extracted_context , {})
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)

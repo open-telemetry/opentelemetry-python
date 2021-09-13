@@ -40,10 +40,7 @@ class CompositeEnvPropagator(TextMapPropagator):
             self._propagators = [TraceContextTextMapPropagator(), W3CBaggagePropagator()]
 
         for propagator in self._propagators:
-            if isinstance(propagator, B3SingleFormat):
-                context = B3MultiFormat().extract(carrier, context, getter)
-            else:
-                context = propagator.extract(carrier, context, getter)
+            context = propagator.extract(carrier, context, getter)
         return context
 
     def inject(self, carrier: CarrierT, context: typing.Optional[Context] = None, setter: Setter = textmap.default_setter) -> None:

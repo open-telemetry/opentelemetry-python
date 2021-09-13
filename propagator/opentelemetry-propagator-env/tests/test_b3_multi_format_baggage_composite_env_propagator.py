@@ -412,7 +412,6 @@ class TestB3MultiBaggageCompositeEnvPropagator(unittest.TestCase):
     @mock.patch.dict(os.environ, {"baggage": "key1=value1,key2=value2"})
     def test_extract_when_baggage_is_valid_but_b3_spanid_is_invalid(self):
         extracted_context = self.composite_propagator_b3_baggage_object.extract(carrier = os.environ, getter = getter)
-        print("****extracted_context: ***", extracted_context)
         self.assertEqual(baggage.get_all(extracted_context), {'key1':'value1', 'key2':'value2'})
 
     @mock.patch.dict(os.environ, {"x-b3-traceid": "98fea4de58eca772"})

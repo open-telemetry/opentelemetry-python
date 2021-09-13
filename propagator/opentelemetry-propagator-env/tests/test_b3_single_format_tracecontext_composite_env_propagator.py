@@ -30,9 +30,10 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     def setUp(self):
         self.mock_carrier = {}
         self.composite_env_propagator_b3_w3c_obj = CompositeEnvPropagator([B3SingleFormat(), tracecontext.TraceContextTextMapPropagator()])
+        self.composite_env_propagator_w3c_b3_obj = CompositeEnvPropagator([tracecontext.TraceContextTextMapPropagator(), B3SingleFormat()])
         self.composite_env_propagator_None_obj = CompositeEnvPropagator(None)
-        self.composite_env_propagator_obj = CompositeEnvPropagator([B3SingleFormat(), tracecontext.TraceContextTextMapPropagator(), W3CBaggagePropagator()])
-
+        self.composite_env_propagator_b3_w3c_baggage_obj = CompositeEnvPropagator([B3SingleFormat(), tracecontext.TraceContextTextMapPropagator(), W3CBaggagePropagator()])
+        self.composite_env_propagator_w3c_b3_baggage_obj = CompositeEnvPropagator([tracecontext.TraceContextTextMapPropagator(), B3SingleFormat(), W3CBaggagePropagator()])
     # Test case for inject
     def test_inject_when_None_object_passed_to_propagator_and_valid_context_attached(self):
         dummy_context = create_valid_context_with_baggage()
@@ -193,7 +194,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
         dummy_context = create_valid_context_with_baggage()
         token = opentelemetry.context.attach(dummy_context)
         traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(dummy_context)
-        self.composite_env_propagator_obj.inject(carrier = self.mock_carrier, setter = DefaultSetter())
+        self.composite_env_propagator_b3_w3c_baggage_obj.inject(carrier = self.mock_carrier, setter = DefaultSetter())
         opentelemetry.context.detach(token)
         self.assertEqual(self.mock_carrier.get("traceparent") , '00'+'-'+str(traceid)+'-'+str(spanid)+'-'+'0'+str(sampled))
         self.assertEqual(self.mock_carrier.get("baggage") , "key1=1,key2=2")
@@ -203,7 +204,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
         dummy_context = create_dummy_context_with_parent_span()
         token = opentelemetry.context.attach(dummy_context)
         traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(dummy_context)
-        self.composite_env_propagator_obj.inject(carrier = self.mock_carrier, setter = DefaultSetter())
+        self.composite_env_propagator_b3_w3c_baggage_obj.inject(carrier = self.mock_carrier, setter = DefaultSetter())
         opentelemetry.context.detach(token)
         self.assertEqual(self.mock_carrier.get("traceparent") , '00'+'-'+str(traceid)+'-'+str(spanid)+'-'+'0'+str(sampled))
         self.assertIsNone(self.mock_carrier.get("baggage"))
@@ -212,7 +213,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     def test_inject_when_invalid_context_with_baggage_attached_or_all_3_formats(self):
         current_context = create_invalid_context_with_baggage()
         token = opentelemetry.context.attach(current_context)
-        self.composite_env_propagator_obj.inject(carrier = self.mock_carrier, setter = DefaultSetter())
+        self.composite_env_propagator_b3_w3c_baggage_obj.inject(carrier = self.mock_carrier, setter = DefaultSetter())
         opentelemetry.context.detach(token)
         self.assertIsNone(self.mock_carrier.get("traceparent"))
         self.assertEqual(self.mock_carrier.get("baggage") , "test1=1,test2=2")
@@ -221,7 +222,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     def test_inject_when_valid_context_with_baggage_passed_as_params_for_all_3_formats(self):
         dummy_context = create_valid_context_with_baggage()
         traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(dummy_context)
-        self.composite_env_propagator_obj.inject(carrier = self.mock_carrier, context = dummy_context, setter = DefaultSetter())
+        self.composite_env_propagator_b3_w3c_baggage_obj.inject(carrier = self.mock_carrier, context = dummy_context, setter = DefaultSetter())
         self.assertEqual(self.mock_carrier.get("traceparent") , '00'+'-'+str(traceid)+'-'+str(spanid)+'-'+'0'+str(sampled))
         self.assertEqual(self.mock_carrier.get("baggage") , "key1=1,key2=2")
         self.assertEqual( self.mock_carrier.get("b3") , str(traceid)+'-'+str(spanid)+'-'+str(sampled))
@@ -229,7 +230,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     def test_inject_when_valid_context_without_baggage_passed_as_param_for_all_3_formats(self):
         dummy_context = create_dummy_context_with_parent_span()
         traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(dummy_context)
-        self.composite_env_propagator_obj.inject(carrier = self.mock_carrier, context = dummy_context, setter = DefaultSetter())
+        self.composite_env_propagator_b3_w3c_baggage_obj.inject(carrier = self.mock_carrier, context = dummy_context, setter = DefaultSetter())
         self.assertEqual(self.mock_carrier.get("traceparent") , '00'+'-'+str(traceid)+'-'+str(spanid)+'-'+'0'+str(sampled))
         self.assertIsNone(self.mock_carrier.get("baggage"))
         self.assertEqual(self.mock_carrier.get("b3"), str(traceid)+'-'+str(spanid)+'-'+str(sampled)+'-'+str(parentspanid))
@@ -237,7 +238,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     def test_inject_when_invalid_context_with_baggage_passed_as_params_for_all_3_formats(self):
         dummy_context = create_invalid_context_with_baggage()
         traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(dummy_context)
-        self.composite_env_propagator_obj.inject(carrier = self.mock_carrier, context = dummy_context, setter = DefaultSetter())
+        self.composite_env_propagator_b3_w3c_baggage_obj.inject(carrier = self.mock_carrier, context = dummy_context, setter = DefaultSetter())
         self.assertIsNone(self.mock_carrier.get("traceparent"))
         self.assertEqual(self.mock_carrier.get("baggage"), "test1=1,test2=2")
         self.assertIsNone(self.mock_carrier.get("b3"))
@@ -245,7 +246,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     def test_inject_when_traceid_has_16_hex_char(self):
         dummy_context = create_dummy_context3()
         traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(dummy_context)
-        self.composite_env_propagator_obj.inject(carrier = self.mock_carrier, context = dummy_context, setter = DefaultSetter())
+        self.composite_env_propagator_b3_w3c_baggage_obj.inject(carrier = self.mock_carrier, context = dummy_context, setter = DefaultSetter())
         self.assertEqual(self.mock_carrier.get("b3"), str(traceid)+'-'+str(spanid)+'-'+str(sampled))
         self.assertEqual(self.mock_carrier.get("traceparent"), '00'+'-'+str(traceid)+'-'+str(spanid)+'-'+'0'+str(sampled))
         self.assertIsNone(self.mock_carrier.get("baggage"))
@@ -352,7 +353,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
         dummy_context = create_valid_context_with_baggage()
         token = opentelemetry.context.attach(dummy_context)
         traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(dummy_context)
-        self.mock_carrier = self.composite_env_propagator_obj.inject_to_carrier()
+        self.mock_carrier = self.composite_env_propagator_b3_w3c_baggage_obj.inject_to_carrier()
         opentelemetry.context.detach(token)
         self.assertEqual(self.mock_carrier.get("traceparent"), '00'+'-'+str(traceid)+'-'+str(spanid)+'-'+'0'+str(sampled))
         self.assertEqual(self.mock_carrier.get("baggage"), "key1=1,key2=2")
@@ -362,7 +363,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
         dummy_context = create_dummy_context_with_parent_span()
         token = opentelemetry.context.attach(dummy_context)
         traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(dummy_context)
-        self.mock_carrier = self.composite_env_propagator_obj.inject_to_carrier()
+        self.mock_carrier = self.composite_env_propagator_b3_w3c_baggage_obj.inject_to_carrier()
         opentelemetry.context.detach(token)
         self.assertEqual(self.mock_carrier.get("traceparent"), '00'+'-'+str(traceid)+'-'+str(spanid)+'-'+'0'+str(sampled))
         self.assertIsNone(self.mock_carrier.get("baggage"))
@@ -371,7 +372,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     def test_inject_to_carrier_when_invalid_context_with_baggage_attached_for_all_3_formats(self):
         current_context = create_invalid_context_with_baggage()
         token = opentelemetry.context.attach(current_context)
-        self.mock_carrier = self.composite_env_propagator_obj.inject_to_carrier()
+        self.mock_carrier = self.composite_env_propagator_b3_w3c_baggage_obj.inject_to_carrier()
         opentelemetry.context.detach(token)
         self.assertIsNone(self.mock_carrier.get("traceparent"))
         self.assertEqual(self.mock_carrier.get("baggage"), "test1=1,test2=2")
@@ -380,7 +381,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     def test_inject_to_carrier_when_valid_context_with_baggage_passed_for_all_3_formats(self):
         dummy_context = create_valid_context_with_baggage()
         traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(dummy_context)
-        self.mock_carrier = self.composite_env_propagator_obj.inject_to_carrier(context = dummy_context)
+        self.mock_carrier = self.composite_env_propagator_b3_w3c_baggage_obj.inject_to_carrier(context = dummy_context)
         self.assertEqual(self.mock_carrier.get("traceparent"),'00'+'-'+str(traceid)+'-'+str(spanid)+'-'+'0'+str(sampled))
         self.assertEqual(self.mock_carrier.get("baggage"), "key1=1,key2=2")
         self.assertEqual(self.mock_carrier.get("b3"), str(traceid)+'-'+str(spanid)+'-'+str(sampled))
@@ -388,7 +389,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     def test_inject_to_carrier_when_valid_context_without_baggage_passed_for_all_3_formats(self):
         dummy_context = create_dummy_context_with_parent_span()
         traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(dummy_context)
-        self.mock_carrier = self.composite_env_propagator_obj.inject_to_carrier(context = dummy_context)
+        self.mock_carrier = self.composite_env_propagator_b3_w3c_baggage_obj.inject_to_carrier(context = dummy_context)
         self.assertEqual(self.mock_carrier.get("traceparent") , '00'+'-'+str(traceid)+'-'+str(spanid)+'-'+'0'+str(sampled))
         self.assertIsNone(self.mock_carrier.get("baggage"))
         self.assertEqual(self.mock_carrier.get("b3") , str(traceid)+'-'+str(spanid)+'-'+str(sampled)+'-'+str(parentspanid))
@@ -396,7 +397,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     def test_inject_to_carrier_when_invalid_context_with_baggage_passed_for_all_3_formats(self):
         dummy_context = create_invalid_context_with_baggage()
         traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(dummy_context)
-        self.mock_carrier = self.composite_env_propagator_obj.inject_to_carrier(context = dummy_context)
+        self.mock_carrier = self.composite_env_propagator_b3_w3c_baggage_obj.inject_to_carrier(context = dummy_context)
         self.assertIsNone(self.mock_carrier.get("traceparent"))
         self.assertEqual(self.mock_carrier.get("baggage") , "test1=1,test2=2")
         self.assertIsNone(self.mock_carrier.get("b3"))
@@ -404,7 +405,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     def test_inject_to_carrier_when_traceid_has_16_hex_char(self):
         dummy_context = create_dummy_context3()
         traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(dummy_context)
-        self.mock_carrier = self.composite_env_propagator_obj.inject_to_carrier(context = dummy_context)
+        self.mock_carrier = self.composite_env_propagator_b3_w3c_baggage_obj.inject_to_carrier(context = dummy_context)
         self.assertEqual(self.mock_carrier.get("b3") , str(traceid)+'-'+str(spanid)+'-'+str(sampled))
         self.assertEqual(self.mock_carrier.get("traceparent") , '00'+'-'+str(traceid)+'-'+str(spanid)+'-'+'0'+str(sampled))
         self.assertIsNone(self.mock_carrier.get("baggage"))
@@ -412,14 +413,14 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     # Test cases for extract_context
 
     def test_extract_context_when_no_trace_details_in_environment_variable(self):
-        extracted_context = self.composite_env_propagator_obj.extract_context()
-        self.assertEqual(extracted_context , {})
+        extracted_context = self.composite_env_propagator_b3_w3c_baggage_obj.extract_context()
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
 
     @mock.patch.dict(os.environ, {'b3':'8128c50fd8653b5d98fea4de58eca772-136eec09c948be26-1-e28bf981e15deb7f'})
     @mock.patch.dict(os.environ, {'traceparent':'00-8128c50fd8653b5d98fea4de58eca772-136eec09c948be26-01'})
     @mock.patch.dict(os.environ, {'baggage':'key1=value1,=value2'})
     def test_extract_context_when_all_3_formats_are_valid(self):
-        extracted_context = self.composite_env_propagator_obj.extract_context()
+        extracted_context = self.composite_env_propagator_b3_w3c_baggage_obj.extract_context()
         traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(extracted_context)
         self.assertEqual(traceid , '8128c50fd8653b5d98fea4de58eca772')
         self.assertEqual(spanid , '136eec09c948be26')
@@ -433,7 +434,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     @mock.patch.dict(os.environ, {'traceparent':'00-8128c50fd8653b5d98fea4de58eca772-136eec09c948be26-01'})
     @mock.patch.dict(os.environ, {'baggage':'/value'})
     def test_extract_context_when_w3c_and_b3_formats_are_valid_and_baggage_invalid(self):
-        extracted_context = self.composite_env_propagator_obj.extract_context()
+        extracted_context = self.composite_env_propagator_b3_w3c_baggage_obj.extract_context()
         traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(extracted_context)
         self.assertEqual(traceid , '8128c50fd8653b5d98fea4de58eca772')
         self.assertEqual(spanid , '136eec09c948be26')
@@ -445,7 +446,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     @mock.patch.dict(os.environ, {'traceparent':'00-8128c50fd8653b5d98fea4de58eca772-136eec09c-01'})
     @mock.patch.dict(os.environ, {'baggage':'key1=value1,key2=value2'})
     def test_extract_context_when_baggage_is_valid_but_w3c_and_b3_spanid_are_invalid(self):
-        extracted_context = self.composite_env_propagator_obj.extract_context()
+        extracted_context = self.composite_env_propagator_b3_w3c_baggage_obj.extract_context()
         self.assertEqual(baggage.get_all(extracted_context) , {'key1':'value1','key2':'value2'})
         self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
 
@@ -454,28 +455,47 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     @mock.patch.dict(os.environ, {'traceparent':'00-98fea4de58eca772-136eec09c948be26-01'})
     @mock.patch.dict(os.environ, {'baggage':'key1=value1,key2=value2'})
     def test_extract_context_when_baggage_is_valid_and_traceid_of_b3_and_w3c_have_16_hex_char(self):
-        extracted_context = self.composite_env_propagator_obj.extract_context()
-        traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(extracted_context)
-        self.assertEqual(traceid , '000000000000000098fea4de58eca772')
-        self.assertEqual(spanid , '136eec09c948be26')
-        self.assertEqual(sampled , 1)
+        # order of propagators in composite_propagator: B3, TraceContextTextMapPropagator
+        extracted_context = self.composite_env_propagator_b3_w3c_baggage_obj.extract_context()
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
         val1 = baggage.get_baggage("key1", extracted_context)
         val2 = baggage.get_baggage("key2", extracted_context)
         self.assertEqual(val1 , "value1")
         self.assertEqual(val2 , "value2")
 
+        @mock.patch.dict(os.environ, {'b3':'98fea4de58eca772-136eec09c948be26-1-e28bf981e15deb7f'})
+        @mock.patch.dict(os.environ, {'traceparent':'00-98fea4de58eca772-136eec09c948be26-01'})
+        @mock.patch.dict(os.environ, {'baggage':'key1=value1,key2=value2'})
+        def test_extract_context_when_baggage_is_valid_and_traceid_of_w3c_and_b3_have_16_hex_char(self):
+            # order of propagators in composite_propagator: TraceContextTextMapPropagator, B3
+            extracted_context = self.composite_env_propagator_w3c_b3_baggage_obj.extract_context()
+            traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(extracted_context)
+            self.assertEqual(traceid , '000000000000000098fea4de58eca772')
+            self.assertEqual(spanid , '136eec09c948be26')
+            self.assertEqual(sampled , 1)
+            val1 = baggage.get_baggage("key1", extracted_context)
+            val2 = baggage.get_baggage("key2", extracted_context)
+            self.assertEqual(val1 , "value1")
+            self.assertEqual(val2 , "value2")
+
 
     @mock.patch.dict(os.environ, {'b3':'8128c50-136eec09c948be26-1-e28bf981e15deb7f'})
     @mock.patch.dict(os.environ, {'traceparent':'00-8128c50-136eec09c948be26-01'})
     def test_extract_context_when_w3c_and_b3_traceid_is_invalid(self):
+        extracted_context = self.composite_env_propagator_w3c_b3_obj.extract_context()
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
+
+    @mock.patch.dict(os.environ, {'b3':'8128c50-136eec09c948be26-1-e28bf981e15deb7f'})
+    @mock.patch.dict(os.environ, {'traceparent':'00-8128c50-136eec09c948be26-01'})
+    def test_extract_context_when_b3_and_w3c_traceid_is_invalid(self):
         extracted_context = self.composite_env_propagator_b3_w3c_obj.extract_context()
-        self.assertEqual(extracted_context , {})
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
 
     @mock.patch.dict(os.environ, {'b3':'8128c50f-1-e28bf981e15deb7f'})
     @mock.patch.dict(os.environ, {'traceparent':'00-8128c50f-136eec09c-01'})
     def test_extract_context_when_w3c_and_b3_traceid_and_spanid_are_invalid(self):
         extracted_context = self.composite_env_propagator_b3_w3c_obj.extract_context()
-        self.assertEqual(extracted_context , {})
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
 
     @mock.patch.dict(os.environ, {'b3':'8128c50fd8653b5d98fea4de58eca772-136eec09c948be26-1-e28bf981e15deb7f'})
     @mock.patch.dict(os.environ, {'traceparent':'00-8128c50fd8653b5d98fea4de58eca772-136eec09c948be26-01'})
@@ -494,14 +514,14 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     # Test cases for extract
 
     def test_extract_when_no_trace_details(self):
-        extracted_context = self.composite_env_propagator_obj.extract(getter = getter, carrier = os.environ)
-        self.assertEqual(extracted_context , {})
+        extracted_context = self.composite_env_propagator_b3_w3c_baggage_obj.extract(getter = getter, carrier = os.environ)
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
 
     @mock.patch.dict(os.environ, {'b3':'8128c50fd8653b5d98fea4de58eca772-136eec09c948be26-1-e28bf981e15deb7f'})
     @mock.patch.dict(os.environ, {'traceparent':'00-8128c50fd8653b5d98fea4de58eca772-136eec09c948be26-01'})
     @mock.patch.dict(os.environ, {'baggage':'key1=value1,=value2'})
     def test_extract_when_all_3_formats_are_valid(self):
-        extracted_context = self.composite_env_propagator_obj.extract(getter = getter, carrier = os.environ)
+        extracted_context = self.composite_env_propagator_b3_w3c_baggage_obj.extract(getter = getter, carrier = os.environ)
         traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(extracted_context)
         self.assertEqual(traceid , '8128c50fd8653b5d98fea4de58eca772')
         self.assertEqual(spanid , '136eec09c948be26')
@@ -515,7 +535,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     @mock.patch.dict(os.environ, {'traceparent':'00-8128c50fd8653b5d98fea4de58eca772-136eec09c948be26-01'})
     @mock.patch.dict(os.environ, {'baggage':'/value1'})
     def test_extract_when_w3c_and_b3_formats_are_valid_and_baggage_invalid(self):
-        extracted_context = self.composite_env_propagator_obj.extract(getter = getter, carrier = os.environ)
+        extracted_context = self.composite_env_propagator_b3_w3c_baggage_obj.extract(getter = getter, carrier = os.environ)
         traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(extracted_context)
         self.assertEqual(traceid,'8128c50fd8653b5d98fea4de58eca772')
         self.assertEqual(spanid,'136eec09c948be26')
@@ -527,7 +547,7 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     @mock.patch.dict(os.environ, {'traceparent':'00-8128c50fd8653b5d98fea4de58eca772-136eec09c-01'})
     @mock.patch.dict(os.environ, {'baggage':'key1=value1,key2=value2'})
     def test_extract_when_baggage_is_valid_but_w3c_and_b3_spanid_are_invalid(self):
-        extracted_context = self.composite_env_propagator_obj.extract(getter = getter, carrier = os.environ)
+        extracted_context = self.composite_env_propagator_b3_w3c_baggage_obj.extract(getter = getter, carrier = os.environ)
         self.assertEqual(baggage.get_all(extracted_context), {'key1':'value1', 'key2':'value2'})
         val1 = baggage.get_baggage("key1", extracted_context)
         val2 = baggage.get_baggage("key2", extracted_context)
@@ -538,7 +558,20 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
     @mock.patch.dict(os.environ, {'traceparent':'00-98fea4de58eca772-136eec09c948be26-01'})
     @mock.patch.dict(os.environ, {'baggage':'key1=value1,key2=value2'})
     def test_extract_when_baggage_is_valid_and_traceid_of_b3_and_w3c_have_16_hex_char(self):
-        extracted_context = self.composite_env_propagator_obj.extract(getter = getter, carrier = os.environ)
+        # order of propagators in composite_propagator: B3, TraceContextTextMapPropagator
+        extracted_context = self.composite_env_propagator_b3_w3c_baggage_obj.extract(getter = getter, carrier = os.environ)
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
+        val1 = baggage.get_baggage("key1", extracted_context)
+        val2 = baggage.get_baggage("key2", extracted_context)
+        self.assertEqual(val1, "value1")
+        self.assertEqual(val2, "value2")
+
+    @mock.patch.dict(os.environ, {'b3':'98fea4de58eca772-136eec09c948be26-1-e28bf981e15deb7f'})
+    @mock.patch.dict(os.environ, {'traceparent':'00-98fea4de58eca772-136eec09c948be26-01'})
+    @mock.patch.dict(os.environ, {'baggage':'key1=value1,key2=value2'})
+    def test_extract_when_baggage_is_valid_and_traceid_of_w3c_and_b3_have_16_hex_char(self):
+        # order of propagators in composite_propagator: TraceContextTextMapPropagator, B3
+        extracted_context = self.composite_env_propagator_w3c_b3_baggage_obj.extract(getter = getter, carrier = os.environ)
         traceid, spanid, sampled, parentspanid, tracestate = get_details_from_context(extracted_context)
         self.assertEqual(traceid, '000000000000000098fea4de58eca772')
         self.assertEqual(spanid, '136eec09c948be26')
@@ -549,27 +582,48 @@ class TestB3TracecontextCompositeEnvPropagator(unittest.TestCase):
         self.assertEqual(val2, "value2")
 
     @mock.patch.dict(os.environ, {'baggage':'example1-value1;example2-value2'})
-    def test_extract_baggage_invalid_format(self):
-        extracted_context = self.composite_env_propagator_obj.extract(getter = getter, carrier = os.environ)
-        self.assertEqual(extracted_context, {})
+    def test_extract_when_baggage_format_invalid_and_w3c_b3_baggage_propagators_passed_to_composite_propagator(self):
+        extracted_context = self.composite_env_propagator_w3c_b3_baggage_obj.extract(getter = getter, carrier = os.environ)
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
+
+    @mock.patch.dict(os.environ, {'baggage':'example1-value1;example2-value2'})
+    def test_extract_when_baggage_format_invalid_and_b3_w3c_baggage_propagators_passed_to_composite_propagator(self):
+        extracted_context = self.composite_env_propagator_b3_w3c_baggage_obj.extract(getter = getter, carrier = os.environ)
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
 
     @mock.patch.dict(os.environ, {'baggage':'example1=value1%2Cvalue2,example2=value3%2Cvalue4'})
     def test_extract_when_baggage_with_valid_format_has_commas_in_values(self):
-        extracted_context = self.composite_env_propagator_obj.extract(getter = getter, carrier = os.environ)
+        extracted_context = self.composite_env_propagator_b3_w3c_baggage_obj.extract(getter = getter, carrier = os.environ)
         self.assertEqual(baggage.get_all(extracted_context) , {'example1':'value1,value2', 'example2':'value3,value4'})
         self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
 
     @mock.patch.dict(os.environ, {'b3':'8128c50f-136eec09c948be26-1-e28bf981e15deb7f'})
     @mock.patch.dict(os.environ, {'traceparent':'00-8128c50f-136eec09c948be26-01'})
     def test_extract_when_traceid_is_invalid_for_w3c_and_b3(self):
+        # order of propagators in composite propagator: TraceContextTextMapPropagator, B3
+        extracted_context = self.composite_env_propagator_w3c_b3_obj.extract(getter = getter, carrier = os.environ)
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
+
+    @mock.patch.dict(os.environ, {'b3':'8128c50f-136eec09c948be26-1-e28bf981e15deb7f'})
+    @mock.patch.dict(os.environ, {'traceparent':'00-8128c50f-136eec09c948be26-01'})
+    def test_extract_when_traceid_is_invalid_for_b3_and_w3c(self):
+        # order of propagators in composite propagator: B3, TraceContextTextMapPropagator
         extracted_context = self.composite_env_propagator_b3_w3c_obj.extract(getter = getter, carrier = os.environ)
-        self.assertEqual(extracted_context, {})
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
 
     @mock.patch.dict(os.environ, {'b3':'8128c50f-136eec09c-1-e28bf981e15deb7f'})
     @mock.patch.dict(os.environ, {'traceparent':'00-8128c50f-136eec09c-01'})
     def test_extract_when_traceid_and_spanid_are_invalid_for_w3c_and_b3(self):
+        # order of propagators in composite propagator: TraceContextTextMapPropagator, B3
+        extracted_context = self.composite_env_propagator_w3c_b3_obj.extract(getter = getter, carrier = os.environ)
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
+
+    @mock.patch.dict(os.environ, {'b3':'8128c50f-136eec09c-1-e28bf981e15deb7f'})
+    @mock.patch.dict(os.environ, {'traceparent':'00-8128c50f-136eec09c-01'})
+    def test_extract_when_traceid_and_spanid_are_invalid_for_b3_and_w3c(self):
+        # order of propagators in composite propagator: B3, TraceContextTextMapPropagator
         extracted_context = self.composite_env_propagator_b3_w3c_obj.extract(getter = getter, carrier = os.environ)
-        self.assertEqual(extracted_context, {})
+        self.assertEqual(opentelemetry.trace.get_current_span(extracted_context), opentelemetry.trace.span.INVALID_SPAN)
 
     @mock.patch.dict(os.environ, {'b3':'8128c50fd8653b5d98fea4de58eca772-136eec09c948be26-1-e28bf981e15deb7f'})
     @mock.patch.dict(os.environ, {'traceparent':'00-8128c50fd8653b5d98fea4de58eca772-136eec09c948be26-01'})

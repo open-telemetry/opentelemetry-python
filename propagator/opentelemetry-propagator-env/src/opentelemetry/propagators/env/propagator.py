@@ -36,8 +36,6 @@ class EnvPropagator(TextMapPropagator):
 
     # delegating to extract function implementation of the formatter
     def extract(self, carrier: CarrierT, context: typing.Optional[Context] = None, getter: Getter = DefaultGetter()) -> Context:
-        if isinstance(self.formatter, B3SingleFormat):
-            return B3MultiFormat().extract(carrier = carrier, context=context, getter = getter)
         return self.formatter.extract(carrier = carrier, context=context, getter = getter)
 
     # delegating to inject function implementation of the formatter
