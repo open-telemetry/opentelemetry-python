@@ -39,7 +39,7 @@ class _RuntimeContext(ABC):
 
     @abstractmethod
     def get_current(self) -> Context:
-        """Returns the current `Context` object. """
+        """Returns the current `Context` object."""
 
     @abstractmethod
     def detach(self, token: object) -> None:

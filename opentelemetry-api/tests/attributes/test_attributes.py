@@ -16,69 +16,58 @@
 
 import collections
 import unittest
+from typing import MutableSequence
 
-from opentelemetry.attributes import (
-    BoundedAttributes,
-    _filter_attributes,
-    _is_valid_attribute_value,
-)
+from opentelemetry.attributes import BoundedAttributes, _clean_attribute
 
 
 class TestAttributes(unittest.TestCase):
-    def test_is_valid_attribute_value(self):
-        self.assertFalse(_is_valid_attribute_value([1, 2, 3.4, "ss", 4]))
-        self.assertFalse(_is_valid_attribute_value([dict(), 1, 2, 3.4, 4]))
-        self.assertFalse(_is_valid_attribute_value(["sw", "lf", 3.4, "ss"]))
-        self.assertFalse(_is_valid_attribute_value([1, 2, 3.4, 5]))
-        self.assertFalse(_is_valid_attribute_value(dict()))
-        self.assertTrue(_is_valid_attribute_value(True))
-        self.assertTrue(_is_valid_attribute_value("hi"))
-        self.assertTrue(_is_valid_attribute_value(3.4))
-        self.assertTrue(_is_valid_attribute_value(15))
-        self.assertTrue(_is_valid_attribute_value([1, 2, 3, 5]))
-        self.assertTrue(_is_valid_attribute_value([1.2, 2.3, 3.4, 4.5]))
-        self.assertTrue(_is_valid_attribute_value([True, False]))
-        self.assertTrue(_is_valid_attribute_value(["ss", "dw", "fw"]))
-        self.assertTrue(_is_valid_attribute_value([]))
+    def assertValid(self, value, key="k"):
+        expected = value
+        if isinstance(value, MutableSequence):
+            expected = tuple(value)
+        self.assertEqual(_clean_attribute(key, value, None), expected)
+
+    def assertInvalid(self, value, key="k"):
+        self.assertIsNone(_clean_attribute(key, value, None))
+
+    def test_attribute_key_validation(self):
+        # only non-empty strings are valid keys
+        self.assertInvalid(1, "")
+        self.assertInvalid(1, 1)
+        self.assertInvalid(1, {})
+        self.assertInvalid(1, [])
+        self.assertInvalid(1, b"1")
+        self.assertValid(1, "k")
+        self.assertValid(1, "1")
+
+    def test_clean_attribute(self):
+        self.assertInvalid([1, 2, 3.4, "ss", 4])
+        self.assertInvalid([dict(), 1, 2, 3.4, 4])
+        self.assertInvalid(["sw", "lf", 3.4, "ss"])
+        self.assertInvalid([1, 2, 3.4, 5])
+        self.assertInvalid(dict())
+        self.assertInvalid([1, True])
+        self.assertValid(True)
+        self.assertValid("hi")
+        self.assertValid(3.4)
+        self.assertValid(15)
+        self.assertValid([1, 2, 3, 5])
+        self.assertValid([1.2, 2.3, 3.4, 4.5])
+        self.assertValid([True, False])
+        self.assertValid(["ss", "dw", "fw"])
+        self.assertValid([])
         # None in sequences are valid
-        self.assertTrue(_is_valid_attribute_value(["A", None, None]))
-        self.assertTrue(_is_valid_attribute_value(["A", None, None, "B"]))
-        self.assertTrue(_is_valid_attribute_value([None, None]))
-        self.assertFalse(_is_valid_attribute_value(["A", None, 1]))
-        self.assertFalse(_is_valid_attribute_value([None, "A", None, 1]))
+        self.assertValid(["A", None, None])
+        self.assertValid(["A", None, None, "B"])
+        self.assertValid([None, None])
+        self.assertInvalid(["A", None, 1])
+        self.assertInvalid([None, "A", None, 1])
 
-    def test_filter_attributes(self):
-        attrs_with_invalid_keys = {
-            "": "empty-key",
-            None: "None-value",
-            "attr-key": "attr-value",
-        }
-        _filter_attributes(attrs_with_invalid_keys)
-        self.assertTrue(len(attrs_with_invalid_keys), 1)
-        self.assertEqual(attrs_with_invalid_keys, {"attr-key": "attr-value"})
-
-        attrs_with_invalid_values = {
-            "nonhomogeneous": [1, 2, 3.4, "ss", 4],
-            "nonprimitive": dict(),
-            "mixed": [1, 2.4, "st", dict()],
-            "validkey1": "validvalue1",
-            "intkey": 5,
-            "floatkey": 3.14,
-            "boolkey": True,
-            "valid-byte-string": b"hello-otel",
-        }
-        _filter_attributes(attrs_with_invalid_values)
-        self.assertEqual(len(attrs_with_invalid_values), 5)
-        self.assertEqual(
-            attrs_with_invalid_values,
-            {
-                "validkey1": "validvalue1",
-                "intkey": 5,
-                "floatkey": 3.14,
-                "boolkey": True,
-                "valid-byte-string": "hello-otel",
-            },
-        )
+        # test keys
+        self.assertValid("value", "key")
+        self.assertInvalid("value", "")
+        self.assertInvalid("value", None)
 
 
 class TestBoundedAttributes(unittest.TestCase):
@@ -148,6 +137,9 @@ class TestBoundedAttributes(unittest.TestCase):
 
         self.assertEqual(len(bdict), dic_len)
         self.assertEqual(bdict.dropped, dic_len)
+        # Invalid values shouldn't be considered for `dropped`
+        bdict["invalid-seq"] = [None, 1, "2"]
+        self.assertEqual(bdict.dropped, dic_len)
 
         # test that elements in the dict are the new ones
         for key in self.base:
@@ -163,10 +155,10 @@ class TestBoundedAttributes(unittest.TestCase):
     def test_no_limit_code(self):
         bdict = BoundedAttributes(maxlen=None, immutable=False)
         for num in range(100):
-            bdict[num] = num
+            bdict[str(num)] = num
 
         for num in range(100):
-            self.assertEqual(bdict[num], num)
+            self.assertEqual(bdict[str(num)], num)
 
     def test_immutable(self):
         bdict = BoundedAttributes()

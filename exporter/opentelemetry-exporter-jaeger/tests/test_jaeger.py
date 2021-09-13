@@ -23,7 +23,7 @@ from opentelemetry.exporter.jaeger.proto import grpc
 # pylint:disable=no-member
 class TestJaegerExporter(unittest.TestCase):
     def test_constructors(self):
-        """ Test ensures both exporters can co-exist"""
+        """Test ensures both exporters can co-exist"""
         try:
             grpc.JaegerExporter()
             thrift.JaegerExporter()

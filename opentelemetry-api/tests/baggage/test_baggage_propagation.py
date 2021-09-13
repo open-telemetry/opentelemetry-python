@@ -18,7 +18,10 @@ import unittest
 from unittest.mock import Mock, patch
 
 from opentelemetry import baggage
-from opentelemetry.baggage.propagation import W3CBaggagePropagator
+from opentelemetry.baggage.propagation import (
+    W3CBaggagePropagator,
+    _format_baggage,
+)
 from opentelemetry.context import get_current
 
 
@@ -106,6 +109,55 @@ class TestBaggagePropagation(unittest.TestCase):
         expected = {"key1": "value1", "key3": "value3"}
         self.assertEqual(self._extract(header), expected)
 
+    def test_extract_unquote_plus(self):
+        self.assertEqual(
+            self._extract("key+key=value+value"), {"key key": "value value"}
+        )
+        self.assertEqual(
+            self._extract("key%2Fkey=value%2Fvalue"),
+            {"key/key": "value/value"},
+        )
+
+    def test_header_max_entries_skip_invalid_entry(self):
+
+        self.assertEqual(
+            self._extract(
+                ",".join(
+                    [
+                        f"key{index}=value{index}"
+                        if index != 2
+                        else (
+                            f"key{index}="
+                            f"value{'s' * (W3CBaggagePropagator._MAX_PAIR_LENGTH + 1)}"
+                        )
+                        for index in range(W3CBaggagePropagator._MAX_PAIRS + 1)
+                    ]
+                )
+            ),
+            {
+                f"key{index}": f"value{index}"
+                for index in range(W3CBaggagePropagator._MAX_PAIRS + 1)
+                if index != 2
+            },
+        )
+        self.assertEqual(
+            self._extract(
+                ",".join(
+                    [
+                        f"key{index}=value{index}"
+                        if index != 2
+                        else f"key{index}xvalue{index}"
+                        for index in range(W3CBaggagePropagator._MAX_PAIRS + 1)
+                    ]
+                )
+            ),
+            {
+                f"key{index}": f"value{index}"
+                for index in range(W3CBaggagePropagator._MAX_PAIRS + 1)
+                if index != 2
+            },
+        )
+
     def test_inject_no_baggage_entries(self):
         values = {}
         output = self._inject(values)
@@ -140,7 +192,7 @@ class TestBaggagePropagation(unittest.TestCase):
         self.assertIn("key2=123", output)
         self.assertIn("key3=123.567", output)
 
-    @patch("opentelemetry.baggage.propagation.baggage")
+    @patch("opentelemetry.baggage.propagation.get_all")
     @patch("opentelemetry.baggage.propagation._format_baggage")
     def test_fields(self, mock_format_baggage, mock_baggage):
 
@@ -154,3 +206,12 @@ class TestBaggagePropagation(unittest.TestCase):
             inject_fields.add(mock_call[1][1])
 
         self.assertEqual(inject_fields, self.propagator.fields)
+
+    def test__format_baggage(self):
+        self.assertEqual(
+            _format_baggage({"key key": "value value"}), "key+key=value+value"
+        )
+        self.assertEqual(
+            _format_baggage({"key/key": "value/value"}),
+            "key%2Fkey=value%2Fvalue",
+        )

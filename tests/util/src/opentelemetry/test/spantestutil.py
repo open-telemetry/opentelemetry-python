@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from functools import partial
 from importlib import reload
 
 from opentelemetry import trace as trace_api
@@ -23,6 +24,13 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 )
 
 _MEMORY_EXPORTER = None
+
+
+def new_tracer(span_limits=None, resource=None) -> trace_api.Tracer:
+    provider_factory = trace_sdk.TracerProvider
+    if resource is not None:
+        provider_factory = partial(provider_factory, resource=resource)
+    return provider_factory(span_limits=span_limits).get_tracer(__name__)
 
 
 class SpanTestBase(unittest.TestCase):
@@ -60,23 +68,14 @@ def get_span_with_dropped_attributes_events_links():
                 attributes=attributes,
             )
         )
-    span = trace_sdk._Span(
-        limits=trace_sdk.SpanLimits(),
-        name="span",
-        resource=Resource(
-            attributes=attributes,
-        ),
-        context=trace_api.SpanContext(
-            trace_id=0x000000000000000000000000DEADBEEF,
-            span_id=0x00000000DEADBEF0,
-            is_remote=False,
-        ),
-        links=links,
-        attributes=attributes,
-    )
 
-    span.start()
-    for index in range(131):
-        span.add_event("event{}".format(index), attributes=attributes)
-    span.end()
-    return span
+    tracer = new_tracer(
+        span_limits=trace_sdk.SpanLimits(),
+        resource=Resource(attributes=attributes),
+    )
+    with tracer.start_as_current_span(
+        "span", links=links, attributes=attributes
+    ) as span:
+        for index in range(131):
+            span.add_event("event{}".format(index), attributes=attributes)
+        return span
