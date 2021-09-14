@@ -13,13 +13,19 @@
 # limitations under the License.
 
 from unittest.mock import Mock, patch
+from unittest import TestCase
+from logging import WARNING
 
 from pytest import fixture
 
 from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry import metrics
 from opentelemetry.metrics import (
-    set_meter_provider, get_meter_provider, ProxyMeterProvider
+    set_meter_provider,
+    get_meter_provider,
+    ProxyMeterProvider,
+    _DefaultMeterProvider,
+    _DefaultMeter
 )
 
 
@@ -67,3 +73,37 @@ def test_get_meter_provider(reset_meter_provider):
                 Mock(**{"return_value": "test_meter_provider"})
             ):
                 assert get_meter_provider() == "test_meter_provider"
+
+
+class TestGetMeter(TestCase):
+
+    def test_get_meter_parameters(self):
+        """
+        Test that get_meter accepts name, version and schema_url
+        """
+        try:
+            _DefaultMeterProvider().get_meter(
+                "name", version="version", schema_url="schema_url"
+            )
+        except Exception as error:
+            self.fail(f"Unexpected exception raised: {error}")
+
+    def test_invalid_name(self):
+        """
+        Test that when an invalid name is specified a working meter
+        implementation is returned as a fallback.
+        """
+        with self.assertLogs(level=WARNING):
+            self.assertTrue(
+                isinstance(
+                    _DefaultMeterProvider().get_meter(""),
+                    _DefaultMeter
+                )
+            )
+        with self.assertLogs(level=WARNING):
+            self.assertTrue(
+                isinstance(
+                    _DefaultMeterProvider().get_meter(None),
+                    _DefaultMeter
+                )
+            )

@@ -63,7 +63,8 @@ class MeterProvider(ABC):
         version=None,
         schema_url=None,
     ) -> "Meter":
-        pass
+        if name is None or name == "":
+            _logger.warning("Invalid name: %s", name)
 
 
 class _DefaultMeterProvider(MeterProvider):
@@ -73,6 +74,7 @@ class _DefaultMeterProvider(MeterProvider):
         version=None,
         schema_url=None,
     ) -> "Meter":
+        super().get_meter(name, version=version, schema_url=schema_url)
         return _DefaultMeter()
 
 
