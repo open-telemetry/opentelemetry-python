@@ -24,8 +24,6 @@ MeterProvider
 #. Test that a message is logged reporting the specified value for the fallback
    meter is invalid.
 #. Test that new configuration applies to previously returned meters.
-#. Test that the effect of associating a schema URL with a meter is that the
-   telemetry emitted using that meter is associated with the schema URL.
 
 Meter
 -----
