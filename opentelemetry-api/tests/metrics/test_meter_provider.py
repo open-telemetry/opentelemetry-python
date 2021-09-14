@@ -25,7 +25,16 @@ from opentelemetry.metrics import (
     get_meter_provider,
     ProxyMeterProvider,
     _DefaultMeterProvider,
-    _DefaultMeter
+    _DefaultMeter,
+    ProxyMeter,
+)
+from opentelemetry.metrics.instrument import (
+    DefaultCounter,
+    DefaultHistogram,
+    DefaultObservableCounter,
+    DefaultObservableGauge,
+    DefaultObservableUpDownCounter,
+    DefaultUpDownCounter,
 )
 
 
@@ -127,3 +136,133 @@ class TestGetMeter(TestCase):
         self.assertIs(
             meter_provider.get_meter("name")._meter_provider, meter_provider
         )
+
+
+class Provider(_DefaultMeterProvider):
+    def get_meter(self, name, version=None, schema_url=None):
+        return Meter(name, version=version, schema_url=schema_url)
+
+
+class Meter(_DefaultMeter):
+    def create_counter(self, name, unit="", description=""):
+        return Counter("name")
+
+    def create_up_down_counter(self, name, unit="", description=""):
+        return UpDownCounter("name")
+
+    def create_observable_counter(
+        self, name, callback, unit="", description=""
+    ):
+        return ObservableCounter("name", Mock())
+
+    def create_histogram(self, name, unit="", description=""):
+        return Histogram("name")
+
+    def create_observable_gauge(self, name, callback, unit="", description=""):
+        return ObservableGauge("name", Mock())
+
+    def create_observable_up_down_counter(
+        self, name, callback, unit="", description=""
+    ):
+        return ObservableUpDownCounter("name", Mock())
+
+
+class Counter(DefaultCounter):
+    pass
+
+
+class Histogram(DefaultHistogram):
+    pass
+
+
+class ObservableCounter(DefaultObservableCounter):
+    pass
+
+
+class ObservableGauge(DefaultObservableGauge):
+    pass
+
+
+class ObservableUpDownCounter(DefaultObservableUpDownCounter):
+    pass
+
+
+class UpDownCounter(DefaultUpDownCounter):
+    pass
+
+
+class TestProxy(TestCase):
+    def test_proxy_meter(self):
+
+        """
+        Test that the proxy meter provider and proxy meter automatically point
+        to updated objects.
+        """
+
+        original_provider = metrics._METER_PROVIDER
+
+        provider = get_meter_provider()
+        self.assertIsInstance(provider, ProxyMeterProvider)
+
+        meter = provider.get_meter("proxy-test")
+        self.assertIsInstance(meter, ProxyMeter)
+
+        self.assertIsInstance(meter.create_counter("counter"), DefaultCounter)
+
+        self.assertIsInstance(
+            meter.create_histogram("histogram"), DefaultHistogram
+        )
+
+        self.assertIsInstance(
+            meter.create_observable_counter("observable_counter", Mock()),
+            DefaultObservableCounter,
+        )
+
+        self.assertIsInstance(
+            meter.create_observable_gauge("observable_gauge", Mock()),
+            DefaultObservableGauge,
+        )
+
+        self.assertIsInstance(
+            meter.create_observable_up_down_counter(
+                "observable_up_down_counter", Mock()
+            ),
+            DefaultObservableUpDownCounter,
+        )
+
+        self.assertIsInstance(
+            meter.create_up_down_counter("up_down_counter"),
+            DefaultUpDownCounter,
+        )
+
+        set_meter_provider(Provider())
+
+        self.assertIsInstance(get_meter_provider(), Provider)
+        self.assertIsInstance(provider.get_meter("proxy-test"), Meter)
+
+        self.assertIsInstance(meter.create_counter("counter"), Counter)
+
+        self.assertIsInstance(meter.create_histogram("histogram"), Histogram)
+
+        self.assertIsInstance(
+            meter.create_observable_counter("observable_counter", Mock()),
+            ObservableCounter,
+        )
+
+        self.assertIsInstance(
+            meter.create_observable_gauge("observable_gauge", Mock()),
+            ObservableGauge,
+        )
+
+        self.assertIsInstance(
+            meter.create_observable_up_down_counter(
+                "observable_up_down_counter", Mock()
+            ),
+            ObservableUpDownCounter,
+        )
+
+        self.assertIsInstance(
+            meter.create_up_down_counter("up_down_counter"), UpDownCounter
+        )
+
+        metrics._METER_PROVIDER = original_provider
