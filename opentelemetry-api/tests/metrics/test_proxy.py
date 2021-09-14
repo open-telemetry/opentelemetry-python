@@ -17,6 +17,14 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 from opentelemetry import metrics
+from opentelemetry.metrics import (
+    ProxyMeter,
+    ProxyMeterProvider,
+    _DefaultMeter,
+    _DefaultMeterProvider,
+    get_meter_provider,
+    set_meter_provider,
+)
 from opentelemetry.metrics.instrument import (
     DefaultCounter,
     DefaultHistogram,
@@ -24,14 +32,6 @@ from opentelemetry.metrics.instrument import (
     DefaultObservableGauge,
     DefaultObservableUpDownCounter,
     DefaultUpDownCounter,
-)
-from opentelemetry.metrics import (
-    _DefaultMeterProvider,
-    _DefaultMeter,
-    ProxyMeter,
-    ProxyMeterProvider,
-    set_meter_provider,
-    get_meter_provider,
 )
 
 
@@ -102,32 +102,30 @@ class TestProxy(TestCase):
 
         self.assertIsInstance(meter.create_counter("counter"), DefaultCounter)
 
-        self.assertIsInstance(meter.create_histogram("histogram"), DefaultHistogram)
-
         self.assertIsInstance(
-            meter.create_observable_counter(
-                "observable_counter", Mock()
-            ),
-            DefaultObservableCounter
+            meter.create_histogram("histogram"), DefaultHistogram
         )
 
         self.assertIsInstance(
-            meter.create_observable_gauge(
-                "observable_gauge", Mock()
-            ),
-            DefaultObservableGauge
+            meter.create_observable_counter("observable_counter", Mock()),
+            DefaultObservableCounter,
+        )
+
+        self.assertIsInstance(
+            meter.create_observable_gauge("observable_gauge", Mock()),
+            DefaultObservableGauge,
         )
 
         self.assertIsInstance(
             meter.create_observable_up_down_counter(
                 "observable_up_down_counter", Mock()
             ),
-            DefaultObservableUpDownCounter
+            DefaultObservableUpDownCounter,
         )
 
         self.assertIsInstance(
             meter.create_up_down_counter("up_down_counter"),
-            DefaultUpDownCounter
+            DefaultUpDownCounter,
         )
 
         set_meter_provider(Provider())
@@ -140,29 +138,24 @@ class TestProxy(TestCase):
         self.assertIsInstance(meter.create_histogram("histogram"), Histogram)
 
         self.assertIsInstance(
-            meter.create_observable_counter(
-                "observable_counter", Mock()
-            ),
-            ObservableCounter
+            meter.create_observable_counter("observable_counter", Mock()),
+            ObservableCounter,
         )
 
         self.assertIsInstance(
-            meter.create_observable_gauge(
-                "observable_gauge", Mock()
-            ),
-            ObservableGauge
+            meter.create_observable_gauge("observable_gauge", Mock()),
+            ObservableGauge,
         )
 
         self.assertIsInstance(
             meter.create_observable_up_down_counter(
                 "observable_up_down_counter", Mock()
             ),
-            ObservableUpDownCounter
+            ObservableUpDownCounter,
         )
 
         self.assertIsInstance(
-            meter.create_up_down_counter("up_down_counter"),
-            UpDownCounter
+            meter.create_up_down_counter("up_down_counter"), UpDownCounter
         )
 
         metrics._METER_PROVIDER = original_provider
