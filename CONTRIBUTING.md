@@ -64,8 +64,8 @@ You can run:
 - `tox` to run all existing tox commands, including unit tests for all packages
   under multiple Python versions
 - `tox -e docs` to regenerate the API docs
-- `tox -e test-core-api` and `tox -e test-core-sdk` to run the API and SDK unit tests
-- `tox -e py37-test-core-api` to e.g. run the API unit tests under a specific
+- `tox -e opentelemetry-api` and `tox -e opentelemetry-sdk` to run the API and SDK unit tests
+- `tox -e py37-opentelemetry-api` to e.g. run the API unit tests under a specific
   Python version
 - `tox -e lint` to run lint checks on all code
 

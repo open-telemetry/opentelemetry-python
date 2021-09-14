@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: 3ad534cbba41c2b92618f5f03c4c92cee4a72df6
+  CONTRIB_REPO_SHA: dde62cebffe519c35875af6d06fae053b3be65ec
 
 jobs:
   build:
@@ -20,15 +20,15 @@ jobs:
       py37: 3.7
       py38: 3.8
       py39: 3.9
-      pypy3: pypy3
+      pypy3: pypy-3.7
       RUN_MATRIX_COMBINATION: ${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
         python-version: [ py36, py37, py38, py39, pypy3 ]
-        package: ["instrumentation", "core", "exporter", "propagator"]
-        os: [ ubuntu-latest ]
+        package: ["api", "sdk", "instrumentation", "semantic", "getting", "distro" , "shim", "exporter", "protobuf", "propagator"]
+        os: [ ubuntu-20.04, windows-2019 ]
     steps:
       - name: Checkout Core Repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v2
@@ -42,14 +42,22 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ env[matrix.python-version] }}
+          architecture: 'x64'
       - name: Install tox
         run: pip install -U tox-factor
       - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
         uses: actions/cache@v2
         with:
-          path: .tox
-          key: tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
+          path: |
+            .tox
+            ~/.cache/pip
+          key: v2-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
+      # tox fails on windows and Python3.6 when tox dir is reused between builds so we remove it
+      - name: fix for windows + py3.6
+        if: ${{ matrix.os == 'windows-2019' && matrix.python-version == 'py36' }} 
+        shell: pwsh
+        run: Remove-Item .\.tox\ -Force -Recurse -ErrorAction Ignore
       - name: run tox
         run: tox -f ${{ matrix.python-version }}-${{ matrix.package }} -- --benchmark-json=${{ env.RUN_MATRIX_COMBINATION }}-benchmark.json
       - name: Find and merge benchmarks
@@ -81,7 +89,7 @@ jobs:
       matrix:
         tox-environment: [ "docker-tests", "lint", "docs", "mypy", "mypyinstalled", "tracecontext" ]
     name: ${{ matrix.tox-environment }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout Core Repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v2
@@ -95,14 +103,17 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
+          architecture: 'x64'
       - name: Install tox
         run: pip install -U tox
       - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
         uses: actions/cache@v2
         with:
-          path: .tox
-          key: tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
+          path: |
+            .tox
+            ~/.cache/pip
+          key: v2-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
       - name: run tox
         run: tox -e ${{ matrix.tox-environment }}
   contrib-build:
@@ -119,7 +130,7 @@ jobs:
       matrix:
         python-version: [ py36, py37, py38, py39, pypy3 ]
         package: ["instrumentation", "exporter"]
-        os: [ ubuntu-latest ]
+        os: [ ubuntu-20.04]
     steps:
       - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
         uses: actions/checkout@v2
@@ -135,14 +146,17 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ env[matrix.python-version] }}
+          architecture: 'x64'
       - name: Install tox
         run: pip install -U tox-factor
       - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
         uses: actions/cache@v2
         with:
-          path: .tox
-          key: tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
+          path: |
+            .tox
+            ~/.cache/pip
+          key: v2-tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
       - name: run tox
         run: tox -f ${{ matrix.python-version }}-${{ matrix.package }}
   contrib-misc:
@@ -151,7 +165,7 @@ jobs:
       matrix:
         tox-environment: [ "docker-tests"]
     name: ${{ matrix.tox-environment }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
         uses: actions/checkout@v2
@@ -167,13 +181,16 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.9
+          architecture: 'x64'
       - name: Install tox
         run: pip install -U tox
       - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
         uses: actions/cache@v2
         with:
-          path: .tox
-          key: tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
+          path: |
+            .tox
+            ~/.cache/pip
+          key: v2-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
       - name: run tox
         run: tox -e ${{ matrix.tox-environment }}
