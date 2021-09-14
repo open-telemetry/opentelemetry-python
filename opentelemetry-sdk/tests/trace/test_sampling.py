@@ -44,7 +44,7 @@ class TestDecision(unittest.TestCase):
         self.assertTrue(
             sampling.Decision.is_sampled(sampling.Decision.RECORD_AND_SAMPLE)
         )
-        self.assertFalse(sampling.Decision.is_sampled(sampling.Decision.DROP))
+        self.assertTrue(sampling.Decision.is_sampled(sampling.Decision.DROP))
 
 
 class TestSamplingResult(unittest.TestCase):
