@@ -20,9 +20,8 @@
 
 from abc import ABC, abstractmethod
 from logging import getLogger
-from typing import cast
 from os import environ
-from typing import Optional
+from typing import Optional, cast
 
 from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics.instrument import (
@@ -80,16 +79,15 @@ class _DefaultMeterProvider(MeterProvider):
 class ProxyMeterProvider(MeterProvider):
     def get_meter(
         self,
-        instrumenting_module_name: str,
-        instrumenting_library_version: str = "",
+        name,
+        version=None,
+        schema_url=None,
     ) -> "Meter":
         if _METER_PROVIDER:
             return _METER_PROVIDER.get_meter(
-                instrumenting_module_name, instrumenting_library_version
+                name, version=version, schema_url=schema_url
             )
-        return ProxyMeter(
-            instrumenting_module_name, instrumenting_library_version
-        )
+        return ProxyMeter(name, version=version, schema_url=schema_url)
 
 
 class Meter(ABC):
@@ -137,14 +135,16 @@ class Meter(ABC):
 
 
 class ProxyMeter(Meter):
-    # pylint: disable=W0222,signature-differs
     def __init__(
         self,
-        instrumenting_module_name: str,
-        instrumenting_library_version: str,
+        name,
+        version=None,
+        schema_url=None,
     ):
-        self._instrumenting_module_name = instrumenting_module_name
-        self._instrumenting_library_version = instrumenting_library_version
+        super().__init__()
+        self._name = name
+        self._version = version
+        self._schema_url = schema_url
         self._real_meter: Optional[Meter] = None
         self._noop_meter = _DefaultMeter()
 
@@ -155,8 +155,8 @@ class ProxyMeter(Meter):
 
         if _METER_PROVIDER:
             self._real_meter = _METER_PROVIDER.get_meter(
-                self._instrumenting_module_name,
-                self._instrumenting_library_version,
+                self._name,
+                self._version,
             )
             return self._real_meter
         return self._noop_meter
@@ -234,8 +234,8 @@ _PROXY_METER_PROVIDER = None
 
 
 def get_meter(
-    instrumenting_module_name: str,
-    instrumenting_library_version: str = "",
+    name: str,
+    version: str = "",
     meter_provider: Optional[MeterProvider] = None,
 ) -> "Meter":
     """Returns a `Meter` for use by the given instrumentation library.
@@ -247,9 +247,7 @@ def get_meter(
     """
     if meter_provider is None:
         meter_provider = get_meter_provider()
-    return meter_provider.get_meter(
-        instrumenting_module_name, instrumenting_library_version
-    )
+    return meter_provider.get_meter(name, version)
 
 
 def set_meter_provider(meter_provider: MeterProvider) -> None:
