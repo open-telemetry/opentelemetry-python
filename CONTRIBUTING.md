@@ -78,6 +78,18 @@ See
 [`tox.ini`](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini)
 for more detail on available tox commands.
 
+#### Contrib repo
+Some of the `tox` targets install packages from the [OpenTelemetry Python Contrib Repository](https://github.com/open-telemetry/opentelemetry-python.git) via
+pip. The version of the packages installed defaults to the `main` branch in that repository when `tox` is run locally. It is possible to install packages tagged
+with a specific git commit hash by setting an environment variable before running tox as per the following example:
+
+```
+CONTRIB_REPO_SHA=dde62cebffe519c35875af6d06fae053b3be65ec tox
+```
+
+The continuation integration overrides that environment variable with as per the configuration 
+[here](https://github.com/open-telemetry/opentelemetry-python/blob/9020b0baaeb41b7137badca988bb5c2d562cddee/.github/workflows/test.yml#L13).
+
 ### Benchmarks
 
 Performance progression of benchmarks for packages distributed by OpenTelemetry Python can be viewed as a [graph of throughput vs commit history](https://opentelemetry-python.readthedocs.io/en/latest/performance/benchmarks.html). From the linked page, you can download a JSON file with the performance results.
