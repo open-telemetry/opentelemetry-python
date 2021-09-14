@@ -12,35 +12,42 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest import TestCase
 from unittest.mock import Mock
 
+from pytest import fixture
+
 from opentelemetry import metrics
-from opentelemetry.metrics import set_meter_provider
+from opentelemetry.metrics import (
+    set_meter_provider, get_meter_provider, ProxyMeterProvider
+)
 
 
-class TestMeterProvider(TestCase):
+@fixture
+def reset_meter_provider():
+    original_meter_provider_value = metrics._METER_PROVIDER
 
-    def setUp(self):
-        self.original_meter_provider_value = metrics._METER_PROVIDER
+    yield
 
-    def tearDown(self):
-        metrics._METER_PROVIDER = self.original_meter_provider_value
+    metrics._METER_PROVIDER = original_meter_provider_value
 
-    def test_set_meter_provider(self):
-        """
-        Test that the API provides a way to set a global default MeterProvider
-        """
 
-        mock = Mock()
+def test_set_meter_provider(reset_meter_provider):
+    """
+    Test that the API provides a way to set a global default MeterProvider
+    """
 
-        self.assertIsNone(metrics._METER_PROVIDER)
+    mock = Mock()
 
-        set_meter_provider(mock)
+    assert metrics._METER_PROVIDER is None
 
-        self.assertIs(metrics._METER_PROVIDER, mock)
+    set_meter_provider(mock)
 
-    def test_get_meter_provider(self):
-        """
-        Test that a global `MeterProvider` can be get.
-        """
+    assert metrics._METER_PROVIDER is mock
+
+
+def test_get_meter_provider():
+    """
+    Test that the API provides a way to get a global default MeterProvider
+    """
+
+    assert isinstance(get_meter_provider(), ProxyMeterProvider)
