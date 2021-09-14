@@ -4,7 +4,6 @@ exclude = '''
 (
   /(  # generated files
     .tox|
-    opentelemetry-python-contrib|
     exporter/opentelemetry-exporter-jaeger-proto-grpc/src/opentelemetry/exporter/jaeger/proto/grpc/gen|
     exporter/opentelemetry-exporter-jaeger-thrift/src/opentelemetry/exporter/jaeger/thrift/gen|
     exporter/opentelemetry-exporter-zipkin-proto-http/src/opentelemetry/exporter/zipkin/proto/http/v2/gen|
