@@ -36,9 +36,7 @@ from opentelemetry.metrics.instrument import (
 
 
 class Provider(_DefaultMeterProvider):
-    def get_meter(
-        self, instrumentation_module_name, instrumentation_library_version=None
-    ):
+    def get_meter(self, name, version=None, schema_url=None):
         return Meter()
 
 

@@ -13,13 +13,32 @@
 # limitations under the License.
 
 from unittest import TestCase
+from unittest.mock import Mock
+
+from opentelemetry import metrics
+from opentelemetry.metrics import set_meter_provider
 
 
 class TestMeterProvider(TestCase):
+
+    def setUp(self):
+        self.original_meter_provider_value = metrics._METER_PROVIDER
+
+    def tearDown(self):
+        metrics._METER_PROVIDER = self.original_meter_provider_value
+
     def test_set_meter_provider(self):
         """
-        Test that a global `MeterProvider` can be set.
+        Test that the API provides a way to set a global default MeterProvider
         """
+
+        mock = Mock()
+
+        self.assertIsNone(metrics._METER_PROVIDER)
+
+        set_meter_provider(mock)
+
+        self.assertIs(metrics._METER_PROVIDER, mock)
 
     def test_get_meter_provider(self):
         """
