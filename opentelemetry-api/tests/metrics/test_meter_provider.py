@@ -92,18 +92,20 @@ class TestGetMeter(TestCase):
         """
         Test that when an invalid name is specified a working meter
         implementation is returned as a fallback.
+
+        Test that the fallback meter name property keeps its original invalid
+        value.
         """
         with self.assertLogs(level=WARNING):
-            self.assertTrue(
-                isinstance(
-                    _DefaultMeterProvider().get_meter(""),
-                    _DefaultMeter
-                )
-            )
+            meter = _DefaultMeterProvider().get_meter("")
+
+            self.assertTrue(isinstance(meter, _DefaultMeter))
+
+        self.assertEqual(meter.name, "")
+
         with self.assertLogs(level=WARNING):
-            self.assertTrue(
-                isinstance(
-                    _DefaultMeterProvider().get_meter(None),
-                    _DefaultMeter
-                )
-            )
+            meter = _DefaultMeterProvider().get_meter(None)
+
+            self.assertTrue(isinstance(meter, _DefaultMeter))
+
+        self.assertEqual(meter.name, None)

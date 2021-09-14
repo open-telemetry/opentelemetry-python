@@ -75,7 +75,7 @@ class _DefaultMeterProvider(MeterProvider):
         schema_url=None,
     ) -> "Meter":
         super().get_meter(name, version=version, schema_url=schema_url)
-        return _DefaultMeter()
+        return _DefaultMeter(name, version=version, schema_url=schema_url)
 
 
 class ProxyMeterProvider(MeterProvider):
@@ -93,8 +93,23 @@ class ProxyMeterProvider(MeterProvider):
 
 
 class Meter(ABC):
-    def __init__(self):
+    def __init__(self, name, version=None, schema_url=None):
+        self._name = name
+        self._version = version
+        self._schema_url = schema_url
         self._instrument_names = set()
+
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def version(self):
+        return self._version
+
+    @property
+    def schema_url(self):
+        return self._schema_url
 
     def _check_instrument_name(self, name):
 
@@ -143,12 +158,11 @@ class ProxyMeter(Meter):
         version=None,
         schema_url=None,
     ):
-        super().__init__()
-        self._name = name
-        self._version = version
-        self._schema_url = schema_url
+        super().__init__(name, version=version, schema_url=schema_url)
         self._real_meter: Optional[Meter] = None
-        self._noop_meter = _DefaultMeter()
+        self._noop_meter = _DefaultMeter(
+            name, version=version, schema_url=schema_url
+        )
 
     @property
     def _meter(self) -> Meter:
@@ -185,6 +199,7 @@ class ProxyMeter(Meter):
 
 
 class _DefaultMeter(Meter):
+
     def create_counter(self, name, unit="", description="") -> Counter:
         super().create_counter(name, unit=unit, description=description)
         return DefaultCounter(name, unit=unit, description=description)
