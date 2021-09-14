@@ -35,34 +35,58 @@ from opentelemetry.metrics import (
 )
 
 
-class TestProvider(_DefaultMeterProvider):
+class Provider(_DefaultMeterProvider):
     def get_meter(
         self, instrumentation_module_name, instrumentation_library_version=None
     ):
-        return TestMeter()
+        return Meter()
 
 
-class TestMeter(_DefaultMeter):
+class Meter(_DefaultMeter):
+    def create_counter(self, name, unit="", description=""):
+        return Counter("name")
+
+    def create_up_down_counter(self, name, unit="", description=""):
+        return UpDownCounter("name")
+
+    def create_observable_counter(
+        self, name, callback, unit="", description=""
+    ):
+        return ObservableCounter("name", Mock())
+
+    def create_histogram(self, name, unit="", description=""):
+        return Histogram("name")
+
+    def create_observable_gauge(self, name, callback, unit="", description=""):
+        return ObservableGauge("name", Mock())
+
+    def create_observable_up_down_counter(
+        self, name, callback, unit="", description=""
+    ):
+        return ObservableUpDownCounter("name", Mock())
+
+
+class Counter(DefaultCounter):
     pass
 
 
-class TestDefaultHistogram(DefaultHistogram):
+class Histogram(DefaultHistogram):
     pass
 
 
-class TestDefaultObservableCounter(DefaultObservableCounter):
+class ObservableCounter(DefaultObservableCounter):
     pass
 
 
-class TestDefaultObservableGauge(DefaultObservableGauge):
+class ObservableGauge(DefaultObservableGauge):
     pass
 
 
-class TestDefaultObservableUpDownCounter(DefaultObservableUpDownCounter):
+class ObservableUpDownCounter(DefaultObservableUpDownCounter):
     pass
 
 
-class TestDefaultUpDownCounter(DefaultUpDownCounter):
+class UpDownCounter(DefaultUpDownCounter):
     pass
 
 
@@ -76,35 +100,69 @@ class TestProxy(TestCase):
         meter = provider.get_meter("proxy-test")
         self.assertIsInstance(meter, ProxyMeter)
 
-        counter = meter.create_counter("counter")
-        self.assertIsInstance(counter, DefaultCounter)
+        self.assertIsInstance(meter.create_counter("counter"), DefaultCounter)
 
-        histogram = meter.create_histogram("histogram")
-        self.assertIsInstance(histogram, DefaultHistogram)
+        self.assertIsInstance(meter.create_histogram("histogram"), DefaultHistogram)
 
-        observable_counter = meter.create_observable_counter("observable_counter", Mock())
-        self.assertIsInstance(observable_counter, DefaultObservableCounter)
+        self.assertIsInstance(
+            meter.create_observable_counter(
+                "observable_counter", Mock()
+            ),
+            DefaultObservableCounter
+        )
 
-        observable_gauge = meter.create_observable_gauge("observable_gauge", Mock())
-        self.assertIsInstance(observable_gauge, DefaultObservableGauge)
+        self.assertIsInstance(
+            meter.create_observable_gauge(
+                "observable_gauge", Mock()
+            ),
+            DefaultObservableGauge
+        )
 
-        observable_up_down_counter = meter.create_observable_up_down_counter("observable_up_down_counter", Mock())
-        self.assertIsInstance(observable_up_down_counter, DefaultObservableUpDownCounter)
+        self.assertIsInstance(
+            meter.create_observable_up_down_counter(
+                "observable_up_down_counter", Mock()
+            ),
+            DefaultObservableUpDownCounter
+        )
 
-        up_down_counter = meter.create_up_down_counter("up_down_counter")
-        self.assertIsInstance(up_down_counter, DefaultUpDownCounter)
+        self.assertIsInstance(
+            meter.create_up_down_counter("up_down_counter"),
+            DefaultUpDownCounter
+        )
 
-        set_meter_provider(TestProvider())
+        set_meter_provider(Provider())
 
-        self.assertIsInstance(get_meter_provider(), TestProvider)
+        self.assertIsInstance(get_meter_provider(), Provider)
+        self.assertIsInstance(provider.get_meter("proxy-test"), Meter)
 
-        # references to the old provider still work but return real meter now
-        real_meter = provider.get_meter("proxy-test")
-        self.assertIsInstance(real_meter, TestMeter)
+        self.assertIsInstance(meter.create_counter("counter"), Counter)
 
-        # reference to old proxy meter now delegates to a real meter and
-        # creates real spans
-        # with meter.start_span("") as span:
-        #     self.assertIsInstance(span, TestSpan)
+        self.assertIsInstance(meter.create_histogram("histogram"), Histogram)
+
+        self.assertIsInstance(
+            meter.create_observable_counter(
+                "observable_counter", Mock()
+            ),
+            ObservableCounter
+        )
+
+        self.assertIsInstance(
+            meter.create_observable_gauge(
+                "observable_gauge", Mock()
+            ),
+            ObservableGauge
+        )
+
+        self.assertIsInstance(
+            meter.create_observable_up_down_counter(
+                "observable_up_down_counter", Mock()
+            ),
+            ObservableUpDownCounter
+        )
+
+        self.assertIsInstance(
+            meter.create_up_down_counter("up_down_counter"),
+            UpDownCounter
+        )
 
         metrics._METER_PROVIDER = original_provider
