@@ -79,6 +79,7 @@ See
 for more detail on available tox commands.
 
 #### Contrib repo
+
 Some of the `tox` targets install packages from the [OpenTelemetry Python Contrib Repository](https://github.com/open-telemetry/opentelemetry-python.git) via
 pip. The version of the packages installed defaults to the `main` branch in that repository when `tox` is run locally. It is possible to install packages tagged
 with a specific git commit hash by setting an environment variable before running tox as per the following example:
