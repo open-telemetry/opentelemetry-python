@@ -12,11 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=W0212,W0222,W0221
 
 from unittest import TestCase
+from unittest.mock import Mock
 
 from opentelemetry import metrics
+from opentelemetry.metrics.instrument import (
+    DefaultCounter,
+    DefaultHistogram,
+    DefaultObservableCounter,
+    DefaultObservableGauge,
+    DefaultObservableUpDownCounter,
+    DefaultUpDownCounter,
+)
 from opentelemetry.metrics import (
     _DefaultMeterProvider,
     _DefaultMeter,
@@ -43,15 +51,28 @@ class TestProxy(TestCase):
         original_provider = metrics._METER_PROVIDER
 
         provider = get_meter_provider()
-        # proxy provider
         self.assertIsInstance(provider, ProxyMeterProvider)
 
-        # provider returns proxy meter
         meter = provider.get_meter("proxy-test")
         self.assertIsInstance(meter, ProxyMeter)
 
-        # with meter.start_span("span1") as span:
-        #     self.assertIsInstance(span, NonRecordingSpan)
+        counter = meter.create_counter("counter")
+        self.assertIsInstance(counter, DefaultCounter)
+
+        histogram = meter.create_histogram("histogram")
+        self.assertIsInstance(histogram, DefaultHistogram)
+
+        observable_counter = meter.create_observable_counter("observable_counter", Mock())
+        self.assertIsInstance(observable_counter, DefaultObservableCounter)
+
+        observable_gauge = meter.create_observable_gauge("observable_gauge", Mock())
+        self.assertIsInstance(observable_gauge, DefaultObservableGauge)
+
+        observable_up_down_counter = meter.create_observable_up_down_counter("observable_up_down_counter", Mock())
+        self.assertIsInstance(observable_up_down_counter, DefaultObservableUpDownCounter)
+
+        up_down_counter = meter.create_up_down_counter("up_down_counter")
+        self.assertIsInstance(up_down_counter, DefaultUpDownCounter)
 
         # with meter.start_as_current_span("span2") as span:
         #     self.assertIsInstance(span, NonRecordingSpan)
