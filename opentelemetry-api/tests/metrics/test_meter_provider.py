@@ -95,6 +95,9 @@ class TestGetMeter(TestCase):
 
         Test that the fallback meter name property keeps its original invalid
         value.
+
+        Test that a message is logged reporting the specified value for the
+        fallback meter is invalid.
         """
         with self.assertLogs(level=WARNING):
             meter = _DefaultMeterProvider().get_meter("")
