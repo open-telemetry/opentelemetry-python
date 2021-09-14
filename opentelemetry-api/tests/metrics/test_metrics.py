@@ -12,10 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from pytest import fixture
 
+from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry import metrics
 from opentelemetry.metrics import (
     set_meter_provider, get_meter_provider, ProxyMeterProvider
@@ -45,9 +46,24 @@ def test_set_meter_provider(reset_meter_provider):
     assert metrics._METER_PROVIDER is mock
 
 
-def test_get_meter_provider():
+def test_get_meter_provider(reset_meter_provider):
     """
     Test that the API provides a way to get a global default MeterProvider
     """
 
+    assert metrics._METER_PROVIDER is None
+
     assert isinstance(get_meter_provider(), ProxyMeterProvider)
+
+    metrics._METER_PROVIDER = None
+
+    with patch.dict(
+        "os.environ", {OTEL_PYTHON_METER_PROVIDER: "test_meter_provider"}
+    ):
+
+        with patch("opentelemetry.metrics._load_provider", Mock()):
+            with patch(
+                "opentelemetry.metrics.cast",
+                Mock(**{"return_value": "test_meter_provider"})
+            ):
+                assert get_meter_provider() == "test_meter_provider"

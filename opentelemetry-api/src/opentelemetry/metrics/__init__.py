@@ -272,7 +272,7 @@ def get_meter_provider() -> MeterProvider:
     global _PROXY_METER_PROVIDER
 
     if _METER_PROVIDER is None:
-        if OTEL_PYTHON_METER_PROVIDER not in environ:
+        if OTEL_PYTHON_METER_PROVIDER not in environ.keys():
             if _PROXY_METER_PROVIDER is None:
                 _PROXY_METER_PROVIDER = ProxyMeterProvider()
             return _PROXY_METER_PROVIDER
