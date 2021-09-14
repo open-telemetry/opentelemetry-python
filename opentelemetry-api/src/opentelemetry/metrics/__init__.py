@@ -263,6 +263,7 @@ class ProxyMeter(Meter):
 
 
 class _DefaultMeter(Meter):
+
     def create_counter(self, name, unit="", description="") -> Counter:
         super().create_counter(name, unit=unit, description=description)
         return DefaultCounter(name, unit=unit, description=description)
