@@ -37,12 +37,32 @@ from opentelemetry.metrics import (
 
 class TestProvider(_DefaultMeterProvider):
     def get_meter(
-        self, instrumentation_module_name, instrumentaiton_library_version=None
+        self, instrumentation_module_name, instrumentation_library_version=None
     ):
         return TestMeter()
 
 
 class TestMeter(_DefaultMeter):
+    pass
+
+
+class TestDefaultHistogram(DefaultHistogram):
+    pass
+
+
+class TestDefaultObservableCounter(DefaultObservableCounter):
+    pass
+
+
+class TestDefaultObservableGauge(DefaultObservableGauge):
+    pass
+
+
+class TestDefaultObservableUpDownCounter(DefaultObservableUpDownCounter):
+    pass
+
+
+class TestDefaultUpDownCounter(DefaultUpDownCounter):
     pass
 
 
@@ -74,13 +94,8 @@ class TestProxy(TestCase):
         up_down_counter = meter.create_up_down_counter("up_down_counter")
         self.assertIsInstance(up_down_counter, DefaultUpDownCounter)
 
-        # with meter.start_as_current_span("span2") as span:
-        #     self.assertIsInstance(span, NonRecordingSpan)
-
-        # set a real provider
         set_meter_provider(TestProvider())
 
-        # meter provider now returns real instance
         self.assertIsInstance(get_meter_provider(), TestProvider)
 
         # references to the old provider still work but return real meter now
