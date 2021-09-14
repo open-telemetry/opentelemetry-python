@@ -75,7 +75,12 @@ class _DefaultMeterProvider(MeterProvider):
         schema_url=None,
     ) -> "Meter":
         super().get_meter(name, version=version, schema_url=schema_url)
-        return _DefaultMeter(name, version=version, schema_url=schema_url)
+        # This is done in order to make it possible to store configuration in
+        # the meter provider and make it automatically accessible for any
+        # meter even after it changes.
+        meter = _DefaultMeter(name, version=version, schema_url=schema_url)
+        meter._meter_provider = self
+        return meter
 
 
 class ProxyMeterProvider(MeterProvider):
@@ -98,6 +103,7 @@ class Meter(ABC):
         self._version = version
         self._schema_url = schema_url
         self._instrument_names = set()
+        self._meter_provider = None
 
     @property
     def name(self):
