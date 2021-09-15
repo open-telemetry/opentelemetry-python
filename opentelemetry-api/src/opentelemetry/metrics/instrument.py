@@ -66,23 +66,23 @@ class Asynchronous(Instrument):
         return next(self._callback)  # pylint: disable=no-member
 
 
-class Adding(Instrument):
+class _Adding(Instrument):
     pass
 
 
-class Grouping(Instrument):
+class _Grouping(Instrument):
     pass
 
 
-class Monotonic(Adding):
+class _Monotonic(_Adding):
     pass
 
 
-class NonMonotonic(Adding):
+class _NonMonotonic(_Adding):
     pass
 
 
-class Counter(Monotonic, Synchronous):
+class Counter(_Monotonic, Synchronous):
     @abstractmethod
     def add(self, amount, attributes=None):
         if amount < 0:
@@ -99,7 +99,7 @@ class DefaultCounter(Counter):
         return super().add(amount, attributes=attributes)
 
 
-class UpDownCounter(NonMonotonic, Synchronous):
+class UpDownCounter(_NonMonotonic, Synchronous):
     @abstractmethod
     def add(self, amount, attributes=None):
         pass
@@ -113,7 +113,7 @@ class DefaultUpDownCounter(UpDownCounter):
         return super().add(amount, attributes=attributes)
 
 
-class ObservableCounter(Monotonic, Asynchronous):
+class ObservableCounter(_Monotonic, Asynchronous):
     pass
 
 
@@ -122,7 +122,7 @@ class DefaultObservableCounter(ObservableCounter):
         super().__init__(name, callback, unit=unit, description=description)
 
 
-class ObservableUpDownCounter(NonMonotonic, Asynchronous):
+class ObservableUpDownCounter(_NonMonotonic, Asynchronous):
     pass
 
 
@@ -131,7 +131,7 @@ class DefaultObservableUpDownCounter(ObservableUpDownCounter):
         super().__init__(name, callback, unit=unit, description=description)
 
 
-class Histogram(Grouping, Synchronous):
+class Histogram(_Grouping, Synchronous):
     @abstractmethod
     def record(self, amount, attributes=None):
         pass
@@ -145,7 +145,7 @@ class DefaultHistogram(Histogram):
         return super().record(amount, attributes=attributes)
 
 
-class ObservableGauge(Grouping, Asynchronous):
+class ObservableGauge(_Grouping, Asynchronous):
     pass
 
 
