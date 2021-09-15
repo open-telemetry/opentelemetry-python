@@ -62,6 +62,9 @@ class Instrument(ABC):
         else:
             self._unit = unit
 
+        if description is None:
+            description = ""
+
         self._description = description
 
 

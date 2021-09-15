@@ -104,11 +104,14 @@ class TestInstrument(TestCase):
 
     def test_instrument_unit_syntax(self):
         """
-        Test that instrument names conform to the specified syntax.
+        Test that instrument unit conform to the specified syntax.
         """
 
         with self.assertLogs(level=ERROR):
             ChildInstrument("name", unit="a" * 64)
+
+        with self.assertLogs(level=ERROR):
+            ChildInstrument("name", unit="ñ")
 
         child_instrument = ChildInstrument("name", unit="a")
         self.assertEqual(child_instrument.unit, "a")
@@ -121,3 +124,21 @@ class TestInstrument(TestCase):
 
         child_instrument = ChildInstrument("name", unit=None)
         self.assertEqual(child_instrument.unit, "")
+
+    def test_instrument_description_syntax(self):
+        """
+        Test that instrument description conform to the specified syntax.
+        """
+
+        child_instrument = ChildInstrument("name", description="a")
+        self.assertEqual(child_instrument.description, "a")
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=ERROR):
+                ChildInstrument("name", description="a" * 1024)
+
+        child_instrument = ChildInstrument("name")
+        self.assertEqual(child_instrument.description, "")
+
+        child_instrument = ChildInstrument("name", description=None)
+        self.assertEqual(child_instrument.description, "")
