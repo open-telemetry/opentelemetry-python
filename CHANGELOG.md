@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.5.0-0.24b0...HEAD)
 
+- Add metrics API
+  ([#1887](https://github.com/open-telemetry/opentelemetry-python/pull/1887))
 - `opentelemetry-semantic-conventions` Update to semantic conventions v1.6.1
   ([#2077](https://github.com/open-telemetry/opentelemetry-python/pull/2077))
 - Do not count invalid attributes for dropped
@@ -100,8 +102,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1877](https://github.com/open-telemetry/opentelemetry-python/pull/1877))
 - Added support for CreateKey functionality.
   ([#1853](https://github.com/open-telemetry/opentelemetry-python/pull/1853))
-- Add metrics
-  ([#1887](https://github.com/open-telemetry/opentelemetry-python/pull/1887))
 
 ### Changed
 - Updated get_tracer to return an empty string when passed an invalid name
