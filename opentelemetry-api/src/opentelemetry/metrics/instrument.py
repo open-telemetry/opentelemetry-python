@@ -21,7 +21,6 @@
 
 from abc import ABC, abstractmethod
 from logging import getLogger
-from re import ASCII
 from re import compile as compile_
 from typing import Callable
 
@@ -30,7 +29,7 @@ _logger = getLogger(__name__)
 
 class Instrument(ABC):
 
-    _name_regex = compile_(r"[a-zA-Z][-.\w]{0,62}", ASCII)
+    _name_regex = compile_(r"[a-zA-Z][-.\w]{0,62}")
 
     @abstractmethod
     def __init__(self, name, *args, unit="", description="", **kwargs):
