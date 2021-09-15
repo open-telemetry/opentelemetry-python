@@ -207,31 +207,33 @@ class TestProxy(TestCase):
         meter = provider.get_meter("proxy-test")
         self.assertIsInstance(meter, ProxyMeter)
 
-        self.assertIsInstance(meter.create_counter("counter"), DefaultCounter)
-
         self.assertIsInstance(
-            meter.create_histogram("histogram"), DefaultHistogram
+            meter.create_counter("counter0"), DefaultCounter
         )
 
         self.assertIsInstance(
-            meter.create_observable_counter("observable_counter", Mock()),
+            meter.create_histogram("histogram0"), DefaultHistogram
+        )
+
+        self.assertIsInstance(
+            meter.create_observable_counter("observable_counter0", Mock()),
             DefaultObservableCounter,
         )
 
         self.assertIsInstance(
-            meter.create_observable_gauge("observable_gauge", Mock()),
+            meter.create_observable_gauge("observable_gauge0", Mock()),
             DefaultObservableGauge,
         )
 
         self.assertIsInstance(
             meter.create_observable_up_down_counter(
-                "observable_up_down_counter", Mock()
+                "observable_up_down_counter0", Mock()
             ),
             DefaultObservableUpDownCounter,
         )
 
         self.assertIsInstance(
-            meter.create_up_down_counter("up_down_counter"),
+            meter.create_up_down_counter("up_down_counter0"),
             DefaultUpDownCounter,
         )
 
@@ -240,29 +242,29 @@ class TestProxy(TestCase):
         self.assertIsInstance(get_meter_provider(), Provider)
         self.assertIsInstance(provider.get_meter("proxy-test"), Meter)
 
-        self.assertIsInstance(meter.create_counter("counter"), Counter)
+        self.assertIsInstance(meter.create_counter("counter1"), Counter)
 
-        self.assertIsInstance(meter.create_histogram("histogram"), Histogram)
+        self.assertIsInstance(meter.create_histogram("histogram1"), Histogram)
 
         self.assertIsInstance(
-            meter.create_observable_counter("observable_counter", Mock()),
+            meter.create_observable_counter("observable_counter1", Mock()),
             ObservableCounter,
         )
 
         self.assertIsInstance(
-            meter.create_observable_gauge("observable_gauge", Mock()),
+            meter.create_observable_gauge("observable_gauge1", Mock()),
             ObservableGauge,
         )
 
         self.assertIsInstance(
             meter.create_observable_up_down_counter(
-                "observable_up_down_counter", Mock()
+                "observable_up_down_counter1", Mock()
             ),
             ObservableUpDownCounter,
         )
 
         self.assertIsInstance(
-            meter.create_up_down_counter("up_down_counter"), UpDownCounter
+            meter.create_up_down_counter("up_down_counter1"), UpDownCounter
         )
 
         metrics._METER_PROVIDER = original_provider

@@ -13,6 +13,8 @@
 # limitations under the License.
 
 from unittest import TestCase
+from unittest.mock import Mock
+from logging import WARNING
 
 from opentelemetry.metrics import Meter
 
@@ -67,3 +69,69 @@ class TestMeter(TestCase):
 
         self.assertTrue(hasattr(Meter, "create_observable_up_down_counter"))
         self.assertTrue(Meter.create_observable_up_down_counter.__isabstractmethod__)
+
+    def test_no_repeated_instrument_names(self):
+        """
+        Test that the meter returns an error when multiple instruments are
+        registered under the same Meter using the same name.
+        """
+
+        class ChildMeter(Meter):
+
+            def create_counter(self, name, unit="", description=""):
+                super().create_counter(
+                    name, unit=unit, description=description
+                )
+
+            def create_up_down_counter(self, name, unit="", description=""):
+                super().create_up_down_counter(
+                    name, unit=unit, description=description
+                )
+
+            def create_observable_counter(
+                self, name, callback, unit="", description=""
+            ):
+                super().create_observable_counter(
+                    name, callback, unit=unit, description=description
+                )
+
+            def create_histogram(self, name, unit="", description=""):
+                super().create_histogram(
+                    name, unit=unit, description=description
+                )
+
+            def create_observable_gauge(
+                self, name, callback, unit="", description=""
+            ):
+                super().create_observable_gauge(
+                    name, callback, unit=unit, description=description
+                )
+
+            def create_observable_up_down_counter(
+                self, name, callback, unit="", description=""
+            ):
+                super().create_observable_up_down_counter(
+                    name, callback, unit=unit, description=description
+                )
+
+        meter = ChildMeter("name")
+
+        meter.create_counter("name")
+
+        with self.assertLogs(level=WARNING):
+            meter.create_counter("name")
+
+        with self.assertLogs(level=WARNING):
+            meter.create_up_down_counter("name")
+
+        with self.assertLogs(level=WARNING):
+            meter.create_observable_counter("name", Mock())
+
+        with self.assertLogs(level=WARNING):
+            meter.create_histogram("name")
+
+        with self.assertLogs(level=WARNING):
+            meter.create_observable_gauge("name", Mock())
+
+        with self.assertLogs(level=WARNING):
+            meter.create_observable_up_down_counter("name", Mock())
