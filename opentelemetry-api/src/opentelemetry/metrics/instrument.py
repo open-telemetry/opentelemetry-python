@@ -22,7 +22,9 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
 from re import compile as compile_
-from typing import Callable
+from types import GeneratorType
+
+from opentelemetry.metrics.measurement import Measurement
 
 _logger = getLogger(__name__)
 
@@ -78,15 +80,21 @@ class Asynchronous(Instrument):
         self, name, callback, *args, unit="", description="", **kwargs
     ):
 
-        if not isinstance(callback, Callable):
-            raise Exception("callback must be callable")
+        if not isinstance(callback, GeneratorType):
+            _logger.error("callback must be a generator")
 
-        super().__init__(
-            name, unit=unit, description=description, *args, **kwargs
-        )
+        else:
+            super().__init__(
+                name, unit=unit, description=description, *args, **kwargs
+            )
+            self._callback = callback
 
     def observe(self):
-        return next(self._callback)  # pylint: disable=no-member
+        measurement = next(self._callback)  # pylint: disable=no-member
+        if not isinstance(measurement, Measurement):
+            _logger.error("Result of observing must be a Measurement")
+        else:
+            return measurement
 
 
 class _Adding(Instrument):

@@ -153,18 +153,18 @@ class Meter(_DefaultMeter):
     def create_observable_counter(
         self, name, callback, unit="", description=""
     ):
-        return ObservableCounter("name", Mock())
+        return ObservableCounter("name", callback)
 
     def create_histogram(self, name, unit="", description=""):
         return Histogram("name")
 
     def create_observable_gauge(self, name, callback, unit="", description=""):
-        return ObservableGauge("name", Mock())
+        return ObservableGauge("name", callback)
 
     def create_observable_up_down_counter(
         self, name, callback, unit="", description=""
     ):
-        return ObservableUpDownCounter("name", Mock())
+        return ObservableUpDownCounter("name", callback)
 
 
 class Counter(DefaultCounter):
@@ -215,19 +215,22 @@ class TestProxy(TestCase):
             meter.create_histogram("histogram0"), DefaultHistogram
         )
 
+        def callback():
+            yield
+
         self.assertIsInstance(
-            meter.create_observable_counter("observable_counter0", Mock()),
+            meter.create_observable_counter("observable_counter0", callback()),
             DefaultObservableCounter,
         )
 
         self.assertIsInstance(
-            meter.create_observable_gauge("observable_gauge0", Mock()),
+            meter.create_observable_gauge("observable_gauge0", callback()),
             DefaultObservableGauge,
         )
 
         self.assertIsInstance(
             meter.create_observable_up_down_counter(
-                "observable_up_down_counter0", Mock()
+                "observable_up_down_counter0", callback()
             ),
             DefaultObservableUpDownCounter,
         )
@@ -247,18 +250,18 @@ class TestProxy(TestCase):
         self.assertIsInstance(meter.create_histogram("histogram1"), Histogram)
 
         self.assertIsInstance(
-            meter.create_observable_counter("observable_counter1", Mock()),
+            meter.create_observable_counter("observable_counter1", callback()),
             ObservableCounter,
         )
 
         self.assertIsInstance(
-            meter.create_observable_gauge("observable_gauge1", Mock()),
+            meter.create_observable_gauge("observable_gauge1", callback()),
             ObservableGauge,
         )
 
         self.assertIsInstance(
             meter.create_observable_up_down_counter(
-                "observable_up_down_counter1", Mock()
+                "observable_up_down_counter1", callback()
             ),
             ObservableUpDownCounter,
         )

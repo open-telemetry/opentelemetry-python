@@ -43,17 +43,6 @@ from opentelemetry.util._providers import _load_provider
 _logger = getLogger(__name__)
 
 
-class Measurement(ABC):
-    @abstractmethod
-    def __init__(self, value, attributes=None):
-        pass
-
-
-class DefaultMeasurement(Measurement):
-    def __init__(self, value, attributes=None):
-        super().__init__(value, attributes=attributes)
-
-
 class MeterProvider(ABC):
     @abstractmethod
     def get_meter(
