@@ -119,9 +119,10 @@ class Meter(ABC):
     def _check_instrument_name(self, name):
 
         if name in self._instrument_names:
-            raise Exception("Instrument name {} has been used already")
+            _logger.error("Instrument name %s has been used already", name)
 
-        self._instrument_names.add(name)
+        else:
+            self._instrument_names.add(name)
 
     @abstractmethod
     def create_counter(self, name, unit="", description="") -> Counter:
