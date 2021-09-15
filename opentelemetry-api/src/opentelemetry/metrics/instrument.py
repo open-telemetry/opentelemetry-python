@@ -116,7 +116,7 @@ class Counter(_Monotonic, Synchronous):
         # FIXME check that the amount is non negative
         pass
 
-        super().add(amount, **attributes)  # pylint: disable=no-member
+        super().add(amount, attributes=attributes)  # pylint: disable=no-member
 
 
 class DefaultCounter(Counter):
