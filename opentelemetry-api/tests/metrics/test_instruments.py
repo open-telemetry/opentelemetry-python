@@ -14,10 +14,18 @@
 
 from unittest import TestCase
 from inspect import signature, Signature
+from logging import ERROR
 
 from opentelemetry.metrics.instrument import (
     Instrument,
 )
+
+
+class ChildInstrument(Instrument):
+    def __init__(self, name, *args, unit="", description="", **kwargs):
+        super().__init__(
+            name, *args, unit=unit, description=description, **kwargs
+        )
 
 
 class TestInstrument(TestCase):
@@ -60,3 +68,36 @@ class TestInstrument(TestCase):
         )
 
         self.assertTrue(hasattr(Instrument, "description"))
+
+    def test_instrument_name_syntax(self):
+        """
+        Test that instrument names conform to the specified syntax.
+        """
+
+        with self.assertLogs(level=ERROR):
+            ChildInstrument("")
+
+        with self.assertLogs(level=ERROR):
+            ChildInstrument(None)
+
+        with self.assertLogs(level=ERROR):
+            ChildInstrument("1a")
+
+        with self.assertLogs(level=ERROR):
+            ChildInstrument("_a")
+
+        with self.assertLogs(level=ERROR):
+            ChildInstrument("!a ")
+
+        with self.assertLogs(level=ERROR):
+            ChildInstrument("a ")
+
+        with self.assertLogs(level=ERROR):
+            ChildInstrument("a%")
+
+        with self.assertLogs(level=ERROR):
+            ChildInstrument("a" * 64)
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=ERROR):
+                ChildInstrument("abc_def_ghi")

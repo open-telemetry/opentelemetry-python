@@ -46,18 +46,20 @@ class Instrument(ABC):
     @abstractmethod
     def __init__(self, name, *args, unit="", description="", **kwargs):
 
-        if self._name_regex.fullmatch(name) is None:
-            raise Exception("Invalid instrument name {}".format(name))
+        if name is None or self._name_regex.fullmatch(name) is None:
+            _logger.error("Invalid instrument name {}".format(name))
 
-        self._name = name
+        else:
+            self._name = name
 
         if len(unit) > 63:
-            raise Exception("unit must be 63 characters or shorter")
+            _logger.error("unit must be 63 characters or shorter")
 
-        if any(ord(character) > 127 for character in unit):
-            raise Exception("unit must only contain ASCII characters")
+        elif any(ord(character) > 127 for character in unit):
+            _logger.error("unit must only contain ASCII characters")
+        else:
+            self._unit = unit
 
-        self._unit = unit
         self._description = description
 
 

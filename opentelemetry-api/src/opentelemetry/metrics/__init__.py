@@ -118,6 +118,8 @@ class Meter(ABC):
 
     def _check_instrument_name(self, name):
 
+        name = name.lower()
+
         if name in self._instrument_names:
             _logger.error("Instrument name %s has been used already", name)
 
