@@ -109,9 +109,7 @@ class Counter(_Monotonic, Synchronous):
     @abstractmethod
     def add(self, amount, attributes=None):
         if amount < 0:
-            raise Exception("Amount must be non-negative")
-
-        super().add(amount, attributes=attributes)  # pylint: disable=no-member
+            _logger.error("Amount must be non-negative")
 
 
 class DefaultCounter(Counter):

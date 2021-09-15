@@ -13,11 +13,14 @@
 # limitations under the License.
 
 from unittest import TestCase
-from inspect import signature, Signature
+from inspect import signature, Signature, isabstract
 from logging import ERROR
 
+from opentelemetry.metrics import _DefaultMeter, Meter
 from opentelemetry.metrics.instrument import (
     Instrument,
+    Counter,
+    DefaultCounter
 )
 
 
@@ -142,3 +145,84 @@ class TestInstrument(TestCase):
 
         child_instrument = ChildInstrument("name", description=None)
         self.assertEqual(child_instrument.description, "")
+
+
+class TestCounter(TestCase):
+
+    def test_create_counter(self):
+        """
+        Test that the Counter can be created with create_counter.
+        """
+
+        self.assertTrue(
+            isinstance(
+                _DefaultMeter("name").create_counter("name"),
+                Counter
+            )
+        )
+
+    def test_api_counter_abstract(self):
+        """
+        Test that the API Counter is an abstract class.
+        """
+
+        self.assertTrue(isabstract(Counter))
+
+    def test_create_counter_api(self):
+        """
+        Test that the API for creating a counter accepts the name of the instrument.
+        Test that the API for creating a counter accepts the unit of the instrument.
+        Test that the API for creating a counter accepts the description of the
+        """
+
+        create_counter_signature = signature(Meter.create_counter)
+        self.assertIn("name", create_counter_signature.parameters.keys())
+        self.assertIs(
+            create_counter_signature.parameters["name"].default,
+            Signature.empty
+        )
+
+        create_counter_signature = signature(Meter.create_counter)
+        self.assertIn("unit", create_counter_signature.parameters.keys())
+        self.assertIs(
+            create_counter_signature.parameters["unit"].default, ""
+        )
+
+        create_counter_signature = signature(Meter.create_counter)
+        self.assertIn(
+            "description", create_counter_signature.parameters.keys()
+        )
+        self.assertIs(
+            create_counter_signature.parameters["description"].default, ""
+        )
+
+    def test_counter_add_method(self):
+        """
+        Test that the counter has an add method.
+        Test that the add method returns None.
+        Test that the add method accepts optional attributes.
+        Test that the add method accepts the increment amount.
+        Test that the add method accepts only positive amounts.
+        """
+
+        self.assertTrue(hasattr(Counter, "add"))
+
+        self.assertIsNone(DefaultCounter("name").add(1))
+
+        add_signature = signature(Counter.add)
+        self.assertIn(
+            "attributes", add_signature.parameters.keys()
+        )
+        self.assertIs(
+            add_signature.parameters["attributes"].default, None
+        )
+
+        self.assertIn(
+            "amount", add_signature.parameters.keys()
+        )
+        self.assertIs(
+            add_signature.parameters["amount"].default, Signature.empty
+        )
+
+        with self.assertLogs(level=ERROR):
+            DefaultCounter("name").add(-1)
