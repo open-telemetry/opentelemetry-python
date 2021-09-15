@@ -36,17 +36,6 @@ Meter
 #. Test that the meter provides functions to create a new
    AsynchronousUpDowncounter
 
-Meter
------
-
-#. Test that the meter provides functions to create a new Counter.
-#. Test that the meter provides functions to create a new Asynchronous Counter.
-#. Test that the meter provides functions to create a new Histogram.
-#. Test that the meter provides functions to create a new Asynchronous Gauge.
-#. Test that the meter provides functions to create a new Up down Counter.
-#. Test that the meter provides functions to create a new Asynchronous Up down
-   Counter.
-
 Instrument
 ----------
 

@@ -43,6 +43,9 @@ class Instrument(ABC):
         if any(ord(character) > 127 for character in unit):
             raise Exception("unit must only contain ASCII characters")
 
+        self._unit = unit
+        self._description = description
+
 
 class Synchronous(Instrument):
     pass
