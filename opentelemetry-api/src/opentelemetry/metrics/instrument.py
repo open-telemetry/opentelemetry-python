@@ -31,17 +31,34 @@ class Instrument(ABC):
 
     _name_regex = compile_(r"[a-zA-Z][-.\w]{0,62}")
 
+    @property
+    def name(self):
+        return self._name
+
+    @property
+    def unit(self):
+        return self._unit
+
+    @property
+    def description(self):
+        return self._description
+
     @abstractmethod
     def __init__(self, name, *args, unit="", description="", **kwargs):
 
         if self._name_regex.fullmatch(name) is None:
             raise Exception("Invalid instrument name {}".format(name))
 
+        self._name = name
+
         if len(unit) > 63:
             raise Exception("unit must be 63 characters or shorter")
 
         if any(ord(character) > 127 for character in unit):
             raise Exception("unit must only contain ASCII characters")
+
+        self._unit = unit
+        self._description = description
 
 
 class Synchronous(Instrument):
