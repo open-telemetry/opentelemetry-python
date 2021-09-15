@@ -39,20 +39,19 @@ from opentelemetry.metrics.instrument import (
     UpDownCounter,
 )
 from opentelemetry.util._providers import _load_provider
-from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
 
 
 class Measurement(ABC):
     @abstractmethod
-    def __init__(self, value, **attributes: Attributes):
+    def __init__(self, value, attributes=None):
         pass
 
 
 class DefaultMeasurement(Measurement):
-    def __init__(self, value, **attributes: Attributes):
-        super().__init__(value, **attributes)
+    def __init__(self, value, attributes=None):
+        super().__init__(value, attributes=attributes)
 
 
 class MeterProvider(ABC):

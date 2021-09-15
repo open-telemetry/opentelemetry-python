@@ -84,24 +84,24 @@ class NonMonotonic(Adding):
 
 class Counter(Monotonic, Synchronous):
     @abstractmethod
-    def add(self, amount, /, **attributes):
+    def add(self, amount, attributes=None):
         if amount < 0:
             raise Exception("Amount must be non-negative")
 
-        super().add(amount, **attributes)  # pylint: disable=no-member
+        super().add(amount, attributes=attributes)  # pylint: disable=no-member
 
 
 class DefaultCounter(Counter):
     def __init__(self, name, unit="", description=""):
         super().__init__(name, unit=unit, description=description)
 
-    def add(self, amount, /, **attributes):
-        return super().add(amount, **attributes)
+    def add(self, amount, attributes=None):
+        return super().add(amount, attributes=attributes)
 
 
 class UpDownCounter(NonMonotonic, Synchronous):
     @abstractmethod
-    def add(self, amount, /, **attributes):
+    def add(self, amount, attributes=None):
         pass
 
 
@@ -109,8 +109,8 @@ class DefaultUpDownCounter(UpDownCounter):
     def __init__(self, name, unit="", description=""):
         super().__init__(name, unit=unit, description=description)
 
-    def add(self, amount, /, **attributes):
-        return super().add(amount, **attributes)
+    def add(self, amount, attributes=None):
+        return super().add(amount, attributes=attributes)
 
 
 class ObservableCounter(Monotonic, Asynchronous):
@@ -133,7 +133,7 @@ class DefaultObservableUpDownCounter(ObservableUpDownCounter):
 
 class Histogram(Grouping, Synchronous):
     @abstractmethod
-    def record(self, amount, /, **attributes):
+    def record(self, amount, attributes=None):
         pass
 
 
@@ -141,8 +141,8 @@ class DefaultHistogram(Histogram):
     def __init__(self, name, unit="", description=""):
         super().__init__(name, unit=unit, description=description)
 
-    def record(self, amount, /, **attributes):
-        return super().record(amount, **attributes)
+    def record(self, amount, attributes=None):
+        return super().record(amount, attributes=attributes)
 
 
 class ObservableGauge(Grouping, Asynchronous):
