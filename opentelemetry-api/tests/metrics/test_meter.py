@@ -19,6 +19,45 @@ from logging import WARNING
 from opentelemetry.metrics import Meter
 
 
+class ChildMeter(Meter):
+
+    def create_counter(self, name, unit="", description=""):
+        super().create_counter(
+            name, unit=unit, description=description
+        )
+
+    def create_up_down_counter(self, name, unit="", description=""):
+        super().create_up_down_counter(
+            name, unit=unit, description=description
+        )
+
+    def create_observable_counter(
+        self, name, callback, unit="", description=""
+    ):
+        super().create_observable_counter(
+            name, callback, unit=unit, description=description
+        )
+
+    def create_histogram(self, name, unit="", description=""):
+        super().create_histogram(
+            name, unit=unit, description=description
+        )
+
+    def create_observable_gauge(
+        self, name, callback, unit="", description=""
+    ):
+        super().create_observable_gauge(
+            name, callback, unit=unit, description=description
+        )
+
+    def create_observable_up_down_counter(
+        self, name, callback, unit="", description=""
+    ):
+        super().create_observable_up_down_counter(
+            name, callback, unit=unit, description=description
+        )
+
+
 class TestMeter(TestCase):
 
     def test_create_counter(self):
@@ -76,44 +115,6 @@ class TestMeter(TestCase):
         registered under the same Meter using the same name.
         """
 
-        class ChildMeter(Meter):
-
-            def create_counter(self, name, unit="", description=""):
-                super().create_counter(
-                    name, unit=unit, description=description
-                )
-
-            def create_up_down_counter(self, name, unit="", description=""):
-                super().create_up_down_counter(
-                    name, unit=unit, description=description
-                )
-
-            def create_observable_counter(
-                self, name, callback, unit="", description=""
-            ):
-                super().create_observable_counter(
-                    name, callback, unit=unit, description=description
-                )
-
-            def create_histogram(self, name, unit="", description=""):
-                super().create_histogram(
-                    name, unit=unit, description=description
-                )
-
-            def create_observable_gauge(
-                self, name, callback, unit="", description=""
-            ):
-                super().create_observable_gauge(
-                    name, callback, unit=unit, description=description
-                )
-
-            def create_observable_up_down_counter(
-                self, name, callback, unit="", description=""
-            ):
-                super().create_observable_up_down_counter(
-                    name, callback, unit=unit, description=description
-                )
-
         meter = ChildMeter("name")
 
         meter.create_counter("name")
@@ -135,3 +136,47 @@ class TestMeter(TestCase):
 
         with self.assertLogs(level=WARNING):
             meter.create_observable_up_down_counter("name", Mock())
+
+    def test_same_name_instrument_different_meter(self):
+        """
+        Test that is possible to register two instruments with the same name
+        under different meters.
+        """
+
+        meter_0 = ChildMeter("meter_0")
+        meter_1 = ChildMeter("meter_1")
+
+        meter_0.create_counter("counter")
+        meter_0.create_up_down_counter("up_down_counter")
+        meter_0.create_observable_counter("observable_counter", Mock())
+        meter_0.create_histogram("histogram")
+        meter_0.create_observable_gauge("observable_gauge", Mock())
+        meter_0.create_observable_up_down_counter(
+            "observable_up_down_counter", Mock()
+        )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                meter_1.create_counter("counter")
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                meter_1.create_up_down_counter("up_down_counter")
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                meter_1.create_observable_counter("observable_counter", Mock())
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                meter_1.create_histogram("histogram")
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                meter_1.create_observable_gauge("observable_gauge", Mock())
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                meter_1.create_observable_up_down_counter(
+                    "observable_up_down_counter", Mock()
+                )
