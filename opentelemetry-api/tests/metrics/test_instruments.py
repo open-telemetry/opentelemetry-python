@@ -101,3 +101,23 @@ class TestInstrument(TestCase):
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=ERROR):
                 ChildInstrument("abc_def_ghi")
+
+    def test_instrument_unit_syntax(self):
+        """
+        Test that instrument names conform to the specified syntax.
+        """
+
+        with self.assertLogs(level=ERROR):
+            ChildInstrument("name", unit="a" * 64)
+
+        child_instrument = ChildInstrument("name", unit="a")
+        self.assertEqual(child_instrument.unit, "a")
+
+        child_instrument = ChildInstrument("name", unit="A")
+        self.assertEqual(child_instrument.unit, "A")
+
+        child_instrument = ChildInstrument("name")
+        self.assertEqual(child_instrument.unit, "")
+
+        child_instrument = ChildInstrument("name", unit=None)
+        self.assertEqual(child_instrument.unit, "")

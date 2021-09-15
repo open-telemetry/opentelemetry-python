@@ -52,7 +52,9 @@ class Instrument(ABC):
         else:
             self._name = name
 
-        if len(unit) > 63:
+        if unit is None:
+            self._unit = ""
+        elif len(unit) > 63:
             _logger.error("unit must be 63 characters or shorter")
 
         elif any(ord(character) > 127 for character in unit):
