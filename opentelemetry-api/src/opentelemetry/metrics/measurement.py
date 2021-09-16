@@ -22,9 +22,19 @@ from abc import ABC, abstractmethod
 
 
 class Measurement(ABC):
+
+    @property
+    def value(self):
+        return self._value
+
+    @property
+    def attributes(self):
+        return self._attributes
+
     @abstractmethod
     def __init__(self, value, attributes=None):
-        pass
+        self._value = value
+        self._attributes = attributes
 
 
 class DefaultMeasurement(Measurement):

@@ -145,6 +145,17 @@ class DefaultUpDownCounter(UpDownCounter):
 class ObservableCounter(_Monotonic, Asynchronous):
     pass
 
+    def observe(self):
+
+        measurement = super().observe()
+
+        if isinstance(measurement, Measurement):
+
+            if measurement.value < 0:
+                _logger.error("Amount must be non-negative")
+            else:
+                return measurement
+
 
 class DefaultObservableCounter(ObservableCounter):
     def __init__(self, name, callback, unit="", description=""):

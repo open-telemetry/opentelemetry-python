@@ -17,6 +17,7 @@ from inspect import signature, Signature, isabstract
 from logging import ERROR
 
 from opentelemetry.metrics import _DefaultMeter, Meter
+from opentelemetry.metrics.measurement import Measurement
 from opentelemetry.metrics.instrument import (
     Instrument,
     Counter,
@@ -28,7 +29,9 @@ from opentelemetry.metrics.instrument import (
     ObservableGauge,
     DefaultObservableGauge,
     UpDownCounter,
-    DefaultUpDownCounter
+    DefaultUpDownCounter,
+    DefaultObservableUpDownCounter,
+    ObservableUpDownCounter
 )
 
 
@@ -37,6 +40,11 @@ class ChildInstrument(Instrument):
         super().__init__(
             name, *args, unit=unit, description=description, **kwargs
         )
+
+
+class ChildMeasurement(Measurement):
+    def __init__(self, value, attributes=None):
+        super().__init__(value, attributes=attributes)
 
 
 class TestInstrument(TestCase):
@@ -301,6 +309,8 @@ class TestObservableCounter(TestCase):
         Test that the API for creating a asynchronous counter accepts a callback.
         Test that the callback function reports measurements.
         Test that there is a way to pass state to the callback.
+        Test that the instrument accepts positive measurements.
+        Test that the instrument does not accept negative measurements.
         """
 
         create_observable_counter_signature = signature(
@@ -315,13 +325,28 @@ class TestObservableCounter(TestCase):
         )
 
         def callback():
-            yield
+            yield 1
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=ERROR):
                 observable_counter = DefaultObservableCounter(
                     "name", callback()
                 )
+
+        with self.assertLogs(level=ERROR):
+            observable_counter.observe()
+
+        def callback():
+            yield ChildMeasurement(1)
+            yield ChildMeasurement(-1)
+
+        observable_counter = DefaultObservableCounter(
+            "name", callback()
+        )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=ERROR):
+                observable_counter.observe()
 
         with self.assertLogs(level=ERROR):
             observable_counter.observe()
@@ -586,3 +611,103 @@ class TestUpDownCounter(TestCase):
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=ERROR):
                 DefaultUpDownCounter("name").add(1)
+
+
+class TestObservableUpDownCounter(TestCase):
+
+    def test_create_observable_up_down_counter(self):
+        """
+        Test that the ObservableUpDownCounter can be created with create_observable_up_down_counter.
+        """
+
+        def callback():
+            yield
+
+        self.assertTrue(
+            isinstance(
+                _DefaultMeter("name").create_observable_up_down_counter(
+                    "name", callback()
+                ),
+                ObservableUpDownCounter
+            )
+        )
+
+    def test_api_observable_up_down_counter_abstract(self):
+        """
+        Test that the API ObservableUpDownCounter is an abstract class.
+        """
+
+        self.assertTrue(isabstract(ObservableUpDownCounter))
+
+    def test_create_observable_up_down_counter_api(self):
+        """
+        Test that the API for creating a observable_up_down_counter accepts the name of the instrument.
+        Test that the API for creating a observable_up_down_counter accepts a callback.
+        Test that the API for creating a observable_up_down_counter accepts the unit of the instrument.
+        Test that the API for creating a observable_up_down_counter accepts the description of the instrument
+        """
+
+        create_observable_up_down_counter_signature = signature(Meter.create_observable_up_down_counter)
+        self.assertIn("name", create_observable_up_down_counter_signature.parameters.keys())
+        self.assertIs(
+            create_observable_up_down_counter_signature.parameters["name"].default,
+            Signature.empty
+        )
+        create_observable_up_down_counter_signature = signature(Meter.create_observable_up_down_counter)
+        self.assertIn("callback", create_observable_up_down_counter_signature.parameters.keys())
+        self.assertIs(
+            create_observable_up_down_counter_signature.parameters["callback"].default,
+            Signature.empty
+        )
+        create_observable_up_down_counter_signature = signature(Meter.create_observable_up_down_counter)
+        self.assertIn("unit", create_observable_up_down_counter_signature.parameters.keys())
+        self.assertIs(
+            create_observable_up_down_counter_signature.parameters["unit"].default, ""
+        )
+
+        create_observable_up_down_counter_signature = signature(Meter.create_observable_up_down_counter)
+        self.assertIn(
+            "description", create_observable_up_down_counter_signature.parameters.keys()
+        )
+        self.assertIs(
+            create_observable_up_down_counter_signature.parameters["description"].default, ""
+        )
+
+    def test_observable_up_down_counter_callback(self):
+        """
+        Test that the API for creating a asynchronous up_down_counter accepts a callback.
+        Test that the callback function reports measurements.
+        Test that there is a way to pass state to the callback.
+        Test that the instrument accepts positive and negative values.
+        """
+
+        create_observable_up_down_counter_signature = signature(
+            Meter.create_observable_up_down_counter
+        )
+        self.assertIn(
+            "callback", create_observable_up_down_counter_signature.parameters.keys()
+        )
+        self.assertIs(
+            create_observable_up_down_counter_signature.parameters["name"].default,
+            Signature.empty
+        )
+
+        def callback():
+            yield ChildMeasurement(1)
+            yield ChildMeasurement(-1)
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=ERROR):
+                observable_up_down_counter = DefaultObservableUpDownCounter(
+                    "name", callback()
+                )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=ERROR):
+                observable_up_down_counter.observe()
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=ERROR):
+                observable_up_down_counter.observe()
+
+        # FIXME implement this: Test that the callback function has a timeout.
