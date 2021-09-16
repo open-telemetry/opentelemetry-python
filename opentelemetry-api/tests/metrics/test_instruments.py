@@ -36,6 +36,8 @@ from opentelemetry.metrics.instrument import (
 from opentelemetry.metrics.measurement import Measurement
 
 
+# FIXME Test that the instrument methods can be called concurrently safely.
+
 class ChildInstrument(Instrument):
     def __init__(self, name, *args, unit="", description="", **kwargs):
         super().__init__(
@@ -350,8 +352,6 @@ class TestObservableCounter(TestCase):
         with self.assertLogs(level=ERROR):
             observable_counter.observe()
 
-        # FIXME implement this: Test that the callback function has a timeout.
-
 
 class TestHistogram(TestCase):
     def test_create_histogram(self):
@@ -528,8 +528,6 @@ class TestObservableGauge(TestCase):
 
         with self.assertLogs(level=ERROR):
             observable_gauge.observe()
-
-        # FIXME implement this: Test that the callback function has a timeout.
 
 
 class TestUpDownCounter(TestCase):
@@ -748,5 +746,3 @@ class TestObservableUpDownCounter(TestCase):
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=ERROR):
                 observable_up_down_counter.observe()
-
-        # FIXME implement this: Test that the callback function has a timeout.

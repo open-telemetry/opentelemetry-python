@@ -39,6 +39,8 @@ from opentelemetry.metrics.instrument import (
 )
 
 
+# FIXME Test that the instrument methods can be called concurrently safely.
+
 @fixture
 def reset_meter_provider():
     original_meter_provider_value = metrics._METER_PROVIDER
