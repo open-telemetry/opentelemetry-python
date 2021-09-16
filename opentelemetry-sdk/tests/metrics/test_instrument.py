@@ -14,17 +14,16 @@
 
 
 from unittest import TestCase
-from unittest.mock import Mock
 
 from opentelemetry.metrics.instrument import (
-    Adding,
+    _Adding,
     Asynchronous,
     Counter,
-    Grouping,
+    _Grouping,
     Histogram,
     Instrument,
-    Monotonic,
-    NonMonotonic,
+    _Monotonic,
+    _NonMonotonic,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
@@ -58,8 +57,8 @@ class TestInstrument(TestCase):
         self.assertEqual(counter.description, "description")
         self.assertIsInstance(counter, SDKCounter)
         self.assertIsInstance(counter, Counter)
-        self.assertIsInstance(counter, Monotonic)
-        self.assertIsInstance(counter, Adding)
+        self.assertIsInstance(counter, _Monotonic)
+        self.assertIsInstance(counter, _Adding)
         self.assertIsInstance(counter, Synchronous)
         self.assertIsInstance(counter, Instrument)
 
@@ -72,36 +71,43 @@ class TestInstrument(TestCase):
         self.assertEqual(up_down_counter.description, "description")
         self.assertIsInstance(up_down_counter, SDKUpDownCounter)
         self.assertIsInstance(up_down_counter, UpDownCounter)
-        self.assertIsInstance(up_down_counter, NonMonotonic)
-        self.assertIsInstance(up_down_counter, Adding)
+        self.assertIsInstance(up_down_counter, _NonMonotonic)
+        self.assertIsInstance(up_down_counter, _Adding)
         self.assertIsInstance(up_down_counter, Synchronous)
         self.assertIsInstance(up_down_counter, Instrument)
 
     def test_create_observable_counter(self):
-        callback = Mock()
+        def callback():
+            yield
+
+        callback = callback()
+
         observable_counter = SDKMeter().create_observable_counter(
             "name", callback, unit="unit", description="description"
         )
         self.assertEqual(observable_counter.name, "name")
-        self.assertIs(observable_counter.callback, callback)
+        self.assertIs(observable_counter._callback, callback)
         self.assertEqual(observable_counter.unit, "unit")
         self.assertEqual(observable_counter.description, "description")
         self.assertIsInstance(observable_counter, SDKObservableCounter)
         self.assertIsInstance(observable_counter, ObservableCounter)
-        self.assertIsInstance(observable_counter, Monotonic)
-        self.assertIsInstance(observable_counter, Adding)
+        self.assertIsInstance(observable_counter, _Monotonic)
+        self.assertIsInstance(observable_counter, _Adding)
         self.assertIsInstance(observable_counter, Asynchronous)
         self.assertIsInstance(observable_counter, Instrument)
 
     def test_create_observable_up_down_counter(self):
-        callback = Mock()
+        def callback():
+            yield
+
+        callback = callback()
         observable_up_down_counter = (
             SDKMeter().create_observable_up_down_counter(
                 "name", callback, unit="unit", description="description"
             )
         )
         self.assertEqual(observable_up_down_counter.name, "name")
-        self.assertIs(observable_up_down_counter.callback, callback)
+        self.assertIs(observable_up_down_counter._callback, callback)
         self.assertEqual(observable_up_down_counter.unit, "unit")
         self.assertEqual(observable_up_down_counter.description, "description")
         self.assertIsInstance(
@@ -110,8 +116,8 @@ class TestInstrument(TestCase):
         self.assertIsInstance(
             observable_up_down_counter, ObservableUpDownCounter
         )
-        self.assertIsInstance(observable_up_down_counter, NonMonotonic)
-        self.assertIsInstance(observable_up_down_counter, Adding)
+        self.assertIsInstance(observable_up_down_counter, _NonMonotonic)
+        self.assertIsInstance(observable_up_down_counter, _Adding)
         self.assertIsInstance(observable_up_down_counter, Asynchronous)
         self.assertIsInstance(observable_up_down_counter, Instrument)
 
@@ -124,21 +130,24 @@ class TestInstrument(TestCase):
         self.assertEqual(histogram.description, "description")
         self.assertIsInstance(histogram, SDKHistogram)
         self.assertIsInstance(histogram, Histogram)
-        self.assertIsInstance(histogram, Grouping)
+        self.assertIsInstance(histogram, _Grouping)
         self.assertIsInstance(histogram, Synchronous)
         self.assertIsInstance(histogram, Instrument)
 
     def test_create_observable_gauge(self):
-        callback = Mock()
+        def callback():
+            yield
+
+        callback = callback()
         observable_gauge = SDKMeter().create_observable_gauge(
             "name", callback, unit="unit", description="description"
         )
         self.assertEqual(observable_gauge.name, "name")
-        self.assertIs(observable_gauge.callback, callback)
+        self.assertIs(observable_gauge._callback, callback)
         self.assertEqual(observable_gauge.unit, "unit")
         self.assertEqual(observable_gauge.description, "description")
         self.assertIsInstance(observable_gauge, SDKObservableGauge)
         self.assertIsInstance(observable_gauge, ObservableGauge)
-        self.assertIsInstance(observable_gauge, Grouping)
+        self.assertIsInstance(observable_gauge, _Grouping)
         self.assertIsInstance(observable_gauge, Asynchronous)
         self.assertIsInstance(observable_gauge, Instrument)

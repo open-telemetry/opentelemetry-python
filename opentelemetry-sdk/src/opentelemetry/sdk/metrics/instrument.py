@@ -17,14 +17,14 @@
 from typing import Generator
 
 from opentelemetry.metrics.instrument import (
-    Adding,
+    _Adding,
     Asynchronous,
     Counter,
-    Grouping,
+    _Grouping,
     Histogram,
     Instrument,
-    Monotonic,
-    NonMonotonic,
+    _Monotonic,
+    _NonMonotonic,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
@@ -41,7 +41,7 @@ class _Instrument(Instrument):
 
         aggregator_class = None
 
-        if isinstance(self, Adding):
+        if isinstance(self, _Adding):
             if isinstance(self, Synchronous):
                 aggregator_class = SumAggregator
 
@@ -99,19 +99,19 @@ class _Asynchronous(Asynchronous, _Instrument):
         return next(self._callback)
 
 
-class _Adding(Adding, _Instrument):
+class _Adding(_Adding, _Instrument):
     pass
 
 
-class _Grouping(Grouping, _Instrument):
+class _Grouping(_Grouping, _Instrument):
     pass
 
 
-class _Monotonic(Monotonic, _Adding):
+class _Monotonic(_Monotonic, _Adding):
     pass
 
 
-class _NonMonotonic(NonMonotonic, _Adding):
+class _NonMonotonic(_NonMonotonic, _Adding):
     pass
 
 
