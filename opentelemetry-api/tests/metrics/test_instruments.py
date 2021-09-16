@@ -33,6 +33,8 @@ from opentelemetry.metrics.instrument import (
 # FIXME Test that the instrument methods can be called concurrently safely.
 
 
+# FIXME Test that the instrument methods can be called concurrently safely.
+
 class ChildInstrument(Instrument):
     def __init__(self, name, *args, unit="", description="", **kwargs):
         super().__init__(
