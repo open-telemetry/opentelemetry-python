@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=abstract-class-instantiated
 # pylint: disable=too-many-ancestors
 # pylint: disable=useless-super-delegation
 # type:ignore
