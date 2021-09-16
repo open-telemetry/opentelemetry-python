@@ -15,6 +15,12 @@
 # pylint: disable=too-many-ancestors
 # type: ignore
 
+# FIXME enhance the documentation of this module
+"""
+This module provides abstract and concrete (but noop) classes that can be used
+to generate metrics.
+"""
+
 
 from abc import ABC, abstractmethod
 from logging import getLogger
