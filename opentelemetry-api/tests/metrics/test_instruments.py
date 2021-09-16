@@ -23,6 +23,8 @@ from opentelemetry.metrics.instrument import (
     DefaultCounter,
     ObservableCounter,
     DefaultObservableCounter,
+    Histogram,
+    DefaultHistogram
 )
 
 
@@ -321,3 +323,83 @@ class TestObservableCounter(TestCase):
             observable_counter.observe()
 
         # FIXME implement this: Test that the callback function has a timeout.
+
+
+class TestHistogram(TestCase):
+
+    def test_create_histogram(self):
+        """
+        Test that the Histogram can be created with create_histogram.
+        """
+
+        self.assertTrue(
+            isinstance(
+                _DefaultMeter("name").create_histogram("name"),
+                Histogram
+            )
+        )
+
+    def test_api_histogram_abstract(self):
+        """
+        Test that the API Histogram is an abstract class.
+        """
+
+        self.assertTrue(isabstract(Histogram))
+
+    def test_create_histogram_api(self):
+        """
+        Test that the API for creating a histogram accepts the name of the instrument.
+        Test that the API for creating a histogram accepts the unit of the instrument.
+        Test that the API for creating a histogram accepts the description of the
+        """
+
+        create_histogram_signature = signature(Meter.create_histogram)
+        self.assertIn("name", create_histogram_signature.parameters.keys())
+        self.assertIs(
+            create_histogram_signature.parameters["name"].default,
+            Signature.empty
+        )
+
+        create_histogram_signature = signature(Meter.create_histogram)
+        self.assertIn("unit", create_histogram_signature.parameters.keys())
+        self.assertIs(
+            create_histogram_signature.parameters["unit"].default, ""
+        )
+
+        create_histogram_signature = signature(Meter.create_histogram)
+        self.assertIn(
+            "description", create_histogram_signature.parameters.keys()
+        )
+        self.assertIs(
+            create_histogram_signature.parameters["description"].default, ""
+        )
+
+    def test_histogram_record_method(self):
+        """
+        Test that the histogram has an record method.
+        Test that the record method returns None.
+        Test that the record method accepts optional attributes.
+        Test that the record method accepts the increment amount.
+        Test that the record method returns None.
+        """
+
+        self.assertTrue(hasattr(Histogram, "record"))
+
+        self.assertIsNone(DefaultHistogram("name").record(1))
+
+        record_signature = signature(Histogram.record)
+        self.assertIn(
+            "attributes", record_signature.parameters.keys()
+        )
+        self.assertIs(
+            record_signature.parameters["attributes"].default, None
+        )
+
+        self.assertIn(
+            "amount", record_signature.parameters.keys()
+        )
+        self.assertIs(
+            record_signature.parameters["amount"].default, Signature.empty
+        )
+
+        self.assertIsNone(DefaultHistogram("name").record(1))

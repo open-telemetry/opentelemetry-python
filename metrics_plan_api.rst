@@ -85,8 +85,6 @@ Asynchronous Counter
 #. Test that the add method accepts only positive amounts.
 #. Test that the callback function has a timeout.
 #. Test that the callback function reports measurements.
-#. Test that if multiple independent SDKs coexist in a running process, they
-   invoke the callback functions independently.
 #. Test that there is a way to pass state to the callback.
 
 Concurrency
