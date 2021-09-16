@@ -27,6 +27,8 @@ from opentelemetry.metrics.instrument import (
     DefaultHistogram,
     ObservableGauge,
     DefaultObservableGauge,
+    UpDownCounter,
+    DefaultUpDownCounter
 )
 
 
@@ -498,3 +500,89 @@ class TestObservableGauge(TestCase):
             observable_gauge.observe()
 
         # FIXME implement this: Test that the callback function has a timeout.
+
+
+class TestUpDownCounter(TestCase):
+
+    def test_create_up_down_counter(self):
+        """
+        Test that the UpDownCounter can be created with create_up_down_counter.
+        """
+
+        self.assertTrue(
+            isinstance(
+                _DefaultMeter("name").create_up_down_counter("name"),
+                UpDownCounter
+            )
+        )
+
+    def test_api_up_down_counter_abstract(self):
+        """
+        Test that the API UpDownCounter is an abstract class.
+        """
+
+        self.assertTrue(isabstract(UpDownCounter))
+
+    def test_create_up_down_counter_api(self):
+        """
+        Test that the API for creating a up_down_counter accepts the name of the instrument.
+        Test that the API for creating a up_down_counter accepts the unit of the instrument.
+        Test that the API for creating a up_down_counter accepts the description of the
+        """
+
+        create_up_down_counter_signature = signature(Meter.create_up_down_counter)
+        self.assertIn("name", create_up_down_counter_signature.parameters.keys())
+        self.assertIs(
+            create_up_down_counter_signature.parameters["name"].default,
+            Signature.empty
+        )
+
+        create_up_down_counter_signature = signature(Meter.create_up_down_counter)
+        self.assertIn("unit", create_up_down_counter_signature.parameters.keys())
+        self.assertIs(
+            create_up_down_counter_signature.parameters["unit"].default, ""
+        )
+
+        create_up_down_counter_signature = signature(Meter.create_up_down_counter)
+        self.assertIn(
+            "description", create_up_down_counter_signature.parameters.keys()
+        )
+        self.assertIs(
+            create_up_down_counter_signature.parameters["description"].default, ""
+        )
+
+    def test_up_down_counter_add_method(self):
+        """
+        Test that the up_down_counter has an add method.
+        Test that the add method returns None.
+        Test that the add method accepts optional attributes.
+        Test that the add method accepts the increment or decrement amount.
+        Test that the add method accepts positive and negative amounts.
+        """
+
+        self.assertTrue(hasattr(UpDownCounter, "add"))
+
+        self.assertIsNone(DefaultUpDownCounter("name").add(1))
+
+        add_signature = signature(UpDownCounter.add)
+        self.assertIn(
+            "attributes", add_signature.parameters.keys()
+        )
+        self.assertIs(
+            add_signature.parameters["attributes"].default, None
+        )
+
+        self.assertIn(
+            "amount", add_signature.parameters.keys()
+        )
+        self.assertIs(
+            add_signature.parameters["amount"].default, Signature.empty
+        )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=ERROR):
+                DefaultUpDownCounter("name").add(-1)
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=ERROR):
+                DefaultUpDownCounter("name").add(1)
