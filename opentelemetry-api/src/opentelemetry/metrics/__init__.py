@@ -13,7 +13,6 @@
 # limitations under the License.
 
 # pylint: disable=too-many-ancestors
-# pylint: disable=useless-super-delegation
 # type: ignore
 
 
