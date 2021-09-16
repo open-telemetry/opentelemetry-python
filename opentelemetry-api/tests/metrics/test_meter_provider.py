@@ -38,8 +38,8 @@ from opentelemetry.metrics.instrument import (
     DefaultUpDownCounter,
 )
 
-
 # FIXME Test that the instrument methods can be called concurrently safely.
+
 
 @fixture
 def reset_meter_provider():

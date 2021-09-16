@@ -19,8 +19,8 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
-from typing import Optional, cast
 from threading import RLock
+from typing import Optional, cast
 
 from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics.instrument import (
@@ -43,7 +43,6 @@ _logger = getLogger(__name__)
 
 
 class MeterProvider(ABC):
-
     def __init__(self):
         super().__init__()
         self._lock = RLock()

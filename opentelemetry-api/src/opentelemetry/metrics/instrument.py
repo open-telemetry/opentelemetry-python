@@ -20,8 +20,8 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
 from re import compile as compile_
-from types import GeneratorType
 from threading import RLock
+from types import GeneratorType
 
 from opentelemetry.metrics.measurement import Measurement
 
@@ -167,9 +167,7 @@ class ObservableCounter(_Monotonic, Asynchronous):
 
 class DefaultObservableCounter(ObservableCounter):
     def __init__(self, name, callback, unit="", description=""):
-        super().__init__(
-            name, callback, unit=unit, description=description
-        )
+        super().__init__(name, callback, unit=unit, description=description)
 
 
 class ObservableUpDownCounter(_NonMonotonic, Asynchronous):
@@ -178,9 +176,7 @@ class ObservableUpDownCounter(_NonMonotonic, Asynchronous):
 
 class DefaultObservableUpDownCounter(ObservableUpDownCounter):
     def __init__(self, name, callback, unit="", description=""):
-        super().__init__(
-            name, callback, unit=unit, description=description
-        )
+        super().__init__(name, callback, unit=unit, description=description)
 
 
 class Histogram(_Grouping, Synchronous):
@@ -205,6 +201,4 @@ class ObservableGauge(_Grouping, Asynchronous):
 
 class DefaultObservableGauge(ObservableGauge):
     def __init__(self, name, callback, unit="", description=""):
-        super().__init__(
-            name, callback, unit=unit, description=description
-        )
+        super().__init__(name, callback, unit=unit, description=description)

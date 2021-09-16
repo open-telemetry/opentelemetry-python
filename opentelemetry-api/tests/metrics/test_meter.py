@@ -19,8 +19,8 @@ from unittest.mock import Mock
 
 from opentelemetry.metrics import Meter
 
-
 # FIXME Test that the meter methods can be called concurrently safely.
+
 
 class ChildMeter(Meter):
     def create_counter(self, name, unit="", description=""):
