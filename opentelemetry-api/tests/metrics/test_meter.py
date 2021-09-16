@@ -12,19 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock
-from logging import WARNING
 
 from opentelemetry.metrics import Meter
 
 
 class ChildMeter(Meter):
-
     def create_counter(self, name, unit="", description=""):
-        super().create_counter(
-            name, unit=unit, description=description
-        )
+        super().create_counter(name, unit=unit, description=description)
 
     def create_up_down_counter(self, name, unit="", description=""):
         super().create_up_down_counter(
@@ -39,13 +36,9 @@ class ChildMeter(Meter):
         )
 
     def create_histogram(self, name, unit="", description=""):
-        super().create_histogram(
-            name, unit=unit, description=description
-        )
+        super().create_histogram(name, unit=unit, description=description)
 
-    def create_observable_gauge(
-        self, name, callback, unit="", description=""
-    ):
+    def create_observable_gauge(self, name, callback, unit="", description=""):
         super().create_observable_gauge(
             name, callback, unit=unit, description=description
         )
@@ -59,7 +52,6 @@ class ChildMeter(Meter):
 
 
 class TestMeter(TestCase):
-
     def test_create_counter(self):
         """
         Test that the meter provides a function to create a new Counter
@@ -107,7 +99,9 @@ class TestMeter(TestCase):
         """
 
         self.assertTrue(hasattr(Meter, "create_observable_up_down_counter"))
-        self.assertTrue(Meter.create_observable_up_down_counter.__isabstractmethod__)
+        self.assertTrue(
+            Meter.create_observable_up_down_counter.__isabstractmethod__
+        )
 
     def test_no_repeated_instrument_names(self):
         """

@@ -49,7 +49,7 @@ class Instrument(ABC):
     def __init__(self, name, *args, unit="", description="", **kwargs):
 
         if name is None or self._name_regex.fullmatch(name) is None:
-            _logger.error("Invalid instrument name {}".format(name))
+            _logger.error("Invalid instrument name %s", name)
 
         else:
             self._name = name
@@ -93,8 +93,8 @@ class Asynchronous(Instrument):
         measurement = next(self._callback)  # pylint: disable=no-member
         if not isinstance(measurement, Measurement):
             _logger.error("Result of observing must be a Measurement")
-        else:
-            return measurement
+            return None
+        return measurement
 
 
 class _Adding(Instrument):
@@ -143,8 +143,6 @@ class DefaultUpDownCounter(UpDownCounter):
 
 
 class ObservableCounter(_Monotonic, Asynchronous):
-    pass
-
     def observe(self):
 
         measurement = super().observe()
@@ -153,8 +151,9 @@ class ObservableCounter(_Monotonic, Asynchronous):
 
             if measurement.value < 0:
                 _logger.error("Amount must be non-negative")
-            else:
-                return measurement
+                return None
+            return measurement
+        return None
 
 
 class DefaultObservableCounter(ObservableCounter):

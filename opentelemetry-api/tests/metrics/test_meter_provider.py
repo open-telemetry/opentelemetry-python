@@ -12,21 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest.mock import Mock, patch
-from unittest import TestCase
 from logging import WARNING
+from unittest import TestCase
+from unittest.mock import Mock, patch
 
 from pytest import fixture
 
-from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry import metrics
+from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics import (
-    set_meter_provider,
-    get_meter_provider,
-    ProxyMeterProvider,
-    _DefaultMeterProvider,
-    _DefaultMeter,
     ProxyMeter,
+    ProxyMeterProvider,
+    _DefaultMeter,
+    _DefaultMeterProvider,
+    get_meter_provider,
+    set_meter_provider,
 )
 from opentelemetry.metrics.instrument import (
     DefaultCounter,
@@ -79,13 +79,12 @@ def test_get_meter_provider(reset_meter_provider):
         with patch("opentelemetry.metrics._load_provider", Mock()):
             with patch(
                 "opentelemetry.metrics.cast",
-                Mock(**{"return_value": "test_meter_provider"})
+                Mock(**{"return_value": "test_meter_provider"}),
             ):
                 assert get_meter_provider() == "test_meter_provider"
 
 
 class TestGetMeter(TestCase):
-
     def test_get_meter_parameters(self):
         """
         Test that get_meter accepts name, version and schema_url
@@ -207,9 +206,7 @@ class TestProxy(TestCase):
         meter = provider.get_meter("proxy-test")
         self.assertIsInstance(meter, ProxyMeter)
 
-        self.assertIsInstance(
-            meter.create_counter("counter0"), DefaultCounter
-        )
+        self.assertIsInstance(meter.create_counter("counter0"), DefaultCounter)
 
         self.assertIsInstance(
             meter.create_histogram("histogram0"), DefaultHistogram

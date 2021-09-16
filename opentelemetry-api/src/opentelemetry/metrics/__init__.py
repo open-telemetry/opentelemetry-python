@@ -67,7 +67,7 @@ class _DefaultMeterProvider(MeterProvider):
         # the meter provider and make it automatically accessible for any
         # meter even after it changes.
         meter = _DefaultMeter(name, version=version, schema_url=schema_url)
-        meter._meter_provider = self
+        meter._meter_provider = self  # pylint: disable=protected-access
         return meter
 
 
@@ -202,7 +202,6 @@ class ProxyMeter(Meter):
 
 
 class _DefaultMeter(Meter):
-
     def create_counter(self, name, unit="", description="") -> Counter:
         super().create_counter(name, unit=unit, description=description)
         return DefaultCounter(name, unit=unit, description=description)
