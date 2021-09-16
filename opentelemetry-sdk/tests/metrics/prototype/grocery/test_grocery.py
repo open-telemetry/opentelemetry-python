@@ -50,29 +50,36 @@ class Store:
 
     def process_order(self, customer, potatoes=0, tomatoes=0):
 
-        self.number_of_orders.add(1, store=self.name, customer=customer)
+        self.number_of_orders.add(
+            1, attributes={"store": self.name, "customer": customer}
+        )
         self.amount.add(
             self.potato_price * potatoes + self.tomato_price * tomatoes,
-            store=self.name,
-            customer=customer,
+            attributes={"store": self.name, "customer": customer}
         )
         if bool(potatoes):
             self.items_sold.add(
-                potatoes, store=self.name, customer=customer, item="potato"
+                potatoes,
+                attributes={
+                    "store": self.name, "customer": customer, "item": "potato"
+                }
             )
         if bool(tomatoes):
             self.items_sold.add(
-                tomatoes, store=self.name, customer=customer, item="tomato"
+                tomatoes,
+                attributes={
+                    "store": self.name, "customer": customer, "item": "tomato"
+                }
             )
 
     def enter_customer(self, account_type):
         self.customers_in_store.add(
-            1, store=self.name, account_type=account_type
+            1, attributes={"store": self.name, "account_type": account_type}
         )
 
     def exit_customer(self, account_type):
         self.customers_in_store.add(
-            -1, store=self.name, account_type=account_type
+            -1, attributes={"store": self.name, "account_type": account_type}
         )
 
 

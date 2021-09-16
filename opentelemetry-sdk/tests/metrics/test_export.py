@@ -15,23 +15,13 @@
 
 from io import StringIO
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from opentelemetry.sdk.metrics.export import ConsoleExporter, Record
 
-records = """{
-    "instrument": "a",
-    "labels": "b",
-    "aggregator": "c",
-    "resource": "d"
-}
-{
-    "instrument": "e",
-    "labels": "f",
-    "aggregator": "g",
-    "resource": "h"
-}
-"""
+records = '''ConsoleExporter(instrument="a", labels="b", value="c", resource="d")
+ConsoleExporter(instrument="e", labels="f", value="g", resource="h")
+'''
 
 
 class TestExport(TestCase):
@@ -40,8 +30,8 @@ class TestExport(TestCase):
         with patch("sys.stdout", new=StringIO()) as stdout:
             ConsoleExporter().export(
                 [
-                    Record("a", "b", "c", "d"),
-                    Record("e", "f", "g", "h"),
+                    Record("a", "b", Mock(**{"checkpoint": "c"}), Mock(**{"attributes": "d"})),
+                    Record("e", "f", Mock(**{"checkpoint": "g"}), Mock(**{"attributes": "h"})),
                 ]
             )
             self.assertEqual(stdout.getvalue(), records)

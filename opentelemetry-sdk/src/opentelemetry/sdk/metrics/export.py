@@ -81,13 +81,10 @@ class ConsoleExporter(Exporter):
     def export(self, records: Sequence[Record]) -> "Result":
         for record in records:
             print(
-                '{}(data="{}", labels="{}", value={}, resource={})'.format(
-                    type(self).__name__,
-                    record.instrument,
-                    record.labels,
-                    record.aggregator.checkpoint,
-                    record.resource.attributes,
-                )
+                f'{type(self).__name__}(instrument="{record.instrument}", '
+                f'labels="{record.labels}", '
+                f'value="{record.aggregator.checkpoint}", '
+                f'resource="{record.resource.attributes}")'
             )
         return Result.SUCCESS
 

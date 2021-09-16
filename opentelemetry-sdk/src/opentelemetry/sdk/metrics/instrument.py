@@ -116,16 +116,13 @@ class _NonMonotonic(_NonMonotonic, _Adding):
 
 
 class Counter(Counter, _Monotonic, _Synchronous):
-    def add(self, amount, **attributes):
-        with self._datas_lock:
-            for view_data in self._view_datas:
-                view_data.record(amount)
+    def add(self, amount, attributes=None):
+        return super().add(amount, attributes=attributes)
 
 
 class UpDownCounter(UpDownCounter, _NonMonotonic, _Synchronous):
-    def add(self, amount, **attributes):
-        print("add")
-        return super().add(amount, **attributes)
+    def add(self, amount, attributes=None):
+        return super().add(amount, attributes=attributes)
 
 
 class ObservableCounter(ObservableCounter, _Monotonic, _Asynchronous):
@@ -139,9 +136,8 @@ class ObservableUpDownCounter(
 
 
 class Histogram(Histogram, _Grouping, _Synchronous):
-    def record(self, amount, **attributes):
-        print("record")
-        return super().record(amount, **attributes)
+    def record(self, amount, attributes=None):
+        return super().record(amount, attributes=attributes)
 
 
 class ObservableGauge(ObservableGauge, _Grouping, _Asynchronous):
