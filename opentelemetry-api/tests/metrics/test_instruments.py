@@ -24,7 +24,9 @@ from opentelemetry.metrics.instrument import (
     ObservableCounter,
     DefaultObservableCounter,
     Histogram,
-    DefaultHistogram
+    DefaultHistogram,
+    ObservableGauge,
+    DefaultObservableGauge,
 )
 
 
@@ -403,3 +405,96 @@ class TestHistogram(TestCase):
         )
 
         self.assertIsNone(DefaultHistogram("name").record(1))
+
+
+class TestObservableGauge(TestCase):
+
+    def test_create_observable_gauge(self):
+        """
+        Test that the ObservableGauge can be created with create_observable_gauge.
+        """
+
+        def callback():
+            yield
+
+        self.assertTrue(
+            isinstance(
+                _DefaultMeter("name").create_observable_gauge(
+                    "name", callback()
+                ),
+                ObservableGauge
+            )
+        )
+
+    def test_api_observable_gauge_abstract(self):
+        """
+        Test that the API ObservableGauge is an abstract class.
+        """
+
+        self.assertTrue(isabstract(ObservableGauge))
+
+    def test_create_observable_gauge_api(self):
+        """
+        Test that the API for creating a observable_gauge accepts the name of the instrument.
+        Test that the API for creating a observable_gauge accepts a callback.
+        Test that the API for creating a observable_gauge accepts the unit of the instrument.
+        Test that the API for creating a observable_gauge accepts the description of the instrument
+        """
+
+        create_observable_gauge_signature = signature(Meter.create_observable_gauge)
+        self.assertIn("name", create_observable_gauge_signature.parameters.keys())
+        self.assertIs(
+            create_observable_gauge_signature.parameters["name"].default,
+            Signature.empty
+        )
+        create_observable_gauge_signature = signature(Meter.create_observable_gauge)
+        self.assertIn("callback", create_observable_gauge_signature.parameters.keys())
+        self.assertIs(
+            create_observable_gauge_signature.parameters["callback"].default,
+            Signature.empty
+        )
+        create_observable_gauge_signature = signature(Meter.create_observable_gauge)
+        self.assertIn("unit", create_observable_gauge_signature.parameters.keys())
+        self.assertIs(
+            create_observable_gauge_signature.parameters["unit"].default, ""
+        )
+
+        create_observable_gauge_signature = signature(Meter.create_observable_gauge)
+        self.assertIn(
+            "description", create_observable_gauge_signature.parameters.keys()
+        )
+        self.assertIs(
+            create_observable_gauge_signature.parameters["description"].default, ""
+        )
+
+    def test_observable_gauge_callback(self):
+        """
+        Test that the API for creating a asynchronous gauge accepts a callback.
+        Test that the callback function reports measurements.
+        Test that there is a way to pass state to the callback.
+        """
+
+        create_observable_gauge_signature = signature(
+            Meter.create_observable_gauge
+        )
+        self.assertIn(
+            "callback", create_observable_gauge_signature.parameters.keys()
+        )
+        self.assertIs(
+            create_observable_gauge_signature.parameters["name"].default,
+            Signature.empty
+        )
+
+        def callback():
+            yield
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=ERROR):
+                observable_gauge = DefaultObservableGauge(
+                    "name", callback()
+                )
+
+        with self.assertLogs(level=ERROR):
+            observable_gauge.observe()
+
+        # FIXME implement this: Test that the callback function has a timeout.
