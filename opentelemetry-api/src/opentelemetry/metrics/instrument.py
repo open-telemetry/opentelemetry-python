@@ -156,8 +156,9 @@ class ObservableCounter(_Monotonic, Asynchronous):
 
             if measurement.value < 0:
                 _logger.error("Amount must be non-negative")
-            else:
-                return measurement
+                return None
+            return measurement
+        return None
 
 
 class DefaultObservableCounter(ObservableCounter):
