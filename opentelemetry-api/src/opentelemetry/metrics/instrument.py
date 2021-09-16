@@ -90,7 +90,7 @@ class Asynchronous(Instrument):
             self._callback = callback
 
     def observe(self):
-        measurement = next(self._callback)  # pylint: disable=no-member
+        measurement = next(self._callback)
         if not isinstance(measurement, Measurement):
             _logger.error("Result of observing must be a Measurement")
             return None
