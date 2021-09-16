@@ -15,7 +15,7 @@
 # pylint: disable=abstract-class-instantiated
 # pylint: disable=too-many-ancestors
 # pylint: disable=useless-super-delegation
-# type:ignore
+# type: ignore
 
 
 from abc import ABC, abstractmethod
@@ -296,7 +296,7 @@ def get_meter_provider() -> MeterProvider:
                 _PROXY_METER_PROVIDER = ProxyMeterProvider()
             return _PROXY_METER_PROVIDER
 
-        _METER_PROVIDER = cast(  # type: ignore
+        _METER_PROVIDER = cast(
             "MeterProvider",
             _load_provider(OTEL_PYTHON_METER_PROVIDER, "meter_provider"),
         )
