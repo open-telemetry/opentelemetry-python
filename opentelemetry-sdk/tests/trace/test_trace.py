@@ -637,10 +637,10 @@ class TestSpan(unittest.TestCase):
     def test_invalid_attribute_values(self):
         with self.tracer.start_as_current_span("root") as root:
             root.set_attributes(
-                {"correct-value": "foo", "non-primitive-data-type": dict()}
+                {"correct-value": "foo", "non-primitive-data-type": {}}
             )
 
-            root.set_attribute("non-primitive-data-type", dict())
+            root.set_attribute("non-primitive-data-type", {})
             root.set_attribute(
                 "list-of-mixed-data-types-numeric-first",
                 [123, False, "string"],
@@ -650,7 +650,7 @@ class TestSpan(unittest.TestCase):
                 [False, 123, "string"],
             )
             root.set_attribute(
-                "list-with-non-primitive-data-type", [dict(), 123]
+                "list-with-non-primitive-data-type", [{}, 123]
             )
             root.set_attribute("list-with-numeric-and-bool", [1, True])
 
@@ -772,9 +772,9 @@ class TestSpan(unittest.TestCase):
 
         with self.tracer.start_as_current_span("root") as root:
             root.add_event("event0", {"attr1": True, "attr2": ["hi", False]})
-            root.add_event("event0", {"attr1": dict()})
+            root.add_event("event0", {"attr1": {}})
             root.add_event("event0", {"attr1": [[True]]})
-            root.add_event("event0", {"attr1": [dict()], "attr2": [1, 2]})
+            root.add_event("event0", {"attr1": [{}], "attr2": [1, 2]})
 
             self.assertEqual(len(root.events), 4)
             self.assertEqual(root.events[0].attributes, {"attr1": True})
