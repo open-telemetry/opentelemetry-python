@@ -155,13 +155,17 @@ class ObservableCounter(_Monotonic, Asynchronous):
         with self._lock:
             measurement = super().observe()
 
-            if isinstance(measurement, Measurement):
+    @property
+    def callback(self):
+        def function():
+            measurement = super(ObservableCounter, self).callback()
 
-                if measurement.value < 0:
-                    _logger.error("Amount must be non-negative")
-                    return None
-                return measurement
-            return None
+            if measurement is not None and measurement.value < 0:
+                _logger.error("Amount must be non-negative")
+                return None
+
+            return measurement
+        return function
 
 
 class DefaultObservableCounter(ObservableCounter):
