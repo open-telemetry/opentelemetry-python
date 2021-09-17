@@ -18,8 +18,8 @@ from argparse import REMAINDER, ArgumentParser
 from logging import getLogger
 from os import environ, execl, getcwd
 from os.path import abspath, dirname, pathsep
-from shutil import which
 from re import sub
+from shutil import which
 
 from pkg_resources import iter_entry_points
 
@@ -44,7 +44,7 @@ def run() -> None:
 
         These optional arguments will override the current value of the
         corresponding environment variable during the execution of the command.
-        """
+        """,
     )
 
     argument_otel_environment_variable = {}
@@ -61,7 +61,7 @@ def run() -> None:
                 argument = sub(r"OTEL_(PYTHON_)?", "", attribute).lower()
 
                 parser.add_argument(
-                    f'--{argument}',
+                    f"--{argument}",
                     required=False,
                 )
                 argument_otel_environment_variable[argument] = attribute
