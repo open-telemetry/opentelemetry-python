@@ -649,9 +649,7 @@ class TestSpan(unittest.TestCase):
                 "list-of-mixed-data-types-non-numeric-first",
                 [False, 123, "string"],
             )
-            root.set_attribute(
-                "list-with-non-primitive-data-type", [{}, 123]
-            )
+            root.set_attribute("list-with-non-primitive-data-type", [{}, 123])
             root.set_attribute("list-with-numeric-and-bool", [1, True])
 
             root.set_attribute("", 123)
