@@ -19,6 +19,7 @@ from logging import getLogger
 from os import environ, execl, getcwd
 from os.path import abspath, dirname, pathsep
 from shutil import which
+from re import sub
 
 from pkg_resources import iter_entry_points
 
@@ -31,10 +32,22 @@ def run() -> None:
         description="""
         opentelemetry-instrument automatically instruments a Python
         program and its dependencies and then runs the program.
+        """,
+        epilog="""
+        Optional arguments (except for --help) for opentelemetry-instrument
+        directly correspond with OpenTelemetry environment variables. The
+        corresponding optional argument is formed by removing the OTEL_ or
+        OTEL_PYTHON_ prefix from the environment variable and lower casing the
+        rest. For example, the optional argument --attribute_value_length_limit
+        corresponds with the environment variable
+        OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT.
+
+        These optional arguments will override the current value of the
+        corresponding environment variable during the execution of the command.
         """
     )
 
-    otel_environment_variables = []
+    argument_otel_environment_variable = {}
 
     for entry_point in iter_entry_points(
         "opentelemetry_environment_variables"
@@ -45,11 +58,13 @@ def run() -> None:
 
             if attribute.startswith("OTEL_"):
 
+                argument = sub(r"OTEL_(PYTHON_)?", "", attribute).lower()
+
                 parser.add_argument(
-                    f"--{attribute}",
+                    f'--{argument}',
                     required=False,
                 )
-                otel_environment_variables.append(attribute)
+                argument_otel_environment_variable[argument] = attribute
 
     parser.add_argument("command", help="Your Python application.")
     parser.add_argument(
@@ -60,8 +75,10 @@ def run() -> None:
 
     args = parser.parse_args()
 
-    for otel_environment_variable in otel_environment_variables:
-        value = getattr(args, otel_environment_variable)
+    for argument, otel_environment_variable in (
+        argument_otel_environment_variable
+    ).items():
+        value = getattr(args, argument)
         if value is not None:
 
             environ[otel_environment_variable] = value
