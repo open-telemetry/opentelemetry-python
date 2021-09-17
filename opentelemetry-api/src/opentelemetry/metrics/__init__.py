@@ -178,7 +178,6 @@ class ProxyMeter(Meter):
         schema_url=None,
     ):
         super().__init__(name, version=version, schema_url=schema_url)
-        self._lock = RLock()
         self._real_meter: Optional[Meter] = None
         self._noop_meter = _DefaultMeter(
             name, version=version, schema_url=schema_url
