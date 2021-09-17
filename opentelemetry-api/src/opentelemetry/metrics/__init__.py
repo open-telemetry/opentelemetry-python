@@ -248,7 +248,7 @@ class _DefaultMeter(Meter):
     ) -> ObservableCounter:
         with self._lock:
             super().create_observable_counter(
-                name, unit=unit, description=description
+                name, callback, unit=unit, description=description
             )
             return DefaultObservableCounter(
                 name,
@@ -267,7 +267,7 @@ class _DefaultMeter(Meter):
     ) -> ObservableGauge:
         with self._lock:
             super().create_observable_gauge(
-                name, unit=unit, description=description
+                name, callback, unit=unit, description=description
             )
             return DefaultObservableGauge(
                 name,
@@ -281,7 +281,7 @@ class _DefaultMeter(Meter):
     ) -> ObservableUpDownCounter:
         with self._lock:
             super().create_observable_up_down_counter(
-                name, unit=unit, description=description
+                name, callback, unit=unit, description=description
             )
             return DefaultObservableUpDownCounter(
                 name,

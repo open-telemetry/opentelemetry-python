@@ -140,56 +140,56 @@ class TestGetMeter(TestCase):
         )
 
 
-class Provider(_DefaultMeterProvider):
+class MockProvider(_DefaultMeterProvider):
     def get_meter(self, name, version=None, schema_url=None):
-        return Meter(name, version=version, schema_url=schema_url)
+        return MockMeter(name, version=version, schema_url=schema_url)
 
 
-class Meter(_DefaultMeter):
+class MockMeter(_DefaultMeter):
     def create_counter(self, name, unit="", description=""):
-        return Counter("name")
+        return MockCounter("name")
 
     def create_up_down_counter(self, name, unit="", description=""):
-        return UpDownCounter("name")
+        return MockUpDownCounter("name")
 
     def create_observable_counter(
         self, name, callback, unit="", description=""
     ):
-        return ObservableCounter("name", callback)
+        return MockObservableCounter("name", callback)
 
     def create_histogram(self, name, unit="", description=""):
-        return Histogram("name")
+        return MockHistogram("name")
 
     def create_observable_gauge(self, name, callback, unit="", description=""):
-        return ObservableGauge("name", callback)
+        return MockObservableGauge("name", callback)
 
     def create_observable_up_down_counter(
         self, name, callback, unit="", description=""
     ):
-        return ObservableUpDownCounter("name", callback)
+        return MockObservableUpDownCounter("name", callback)
 
 
-class Counter(DefaultCounter):
+class MockCounter(DefaultCounter):
     pass
 
 
-class Histogram(DefaultHistogram):
+class MockHistogram(DefaultHistogram):
     pass
 
 
-class ObservableCounter(DefaultObservableCounter):
+class MockObservableCounter(DefaultObservableCounter):
     pass
 
 
-class ObservableGauge(DefaultObservableGauge):
+class MockObservableGauge(DefaultObservableGauge):
     pass
 
 
-class ObservableUpDownCounter(DefaultObservableUpDownCounter):
+class MockObservableUpDownCounter(DefaultObservableUpDownCounter):
     pass
 
 
-class UpDownCounter(DefaultUpDownCounter):
+class MockUpDownCounter(DefaultUpDownCounter):
     pass
 
 
@@ -240,34 +240,36 @@ class TestProxy(TestCase):
             DefaultUpDownCounter,
         )
 
-        set_meter_provider(Provider())
+        set_meter_provider(MockProvider())
 
-        self.assertIsInstance(get_meter_provider(), Provider)
-        self.assertIsInstance(provider.get_meter("proxy-test"), Meter)
+        self.assertIsInstance(get_meter_provider(), MockProvider)
+        self.assertIsInstance(provider.get_meter("proxy-test"), MockMeter)
 
-        self.assertIsInstance(meter.create_counter("counter1"), Counter)
+        self.assertIsInstance(meter.create_counter("counter1"), MockCounter)
 
-        self.assertIsInstance(meter.create_histogram("histogram1"), Histogram)
+        self.assertIsInstance(
+            meter.create_histogram("histogram1"), MockHistogram
+        )
 
         self.assertIsInstance(
             meter.create_observable_counter("observable_counter1", callback()),
-            ObservableCounter,
+            MockObservableCounter,
         )
 
         self.assertIsInstance(
             meter.create_observable_gauge("observable_gauge1", callback()),
-            ObservableGauge,
+            MockObservableGauge,
         )
 
         self.assertIsInstance(
             meter.create_observable_up_down_counter(
                 "observable_up_down_counter1", callback()
             ),
-            ObservableUpDownCounter,
+            MockObservableUpDownCounter,
         )
 
         self.assertIsInstance(
-            meter.create_up_down_counter("up_down_counter1"), UpDownCounter
+            meter.create_up_down_counter("up_down_counter1"), MockUpDownCounter
         )
 
         metrics._METER_PROVIDER = original_provider
