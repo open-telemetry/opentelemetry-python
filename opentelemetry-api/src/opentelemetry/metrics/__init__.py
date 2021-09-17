@@ -199,34 +199,28 @@ class ProxyMeter(Meter):
 
     def create_counter(self, *args, **kwargs) -> Counter:
         with self._lock:
-            super().create_counter(*args, **kwargs)
             return self._meter.create_counter(*args, **kwargs)
 
     def create_up_down_counter(self, *args, **kwargs) -> UpDownCounter:
         with self._lock:
-            super().create_up_down_counter(*args, **kwargs)
             return self._meter.create_up_down_counter(*args, **kwargs)
 
     def create_observable_counter(self, *args, **kwargs) -> ObservableCounter:
         with self._lock:
-            super().create_observable_counter(*args, **kwargs)
             return self._meter.create_observable_counter(*args, **kwargs)
 
     def create_histogram(self, *args, **kwargs) -> Histogram:
         with self._lock:
-            super().create_histogram(*args, **kwargs)
             return self._meter.create_histogram(*args, **kwargs)
 
     def create_observable_gauge(self, *args, **kwargs) -> ObservableGauge:
         with self._lock:
-            super().create_observable_gauge(*args, **kwargs)
             return self._meter.create_observable_gauge(*args, **kwargs)
 
     def create_observable_up_down_counter(
         self, *args, **kwargs
     ) -> ObservableUpDownCounter:
         with self._lock:
-            super().create_observable_up_down_counter(*args, **kwargs)
             return self._meter.create_observable_up_down_counter(
                 *args, **kwargs
             )
