@@ -32,12 +32,12 @@ def _load_provider(
     try:
         entry_point = next(
             iter_entry_points(
-                "opentelemetry_{}".format(provider),
+                f"opentelemetry_{provider}",
                 name=cast(
                     str,
                     environ.get(
                         provider_environment_variable,
-                        "default_{}".format(provider),
+                        f"default_{provider}",
                     ),
                 ),
             )

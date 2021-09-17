@@ -128,12 +128,7 @@ class JaegerPropagator(TextMapPropagator):
 
 
 def _format_uber_trace_id(trace_id, span_id, parent_span_id, flags):
-    return "{trace_id}:{span_id}:{parent_id}:{:02x}".format(
-        flags,
-        trace_id=format_trace_id(trace_id),
-        span_id=format_span_id(span_id),
-        parent_id=format_span_id(parent_span_id),
-    )
+    return f"{format_trace_id(trace_id)}:{format_span_id(span_id)}:{format_span_id(parent_span_id)}:{flags:02x}"
 
 
 def _extract_first_element(
