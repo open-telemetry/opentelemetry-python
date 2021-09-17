@@ -267,7 +267,7 @@ class BatchLogProcessor(LogProcessor):
             self._condition.notify_all()
 
         ret = flush_request.event.wait(
-            flush_request.event.wait(timeout_millis / 1e3)
+           timeout_millis / 1e3
         )
         if not ret:
             _logger.warning("Timeout was exceeded in force_flush().")
