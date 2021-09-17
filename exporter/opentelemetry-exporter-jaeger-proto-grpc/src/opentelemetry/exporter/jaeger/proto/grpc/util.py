@@ -26,7 +26,7 @@ logger = logging.getLogger(__name__)
 
 def _load_credential_from_file(path) -> ChannelCredentials:
     try:
-        with open(path, "rb", encoding="utf-8") as creds_file:
+        with open(path, "rb") as creds_file:
             credential = creds_file.read()
             return ssl_channel_credentials(credential)
     except FileNotFoundError:
