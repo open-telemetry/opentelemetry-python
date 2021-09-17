@@ -337,7 +337,7 @@ class TestObservableCounter(TestCase):
                 )
 
         with self.assertLogs(level=ERROR):
-            observable_counter.observe()
+            observable_counter.callback()
 
         def callback():
             yield ChildMeasurement(1)
@@ -347,10 +347,10 @@ class TestObservableCounter(TestCase):
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=ERROR):
-                observable_counter.observe()
+                observable_counter.callback()
 
         with self.assertLogs(level=ERROR):
-            observable_counter.observe()
+            observable_counter.callback()
 
 
 class TestHistogram(TestCase):
@@ -527,7 +527,7 @@ class TestObservableGauge(TestCase):
                 observable_gauge = DefaultObservableGauge("name", callback())
 
         with self.assertLogs(level=ERROR):
-            observable_gauge.observe()
+            observable_gauge.callback()
 
 
 class TestUpDownCounter(TestCase):
@@ -741,8 +741,8 @@ class TestObservableUpDownCounter(TestCase):
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=ERROR):
-                observable_up_down_counter.observe()
+                observable_up_down_counter.callback()
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=ERROR):
-                observable_up_down_counter.observe()
+                observable_up_down_counter.callback()

@@ -91,14 +91,16 @@ class Asynchronous(Instrument):
                 )
                 self._callback = callback
 
-    def observe(self):
-        # FIXME this needs a timeout mechanism.
-        with self._lock:
+    @property
+    def callback(self):
+        def function():
             measurement = next(self._callback)
             if not isinstance(measurement, Measurement):
-                _logger.error("Result of observing must be a Measurement")
+                _logger.error("Callback must return a Measurement")
                 return None
+
             return measurement
+        return function
 
 
 class _Adding(Instrument):
@@ -151,17 +153,18 @@ class DefaultUpDownCounter(UpDownCounter):
 
 
 class ObservableCounter(_Monotonic, Asynchronous):
-    def observe(self):
-        with self._lock:
-            measurement = super().observe()
 
-            if isinstance(measurement, Measurement):
+    @property
+    def callback(self):
+        def function():
+            measurement = super(ObservableCounter, self).callback()
 
-                if measurement.value < 0:
-                    _logger.error("Amount must be non-negative")
-                    return None
-                return measurement
-            return None
+            if measurement is not None and measurement.value < 0:
+                _logger.error("Amount must be non-negative")
+                return None
+
+            return measurement
+        return function
 
 
 class DefaultObservableCounter(ObservableCounter):
@@ -170,6 +173,7 @@ class DefaultObservableCounter(ObservableCounter):
 
 
 class ObservableUpDownCounter(_NonMonotonic, Asynchronous):
+
     pass
 
 
