@@ -100,6 +100,7 @@ class Asynchronous(Instrument):
                 return None
 
             return measurement
+
         return function
 
 
@@ -153,7 +154,6 @@ class DefaultUpDownCounter(UpDownCounter):
 
 
 class ObservableCounter(_Monotonic, Asynchronous):
-
     @property
     def callback(self):
         def function():
@@ -164,6 +164,7 @@ class ObservableCounter(_Monotonic, Asynchronous):
                 return None
 
             return measurement
+
         return function
 
 
