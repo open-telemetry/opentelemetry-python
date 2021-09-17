@@ -165,6 +165,7 @@ class ObservableCounter(_Monotonic, Asynchronous):
                 return None
 
             return measurement
+
         return function
 
 
