@@ -153,7 +153,6 @@ class DefaultUpDownCounter(UpDownCounter):
 class ObservableCounter(_Monotonic, Asynchronous):
     def observe(self):
         with self._lock:
-
             measurement = super().observe()
 
             if isinstance(measurement, Measurement):
