@@ -247,6 +247,9 @@ class _DefaultMeter(Meter):
         self, name, callback, unit="", description=""
     ) -> ObservableCounter:
         with self._lock:
+            super().create_observable_counter(
+                name, unit=unit, description=description
+            )
             return DefaultObservableCounter(
                 name,
                 callback,
@@ -256,12 +259,16 @@ class _DefaultMeter(Meter):
 
     def create_histogram(self, name, unit="", description="") -> Histogram:
         with self._lock:
+            super().create_histogram(name, unit=unit, description=description)
             return DefaultHistogram(name, unit=unit, description=description)
 
     def create_observable_gauge(
         self, name, callback, unit="", description=""
     ) -> ObservableGauge:
         with self._lock:
+            super().create_observable_gauge(
+                name, unit=unit, description=description
+            )
             return DefaultObservableGauge(
                 name,
                 callback,
@@ -273,6 +280,9 @@ class _DefaultMeter(Meter):
         self, name, callback, unit="", description=""
     ) -> ObservableUpDownCounter:
         with self._lock:
+            super().create_observable_up_down_counter(
+                name, unit=unit, description=description
+            )
             return DefaultObservableUpDownCounter(
                 name,
                 callback,
