@@ -121,7 +121,7 @@ class Meter(ABC):
         with self._lock:
             return self._schema_url
 
-    def _check_instrument_name(self, name):
+    def _secure_instrument_name(self, name):
         with self._lock:
             name = name.lower()
 
@@ -134,40 +134,40 @@ class Meter(ABC):
     @abstractmethod
     def create_counter(self, name, unit="", description="") -> Counter:
         with self._lock:
-            self._check_instrument_name(name)
+            self._secure_instrument_name(name)
 
     @abstractmethod
     def create_up_down_counter(
         self, name, unit="", description=""
     ) -> UpDownCounter:
         with self._lock:
-            self._check_instrument_name(name)
+            self._secure_instrument_name(name)
 
     @abstractmethod
     def create_observable_counter(
         self, name, callback, unit="", description=""
     ) -> ObservableCounter:
         with self._lock:
-            self._check_instrument_name(name)
+            self._secure_instrument_name(name)
 
     @abstractmethod
     def create_histogram(self, name, unit="", description="") -> Histogram:
         with self._lock:
-            self._check_instrument_name(name)
+            self._secure_instrument_name(name)
 
     @abstractmethod
     def create_observable_gauge(
         self, name, callback, unit="", description=""
     ) -> ObservableGauge:
         with self._lock:
-            self._check_instrument_name(name)
+            self._secure_instrument_name(name)
 
     @abstractmethod
     def create_observable_up_down_counter(
         self, name, callback, unit="", description=""
     ) -> ObservableUpDownCounter:
         with self._lock:
-            self._check_instrument_name(name)
+            self._secure_instrument_name(name)
 
 
 class ProxyMeter(Meter):
