@@ -15,16 +15,12 @@
 
 from unittest import TestCase
 
-from opentelemetry.metrics.meter import Meter, MeterProvider
+from opentelemetry.metrics.meter import Meter
 from opentelemetry.sdk.metrics.meter import Meter as SDKMeter
 from opentelemetry.sdk.metrics.meter import MeterProvider as SDKMeterProvider
 
 
 class TestMeter(TestCase):
-    def test_meter_provider(self):
-        meter_provider = SDKMeterProvider()
-        self.assertIsInstance(meter_provider, SDKMeterProvider)
-        self.assertIsInstance(meter_provider, MeterProvider)
 
     def test_meter(self):
         meter = SDKMeterProvider().get_meter(__name__)
