@@ -50,7 +50,7 @@ class TestDecision(unittest.TestCase):
 class TestSamplingResult(unittest.TestCase):
     def test_ctr(self):
         attributes = {"asd": "test"}
-        trace_state = dict()
+        trace_state = {}
         # pylint: disable=E1137
         trace_state["test"] = "123"
         result = sampling.SamplingResult(
