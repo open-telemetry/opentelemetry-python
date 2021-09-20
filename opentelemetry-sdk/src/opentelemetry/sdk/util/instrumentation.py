@@ -27,9 +27,7 @@ class InstrumentationInfo:
         self._version = version
 
     def __repr__(self):
-        return "{}({}, {})".format(
-            type(self).__name__, self._name, self._version
-        )
+        return f"{type(self).__name__}({self._name}, {self._version})"
 
     def __hash__(self):
         return hash((self._name, self._version))

@@ -259,7 +259,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
         def create_spans_and_flush(tno: int):
             for span_idx in range(num_spans):
                 _create_start_and_end_span(
-                    "Span {}-{}".format(tno, span_idx), span_processor
+                    f"Span {tno}-{span_idx}", span_processor
                 )
             self.assertTrue(span_processor.force_flush())
 

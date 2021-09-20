@@ -1515,8 +1515,7 @@ class TestSpanLimits(unittest.TestCase):
         ]
 
         some_attrs = {
-            "init_attribute_{}".format(idx): self.long_val
-            for idx in range(100)
+            f"init_attribute_{idx}": self.long_val for idx in range(100)
         }
         with tracer.start_as_current_span(
             "root", links=some_links, attributes=some_attrs
@@ -1524,17 +1523,15 @@ class TestSpanLimits(unittest.TestCase):
             self.assertEqual(len(root.links), max_links)
             self.assertEqual(len(root.attributes), max_attrs)
             for idx in range(100):
+                root.set_attribute(f"my_str_attribute_{idx}", self.long_val)
                 root.set_attribute(
-                    "my_str_attribute_{}".format(idx), self.long_val
+                    f"my_byte_attribute_{idx}", self.long_val.encode()
                 )
                 root.set_attribute(
-                    "my_byte_attribute_{}".format(idx), self.long_val.encode()
-                )
-                root.set_attribute(
-                    "my_int_attribute_{}".format(idx), self.long_val.encode()
+                    f"my_int_attribute_{idx}", self.long_val.encode()
                 )
                 root.add_event(
-                    "my_event_{}".format(idx), attributes={"k": self.long_val}
+                    f"my_event_{idx}", attributes={"k": self.long_val}
                 )
 
             self.assertEqual(len(root.attributes), max_attrs)
@@ -1576,7 +1573,7 @@ class TestSpanLimits(unittest.TestCase):
         with tracer.start_as_current_span("root") as root:
             for idx in range(num_events):
                 root.add_event(
-                    "my_event_{}".format(idx), attributes={"k": self.long_val}
+                    f"my_event_{idx}", attributes={"k": self.long_val}
                 )
 
             self.assertEqual(len(root.events), num_events)
@@ -1586,9 +1583,7 @@ class TestSpanLimits(unittest.TestCase):
         ) + randint(1, 100)
         with tracer.start_as_current_span("root") as root:
             for idx in range(num_attributes):
-                root.set_attribute(
-                    "my_attribute_{}".format(idx), self.long_val
-                )
+                root.set_attribute(f"my_attribute_{idx}", self.long_val)
 
             self.assertEqual(len(root.attributes), num_attributes)
             for attr_val in root.attributes.values():

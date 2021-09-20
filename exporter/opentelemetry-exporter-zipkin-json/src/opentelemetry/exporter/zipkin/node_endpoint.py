@@ -64,7 +64,7 @@ class NodeEndpoint:
             ipv4_address = ipaddress.ip_address(address)
             if not isinstance(ipv4_address, ipaddress.IPv4Address):
                 raise ValueError(
-                    "%r does not appear to be an IPv4 address" % address
+                    f"{address!r} does not appear to be an IPv4 address"
                 )
             self._ipv4 = ipv4_address
 
@@ -80,6 +80,6 @@ class NodeEndpoint:
             ipv6_address = ipaddress.ip_address(address)
             if not isinstance(ipv6_address, ipaddress.IPv6Address):
                 raise ValueError(
-                    "%r does not appear to be an IPv6 address" % address
+                    f"{address!r} does not appear to be an IPv6 address"
                 )
             self._ipv6 = ipv6_address
