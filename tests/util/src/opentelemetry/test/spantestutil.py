@@ -55,13 +55,13 @@ class SpanTestBase(unittest.TestCase):
 def get_span_with_dropped_attributes_events_links():
     attributes = {}
     for index in range(130):
-        attributes["key{}".format(index)] = ["value{}".format(index)]
+        attributes[f"key{index}"] = [f"value{index}"]
     links = []
     for index in range(129):
         links.append(
             trace_api.Link(
                 trace_sdk._Span(
-                    name="span{}".format(index),
+                    name=f"span{index}",
                     context=trace_api.INVALID_SPAN_CONTEXT,
                     attributes=attributes,
                 ).get_span_context(),
@@ -77,5 +77,5 @@ def get_span_with_dropped_attributes_events_links():
         "span", links=links, attributes=attributes
     ) as span:
         for index in range(131):
-            span.add_event("event{}".format(index), attributes=attributes)
+            span.add_event(f"event{index}", attributes=attributes)
         return span

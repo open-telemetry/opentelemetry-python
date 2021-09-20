@@ -29,7 +29,7 @@ class Client:
         await before_handler()
         await after_handler()
 
-        return "%s::response" % message
+        return f"{message}::response"
 
     def send(self, message):
         return self.send_task(message)
