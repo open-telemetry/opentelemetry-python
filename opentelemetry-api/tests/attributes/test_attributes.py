@@ -43,10 +43,10 @@ class TestAttributes(unittest.TestCase):
 
     def test_clean_attribute(self):
         self.assertInvalid([1, 2, 3.4, "ss", 4])
-        self.assertInvalid([dict(), 1, 2, 3.4, 4])
+        self.assertInvalid([{}, 1, 2, 3.4, 4])
         self.assertInvalid(["sw", "lf", 3.4, "ss"])
         self.assertInvalid([1, 2, 3.4, 5])
-        self.assertInvalid(dict())
+        self.assertInvalid({})
         self.assertInvalid([1, True])
         self.assertValid(True)
         self.assertValid("hi")
