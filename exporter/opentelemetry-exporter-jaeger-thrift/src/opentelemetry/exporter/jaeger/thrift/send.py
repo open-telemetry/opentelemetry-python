@@ -123,9 +123,9 @@ class Collector:
 
         # set basic auth header
         if auth is not None:
-            auth_header = "{}:{}".format(*auth)
+            auth_header = f"{auth[0]}:{auth[1]}"
             decoded = base64.b64encode(auth_header.encode()).decode("ascii")
-            basic_auth = dict(Authorization="Basic {}".format(decoded))
+            basic_auth = dict(Authorization=f"Basic {decoded}")
             self.http_transport.setCustomHeaders(basic_auth)
 
     def submit(self, batch: jaeger.Batch):

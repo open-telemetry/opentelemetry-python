@@ -78,9 +78,9 @@ if file_path_symbols:
     print("The code in this branch adds the following public symbols:")
     print()
     for file_path, symbols in file_path_symbols.items():
-        print("- {}".format(file_path))
+        print(f"- {file_path}")
         for symbol in symbols:
-            print("\t{}".format(symbol))
+            print(f"\t{symbol}")
         print()
 
     print(

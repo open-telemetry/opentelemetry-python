@@ -145,9 +145,7 @@ class SamplingResult:
     """
 
     def __repr__(self) -> str:
-        return "{}({}, attributes={})".format(
-            type(self).__name__, str(self.decision), str(self.attributes)
-        )
+        return f"{type(self).__name__}({str(self.decision)}, attributes={str(self.attributes)})"
 
     def __init__(
         self,
@@ -271,7 +269,7 @@ class TraceIdRatioBased(Sampler):
         )
 
     def get_description(self) -> str:
-        return "TraceIdRatioBased{{{}}}".format(self._rate)
+        return f"TraceIdRatioBased{{{self._rate}}}"
 
 
 class ParentBased(Sampler):
@@ -342,13 +340,7 @@ class ParentBased(Sampler):
         )
 
     def get_description(self):
-        return "ParentBased{{root:{},remoteParentSampled:{},remoteParentNotSampled:{}," "localParentSampled:{},localParentNotSampled:{}}}".format(
-            self._root.get_description(),
-            self._remote_parent_sampled.get_description(),
-            self._remote_parent_not_sampled.get_description(),
-            self._local_parent_sampled.get_description(),
-            self._local_parent_not_sampled.get_description(),
-        )
+        return f"ParentBased{{root:{self._root.get_description()},remoteParentSampled:{self._remote_parent_sampled.get_description()},remoteParentNotSampled:{self._remote_parent_not_sampled.get_description()},localParentSampled:{self._local_parent_sampled.get_description()},localParentNotSampled:{self._local_parent_not_sampled.get_description()}}}"
 
 
 DEFAULT_OFF = ParentBased(ALWAYS_OFF)

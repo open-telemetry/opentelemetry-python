@@ -17,7 +17,7 @@ class Client:
 
     def _task(self, message, listener):
         # pylint: disable=no-self-use
-        res = "%s::response" % message
+        res = f"{message}::response"
         listener.on_response(res)
         return res
 
