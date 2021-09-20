@@ -25,7 +25,7 @@ class TestProvider(trace._DefaultTracerProvider):
         self,
         instrumenting_module_name: str,
         instrumenting_library_version: str = "",
-    ):
+    ) -> trace.Tracer:
         return TestTracer()
 
 
