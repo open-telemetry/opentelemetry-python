@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import unittest
-from abc import abstractclassmethod
+from abc import abstractmethod
 from unittest.mock import Mock
 
 import opentelemetry.sdk.trace as trace
@@ -81,11 +81,13 @@ class AbstractB3FormatTestCase:
     def get_child_parent_new_carrier(cls, old_carrier):
         return get_child_parent_new_carrier(old_carrier, cls.get_propagator())
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def get_propagator(cls):
         pass
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def get_trace_id(cls, carrier):
         pass
 

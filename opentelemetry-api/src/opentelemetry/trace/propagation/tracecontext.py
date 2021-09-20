@@ -15,7 +15,7 @@
 import re
 import typing
 
-import opentelemetry.trace as trace
+from opentelemetry import trace
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
 from opentelemetry.trace import format_span_id, format_trace_id
