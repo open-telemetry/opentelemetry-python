@@ -13,7 +13,7 @@
 # limitations under the License.
 
 import unittest
-from abc import abstractclassmethod
+from abc import abstractmethod
 from unittest.mock import Mock
 
 import opentelemetry.sdk.trace as trace
@@ -81,11 +81,13 @@ class AbstractB3FormatTestCase:
     def get_child_parent_new_carrier(cls, old_carrier):
         return get_child_parent_new_carrier(old_carrier, cls.get_propagator())
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def get_propagator(cls):
         pass
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def get_trace_id(cls, carrier):
         pass
 
@@ -123,9 +125,7 @@ class AbstractB3FormatTestCase:
         propagator = self.get_propagator()
         child, parent, _ = self.get_child_parent_new_carrier(
             {
-                propagator.SINGLE_HEADER_KEY: "{}-{}".format(
-                    self.serialized_trace_id, self.serialized_span_id
-                )
+                propagator.SINGLE_HEADER_KEY: f"{self.serialized_trace_id}-{self.serialized_span_id}"
             }
         )
 
@@ -142,11 +142,7 @@ class AbstractB3FormatTestCase:
 
         child, parent, _ = self.get_child_parent_new_carrier(
             {
-                propagator.SINGLE_HEADER_KEY: "{}-{}-1-{}".format(
-                    self.serialized_trace_id,
-                    self.serialized_span_id,
-                    self.serialized_parent_id,
-                )
+                propagator.SINGLE_HEADER_KEY: f"{self.serialized_trace_id}-{self.serialized_span_id}-1-{self.serialized_parent_id}"
             }
         )
 
@@ -171,9 +167,7 @@ class AbstractB3FormatTestCase:
 
         _, _, new_carrier = self.get_child_parent_new_carrier(
             {
-                propagator.SINGLE_HEADER_KEY: "{}-{}".format(
-                    single_header_trace_id, self.serialized_span_id
-                ),
+                propagator.SINGLE_HEADER_KEY: f"{single_header_trace_id}-{self.serialized_span_id}",
                 propagator.TRACE_ID_KEY: self.serialized_trace_id,
                 propagator.SPAN_ID_KEY: self.serialized_span_id,
                 propagator.SAMPLED_KEY: "1",

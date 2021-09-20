@@ -15,8 +15,6 @@
 import unittest
 from unittest.mock import Mock
 
-import opentelemetry.sdk.trace as trace
-import opentelemetry.sdk.trace.id_generator as id_generator
 import opentelemetry.trace as trace_api
 from opentelemetry import baggage
 from opentelemetry.baggage import _BAGGAGE_KEY
@@ -24,6 +22,8 @@ from opentelemetry.context import Context
 from opentelemetry.propagators import (  # pylint: disable=no-name-in-module
     jaeger,
 )
+from opentelemetry.sdk import trace
+from opentelemetry.sdk.trace import id_generator
 
 FORMAT = jaeger.JaegerPropagator()
 

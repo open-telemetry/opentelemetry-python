@@ -219,7 +219,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         self,
         func: Callable[[SpanProcessor], Callable[..., None]],
         *args: Any,
-        **kwargs: Any
+        **kwargs: Any,
     ):
         futures = []
         for sp in self._span_processors:
@@ -442,12 +442,10 @@ class ReadableSpan:
         if self.parent is not None:
             if isinstance(self.parent, Span):
                 ctx = self.parent.context
-                parent_id = "0x{}".format(
-                    trace_api.format_span_id(ctx.span_id)
-                )
+                parent_id = f"0x{trace_api.format_span_id(ctx.span_id)}"
             elif isinstance(self.parent, SpanContext):
-                parent_id = "0x{}".format(
-                    trace_api.format_span_id(self.parent.span_id)
+                parent_id = (
+                    f"0x{trace_api.format_span_id(self.parent.span_id)}"
                 )
 
         start_time = None
@@ -484,12 +482,8 @@ class ReadableSpan:
     @staticmethod
     def _format_context(context):
         x_ctx = OrderedDict()
-        x_ctx["trace_id"] = "0x{}".format(
-            trace_api.format_trace_id(context.trace_id)
-        )
-        x_ctx["span_id"] = "0x{}".format(
-            trace_api.format_span_id(context.span_id)
-        )
+        x_ctx["trace_id"] = f"0x{trace_api.format_trace_id(context.trace_id)}"
+        x_ctx["span_id"] = f"0x{trace_api.format_span_id(context.span_id)}"
         x_ctx["trace_state"] = repr(context.trace_state)
         return x_ctx
 
@@ -612,16 +606,7 @@ class SpanLimits:
         )
 
     def __repr__(self):
-        return "{}(max_span_attributes={}, max_events_attributes={}, max_link_attributes={}, max_attributes={}, max_events={}, max_links={}, max_attribute_length={})".format(
-            type(self).__name__,
-            self.max_span_attribute_length,
-            self.max_event_attributes,
-            self.max_link_attributes,
-            self.max_attributes,
-            self.max_events,
-            self.max_links,
-            self.max_attribute_length,
-        )
+        return f"{type(self).__name__}(max_span_attributes={self.max_span_attribute_length}, max_events_attributes={self.max_event_attributes}, max_link_attributes={self.max_link_attributes}, max_attributes={self.max_attributes}, max_events={self.max_events}, max_links={self.max_links}, max_attribute_length={self.max_attribute_length})"
 
     @classmethod
     def _from_env_if_absent(
@@ -759,9 +744,7 @@ class Span(trace_api.Span, ReadableSpan):
             self._links = BoundedList.from_seq(self._limits.max_links, links)
 
     def __repr__(self):
-        return '{}(name="{}", context={})'.format(
-            type(self).__name__, self._name, self._context
-        )
+        return f'{type(self).__name__}(name="{self._name}", context={self._context})'
 
     def _new_events(self):
         return BoundedList(self._limits.max_events)
@@ -889,9 +872,7 @@ class Span(trace_api.Span, ReadableSpan):
                 self.set_status(
                     Status(
                         status_code=StatusCode.ERROR,
-                        description="{}: {}".format(
-                            exc_type.__name__, exc_val
-                        ),
+                        description=f"{exc_type.__name__}: {exc_val}",
                     )
                 )
 
