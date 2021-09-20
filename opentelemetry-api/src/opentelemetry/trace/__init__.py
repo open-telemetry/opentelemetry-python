@@ -537,7 +537,7 @@ def use_span(
                 span.set_status(
                     Status(
                         status_code=StatusCode.ERROR,
-                        description="{}: {}".format(type(exc).__name__, exc),
+                        description=f"{type(exc).__name__}: {exc}",
                     )
                 )
         raise
