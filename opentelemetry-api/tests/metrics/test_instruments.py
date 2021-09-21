@@ -337,20 +337,30 @@ class TestObservableCounter(TestCase):
                 )
 
         with self.assertLogs(level=ERROR):
-            observable_counter.callback()
+            # use list() to consume the whole generator returned by callback()
+            list(observable_counter.callback())
 
         def callback():
-            yield ChildMeasurement(1)
-            yield ChildMeasurement(-1)
+            yield [ChildMeasurement(1), ChildMeasurement(2)]
+            yield [ChildMeasurement(-1)]
 
         observable_counter = DefaultObservableCounter("name", callback())
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=ERROR):
-                observable_counter.callback()
+                list(observable_counter.callback())
 
         with self.assertLogs(level=ERROR):
-            observable_counter.callback()
+            list(observable_counter.callback())
+
+        # out of items in generator, should log once
+        with self.assertLogs(level=ERROR):
+            list(observable_counter.callback())
+
+        # but log only once
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=ERROR):
+                list(observable_counter.callback())
 
 
 class TestHistogram(TestCase):
@@ -527,7 +537,15 @@ class TestObservableGauge(TestCase):
                 observable_gauge = DefaultObservableGauge("name", callback())
 
         with self.assertLogs(level=ERROR):
-            observable_gauge.callback()
+            list(observable_gauge.callback())
+
+        def callback():
+            yield [ChildMeasurement(1), ChildMeasurement(-1)]
+
+        observable_gauge = DefaultObservableGauge("name", callback())
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=ERROR):
+                list(observable_gauge.callback())
 
 
 class TestUpDownCounter(TestCase):
