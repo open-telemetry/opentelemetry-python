@@ -16,7 +16,7 @@ class Client:
         self.loop = loop
 
     async def task(self, message, listener):
-        res = "%s::response" % message
+        res = f"{message}::response"
         listener.on_response(res)
         return res
 

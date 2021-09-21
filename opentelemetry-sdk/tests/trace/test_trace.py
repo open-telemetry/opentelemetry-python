@@ -637,10 +637,10 @@ class TestSpan(unittest.TestCase):
     def test_invalid_attribute_values(self):
         with self.tracer.start_as_current_span("root") as root:
             root.set_attributes(
-                {"correct-value": "foo", "non-primitive-data-type": dict()}
+                {"correct-value": "foo", "non-primitive-data-type": {}}
             )
 
-            root.set_attribute("non-primitive-data-type", dict())
+            root.set_attribute("non-primitive-data-type", {})
             root.set_attribute(
                 "list-of-mixed-data-types-numeric-first",
                 [123, False, "string"],
@@ -649,9 +649,7 @@ class TestSpan(unittest.TestCase):
                 "list-of-mixed-data-types-non-numeric-first",
                 [False, 123, "string"],
             )
-            root.set_attribute(
-                "list-with-non-primitive-data-type", [dict(), 123]
-            )
+            root.set_attribute("list-with-non-primitive-data-type", [{}, 123])
             root.set_attribute("list-with-numeric-and-bool", [1, True])
 
             root.set_attribute("", 123)
@@ -772,9 +770,9 @@ class TestSpan(unittest.TestCase):
 
         with self.tracer.start_as_current_span("root") as root:
             root.add_event("event0", {"attr1": True, "attr2": ["hi", False]})
-            root.add_event("event0", {"attr1": dict()})
+            root.add_event("event0", {"attr1": {}})
             root.add_event("event0", {"attr1": [[True]]})
-            root.add_event("event0", {"attr1": [dict()], "attr2": [1, 2]})
+            root.add_event("event0", {"attr1": [{}], "attr2": [1, 2]})
 
             self.assertEqual(len(root.events), 4)
             self.assertEqual(root.events[0].attributes, {"attr1": True})
@@ -1517,8 +1515,7 @@ class TestSpanLimits(unittest.TestCase):
         ]
 
         some_attrs = {
-            "init_attribute_{}".format(idx): self.long_val
-            for idx in range(100)
+            f"init_attribute_{idx}": self.long_val for idx in range(100)
         }
         with tracer.start_as_current_span(
             "root", links=some_links, attributes=some_attrs
@@ -1526,17 +1523,15 @@ class TestSpanLimits(unittest.TestCase):
             self.assertEqual(len(root.links), max_links)
             self.assertEqual(len(root.attributes), max_attrs)
             for idx in range(100):
+                root.set_attribute(f"my_str_attribute_{idx}", self.long_val)
                 root.set_attribute(
-                    "my_str_attribute_{}".format(idx), self.long_val
+                    f"my_byte_attribute_{idx}", self.long_val.encode()
                 )
                 root.set_attribute(
-                    "my_byte_attribute_{}".format(idx), self.long_val.encode()
-                )
-                root.set_attribute(
-                    "my_int_attribute_{}".format(idx), self.long_val.encode()
+                    f"my_int_attribute_{idx}", self.long_val.encode()
                 )
                 root.add_event(
-                    "my_event_{}".format(idx), attributes={"k": self.long_val}
+                    f"my_event_{idx}", attributes={"k": self.long_val}
                 )
 
             self.assertEqual(len(root.attributes), max_attrs)
@@ -1578,7 +1573,7 @@ class TestSpanLimits(unittest.TestCase):
         with tracer.start_as_current_span("root") as root:
             for idx in range(num_events):
                 root.add_event(
-                    "my_event_{}".format(idx), attributes={"k": self.long_val}
+                    f"my_event_{idx}", attributes={"k": self.long_val}
                 )
 
             self.assertEqual(len(root.events), num_events)
@@ -1588,9 +1583,7 @@ class TestSpanLimits(unittest.TestCase):
         ) + randint(1, 100)
         with tracer.start_as_current_span("root") as root:
             for idx in range(num_attributes):
-                root.set_attribute(
-                    "my_attribute_{}".format(idx), self.long_val
-                )
+                root.set_attribute(f"my_attribute_{idx}", self.long_val)
 
             self.assertEqual(len(root.attributes), num_attributes)
             for attr_val in root.attributes.values():
