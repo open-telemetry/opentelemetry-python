@@ -233,5 +233,5 @@ Additional resources
 ~~~~~~~~~~~~~~~~~~~~
 
 In order to send telemetry to an OpenTelemetry Collector without doing any
-additional configuration, read about the `OpenTelemetry Distro <../distro/README.html>`_
+additional configuration, read about the `OpenTelemetry Distro <../distro>`_
 package.
