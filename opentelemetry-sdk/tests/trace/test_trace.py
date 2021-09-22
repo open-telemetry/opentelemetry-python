@@ -1490,7 +1490,6 @@ class TestSpanLimits(unittest.TestCase):
         self.assertEqual(3, span.dropped_events)
         self.assertEqual(2, span.events[0].attributes.dropped)
         self.assertEqual(2, span.links[0].attributes.dropped)
-        self.assertEqual(2, span.resource.attributes.dropped)
 
     def _test_span_limits(
         self,
