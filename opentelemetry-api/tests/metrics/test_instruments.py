@@ -307,11 +307,11 @@ class TestObservableCounter(TestCase):
             "",
         )
 
-    def test_observable_counter_callback(self):
+    def test_observable_counter_generator(self):
         """
-        Test that the API for creating a asynchronous counter accepts a callback.
-        Test that the callback function reports measurements.
-        Test that there is a way to pass state to the callback.
+        Test that the API for creating a asynchronous counter accepts a generator.
+        Test that the generator function reports iterable of measurements.
+        Test that there is a way to pass state to the generator.
         Test that the instrument accepts positive measurements.
         Test that the instrument does not accept negative measurements.
         """
@@ -361,6 +361,42 @@ class TestObservableCounter(TestCase):
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=ERROR):
                 list(observable_counter.callback())
+
+    def test_observable_counter_callback(self):
+        """
+        Equivalent to test_observable_counter_generator but uses the callback
+        form.
+        """
+
+        def callback_invalid_return():
+            return 1
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=ERROR):
+                observable_counter = DefaultObservableCounter(
+                    "name", callback_invalid_return
+                )
+
+        with self.assertLogs(level=ERROR):
+            # use list() to consume the whole generator returned by callback()
+            list(observable_counter.callback())
+
+        def callback_valid():
+            return [ChildMeasurement(1), ChildMeasurement(2)]
+
+        observable_counter = DefaultObservableCounter("name", callback_valid)
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=ERROR):
+                list(observable_counter.callback())
+
+        def callback_one_invalid():
+            return [ChildMeasurement(1), ChildMeasurement(-2)]
+
+        observable_counter = DefaultObservableCounter("name", callback_one_invalid)
+
+        with self.assertLogs(level=ERROR):
+            list(observable_counter.callback())
 
 
 class TestHistogram(TestCase):
