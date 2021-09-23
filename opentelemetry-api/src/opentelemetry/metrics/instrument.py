@@ -44,7 +44,7 @@ class Instrument(ABC):
         return self._description
 
     @abstractmethod
-    def __init__(self, name, *args, unit="", description="", **kwargs):
+    def __init__(self, name, unit="", description=""):
 
         if name is None or self._name_regex.fullmatch(name) is None:
             _logger.error("Invalid instrument name %s", name)
