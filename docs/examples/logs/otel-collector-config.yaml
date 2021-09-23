@@ -1,0 +1,10 @@
+receivers:
+  otlp:
+    protocols:
+      grpc:
+
+exporters:
+  logging:
+
+processors:
+  batch:
