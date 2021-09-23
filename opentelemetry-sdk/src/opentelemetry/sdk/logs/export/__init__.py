@@ -16,11 +16,13 @@ import abc
 import collections
 import enum
 import logging
+import sys
 import threading
-from typing import Deque, List, Optional, Sequence
+from os import linesep
+from typing import IO, Callable, Deque, List, Optional, Sequence
 
 from opentelemetry.context import attach, detach, set_value
-from opentelemetry.sdk.logs import LogData, LogProcessor
+from opentelemetry.sdk.logs import LogData, LogProcessor, LogRecord
 from opentelemetry.util._time import _time_ns
 
 _logger = logging.getLogger(__name__)
@@ -58,6 +60,33 @@ class LogExporter(abc.ABC):
 
         Called when the SDK is shut down.
         """
+
+
+class ConsoleExporter(LogExporter):
+    """Implementation of :class:`LogExporter` that prints log records to the
+    console.
+
+    This class can be used for diagnostic purposes. It prints the exported
+    log records to the console STDOUT.
+    """
+
+    def __init__(
+        self,
+        out: IO = sys.stdout,
+        formatter: Callable[[LogRecord], str] = lambda record: record.to_json()
+        + linesep,
+    ):
+        self.out = out
+        self.formatter = formatter
+
+    def export(self, batch: Sequence[LogData]):
+        for data in batch:
+            self.out.write(self.formatter(data.log_record))
+        self.out.flush()
+        return LogExportResult.SUCCESS
+
+    def shutdown(self):
+        pass
 
 
 class SimpleLogProcessor(LogProcessor):
