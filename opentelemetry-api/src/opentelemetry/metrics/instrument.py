@@ -20,7 +20,6 @@
 from abc import ABC, abstractmethod
 from logging import getLogger
 from re import compile as compile_
-from threading import RLock
 from types import GeneratorType
 
 from opentelemetry.metrics.measurement import Measurement
@@ -46,7 +45,6 @@ class Instrument(ABC):
 
     @abstractmethod
     def __init__(self, name, *args, unit="", description="", **kwargs):
-        self._lock = RLock()
 
         if name is None or self._name_regex.fullmatch(name) is None:
             _logger.error("Invalid instrument name %s", name)
@@ -80,16 +78,15 @@ class Asynchronous(Instrument):
         self, name, callback, *args, unit="", description="", **kwargs
     ):
         super().__init__(name, *args, unit=unit, description="", **kwargs)
-        with self._lock:
 
-            if not isinstance(callback, GeneratorType):
-                _logger.error("callback must be a generator")
+        if not isinstance(callback, GeneratorType):
+            _logger.error("callback must be a generator")
 
-            else:
-                super().__init__(
-                    name, unit=unit, description=description, *args, **kwargs
-                )
-                self._callback = callback
+        else:
+            super().__init__(
+                name, unit=unit, description=description, *args, **kwargs
+            )
+            self._callback = callback
 
     @property
     def callback(self):
@@ -123,9 +120,8 @@ class _NonMonotonic(_Adding):
 class Counter(_Monotonic, Synchronous):
     @abstractmethod
     def add(self, amount, attributes=None):
-        with self._lock:
-            if amount < 0:
-                _logger.error("Amount must be non-negative")
+        if amount < 0:
+            _logger.error("Amount must be non-negative")
 
 
 class DefaultCounter(Counter):
@@ -133,15 +129,13 @@ class DefaultCounter(Counter):
         super().__init__(name, unit=unit, description=description)
 
     def add(self, amount, attributes=None):
-        with self._lock:
-            return super().add(amount, attributes=attributes)
+        return super().add(amount, attributes=attributes)
 
 
 class UpDownCounter(_NonMonotonic, Synchronous):
     @abstractmethod
     def add(self, amount, attributes=None):
-        with self._lock:
-            pass
+        pass
 
 
 class DefaultUpDownCounter(UpDownCounter):
@@ -149,8 +143,7 @@ class DefaultUpDownCounter(UpDownCounter):
         super().__init__(name, unit=unit, description=description)
 
     def add(self, amount, attributes=None):
-        with self._lock:
-            return super().add(amount, attributes=attributes)
+        return super().add(amount, attributes=attributes)
 
 
 class ObservableCounter(_Monotonic, Asynchronous):
@@ -186,8 +179,7 @@ class DefaultObservableUpDownCounter(ObservableUpDownCounter):
 class Histogram(_Grouping, Synchronous):
     @abstractmethod
     def record(self, amount, attributes=None):
-        with self._lock:
-            pass
+        pass
 
 
 class DefaultHistogram(Histogram):
@@ -195,8 +187,7 @@ class DefaultHistogram(Histogram):
         super().__init__(name, unit=unit, description=description)
 
     def record(self, amount, attributes=None):
-        with self._lock:
-            return super().record(amount, attributes=attributes)
+        return super().record(amount, attributes=attributes)
 
 
 class ObservableGauge(_Grouping, Asynchronous):
