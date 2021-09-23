@@ -25,8 +25,7 @@ class SeverityNumber(enum.Enum):
     See the `Log Data Model`_ spec for more info and how to map the
     severity from source format to OTLP Model.
 
-    .. _Log Data Model:
-    https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#field-severitynumber
+    .. _Log Data Model: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#field-severitynumber
     """
 
     UNSPECIFIED = 0
