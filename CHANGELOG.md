@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2101](https://github.com/open-telemetry/opentelemetry-python/pull/2101))
 - Fix incorrect headers parsing via environment variables
   ([#2103](https://github.com/open-telemetry/opentelemetry-python/pull/2103))
+- Add support for OTEL_ATTRIBUTE_COUNT_LIMIT
+  ([#2139](https://github.com/open-telemetry/opentelemetry-python/pull/2139))
 
 ## [1.5.0-0.24b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.5.0-0.24b0) - 2021-08-26
 

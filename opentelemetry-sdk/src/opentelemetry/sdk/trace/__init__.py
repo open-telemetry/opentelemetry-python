@@ -41,6 +41,7 @@ from opentelemetry import trace as trace_api
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk import util
 from opentelemetry.sdk.environment_variables import (
+    OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
     OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
     OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
@@ -61,11 +62,12 @@ from opentelemetry.util._time import _time_ns
 
 logger = logging.getLogger(__name__)
 
+_DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT = 128
-_DEFAULT_OTEL_SPAN_EVENT_COUNT_LIMIT = 128
-_DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT = 128
 _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT = 128
 _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT = 128
+_DEFAULT_OTEL_SPAN_EVENT_COUNT_LIMIT = 128
+_DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT = 128
 
 
 _ENV_VALUE_UNSET = ""
@@ -533,19 +535,23 @@ class SpanLimits:
     Limit precedence:
 
     - If a model specific limit is set, it will be used.
+    - Else if the corresponding global limit is set, it will be used.
     - Else if the model specific limit has a default value, the default value will be used.
-    - Else if model specific limit has a corresponding global limit, the global limit will be used.
+    - Else if the global limit has a default value, the default value will be used.
 
     Args:
         max_attributes: Maximum number of attributes that can be added to a Span.
-            Environment variable: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
-            Default: {_DEFAULT_SPAN_ATTRIBUTE_COUNT_LIMIT}
+            Environment variable: OTEL_ATTRIBUTE_COUNT_LIMIT
+            Default: {_DEFAULT_ATTRIBUTE_COUNT_LIMIT}
         max_events: Maximum number of events that can be added to a Span.
             Environment variable: OTEL_SPAN_EVENT_COUNT_LIMIT
             Default: {_DEFAULT_SPAN_EVENT_COUNT_LIMIT}
         max_links: Maximum number of links that can be added to a Span.
             Environment variable: OTEL_SPAN_LINK_COUNT_LIMIT
             Default: {_DEFAULT_SPAN_LINK_COUNT_LIMIT}
+        max_span_attributes: Maximum number of attributes that can be added to a Span.
+            Environment variable: OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT
+            Default: {_DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT}
         max_event_attributes: Maximum number of attributes that can be added to an Event.
             Default: {_DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT}
         max_link_attributes: Maximum number of attributes that can be added to a Link.
@@ -563,16 +569,14 @@ class SpanLimits:
         max_attributes: Optional[int] = None,
         max_events: Optional[int] = None,
         max_links: Optional[int] = None,
+        max_span_attributes: Optional[int] = None,
         max_event_attributes: Optional[int] = None,
         max_link_attributes: Optional[int] = None,
         max_attribute_length: Optional[int] = None,
         max_span_attribute_length: Optional[int] = None,
     ):
-        self.max_attributes = self._from_env_if_absent(
-            max_attributes,
-            OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
-            _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
-        )
+
+        # span events and links count
         self.max_events = self._from_env_if_absent(
             max_events,
             OTEL_SPAN_EVENT_COUNT_LIMIT,
@@ -583,17 +587,28 @@ class SpanLimits:
             OTEL_SPAN_LINK_COUNT_LIMIT,
             _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT,
         )
+
+        # attribute count
+        global_max_attributes = self._from_env_if_absent(max_attributes, OTEL_ATTRIBUTE_COUNT_LIMIT)
+        self.max_attributes = global_max_attributes or _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT
+
+        self.max_span_attributes = self._from_env_if_absent(
+            max_span_attributes,
+            OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+            global_max_attributes or _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+        )
         self.max_event_attributes = self._from_env_if_absent(
             max_event_attributes,
             OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
-            _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
+            global_max_attributes or _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
         )
         self.max_link_attributes = self._from_env_if_absent(
             max_link_attributes,
             OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
-            _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
+            global_max_attributes or _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
         )
 
+        # attribute length
         self.max_attribute_length = self._from_env_if_absent(
             max_attribute_length,
             OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
@@ -606,7 +621,7 @@ class SpanLimits:
         )
 
     def __repr__(self):
-        return f"{type(self).__name__}(max_span_attributes={self.max_span_attribute_length}, max_events_attributes={self.max_event_attributes}, max_link_attributes={self.max_link_attributes}, max_attributes={self.max_attributes}, max_events={self.max_events}, max_links={self.max_links}, max_attribute_length={self.max_attribute_length})"
+        return f"{type(self).__name__}(max_span_attributes={self.max_span_attributes}, max_events_attributes={self.max_event_attributes}, max_link_attributes={self.max_link_attributes}, max_attributes={self.max_attributes}, max_events={self.max_events}, max_links={self.max_links}, max_attribute_length={self.max_attribute_length})"
 
     @classmethod
     def _from_env_if_absent(
@@ -641,13 +656,14 @@ _UnsetLimits = SpanLimits(
     max_attributes=SpanLimits.UNSET,
     max_events=SpanLimits.UNSET,
     max_links=SpanLimits.UNSET,
+    max_span_attributes=SpanLimits.UNSET,
     max_event_attributes=SpanLimits.UNSET,
     max_link_attributes=SpanLimits.UNSET,
     max_attribute_length=SpanLimits.UNSET,
     max_span_attribute_length=SpanLimits.UNSET,
 )
 
-# not remove for backward compat. please use SpanLimits instead.
+# not removed for backward compat. please use SpanLimits instead.
 SPAN_ATTRIBUTE_COUNT_LIMIT = SpanLimits._from_env_if_absent(
     None,
     OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
@@ -717,7 +733,7 @@ class Span(trace_api.Span, ReadableSpan):
         self._limits = limits
         self._lock = threading.Lock()
         self._attributes = BoundedAttributes(
-            self._limits.max_attributes,
+            self._limits.max_span_attributes,
             attributes,
             immutable=False,
             max_value_len=self._limits.max_span_attribute_length,
