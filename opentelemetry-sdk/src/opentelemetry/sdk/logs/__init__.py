@@ -15,6 +15,7 @@
 import abc
 import atexit
 import concurrent.futures
+import json
 import logging
 import os
 import threading
@@ -25,8 +26,13 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.logs.severity import SeverityNumber, std_to_otlp
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.trace import get_current_span
+from opentelemetry.trace import (
+    format_span_id,
+    format_trace_id,
+    get_current_span,
+)
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._providers import _load_provider
 from opentelemetry.util._time import _time_ns
@@ -71,6 +77,25 @@ class LogRecord:
         if not isinstance(other, LogRecord):
             return NotImplemented
         return self.__dict__ == other.__dict__
+
+    def to_json(self) -> str:
+        return json.dumps(
+            {
+                "body": self.body,
+                "name": self.name,
+                "severity_number": repr(self.severity_number),
+                "severity_text": self.severity_text,
+                "attributes": self.attributes,
+                "timestamp": ns_to_iso_str(self.timestamp),
+                "trace_id": "0x{}".format(format_trace_id(self.trace_id)),
+                "span_id": "0x{}".format(format_span_id(self.span_id)),
+                "trace_flags": self.trace_flags,
+                "resource": repr(self.resource.attributes)
+                if self.resource
+                else "",
+            },
+            indent=4,
+        )
 
 
 class LogData:
