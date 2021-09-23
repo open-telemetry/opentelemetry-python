@@ -175,18 +175,18 @@ class Meter(ABC):
 
             def cpu_time_callback(states_to_include: set[str]) -> Iterable[Iterable[Measurement]]:
                 while True:
+                    measurements = []
                     with open("/proc/stat") as procstat:
                         procstat.readline()  # skip the first line
                         for line in procstat:
                             if not line.startswith("cpu"): break
                             cpu, *states = line.split()
-                            measurements = []
                             if "user" in states_to_include:
                                 measurements.append(Measurement(int(states[0]) // 100, {"cpu": cpu, "state": "user"}))
                             if "nice" in states_to_include:
                                 measurements.append(Measurement(int(states[1]) // 100, {"cpu": cpu, "state": "nice"}))
                             # ... other states
-                            yield measurements
+                    yield measurements
 
             meter.create_observable_counter(
                 "system.cpu.time",

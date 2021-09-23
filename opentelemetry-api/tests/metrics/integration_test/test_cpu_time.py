@@ -14,7 +14,7 @@
 # type: ignore
 
 import io
-from typing import Iterable
+from typing import Generator, Iterable
 from unittest import TestCase
 
 from opentelemetry.metrics import _DefaultMeter
@@ -68,7 +68,7 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
         ChildMeasurement(0, {"cpu": "cpu1", "state": "guest_nice"}),
     ]
 
-    def test_cpu_time(self):
+    def test_cpu_time_callback(self):
         meter = _DefaultMeter("foo")
 
         def cpu_time_callback() -> Iterable[Measurement]:
@@ -109,6 +109,84 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
         observable_counter = meter.create_observable_counter(
             "system.cpu.time",
             callback=cpu_time_callback,
+            unit="s",
+            description="CPU time",
+        )
+        measurements = list(observable_counter.callback())
+        self.assertEqual(measurements, self.measurements_expected)
+
+    def test_cpu_time_generator(self):
+        meter = _DefaultMeter("foo")
+
+        def cpu_time_generator() -> Generator[
+            Iterable[Measurement], None, None
+        ]:
+            while True:
+                measurements = []
+                procstat = io.StringIO(self.procstat_str)
+                procstat.readline()  # skip the first line
+                for line in procstat:
+                    if not line.startswith("cpu"):
+                        break
+                    cpu, *states = line.split()
+                    measurements.append(
+                        ChildMeasurement(
+                            int(states[0]) // 100,
+                            {"cpu": cpu, "state": "user"},
+                        )
+                    )
+                    measurements.append(
+                        ChildMeasurement(
+                            int(states[1]) // 100,
+                            {"cpu": cpu, "state": "nice"},
+                        )
+                    )
+                    measurements.append(
+                        ChildMeasurement(
+                            int(states[2]) // 100,
+                            {"cpu": cpu, "state": "system"},
+                        )
+                    )
+                    measurements.append(
+                        ChildMeasurement(
+                            int(states[3]) // 100,
+                            {"cpu": cpu, "state": "idle"},
+                        )
+                    )
+                    measurements.append(
+                        ChildMeasurement(
+                            int(states[4]) // 100,
+                            {"cpu": cpu, "state": "iowait"},
+                        )
+                    )
+                    measurements.append(
+                        ChildMeasurement(
+                            int(states[5]) // 100, {"cpu": cpu, "state": "irq"}
+                        )
+                    )
+                    measurements.append(
+                        ChildMeasurement(
+                            int(states[6]) // 100,
+                            {"cpu": cpu, "state": "softirq"},
+                        )
+                    )
+                    measurements.append(
+                        ChildMeasurement(
+                            int(states[7]) // 100,
+                            {"cpu": cpu, "state": "guest"},
+                        )
+                    )
+                    measurements.append(
+                        ChildMeasurement(
+                            int(states[8]) // 100,
+                            {"cpu": cpu, "state": "guest_nice"},
+                        )
+                    )
+                yield measurements
+
+        observable_counter = meter.create_observable_counter(
+            "system.cpu.time",
+            callback=cpu_time_generator(),
             unit="s",
             description="CPU time",
         )
