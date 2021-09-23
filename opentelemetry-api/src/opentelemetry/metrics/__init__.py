@@ -139,13 +139,13 @@ class Meter(ABC):
             def cpu_time_callback() -> Iterable[Measurement]:
                 measurements = []
                 with open("/proc/stat") as procstat:
-                    next(procstat)  # skip the first line
+                    procstat.readline()  # skip the first line
                     for line in procstat:
                         if not line.startswith("cpu"): break
                         cpu, *states = line.split()
-                        measurements.append(Measurement(states[0] / 100, {"cpu": cpu, "state": "user"}))
-                        measurements.append(Measurement(states[1] / 100, {"cpu": cpu, "state": "nice"}))
-                        measurements.append(Measurement(states[2] / 100, {"cpu": cpu, "state": "system"}))
+                        measurements.append(Measurement(int(states[0]) // 100, {"cpu": cpu, "state": "user"}))
+                        measurements.append(Measurement(int(states[1]) // 100, {"cpu": cpu, "state": "nice"}))
+                        measurements.append(Measurement(int(states[2]) // 100, {"cpu": cpu, "state": "system"}))
                         # ... other states
                 return measurements
 
@@ -161,13 +161,12 @@ class Meter(ABC):
 
             def cpu_time_callback() -> Iterable[Measurement]:
                 with open("/proc/stat") as procstat:
-                    next(procstat)
+                    procstat.readline()  # skip the first line
                     for line in procstat:
                         if not line.startswith("cpu"): break
                         cpu, *states = line.split()
-                        yield Measurement(states[0] / 100, {"cpu": cpu, "state": "user"})
-                        yield Measurement(states[1] / 100, {"cpu": cpu, "state": "nice"})
-                        yield Measurement(states[2] / 100, {"cpu": cpu, "state": "system"})
+                        yield Measurement(int(states[0]) // 100, {"cpu": cpu, "state": "user"})
+                        yield Measurement(int(states[1]) // 100, {"cpu": cpu, "state": "nice"})
                         # ... other states
 
         Alternatively, you can pass a generator directly instead of a callback,
@@ -177,15 +176,15 @@ class Meter(ABC):
             def cpu_time_callback(states_to_include: set[str]) -> Iterable[Iterable[Measurement]]:
                 while True:
                     with open("/proc/stat") as procstat:
-                        next(procstat)
+                        procstat.readline()  # skip the first line
                         for line in procstat:
                             if not line.startswith("cpu"): break
                             cpu, *states = line.split()
                             measurements = []
                             if "user" in states_to_include:
-                                measurements.append(Measurement(states[0] / 100, {"cpu": cpu, "state": "user"}))
+                                measurements.append(Measurement(int(states[0]) // 100, {"cpu": cpu, "state": "user"}))
                             if "nice" in states_to_include:
-                                measurements.append(Measurement(states[1] / 100, {"cpu": cpu, "state": "nice"}))
+                                measurements.append(Measurement(int(states[1]) // 100, {"cpu": cpu, "state": "nice"}))
                             # ... other states
                             yield measurements
 

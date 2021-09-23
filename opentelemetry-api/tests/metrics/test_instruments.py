@@ -393,7 +393,9 @@ class TestObservableCounter(TestCase):
         def callback_one_invalid():
             return [ChildMeasurement(1), ChildMeasurement(-2)]
 
-        observable_counter = DefaultObservableCounter("name", callback_one_invalid)
+        observable_counter = DefaultObservableCounter(
+            "name", callback_one_invalid
+        )
 
         with self.assertLogs(level=ERROR):
             list(observable_counter.callback())
