@@ -26,12 +26,12 @@ class BaseSafety(ABC):
             instance._init(*args, **kwargs)
 
         else:
+            warn(
+                f"{cls.__name__} should not be instantiated directly"
+            )
             instance = instance._get_no_op_class()()
 
         return instance
-
-    def __init__(self, *args, **kwargs):
-        warn(f"{self.__class__.__name__} should not be instantiated directly")
 
     @abstractmethod
     def _init(self, *args, **kwargs):

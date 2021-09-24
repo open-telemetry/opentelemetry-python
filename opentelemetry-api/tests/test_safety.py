@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from io import StringIO
 from unittest import TestCase
+from unittest.mock import patch
 from abc import ABC, abstractmethod
 
 from opentelemetry import BaseSafety, safety
@@ -97,6 +99,7 @@ class SDKTracerProvider(BaseSafety, TracerProvider):
 
 
 # Would be defined in the API
+@safety(NoOpTracerProvider())
 def get_tracer_provider() -> TracerProvider:
     # SDKTracerProvider would be loaded by entry points.
     return SDKTracerProvider.__new__(
@@ -107,15 +110,68 @@ def get_tracer_provider() -> TracerProvider:
 class TestSafety(TestCase):
 
     def test_no_direct_instantiation(self):
-        self.assertIsInstance(SDKSpan(), NoOpSpan)
-        self.assertIsInstance(SDKTracer(), NoOpTracer)
-        self.assertIsInstance(SDKTracerProvider(), NoOpTracerProvider)
+        with self.assertWarns(UserWarning):
+            self.assertIsInstance(SDKSpan(), NoOpSpan)
+
+        with self.assertWarns(UserWarning):
+            self.assertIsInstance(SDKTracer(), NoOpTracer)
+
+        with self.assertWarns(UserWarning):
+            self.assertIsInstance(SDKTracerProvider(), NoOpTracerProvider)
 
     def test_indirect_instantiation(self):
+        with self.assertRaises(AssertionError):
+            with self.assertWarns(UserWarning):
+                sdk_tracer_provider = get_tracer_provider()
+                self.assertIsInstance(sdk_tracer_provider, SDKTracerProvider)
+
+        with self.assertRaises(AssertionError):
+            with self.assertWarns(UserWarning):
+                sdk_tracer = sdk_tracer_provider.get_tracer(
+                    "instrumenting_module_name"
+                )
+                self.assertIsInstance(sdk_tracer, SDKTracer)
+
+        with self.assertRaises(AssertionError):
+            with self.assertWarns(UserWarning):
+                sdk_span = sdk_tracer.start_span("name")
+                self.assertIsInstance(sdk_span, SDKSpan)
+
+        with patch("sys.stdout", new=StringIO()) as patched_stdout:
+            sdk_span.update_name("name")
+            with self.assertRaises(AssertionError):
+                with self.assertWarns(UserWarning):
+                    self.assertEqual(
+                        patched_stdout.getvalue(),
+                        "Name has been updated to name"
+                    )
+
+    def test_wrong_arguments(self):
+        with self.assertWarns(UserWarning):
+            self.assertIsInstance(
+                get_tracer_provider("wrong_argument"),
+                NoOpTracerProvider
+            )
+
         sdk_tracer_provider = get_tracer_provider()
-        self.assertIsInstance(sdk_tracer_provider, SDKTracerProvider)
+
+        with self.assertWarns(UserWarning):
+            self.assertIsInstance(
+                sdk_tracer_provider.get_tracer(),
+                NoOpTracer
+            )
 
         sdk_tracer = sdk_tracer_provider.get_tracer(
             "instrumenting_module_name"
         )
-        self.assertIsInstance(sdk_tracer, SDKTracer)
+
+        with self.assertWarns(UserWarning):
+            self.assertIsInstance(
+                sdk_tracer.start_span(),
+                NoOpSpan
+            )
+
+        sdk_span = sdk_tracer.start_span("name")
+
+        with self.assertWarns(UserWarning):
+            self.assertIs(sdk_span.update_name(), None)
