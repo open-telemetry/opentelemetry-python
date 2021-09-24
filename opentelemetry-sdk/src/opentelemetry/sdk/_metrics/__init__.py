@@ -46,6 +46,7 @@ from opentelemetry.sdk._metrics.measurement_consumer import (
 )
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
+from opentelemetry.sdk._metrics.view import View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.util._once import Once
@@ -152,8 +153,10 @@ class MeterProvider(APIMeterProvider):
     def __init__(
         self,
         metric_readers: Sequence[MetricReader] = (),
+        views: Sequence[View] = (),
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
+        use_always_matching_view: bool = True,
     ):
         self._lock = Lock()
         self._meter_lock = Lock()
@@ -178,6 +181,24 @@ class MeterProvider(APIMeterProvider):
 
         self._shutdown_once = Once()
         self._shutdown = False
+
+        self._views = views
+
+        if use_always_matching_view:
+            self._views = (*self._views, View(instrument_name=".*"))
+
+        previous_view_names = set()
+        checked_views = []
+
+        for view in self._views:
+            if view._name is not None and view._name in previous_view_names:
+                _logger.warning("View with conflicting name has been removed")
+                continue
+
+            previous_view_names.add(view._name)
+            checked_views.append(view)
+
+        self._views = checked_views
 
     def force_flush(self) -> bool:
 
