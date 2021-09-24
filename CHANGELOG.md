@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2103](https://github.com/open-telemetry/opentelemetry-python/pull/2103))
 - `opentelemetry-exporter-otlp`: Add `opentelemetry-otlp-proto-http` as dependency
 - ([#2147](https://github.com/open-telemetry/opentelemetry-python/pull/2147))
+- Add `schema_url` to `TracerProvider.get_tracer` 
+- ([#2154](https://github.com/open-telemetry/opentelemetry-python/pull/2154))
 
 ## [1.5.0-0.24b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.5.0-0.24b0) - 2021-08-26
 
