@@ -63,12 +63,37 @@ class SDKSpan(BaseSafety, Span):
     def update_name(self, name: str) -> None:
         print(f"Name has been updated to {name}")
 
+    def _init(self, *args, **kwargs):
+        pass
+
+    def _get_no_op_class(self):
+        return NoOpSpan
+
 
 # Would be defined in the SDK
-class SDKTracer(Tracer):
+class SDKTracer(BaseSafety, Tracer):
     @safety(NoOpSpan())
     def start_span(self, name: str) -> Span:
         return SDKSpan.__new__(_allow_instantiation=True)
+
+    def _init(self, *args, **kwargs):
+        pass
+
+    def _get_no_op_class(self):
+        return NoOpTracer
+
+
+# Would be defined in the SDK
+class SDKTracerProvider(BaseSafety, TracerProvider):
+    @safety(NoOpTracer())
+    def get_tracer(self, instrumenting_module_name: str) -> Tracer:
+        return SDKTracer.__new__(_allow_instantiation=True)
+
+    def _init(self, *args, **kwargs):
+        pass
+
+    def _get_no_op_class(self):
+        return NoOpTracerProvider
 
 
 # Would be defined in the API
@@ -77,14 +102,9 @@ def get_tracer_provider() -> TracerProvider:
     return SDKTracerProvider.__new__(_allow_instantiation=True)
 
 
-# Would be defined in the SDK
-class SDKTracerProvider(TracerProvider):
-    @safety(NoOpTracer())
-    def get_tracer(self, instrumenting_module_name: str) -> Tracer:
-        return SDKTracer.__new__(_allow_instantiation=True)
-
-
 class TestSafety(TestCase):
 
     def test_safety(self):
-        pass
+        self.assertIsInstance(SDKSpan(), NoOpSpan)
+        self.assertIsInstance(SDKTracer(), NoOpTracer)
+        self.assertIsInstance(SDKTracerProvider(), NoOpTracerProvider)
