@@ -589,8 +589,12 @@ class SpanLimits:
         )
 
         # attribute count
-        global_max_attributes = self._from_env_if_absent(max_attributes, OTEL_ATTRIBUTE_COUNT_LIMIT)
-        self.max_attributes = global_max_attributes or _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT
+        global_max_attributes = self._from_env_if_absent(
+            max_attributes, OTEL_ATTRIBUTE_COUNT_LIMIT
+        )
+        self.max_attributes = (
+            global_max_attributes or _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT
+        )
 
         self.max_span_attributes = self._from_env_if_absent(
             max_span_attributes,

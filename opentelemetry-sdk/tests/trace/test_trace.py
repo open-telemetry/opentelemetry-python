@@ -1370,7 +1370,16 @@ class TestSpanLimits(unittest.TestCase):
         self.assertEqual(limits.max_span_attribute_length, 33)
 
     def test_limits_values_code(self):
-        max_attributes, max_span_attributes, max_link_attributes, max_event_attributes, max_events, max_links, max_attr_length, max_span_attr_length = (
+        (
+            max_attributes,
+            max_span_attributes,
+            max_link_attributes,
+            max_event_attributes,
+            max_events,
+            max_links,
+            max_attr_length,
+            max_span_attr_length,
+        ) = (
             randint(0, 10000),
             randint(0, 10000),
             randint(0, 10000),
@@ -1397,10 +1406,21 @@ class TestSpanLimits(unittest.TestCase):
         self.assertEqual(limits.max_event_attributes, max_event_attributes)
         self.assertEqual(limits.max_link_attributes, max_link_attributes)
         self.assertEqual(limits.max_attribute_length, max_attr_length)
-        self.assertEqual(limits.max_span_attribute_length, max_span_attr_length)
+        self.assertEqual(
+            limits.max_span_attribute_length, max_span_attr_length
+        )
 
     def test_limits_values_env(self):
-        max_attributes, max_span_attributes, max_link_attributes, max_event_attributes, max_events, max_links, max_attr_length, max_span_attr_length = (
+        (
+            max_attributes,
+            max_span_attributes,
+            max_link_attributes,
+            max_event_attributes,
+            max_events,
+            max_links,
+            max_attr_length,
+            max_span_attr_length,
+        ) = (
             randint(0, 10000),
             randint(0, 10000),
             randint(0, 10000),
@@ -1420,7 +1440,9 @@ class TestSpanLimits(unittest.TestCase):
                 OTEL_SPAN_EVENT_COUNT_LIMIT: str(max_events),
                 OTEL_SPAN_LINK_COUNT_LIMIT: str(max_links),
                 OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT: str(max_attr_length),
-                OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT: str(max_span_attr_length),
+                OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT: str(
+                    max_span_attr_length
+                ),
             },
         ):
             limits = trace.SpanLimits()
@@ -1431,7 +1453,9 @@ class TestSpanLimits(unittest.TestCase):
             self.assertEqual(limits.max_event_attributes, max_event_attributes)
             self.assertEqual(limits.max_link_attributes, max_link_attributes)
             self.assertEqual(limits.max_attribute_length, max_attr_length)
-            self.assertEqual(limits.max_span_attribute_length, max_span_attr_length)
+            self.assertEqual(
+                limits.max_span_attribute_length, max_span_attr_length
+            )
 
     @mock.patch.dict(
         "os.environ",
