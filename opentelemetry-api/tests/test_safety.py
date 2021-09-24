@@ -12,12 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from abc import ABC, abstractmethod
 from io import StringIO
 from unittest import TestCase
 from unittest.mock import patch
-from abc import ABC, abstractmethod
 
-from opentelemetry import BaseSafety, safety
+from opentelemetry.safety import BaseSafety, safety
 
 
 # Would be defined in the API
@@ -55,6 +55,7 @@ class TracerProvider(ABC):
 
 # Would be defined in the API
 class NoOpTracerProvider:
+    # pylint: disable=no-self-use
     def get_tracer(self, instrumenting_module_name: str) -> Tracer:
         return NoOpTracer()
 
@@ -108,7 +109,6 @@ def get_tracer_provider() -> TracerProvider:
 
 
 class TestSafety(TestCase):
-
     def test_no_direct_instantiation(self):
         with self.assertWarns(UserWarning):
             self.assertIsInstance(SDKSpan(), NoOpSpan)
@@ -143,33 +143,29 @@ class TestSafety(TestCase):
                 with self.assertWarns(UserWarning):
                     self.assertEqual(
                         patched_stdout.getvalue(),
-                        "Name has been updated to name"
+                        "Name has been updated to name",
                     )
 
     def test_wrong_arguments(self):
         with self.assertWarns(UserWarning):
             self.assertIsInstance(
+                # pylint: disable=too-many-function-args
                 get_tracer_provider("wrong_argument"),
-                NoOpTracerProvider
+                NoOpTracerProvider,
             )
 
         sdk_tracer_provider = get_tracer_provider()
 
+        # pylint: disable=no-value-for-parameter
         with self.assertWarns(UserWarning):
-            self.assertIsInstance(
-                sdk_tracer_provider.get_tracer(),
-                NoOpTracer
-            )
+            self.assertIsInstance(sdk_tracer_provider.get_tracer(), NoOpTracer)
 
         sdk_tracer = sdk_tracer_provider.get_tracer(
             "instrumenting_module_name"
         )
 
         with self.assertWarns(UserWarning):
-            self.assertIsInstance(
-                sdk_tracer.start_span(),
-                NoOpSpan
-            )
+            self.assertIsInstance(sdk_tracer.start_span(), NoOpSpan)
 
         sdk_span = sdk_tracer.start_span("name")
 

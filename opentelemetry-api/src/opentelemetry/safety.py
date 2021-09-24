@@ -13,12 +13,11 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from warnings import warn
 from functools import wraps
+from warnings import warn
 
 
 class BaseSafety(ABC):
-
     def __new__(cls, *args, _allow_instantiation=False, **kwargs):
 
         instance = object.__new__(cls)
@@ -26,9 +25,7 @@ class BaseSafety(ABC):
             instance._init(*args, **kwargs)
 
         else:
-            warn(
-                f"{cls.__name__} should not be instantiated directly"
-            )
+            warn(f"{cls.__name__} should not be instantiated directly")
             instance = instance._get_no_op_class()()
 
         return instance
@@ -44,14 +41,15 @@ class BaseSafety(ABC):
 
 def safety(no_op_return):
     def internal(function):
-
         @wraps(function)
         def wrapper(*args, **kwargs):
             try:
                 return function(*args, **kwargs)
-            except Exception as error:
+            except Exception as error:  # pylint: disable=broad-except
                 warn(error)
 
                 return no_op_return
+
         return wrapper
+
     return internal
