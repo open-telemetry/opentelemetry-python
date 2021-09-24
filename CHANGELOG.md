@@ -12,12 +12,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2096](https://github.com/open-telemetry/opentelemetry-python/pull/2096))
 - Fix propagation bug caused by counting skipped entries
   ([#2071](https://github.com/open-telemetry/opentelemetry-python/pull/2071))
+- Add entry point for exporters with default protocol
+  ([#2093](https://github.com/open-telemetry/opentelemetry-python/pull/2093))
 - Do not skip sequence attribute on decode error
   ([#2097](https://github.com/open-telemetry/opentelemetry-python/pull/2097))
 - `opentelemetry-test`: Add `HttpTestBase` to allow tests with actual TCP sockets
   ([#2101](https://github.com/open-telemetry/opentelemetry-python/pull/2101))
 - Fix incorrect headers parsing via environment variables
   ([#2103](https://github.com/open-telemetry/opentelemetry-python/pull/2103))
+- `opentelemetry-exporter-otlp`: Add `opentelemetry-otlp-proto-http` as dependency
+- ([#2147](https://github.com/open-telemetry/opentelemetry-python/pull/2147))
 
 ## [1.5.0-0.24b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.5.0-0.24b0) - 2021-08-26
 

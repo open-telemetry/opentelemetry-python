@@ -109,7 +109,7 @@ def _import_exporters(
         exporter_name,
         exporter_impl,
     ) in _import_tracer_provider_config_components(
-        exporter_names, "opentelemetry_exporter"
+        exporter_names, "opentelemetry_traces_exporter"
     ):
         if issubclass(exporter_impl, SpanExporter):
             trace_exporters[exporter_name] = exporter_impl
