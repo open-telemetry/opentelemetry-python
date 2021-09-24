@@ -35,7 +35,8 @@ class Aggregation(ABC):
     @abstractmethod
     def make_point_and_reset(self):
         """
-        Atomically return a point for the current value of the metric and reset the internal state.
+        Atomically return a point for the current value of the metric and reset
+        the internal state.
         """
 
 

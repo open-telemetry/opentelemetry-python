@@ -21,8 +21,8 @@ from opentelemetry.sdk._metrics import (
     ConsoleMetricExporter,
     MeterProvider,
     SDKMetricReader,
-    View,
 )
+from opentelemetry.sdk._metrics.view import View
 from opentelemetry.sdk.resources import Resource
 
 
@@ -90,42 +90,19 @@ class TestMeterProvider(TestCase):
 
     def test_register_view(self):
         """ "
-        `MeterProvider` provides a way to configure `View`s.
+        `MeterProvider` provides a way to register `View`s.
         """
 
-        meter_provider = MeterProvider()
+        view_0 = View(instrument_name="instrument_name")
+        view_1 = View(instrument_name="instrument_name")
 
-        self.assertTrue(hasattr(meter_provider, "register_view"))
-
-        view = View()
-
-        meter_provider.register_view(view)
-
-        self.assertTrue(meter_provider._views, [view])
-
-    def test_meter_configuration(self):
-        """
-        Any updated configuration is applied to all returned `Meter`s.
-        """
-
-        meter_provider = MeterProvider()
-
-        view_0 = View()
-
-        meter_provider.register_view(view_0)
+        meter_provider = MeterProvider(views=[view_0, view_1])
 
         meter_0 = meter_provider.get_meter("meter_0")
         meter_1 = meter_provider.get_meter("meter_1")
 
-        self.assertEqual(meter_0._meter_provider._views, [view_0])
-        self.assertEqual(meter_1._meter_provider._views, [view_0])
-
-        view_1 = View()
-
-        meter_provider.register_view(view_1)
-
-        self.assertEqual(meter_0._meter_provider._views, [view_0, view_1])
-        self.assertEqual(meter_1._meter_provider._views, [view_0, view_1])
+        self.assertEqual(meter_0._meter_provider._views[0], view_0)
+        self.assertEqual(meter_1._meter_provider._views[1], view_1)
 
     def test_shutdown_subsequent_calls(self):
         """

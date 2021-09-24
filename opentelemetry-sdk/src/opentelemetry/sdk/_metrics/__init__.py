@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=function-redefined,too-many-ancestors
+# pylint: disable=protected-access
 
 from abc import ABC, abstractmethod
 from atexit import register, unregister
@@ -22,14 +22,27 @@ from typing import Optional
 from opentelemetry._metrics import Meter as APIMeter
 from opentelemetry._metrics import MeterProvider as APIMeterProvider
 from opentelemetry._metrics import _DefaultMeter
+from opentelemetry._metrics.instrument import Counter as APICounter
+from opentelemetry._metrics.instrument import Histogram as APIHistogram
 from opentelemetry._metrics.instrument import (
+    ObservableCounter as APIObservableCounter,
+)
+from opentelemetry._metrics.instrument import (
+    ObservableGauge as APIObservableGauge,
+)
+from opentelemetry._metrics.instrument import (
+    ObservableUpDownCounter as APIObservableUpDownCounter,
+)
+from opentelemetry._metrics.instrument import Synchronous
+from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
+from opentelemetry.sdk._metrics.instrument import (
     Counter,
     Histogram,
     ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
     UpDownCounter,
+    _ViewInstrument,
 )
+from opentelemetry.sdk._metrics.view import View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
@@ -46,35 +59,63 @@ class Meter(APIMeter):
         self._instrumentation_info = instrumentation_info
         self._meter_provider = meter_provider
 
-    def create_counter(self, name, unit=None, description=None) -> Counter:
-        # FIXME implement this method
-        pass
+    def _initialize_instrument(self, instrument):
+
+        for view in self._meter_provider._views:
+
+            if view._matches_instrument(instrument):
+
+                instrument._view_instruments.append(
+                    _ViewInstrument(
+                        view._name or instrument._name,
+                        view._unit or instrument._unit,
+                        view._description or instrument._description,
+                        view._attribute_keys,
+                        (
+                            view._extra_dimensions
+                            if isinstance(instrument, Synchronous)
+                            else None
+                        ),
+                        view._aggregation or instrument._default_aggregation,
+                        view._exemplar_reservoir,
+                    )
+                )
+
+    def create_counter(self, name, unit=None, description=None) -> APICounter:
+        return self._initialize_instrument(
+            Counter(name, unit=unit, description=description)
+        )
 
     def create_up_down_counter(
         self, name, unit=None, description=None
-    ) -> UpDownCounter:
-        # FIXME implement this method
-        pass
+    ) -> APIUpDownCounter:
+        return self._initialize_instrument(
+            UpDownCounter(name, unit=unit, description=description)
+        )
 
     def create_observable_counter(
         self, name, callback, unit=None, description=None
-    ) -> ObservableCounter:
-        # FIXME implement this method
-        pass
+    ) -> APIObservableCounter:
+        return self._initialize_instrument(
+            ObservableCounter(name, unit=unit, description=description)
+        )
 
-    def create_histogram(self, name, unit=None, description=None) -> Histogram:
-        # FIXME implement this method
-        pass
+    def create_histogram(
+        self, name, unit=None, description=None
+    ) -> APIHistogram:
+        return self._initialize_instrument(
+            Histogram(name, unit=unit, description=description)
+        )
 
     def create_observable_gauge(
         self, name, callback, unit=None, description=None
-    ) -> ObservableGauge:
+    ) -> APIObservableGauge:
         # FIXME implement this method
         pass
 
     def create_observable_up_down_counter(
         self, name, callback, unit=None, description=None
-    ) -> ObservableUpDownCounter:
+    ) -> APIObservableUpDownCounter:
         # FIXME implement this method
         pass
 
@@ -86,6 +127,8 @@ class MeterProvider(APIMeterProvider):
         self,
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
+        views=None,
+        use_always_matching_view=True,
     ):
         self._resource = resource
         self._atexit_handler = None
@@ -95,7 +138,16 @@ class MeterProvider(APIMeterProvider):
 
         self._metric_readers = []
         self._metric_exporters = []
-        self._views = []
+
+        if views is None:
+            self._views = []
+
+        else:
+            self._views = views
+
+        if use_always_matching_view:
+            self._views.append(View(instrument_name=".*"))
+
         self._shutdown = False
 
     def get_meter(
@@ -171,10 +223,6 @@ class MeterProvider(APIMeterProvider):
         # FIXME protect this method against race conditions
         self._metric_exporters.append(metric_exporter)
 
-    def register_view(self, view: "View") -> None:
-        # FIXME protect this method against race conditions
-        self._views.append(view)
-
 
 class MetricReader(ABC):
     def __init__(self):
@@ -200,10 +248,6 @@ class MetricExporter(ABC):
     def shutdown(self):
         # FIXME this will need a Once wrapper
         self._shutdown = True
-
-
-class View:
-    pass
 
 
 class ConsoleMetricExporter(MetricExporter):

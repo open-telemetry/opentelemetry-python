@@ -19,14 +19,18 @@
 # all instances. Implementations of these classes must not make any change to
 # this default dictionary in __init__.
 
+from opentelemetry._metrics.instrument import Counter as APICounter
+from opentelemetry._metrics.instrument import Histogram as APIHistogram
 from opentelemetry._metrics.instrument import (
-    Counter,
-    Histogram,
-    ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
-    UpDownCounter,
+    ObservableCounter as APIObservableCounter,
 )
+from opentelemetry._metrics.instrument import (
+    ObservableGauge as APIObservableGauge,
+)
+from opentelemetry._metrics.instrument import (
+    ObservableUpDownCounter as APIObservableUpDownCounter,
+)
+from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
 from opentelemetry.sdk._metrics.aggregation import (
     ExplicitBucketHistogramAggregation,
     LastValueAggregation,
@@ -35,126 +39,94 @@ from opentelemetry.sdk._metrics.aggregation import (
 
 
 class _Instrument:
+    def __init__(self, name, unit="", description=""):
+
+        super().__init__(name, unit=unit, description=description)
+
+        self._view_instruments = []
+
+    def _instrument(self, amount, attributes):
+
+        for view_instrument in self._view_instruments:
+
+            view_instrument.instrument(amount, attributes)
+
+
+class _ViewInstrument:
     def __init__(
         self,
         name,
-        unit="",
-        description="",
-        aggregation=None,
-        aggregation_config={},
+        unit,
+        description,
+        attribute_keys,
+        extra_dimensions,
+        aggregation,
+        exemplar_reservoir,
     ):
-        self._attributes_aggregations = {}
+
+        self._name = name
+        self._unit = unit
+        self._description = description
+        if attribute_keys is None:
+            self._attribute_keys = set()
+        else:
+            self._attribute_keys = set(attribute_keys)
+        if extra_dimensions is not None:
+            self._extra_dimensions = extra_dimensions
         self._aggregation = aggregation
-        self._aggregation_config = aggregation_config
-        aggregation(self, **aggregation_config)
+        self._exemplar_reservoir = exemplar_reservoir
 
+        self._attributes_aggregation = {}
 
-class Counter(_Instrument, Counter):
-    def __init__(
-        self,
-        name,
-        unit="",
-        description="",
-        aggregation=SumAggregation,
-        aggregation_config={},
-    ):
-        super().__init__(
-            name,
-            unit=unit,
-            description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
+    def instrument(self, amount, attributes):
+
+        attributes = frozenset(
+            set(attributes).difference(self._attribute_keys)
         )
 
+        if attributes not in self._attributes_aggregation.keys():
+            self._attributes_aggregation[attributes] = self._aggregation()
 
-class UpDownCounter(_Instrument, UpDownCounter):
-    def __init__(
-        self,
-        name,
-        unit="",
-        description="",
-        aggregation=SumAggregation,
-        aggregation_config={},
-    ):
-        super().__init__(
-            name,
-            unit=unit,
-            description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
-        )
+        self._attributes_aggregation[attributes].aggregate(amount)
 
 
-class ObservableCounter(_Instrument, ObservableCounter):
-    def __init__(
-        self,
-        name,
-        callback,
-        unit="",
-        description="",
-        aggregation=SumAggregation,
-        aggregation_config={},
-    ):
-        super().__init__(
-            name,
-            unit=unit,
-            description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
-        )
+class Counter(_Instrument, APICounter):
+
+    _default_aggregation = SumAggregation
+
+    def add(self, amount, attributes={}):
+        if amount < 0:
+            raise Exception("amount must be positive")
+
+        self._instrument(amount, attributes)
 
 
-class ObservableUpDownCounter(_Instrument, ObservableUpDownCounter):
-    def __init__(
-        self,
-        name,
-        callback,
-        unit="",
-        description="",
-        aggregation=SumAggregation,
-        aggregation_config={},
-    ):
-        super().__init__(
-            name,
-            unit=unit,
-            description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
-        )
+class UpDownCounter(_Instrument, APIUpDownCounter):
+
+    _default_aggregation = SumAggregation
+
+    def add(self, amount, attributes={}):
+        self._instrument(amount, attributes)
 
 
-class Histogram(_Instrument, Histogram):
-    def __init__(
-        self,
-        name,
-        unit="",
-        description="",
-        aggregation=ExplicitBucketHistogramAggregation,
-        aggregation_config={},
-    ):
-        super().__init__(
-            name,
-            unit=unit,
-            description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
-        )
+class ObservableCounter(_Instrument, APIObservableCounter):
+
+    _default_aggregation = SumAggregation
 
 
-class ObservableGauge(_Instrument, ObservableGauge):
-    def __init__(
-        self,
-        name,
-        callback,
-        unit="",
-        description="",
-        aggregation=LastValueAggregation,
-        aggregation_config={},
-    ):
-        super().__init__(
-            name,
-            unit=unit,
-            description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
-        )
+class ObservableUpDownCounter(_Instrument, APIObservableUpDownCounter):
+
+    _default_aggregation = SumAggregation
+
+
+class Histogram(_Instrument, APIHistogram):
+
+    _default_aggregation = ExplicitBucketHistogramAggregation
+
+    def record(self, amount, attributes={}):
+        self._instrument(amount, attributes)
+
+
+class ObservableGauge(_Instrument, APIObservableGauge):
+
+    _default_aggregation = LastValueAggregation
