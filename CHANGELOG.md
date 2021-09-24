@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2182](https://github.com/open-telemetry/opentelemetry-python/pull/2182))
 - Automatically load OTEL environment variables as options for `opentelemetry-instrument`
   ([#1969](https://github.com/open-telemetry/opentelemetry-python/pull/1969))
+- Add class and function safety mechanisms
+  ([#2152](https://github.com/open-telemetry/opentelemetry-python/pull/2152))
 - `opentelemetry-semantic-conventions` Update to semantic conventions v1.6.1
   ([#2077](https://github.com/open-telemetry/opentelemetry-python/pull/2077))
 - Do not count invalid attributes for dropped
