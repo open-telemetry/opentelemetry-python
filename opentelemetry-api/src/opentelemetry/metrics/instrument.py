@@ -16,13 +16,18 @@
 
 # type: ignore
 
-
 from abc import ABC, abstractmethod
+from collections import abc as collections_abc
 from logging import getLogger
 from re import compile as compile_
-from types import GeneratorType
+from typing import Callable, Generator, Iterable, Union
 
 from opentelemetry.metrics.measurement import Measurement
+
+_TInstrumentCallback = Callable[[], Iterable[Measurement]]
+_TInstrumentCallbackGenerator = Generator[Iterable[Measurement], None, None]
+TCallback = Union[_TInstrumentCallback, _TInstrumentCallbackGenerator]
+
 
 _logger = getLogger(__name__)
 
@@ -75,30 +80,65 @@ class Synchronous(Instrument):
 class Asynchronous(Instrument):
     @abstractmethod
     def __init__(
-        self, name, callback, *args, unit="", description="", **kwargs
+        self,
+        name,
+        callback: TCallback,
+        *args,
+        unit="",
+        description="",
+        **kwargs
     ):
-        super().__init__(name, *args, unit=unit, description="", **kwargs)
+        super().__init__(
+            name, *args, unit=unit, description=description, **kwargs
+        )
 
-        if not isinstance(callback, GeneratorType):
-            _logger.error("callback must be a generator")
-
-        else:
-            super().__init__(
-                name, unit=unit, description=description, *args, **kwargs
-            )
+        if isinstance(callback, collections_abc.Callable):
             self._callback = callback
+        elif isinstance(callback, collections_abc.Generator):
+            self._callback = self._wrap_generator_callback(callback)
+        else:
+            _logger.error("callback must be a callable or generator")
 
-    @property
+    def _wrap_generator_callback(
+        self,
+        generator_callback: _TInstrumentCallbackGenerator,
+    ) -> _TInstrumentCallback:
+        """Wraps a generator style callback into a callable one"""
+        has_items = True
+
+        def inner() -> Iterable[Measurement]:
+            nonlocal has_items
+            if not has_items:
+                return []
+
+            try:
+                return next(generator_callback)
+            except StopIteration:
+                has_items = False
+                _logger.error(
+                    "callback generator for instrument %s ran out of measurements",
+                    self._name,
+                )
+                return []
+
+        return inner
+
     def callback(self):
-        def function():
-            measurement = next(self._callback)
+        measurements = self._callback()
+        if not isinstance(measurements, collections_abc.Iterable):
+            _logger.error(
+                "Callback must return an iterable of Measurement, got %s",
+                type(measurements),
+            )
+            return
+        for measurement in measurements:
             if not isinstance(measurement, Measurement):
-                _logger.error("Callback must return a Measurement")
-                return None
-
-            return measurement
-
-        return function
+                _logger.error(
+                    "Callback must return an iterable of Measurement, "
+                    "iterable contained type %s",
+                    type(measurement),
+                )
+            yield measurement
 
 
 class _Adding(Instrument):
@@ -147,18 +187,13 @@ class DefaultUpDownCounter(UpDownCounter):
 
 
 class ObservableCounter(_Monotonic, Asynchronous):
-    @property
     def callback(self):
-        def function():
-            measurement = super(ObservableCounter, self).callback()
+        measurements = super().callback()
 
-            if measurement is not None and measurement.value < 0:
+        for measurement in measurements:
+            if measurement.value < 0:
                 _logger.error("Amount must be non-negative")
-                return None
-
-            return measurement
-
-        return function
+            yield measurement
 
 
 class DefaultObservableCounter(ObservableCounter):
