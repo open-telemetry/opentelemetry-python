@@ -124,21 +124,6 @@ class TestGetMeter(TestCase):
 
         self.assertEqual(meter.name, None)
 
-    def test_new_configuration(self):
-        """
-        Test that new configuration applies to previously returned meters.
-        """
-
-        # Configuration is to be stored in the MeterProvider. It is not
-        # specified exactly how it will be stored, but it is enough for the
-        # meter to have access to the meter provider to get configuration
-        # changes automatically.
-
-        meter_provider = _DefaultMeterProvider()
-        self.assertIs(
-            meter_provider.get_meter("name")._meter_provider, meter_provider
-        )
-
 
 class MockProvider(_DefaultMeterProvider):
     def get_meter(self, name, version=None, schema_url=None):
