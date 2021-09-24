@@ -74,7 +74,7 @@ class SDKSpan(BaseSafety, Span):
 class SDKTracer(BaseSafety, Tracer):
     @safety(NoOpSpan())
     def start_span(self, name: str) -> Span:
-        return SDKSpan.__new__(_allow_instantiation=True)
+        return SDKSpan.__new__(SDKSpan, _allow_instantiation=True)
 
     def _init(self, *args, **kwargs):
         pass
@@ -87,7 +87,7 @@ class SDKTracer(BaseSafety, Tracer):
 class SDKTracerProvider(BaseSafety, TracerProvider):
     @safety(NoOpTracer())
     def get_tracer(self, instrumenting_module_name: str) -> Tracer:
-        return SDKTracer.__new__(_allow_instantiation=True)
+        return SDKTracer.__new__(SDKTracer, _allow_instantiation=True)
 
     def _init(self, *args, **kwargs):
         pass
@@ -99,12 +99,23 @@ class SDKTracerProvider(BaseSafety, TracerProvider):
 # Would be defined in the API
 def get_tracer_provider() -> TracerProvider:
     # SDKTracerProvider would be loaded by entry points.
-    return SDKTracerProvider.__new__(_allow_instantiation=True)
+    return SDKTracerProvider.__new__(
+        SDKTracerProvider, _allow_instantiation=True
+    )
 
 
 class TestSafety(TestCase):
 
-    def test_safety(self):
+    def test_no_direct_instantiation(self):
         self.assertIsInstance(SDKSpan(), NoOpSpan)
         self.assertIsInstance(SDKTracer(), NoOpTracer)
         self.assertIsInstance(SDKTracerProvider(), NoOpTracerProvider)
+
+    def test_indirect_instantiation(self):
+        sdk_tracer_provider = get_tracer_provider()
+        self.assertIsInstance(sdk_tracer_provider, SDKTracerProvider)
+
+        sdk_tracer = sdk_tracer_provider.get_tracer(
+            "instrumenting_module_name"
+        )
+        self.assertIsInstance(sdk_tracer, SDKTracer)
