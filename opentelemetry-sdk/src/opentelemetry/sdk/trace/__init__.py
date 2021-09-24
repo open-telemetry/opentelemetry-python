@@ -540,7 +540,7 @@ class SpanLimits:
     - Else if the global limit has a default value, the default value will be used.
 
     Args:
-        max_attributes: Maximum number of attributes that can be added to a Span.
+        max_attributes: Maximum number of attributes that can be added to a span, event, and link.
             Environment variable: OTEL_ATTRIBUTE_COUNT_LIMIT
             Default: {_DEFAULT_ATTRIBUTE_COUNT_LIMIT}
         max_events: Maximum number of events that can be added to a Span.
