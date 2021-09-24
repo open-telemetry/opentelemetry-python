@@ -418,7 +418,7 @@ class CommonEncoderTestCases:
                 parent=None,
                 resource=trace.Resource({}),
                 instrumentation_info=InstrumentationInfo(
-                    name="name", version="version"
+                    name="name", version="version", schema_url="schema_url"
                 ),
             )
             span4.start(start_time=start_times[3])

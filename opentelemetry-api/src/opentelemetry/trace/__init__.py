@@ -75,6 +75,7 @@ either implicit or explicit context propagation consistently throughout.
 
 
 import os
+import typing
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from enum import Enum
@@ -187,6 +188,7 @@ class TracerProvider(ABC):
         self,
         instrumenting_module_name: str,
         instrumenting_library_version: str = "",
+        schema_url: typing.Optional[str] = None,
     ) -> "Tracer":
         """Returns a `Tracer` for use by the given instrumentation library.
 
@@ -208,6 +210,8 @@ class TracerProvider(ABC):
             instrumenting_library_version: Optional. The version string of the
                 instrumenting library.  Usually this should be the same as
                 ``pkg_resources.get_distribution(instrumenting_library_name).version``.
+
+            schema_url: Optional. Specifies the Schema URL of the emitted telemetry.
         """
 
 
@@ -221,6 +225,7 @@ class _DefaultTracerProvider(TracerProvider):
         self,
         instrumenting_module_name: str,
         instrumenting_library_version: str = "",
+        schema_url: typing.Optional[str] = None,
     ) -> "Tracer":
         # pylint:disable=no-self-use,unused-argument
         return _DefaultTracer()
@@ -231,13 +236,16 @@ class ProxyTracerProvider(TracerProvider):
         self,
         instrumenting_module_name: str,
         instrumenting_library_version: str = "",
+        schema_url: typing.Optional[str] = None,
     ) -> "Tracer":
+        if schema_url is None:
+            schema_url = ""
         if _TRACER_PROVIDER:
             return _TRACER_PROVIDER.get_tracer(
-                instrumenting_module_name, instrumenting_library_version
+                instrumenting_module_name, instrumenting_library_version, schema_url
             )
         return ProxyTracer(
-            instrumenting_module_name, instrumenting_library_version
+            instrumenting_module_name, instrumenting_library_version, schema_url
         )
 
 
@@ -376,9 +384,11 @@ class ProxyTracer(Tracer):
         self,
         instrumenting_module_name: str,
         instrumenting_library_version: str,
+        schema_url: str,
     ):
         self._instrumenting_module_name = instrumenting_module_name
         self._instrumenting_library_version = instrumenting_library_version
+        self._schema_url = schema_url
         self._real_tracer: Optional[Tracer] = None
         self._noop_tracer = _DefaultTracer()
 
@@ -391,6 +401,7 @@ class ProxyTracer(Tracer):
             self._real_tracer = _TRACER_PROVIDER.get_tracer(
                 self._instrumenting_module_name,
                 self._instrumenting_library_version,
+                self._schema_url
             )
             return self._real_tracer
         return self._noop_tracer
@@ -447,6 +458,7 @@ def get_tracer(
     instrumenting_module_name: str,
     instrumenting_library_version: str = "",
     tracer_provider: Optional[TracerProvider] = None,
+    schema_url: typing.Optional[str] = None,
 ) -> "Tracer":
     """Returns a `Tracer` for use by the given instrumentation library.
 
@@ -455,10 +467,12 @@ def get_tracer(
 
     If tracer_provider is omitted the current configured one is used.
     """
+    if schema_url is None:
+        schema_url = ""
     if tracer_provider is None:
         tracer_provider = get_tracer_provider()
     return tracer_provider.get_tracer(
-        instrumenting_module_name, instrumenting_library_version
+        instrumenting_module_name, instrumenting_library_version, schema_url
     )
 
 

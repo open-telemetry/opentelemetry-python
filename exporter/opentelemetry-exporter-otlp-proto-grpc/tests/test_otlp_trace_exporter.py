@@ -172,7 +172,7 @@ class TestOTLPSpanExporter(TestCase):
                 )
             ],
             instrumentation_info=InstrumentationInfo(
-                name="name", version="version"
+                name="name", version="version", schema_url="schema_url"
             ),
         )
 
@@ -188,7 +188,7 @@ class TestOTLPSpanExporter(TestCase):
             resource=SDKResource(OrderedDict([("a", 2), ("b", False)])),
             parent=Mock(**{"span_id": 12345}),
             instrumentation_info=InstrumentationInfo(
-                name="name", version="version"
+                name="name", version="version", schema_url="schema_url"
             ),
         )
 
@@ -204,7 +204,7 @@ class TestOTLPSpanExporter(TestCase):
             resource=SDKResource(OrderedDict([("a", 1), ("b", False)])),
             parent=Mock(**{"span_id": 12345}),
             instrumentation_info=InstrumentationInfo(
-                name="name2", version="version2"
+                name="name2", version="version2", schema_url="schema_url2"
             ),
         )
 
@@ -871,7 +871,7 @@ def _create_span_with_status(status: SDKStatus):
         ),
         parent=Mock(**{"span_id": 12345}),
         instrumentation_info=InstrumentationInfo(
-            name="name", version="version"
+            name="name", version="version", schema_url="schema_url"
         ),
     )
     span.set_status(status)

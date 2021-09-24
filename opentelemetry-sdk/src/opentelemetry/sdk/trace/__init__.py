@@ -20,6 +20,7 @@ import json
 import logging
 import threading
 import traceback
+import typing
 from collections import OrderedDict
 from contextlib import contextmanager
 from os import environ
@@ -1085,17 +1086,20 @@ class TracerProvider(trace_api.TracerProvider):
         self,
         instrumenting_module_name: str,
         instrumenting_library_version: str = "",
+        schema_url: typing.Optional[str] = None,
     ) -> "trace_api.Tracer":
         if not instrumenting_module_name:  # Reject empty strings too.
             instrumenting_module_name = ""
             logger.error("get_tracer called with missing module name.")
+        if schema_url is None:
+            schema_url = ""
         return Tracer(
             self.sampler,
             self.resource,
             self._active_span_processor,
             self.id_generator,
             InstrumentationInfo(
-                instrumenting_module_name, instrumenting_library_version
+                instrumenting_module_name, instrumenting_library_version, schema_url
             ),
             self._span_limits,
         )
