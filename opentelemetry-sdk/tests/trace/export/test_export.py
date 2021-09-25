@@ -366,7 +366,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
         )
         span_processor = export.BatchSpanProcessor(
             my_exporter,
-            schedule_delay_millis=50,
+            schedule_delay_millis=200,
         )
 
         # create single span
@@ -376,7 +376,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
         self.assertTrue(export_event.wait(2))
         export_time = time.time()
         self.assertEqual(len(spans_names_list), 1)
-        self.assertGreaterEqual((export_time - start_time) * 1e3, 50)
+        self.assertGreaterEqual((export_time - start_time) * 1e3, 200)
 
         span_processor.shutdown()
 
