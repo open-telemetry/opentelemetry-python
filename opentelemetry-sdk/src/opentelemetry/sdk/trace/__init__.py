@@ -1069,11 +1069,6 @@ class TracerProvider(trace_api.TracerProvider):
         self._span_limits = span_limits or SpanLimits()
         self._atexit_handler = None
 
-        self._resource._attributes = BoundedAttributes(
-            self._span_limits.max_attributes,
-            self._resource._attributes,
-            max_value_len=self._span_limits.max_attribute_length,
-        )
         if shutdown_on_exit:
             self._atexit_handler = atexit.register(self.shutdown)
 
