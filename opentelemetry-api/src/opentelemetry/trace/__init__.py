@@ -399,7 +399,7 @@ class ProxyTracer(Tracer):
             self._real_tracer = _TRACER_PROVIDER.get_tracer(
                 self._instrumenting_module_name,
                 self._instrumenting_library_version,
-                self._schema_url
+                self._schema_url,
             )
             return self._real_tracer
         return self._noop_tracer
