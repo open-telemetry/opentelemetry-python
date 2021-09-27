@@ -10,22 +10,23 @@ from ..utils import get_one_by_tag
 from .response_listener import ResponseListener
 
 
+async def task(message, listener):
+    res = f"{message}::response"
+    listener.on_response(res)
+    return res
+
+
 class Client:
     def __init__(self, tracer, loop):
         self.tracer = tracer
         self.loop = loop
-
-    async def task(self, message, listener):
-        res = f"{message}::response"
-        listener.on_response(res)
-        return res
 
     def send_sync(self, message):
         span = self.tracer.start_span("send")
         span.set_tag(tags.SPAN_KIND, tags.SPAN_KIND_RPC_CLIENT)
 
         listener = ResponseListener(span)
-        return self.loop.run_until_complete(self.task(message, listener))
+        return self.loop.run_until_complete(task(message, listener))
 
 
 class TestAsyncio(OpenTelemetryTestCase):
