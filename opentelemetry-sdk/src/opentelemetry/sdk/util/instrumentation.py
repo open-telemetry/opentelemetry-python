@@ -23,7 +23,7 @@ class InstrumentationInfo:
 
     __slots__ = ("_name", "_version", "_schema_url")
 
-    def __init__(self, name: str, version: str, schema_url: typing.Optional[str] = None):
+    def __init__(self, name: str, version: typing.Optional[str] = None, schema_url: typing.Optional[str] = None):
         self._name = name
         self._version = version
         self._schema_url = schema_url
@@ -47,13 +47,13 @@ class InstrumentationInfo:
         return (self._name, self._version, self._schema_url) < (value._name, value._version, value._schema_url)
 
     @property
-    def version(self) -> str:
+    def schema_url(self) -> typing.Optional[str]:
+        return self._schema_url
+
+    @property
+    def version(self) -> typing.Optional[str]:
         return self._version
 
     @property
     def name(self) -> str:
         return self._name
-
-    @property
-    def schema_url(self) -> typing.Optional[str]:
-        return self._schema_url

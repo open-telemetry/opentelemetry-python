@@ -187,7 +187,7 @@ class TracerProvider(ABC):
     def get_tracer(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: str = "",
+        instrumenting_library_version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
     ) -> "Tracer":
         """Returns a `Tracer` for use by the given instrumentation library.
@@ -224,7 +224,7 @@ class _DefaultTracerProvider(TracerProvider):
     def get_tracer(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: str = "",
+        instrumenting_library_version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
     ) -> "Tracer":
         # pylint:disable=no-self-use,unused-argument
@@ -235,7 +235,7 @@ class ProxyTracerProvider(TracerProvider):
     def get_tracer(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: str = "",
+        instrumenting_library_version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
     ) -> "Tracer":
         if _TRACER_PROVIDER:
@@ -381,7 +381,7 @@ class ProxyTracer(Tracer):
     def __init__(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: str,
+        instrumenting_library_version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
     ):
         self._instrumenting_module_name = instrumenting_module_name
@@ -454,7 +454,7 @@ _PROXY_TRACER_PROVIDER = None
 
 def get_tracer(
     instrumenting_module_name: str,
-    instrumenting_library_version: str = "",
+    instrumenting_library_version: typing.Optional[TracerProvider] = None,
     tracer_provider: Optional[TracerProvider] = None,
     schema_url: typing.Optional[str] = None,
 ) -> "Tracer":
