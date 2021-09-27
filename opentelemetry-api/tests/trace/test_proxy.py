@@ -22,8 +22,10 @@ from opentelemetry.trace.span import INVALID_SPAN_CONTEXT, NonRecordingSpan
 
 class TestProvider(trace._DefaultTracerProvider):
     def get_tracer(
-        self, instrumentation_module_name, instrumentaiton_library_version=None
-    ):
+        self,
+        instrumenting_module_name: str,
+        instrumenting_library_version: str = "",
+    ) -> trace.Tracer:
         return TestTracer()
 
 
