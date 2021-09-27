@@ -308,7 +308,7 @@ class TestJaegerExporter(unittest.TestCase):
                 parent=None,
                 resource=Resource({}),
                 instrumentation_info=InstrumentationInfo(
-                    name="name", version="version", schema_url="schema_url"
+                    name="name", version="version"
                 ),
             ),
         ]

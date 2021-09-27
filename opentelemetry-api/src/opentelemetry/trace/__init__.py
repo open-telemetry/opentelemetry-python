@@ -238,8 +238,6 @@ class ProxyTracerProvider(TracerProvider):
         instrumenting_library_version: str = "",
         schema_url: typing.Optional[str] = None,
     ) -> "Tracer":
-        if schema_url is None:
-            schema_url = ""
         if _TRACER_PROVIDER:
             return _TRACER_PROVIDER.get_tracer(
                 instrumenting_module_name, instrumenting_library_version, schema_url
@@ -384,7 +382,7 @@ class ProxyTracer(Tracer):
         self,
         instrumenting_module_name: str,
         instrumenting_library_version: str,
-        schema_url: str,
+        schema_url: typing.Optional[str] = None,
     ):
         self._instrumenting_module_name = instrumenting_module_name
         self._instrumenting_library_version = instrumenting_library_version
@@ -467,8 +465,6 @@ def get_tracer(
 
     If tracer_provider is omitted the current configured one is used.
     """
-    if schema_url is None:
-        schema_url = ""
     if tracer_provider is None:
         tracer_provider = get_tracer_provider()
     return tracer_provider.get_tracer(

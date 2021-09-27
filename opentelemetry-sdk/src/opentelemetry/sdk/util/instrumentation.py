@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import typing
 
 
 class InstrumentationInfo:
@@ -22,7 +23,7 @@ class InstrumentationInfo:
 
     __slots__ = ("_name", "_version", "_schema_url")
 
-    def __init__(self, name: str, version: str, schema_url: str):
+    def __init__(self, name: str, version: str, schema_url: typing.Optional[str] = None):
         self._name = name
         self._version = version
         self._schema_url = schema_url
@@ -54,5 +55,5 @@ class InstrumentationInfo:
         return self._name
 
     @property
-    def schema_url(self) -> str:
+    def schema_url(self) -> typing.Optional[str]:
         return self._schema_url

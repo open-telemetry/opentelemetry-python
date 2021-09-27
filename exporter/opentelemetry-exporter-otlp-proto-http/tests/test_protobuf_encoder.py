@@ -159,7 +159,7 @@ class TestProtobufEncoder(unittest.TestCase):
             parent=None,
             resource=SDKResource({}),
             instrumentation_info=SDKInstrumentationInfo(
-                name="name", version="version", schema_url="schema_url"
+                name="name", version="version"
             ),
         )
         span4.start(start_time=start_times[3])

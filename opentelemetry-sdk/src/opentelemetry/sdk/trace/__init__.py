@@ -1091,8 +1091,6 @@ class TracerProvider(trace_api.TracerProvider):
         if not instrumenting_module_name:  # Reject empty strings too.
             instrumenting_module_name = ""
             logger.error("get_tracer called with missing module name.")
-        if schema_url is None:
-            schema_url = ""
         return Tracer(
             self.sampler,
             self.resource,
