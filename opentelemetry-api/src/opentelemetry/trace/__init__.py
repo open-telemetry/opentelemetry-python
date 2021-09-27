@@ -454,7 +454,7 @@ _PROXY_TRACER_PROVIDER = None
 
 def get_tracer(
     instrumenting_module_name: str,
-    instrumenting_library_version: typing.Optional[TracerProvider] = None,
+    instrumenting_library_version: typing.Optional[str] = None,
     tracer_provider: Optional[TracerProvider] = None,
     schema_url: typing.Optional[str] = None,
 ) -> "Tracer":
