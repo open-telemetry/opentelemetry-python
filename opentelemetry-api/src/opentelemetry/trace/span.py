@@ -421,8 +421,8 @@ class SpanContext(
             trace_state = DEFAULT_TRACE_STATE
 
         is_valid = (
-            0 < trace_id <= _TRACE_ID_MAX_VALUE
-            and 0 < span_id <= _SPAN_ID_MAX_VALUE
+            INVALID_TRACE_ID < trace_id <= _TRACE_ID_MAX_VALUE
+            and INVALID_SPAN_ID < span_id <= _SPAN_ID_MAX_VALUE
         )
 
         return tuple.__new__(
