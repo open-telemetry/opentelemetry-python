@@ -19,11 +19,16 @@ from opentelemetry.metrics.measurement import Measurement
 
 class TestMeasurement(TestCase):
     def test_measurement_init(self):
-        # int
-        Measurement(321, {"hello": "world"})
+        try:
+            # int
+            Measurement(321, {"hello": "world"})
 
-        # float
-        Measurement(321.321, {"hello": "world"})
+            # float
+            Measurement(321.321, {"hello": "world"})
+        except Exception:  # pylint: disable=broad-except
+            self.fail(
+                "Unexpected exception raised when instantiating Measurement"
+            )
 
     def test_measurement_equality(self):
         self.assertEqual(
