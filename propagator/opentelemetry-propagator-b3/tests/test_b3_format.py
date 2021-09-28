@@ -16,8 +16,6 @@ import unittest
 from abc import abstractmethod
 from unittest.mock import Mock
 
-import opentelemetry.sdk.trace as trace
-import opentelemetry.sdk.trace.id_generator as id_generator
 import opentelemetry.trace as trace_api
 from opentelemetry.context import Context, get_current
 from opentelemetry.propagators.b3 import (  # pylint: disable=no-name-in-module,import-error
@@ -25,6 +23,8 @@ from opentelemetry.propagators.b3 import (  # pylint: disable=no-name-in-module,
     B3SingleFormat,
 )
 from opentelemetry.propagators.textmap import DefaultGetter
+from opentelemetry.sdk import trace
+from opentelemetry.sdk.trace import id_generator
 from opentelemetry.trace.propagation import _SPAN_KEY
 
 
