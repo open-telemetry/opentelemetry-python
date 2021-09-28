@@ -240,10 +240,14 @@ class ProxyTracerProvider(TracerProvider):
     ) -> "Tracer":
         if _TRACER_PROVIDER:
             return _TRACER_PROVIDER.get_tracer(
-                instrumenting_module_name, instrumenting_library_version, schema_url
+                instrumenting_module_name,
+                instrumenting_library_version,
+                schema_url,
             )
         return ProxyTracer(
-            instrumenting_module_name, instrumenting_library_version, schema_url
+            instrumenting_module_name,
+            instrumenting_library_version,
+            schema_url,
         )
 
 

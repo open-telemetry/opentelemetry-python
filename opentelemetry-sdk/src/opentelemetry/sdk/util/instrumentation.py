@@ -23,7 +23,12 @@ class InstrumentationInfo:
 
     __slots__ = ("_name", "_version", "_schema_url")
 
-    def __init__(self, name: str, version: typing.Optional[str] = None, schema_url: typing.Optional[str] = None):
+    def __init__(
+        self,
+        name: str,
+        version: typing.Optional[str] = None,
+        schema_url: typing.Optional[str] = None,
+    ):
         self._name = name
         self._version = version
         self._schema_url = schema_url
@@ -35,16 +40,20 @@ class InstrumentationInfo:
         return hash((self._name, self._version, self._schema_url))
 
     def __eq__(self, value):
-        return type(value) is type(self) and (self._name, self._version, self._schema_url) == (
-            value._name,
-            value._version,
-            value._schema_url
-        )
+        return type(value) is type(self) and (
+            self._name,
+            self._version,
+            self._schema_url,
+        ) == (value._name, value._version, value._schema_url)
 
     def __lt__(self, value):
         if type(value) is not type(self):
             return NotImplemented
-        return (self._name, self._version, self._schema_url) < (value._name, value._version, value._schema_url)
+        return (self._name, self._version, self._schema_url) < (
+            value._name,
+            value._version,
+            value._schema_url,
+        )
 
     @property
     def schema_url(self) -> typing.Optional[str]:

@@ -246,7 +246,8 @@ class TestSpanCreation(unittest.TestCase):
             span1.instrumentation_info, InstrumentationInfo("instr1", "")
         )
         self.assertEqual(
-            span2.instrumentation_info, InstrumentationInfo("instr2", "1.3b3", schema_url)
+            span2.instrumentation_info,
+            InstrumentationInfo("instr2", "1.3b3", schema_url),
         )
 
         self.assertEqual(span2.instrumentation_info.schema_url, schema_url)

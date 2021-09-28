@@ -1114,7 +1114,9 @@ class TracerProvider(trace_api.TracerProvider):
             self._active_span_processor,
             self.id_generator,
             InstrumentationInfo(
-                instrumenting_module_name, instrumenting_library_version, schema_url
+                instrumenting_module_name,
+                instrumenting_library_version,
+                schema_url,
             ),
             self._span_limits,
         )
