@@ -27,10 +27,12 @@ class AssertNotRaisesMixin:
         def __exit__(self, type_, value, tb):  # pylint: disable=invalid-name
             if value is not None and type_ in self._exception_types:
 
+                # Using a single-use variable here because the f string can't
+                # contain a backslash.
+                formatted_tb = "\n".join(format_tb(tb))
+
                 self._test_case.fail(
-                    "Unexpected exception was raised:\n{}".format(
-                        "\n".join(format_tb(tb))
-                    )
+                    f"Unexpected exception was raised:\n{formatted_tb}"
                 )
 
             return True

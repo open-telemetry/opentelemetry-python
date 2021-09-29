@@ -48,9 +48,6 @@ _logger = getLogger(__name__)
 
 
 class MeterProvider(ABC):
-    def __init__(self):
-        super().__init__()
-
     @abstractmethod
     def get_meter(
         self,
@@ -268,9 +265,7 @@ class ProxyMeter(Meter):
     def create_observable_up_down_counter(
         self, *args, **kwargs
     ) -> ObservableUpDownCounter:
-        return self._meter.create_observable_up_down_counter(
-            *args, **kwargs
-        )
+        return self._meter.create_observable_up_down_counter(*args, **kwargs)
 
 
 class _DefaultMeter(Meter):
@@ -284,9 +279,7 @@ class _DefaultMeter(Meter):
         super().create_up_down_counter(
             name, unit=unit, description=description
         )
-        return DefaultUpDownCounter(
-            name, unit=unit, description=description
-        )
+        return DefaultUpDownCounter(name, unit=unit, description=description)
 
     def create_observable_counter(
         self, name, callback, unit="", description=""

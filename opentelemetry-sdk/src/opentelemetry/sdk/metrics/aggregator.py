@@ -32,14 +32,17 @@ class Aggregator(ABC):
 
     def aggregate(self, value):
         if self.__class__.__bases__[0] is Aggregator:
+            # pylint: disable=attribute-defined-outside-init
             self._value = self._aggregate(value)
 
         else:
             for parent_class in self.__class__.__bases__:
+                # pylint: disable=no-member
+                # pylint: disable=protected-access
                 getattr(self, parent_class._get_value_name()).aggregate(value)
 
     @abstractmethod
-    def _aggregate(self, new_value):
+    def _aggregate(self, value):
         pass
 
 
@@ -147,6 +150,7 @@ class LastAggregator(Aggregator):
     def __init__(self, *args, **kwargs):
 
         if self.__class__ == LastAggregator:
+            # pylint: disable=assignment-from-none
             self._value = self._get_initial_value()
             setattr(
                 self.__class__, "value", property(lambda self: self._value)
@@ -217,7 +221,7 @@ class HistogramAggregator(Aggregator):
 
         for bucket in self._value:
             if value < bucket.lower.value:
-                _logger.warning("Value %s below lower histogram bound" % value)
+                _logger.warning("Value %s below lower histogram bound", value)
                 break
 
             if (bucket.upper.inclusive and value <= bucket.upper.value) or (
@@ -228,7 +232,7 @@ class HistogramAggregator(Aggregator):
 
         else:
 
-            _logger.warning("Value %s over upper histogram bound" % value)
+            _logger.warning("Value {value} over upper histogram bound")
 
         return self._value
 
@@ -263,10 +267,10 @@ class BoundSetAggregator(Aggregator):
     def _aggregate(self, value):
 
         if value < self._lower_bound:
-            _logger.warning("Value %s below lower set bound" % value)
+            _logger.warning("Value %s below lower set bound", value)
 
         elif value > self._upper_bound:
-            _logger.warning("Value %s over upper set bound" % value)
+            _logger.warning("Value %s over upper set bound", value)
 
         else:
             self._value.add(value)

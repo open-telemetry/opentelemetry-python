@@ -17,8 +17,8 @@ from enum import Enum
 from threading import Event, Lock, Thread
 from typing import Sequence, Tuple
 
+from opentelemetry.metrics import Meter
 from opentelemetry.metrics.instrument import Instrument
-from opentelemetry.metrics.meter import Meter
 from opentelemetry.sdk.metrics.aggregator import Aggregator
 from opentelemetry.sdk.resources import Resource
 
