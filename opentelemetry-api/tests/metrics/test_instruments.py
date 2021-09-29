@@ -45,11 +45,6 @@ class ChildInstrument(Instrument):
         )
 
 
-class ChildMeasurement(Measurement):
-    def __init__(self, value, attributes=None):
-        super().__init__(value, attributes=attributes)
-
-
 class TestInstrument(TestCase):
     def test_instrument_has_name(self):
         """
@@ -341,8 +336,8 @@ class TestObservableCounter(TestCase):
             list(observable_counter.callback())
 
         def callback():
-            yield [ChildMeasurement(1), ChildMeasurement(2)]
-            yield [ChildMeasurement(-1)]
+            yield [Measurement(1), Measurement(2)]
+            yield [Measurement(-1)]
 
         observable_counter = DefaultObservableCounter("name", callback())
 
@@ -382,7 +377,7 @@ class TestObservableCounter(TestCase):
             list(observable_counter.callback())
 
         def callback_valid():
-            return [ChildMeasurement(1), ChildMeasurement(2)]
+            return [Measurement(1), Measurement(2)]
 
         observable_counter = DefaultObservableCounter("name", callback_valid)
 
@@ -391,7 +386,7 @@ class TestObservableCounter(TestCase):
                 list(observable_counter.callback())
 
         def callback_one_invalid():
-            return [ChildMeasurement(1), ChildMeasurement(-2)]
+            return [Measurement(1), Measurement(-2)]
 
         observable_counter = DefaultObservableCounter(
             "name", callback_one_invalid
@@ -578,7 +573,7 @@ class TestObservableGauge(TestCase):
             list(observable_gauge.callback())
 
         def callback():
-            yield [ChildMeasurement(1), ChildMeasurement(-1)]
+            yield [Measurement(1), Measurement(-1)]
 
         observable_gauge = DefaultObservableGauge("name", callback())
         with self.assertRaises(AssertionError):
@@ -786,8 +781,8 @@ class TestObservableUpDownCounter(TestCase):
         )
 
         def callback():
-            yield ChildMeasurement(1)
-            yield ChildMeasurement(-1)
+            yield Measurement(1)
+            yield Measurement(-1)
 
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=ERROR):
