@@ -12,28 +12,41 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-many-ancestors
-# type:ignore
+from typing import Union
+
+from opentelemetry.util.types import Attributes
 
 
-from abc import ABC, abstractmethod
+class Measurement:
+    """A measurement observed in an asynchronous instrument
 
+    Return/yield instances of this class from asynchronous instrument callbacks.
 
-class Measurement(ABC):
-    @property
-    def value(self):
-        return self._value
+    Args:
+        value: The float or int measured value
+        attributes: The measurement's attributes
+    """
 
-    @property
-    def attributes(self):
-        return self._attributes
-
-    @abstractmethod
-    def __init__(self, value, attributes=None):
+    def __init__(
+        self, value: Union[int, float], attributes: Attributes = None
+    ) -> None:
         self._value = value
         self._attributes = attributes
 
+    @property
+    def value(self) -> Union[float, int]:
+        return self._value
 
-class DefaultMeasurement(Measurement):
-    def __init__(self, value, attributes=None):
-        super().__init__(value, attributes=attributes)
+    @property
+    def attributes(self) -> Attributes:
+        return self._attributes
+
+    def __eq__(self, other: object) -> bool:
+        return (
+            isinstance(other, Measurement)
+            and self.value == other.value
+            and self.attributes == other.attributes
+        )
+
+    def __repr__(self) -> str:
+        return f"Measurement(value={self.value}, attributes={self.attributes})"
