@@ -24,7 +24,6 @@ from opentelemetry.sdk.metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk.resources import Resource
 from opentelemetry.util.types import Attributes
 
 
@@ -88,12 +87,6 @@ class Meter(Meter):
 
 
 class MeterProvider(MeterProvider):
-    def __init__(self, resource=None):
-        if resource is None:
-            self._resource = Resource()
-        else:
-            self._resource = resource
-
     def add_pipeline(self):
         pass
 
