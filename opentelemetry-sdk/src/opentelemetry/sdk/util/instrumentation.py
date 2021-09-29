@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import typing
 
 
 class InstrumentationInfo:
@@ -20,31 +21,50 @@ class InstrumentationInfo:
     properties.
     """
 
-    __slots__ = ("_name", "_version")
+    __slots__ = ("_name", "_version", "_schema_url")
 
-    def __init__(self, name: str, version: str):
+    def __init__(
+        self,
+        name: str,
+        version: typing.Optional[str] = None,
+        schema_url: typing.Optional[str] = None,
+    ):
         self._name = name
         self._version = version
+        self._schema_url = schema_url
 
     def __repr__(self):
-        return f"{type(self).__name__}({self._name}, {self._version})"
+        return f"{type(self).__name__}({self._name}, {self._version}, {self._schema_url})"
 
     def __hash__(self):
-        return hash((self._name, self._version))
+        return hash((self._name, self._version, self._schema_url))
 
     def __eq__(self, value):
-        return type(value) is type(self) and (self._name, self._version) == (
-            value._name,
-            value._version,
+        return (
+            type(value) is type(self)
+            and (
+                self._name,
+                self._version,
+                self._schema_url,
+            )
+            == (value._name, value._version, value._schema_url)
         )
 
     def __lt__(self, value):
         if type(value) is not type(self):
             return NotImplemented
-        return (self._name, self._version) < (value._name, value._version)
+        return (self._name, self._version, self._schema_url) < (
+            value._name,
+            value._version,
+            value._schema_url,
+        )
 
     @property
-    def version(self) -> str:
+    def schema_url(self) -> typing.Optional[str]:
+        return self._schema_url
+
+    @property
+    def version(self) -> typing.Optional[str]:
         return self._version
 
     @property
