@@ -21,7 +21,6 @@ from opentelemetry.sdk.metrics.meter import MeterProvider as SDKMeterProvider
 
 
 class TestMeter(TestCase):
-
     def test_meter(self):
         meter = SDKMeterProvider().get_meter(__name__)
         self.assertIsInstance(meter, SDKMeter)

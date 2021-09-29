@@ -31,9 +31,9 @@ from opentelemetry.sdk.metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import get_dict_as_key
 from opentelemetry.util.types import Attributes
-from opentelemetry.sdk.resources import Resource
 
 
 class Measurement(Measurement):
@@ -192,7 +192,6 @@ class Meter(Meter):
 
 
 class MeterProvider(MeterProvider):
-
     def __init__(self, resource=None):
         self._resource = Resource()
 

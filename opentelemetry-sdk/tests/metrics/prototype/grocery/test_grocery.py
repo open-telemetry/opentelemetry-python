@@ -55,21 +55,25 @@ class Store:
         )
         self.amount.add(
             self.potato_price * potatoes + self.tomato_price * tomatoes,
-            attributes={"store": self.name, "customer": customer}
+            attributes={"store": self.name, "customer": customer},
         )
         if bool(potatoes):
             self.items_sold.add(
                 potatoes,
                 attributes={
-                    "store": self.name, "customer": customer, "item": "potato"
-                }
+                    "store": self.name,
+                    "customer": customer,
+                    "item": "potato",
+                },
             )
         if bool(tomatoes):
             self.items_sold.add(
                 tomatoes,
                 attributes={
-                    "store": self.name, "customer": customer, "item": "tomato"
-                }
+                    "store": self.name,
+                    "customer": customer,
+                    "item": "tomato",
+                },
             )
 
     def enter_customer(self, account_type):

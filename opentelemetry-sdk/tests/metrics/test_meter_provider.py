@@ -14,15 +14,12 @@
 
 
 from unittest import TestCase
-from unittest.mock import Mock
 
 from opentelemetry.metrics.meter import MeterProvider
 from opentelemetry.sdk.metrics.meter import MeterProvider as SDKMeterProvider
 
 
-
 class TestMeterProvider(TestCase):
-
     def test_meter_provider_instance(self):
         """
         Test that a SDK MeterProvider is an instance of the API MeterProvider

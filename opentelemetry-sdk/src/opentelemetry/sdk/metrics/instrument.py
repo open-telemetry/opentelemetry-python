@@ -17,19 +17,19 @@
 from typing import Generator
 
 from opentelemetry.metrics.instrument import (
-    _Adding,
     Asynchronous,
     Counter,
-    _Grouping,
     Histogram,
     Instrument,
-    _Monotonic,
-    _NonMonotonic,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
     Synchronous,
     UpDownCounter,
+    _Adding,
+    _Grouping,
+    _Monotonic,
+    _NonMonotonic,
 )
 from opentelemetry.sdk.metrics.aggregator import SumAggregator
 

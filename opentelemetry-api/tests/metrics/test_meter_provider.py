@@ -16,10 +16,6 @@
 from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock, patch
-from unittest import TestCase
-from logging import WARNING
-from unittest import TestCase
-from unittest.mock import Mock, patch
 
 from pytest import fixture
 

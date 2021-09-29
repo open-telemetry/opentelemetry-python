@@ -16,19 +16,19 @@
 from unittest import TestCase
 
 from opentelemetry.metrics.instrument import (
-    _Adding,
     Asynchronous,
     Counter,
-    _Grouping,
     Histogram,
     Instrument,
-    _Monotonic,
-    _NonMonotonic,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
     Synchronous,
     UpDownCounter,
+    _Adding,
+    _Grouping,
+    _Monotonic,
+    _NonMonotonic,
 )
 from opentelemetry.sdk.metrics.instrument import Counter as SDKCounter
 from opentelemetry.sdk.metrics.instrument import Histogram as SDKHistogram
