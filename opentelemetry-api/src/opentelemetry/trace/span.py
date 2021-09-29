@@ -387,7 +387,8 @@ class TraceState(typing.Mapping[str, str]):
 
 
 DEFAULT_TRACE_STATE = TraceState.get_default()
-_TRACE_ID_HEX_LENGTH = 2 ** 128 - 1
+_TRACE_ID_MAX_VALUE = 2 ** 128 - 1
+_SPAN_ID_MAX_VALUE = 2 ** 64 - 1
 
 
 class SpanContext(
@@ -420,9 +421,8 @@ class SpanContext(
             trace_state = DEFAULT_TRACE_STATE
 
         is_valid = (
-            trace_id != INVALID_TRACE_ID
-            and span_id != INVALID_SPAN_ID
-            and trace_id < _TRACE_ID_HEX_LENGTH
+            INVALID_TRACE_ID < trace_id <= _TRACE_ID_MAX_VALUE
+            and INVALID_SPAN_ID < span_id <= _SPAN_ID_MAX_VALUE
         )
 
         return tuple.__new__(
