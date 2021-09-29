@@ -23,14 +23,6 @@ from opentelemetry.metrics.measurement import Measurement
 # FIXME Test that the instrument methods can be called concurrently safely.
 
 
-class ChildMeasurement(Measurement):
-    def __init__(self, value, attributes=None):
-        super().__init__(value, attributes=attributes)
-
-    def __eq__(self, o: Measurement) -> bool:
-        return self.value == o.value and self.attributes == o.attributes
-
-
 class TestCpuTimeIntegration(TestCase):
     """Integration test of scraping CPU time from proc stat with an observable
     counter"""
@@ -48,24 +40,24 @@ procs_blocked 0
 softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 222975718\n"""
 
     measurements_expected = [
-        ChildMeasurement(6150, {"cpu": "cpu0", "state": "user"}),
-        ChildMeasurement(3177, {"cpu": "cpu0", "state": "nice"}),
-        ChildMeasurement(5946, {"cpu": "cpu0", "state": "system"}),
-        ChildMeasurement(891264, {"cpu": "cpu0", "state": "idle"}),
-        ChildMeasurement(1296, {"cpu": "cpu0", "state": "iowait"}),
-        ChildMeasurement(0, {"cpu": "cpu0", "state": "irq"}),
-        ChildMeasurement(8343, {"cpu": "cpu0", "state": "softirq"}),
-        ChildMeasurement(421, {"cpu": "cpu0", "state": "guest"}),
-        ChildMeasurement(0, {"cpu": "cpu0", "state": "guest_nice"}),
-        ChildMeasurement(5882, {"cpu": "cpu1", "state": "user"}),
-        ChildMeasurement(3491, {"cpu": "cpu1", "state": "nice"}),
-        ChildMeasurement(6404, {"cpu": "cpu1", "state": "system"}),
-        ChildMeasurement(891564, {"cpu": "cpu1", "state": "idle"}),
-        ChildMeasurement(1244, {"cpu": "cpu1", "state": "iowait"}),
-        ChildMeasurement(0, {"cpu": "cpu1", "state": "irq"}),
-        ChildMeasurement(2410, {"cpu": "cpu1", "state": "softirq"}),
-        ChildMeasurement(418, {"cpu": "cpu1", "state": "guest"}),
-        ChildMeasurement(0, {"cpu": "cpu1", "state": "guest_nice"}),
+        Measurement(6150, {"cpu": "cpu0", "state": "user"}),
+        Measurement(3177, {"cpu": "cpu0", "state": "nice"}),
+        Measurement(5946, {"cpu": "cpu0", "state": "system"}),
+        Measurement(891264, {"cpu": "cpu0", "state": "idle"}),
+        Measurement(1296, {"cpu": "cpu0", "state": "iowait"}),
+        Measurement(0, {"cpu": "cpu0", "state": "irq"}),
+        Measurement(8343, {"cpu": "cpu0", "state": "softirq"}),
+        Measurement(421, {"cpu": "cpu0", "state": "guest"}),
+        Measurement(0, {"cpu": "cpu0", "state": "guest_nice"}),
+        Measurement(5882, {"cpu": "cpu1", "state": "user"}),
+        Measurement(3491, {"cpu": "cpu1", "state": "nice"}),
+        Measurement(6404, {"cpu": "cpu1", "state": "system"}),
+        Measurement(891564, {"cpu": "cpu1", "state": "idle"}),
+        Measurement(1244, {"cpu": "cpu1", "state": "iowait"}),
+        Measurement(0, {"cpu": "cpu1", "state": "irq"}),
+        Measurement(2410, {"cpu": "cpu1", "state": "softirq"}),
+        Measurement(418, {"cpu": "cpu1", "state": "guest"}),
+        Measurement(0, {"cpu": "cpu1", "state": "guest_nice"}),
     ]
 
     def test_cpu_time_callback(self):
@@ -78,31 +70,31 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
                 if not line.startswith("cpu"):
                     break
                 cpu, *states = line.split()
-                yield ChildMeasurement(
+                yield Measurement(
                     int(states[0]) // 100, {"cpu": cpu, "state": "user"}
                 )
-                yield ChildMeasurement(
+                yield Measurement(
                     int(states[1]) // 100, {"cpu": cpu, "state": "nice"}
                 )
-                yield ChildMeasurement(
+                yield Measurement(
                     int(states[2]) // 100, {"cpu": cpu, "state": "system"}
                 )
-                yield ChildMeasurement(
+                yield Measurement(
                     int(states[3]) // 100, {"cpu": cpu, "state": "idle"}
                 )
-                yield ChildMeasurement(
+                yield Measurement(
                     int(states[4]) // 100, {"cpu": cpu, "state": "iowait"}
                 )
-                yield ChildMeasurement(
+                yield Measurement(
                     int(states[5]) // 100, {"cpu": cpu, "state": "irq"}
                 )
-                yield ChildMeasurement(
+                yield Measurement(
                     int(states[6]) // 100, {"cpu": cpu, "state": "softirq"}
                 )
-                yield ChildMeasurement(
+                yield Measurement(
                     int(states[7]) // 100, {"cpu": cpu, "state": "guest"}
                 )
-                yield ChildMeasurement(
+                yield Measurement(
                     int(states[8]) // 100, {"cpu": cpu, "state": "guest_nice"}
                 )
 
@@ -130,54 +122,54 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
                         break
                     cpu, *states = line.split()
                     measurements.append(
-                        ChildMeasurement(
+                        Measurement(
                             int(states[0]) // 100,
                             {"cpu": cpu, "state": "user"},
                         )
                     )
                     measurements.append(
-                        ChildMeasurement(
+                        Measurement(
                             int(states[1]) // 100,
                             {"cpu": cpu, "state": "nice"},
                         )
                     )
                     measurements.append(
-                        ChildMeasurement(
+                        Measurement(
                             int(states[2]) // 100,
                             {"cpu": cpu, "state": "system"},
                         )
                     )
                     measurements.append(
-                        ChildMeasurement(
+                        Measurement(
                             int(states[3]) // 100,
                             {"cpu": cpu, "state": "idle"},
                         )
                     )
                     measurements.append(
-                        ChildMeasurement(
+                        Measurement(
                             int(states[4]) // 100,
                             {"cpu": cpu, "state": "iowait"},
                         )
                     )
                     measurements.append(
-                        ChildMeasurement(
+                        Measurement(
                             int(states[5]) // 100, {"cpu": cpu, "state": "irq"}
                         )
                     )
                     measurements.append(
-                        ChildMeasurement(
+                        Measurement(
                             int(states[6]) // 100,
                             {"cpu": cpu, "state": "softirq"},
                         )
                     )
                     measurements.append(
-                        ChildMeasurement(
+                        Measurement(
                             int(states[7]) // 100,
                             {"cpu": cpu, "state": "guest"},
                         )
                     )
                     measurements.append(
-                        ChildMeasurement(
+                        Measurement(
                             int(states[8]) // 100,
                             {"cpu": cpu, "state": "guest_nice"},
                         )
