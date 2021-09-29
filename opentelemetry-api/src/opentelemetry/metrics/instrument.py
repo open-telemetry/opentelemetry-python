@@ -128,15 +128,13 @@ class DefaultCounter(Counter):
         super().__init__(name, unit=unit, description=description)
 
     def add(self, amount, attributes=None):
-        with self._lock:
-            return super().add(amount, attributes=attributes)
+        return super().add(amount, attributes=attributes)
 
 
 class UpDownCounter(_NonMonotonic, Synchronous):
     @abstractmethod
     def add(self, amount, attributes=None):
-        with self._lock:
-            pass
+        pass
 
 
 class DefaultUpDownCounter(UpDownCounter):
@@ -144,8 +142,7 @@ class DefaultUpDownCounter(UpDownCounter):
         super().__init__(name, unit=unit, description=description)
 
     def add(self, amount, attributes=None):
-        with self._lock:
-            return super().add(amount, attributes=attributes)
+        return super().add(amount, attributes=attributes)
 
 
 class ObservableCounter(_Monotonic, Asynchronous):
@@ -187,8 +184,7 @@ class DefaultObservableUpDownCounter(ObservableUpDownCounter):
 class Histogram(_Grouping, Synchronous):
     @abstractmethod
     def record(self, amount, attributes=None):
-        with self._lock:
-            pass
+        pass
 
 
 class DefaultHistogram(Histogram):
@@ -196,8 +192,7 @@ class DefaultHistogram(Histogram):
         super().__init__(name, unit=unit, description=description)
 
     def record(self, amount, attributes=None):
-        with self._lock:
-            return super().record(amount, attributes=attributes)
+        return super().record(amount, attributes=attributes)
 
 
 class ObservableGauge(_Grouping, Asynchronous):
