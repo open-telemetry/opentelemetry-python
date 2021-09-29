@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2138](https://github.com/open-telemetry/opentelemetry-python/pull/2138))
 - `opentelemetry-exporter-otlp`: Add `opentelemetry-otlp-proto-http` as dependency
   ([#2147](https://github.com/open-telemetry/opentelemetry-python/pull/2147))
+- Fix validity calculation for trace and span IDs
+  ([#2145](https://github.com/open-telemetry/opentelemetry-python/pull/2145))
 
 ## [1.5.0-0.24b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.5.0-0.24b0) - 2021-08-26
 
