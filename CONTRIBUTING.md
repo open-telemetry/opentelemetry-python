@@ -214,6 +214,16 @@ rather than conform to specific API names or argument patterns in the spec.
 
 For a deeper discussion, see: https://github.com/open-telemetry/opentelemetry-specification/issues/165
 
+### Environment Variables
+
+If you are adding a component that introduces new OpenTelemetry environment variables, put them all in a module,
+as it is done in `opentelemetry.environment_variables` or in `opentelemetry.sdk.environment_variables`.
+
+Keep in mind that any new environment variable must be declared in all caps and must start with `OTEL_PYTHON_`.
+
+Register this module with the `opentelemetry_environment_variables` entry point to make your environment variables
+automatically load as options for the `opentelemetry-instrument` command.
+
 ## Style Guide
 
 * docstrings should adhere to the [Google Python Style

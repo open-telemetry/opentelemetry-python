@@ -14,72 +14,74 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import argparse
+from argparse import REMAINDER, ArgumentParser
 from logging import getLogger
 from os import environ, execl, getcwd
 from os.path import abspath, dirname, pathsep
+from re import sub
 from shutil import which
 
-from opentelemetry.environment_variables import (
-    OTEL_PYTHON_ID_GENERATOR,
-    OTEL_TRACES_EXPORTER,
-)
+from pkg_resources import iter_entry_points
 
-logger = getLogger(__file__)
+_logger = getLogger(__file__)
 
 
-def parse_args():
-    parser = argparse.ArgumentParser(
+def run() -> None:
+
+    parser = ArgumentParser(
         description="""
         opentelemetry-instrument automatically instruments a Python
         program and its dependencies and then runs the program.
-        """
-    )
+        """,
+        epilog="""
+        Optional arguments (except for --help) for opentelemetry-instrument
+        directly correspond with OpenTelemetry environment variables. The
+        corresponding optional argument is formed by removing the OTEL_ or
+        OTEL_PYTHON_ prefix from the environment variable and lower casing the
+        rest. For example, the optional argument --attribute_value_length_limit
+        corresponds with the environment variable
+        OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT.
 
-    parser.add_argument(
-        "--trace-exporter",
-        required=False,
-        help="""
-        Uses the specified exporter to export spans.
-        Accepts multiple exporters as comma separated values.
-
-        Examples:
-
-            --trace-exporter=jaeger
+        These optional arguments will override the current value of the
+        corresponding environment variable during the execution of the command.
         """,
     )
 
-    parser.add_argument(
-        "--id-generator",
-        required=False,
-        help="""
-        The IDs Generator to be used with the Tracer Provider.
+    argument_otel_environment_variable = {}
 
-        Examples:
+    for entry_point in iter_entry_points(
+        "opentelemetry_environment_variables"
+    ):
+        environment_variable_module = entry_point.load()
 
-            --id-generator=random
-        """,
-    )
+        for attribute in dir(environment_variable_module):
+
+            if attribute.startswith("OTEL_"):
+
+                argument = sub(r"OTEL_(PYTHON_)?", "", attribute).lower()
+
+                parser.add_argument(
+                    f"--{argument}",
+                    required=False,
+                )
+                argument_otel_environment_variable[argument] = attribute
 
     parser.add_argument("command", help="Your Python application.")
     parser.add_argument(
         "command_args",
         help="Arguments for your application.",
-        nargs=argparse.REMAINDER,
+        nargs=REMAINDER,
     )
-    return parser.parse_args()
 
+    args = parser.parse_args()
 
-def load_config_from_cli_args(args):
-    if args.trace_exporter:
-        environ[OTEL_TRACES_EXPORTER] = args.trace_exporter
-    if args.id_generator:
-        environ[OTEL_PYTHON_ID_GENERATOR] = args.id_generator
+    for argument, otel_environment_variable in (
+        argument_otel_environment_variable
+    ).items():
+        value = getattr(args, argument)
+        if value is not None:
 
-
-def run() -> None:
-    args = parse_args()
-    load_config_from_cli_args(args)
+            environ[otel_environment_variable] = value
 
     python_path = environ.get("PYTHONPATH")
 
