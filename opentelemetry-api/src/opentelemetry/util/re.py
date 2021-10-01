@@ -27,8 +27,8 @@ _KEY_FORMAT = (
 )
 # A value contains a URL encoded UTF-8 string.
 _VALUE_FORMAT = r"[\x21\x23-\x2b\x2d-\x3a\x3c-\x5b\x5d-\x7e]*"
-_HEADER_FORMAT = _KEY_FORMAT + _OWS + r"=" + _OWS + _VALUE_FORMAT
-_HEADER_PATTERN = compile(_HEADER_FORMAT)
+_KEY_VALUE_FORMAT = rf"{_OWS}{_KEY_FORMAT}{_OWS}={_OWS}{_VALUE_FORMAT}{_OWS}"
+_HEADER_PATTERN = compile(_KEY_VALUE_FORMAT)
 _DELIMITER_PATTERN = compile(r"[ \t]*,[ \t]*")
 
 
