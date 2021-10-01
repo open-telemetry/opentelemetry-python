@@ -21,9 +21,7 @@ class DependencyConflict:
         self.found = found
 
     def __str__(self):
-        return 'DependencyConflict: requested: "{0}" but found: "{1}"'.format(
-            self.required, self.found
-        )
+        return f'DependencyConflict: requested: "{self.required}" but found: "{self.found}"'
 
 
 def get_dist_dependency_conflicts(

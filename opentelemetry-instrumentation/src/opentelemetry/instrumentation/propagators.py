@@ -54,7 +54,7 @@ class DictHeaderSetter(Setter):
     def set(self, carrier, key, value):  # pylint: disable=no-self-use
         old_value = carrier.get(key, "")
         if old_value:
-            value = "{0}, {1}".format(old_value, value)
+            value = f"{old_value}, {value}"
         carrier[key] = value
 
 
@@ -115,11 +115,7 @@ class TraceResponsePropagator(ResponsePropagator):
         setter.set(
             carrier,
             header_name,
-            "00-{trace_id}-{span_id}-{:02x}".format(
-                span_context.trace_flags,
-                trace_id=format_trace_id(span_context.trace_id),
-                span_id=format_span_id(span_context.span_id),
-            ),
+            f"00-{format_trace_id(span_context.trace_id)}-{format_span_id(span_context.span_id)}-{span_context.trace_flags:02x}",
         )
         setter.set(
             carrier,

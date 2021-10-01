@@ -32,7 +32,7 @@ class TestThreads(OpenTelemetryTestCase):
 
         for idx in range(1, 4):
             self.assertEqual(
-                spans[0].attributes.get("key%s" % idx, None), str(idx)
+                spans[0].attributes.get(f"key{idx}", None), str(idx)
             )
 
     def submit(self):

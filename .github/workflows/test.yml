@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: dde62cebffe519c35875af6d06fae053b3be65ec
+  CONTRIB_REPO_SHA: d2984f5242ed2250ad1c11b6164e2e8e11e2a804
 
 jobs:
   build:
@@ -27,17 +27,11 @@ jobs:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
         python-version: [ py36, py37, py38, py39, pypy3 ]
-        package: ["instrumentation", "core", "exporter", "propagator"]
+        package: ["api", "sdk", "instrumentation", "semantic", "getting", "distro" , "shim", "exporter", "protobuf", "propagator"]
         os: [ ubuntu-20.04, windows-2019 ]
     steps:
       - name: Checkout Core Repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v2
-      - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
-        uses: actions/checkout@v2
-        with:
-          repository: open-telemetry/opentelemetry-python-contrib
-          ref: ${{ env.CONTRIB_REPO_SHA }}
-          path: opentelemetry-python-contrib
       - name: Set up Python ${{ env[matrix.python-version] }}
         uses: actions/setup-python@v2
         with:
@@ -93,12 +87,6 @@ jobs:
     steps:
       - name: Checkout Core Repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v2
-      - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
-        uses: actions/checkout@v2
-        with:
-          repository: open-telemetry/opentelemetry-python-contrib
-          ref: ${{ env.CONTRIB_REPO_SHA }}
-          path: opentelemetry-python-contrib
       - name: Set up Python
         uses: actions/setup-python@v2
         with:

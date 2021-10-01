@@ -5,16 +5,38 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.5.0-0.24b0...HEAD)
-
+- Automatically load OTEL environment variables as options for `opentelemetry-instrument`
+  ([#1969](https://github.com/open-telemetry/opentelemetry-python/pull/1969))
 - `opentelemetry-semantic-conventions` Update to semantic conventions v1.6.1
   ([#2077](https://github.com/open-telemetry/opentelemetry-python/pull/2077))
+- Do not count invalid attributes for dropped
+  ([#2096](https://github.com/open-telemetry/opentelemetry-python/pull/2096))
 - Fix propagation bug caused by counting skipped entries
   ([#2071](https://github.com/open-telemetry/opentelemetry-python/pull/2071))
+- Add entry point for exporters with default protocol
+  ([#2093](https://github.com/open-telemetry/opentelemetry-python/pull/2093))
+- Do not skip sequence attribute on decode error
+  ([#2097](https://github.com/open-telemetry/opentelemetry-python/pull/2097))
+- `opentelemetry-test`: Add `HttpTestBase` to allow tests with actual TCP sockets
+  ([#2101](https://github.com/open-telemetry/opentelemetry-python/pull/2101))
+- Fix incorrect headers parsing via environment variables
+  ([#2103](https://github.com/open-telemetry/opentelemetry-python/pull/2103))
+- Add support for OTEL_ATTRIBUTE_COUNT_LIMIT
+  ([#2139](https://github.com/open-telemetry/opentelemetry-python/pull/2139))
+- Attribute limits no longer apply to Resource attributes
+  ([#2138](https://github.com/open-telemetry/opentelemetry-python/pull/2138))
+- `opentelemetry-exporter-otlp`: Add `opentelemetry-otlp-proto-http` as dependency
+  ([#2147](https://github.com/open-telemetry/opentelemetry-python/pull/2147))
+- Fix validity calculation for trace and span IDs
+  ([#2145](https://github.com/open-telemetry/opentelemetry-python/pull/2145))
+- Add `schema_url` to `TracerProvider.get_tracer`
+  ([#2154](https://github.com/open-telemetry/opentelemetry-python/pull/2154))
 
 ## [1.5.0-0.24b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.5.0-0.24b0) - 2021-08-26
 
-- Add regexes to check baggage keys and values
-  ([#2017](https://github.com/open-telemetry/opentelemetry-python/pull/2017))
+
+- Add pre and post instrumentation entry points
+  ([#1983](https://github.com/open-telemetry/opentelemetry-python/pull/1983))
 - Fix documentation on well known exporters and variable OTEL_TRACES_EXPORTER which were misnamed
   ([#2023](https://github.com/open-telemetry/opentelemetry-python/pull/2023))
 - `opentelemetry-sdk` `get_aggregated_resource()` returns default resource and service name

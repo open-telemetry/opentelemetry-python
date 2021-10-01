@@ -20,13 +20,13 @@ from re import sub
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry.environment_variables import (
-    OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
-)
 from opentelemetry.instrumentation.dependencies import (
     get_dist_dependency_conflicts,
 )
 from opentelemetry.instrumentation.distro import BaseDistro, DefaultDistro
+from opentelemetry.instrumentation.environment_variables import (
+    OTEL_PYTHON_DISABLED_INSTRUMENTATIONS,
+)
 
 logger = getLogger(__file__)
 
@@ -60,6 +60,9 @@ def _load_instrumentors(distro):
         # to handle users entering "requests , flask" or "requests, flask" with spaces
         package_to_exclude = [x.strip() for x in package_to_exclude]
 
+    for entry_point in iter_entry_points("opentelemetry_pre_instrument"):
+        entry_point.load()()
+
     for entry_point in iter_entry_points("opentelemetry_instrumentor"):
         if entry_point.name in package_to_exclude:
             logger.debug(
@@ -83,6 +86,9 @@ def _load_instrumentors(distro):
         except Exception as exc:  # pylint: disable=broad-except
             logger.exception("Instrumenting of %s failed", entry_point.name)
             raise exc
+
+    for entry_point in iter_entry_points("opentelemetry_post_instrument"):
+        entry_point.load()()
 
 
 def _load_configurators():
@@ -113,7 +119,7 @@ def initialize():
         logger.exception("Failed to auto initialize opentelemetry")
     finally:
         environ["PYTHONPATH"] = sub(
-            r"{}{}?".format(dirname(abspath(__file__)), pathsep),
+            fr"{dirname(abspath(__file__))}{pathsep}?",
             "",
             environ["PYTHONPATH"],
         )

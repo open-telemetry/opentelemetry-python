@@ -113,12 +113,12 @@ class FinishedTestSpans(list):
         for span in self:
             if span.name == name:
                 return span
-        self.test.fail("Did not find span with name {}".format(name))
+        self.test.fail(f"Did not find span with name {name}")
         return None
 
     def by_attr(self, key, value):
         for span in self:
             if span.attributes.get(key) == value:
                 return span
-        self.test.fail("Did not find span with attrs {}={}".format(key, value))
+        self.test.fail(f"Did not find span with attrs {key}={value}")
         return None
