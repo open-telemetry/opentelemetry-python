@@ -40,6 +40,7 @@ from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.trace_exporter.encoder import (
     _ProtobufEncoder,
 )
+from opentelemetry.util.re import parse_headers
 
 
 _logger = logging.getLogger(__name__)
@@ -70,7 +71,11 @@ class OTLPSpanExporter(SpanExporter):
             OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
             environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
         )
-        self._headers = headers or _headers_from_env()
+        headers_string = environ.get(
+            OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+            environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
+        )
+        self._headers = headers or parse_headers(headers_string)
         self._timeout = timeout or int(
             environ.get(
                 OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
@@ -153,24 +158,6 @@ class OTLPSpanExporter(SpanExporter):
             return
         self._session.close()
         self._shutdown = True
-
-
-def _headers_from_env() -> Optional[Dict[str, str]]:
-    headers_str = environ.get(
-        OTEL_EXPORTER_OTLP_TRACES_HEADERS,
-        environ.get(OTEL_EXPORTER_OTLP_HEADERS),
-    )
-    headers = {}
-    if headers_str:
-        for header in headers_str.split(","):
-            try:
-                header_name, header_value = header.split("=")
-                headers[header_name.strip()] = header_value.strip()
-            except ValueError:
-                _logger.warning(
-                    "Skipped invalid OTLP exporter header: %r", header
-                )
-    return headers
 
 
 def _compression_from_env() -> Compression:

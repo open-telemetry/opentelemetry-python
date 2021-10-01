@@ -50,9 +50,7 @@ class TestDependencyConflicts(TestBase):
         self.assertTrue(isinstance(conflict, DependencyConflict))
         self.assertEqual(
             str(conflict),
-            'DependencyConflict: requested: "pytest == 5000" but found: "pytest {0}"'.format(
-                pytest.__version__
-            ),
+            f'DependencyConflict: requested: "pytest == 5000" but found: "pytest {pytest.__version__}"',
         )
 
     def test_get_dist_dependency_conflicts(self):

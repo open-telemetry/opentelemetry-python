@@ -13,7 +13,7 @@
 # limitations under the License.
 
 # pylint: disable=W0212,W0222,W0221
-
+import typing
 import unittest
 
 from opentelemetry import trace
@@ -22,8 +22,11 @@ from opentelemetry.trace.span import INVALID_SPAN_CONTEXT, NonRecordingSpan
 
 class TestProvider(trace._DefaultTracerProvider):
     def get_tracer(
-        self, instrumentation_module_name, instrumentaiton_library_version=None
-    ):
+        self,
+        instrumenting_module_name: str,
+        instrumenting_library_version: typing.Optional[str] = None,
+        schema_url: typing.Optional[str] = None,
+    ) -> trace.Tracer:
         return TestTracer()
 
 

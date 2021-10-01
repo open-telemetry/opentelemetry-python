@@ -38,11 +38,9 @@ def _syscall(func):
         except subprocess.SubprocessError as exp:
             cmd = getattr(exp, "cmd", None)
             if cmd:
-                msg = 'Error calling system command "{0}"'.format(
-                    " ".join(cmd)
-                )
+                msg = f'Error calling system command "{" ".join(cmd)}"'
             if package:
-                msg = '{0} for package "{1}"'.format(msg, package)
+                msg = f'{msg} for package "{package}"'
             raise RuntimeError(msg)
 
     return wrapper
@@ -73,17 +71,15 @@ def _pip_check():
     'opentelemetry-instrumentation-flask 1.0.1 has requirement opentelemetry-sdk<2.0,>=1.0, but you have opentelemetry-sdk 0.5.'
     To not be too restrictive, we'll only check for relevant packages.
     """
-    check_pipe = subprocess.Popen(
+    with subprocess.Popen(
         [sys.executable, "-m", "pip", "check"], stdout=subprocess.PIPE
-    )
-    pip_check = check_pipe.communicate()[0].decode()
-    pip_check_lower = pip_check.lower()
+    ) as check_pipe:
+        pip_check = check_pipe.communicate()[0].decode()
+        pip_check_lower = pip_check.lower()
     for package_tup in libraries.values():
         for package in package_tup:
             if package.lower() in pip_check_lower:
-                raise RuntimeError(
-                    "Dependency conflict found: {}".format(pip_check)
-                )
+                raise RuntimeError(f"Dependency conflict found: {pip_check}")
 
 
 def _is_installed(req):

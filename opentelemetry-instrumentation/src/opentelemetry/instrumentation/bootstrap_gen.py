@@ -53,7 +53,7 @@ libraries = {
         "instrumentation": "opentelemetry-instrumentation-elasticsearch==0.24b0",
     },
     "falcon": {
-        "library": "falcon ~= 2.0",
+        "library": "falcon >= 2.0.0, < 4.0.0",
         "instrumentation": "opentelemetry-instrumentation-falcon==0.24b0",
     },
     "fastapi": {

@@ -17,12 +17,13 @@ import unittest
 from collections import OrderedDict
 from unittest import mock
 
-# pylint:disable=no-name-in-module
-# pylint:disable=import-error
-import opentelemetry.exporter.jaeger.proto.grpc.gen.model_pb2 as model_pb2
 import opentelemetry.exporter.jaeger.proto.grpc.translate as pb_translator
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.jaeger.proto.grpc import JaegerExporter
+
+# pylint:disable=no-name-in-module
+# pylint:disable=import-error
+from opentelemetry.exporter.jaeger.proto.grpc.gen import model_pb2
 from opentelemetry.exporter.jaeger.proto.grpc.translate import (
     NAME_KEY,
     VERSION_KEY,
