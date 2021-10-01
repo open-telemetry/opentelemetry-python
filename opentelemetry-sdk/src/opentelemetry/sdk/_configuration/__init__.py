@@ -29,7 +29,11 @@ from opentelemetry.environment_variables import (
 )
 from opentelemetry.instrumentation.configurator import BaseConfigurator
 from opentelemetry.sdk.trace import TracerProvider
-from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
+from opentelemetry.sdk.trace.export import (
+    BatchSpanProcessor,
+    ConsoleSpanExporter,
+    SpanExporter,
+)
 from opentelemetry.sdk.trace.id_generator import IdGenerator
 
 _EXPORTER_OTLP = "otlp"
@@ -100,6 +104,13 @@ def _import_tracer_provider_config_components(
     return component_impls
 
 
+def _import_exporters_from_env() -> Sequence[SpanExporter]:
+    exporters = _get_exporter_names()
+    if not exporters:
+        return [ConsoleSpanExporter]
+    return _import_exporters(exporters)
+
+
 def _import_exporters(
     exporter_names: Sequence[str],
 ) -> Sequence[SpanExporter]:
@@ -130,6 +141,10 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
         return id_generator_impl
 
     raise RuntimeError(f"{id_generator_name} is not an IdGenerator")
+
+
+def _import_id_generator_from_env() -> IdGenerator:
+    return _import_id_generator(_get_id_generator())
 
 
 def _initialize_components():
