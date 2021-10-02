@@ -16,6 +16,7 @@
 
 import unittest
 from unittest.mock import Mock, patch
+from logging import WARNING
 
 from opentelemetry import baggage
 from opentelemetry.baggage.propagation import (
@@ -38,8 +39,6 @@ class TestBaggagePropagation(unittest.TestCase):
         """Test helper"""
         ctx = get_current()
         for k, v in values.items():
-            from ipdb import set_trace
-            set_trace()
             ctx = baggage.set_baggage(k, v, context=ctx)
         output = {}
         self.propagator.inject(output, context=ctx)
@@ -68,15 +67,23 @@ class TestBaggagePropagation(unittest.TestCase):
         expected = {"key1": "val1", "key2": "val2;prop=1"}
         self.assertEqual(self._extract(header), expected)
 
-    def test_valid_header_with_url_escaped_comma(self):
-        header = "key%2C1=val1,key2=val2%2Cval3"
-        expected = {"key,1": "val1", "key2": "val2,val3"}
+    def test_valid_header_with_url_escaped_values(self):
+        header = "key%2C1=val1,key2=val2%3Aval3,key3=val4%40%23%24val5"
+        expected = {
+            "key,1": "val1",
+            "key2": "val2:val3",
+            "key3": "val4@#$val5",
+        }
         self.assertEqual(self._extract(header), expected)
 
-    def test_valid_header_with_invalid_value(self):
+    def test_header_with_invalid_value(self):
         header = "key1=val1,key2=val2,a,val3"
-        expected = {"key1": "val1", "key2": "val2"}
-        self.assertEqual(self._extract(header), expected)
+        with self.assertLogs(level=WARNING) as warning:
+            self._extract(header)
+            self.assertIn(
+                "Baggage list-member doesn't match the format",
+                warning.output[0],
+            )
 
     def test_valid_header_with_empty_value(self):
         header = "key1=,key2=val2"
@@ -112,11 +119,11 @@ class TestBaggagePropagation(unittest.TestCase):
 
     def test_extract_unquote_plus(self):
         self.assertEqual(
-            self._extract("key+key=value+value"), {"key key": "value value"}
+            self._extract("keykey=value%5Evalue"), {"keykey": "value^value"}
         )
         self.assertEqual(
-            self._extract("key%2Fkey=value%2Fvalue"),
-            {"key/key": "value/value"},
+            self._extract("key%23key=value%23value"),
+            {"key#key": "value#value"},
         )
 
     def test_header_max_entries_skip_invalid_entry(self):
@@ -165,7 +172,7 @@ class TestBaggagePropagation(unittest.TestCase):
         self.assertEqual(None, output)
 
     def test_inject_invalid_entries(self):
-        self.assertEqual("", self._inject({"key": "val ue"}))
+        self.assertEqual(None, self._inject({"key": "val ue"}))
 
     def test_inject(self):
         values = {

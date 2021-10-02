@@ -31,6 +31,7 @@ _KEY_VALUE_FORMAT = rf"{_OWS}{_KEY_FORMAT}{_OWS}={_OWS}{_VALUE_FORMAT}{_OWS}"
 _HEADER_PATTERN = compile(_KEY_VALUE_FORMAT)
 _DELIMITER_PATTERN = compile(r"[ \t]*,[ \t]*")
 
+_BAGGAGE_PROPERTY_FORMAT = rf"{_KEY_VALUE_FORMAT}|{_OWS}{_KEY_FORMAT}{_OWS}"
 
 # pylint: disable=invalid-name
 def parse_headers(s: str) -> Mapping[str, str]:

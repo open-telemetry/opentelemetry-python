@@ -13,20 +13,25 @@
 # limitations under the License.
 
 from logging import getLogger
-from re import compile as compile_
+from re import compile
 from types import MappingProxyType
 from typing import Mapping, Optional
 
 from opentelemetry.context import create_key, get_value, set_value
 from opentelemetry.context.context import Context
+from opentelemetry.util.re import (
+    _KEY_FORMAT,
+    _VALUE_FORMAT,
+    _BAGGAGE_PROPERTY_FORMAT,
+)
+
 
 _BAGGAGE_KEY = create_key("baggage")
 _logger = getLogger(__name__)
 
-# The following regular expressions are taken from
-# https://github.com/open-telemetry/opentelemetry-go/blob/4bf6150fa94e18bdf01c96ed78ee6d1c76f8e308/baggage/baggage.go#L36-L55
-_key_regex = compile_(r"[!#-'*+-.0-9A-Z^-z|~]+")
-_value_regex = compile_(r"[!#-+.-:<-\[\]-~-]*")
+_KEY_PATTERN = compile(_KEY_FORMAT)
+_VALUE_PATTERN = compile(_VALUE_FORMAT)
+_PROPERT_PATTERN = compile(_BAGGAGE_PROPERTY_FORMAT)
 
 
 def get_all(
@@ -77,11 +82,11 @@ def set_baggage(
         A Context with the value updated
     """
     baggage = dict(get_all(context=context))
-    if _key_regex.fullmatch(str(name)) is None or (
-        _value_regex.fullmatch(str(value)) is None
-    ):
+    if not _is_valid_key(name):
+        _logger.warning("Baggage key `%s` does not match format, ignoring", name)
+    elif not _is_valid_value(str(value)):
         _logger.warning(
-            "name %s and value %s have been discarded", name, value
+            "Baggage value `%s` does not match format, ignorig", value
         )
     else:
         baggage[name] = value
@@ -116,3 +121,22 @@ def clear(context: Optional[Context] = None) -> Context:
         A Context with all baggage entries removed
     """
     return set_value(_BAGGAGE_KEY, {}, context=context)
+
+
+def _is_valid_key(name: str) -> bool:
+    return _KEY_PATTERN.fullmatch(name) is not None
+
+
+def _is_valid_value(value: str) -> bool:
+    parts = value.split(";")
+    is_valid_value = _VALUE_PATTERN.fullmatch(parts[0]) is not None
+    if len(parts) > 1:  # one or more properties metadata
+        for property in parts[1:]:
+            if _PROPERT_PATTERN.fullmatch(property) is None:
+                is_valid_value = False
+                break
+    return is_valid_value
+
+
+def _is_valid_pair(key: str, value: str) -> bool:
+    return _is_valid_key(key) and _is_valid_value(value)

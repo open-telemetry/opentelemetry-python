@@ -15,20 +15,16 @@
 from urllib.parse import quote_plus, unquote_plus
 
 from logging import getLogger
-from re import compile as compile_
+from re import compile, split
 from typing import Iterable, Mapping, Optional, Set
 
-from opentelemetry.baggage import get_all, set_baggage
+from opentelemetry.baggage import get_all, set_baggage, _is_valid_pair
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
+from opentelemetry.util.re import _DELIMITER_PATTERN
 from opentelemetry.propagators import textmap
 
 _logger = getLogger(__name__)
-
-# The following regexes are taken from
-# https://github.com/open-telemetry/opentelemetry-go/blob/4bf6150fa94e18bdf01c96ed78ee6d1c76f8e308/baggage/baggage.go#L36-L55
-_key_regex = compile_(r"[!#-'*+-.0-9A-Z^-z|~]+")
-_value_regex = compile_(r"[!#-+.-:<-\[\]-~-]*")
 
 
 class W3CBaggagePropagator(textmap.TextMapPropagator):
@@ -59,31 +55,52 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         )
 
         if not header or len(header) > self._MAX_HEADER_LENGTH:
+            _logger.warning(
+                "Baggage header `%s` exceeded the maximum number of bytes per baggage-string.",
+                header,
+            )
             return context
 
-        baggage_entries = header.split(",")
-        total_baggage_entries = self._MAX_PAIRS
-        for entry in baggage_entries:
+        baggage_entries = split(_DELIMITER_PATTERN, header)
 
-            if total_baggage_entries <= 0:
-                return context  # type: ignore
-            total_baggage_entries -= 1
+        if len(baggage_entries) > self._MAX_PAIRS:
+            _logger.warning(
+                "Baggage header `%s` exceeded the maximum number of list-members",
+                header,
+            )
+            return context
+
+        entries = []
+        for entry in baggage_entries:
             if len(entry) > self._MAX_PAIR_LENGTH:
-                _logger.warning("Entry %s has been discarded", entry)
+                _logger.warning(
+                    "Baggage entry `%s` exceeded the maximum number of bytes per list-member",
+                    entry,
+                )
+                return context
+            if not entry:  # empty string
                 continue
             try:
                 name, value = entry.split("=", 1)
             except Exception:  # pylint: disable=broad-except
-                _logger.warning("Entry %s has been discarded", entry)
-                continue
+                _logger.warning(
+                    "Baggage list-member doesn't match the format: `%s`", entry
+                )
+                return context
+            name = unquote_plus(name).strip().lower()
+            value = unquote_plus(value).strip()
+            if not _is_valid_pair(name, value):
+                _logger.warning("Invalid baggage entry: `%s`", entry)
+                return context
+
+            entries.append((name, value))
+
+        for name, value in entries:
             context = set_baggage(
-                unquote_plus(name).strip(),
-                unquote_plus(value).strip(),
+                name,
+                value,
                 context=context,
             )
-            total_baggage_entries -= 1
-            if total_baggage_entries == 0:
-                break
 
         return context  # type: ignore
 
@@ -114,17 +131,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
 def _format_baggage(baggage_entries: Mapping[str, object]) -> str:
 
     key_values = []
-
     for key, value in baggage_entries.items():
-
-        if _key_regex.fullmatch(key) is None or (
-            _value_regex.fullmatch(str(value)) is None
-        ):
-            _logger.warning(
-                "Key %s and value %s have been discarded", key, value
-            )
-            continue
-
         key_values.append(quote_plus(str(key)) + "=" + quote_plus(str(value)))
 
     return ",".join(key_values)
