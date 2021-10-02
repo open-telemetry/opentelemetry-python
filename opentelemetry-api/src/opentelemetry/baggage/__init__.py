@@ -20,11 +20,10 @@ from typing import Mapping, Optional
 from opentelemetry.context import create_key, get_value, set_value
 from opentelemetry.context.context import Context
 from opentelemetry.util.re import (
+    _BAGGAGE_PROPERTY_FORMAT,
     _KEY_FORMAT,
     _VALUE_FORMAT,
-    _BAGGAGE_PROPERTY_FORMAT,
 )
-
 
 _BAGGAGE_KEY = create_key("baggage")
 _logger = getLogger(__name__)

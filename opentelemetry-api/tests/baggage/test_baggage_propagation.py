@@ -15,8 +15,8 @@
 # type: ignore
 
 import unittest
-from unittest.mock import Mock, patch
 from logging import WARNING
+from unittest.mock import Mock, patch
 
 from opentelemetry import baggage
 from opentelemetry.baggage.propagation import (

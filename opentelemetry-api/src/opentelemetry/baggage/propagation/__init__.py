@@ -12,17 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-from urllib.parse import quote_plus, unquote_plus
-
 from logging import getLogger
 from re import compile, split
 from typing import Iterable, Mapping, Optional, Set
+from urllib.parse import quote_plus, unquote_plus
 
-from opentelemetry.baggage import get_all, set_baggage, _is_valid_pair
+from opentelemetry.baggage import _is_valid_pair, get_all, set_baggage
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
-from opentelemetry.util.re import _DELIMITER_PATTERN
 from opentelemetry.propagators import textmap
+from opentelemetry.util.re import _DELIMITER_PATTERN
 
 _logger = getLogger(__name__)
 
@@ -102,7 +101,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
                 context=context,
             )
 
-        return context  # type: ignore
+        return context
 
     def inject(
         self,
