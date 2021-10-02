@@ -123,11 +123,11 @@ def clear(context: Optional[Context] = None) -> Context:
 
 
 def _is_valid_key(name: str) -> bool:
-    return _KEY_PATTERN.fullmatch(name) is not None
+    return _KEY_PATTERN.fullmatch(str(name)) is not None
 
 
-def _is_valid_value(value: str) -> bool:
-    parts = value.split(";")
+def _is_valid_value(value: object) -> bool:
+    parts = str(value).split(";")
     is_valid_value = _VALUE_PATTERN.fullmatch(parts[0]) is not None
     if len(parts) > 1:  # one or more properties metadata
         for property in parts[1:]:

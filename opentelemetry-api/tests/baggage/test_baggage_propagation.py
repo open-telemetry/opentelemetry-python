@@ -63,14 +63,14 @@ class TestBaggagePropagation(unittest.TestCase):
         self.assertEqual(self._extract(header), expected)
 
     def test_valid_header_with_properties(self):
-        header = "key1=val1,key2=val2;prop=1"
-        expected = {"key1": "val1", "key2": "val2;prop=1"}
+        header = "key1=val1,key2=val2;prop=1;prop2;prop3=2"
+        expected = {"key1": "val1", "key2": "val2;prop=1;prop2;prop3=2"}
         self.assertEqual(self._extract(header), expected)
 
     def test_valid_header_with_url_escaped_values(self):
-        header = "key%2C1=val1,key2=val2%3Aval3,key3=val4%40%23%24val5"
+        header = "key1=val1,key2=val2%3Aval3,key3=val4%40%23%24val5"
         expected = {
-            "key,1": "val1",
+            "key1": "val1",
             "key2": "val2:val3",
             "key3": "val4@#$val5",
         }
@@ -107,15 +107,17 @@ class TestBaggagePropagation(unittest.TestCase):
                 for k in range(W3CBaggagePropagator._MAX_PAIRS + 1)
             ]
         )
-        self.assertEqual(
-            len(self._extract(header)), W3CBaggagePropagator._MAX_PAIRS
-        )
+        self.assertEqual(len(self._extract(header)), 0)
 
     def test_header_contains_pair_too_long(self):
         long_value = "s" * (W3CBaggagePropagator._MAX_PAIR_LENGTH + 1)
         header = "key1=value1,key2={},key3=value3".format(long_value)
-        expected = {"key1": "value1", "key3": "value3"}
-        self.assertEqual(self._extract(header), expected)
+        with self.assertLogs(level=WARNING) as warning:
+            self.assertEqual(self._extract(header), {})
+            self.assertIn(
+                "exceeded the maximum number of bytes per list-member",
+                warning.output[0],
+            )
 
     def test_extract_unquote_plus(self):
         self.assertEqual(
@@ -128,43 +130,50 @@ class TestBaggagePropagation(unittest.TestCase):
 
     def test_header_max_entries_skip_invalid_entry(self):
 
-        self.assertEqual(
-            self._extract(
-                ",".join(
-                    [
-                        f"key{index}=value{index}"
-                        if index != 2
-                        else (
-                            f"key{index}="
-                            f"value{'s' * (W3CBaggagePropagator._MAX_PAIR_LENGTH + 1)}"
-                        )
-                        for index in range(W3CBaggagePropagator._MAX_PAIRS + 1)
-                    ]
-                )
-            ),
-            {
-                f"key{index}": f"value{index}"
-                for index in range(W3CBaggagePropagator._MAX_PAIRS + 1)
-                if index != 2
-            },
-        )
-        self.assertEqual(
-            self._extract(
-                ",".join(
-                    [
-                        f"key{index}=value{index}"
-                        if index != 2
-                        else f"key{index}xvalue{index}"
-                        for index in range(W3CBaggagePropagator._MAX_PAIRS + 1)
-                    ]
-                )
-            ),
-            {
-                f"key{index}": f"value{index}"
-                for index in range(W3CBaggagePropagator._MAX_PAIRS + 1)
-                if index != 2
-            },
-        )
+        with self.assertLogs(level=WARNING) as warning:
+            self.assertEqual(
+                self._extract(
+                    ",".join(
+                        [
+                            f"key{index}=value{index}"
+                            if index != 2
+                            else (
+                                f"key{index}="
+                                f"value{'s' * (W3CBaggagePropagator._MAX_PAIR_LENGTH + 1)}"
+                            )
+                            for index in range(
+                                W3CBaggagePropagator._MAX_PAIRS + 1
+                            )
+                        ]
+                    )
+                ),
+                {},
+            )
+            self.assertIn(
+                "exceeded the maximum number of list-members",
+                warning.output[0],
+            )
+
+        with self.assertLogs(level=WARNING) as warning:
+            self.assertEqual(
+                self._extract(
+                    ",".join(
+                        [
+                            f"key{index}=value{index}"
+                            if index != 2
+                            else f"key{index}xvalue{index}"
+                            for index in range(
+                                W3CBaggagePropagator._MAX_PAIRS + 1
+                            )
+                        ]
+                    )
+                ),
+                {},
+            )
+            self.assertIn(
+                "exceeded the maximum number of list-members",
+                warning.output[0],
+            )
 
     def test_inject_no_baggage_entries(self):
         values = {}

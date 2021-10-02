@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 from logging import getLogger
-from re import compile, split
+from re import split
 from typing import Iterable, Mapping, Optional, Set
 from urllib.parse import quote_plus, unquote_plus
 
