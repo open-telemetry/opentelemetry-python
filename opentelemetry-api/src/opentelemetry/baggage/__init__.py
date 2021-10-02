@@ -70,7 +70,7 @@ def get_baggage(
 
 def set_baggage(
     name: str, value: object, context: Optional[Context] = None
-) -> Optional[Context]:
+) -> Context:
     """Sets a value in the Baggage
 
     Args:
@@ -83,7 +83,9 @@ def set_baggage(
     """
     baggage = dict(get_all(context=context))
     if not _is_valid_key(name):
-        _logger.warning("Baggage key `%s` does not match format, ignoring", name)
+        _logger.warning(
+            "Baggage key `%s` does not match format, ignoring", name
+        )
     elif not _is_valid_value(str(value)):
         _logger.warning(
             "Baggage value `%s` does not match format, ignorig", value
@@ -93,9 +95,7 @@ def set_baggage(
     return set_value(_BAGGAGE_KEY, baggage, context=context)
 
 
-def remove_baggage(
-    name: str, context: Optional[Context] = None
-) -> Optional[Context]:
+def remove_baggage(name: str, context: Optional[Context] = None) -> Context:
     """Removes a value from the Baggage
 
     Args:
