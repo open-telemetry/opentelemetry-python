@@ -129,12 +129,10 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
 
 
 def _format_baggage(baggage_entries: Mapping[str, object]) -> str:
-
-    key_values = []
-    for key, value in baggage_entries.items():
-        key_values.append(quote_plus(str(key)) + "=" + quote_plus(str(value)))
-
-    return ",".join(key_values)
+    return ",".join(
+        quote_plus(str(key)) + "=" + quote_plus(str(value))
+        for key, value in baggage_entries.items()
+    )
 
 
 def _extract_first_element(
