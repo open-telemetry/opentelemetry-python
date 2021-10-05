@@ -592,7 +592,7 @@ class TracerShim(Tracer):
 
         current_span = get_current_span()
 
-        if child_of is None and current_span is not INVALID_SPAN_CONTEXT:
+        if child_of is None and current_span.get_span_context() is not INVALID_SPAN_CONTEXT:
             child_of = SpanShim(None, None, current_span)
 
         span = self.start_span(
@@ -649,12 +649,18 @@ class TracerShim(Tracer):
         if isinstance(parent, OtelSpanContext):
             parent = NonRecordingSpan(parent)
 
-        parent_span_context = set_span_in_context(parent)
-
         links = []
+        valid_links = []
         if references:
             for ref in references:
                 links.append(Link(ref.referenced_context.unwrap()))
+                if ref.referenced_context.unwrap() is not INVALID_SPAN_CONTEXT:
+                    valid_links.append(ref)
+
+        if valid_links and parent is None:
+            parent = NonRecordingSpan(valid_links[0].referenced_context.unwrap())
+
+        parent_span_context = set_span_in_context(parent)
 
         # The OpenTracing API expects time values to be `float` values which
         # represent the number of seconds since the epoch. OpenTelemetry
