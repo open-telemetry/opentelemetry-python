@@ -592,7 +592,10 @@ class TracerShim(Tracer):
 
         current_span = get_current_span()
 
-        if child_of is None and current_span.get_span_context() is not INVALID_SPAN_CONTEXT:
+        if (
+            child_of is None
+            and current_span.get_span_context() is not INVALID_SPAN_CONTEXT
+        ):
             child_of = SpanShim(None, None, current_span)
 
         span = self.start_span(
@@ -658,7 +661,9 @@ class TracerShim(Tracer):
                     valid_links.append(ref)
 
         if valid_links and parent is None:
-            parent = NonRecordingSpan(valid_links[0].referenced_context.unwrap())
+            parent = NonRecordingSpan(
+                valid_links[0].referenced_context.unwrap()
+            )
 
         parent_span_context = set_span_in_context(parent)
 
