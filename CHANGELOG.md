@@ -32,7 +32,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add `schema_url` to `TracerProvider.get_tracer`
   ([#2154](https://github.com/open-telemetry/opentelemetry-python/pull/2154))
 - Fix parental trace relationship for opentracing `follows_from` reference
-  ()
+  ([#2180](https://github.com/open-telemetry/opentelemetry-python/pull/2180))
 
 ## [1.5.0-0.24b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.5.0-0.24b0) - 2021-08-26
 
