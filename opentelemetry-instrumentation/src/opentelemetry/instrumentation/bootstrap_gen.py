@@ -80,6 +80,10 @@ libraries = {
         "library": "mysql-connector-python ~= 8.0",
         "instrumentation": "opentelemetry-instrumentation-mysql==0.24b0",
     },
+    "pika": {
+        "library": "pika >= 1.1.0",
+        "instrumentation": "opentelemetry-instrumentation-pika==0.24b0",
+    },
     "psycopg2": {
         "library": "psycopg2 >= 2.7.3.1",
         "instrumentation": "opentelemetry-instrumentation-psycopg2==0.24b0",
