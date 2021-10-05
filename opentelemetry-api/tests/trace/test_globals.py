@@ -1,7 +1,8 @@
 import unittest
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from opentelemetry import context, trace
+from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
 from opentelemetry.trace.status import Status, StatusCode
 
 
@@ -27,21 +28,72 @@ class TestSpan(trace.NonRecordingSpan):
 
 class TestGlobals(unittest.TestCase):
     def setUp(self):
-        self._patcher = patch("opentelemetry.trace._TRACER_PROVIDER")
-        self._mock_tracer_provider = self._patcher.start()
+        super().setUp()
+        trace._reset_globals()  # pylint: disable=protected-access
 
-    def tearDown(self) -> None:
-        self._patcher.stop()
+    def tearDown(self):
+        super().tearDown()
+        trace._reset_globals()  # pylint: disable=protected-access
 
-    def test_get_tracer(self):
+    @staticmethod
+    @patch("opentelemetry.trace._TRACER_PROVIDER")
+    def test_get_tracer(mock_tracer_provider):  # type: ignore
         """trace.get_tracer should proxy to the global tracer provider."""
         trace.get_tracer("foo", "var")
-        self._mock_tracer_provider.get_tracer.assert_called_with(
-            "foo", "var", None
-        )
-        mock_provider = unittest.mock.Mock()
+        mock_tracer_provider.get_tracer.assert_called_with("foo", "var", None)
+        mock_provider = Mock()
         trace.get_tracer("foo", "var", mock_provider)
         mock_provider.get_tracer.assert_called_with("foo", "var", None)
+
+
+class TestGlobalsConcurrency(ConcurrencyTestBase):
+    def setUp(self):
+        super().setUp()
+        trace._reset_globals()  # pylint: disable=protected-access
+
+    def tearDown(self):
+        super().tearDown()
+        trace._reset_globals()  # pylint: disable=protected-access
+
+    @patch("opentelemetry.trace.logger")
+    def test_set_tracer_provider_many_threads(self, mock_logger) -> None:  # type: ignore
+        mock_logger.warning = MockFunc()
+
+        def do_concurrently() -> Mock:
+            # first get a proxy tracer
+            proxy_tracer = trace.ProxyTracerProvider().get_tracer("foo")
+
+            # try to set the global tracer provider
+            mock_tracer_provider = Mock(get_tracer=MockFunc())
+            trace.set_tracer_provider(mock_tracer_provider)
+
+            # start a span through the proxy which will call through to the mock provider
+            proxy_tracer.start_span("foo")
+
+            return mock_tracer_provider
+
+        num_threads = 100
+        mock_tracer_providers = self.run_with_many_threads(
+            do_concurrently,
+            num_threads=num_threads,
+        )
+
+        # despite trying to set tracer provider many times, only one of the
+        # mock_tracer_providers should have stuck and been called from
+        # proxy_tracer.start_span()
+        mock_tps_with_any_call = [
+            mock
+            for mock in mock_tracer_providers
+            if mock.get_tracer.call_count > 0
+        ]
+
+        self.assertEqual(len(mock_tps_with_any_call), 1)
+        self.assertEqual(
+            mock_tps_with_any_call[0].get_tracer.call_count, num_threads
+        )
+
+        # should have warned everytime except for the successful set
+        self.assertEqual(mock_logger.warning.call_count, num_threads - 1)
 
 
 class TestTracer(unittest.TestCase):

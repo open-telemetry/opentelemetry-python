@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.5.0-0.24b0...HEAD)
+- Fix race in `set_tracer_provider()`
+  ([#2182](https://github.com/open-telemetry/opentelemetry-python/pull/2182))
 - Automatically load OTEL environment variables as options for `opentelemetry-instrument`
   ([#1969](https://github.com/open-telemetry/opentelemetry-python/pull/1969))
 - `opentelemetry-semantic-conventions` Update to semantic conventions v1.6.1

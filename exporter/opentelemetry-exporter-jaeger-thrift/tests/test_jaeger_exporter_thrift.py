@@ -55,6 +55,7 @@ def _translate_spans_with_dropped_attributes():
 
 class TestJaegerExporter(unittest.TestCase):
     def setUp(self):
+        trace_api._reset_globals()  # pylint: disable=protected-access
         # create and save span to be used in tests
         self.context = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
@@ -72,6 +73,10 @@ class TestJaegerExporter(unittest.TestCase):
         self._test_span.start(start_time=1)
         self._test_span.end(end_time=3)
         # pylint: disable=protected-access
+
+    def tearDown(self):
+        super().tearDown()
+        trace_api._reset_globals()  # pylint: disable=protected-access
 
     @patch("opentelemetry.exporter.jaeger.thrift.trace._TRACER_PROVIDER", None)
     def test_constructor_default(self):

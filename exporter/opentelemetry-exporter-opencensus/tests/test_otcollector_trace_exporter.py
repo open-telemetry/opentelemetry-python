@@ -34,6 +34,14 @@ from opentelemetry.trace import TraceFlags
 
 # pylint: disable=no-member
 class TestCollectorSpanExporter(unittest.TestCase):
+    def setUp(self):
+        super().setUp()
+        trace_api._reset_globals()  # pylint: disable=protected-access
+
+    def tearDown(self):
+        super().tearDown()
+        trace_api._reset_globals()  # pylint: disable=protected-access
+
     @mock.patch(
         "opentelemetry.exporter.opencensus.trace_exporter.trace._TRACER_PROVIDER",
         None,

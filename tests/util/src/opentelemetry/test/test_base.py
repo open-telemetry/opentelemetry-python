@@ -28,20 +28,18 @@ class TestBase(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        cls.original_tracer_provider = trace_api.get_tracer_provider()
         result = cls.create_tracer_provider()
         cls.tracer_provider, cls.memory_exporter = result
         # This is done because set_tracer_provider cannot override the
         # current tracer provider.
-        trace_api._TRACER_PROVIDER = None  # pylint: disable=protected-access
+        trace_api._reset_globals()  # pylint: disable=protected-access
         trace_api.set_tracer_provider(cls.tracer_provider)
 
     @classmethod
     def tearDownClass(cls):
         # This is done because set_tracer_provider cannot override the
         # current tracer provider.
-        trace_api._TRACER_PROVIDER = None  # pylint: disable=protected-access
-        trace_api.set_tracer_provider(cls.original_tracer_provider)
+        trace_api._reset_globals()  # pylint: disable=protected-access
 
     def setUp(self):
         self.memory_exporter.clear()
