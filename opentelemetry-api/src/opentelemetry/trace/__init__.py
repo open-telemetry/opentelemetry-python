@@ -99,6 +99,7 @@ from opentelemetry.trace.span import (
     INVALID_SPAN_ID,
     INVALID_TRACE_ID,
     NonRecordingSpan,
+    NoOpSpan,
     Span,
     SpanContext,
     TraceFlags,
@@ -216,11 +217,7 @@ class TracerProvider(ABC):
         """
 
 
-class _DefaultTracerProvider(TracerProvider):
-    """The default TracerProvider, used when no implementation is available.
-
-    All operations are no-op.
-    """
+class NoOpTracerProvider(TracerProvider):
 
     def get_tracer(
         self,
@@ -228,8 +225,7 @@ class _DefaultTracerProvider(TracerProvider):
         instrumenting_library_version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
     ) -> "Tracer":
-        # pylint:disable=no-self-use,unused-argument
-        return _DefaultTracer()
+        return NoOpTracer()
 
 
 class ProxyTracerProvider(TracerProvider):
@@ -379,6 +375,36 @@ class Tracer(ABC):
         Yields:
             The newly-created span.
         """
+
+
+class NoOpTracer(Tracer):
+    def start_span(
+        self,
+        name: str,
+        context: Optional[Context] = None,
+        kind: SpanKind = SpanKind.INTERNAL,
+        attributes: types.Attributes = None,
+        links: _Links = None,
+        start_time: Optional[int] = None,
+        record_exception: bool = True,
+        set_status_on_exception: bool = True,
+    ) -> "Span":
+        return NoOpSpan()
+
+    @contextmanager  # type: ignore
+    def start_as_current_span(
+        self,
+        name: str,
+        context: Optional[Context] = None,
+        kind: SpanKind = SpanKind.INTERNAL,
+        attributes: types.Attributes = None,
+        links: _Links = None,
+        start_time: Optional[int] = None,
+        record_exception: bool = True,
+        set_status_on_exception: bool = True,
+        end_on_exit: bool = True,
+    ) -> Iterator["Span"]:
+        yield [NoOpSpan()]
 
 
 class ProxyTracer(Tracer):

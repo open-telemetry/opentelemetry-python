@@ -20,6 +20,7 @@ from collections.abc import MutableMapping
 from typing import Optional, Sequence, Union
 
 from opentelemetry.util import types
+from opentelemetry.safety import BaseSafety, safety
 
 # bytes are accepted as a user supplied value for attributes but
 # decoded to strings internally.
@@ -123,14 +124,14 @@ def _clean_attribute_value(
     return value
 
 
-class BoundedAttributes(MutableMapping):
+class BoundedAttributes(MutableMapping, BaseSafety):
     """An ordered dict with a fixed max capacity.
 
     Oldest elements are dropped when the dict is full and a new element is
     added.
     """
 
-    def __init__(
+    def _init(
         self,
         maxlen: Optional[int] = None,
         attributes: types.Attributes = None,
@@ -152,14 +153,20 @@ class BoundedAttributes(MutableMapping):
                 self[key] = value
         self._immutable = immutable
 
+    def _get_no_op_class(self):
+        return dict
+
+    @safety("")
     def __repr__(self):
         return (
             f"{type(self).__name__}({dict(self._dict)}, maxlen={self.maxlen})"
         )
 
+    @safety(None)
     def __getitem__(self, key):
         return self._dict[key]
 
+    @safety(None)
     def __setitem__(self, key, value):
         if getattr(self, "_immutable", False):
             raise TypeError
@@ -180,18 +187,22 @@ class BoundedAttributes(MutableMapping):
 
                 self._dict[key] = value
 
+    @safety(None)
     def __delitem__(self, key):
         if getattr(self, "_immutable", False):
             raise TypeError
         with self._lock:
             del self._dict[key]
 
+    @safety(iter({}))
     def __iter__(self):
         with self._lock:
             return iter(self._dict.copy())
 
+    @safety(0)
     def __len__(self):
         return len(self._dict)
 
+    @safety({})
     def copy(self):
         return self._dict.copy()

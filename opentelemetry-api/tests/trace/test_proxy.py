@@ -13,63 +13,52 @@
 # limitations under the License.
 
 # pylint: disable=W0212,W0222,W0221
-import typing
 import unittest
 
 from opentelemetry import trace
-from opentelemetry.test.globals_test import TraceGlobalsTest
-from opentelemetry.trace.span import INVALID_SPAN_CONTEXT, NonRecordingSpan
+from opentelemetry.trace import (
+    NoOpTracer,
+    NoOpSpan,
+    ProxyTracer,
+    ProxyTracerProvider,
+    get_tracer_provider,
+    set_tracer_provider,
+    NoOpTracerProvider,
+)
+from opentelemetry.trace.span import NonRecordingSpan
 
 
-class TestProvider(trace._DefaultTracerProvider):
-    def get_tracer(
-        self,
-        instrumenting_module_name: str,
-        instrumenting_library_version: typing.Optional[str] = None,
-        schema_url: typing.Optional[str] = None,
-    ) -> trace.Tracer:
-        return TestTracer()
-
-
-class TestTracer(trace._DefaultTracer):
-    def start_span(self, *args, **kwargs):
-        return TestSpan(INVALID_SPAN_CONTEXT)
-
-
-class TestSpan(NonRecordingSpan):
-    pass
-
-
-class TestProxy(TraceGlobalsTest, unittest.TestCase):
+class TestProxy(unittest.TestCase):
     def test_proxy_tracer(self):
-        provider = trace.get_tracer_provider()
+        original_provider = trace._TRACER_PROVIDER
+
+        provider = get_tracer_provider()
         # proxy provider
-        self.assertIsInstance(provider, trace.ProxyTracerProvider)
+        self.assertIsInstance(provider, ProxyTracerProvider)
 
         # provider returns proxy tracer
         tracer = provider.get_tracer("proxy-test")
-        self.assertIsInstance(tracer, trace.ProxyTracer)
+        self.assertIsInstance(tracer, ProxyTracer)
 
         with tracer.start_span("span1") as span:
-            self.assertIsInstance(span, trace.NonRecordingSpan)
+            self.assertIsInstance(span, NonRecordingSpan)
 
         with tracer.start_as_current_span("span2") as span:
-            self.assertIsInstance(span, trace.NonRecordingSpan)
+            self.assertIsInstance(span, NonRecordingSpan)
 
         # set a real provider
-        trace.set_tracer_provider(TestProvider())
-
-        # get_tracer_provider() now returns the real provider
-        self.assertIsInstance(trace.get_tracer_provider(), TestProvider)
+        set_tracer_provider(NoOpTracerProvider())
 
         # tracer provider now returns real instance
-        self.assertIsInstance(trace.get_tracer_provider(), TestProvider)
+        self.assertIsInstance(get_tracer_provider(), NoOpTracerProvider)
 
         # references to the old provider still work but return real tracer now
         real_tracer = provider.get_tracer("proxy-test")
-        self.assertIsInstance(real_tracer, TestTracer)
+        self.assertIsInstance(real_tracer, NoOpTracer)
 
         # reference to old proxy tracer now delegates to a real tracer and
         # creates real spans
         with tracer.start_span("") as span:
-            self.assertIsInstance(span, TestSpan)
+            self.assertIsInstance(span, NoOpSpan)
+
+        trace._TRACER_PROVIDER = original_provider

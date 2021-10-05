@@ -164,6 +164,62 @@ class Span(abc.ABC):
         self.end()
 
 
+class NoOpSpan(Span):
+    def end(self, end_time: typing.Optional[int] = None) -> None:
+        pass
+
+    def get_span_context(self) -> "SpanContext":
+        # This is strange, but there is no API for SpanContext in the API but
+        # an actual implementation, that is why there is no NoOpSpanContext
+        # class because there is no abstract class from which inheriting.
+        return SpanContext()
+
+    def set_attributes(
+        self, attributes: typing.Dict[str, types.AttributeValue]
+    ) -> None:
+        pass
+
+    def set_attribute(self, key: str, value: types.AttributeValue) -> None:
+        pass
+
+    def add_event(
+        self,
+        name: str,
+        attributes: types.Attributes = None,
+        timestamp: typing.Optional[int] = None,
+    ) -> None:
+        pass
+
+    def update_name(self, name: str) -> None:
+        pass
+
+    def is_recording(self) -> bool:
+        return False
+
+    def set_status(self, status: Status) -> None:
+        pass
+
+    def record_exception(
+        self,
+        exception: Exception,
+        attributes: types.Attributes = None,
+        timestamp: typing.Optional[int] = None,
+        escaped: bool = False,
+    ) -> None:
+        pass
+
+    def __enter__(self) -> "Span":
+        return self
+
+    def __exit__(
+        self,
+        exc_type: typing.Optional[typing.Type[BaseException]],
+        exc_val: typing.Optional[BaseException],
+        exc_tb: typing.Optional[python_types.TracebackType],
+    ) -> None:
+        pass
+
+
 class TraceFlags(int):
     """A bitmask that represents options specific to the trace.
 
