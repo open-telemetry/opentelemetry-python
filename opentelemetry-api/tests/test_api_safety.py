@@ -121,7 +121,7 @@ get_current_span
 
 class ClassSafetyTestMixin:
 
-    def test_class_safety(self, class_, no_op_class):
+    def class_safety(self, class_, no_op_class):
         with self.assertWarns(UserWarning):
             bounded_attributes = class_()
 
@@ -130,4 +130,4 @@ class ClassSafetyTestMixin:
 
 class TestAPISafety(TestCase, ClassSafetyTestMixin):
     def test_bounded_attributes(self):
-        self.test_class_safety(BoundedAttributes, dict)
+        self.class_safety(BoundedAttributes, dict)

@@ -100,8 +100,8 @@ class TestBoundedAttributes(unittest.TestCase):
     )
 
     def test_negative_maxlen(self):
-        with self.assertRaises(ValueError):
-            BoundedAttributes(-1)
+        with self.assertWarns(UserWarning):
+            BoundedAttributes(-1, _allow_instantiation=True)
 
     def test_from_map(self):
         dic_len = len(self.base)
