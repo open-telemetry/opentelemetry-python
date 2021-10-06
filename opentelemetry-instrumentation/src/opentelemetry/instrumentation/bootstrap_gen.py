@@ -73,7 +73,7 @@ libraries = {
         "instrumentation": "opentelemetry-instrumentation-httpx==0.24b0",
     },
     "jinja2": {
-        "library": "jinja2~=2.7",
+        "library": "jinja2 >= 2.7, < 4.0",
         "instrumentation": "opentelemetry-instrumentation-jinja2==0.24b0",
     },
     "mysql-connector-python": {
