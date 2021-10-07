@@ -29,12 +29,12 @@ from opentelemetry.sdk import trace
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SpanExportResult
-from opentelemetry.test.globals_test import TraceGlobalsTestMixin
+from opentelemetry.test.globals_test import TraceGlobalsTest
 from opentelemetry.trace import TraceFlags
 
 
 # pylint: disable=no-member
-class TestCollectorSpanExporter(TraceGlobalsTestMixin, unittest.TestCase):
+class TestCollectorSpanExporter(TraceGlobalsTest, unittest.TestCase):
     def test_constructor(self):
         mock_get_node = mock.Mock()
         patch = mock.patch(

@@ -3,7 +3,7 @@ from unittest.mock import Mock, patch
 
 from opentelemetry import context, trace
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
-from opentelemetry.test.globals_test import TraceGlobalsTestMixin
+from opentelemetry.test.globals_test import TraceGlobalsTest
 from opentelemetry.trace.status import Status, StatusCode
 
 
@@ -27,7 +27,7 @@ class TestSpan(trace.NonRecordingSpan):
         self.recorded_exception = exception
 
 
-class TestGlobals(TraceGlobalsTestMixin, unittest.TestCase):
+class TestGlobals(TraceGlobalsTest, unittest.TestCase):
     @staticmethod
     @patch("opentelemetry.trace._TRACER_PROVIDER")
     def test_get_tracer(mock_tracer_provider):  # type: ignore
@@ -39,7 +39,7 @@ class TestGlobals(TraceGlobalsTestMixin, unittest.TestCase):
         mock_provider.get_tracer.assert_called_with("foo", "var", None)
 
 
-class TestGlobalsConcurrency(TraceGlobalsTestMixin, ConcurrencyTestBase):
+class TestGlobalsConcurrency(TraceGlobalsTest, ConcurrencyTestBase):
     @patch("opentelemetry.trace.logger")
     def test_set_tracer_provider_many_threads(self, mock_logger) -> None:  # type: ignore
         mock_logger.warning = MockFunc()

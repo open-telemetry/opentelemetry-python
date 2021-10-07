@@ -26,19 +26,16 @@ def reset_trace_globals() -> None:
     trace_api._PROXY_TRACER_PROVIDER = trace_api.ProxyTracerProvider()
 
 
-class TraceGlobalsTestMixin(unittest.TestCase):
+class TraceGlobalsTest(unittest.TestCase):
     """Resets trace API globals in setUp/tearDown
 
-    Use as a mixin with unittest.TestCase for your test that modifies trace API
-    globals.
+    Use as a base class or mixin for your test that modifies trace API globals.
     """
 
     def setUp(self) -> None:
-        if hasattr(super(), "setUp"):
-            super().setUp()
+        super().setUp()
         reset_trace_globals()
 
     def tearDown(self) -> None:
-        if hasattr(super(), "tearDown"):
-            super().tearDown()
+        super().tearDown()
         reset_trace_globals()

@@ -37,7 +37,7 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.resources import SERVICE_NAME
 from opentelemetry.sdk.trace import Resource, TracerProvider
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.test.globals_test import TraceGlobalsTestMixin
+from opentelemetry.test.globals_test import TraceGlobalsTest
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
 )
@@ -53,7 +53,7 @@ def _translate_spans_with_dropped_attributes():
     return translate._translate(ThriftTranslator(max_tag_value_length=5))
 
 
-class TestJaegerExporter(TraceGlobalsTestMixin, unittest.TestCase):
+class TestJaegerExporter(TraceGlobalsTest, unittest.TestCase):
     def setUp(self):
         # create and save span to be used in tests
         self.context = trace_api.SpanContext(
