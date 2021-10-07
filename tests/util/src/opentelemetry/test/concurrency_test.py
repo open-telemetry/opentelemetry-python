@@ -22,8 +22,13 @@ from unittest.mock import Mock
 ReturnT = TypeVar("ReturnT")
 
 
-# Can't use Mock directly because its call count is not thread safe
 class MockFunc:
+    """A thread safe mock function
+
+    Use this as part of your mock if you want to count calls across multiple
+    threads.
+    """
+
     def __init__(self) -> None:
         self.lock = threading.Lock()
         self.call_count = 0
@@ -36,6 +41,14 @@ class MockFunc:
 
 
 class ConcurrencyTestBase(unittest.TestCase):
+    """Test base class/mixin for tests of concurrent code
+
+    This test class calls ``sys.setswitchinterval(1e-12)`` to try to create more
+    contention while running tests that use many threads. It also provides
+    ``run_with_many_threads`` to run some test code in many threads
+    concurrently.
+    """
+
     orig_switch_interval = sys.getswitchinterval()
 
     @classmethod
@@ -54,6 +67,8 @@ class ConcurrencyTestBase(unittest.TestCase):
         func_to_test: Callable[[], ReturnT],
         num_threads: int = 100,
     ) -> List[ReturnT]:
+        """Util to run ``func_to_test`` in ``num_threads`` concurrently"""
+
         barrier = threading.Barrier(num_threads)
         results: List[Optional[ReturnT]] = [None] * num_threads
 
