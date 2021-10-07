@@ -15,7 +15,6 @@
 
 import unittest
 from unittest import mock
-from unittest.mock import patch
 
 # pylint:disable=no-name-in-module
 # pylint:disable=import-error
@@ -38,6 +37,7 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.resources import SERVICE_NAME
 from opentelemetry.sdk.trace import Resource, TracerProvider
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.test.globals_test import TraceGlobalsTestMixin
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
 )
@@ -53,9 +53,8 @@ def _translate_spans_with_dropped_attributes():
     return translate._translate(ThriftTranslator(max_tag_value_length=5))
 
 
-class TestJaegerExporter(unittest.TestCase):
+class TestJaegerExporter(TraceGlobalsTestMixin, unittest.TestCase):
     def setUp(self):
-        trace_api._reset_globals()  # pylint: disable=protected-access
         # create and save span to be used in tests
         self.context = trace_api.SpanContext(
             trace_id=0x000000000000000000000000DEADBEEF,
@@ -74,11 +73,6 @@ class TestJaegerExporter(unittest.TestCase):
         self._test_span.end(end_time=3)
         # pylint: disable=protected-access
 
-    def tearDown(self):
-        super().tearDown()
-        trace_api._reset_globals()  # pylint: disable=protected-access
-
-    @patch("opentelemetry.exporter.jaeger.thrift.trace._TRACER_PROVIDER", None)
     def test_constructor_default(self):
         # pylint: disable=protected-access
         """Test the default values assigned by constructor."""
@@ -103,7 +97,6 @@ class TestJaegerExporter(unittest.TestCase):
         self.assertTrue(exporter._agent_client is not None)
         self.assertIsNone(exporter._max_tag_value_length)
 
-    @patch("opentelemetry.exporter.jaeger.thrift.trace._TRACER_PROVIDER", None)
     def test_constructor_explicit(self):
         # pylint: disable=protected-access
         """Test the constructor passing all the options."""
@@ -148,7 +141,6 @@ class TestJaegerExporter(unittest.TestCase):
         self.assertTrue(exporter._collector_http_client.auth is None)
         self.assertEqual(exporter._max_tag_value_length, 42)
 
-    @patch("opentelemetry.exporter.jaeger.thrift.trace._TRACER_PROVIDER", None)
     def test_constructor_by_environment_variables(self):
         #  pylint: disable=protected-access
         """Test the constructor using Environment Variables."""
@@ -203,7 +195,6 @@ class TestJaegerExporter(unittest.TestCase):
         self.assertTrue(exporter._collector_http_client.auth is None)
         environ_patcher.stop()
 
-    @patch("opentelemetry.exporter.jaeger.thrift.trace._TRACER_PROVIDER", None)
     def test_constructor_with_no_traceprovider_resource(self):
 
         """Test the constructor when there is no resource attached to trace_provider"""
@@ -485,7 +476,6 @@ class TestJaegerExporter(unittest.TestCase):
 
         self.assertEqual(spans, expected_spans)
 
-    @patch("opentelemetry.exporter.jaeger.thrift.trace._TRACER_PROVIDER", None)
     def test_export(self):
 
         """Test that agent and/or collector are invoked"""
@@ -516,9 +506,7 @@ class TestJaegerExporter(unittest.TestCase):
         exporter.export((self._test_span,))
         self.assertEqual(agent_client_mock.emit.call_count, 1)
         self.assertEqual(collector_mock.submit.call_count, 1)
-        # trace_api._TRACER_PROVIDER = None
 
-    @patch("opentelemetry.exporter.jaeger.thrift.trace._TRACER_PROVIDER", None)
     def test_export_span_service_name(self):
         trace_api.set_tracer_provider(
             TracerProvider(

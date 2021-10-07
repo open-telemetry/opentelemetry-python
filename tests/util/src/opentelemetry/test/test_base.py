@@ -21,6 +21,7 @@ from opentelemetry.sdk.trace import TracerProvider, export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
+from opentelemetry.test.globals_test import reset_trace_globals
 
 
 class TestBase(unittest.TestCase):
@@ -32,14 +33,14 @@ class TestBase(unittest.TestCase):
         cls.tracer_provider, cls.memory_exporter = result
         # This is done because set_tracer_provider cannot override the
         # current tracer provider.
-        trace_api._reset_globals()  # pylint: disable=protected-access
+        reset_trace_globals()
         trace_api.set_tracer_provider(cls.tracer_provider)
 
     @classmethod
     def tearDownClass(cls):
         # This is done because set_tracer_provider cannot override the
         # current tracer provider.
-        trace_api._reset_globals()  # pylint: disable=protected-access
+        reset_trace_globals()
 
     def setUp(self):
         self.memory_exporter.clear()

@@ -29,23 +29,12 @@ from opentelemetry.sdk import trace
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SpanExportResult
+from opentelemetry.test.globals_test import TraceGlobalsTestMixin
 from opentelemetry.trace import TraceFlags
 
 
 # pylint: disable=no-member
-class TestCollectorSpanExporter(unittest.TestCase):
-    def setUp(self):
-        super().setUp()
-        trace_api._reset_globals()  # pylint: disable=protected-access
-
-    def tearDown(self):
-        super().tearDown()
-        trace_api._reset_globals()  # pylint: disable=protected-access
-
-    @mock.patch(
-        "opentelemetry.exporter.opencensus.trace_exporter.trace._TRACER_PROVIDER",
-        None,
-    )
+class TestCollectorSpanExporter(TraceGlobalsTestMixin, unittest.TestCase):
     def test_constructor(self):
         mock_get_node = mock.Mock()
         patch = mock.patch(
@@ -337,10 +326,6 @@ class TestCollectorSpanExporter(unittest.TestCase):
             getattr(output_identifier, "host_name"), "testHostName"
         )
 
-    @mock.patch(
-        "opentelemetry.exporter.opencensus.trace_exporter.trace._TRACER_PROVIDER",
-        None,
-    )
     def test_export_service_name(self):
         trace_api.set_tracer_provider(
             TracerProvider(

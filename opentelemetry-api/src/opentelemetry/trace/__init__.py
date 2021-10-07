@@ -458,16 +458,6 @@ _TRACER_PROVIDER: Optional[TracerProvider] = None
 _PROXY_TRACER_PROVIDER = ProxyTracerProvider()
 
 
-def _reset_globals() -> None:
-    """WARNING: only use this for tests."""
-    global _TRACER_PROVIDER_SET_ONCE  # pylint: disable=global-statement
-    global _TRACER_PROVIDER  # pylint: disable=global-statement
-    global _PROXY_TRACER_PROVIDER  # pylint: disable=global-statement
-    _TRACER_PROVIDER_SET_ONCE = Once()
-    _TRACER_PROVIDER = None
-    _PROXY_TRACER_PROVIDER = ProxyTracerProvider()
-
-
 def get_tracer(
     instrumenting_module_name: str,
     instrumenting_library_version: typing.Optional[str] = None,

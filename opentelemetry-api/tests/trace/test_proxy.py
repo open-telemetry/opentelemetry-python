@@ -17,6 +17,7 @@ import typing
 import unittest
 
 from opentelemetry import trace
+from opentelemetry.test.globals_test import TraceGlobalsTestMixin
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT, NonRecordingSpan
 
 
@@ -39,15 +40,7 @@ class TestSpan(NonRecordingSpan):
     pass
 
 
-class TestProxy(unittest.TestCase):
-    def setUp(self) -> None:
-        super().setUp()
-        trace._reset_globals()
-
-    def tearDown(self) -> None:
-        super().tearDown()
-        trace._reset_globals()
-
+class TestProxy(TraceGlobalsTestMixin, unittest.TestCase):
     def test_proxy_tracer(self):
         provider = trace.get_tracer_provider()
         # proxy provider
