@@ -485,7 +485,7 @@ def _set_tracer_provider(tracer_provider: TracerProvider, log: bool) -> None:
 
     did_set = _TRACER_PROVIDER_SET_ONCE.do_once(set_tp)
 
-    if not did_set:
+    if log and not did_set:
         logger.warning("Overriding of current TracerProvider is not allowed")
 
 
