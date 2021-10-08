@@ -175,7 +175,9 @@ class BatchSpanProcessor(SpanProcessor):
         self.queue = collections.deque(
             [], max_queue_size
         )  # type: typing.Deque[Span]
-        self.worker_thread = threading.Thread(target=self.worker, daemon=True)
+        self.worker_thread = threading.Thread(
+            name="OtelBatchSpanProcessor", target=self.worker, daemon=True
+        )
         self.condition = threading.Condition(threading.Lock())
         self._flush_request = None  # type: typing.Optional[_FlushRequest]
         self.schedule_delay_millis = schedule_delay_millis
