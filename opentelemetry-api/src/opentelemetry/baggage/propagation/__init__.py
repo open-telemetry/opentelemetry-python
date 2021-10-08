@@ -55,51 +55,50 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
 
         if not header or len(header) > self._MAX_HEADER_LENGTH:
             _logger.warning(
-                "Baggage header `%s` exceeded the maximum number of bytes per baggage-string.",
+                "Baggage header `%s` exceeded the maximum number of bytes per baggage-string",
                 header,
             )
             return context
 
         baggage_entries = split(_DELIMITER_PATTERN, header)
+        total_baggage_entries = self._MAX_PAIRS
 
         if len(baggage_entries) > self._MAX_PAIRS:
             _logger.warning(
                 "Baggage header `%s` exceeded the maximum number of list-members",
                 header,
             )
-            return context
 
-        entries = []
         for entry in baggage_entries:
             if len(entry) > self._MAX_PAIR_LENGTH:
                 _logger.warning(
                     "Baggage entry `%s` exceeded the maximum number of bytes per list-member",
                     entry,
                 )
-                return context
+                continue
             if not entry:  # empty string
                 continue
             try:
                 name, value = entry.split("=", 1)
             except Exception:  # pylint: disable=broad-except
                 _logger.warning(
-                    "Baggage list-member doesn't match the format: `%s`", entry
+                    "Baggage list-member `%s` doesn't match the format", entry
                 )
-                return context
+                continue
             name = unquote_plus(name).strip().lower()
             value = unquote_plus(value).strip()
             if not _is_valid_pair(name, value):
                 _logger.warning("Invalid baggage entry: `%s`", entry)
-                return context
+                continue
 
-            entries.append((name, value))
-
-        for name, value in entries:
             context = set_baggage(
                 name,
                 value,
                 context=context,
             )
+            total_baggage_entries -= 1
+            if total_baggage_entries == 0:
+                break
 
         return context
 

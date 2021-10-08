@@ -81,7 +81,7 @@ class TestBaggagePropagation(unittest.TestCase):
         with self.assertLogs(level=WARNING) as warning:
             self._extract(header)
             self.assertIn(
-                "Baggage list-member doesn't match the format",
+                "Baggage list-member `a` doesn't match the format",
                 warning.output[0],
             )
 
@@ -107,13 +107,16 @@ class TestBaggagePropagation(unittest.TestCase):
                 for k in range(W3CBaggagePropagator._MAX_PAIRS + 1)
             ]
         )
-        self.assertEqual(len(self._extract(header)), 0)
+        self.assertEqual(
+            len(self._extract(header)), W3CBaggagePropagator._MAX_PAIRS
+        )
 
     def test_header_contains_pair_too_long(self):
         long_value = "s" * (W3CBaggagePropagator._MAX_PAIR_LENGTH + 1)
         header = "key1=value1,key2={},key3=value3".format(long_value)
+        expected = {"key1": "value1", "key3": "value3"}
         with self.assertLogs(level=WARNING) as warning:
-            self.assertEqual(self._extract(header), {})
+            self.assertEqual(self._extract(header), expected)
             self.assertIn(
                 "exceeded the maximum number of bytes per list-member",
                 warning.output[0],
@@ -147,7 +150,11 @@ class TestBaggagePropagation(unittest.TestCase):
                         ]
                     )
                 ),
-                {},
+                {
+                    f"key{index}": f"value{index}"
+                    for index in range(W3CBaggagePropagator._MAX_PAIRS + 1)
+                    if index != 2
+                },
             )
             self.assertIn(
                 "exceeded the maximum number of list-members",
@@ -168,7 +175,11 @@ class TestBaggagePropagation(unittest.TestCase):
                         ]
                     )
                 ),
-                {},
+                {
+                    f"key{index}": f"value{index}"
+                    for index in range(W3CBaggagePropagator._MAX_PAIRS + 1)
+                    if index != 2
+                },
             )
             self.assertIn(
                 "exceeded the maximum number of list-members",
