@@ -87,7 +87,7 @@ def set_baggage(
         )
     elif not _is_valid_value(str(value)):
         _logger.warning(
-            "Baggage value `%s` does not match format, ignorig", value
+            "Baggage value `%s` does not match format, ignoring", value
         )
     else:
         baggage[name] = value
