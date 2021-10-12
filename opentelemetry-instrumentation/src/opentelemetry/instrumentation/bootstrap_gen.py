@@ -126,7 +126,7 @@ libraries = {
     },
     "tornado": {
         "library": "tornado >= 6.0",
-        "instrumentation": "opentelemetry-instrumentation-tornado==0.24b0",
+        "instrumentation": "opentelemetry-instrumentation-tornado==0.25b0",
     },
     "urllib3": {
         "library": "urllib3 >= 1.0.0, < 2.0.0",
