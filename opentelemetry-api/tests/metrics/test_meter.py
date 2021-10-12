@@ -13,9 +13,7 @@
 # limitations under the License.
 # type: ignore
 
-from logging import WARNING
 from unittest import TestCase
-from unittest.mock import Mock
 
 from opentelemetry.metrics import Meter
 
@@ -105,75 +103,3 @@ class TestMeter(TestCase):
         self.assertTrue(
             Meter.create_observable_up_down_counter.__isabstractmethod__
         )
-
-    def test_no_repeated_instrument_names(self):
-        """
-        Test that the meter returns an error when multiple instruments are
-        registered under the same Meter using the same name.
-        """
-
-        meter = ChildMeter("name")
-
-        meter.create_counter("name")
-
-        with self.assertLogs(level=WARNING):
-            meter.create_counter("name")
-
-        with self.assertLogs(level=WARNING):
-            meter.create_up_down_counter("name")
-
-        with self.assertLogs(level=WARNING):
-            meter.create_observable_counter("name", Mock())
-
-        with self.assertLogs(level=WARNING):
-            meter.create_histogram("name")
-
-        with self.assertLogs(level=WARNING):
-            meter.create_observable_gauge("name", Mock())
-
-        with self.assertLogs(level=WARNING):
-            meter.create_observable_up_down_counter("name", Mock())
-
-    def test_same_name_instrument_different_meter(self):
-        """
-        Test that is possible to register two instruments with the same name
-        under different meters.
-        """
-
-        meter_0 = ChildMeter("meter_0")
-        meter_1 = ChildMeter("meter_1")
-
-        meter_0.create_counter("counter")
-        meter_0.create_up_down_counter("up_down_counter")
-        meter_0.create_observable_counter("observable_counter", Mock())
-        meter_0.create_histogram("histogram")
-        meter_0.create_observable_gauge("observable_gauge", Mock())
-        meter_0.create_observable_up_down_counter(
-            "observable_up_down_counter", Mock()
-        )
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=WARNING):
-                meter_1.create_counter("counter")
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=WARNING):
-                meter_1.create_up_down_counter("up_down_counter")
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=WARNING):
-                meter_1.create_observable_counter("observable_counter", Mock())
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=WARNING):
-                meter_1.create_histogram("histogram")
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=WARNING):
-                meter_1.create_observable_gauge("observable_gauge", Mock())
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=WARNING):
-                meter_1.create_observable_up_down_counter(
-                    "observable_up_down_counter", Mock()
-                )

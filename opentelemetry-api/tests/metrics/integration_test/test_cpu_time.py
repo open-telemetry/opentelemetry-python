@@ -104,7 +104,7 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
             unit="s",
             description="CPU time",
         )
-        measurements = list(observable_counter.callback())
+        measurements = list(observable_counter._callback())
         self.assertEqual(measurements, self.measurements_expected)
 
     def test_cpu_time_generator(self):
@@ -182,5 +182,5 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
             unit="s",
             description="CPU time",
         )
-        measurements = list(observable_counter.callback())
+        measurements = list(observable_counter._callback())
         self.assertEqual(measurements, self.measurements_expected)

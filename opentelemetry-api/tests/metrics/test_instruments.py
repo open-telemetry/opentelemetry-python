@@ -14,7 +14,6 @@
 # type: ignore
 
 from inspect import Signature, isabstract, signature
-from logging import ERROR
 from unittest import TestCase
 
 from opentelemetry.metrics import Meter, _DefaultMeter
@@ -22,9 +21,6 @@ from opentelemetry.metrics.instrument import (
     Counter,
     DefaultCounter,
     DefaultHistogram,
-    DefaultObservableCounter,
-    DefaultObservableGauge,
-    DefaultObservableUpDownCounter,
     DefaultUpDownCounter,
     Histogram,
     Instrument,
@@ -33,7 +29,6 @@ from opentelemetry.metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.metrics.measurement import Measurement
 
 # FIXME Test that the instrument methods can be called concurrently safely.
 
@@ -43,117 +38,6 @@ class ChildInstrument(Instrument):
         super().__init__(
             name, *args, unit=unit, description=description, **kwargs
         )
-
-
-class TestInstrument(TestCase):
-    def test_instrument_has_name(self):
-        """
-        Test that the instrument has name.
-        """
-
-        init_signature = signature(Instrument.__init__)
-        self.assertIn("name", init_signature.parameters.keys())
-        self.assertIs(
-            init_signature.parameters["name"].default, Signature.empty
-        )
-
-        self.assertTrue(hasattr(Instrument, "name"))
-
-    def test_instrument_has_unit(self):
-        """
-        Test that the instrument has unit.
-        """
-
-        init_signature = signature(Instrument.__init__)
-        self.assertIn("unit", init_signature.parameters.keys())
-        self.assertIs(init_signature.parameters["unit"].default, "")
-
-        self.assertTrue(hasattr(Instrument, "unit"))
-
-    def test_instrument_has_description(self):
-        """
-        Test that the instrument has description.
-        """
-
-        init_signature = signature(Instrument.__init__)
-        self.assertIn("description", init_signature.parameters.keys())
-        self.assertIs(init_signature.parameters["description"].default, "")
-
-        self.assertTrue(hasattr(Instrument, "description"))
-
-    def test_instrument_name_syntax(self):
-        """
-        Test that instrument names conform to the specified syntax.
-        """
-
-        with self.assertLogs(level=ERROR):
-            ChildInstrument("")
-
-        with self.assertLogs(level=ERROR):
-            ChildInstrument(None)
-
-        with self.assertLogs(level=ERROR):
-            ChildInstrument("1a")
-
-        with self.assertLogs(level=ERROR):
-            ChildInstrument("_a")
-
-        with self.assertLogs(level=ERROR):
-            ChildInstrument("!a ")
-
-        with self.assertLogs(level=ERROR):
-            ChildInstrument("a ")
-
-        with self.assertLogs(level=ERROR):
-            ChildInstrument("a%")
-
-        with self.assertLogs(level=ERROR):
-            ChildInstrument("a" * 64)
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=ERROR):
-                ChildInstrument("abc_def_ghi")
-
-    def test_instrument_unit_syntax(self):
-        """
-        Test that instrument unit conform to the specified syntax.
-        """
-
-        with self.assertLogs(level=ERROR):
-            ChildInstrument("name", unit="a" * 64)
-
-        with self.assertLogs(level=ERROR):
-            ChildInstrument("name", unit="ñ")
-
-        child_instrument = ChildInstrument("name", unit="a")
-        self.assertEqual(child_instrument.unit, "a")
-
-        child_instrument = ChildInstrument("name", unit="A")
-        self.assertEqual(child_instrument.unit, "A")
-
-        child_instrument = ChildInstrument("name")
-        self.assertEqual(child_instrument.unit, "")
-
-        child_instrument = ChildInstrument("name", unit=None)
-        self.assertEqual(child_instrument.unit, "")
-
-    def test_instrument_description_syntax(self):
-        """
-        Test that instrument description conform to the specified syntax.
-        """
-
-        child_instrument = ChildInstrument("name", description="a")
-        self.assertEqual(child_instrument.description, "a")
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=ERROR):
-                ChildInstrument("name", description="a" * 1024)
-
-        child_instrument = ChildInstrument("name")
-        self.assertEqual(child_instrument.description, "")
-
-        child_instrument = ChildInstrument("name", description=None)
-        self.assertEqual(child_instrument.description, "")
 
 
 class TestCounter(TestCase):
@@ -220,9 +104,6 @@ class TestCounter(TestCase):
         self.assertIs(
             add_signature.parameters["amount"].default, Signature.empty
         )
-
-        with self.assertLogs(level=ERROR):
-            DefaultCounter("name").add(-1)
 
 
 class TestObservableCounter(TestCase):
@@ -321,79 +202,6 @@ class TestObservableCounter(TestCase):
             create_observable_counter_signature.parameters["name"].default,
             Signature.empty,
         )
-
-        def callback():
-            yield 1
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=ERROR):
-                observable_counter = DefaultObservableCounter(
-                    "name", callback()
-                )
-
-        with self.assertLogs(level=ERROR):
-            # use list() to consume the whole generator returned by callback()
-            list(observable_counter.callback())
-
-        def callback():
-            yield [Measurement(1), Measurement(2)]
-            yield [Measurement(-1)]
-
-        observable_counter = DefaultObservableCounter("name", callback())
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=ERROR):
-                list(observable_counter.callback())
-
-        with self.assertLogs(level=ERROR):
-            list(observable_counter.callback())
-
-        # out of items in generator, should log once
-        with self.assertLogs(level=ERROR):
-            list(observable_counter.callback())
-
-        # but log only once
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=ERROR):
-                list(observable_counter.callback())
-
-    def test_observable_counter_callback(self):
-        """
-        Equivalent to test_observable_counter_generator but uses the callback
-        form.
-        """
-
-        def callback_invalid_return():
-            return 1
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=ERROR):
-                observable_counter = DefaultObservableCounter(
-                    "name", callback_invalid_return
-                )
-
-        with self.assertLogs(level=ERROR):
-            # use list() to consume the whole generator returned by callback()
-            list(observable_counter.callback())
-
-        def callback_valid():
-            return [Measurement(1), Measurement(2)]
-
-        observable_counter = DefaultObservableCounter("name", callback_valid)
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=ERROR):
-                list(observable_counter.callback())
-
-        def callback_one_invalid():
-            return [Measurement(1), Measurement(-2)]
-
-        observable_counter = DefaultObservableCounter(
-            "name", callback_one_invalid
-        )
-
-        with self.assertLogs(level=ERROR):
-            list(observable_counter.callback())
 
 
 class TestHistogram(TestCase):
@@ -562,24 +370,6 @@ class TestObservableGauge(TestCase):
             Signature.empty,
         )
 
-        def callback():
-            yield
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=ERROR):
-                observable_gauge = DefaultObservableGauge("name", callback())
-
-        with self.assertLogs(level=ERROR):
-            list(observable_gauge.callback())
-
-        def callback():
-            yield [Measurement(1), Measurement(-1)]
-
-        observable_gauge = DefaultObservableGauge("name", callback())
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=ERROR):
-                list(observable_gauge.callback())
-
 
 class TestUpDownCounter(TestCase):
     def test_create_up_down_counter(self):
@@ -661,14 +451,6 @@ class TestUpDownCounter(TestCase):
         self.assertIs(
             add_signature.parameters["amount"].default, Signature.empty
         )
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=ERROR):
-                DefaultUpDownCounter("name").add(-1)
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=ERROR):
-                DefaultUpDownCounter("name").add(1)
 
 
 class TestObservableUpDownCounter(TestCase):
@@ -779,21 +561,3 @@ class TestObservableUpDownCounter(TestCase):
             ].default,
             Signature.empty,
         )
-
-        def callback():
-            yield Measurement(1)
-            yield Measurement(-1)
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=ERROR):
-                observable_up_down_counter = DefaultObservableUpDownCounter(
-                    "name", callback()
-                )
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=ERROR):
-                observable_up_down_counter.callback()
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=ERROR):
-                observable_up_down_counter.callback()
