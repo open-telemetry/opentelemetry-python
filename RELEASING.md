@@ -73,16 +73,6 @@ run eachdist once again:
 ./scripts/eachdist.py update_versions --versions stable,prerelease
 ```
 
-## Update website docs
-
-If the docs for the Opentelemetry [website](https://opentelemetry.io/docs/python/) was updated in this release in this [folder](https://github.com/open-telemetry/opentelemetry-python/tree/main/website_docs), submit a [PR](https://github.com/open-telemetry/opentelemetry.io/tree/main/content/en/docs/python) to update the docs on the website accordingly. To check if the new version requires updating, run the following script and compare the diff:
-
-```bash
-./scripts/generate_website_docs.sh
-```
-
-If the diff includes significant changes, create a pull request to commit the changes and once the changes are merged, click the "Run workflow" button for the Update [OpenTelemetry Website Docs](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/docs-update.yml) GitHub Action.
-
 ## Hotfix procedure
 
 A `hotfix` is defined as a small change developed to correct a bug that should be released as quickly as possible. Due to the nature of hotfixes, they usually will only affect one or a few packages. Therefore, it usually is not necessary to go through the entire release process outlined above for hotfixes. Follow the below steps how to release a hotfix:
