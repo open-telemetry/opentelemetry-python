@@ -12,12 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
+from unittest import TestCase
 
-from opentelemetry import trace
+from opentelemetry.trace import (
+    TracerProvider,
+    INVALID_SPAN_CONTEXT,
+    Span,
+    NonRecordingSpan,
+    INVALID_SPAN,
+    NoOpTracerProvider
+)
 
 
-class TestAPIOnlyImplementation(unittest.TestCase):
+class TestAPIOnlyImplementation(TestCase):
     """
     This test is in place to ensure the API is returning values that
     are valid. The same tests have been added to the SDK with
@@ -30,31 +37,31 @@ class TestAPIOnlyImplementation(unittest.TestCase):
     def test_tracer(self):
         with self.assertRaises(TypeError):
             # pylint: disable=abstract-class-instantiated
-            trace.TracerProvider()  # type:ignore
+            TracerProvider()  # type:ignore
 
     def test_default_tracer(self):
         # pylint: disable=protected-access
-        tracer_provider = trace._DefaultTracerProvider()
+        tracer_provider = NoOpTracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
         with tracer.start_span("test") as span:
             self.assertEqual(
-                span.get_span_context(), trace.INVALID_SPAN_CONTEXT
+                span.get_span_context(), INVALID_SPAN_CONTEXT
             )
-            self.assertEqual(span, trace.INVALID_SPAN)
+            self.assertEqual(span, INVALID_SPAN)
             self.assertIs(span.is_recording(), False)
             with tracer.start_span("test2") as span2:
                 self.assertEqual(
-                    span2.get_span_context(), trace.INVALID_SPAN_CONTEXT
+                    span2.get_span_context(), INVALID_SPAN_CONTEXT
                 )
-                self.assertEqual(span2, trace.INVALID_SPAN)
+                self.assertEqual(span2, INVALID_SPAN)
                 self.assertIs(span2.is_recording(), False)
 
     def test_span(self):
         with self.assertRaises(TypeError):
             # pylint: disable=abstract-class-instantiated
-            trace.Span()  # type:ignore
+            Span()  # type:ignore
 
     def test_default_span(self):
-        span = trace.NonRecordingSpan(trace.INVALID_SPAN_CONTEXT)
-        self.assertEqual(span.get_span_context(), trace.INVALID_SPAN_CONTEXT)
+        span = NonRecordingSpan(INVALID_SPAN_CONTEXT)
+        self.assertEqual(span.get_span_context(), INVALID_SPAN_CONTEXT)
         self.assertIs(span.is_recording(), False)

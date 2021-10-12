@@ -172,7 +172,7 @@ class NoOpSpan(Span):
         # This is strange, but there is no API for SpanContext in the API but
         # an actual implementation, that is why there is no NoOpSpanContext
         # class because there is no abstract class from which inheriting.
-        return SpanContext()
+        return SpanContext(0, 0, False)
 
     def set_attributes(
         self, attributes: typing.Dict[str, types.AttributeValue]
