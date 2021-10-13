@@ -100,7 +100,7 @@ class _ProxyMeterProvider(MeterProvider):
             self._meters.append(meter)
             return meter
 
-    def set_meter_provider(self, meter_provider: MeterProvider) -> None:
+    def on_set_meter_provider(self, meter_provider: MeterProvider) -> None:
         with self._lock:
             self._real_meter_provider = meter_provider
             for meter in self._meters:
@@ -431,7 +431,7 @@ def _set_meter_provider(meter_provider: MeterProvider, *, log: bool) -> None:
         _METER_PROVIDER = meter_provider
 
         # gives all proxies real instruments off the newly set meter provider
-        _PROXY_METER_PROVIDER.set_meter_provider(meter_provider)
+        _PROXY_METER_PROVIDER.on_set_meter_provider(meter_provider)
 
     did_set = _METER_PROVIDER_SET_ONCE.do_once(set_mp)
 
@@ -439,7 +439,7 @@ def _set_meter_provider(meter_provider: MeterProvider, *, log: bool) -> None:
         _logger.warning("Overriding of current MeterProvider is not allowed")
 
 
-def set_meter_provider(meter_provider: MeterProvider) -> None:
+def on_set_meter_provider(meter_provider: MeterProvider) -> None:
     """Sets the current global :class:`~.MeterProvider` object.
 
     This can only be done once, a warning will be logged if any furter attempt
