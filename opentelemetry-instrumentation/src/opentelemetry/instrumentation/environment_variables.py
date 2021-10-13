@@ -12,23 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-
-from opentelemetry.environment_variables import OTEL_TRACES_EXPORTER
-from opentelemetry.instrumentation.distro import BaseDistro
-from opentelemetry.sdk._configuration import _OTelSDKConfigurator
-
-
-class OpenTelemetryConfigurator(_OTelSDKConfigurator):
-    pass
-
-
-class OpenTelemetryDistro(BaseDistro):
-    """
-    The OpenTelemetry provided Distro configures a default set of
-    configuration out of the box.
-    """
-
-    # pylint: disable=no-self-use
-    def _configure(self, **kwargs):
-        os.environ.setdefault(OTEL_TRACES_EXPORTER, "otlp_proto_grpc_span")
+OTEL_PYTHON_DISABLED_INSTRUMENTATIONS = "OTEL_PYTHON_DISABLED_INSTRUMENTATIONS"
+"""
+.. envvar:: OTEL_PYTHON_DISABLED_INSTRUMENTATIONS
+"""

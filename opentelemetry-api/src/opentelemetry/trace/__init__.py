@@ -108,6 +108,7 @@ from opentelemetry.trace.span import (
 )
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
+from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 
 logger = getLogger(__name__)
@@ -452,8 +453,9 @@ class _DefaultTracer(Tracer):
         yield INVALID_SPAN
 
 
-_TRACER_PROVIDER = None
-_PROXY_TRACER_PROVIDER = None
+_TRACER_PROVIDER_SET_ONCE = Once()
+_TRACER_PROVIDER: Optional[TracerProvider] = None
+_PROXY_TRACER_PROVIDER = ProxyTracerProvider()
 
 
 def get_tracer(
@@ -476,40 +478,40 @@ def get_tracer(
     )
 
 
+def _set_tracer_provider(tracer_provider: TracerProvider, log: bool) -> None:
+    def set_tp() -> None:
+        global _TRACER_PROVIDER  # pylint: disable=global-statement
+        _TRACER_PROVIDER = tracer_provider
+
+    did_set = _TRACER_PROVIDER_SET_ONCE.do_once(set_tp)
+
+    if log and not did_set:
+        logger.warning("Overriding of current TracerProvider is not allowed")
+
+
 def set_tracer_provider(tracer_provider: TracerProvider) -> None:
     """Sets the current global :class:`~.TracerProvider` object.
 
     This can only be done once, a warning will be logged if any furter attempt
     is made.
     """
-    global _TRACER_PROVIDER  # pylint: disable=global-statement
-
-    if _TRACER_PROVIDER is not None:
-        logger.warning("Overriding of current TracerProvider is not allowed")
-        return
-
-    _TRACER_PROVIDER = tracer_provider
+    _set_tracer_provider(tracer_provider, log=True)
 
 
 def get_tracer_provider() -> TracerProvider:
     """Gets the current global :class:`~.TracerProvider` object."""
-    # pylint: disable=global-statement
-    global _TRACER_PROVIDER
-    global _PROXY_TRACER_PROVIDER
-
     if _TRACER_PROVIDER is None:
         # if a global tracer provider has not been set either via code or env
         # vars, return a proxy tracer provider
         if OTEL_PYTHON_TRACER_PROVIDER not in os.environ:
-            if not _PROXY_TRACER_PROVIDER:
-                _PROXY_TRACER_PROVIDER = ProxyTracerProvider()
             return _PROXY_TRACER_PROVIDER
 
-        _TRACER_PROVIDER = cast(  # type: ignore
-            "TracerProvider",
-            _load_provider(OTEL_PYTHON_TRACER_PROVIDER, "tracer_provider"),
+        tracer_provider: TracerProvider = _load_provider(
+            OTEL_PYTHON_TRACER_PROVIDER, "tracer_provider"
         )
-    return _TRACER_PROVIDER
+        _set_tracer_provider(tracer_provider, log=False)
+    # _TRACER_PROVIDER will have been set by one thread
+    return cast("TracerProvider", _TRACER_PROVIDER)
 
 
 @contextmanager  # type: ignore
