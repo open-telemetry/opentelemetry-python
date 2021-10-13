@@ -455,10 +455,10 @@ def get_meter_provider() -> MeterProvider:
         if OTEL_PYTHON_METER_PROVIDER not in environ.keys():
             return _PROXY_METER_PROVIDER
 
-        meter_provider = cast(
-            "MeterProvider",
-            _load_provider(OTEL_PYTHON_METER_PROVIDER, "meter_provider"),
+        meter_provider: MeterProvider = _load_provider(
+            OTEL_PYTHON_METER_PROVIDER, "meter_provider"
         )
         _set_meter_provider(meter_provider, log=False)
 
-    return _METER_PROVIDER
+    # _METER_PROVIDER will have been set by one thread
+    return cast("MeterProvider", _METER_PROVIDER)
