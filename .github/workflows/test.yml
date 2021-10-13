@@ -46,7 +46,7 @@ jobs:
           path: |
             .tox
             ~/.cache/pip
-          key: v2-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
+          key: v3-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
       # tox fails on windows and Python3.6 when tox dir is reused between builds so we remove it
       - name: fix for windows + py3.6
         if: ${{ matrix.os == 'windows-2019' && matrix.python-version == 'py36' }} 
@@ -101,7 +101,7 @@ jobs:
           path: |
             .tox
             ~/.cache/pip
-          key: v2-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
+          key: v3-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
       - name: run tox
         run: tox -e ${{ matrix.tox-environment }}
   contrib-build:
@@ -144,7 +144,7 @@ jobs:
           path: |
             .tox
             ~/.cache/pip
-          key: v2-tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
+          key: v3-tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
       - name: run tox
         run: tox -f ${{ matrix.python-version }}-${{ matrix.package }}
   contrib-misc:
@@ -179,6 +179,6 @@ jobs:
           path: |
             .tox
             ~/.cache/pip
-          key: v2-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
+          key: v3-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
       - name: run tox
         run: tox -e ${{ matrix.tox-environment }}
