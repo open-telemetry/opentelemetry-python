@@ -408,16 +408,6 @@ _METER_PROVIDER: Optional[MeterProvider] = None
 _PROXY_METER_PROVIDER = ProxyMeterProvider()
 
 
-def _reset_globals() -> None:
-    """WARNING: only use this for tests."""
-    global _METER_PROVIDER_SET_ONCE  # pylint: disable=global-statement
-    global _METER_PROVIDER  # pylint: disable=global-statement
-    global _PROXY_METER_PROVIDER  # pylint: disable=global-statement
-    _METER_PROVIDER_SET_ONCE = Once()
-    _METER_PROVIDER = None
-    _PROXY_METER_PROVIDER = ProxyMeterProvider()
-
-
 def get_meter(
     name: str,
     version: str = "",

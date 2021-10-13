@@ -36,15 +36,19 @@ from opentelemetry.metrics.instrument import (
     _ProxyObservableUpDownCounter,
     _ProxyUpDownCounter,
 )
+from opentelemetry.test.globals_test import (
+    reset_metrics_globals,
+    MetricsGlobalsTest,
+)
 
 # FIXME Test that the instrument methods can be called concurrently safely.
 
 
 @fixture
 def reset_meter_provider():
-    metrics._reset_globals()
+    reset_metrics_globals()
     yield
-    metrics._reset_globals()
+    reset_metrics_globals()
 
 
 def test_set_meter_provider(reset_meter_provider):
@@ -120,13 +124,7 @@ class TestGetMeter(TestCase):
         self.assertEqual(meter.name, None)
 
 
-class TestProxy(TestCase):
-    def setUp(self) -> None:
-        metrics._reset_globals()
-
-    def tearDown(self) -> None:
-        metrics._reset_globals()
-
+class TestProxy(MetricsGlobalsTest, TestCase):
     def test_global_proxy_meter_provider(self):
         # Global get_meter_provider() should initially be a ProxyMeterProvider
         # singleton

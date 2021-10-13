@@ -53,8 +53,10 @@ class Instrument(ABC):
 
 
 class _ProxyInstrument(ABC, Generic[InstrumentT]):
-    def __init__(self, *args, **kwargs) -> None:
-        super().__init__(*args, **kwargs)
+    def __init__(self, name, unit, description) -> None:
+        self._name = name
+        self._unit = unit
+        self._description = description
         self._real_instrument: Optional[InstrumentT] = None
 
     def on_meter_set(self, meter: "metrics.Meter") -> None:
@@ -68,6 +70,12 @@ class _ProxyInstrument(ABC, Generic[InstrumentT]):
     @abstractmethod
     def _create_real_instrument(self, meter: "metrics.Meter") -> InstrumentT:
         """Create an instance of the real instrument. Implement this."""
+
+
+class _ProxyAsynchronousInstrument(_ProxyInstrument[InstrumentT]):
+    def __init__(self, name, callback, unit, description) -> None:
+        super().__init__(name, unit, description)
+        self._callback = callback
 
 
 class Synchronous(Instrument):
@@ -157,7 +165,7 @@ class _ProxyCounter(_ProxyInstrument[Counter], Counter):
             self._real_instrument.add(amount, attributes)
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> Counter:
-        return meter.create_counter(self.name, self.unit, self.description)
+        return meter.create_counter(self._name, self._unit, self._description)
 
 
 class UpDownCounter(_NonMonotonic, Synchronous):
@@ -181,7 +189,7 @@ class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> UpDownCounter:
         return meter.create_up_down_counter(
-            self.name, self.unit, self.description
+            self._name, self._unit, self._description
         )
 
 
@@ -195,13 +203,13 @@ class DefaultObservableCounter(ObservableCounter):
 
 
 class _ProxyObservableCounter(
-    _ProxyInstrument[ObservableCounter], ObservableCounter
+    _ProxyAsynchronousInstrument[ObservableCounter], ObservableCounter
 ):
     def _create_real_instrument(
         self, meter: "metrics.Meter"
     ) -> ObservableCounter:
         return meter.create_observable_counter(
-            self.name, self._callback, self.unit, self.description
+            self._name, self._callback, self._unit, self._description
         )
 
 
@@ -215,13 +223,14 @@ class DefaultObservableUpDownCounter(ObservableUpDownCounter):
 
 
 class _ProxyObservableUpDownCounter(
-    _ProxyInstrument[ObservableUpDownCounter], ObservableUpDownCounter
+    _ProxyAsynchronousInstrument[ObservableUpDownCounter],
+    ObservableUpDownCounter,
 ):
     def _create_real_instrument(
         self, meter: "metrics.Meter"
     ) -> ObservableUpDownCounter:
         return meter.create_observable_up_down_counter(
-            self.name, self._callback, self.unit, self.description
+            self._name, self._callback, self._unit, self._description
         )
 
 
@@ -245,7 +254,9 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
             self._real_instrument.record(amount, attributes)
 
     def _create_real_instrument(self, meter: "metrics.Meter") -> Histogram:
-        return meter.create_histogram(self.name, self.unit, self.description)
+        return meter.create_histogram(
+            self._name, self._unit, self._description
+        )
 
 
 class ObservableGauge(_Grouping, Asynchronous):
@@ -258,11 +269,12 @@ class DefaultObservableGauge(ObservableGauge):
 
 
 class _ProxyObservableGauge(
-    _ProxyInstrument[ObservableGauge], ObservableGauge
+    _ProxyAsynchronousInstrument[ObservableGauge],
+    ObservableGauge,
 ):
     def _create_real_instrument(
         self, meter: "metrics.Meter"
     ) -> ObservableGauge:
         return meter.create_observable_gauge(
-            self.name, self._callback, self.unit, self.description
+            self._name, self._callback, self._unit, self._description
         )
