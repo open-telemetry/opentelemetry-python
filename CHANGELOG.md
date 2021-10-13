@@ -37,6 +37,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2145](https://github.com/open-telemetry/opentelemetry-python/pull/2145))
 - Add `schema_url` to `TracerProvider.get_tracer`
   ([#2154](https://github.com/open-telemetry/opentelemetry-python/pull/2154))
+- Make baggage implementation w3c spec complaint
+  ([#2167](https://github.com/open-telemetry/opentelemetry-python/pull/2167))
 
 ## [1.5.0-0.24b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.5.0-0.24b0) - 2021-08-26
 
