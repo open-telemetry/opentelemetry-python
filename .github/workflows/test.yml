@@ -39,14 +39,6 @@ jobs:
           architecture: 'x64'
       - name: Install tox
         run: pip install -U tox-factor
-      - name: Cache tox environment
-        # Preserves .tox directory between runs for faster installs
-        uses: actions/cache@v2
-        with:
-          path: |
-            .tox
-            ~/.cache/pip
-          key: v2-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
       # tox fails on windows and Python3.6 when tox dir is reused between builds so we remove it
       - name: fix for windows + py3.6
         if: ${{ matrix.os == 'windows-2019' && matrix.python-version == 'py36' }} 
@@ -94,14 +86,6 @@ jobs:
           architecture: 'x64'
       - name: Install tox
         run: pip install -U tox
-      - name: Cache tox environment
-        # Preserves .tox directory between runs for faster installs
-        uses: actions/cache@v2
-        with:
-          path: |
-            .tox
-            ~/.cache/pip
-          key: v2-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
       - name: run tox
         run: tox -e ${{ matrix.tox-environment }}
   contrib-build:
