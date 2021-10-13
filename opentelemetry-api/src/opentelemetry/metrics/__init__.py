@@ -78,10 +78,10 @@ class _DefaultMeterProvider(MeterProvider):
         return _DefaultMeter(name, version=version, schema_url=schema_url)
 
 
-class ProxyMeterProvider(MeterProvider):
+class _ProxyMeterProvider(MeterProvider):
     def __init__(self) -> None:
         self._lock = Lock()
-        self._meters: List[ProxyMeter] = []
+        self._meters: List[_ProxyMeter] = []
         self._real_meter_provider: Optional[MeterProvider] = None
 
     def get_meter(
@@ -96,7 +96,7 @@ class ProxyMeterProvider(MeterProvider):
                     name, version, schema_url
                 )
 
-            meter = ProxyMeter(name, version=version, schema_url=schema_url)
+            meter = _ProxyMeter(name, version=version, schema_url=schema_url)
             self._meters.append(meter)
             return meter
 
@@ -239,7 +239,7 @@ class Meter(ABC):
         pass
 
 
-class ProxyMeter(Meter):
+class _ProxyMeter(Meter):
     def __init__(
         self,
         name,
@@ -254,7 +254,7 @@ class ProxyMeter(Meter):
     def on_set_real_meter_provider(
         self, meter_provider: MeterProvider
     ) -> None:
-        """Called when a real meter provider is set on the creating ProxyMeterProvider
+        """Called when a real meter provider is set on the creating _ProxyMeterProvider
 
         Creates a real backing meter for this instance and notifies all created
         instruments so they can create real backing instruments.
@@ -405,7 +405,7 @@ class _DefaultMeter(Meter):
 
 _METER_PROVIDER_SET_ONCE = Once()
 _METER_PROVIDER: Optional[MeterProvider] = None
-_PROXY_METER_PROVIDER = ProxyMeterProvider()
+_PROXY_METER_PROVIDER = _ProxyMeterProvider()
 
 
 def get_meter(

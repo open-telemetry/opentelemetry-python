@@ -60,7 +60,7 @@ class _ProxyInstrument(ABC, Generic[InstrumentT]):
         self._real_instrument: Optional[InstrumentT] = None
 
     def on_meter_set(self, meter: "metrics.Meter") -> None:
-        """Called when a real meter is set on the creating ProxyMeter"""
+        """Called when a real meter is set on the creating _ProxyMeter"""
 
         # We don't need any locking on proxy instruments because it's OK if some
         # measurements get dropped while a real backing instrument is being

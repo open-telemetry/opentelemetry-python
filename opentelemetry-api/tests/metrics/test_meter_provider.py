@@ -21,10 +21,10 @@ from pytest import fixture
 from opentelemetry import metrics
 from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics import (
-    ProxyMeter,
-    ProxyMeterProvider,
     _DefaultMeter,
     _DefaultMeterProvider,
+    _ProxyMeter,
+    _ProxyMeterProvider,
     get_meter_provider,
     set_meter_provider,
 )
@@ -37,8 +37,8 @@ from opentelemetry.metrics.instrument import (
     _ProxyUpDownCounter,
 )
 from opentelemetry.test.globals_test import (
-    reset_metrics_globals,
     MetricsGlobalsTest,
+    reset_metrics_globals,
 )
 
 # FIXME Test that the instrument methods can be called concurrently safely.
@@ -72,7 +72,7 @@ def test_get_meter_provider(reset_meter_provider):
 
     assert metrics._METER_PROVIDER is None
 
-    assert isinstance(get_meter_provider(), ProxyMeterProvider)
+    assert isinstance(get_meter_provider(), _ProxyMeterProvider)
 
     metrics._METER_PROVIDER = None
 
@@ -126,27 +126,27 @@ class TestGetMeter(TestCase):
 
 class TestProxy(MetricsGlobalsTest, TestCase):
     def test_global_proxy_meter_provider(self):
-        # Global get_meter_provider() should initially be a ProxyMeterProvider
+        # Global get_meter_provider() should initially be a _ProxyMeterProvider
         # singleton
 
-        proxy_meter_provider: ProxyMeterProvider = get_meter_provider()
-        self.assertIsInstance(proxy_meter_provider, ProxyMeterProvider)
+        proxy_meter_provider: _ProxyMeterProvider = get_meter_provider()
+        self.assertIsInstance(proxy_meter_provider, _ProxyMeterProvider)
         self.assertIs(get_meter_provider(), proxy_meter_provider)
 
     def test_proxy_provider(self):
-        proxy_meter_provider = ProxyMeterProvider()
+        proxy_meter_provider = _ProxyMeterProvider()
 
         # Should return a proxy meter when no real MeterProvider is set
         name = "foo"
         version = "1.2"
         schema_url = "schema_url"
-        proxy_meter: ProxyMeter = proxy_meter_provider.get_meter(
+        proxy_meter: _ProxyMeter = proxy_meter_provider.get_meter(
             name, version=version, schema_url=schema_url
         )
-        self.assertIsInstance(proxy_meter, ProxyMeter)
+        self.assertIsInstance(proxy_meter, _ProxyMeter)
 
         # After setting a real meter provider on the proxy, it should notify
-        # it's ProxyMeters which should create their own real Meters
+        # it's _ProxyMeters which should create their own real Meters
         mock_real_mp = Mock()
         proxy_meter_provider.set_meter_provider(mock_real_mp)
         mock_real_mp.get_meter.assert_called_once_with(
@@ -163,8 +163,8 @@ class TestProxy(MetricsGlobalsTest, TestCase):
     # pylint: disable=too-many-locals
     def test_proxy_meter(self):
         meter_name = "foo"
-        proxy_meter: ProxyMeter = ProxyMeterProvider().get_meter(meter_name)
-        self.assertIsInstance(proxy_meter, ProxyMeter)
+        proxy_meter: _ProxyMeter = _ProxyMeterProvider().get_meter(meter_name)
+        self.assertIsInstance(proxy_meter, _ProxyMeter)
 
         # Should be able to create proxy instruments
         name = "foo"
@@ -209,8 +209,8 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         proxy_updowncounter.add(amount, attributes=attributes)
         proxy_histogram.record(amount, attributes=attributes)
 
-        # Calling ProxyMeterProvider.on_set_meter_provider() should cascade down
-        # to the ProxyInstruments which should create their own real instruments
+        # Calling _ProxyMeterProvider.on_set_meter_provider() should cascade down
+        # to the _ProxyInstruments which should create their own real instruments
         # from the real Meter to back their calls
         real_meter_provider = Mock()
         proxy_meter.on_set_real_meter_provider(real_meter_provider)
@@ -255,11 +255,11 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         real_histogram.record.assert_called_once_with(amount, attributes)
 
     def test_proxy_meter_with_real_meter(self) -> None:
-        # Creating new instruments on the ProxyMeter with a real meter set
+        # Creating new instruments on the _ProxyMeter with a real meter set
         # should create real instruments instead of proxies
         meter_name = "foo"
-        proxy_meter: ProxyMeter = ProxyMeterProvider().get_meter(meter_name)
-        self.assertIsInstance(proxy_meter, ProxyMeter)
+        proxy_meter: _ProxyMeter = _ProxyMeterProvider().get_meter(meter_name)
+        self.assertIsInstance(proxy_meter, _ProxyMeter)
 
         real_meter_provider = Mock()
         proxy_meter.on_set_real_meter_provider(real_meter_provider)
