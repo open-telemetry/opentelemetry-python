@@ -91,7 +91,7 @@ class _ProxyMeterProvider(MeterProvider):
         schema_url=None,
     ) -> "Meter":
         with self._lock:
-            if self._real_meter_provider:
+            if self._real_meter_provider is not None:
                 return self._real_meter_provider.get_meter(
                     name, version, schema_url
                 )
@@ -425,7 +425,7 @@ def get_meter(
     return meter_provider.get_meter(name, version)
 
 
-def _set_meter_provider(meter_provider: MeterProvider, *, log: bool) -> None:
+def _set_meter_provider(meter_provider: MeterProvider, log: bool) -> None:
     def set_mp() -> None:
         global _METER_PROVIDER  # pylint: disable=global-statement
         _METER_PROVIDER = meter_provider
@@ -435,7 +435,7 @@ def _set_meter_provider(meter_provider: MeterProvider, *, log: bool) -> None:
 
     did_set = _METER_PROVIDER_SET_ONCE.do_once(set_mp)
 
-    if not did_set:
+    if log and not did_set:
         _logger.warning("Overriding of current MeterProvider is not allowed")
 
 
