@@ -19,7 +19,6 @@
 from abc import ABC, abstractmethod
 from collections import abc as collections_abc
 from logging import getLogger
-from re import compile as compile_
 from typing import (
     Callable,
     Generator,
@@ -44,44 +43,13 @@ _logger = getLogger(__name__)
 
 
 class Instrument(ABC):
-
-    _name_regex = compile_(r"[a-zA-Z][-.\w]{0,62}")
-
-    @property
-    def name(self):
-        return self._name
-
-    @property
-    def unit(self):
-        return self._unit
-
-    @property
-    def description(self):
-        return self._description
-
     @abstractmethod
     def __init__(self, name, unit="", description=""):
+        pass
 
-        if name is None or self._name_regex.fullmatch(name) is None:
-            _logger.error("Invalid instrument name %s", name)
-
-        else:
-            self._name = name
-
-        if unit is None:
-            self._unit = ""
-        elif len(unit) > 63:
-            _logger.error("unit must be 63 characters or shorter")
-
-        elif any(ord(character) > 127 for character in unit):
-            _logger.error("unit must only contain ASCII characters")
-        else:
-            self._unit = unit
-
-        if description is None:
-            description = ""
-
-        self._description = description
+        # FIXME check that the instrument name is valid
+        # FIXME check that the unit is 63 characters or shorter
+        # FIXME check that the unit contains only ASCII characters
 
 
 class _ProxyInstrument(ABC, Generic[InstrumentT]):
@@ -125,11 +93,10 @@ class Asynchronous(Instrument):
             self._callback = callback
         elif isinstance(callback, collections_abc.Generator):
             self._callback = self._wrap_generator_callback(callback)
-        else:
-            _logger.error("callback must be a callable or generator")
+        # FIXME check that callback is a callable or generator
 
+    @staticmethod
     def _wrap_generator_callback(
-        self,
         generator_callback: _TInstrumentCallbackGenerator,
     ) -> _TInstrumentCallback:
         """Wraps a generator style callback into a callable one"""
@@ -144,30 +111,13 @@ class Asynchronous(Instrument):
                 return next(generator_callback)
             except StopIteration:
                 has_items = False
-                _logger.error(
-                    "callback generator for instrument %s ran out of measurements",
-                    self._name,
-                )
+                # FIXME handle the situation where the callback generator has
+                # run out of measurements
                 return []
 
         return inner
 
-    def callback(self):
-        measurements = self._callback()
-        if not isinstance(measurements, collections_abc.Iterable):
-            _logger.error(
-                "Callback must return an iterable of Measurement, got %s",
-                type(measurements),
-            )
-            return
-        for measurement in measurements:
-            if not isinstance(measurement, Measurement):
-                _logger.error(
-                    "Callback must return an iterable of Measurement, "
-                    "iterable contained type %s",
-                    type(measurement),
-                )
-            yield measurement
+    # FIXME check that callbacks return an iterable of Measurements
 
 
 class _Adding(Instrument):
@@ -189,8 +139,8 @@ class _NonMonotonic(_Adding):
 class Counter(_Monotonic, Synchronous):
     @abstractmethod
     def add(self, amount, attributes=None):
-        if amount < 0:
-            _logger.error("Amount must be non-negative")
+        # FIXME check that the amount is non negative
+        pass
 
 
 class DefaultCounter(Counter):
@@ -236,13 +186,7 @@ class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
 
 
 class ObservableCounter(_Monotonic, Asynchronous):
-    def callback(self):
-        measurements = super().callback()
-
-        for measurement in measurements:
-            if measurement.value < 0:
-                _logger.error("Amount must be non-negative")
-            yield measurement
+    pass
 
 
 class DefaultObservableCounter(ObservableCounter):

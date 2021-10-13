@@ -13,7 +13,6 @@
 # limitations under the License.
 # type: ignore
 
-from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -108,17 +107,15 @@ class TestGetMeter(TestCase):
         Test that a message is logged reporting the specified value for the
         fallback meter is invalid.
         """
-        with self.assertLogs(level=WARNING):
-            meter = _DefaultMeterProvider().get_meter("")
+        meter = _DefaultMeterProvider().get_meter("")
 
-            self.assertTrue(isinstance(meter, _DefaultMeter))
+        self.assertTrue(isinstance(meter, _DefaultMeter))
 
         self.assertEqual(meter.name, "")
 
-        with self.assertLogs(level=WARNING):
-            meter = _DefaultMeterProvider().get_meter(None)
+        meter = _DefaultMeterProvider().get_meter(None)
 
-            self.assertTrue(isinstance(meter, _DefaultMeter))
+        self.assertTrue(isinstance(meter, _DefaultMeter))
 
         self.assertEqual(meter.name, None)
 

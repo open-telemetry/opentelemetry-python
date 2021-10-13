@@ -111,7 +111,8 @@ class TestArgs(TestCase):
             self.assertIsNone(environ.get(OTEL_TRACES_EXPORTER))
 
         with patch(
-            "sys.argv", ["instrument", "--trace-exporter", "jaeger", "1", "2"]
+            "sys.argv",
+            ["instrument", "--traces_exporter", "jaeger", "1", "2"],
         ):
             auto_instrumentation.run()
             self.assertEqual(environ.get(OTEL_TRACES_EXPORTER), "jaeger")

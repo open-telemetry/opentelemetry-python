@@ -53,7 +53,7 @@ libraries = {
         "instrumentation": "opentelemetry-instrumentation-elasticsearch==0.24b0",
     },
     "falcon": {
-        "library": "falcon ~= 2.0",
+        "library": "falcon >= 2.0.0, < 4.0.0",
         "instrumentation": "opentelemetry-instrumentation-falcon==0.24b0",
     },
     "fastapi": {
@@ -73,12 +73,16 @@ libraries = {
         "instrumentation": "opentelemetry-instrumentation-httpx==0.24b0",
     },
     "jinja2": {
-        "library": "jinja2~=2.7",
+        "library": "jinja2 >= 2.7, < 4.0",
         "instrumentation": "opentelemetry-instrumentation-jinja2==0.24b0",
     },
     "mysql-connector-python": {
         "library": "mysql-connector-python ~= 8.0",
         "instrumentation": "opentelemetry-instrumentation-mysql==0.24b0",
+    },
+    "pika": {
+        "library": "pika >= 1.1.0",
+        "instrumentation": "opentelemetry-instrumentation-pika==0.24b0",
     },
     "psycopg2": {
         "library": "psycopg2 >= 2.7.3.1",

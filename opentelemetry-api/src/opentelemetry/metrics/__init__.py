@@ -64,8 +64,7 @@ class MeterProvider(ABC):
         version=None,
         schema_url=None,
     ) -> "Meter":
-        if name is None or name == "":
-            _logger.warning("Invalid name: %s", name)
+        pass
 
 
 class _DefaultMeterProvider(MeterProvider):
@@ -128,24 +127,17 @@ class Meter(ABC):
     def schema_url(self):
         return self._schema_url
 
-    def _secure_instrument_name(self, name):
-        name = name.lower()
-
-        if name in self._instrument_names:
-            _logger.error("Instrument name %s has been used already", name)
-
-        else:
-            self._instrument_names.add(name)
+    # FIXME check that the instrument name has not been used already
 
     @abstractmethod
     def create_counter(self, name, unit="", description="") -> Counter:
-        self._secure_instrument_name(name)
+        pass
 
     @abstractmethod
     def create_up_down_counter(
         self, name, unit="", description=""
     ) -> UpDownCounter:
-        self._secure_instrument_name(name)
+        pass
 
     @abstractmethod
     def create_observable_counter(
@@ -230,23 +222,21 @@ class Meter(ABC):
             description: A description for this instrument and what it measures.
         """
 
-        self._secure_instrument_name(name)
-
     @abstractmethod
     def create_histogram(self, name, unit="", description="") -> Histogram:
-        self._secure_instrument_name(name)
+        pass
 
     @abstractmethod
     def create_observable_gauge(
         self, name, callback, unit="", description=""
     ) -> ObservableGauge:
-        self._secure_instrument_name(name)
+        pass
 
     @abstractmethod
     def create_observable_up_down_counter(
         self, name, callback, unit="", description=""
     ) -> ObservableUpDownCounter:
-        self._secure_instrument_name(name)
+        pass
 
 
 class ProxyMeter(Meter):

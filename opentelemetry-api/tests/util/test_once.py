@@ -12,37 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import sys
-import threading
-import unittest
-from functools import partial
-
+from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
 from opentelemetry.util._once import Once
 
 
-# Can't use Mock because its call count is not thread safe
-class MockFunc:
-    def __init__(self) -> None:
-        self.lock = threading.Lock()
-        self.call_count = 0
-
-    def __call__(self) -> None:
-        with self.lock:
-            self.call_count += 1
-
-
-class TestOnce(unittest.TestCase):
-    orig_switch_interval = sys.getswitchinterval()
-
-    @classmethod
-    def setUpClass(cls) -> None:
-        # switch threads more often to increase chance of contention
-        sys.setswitchinterval(1e-12)
-
-    @classmethod
-    def tearDownClass(cls) -> None:
-        sys.setswitchinterval(cls.orig_switch_interval)
-
+class TestOnce(ConcurrencyTestBase):
     def test_once_single_thread(self):
         once_func = MockFunc()
         once = Once()
@@ -60,29 +34,13 @@ class TestOnce(unittest.TestCase):
         self.assertEqual(once_func.call_count, 1)
 
     def test_once_many_threads(self):
-        num_threads = 100
         once_func = MockFunc()
         once = Once()
-        barrier = threading.Barrier(num_threads)
-        results = [False] * num_threads
 
-        def thread_start(idx: int) -> None:
-            nonlocal results
-            # Get all threads here before releasing them to create contention
-            barrier.wait()
-            called = once.do_once(once_func)
-            if called:
-                print(f"\t\tCalled {called}")
-            results[idx] = called
+        def run_concurrently() -> bool:
+            return once.do_once(once_func)
 
-        threads = [
-            threading.Thread(target=partial(thread_start, i))
-            for i in range(num_threads)
-        ]
-        for thread in threads:
-            thread.start()
-        for thread in threads:
-            thread.join()
+        results = self.run_with_many_threads(run_concurrently, num_threads=100)
 
         self.assertEqual(once_func.call_count, 1)
 
