@@ -21,8 +21,13 @@ from enum import Enum
 from os import environ, linesep
 from typing import Optional
 
-from opentelemetry.context import Context, attach, detach, set_value
-from opentelemetry.instrumentation.utils import _SUPPRESS_INSTRUMENTATION_KEY
+from opentelemetry.context import (
+    _SUPPRESS_INSTRUMENTATION_KEY,
+    Context,
+    attach,
+    detach,
+    set_value,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_EXPORT_TIMEOUT,
     OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
@@ -175,7 +180,9 @@ class BatchSpanProcessor(SpanProcessor):
         self.queue = collections.deque(
             [], max_queue_size
         )  # type: typing.Deque[Span]
-        self.worker_thread = threading.Thread(target=self.worker, daemon=True)
+        self.worker_thread = threading.Thread(
+            name="OtelBatchSpanProcessor", target=self.worker, daemon=True
+        )
         self.condition = threading.Condition(threading.Lock())
         self._flush_request = None  # type: typing.Optional[_FlushRequest]
         self.schedule_delay_millis = schedule_delay_millis
