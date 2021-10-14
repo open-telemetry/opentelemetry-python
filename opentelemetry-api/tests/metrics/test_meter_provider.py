@@ -66,6 +66,15 @@ def test_set_meter_provider(reset_meter_provider):
     assert get_meter_provider() is mock
 
 
+def test_set_meter_provider_calls_proxy_provider(reset_meter_provider):
+    with patch("opentelemetry.metrics._PROXY_METER_PROVIDER") as mock_proxy_mp:
+        mock_real_mp = Mock()
+        set_meter_provider(mock_real_mp)
+        mock_proxy_mp.on_set_meter_provider.assert_called_once_with(
+            mock_real_mp
+        )
+
+
 def test_get_meter_provider(reset_meter_provider):
     """
     Test that the API provides a way to get a global default MeterProvider
