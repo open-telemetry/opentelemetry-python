@@ -652,18 +652,14 @@ class TracerShim(Tracer):
         if isinstance(parent, OtelSpanContext):
             parent = NonRecordingSpan(parent)
 
-        links = []
         valid_links = []
         if references:
             for ref in references:
-                links.append(Link(ref.referenced_context.unwrap()))
                 if ref.referenced_context.unwrap() is not INVALID_SPAN_CONTEXT:
-                    valid_links.append(ref)
+                    valid_links.append(Link(ref.referenced_context.unwrap()))
 
         if valid_links and parent is None:
-            parent = NonRecordingSpan(
-                valid_links[0].referenced_context.unwrap()
-            )
+            parent = NonRecordingSpan(valid_links[0].context)
 
         parent_span_context = set_span_in_context(parent)
 
@@ -677,7 +673,7 @@ class TracerShim(Tracer):
         span = self._otel_tracer.start_span(
             operation_name,
             context=parent_span_context,
-            links=links,
+            links=valid_links,
             attributes=tags,
             start_time=start_time_ns,
         )
