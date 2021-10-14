@@ -17,6 +17,7 @@ import typing
 import unittest
 
 from opentelemetry import trace
+from opentelemetry.test.globals_test import TraceGlobalsTest
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT, NonRecordingSpan
 
 
@@ -39,10 +40,8 @@ class TestSpan(NonRecordingSpan):
     pass
 
 
-class TestProxy(unittest.TestCase):
+class TestProxy(TraceGlobalsTest, unittest.TestCase):
     def test_proxy_tracer(self):
-        original_provider = trace._TRACER_PROVIDER
-
         provider = trace.get_tracer_provider()
         # proxy provider
         self.assertIsInstance(provider, trace.ProxyTracerProvider)
@@ -60,6 +59,9 @@ class TestProxy(unittest.TestCase):
         # set a real provider
         trace.set_tracer_provider(TestProvider())
 
+        # get_tracer_provider() now returns the real provider
+        self.assertIsInstance(trace.get_tracer_provider(), TestProvider)
+
         # tracer provider now returns real instance
         self.assertIsInstance(trace.get_tracer_provider(), TestProvider)
 
@@ -71,5 +73,3 @@ class TestProxy(unittest.TestCase):
         # creates real spans
         with tracer.start_span("") as span:
             self.assertIsInstance(span, TestSpan)
-
-        trace._TRACER_PROVIDER = original_provider
