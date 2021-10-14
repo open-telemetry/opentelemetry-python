@@ -27,6 +27,7 @@ from opentelemetry.metrics.measurement import Measurement
 _TInstrumentCallback = Callable[[], Iterable[Measurement]]
 _TInstrumentCallbackGenerator = Generator[Iterable[Measurement], None, None]
 TCallback = Union[_TInstrumentCallback, _TInstrumentCallbackGenerator]
+InstrumentT = TypeVar("InstrumentT", bound="Instrument")
 
 
 _logger = getLogger(__name__)
@@ -71,6 +72,32 @@ class Instrument(ABC):
             description = ""
 
         self._description = description
+
+
+class _ProxyInstrument(ABC, Generic[InstrumentT]):
+    def __init__(self, name, unit, description) -> None:
+        self._name = name
+        self._unit = unit
+        self._description = description
+        self._real_instrument: Optional[InstrumentT] = None
+
+    def on_meter_set(self, meter: "metrics.Meter") -> None:
+        """Called when a real meter is set on the creating _ProxyMeter"""
+
+        # We don't need any locking on proxy instruments because it's OK if some
+        # measurements get dropped while a real backing instrument is being
+        # created.
+        self._real_instrument = self._create_real_instrument(meter)
+
+    @abstractmethod
+    def _create_real_instrument(self, meter: "metrics.Meter") -> InstrumentT:
+        """Create an instance of the real instrument. Implement this."""
+
+
+class _ProxyAsynchronousInstrument(_ProxyInstrument[InstrumentT]):
+    def __init__(self, name, callback, unit, description) -> None:
+        super().__init__(name, unit, description)
+        self._callback = callback
 
 
 class Synchronous(Instrument):
@@ -172,6 +199,15 @@ class DefaultCounter(Counter):
         return super().add(amount, attributes=attributes)
 
 
+class _ProxyCounter(_ProxyInstrument[Counter], Counter):
+    def add(self, amount, attributes=None):
+        if self._real_instrument:
+            self._real_instrument.add(amount, attributes)
+
+    def _create_real_instrument(self, meter: "metrics.Meter") -> Counter:
+        return meter.create_counter(self._name, self._unit, self._description)
+
+
 class UpDownCounter(_NonMonotonic, Synchronous):
     @abstractmethod
     def add(self, amount, attributes=None):
@@ -184,6 +220,17 @@ class DefaultUpDownCounter(UpDownCounter):
 
     def add(self, amount, attributes=None):
         return super().add(amount, attributes=attributes)
+
+
+class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
+    def add(self, amount, attributes=None):
+        if self._real_instrument:
+            self._real_instrument.add(amount, attributes)
+
+    def _create_real_instrument(self, meter: "metrics.Meter") -> UpDownCounter:
+        return meter.create_up_down_counter(
+            self._name, self._unit, self._description
+        )
 
 
 class ObservableCounter(_Monotonic, Asynchronous):
@@ -201,14 +248,36 @@ class DefaultObservableCounter(ObservableCounter):
         super().__init__(name, callback, unit=unit, description=description)
 
 
-class ObservableUpDownCounter(_NonMonotonic, Asynchronous):
+class _ProxyObservableCounter(
+    _ProxyAsynchronousInstrument[ObservableCounter], ObservableCounter
+):
+    def _create_real_instrument(
+        self, meter: "metrics.Meter"
+    ) -> ObservableCounter:
+        return meter.create_observable_counter(
+            self._name, self._callback, self._unit, self._description
+        )
 
+
+class ObservableUpDownCounter(_NonMonotonic, Asynchronous):
     pass
 
 
 class DefaultObservableUpDownCounter(ObservableUpDownCounter):
     def __init__(self, name, callback, unit="", description=""):
         super().__init__(name, callback, unit=unit, description=description)
+
+
+class _ProxyObservableUpDownCounter(
+    _ProxyAsynchronousInstrument[ObservableUpDownCounter],
+    ObservableUpDownCounter,
+):
+    def _create_real_instrument(
+        self, meter: "metrics.Meter"
+    ) -> ObservableUpDownCounter:
+        return meter.create_observable_up_down_counter(
+            self._name, self._callback, self._unit, self._description
+        )
 
 
 class Histogram(_Grouping, Synchronous):
@@ -225,6 +294,17 @@ class DefaultHistogram(Histogram):
         return super().record(amount, attributes=attributes)
 
 
+class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
+    def record(self, amount, attributes=None):
+        if self._real_instrument:
+            self._real_instrument.record(amount, attributes)
+
+    def _create_real_instrument(self, meter: "metrics.Meter") -> Histogram:
+        return meter.create_histogram(
+            self._name, self._unit, self._description
+        )
+
+
 class ObservableGauge(_Grouping, Asynchronous):
     pass
 
@@ -232,3 +312,15 @@ class ObservableGauge(_Grouping, Asynchronous):
 class DefaultObservableGauge(ObservableGauge):
     def __init__(self, name, callback, unit="", description=""):
         super().__init__(name, callback, unit=unit, description=description)
+
+
+class _ProxyObservableGauge(
+    _ProxyAsynchronousInstrument[ObservableGauge],
+    ObservableGauge,
+):
+    def _create_real_instrument(
+        self, meter: "metrics.Meter"
+    ) -> ObservableGauge:
+        return meter.create_observable_gauge(
+            self._name, self._callback, self._unit, self._description
+        )
