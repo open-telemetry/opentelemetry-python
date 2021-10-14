@@ -19,9 +19,9 @@ from opentelemetry.trace import (
     INVALID_SPAN_CONTEXT,
     Span,
     NonRecordingSpan,
-    INVALID_SPAN,
     NoOpTracerProvider
 )
+from opentelemetry.trace.span import SpanContext, NoOpSpan
 
 
 class TestAPIOnlyImplementation(TestCase):
@@ -45,15 +45,15 @@ class TestAPIOnlyImplementation(TestCase):
         tracer = tracer_provider.get_tracer(__name__)
         with tracer.start_span("test") as span:
             self.assertEqual(
-                span.get_span_context(), INVALID_SPAN_CONTEXT
+                span.get_span_context(), SpanContext(0, 0, False)
             )
-            self.assertEqual(span, INVALID_SPAN)
+            self.assertIsInstance(span, NoOpSpan)
             self.assertIs(span.is_recording(), False)
             with tracer.start_span("test2") as span2:
                 self.assertEqual(
                     span2.get_span_context(), INVALID_SPAN_CONTEXT
                 )
-                self.assertEqual(span2, INVALID_SPAN)
+                self.assertIsInstance(span2, NoOpSpan)
                 self.assertIs(span2.is_recording(), False)
 
     def test_span(self):
