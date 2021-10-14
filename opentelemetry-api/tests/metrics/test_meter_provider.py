@@ -26,7 +26,7 @@ from opentelemetry.metrics import (
     _ProxyMeter,
     _ProxyMeterProvider,
     get_meter_provider,
-    on_set_meter_provider,
+    set_meter_provider,
 )
 from opentelemetry.metrics.instrument import (
     _ProxyCounter,
@@ -60,9 +60,10 @@ def test_set_meter_provider(reset_meter_provider):
 
     assert metrics._METER_PROVIDER is None
 
-    on_set_meter_provider(mock)
+    set_meter_provider(mock)
 
     assert metrics._METER_PROVIDER is mock
+    assert get_meter_provider() is mock
 
 
 def test_get_meter_provider(reset_meter_provider):
@@ -213,7 +214,7 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         # to the _ProxyInstruments which should create their own real instruments
         # from the real Meter to back their calls
         real_meter_provider = Mock()
-        proxy_meter.on_set_real_meter_provider(real_meter_provider)
+        proxy_meter.on_set_meter_provider(real_meter_provider)
         real_meter_provider.get_meter.assert_called_once_with(
             meter_name, None, None
         )
@@ -262,7 +263,7 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         self.assertIsInstance(proxy_meter, _ProxyMeter)
 
         real_meter_provider = Mock()
-        proxy_meter.on_set_real_meter_provider(real_meter_provider)
+        proxy_meter.on_set_meter_provider(real_meter_provider)
 
         name = "foo"
         unit = "s"
