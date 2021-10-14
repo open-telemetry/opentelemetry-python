@@ -4,7 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.5.0-0.24b0...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.6.0-0.25b0...HEAD)
+
+- Fix parental trace relationship for opentracing `follows_from` reference
+  ([#2180](https://github.com/open-telemetry/opentelemetry-python/pull/2180))
+
+
+## [1.6.0-0.25b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.0-0.25b0) - 2021-10-13
+
+
+- Fix race in `set_tracer_provider()`
+  ([#2182](https://github.com/open-telemetry/opentelemetry-python/pull/2182))
 - Automatically load OTEL environment variables as options for `opentelemetry-instrument`
   ([#1969](https://github.com/open-telemetry/opentelemetry-python/pull/1969))
 - `opentelemetry-semantic-conventions` Update to semantic conventions v1.6.1
@@ -31,8 +41,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2145](https://github.com/open-telemetry/opentelemetry-python/pull/2145))
 - Add `schema_url` to `TracerProvider.get_tracer`
   ([#2154](https://github.com/open-telemetry/opentelemetry-python/pull/2154))
-- Fix parental trace relationship for opentracing `follows_from` reference
-  ([#2180](https://github.com/open-telemetry/opentelemetry-python/pull/2180))
+- Make baggage implementation w3c spec complaint
+  ([#2167](https://github.com/open-telemetry/opentelemetry-python/pull/2167))
+- Add name to `BatchSpanProcessor` worker thread
+  ([#2186](https://github.com/open-telemetry/opentelemetry-python/pull/2186))
+
 
 ## [1.5.0-0.24b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.5.0-0.24b0) - 2021-08-26
 
