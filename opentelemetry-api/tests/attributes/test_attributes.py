@@ -100,7 +100,7 @@ class TestBoundedAttributes(unittest.TestCase):
     )
 
     def test_negative_maxlen(self):
-        with self.assertWarns(UserWarning):
+        with self.assertRaises(ValueError):
             BoundedAttributes(-1, _allow_instantiation=True)
 
     def test_from_map(self):
