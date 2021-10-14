@@ -106,7 +106,9 @@ class TestBoundedAttributes(unittest.TestCase):
     def test_from_map(self):
         dic_len = len(self.base)
         base_copy = collections.OrderedDict(self.base)
-        bdict = BoundedAttributes(dic_len, base_copy)
+        bdict = BoundedAttributes(
+            dic_len, base_copy, _allow_instantiation=True
+        )
 
         self.assertEqual(len(bdict), dic_len)
 
@@ -122,14 +124,18 @@ class TestBoundedAttributes(unittest.TestCase):
 
         # map too big
         half_len = dic_len // 2
-        bdict = BoundedAttributes(half_len, self.base)
+        bdict = BoundedAttributes(
+            half_len, self.base, _allow_instantiation=True
+        )
         self.assertEqual(len(tuple(bdict)), half_len)
         self.assertEqual(bdict.dropped, dic_len - half_len)
 
     def test_bounded_dict(self):
         # create empty dict
         dic_len = len(self.base)
-        bdict = BoundedAttributes(dic_len, immutable=False)
+        bdict = BoundedAttributes(
+            dic_len, _allow_instantiation=True, immutable=False
+        )
         self.assertEqual(len(bdict), 0)
 
         # fill dict
@@ -168,11 +174,13 @@ class TestBoundedAttributes(unittest.TestCase):
         del bdict["new-name"]
         self.assertEqual(len(bdict), dic_len - 1)
 
-        with self.assertRaises(KeyError):
-            _ = bdict["new-name"]
+        with self.assertWarns(UserWarning):
+            bdict["new-name"]
 
     def test_no_limit_code(self):
-        bdict = BoundedAttributes(maxlen=None, immutable=False)
+        bdict = BoundedAttributes(
+            maxlen=None, _allow_instantiation=True, immutable=False
+        )
         for num in range(100):
             bdict[str(num)] = num
 
@@ -180,6 +188,6 @@ class TestBoundedAttributes(unittest.TestCase):
             self.assertEqual(bdict[str(num)], num)
 
     def test_immutable(self):
-        bdict = BoundedAttributes()
-        with self.assertRaises(TypeError):
+        bdict = BoundedAttributes(_allow_instantiation=True)
+        with self.assertWarns(UserWarning):
             bdict["should-not-work"] = "dict immutable"

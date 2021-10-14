@@ -143,9 +143,9 @@ class BoundedAttributes(MutableMapping, BaseSafety):
                 raise ValueError(
                     "maxlen must be valid int greater or equal to 0"
                 )
-        self._maxlen = maxlen
-        self._dropped = 0
-        self._max_value_len = max_value_len
+        self.maxlen = maxlen
+        self.dropped = 0
+        self.max_value_len = max_value_len
         self._dict = OrderedDict()  # type: OrderedDict
         self._lock = threading.Lock()  # type: threading.Lock
         if attributes:
@@ -155,16 +155,6 @@ class BoundedAttributes(MutableMapping, BaseSafety):
 
     def _get_no_op_class(self):
         return dict
-
-    @property
-    @safety(0)
-    def max_value_len(self):
-        return self._max_value_len
-
-    @property
-    @safety(0)
-    def dropped(self):
-        return self._dropped
 
     @safety("")
     def __repr__(self):
