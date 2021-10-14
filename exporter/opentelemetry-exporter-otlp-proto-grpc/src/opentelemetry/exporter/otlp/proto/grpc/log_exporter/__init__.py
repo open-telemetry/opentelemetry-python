@@ -164,10 +164,9 @@ class OTLPLogExporter(
             self._translate_severity_text(log_data)
             self._translate_attributes(log_data)
 
-            self._collector_log_kwargs["severity_number"] = getattr(
-                SeverityNumber,
-                "SEVERITY_NUMBER_{}".format(log_data.log_record.severity_text),
-            )
+            self._collector_log_kwargs[
+                "severity_number"
+            ] = log_data.log_record.severity_number.value
 
             instrumentation_library_logs.logs.append(
                 PB2LogRecord(**self._collector_log_kwargs)
