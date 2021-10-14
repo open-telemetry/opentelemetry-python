@@ -17,6 +17,7 @@
 OpenTelemetry SDK Configurator for Easy Instrumentation with Distros
 """
 
+from abc import ABC, abstractmethod
 from os import environ
 from typing import Sequence, Tuple
 
@@ -27,7 +28,6 @@ from opentelemetry.environment_variables import (
     OTEL_PYTHON_ID_GENERATOR,
     OTEL_TRACES_EXPORTER,
 )
-from opentelemetry.instrumentation.configurator import BaseConfigurator
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
@@ -140,7 +140,34 @@ def _initialize_components():
     _init_tracing(trace_exporters, id_generator)
 
 
-class _OTelSDKConfigurator(BaseConfigurator):
+class _BaseConfigurator(ABC):
+    """An ABC for configurators
+
+    Configurators are used to configure
+    SDKs (i.e. TracerProvider, MeterProvider, Processors...)
+    to reduce the amount of manual configuration required.
+    """
+
+    _instance = None
+    _is_instrumented = False
+
+    def __new__(cls, *args, **kwargs):
+
+        if cls._instance is None:
+            cls._instance = object.__new__(cls, *args, **kwargs)
+
+        return cls._instance
+
+    @abstractmethod
+    def _configure(self, **kwargs):
+        """Configure the SDK"""
+
+    def configure(self, **kwargs):
+        """Configure the SDK"""
+        self._configure(**kwargs)
+
+
+class _OTelSDKConfigurator(_BaseConfigurator):
     """A basic Configurator by OTel Python for initalizing OTel SDK components
 
     Initializes several crucial OTel SDK components (i.e. TracerProvider,
