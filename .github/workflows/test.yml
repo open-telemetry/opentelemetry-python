@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: 4a4d889b1876323d7f70507b5e4d079f454fe0d6
+  CONTRIB_REPO_SHA: c2e674983a265e54c5eb14e376459a992498aae6
   # This is needed because we do not clone the core repo in contrib builds anymore.
   # When running contrib builds as part of core builds, we use actions/checkout@v2 which
   # does not set an environment variable (simply just runs tox), which is different when
@@ -34,7 +34,7 @@ jobs:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
         python-version: [ py36, py37, py38, py39, pypy3 ]
-        package: ["api", "sdk", "instrumentation", "semantic", "getting", "distro" , "shim", "exporter", "protobuf", "propagator"]
+        package: ["api", "sdk", "semantic", "getting", "shim", "exporter", "protobuf", "propagator"]
         os: [ ubuntu-20.04, windows-2019 ]
     steps:
       - name: Checkout Core Repo @ SHA - ${{ github.sha }}
