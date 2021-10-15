@@ -15,20 +15,24 @@ DESCRIPTOR: google.protobuf.descriptor.FileDescriptor = ...
 class ExportLogsServiceRequest(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     RESOURCE_LOGS_FIELD_NUMBER: builtins.int
-
     @property
-    def resource_logs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.logs.v1.logs_pb2.ResourceLogs]: ...
-
+    def resource_logs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.logs.v1.logs_pb2.ResourceLogs]:
+        """An array of ResourceLogs.
+        For data coming from a single resource this array will typically contain one
+        element. Intermediary nodes (such as OpenTelemetry Collector) that receive
+        data from multiple origins typically batch the data before forwarding further and
+        in that case this array will contain multiple elements.
+        """
+        pass
     def __init__(self,
         *,
         resource_logs : typing.Optional[typing.Iterable[opentelemetry.proto.logs.v1.logs_pb2.ResourceLogs]] = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"resource_logs",b"resource_logs"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["resource_logs",b"resource_logs"]) -> None: ...
 global___ExportLogsServiceRequest = ExportLogsServiceRequest
 
 class ExportLogsServiceResponse(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-
     def __init__(self,
         ) -> None: ...
 global___ExportLogsServiceResponse = ExportLogsServiceResponse
