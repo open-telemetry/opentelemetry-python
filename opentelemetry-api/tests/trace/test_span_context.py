@@ -43,3 +43,47 @@ class TestSpanContext(unittest.TestCase):
             trace_state=trace.DEFAULT_TRACE_STATE,
         )
         self.assertFalse(invalid_sc.is_valid)
+
+    def test_trace_id_validity(self):
+        trace_id_max_value = int("f" * 32, 16)
+        span_id = 1
+
+        # valid trace IDs
+        sc = trace.SpanContext(trace_id_max_value, span_id, is_remote=False)
+        self.assertTrue(sc.is_valid)
+
+        sc = trace.SpanContext(1, span_id, is_remote=False)
+        self.assertTrue(sc.is_valid)
+
+        # invalid trace IDs
+        sc = trace.SpanContext(0, span_id, is_remote=False)
+        self.assertFalse(sc.is_valid)
+
+        sc = trace.SpanContext(-1, span_id, is_remote=False)
+        self.assertFalse(sc.is_valid)
+
+        sc = trace.SpanContext(
+            trace_id_max_value + 1, span_id, is_remote=False
+        )
+        self.assertFalse(sc.is_valid)
+
+    def test_span_id_validity(self):
+        span_id_max = int("f" * 16, 16)
+        trace_id = 1
+
+        # valid span IDs
+        sc = trace.SpanContext(trace_id, span_id_max, is_remote=False)
+        self.assertTrue(sc.is_valid)
+
+        sc = trace.SpanContext(trace_id, 1, is_remote=False)
+        self.assertTrue(sc.is_valid)
+
+        # invalid span IDs
+        sc = trace.SpanContext(trace_id, 0, is_remote=False)
+        self.assertFalse(sc.is_valid)
+
+        sc = trace.SpanContext(trace_id, -1, is_remote=False)
+        self.assertFalse(sc.is_valid)
+
+        sc = trace.SpanContext(trace_id, span_id_max + 1, is_remote=False)
+        self.assertFalse(sc.is_valid)

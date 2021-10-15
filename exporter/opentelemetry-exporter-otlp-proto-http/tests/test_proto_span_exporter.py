@@ -64,7 +64,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: "traces/certificate.env",
             OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: Compression.Deflate.value,
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "https://traces.endpoint.env",
-            OTEL_EXPORTER_OTLP_TRACES_HEADERS: "tracesEnv1=val1,tracesEnv2=val2",
+            OTEL_EXPORTER_OTLP_TRACES_HEADERS: "tracesEnv1=val1,tracesEnv2=val2,traceEnv3===val3==",
             OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "40",
         },
     )
@@ -77,7 +77,11 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertIs(exporter._compression, Compression.Deflate)
         self.assertEqual(
             exporter._headers,
-            {"tracesEnv1": "val1", "tracesEnv2": "val2"},
+            {
+                "tracesenv1": "val1",
+                "tracesenv2": "val2",
+                "traceenv3": "==val3==",
+            },
         )
 
     @patch.dict(
@@ -127,7 +131,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(exporter._timeout, int(OS_ENV_TIMEOUT))
         self.assertIs(exporter._compression, Compression.Gzip)
         self.assertEqual(
-            exporter._headers, {"envHeader1": "val1", "envHeader2": "val2"}
+            exporter._headers, {"envheader1": "val1", "envheader2": "val2"}
         )
 
     @patch.dict(
@@ -143,5 +147,5 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
             self.assertEqual(
                 cm.records[0].message,
-                "Skipped invalid OTLP exporter header: 'missingValue'",
+                "Header doesn't match the format: missingValue.",
             )

@@ -17,6 +17,7 @@
 OpenTelemetry SDK Configurator for Easy Instrumentation with Distros
 """
 
+from abc import ABC, abstractmethod
 from os import environ
 from typing import Sequence, Tuple
 
@@ -27,7 +28,6 @@ from opentelemetry.environment_variables import (
     OTEL_PYTHON_ID_GENERATOR,
     OTEL_TRACES_EXPORTER,
 )
-from opentelemetry.instrumentation.configurator import BaseConfigurator
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
@@ -91,9 +91,7 @@ def _import_tracer_provider_config_components(
         entry_point = component_entry_points.get(selected_component, None)
         if not entry_point:
             raise RuntimeError(
-                "Requested component '{}' not found in entry points for '{}'".format(
-                    selected_component, entry_point_name
-                )
+                f"Requested component '{selected_component}' not found in entry points for '{entry_point_name}'"
             )
 
         component_impl = entry_point.load()
@@ -111,14 +109,12 @@ def _import_exporters(
         exporter_name,
         exporter_impl,
     ) in _import_tracer_provider_config_components(
-        exporter_names, "opentelemetry_exporter"
+        exporter_names, "opentelemetry_traces_exporter"
     ):
         if issubclass(exporter_impl, SpanExporter):
             trace_exporters[exporter_name] = exporter_impl
         else:
-            raise RuntimeError(
-                "{0} is not a trace exporter".format(exporter_name)
-            )
+            raise RuntimeError(f"{exporter_name} is not a trace exporter")
     return trace_exporters
 
 
@@ -133,7 +129,7 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
     if issubclass(id_generator_impl, IdGenerator):
         return id_generator_impl
 
-    raise RuntimeError("{0} is not an IdGenerator".format(id_generator_name))
+    raise RuntimeError(f"{id_generator_name} is not an IdGenerator")
 
 
 def _initialize_components():
@@ -144,7 +140,34 @@ def _initialize_components():
     _init_tracing(trace_exporters, id_generator)
 
 
-class _OTelSDKConfigurator(BaseConfigurator):
+class _BaseConfigurator(ABC):
+    """An ABC for configurators
+
+    Configurators are used to configure
+    SDKs (i.e. TracerProvider, MeterProvider, Processors...)
+    to reduce the amount of manual configuration required.
+    """
+
+    _instance = None
+    _is_instrumented = False
+
+    def __new__(cls, *args, **kwargs):
+
+        if cls._instance is None:
+            cls._instance = object.__new__(cls, *args, **kwargs)
+
+        return cls._instance
+
+    @abstractmethod
+    def _configure(self, **kwargs):
+        """Configure the SDK"""
+
+    def configure(self, **kwargs):
+        """Configure the SDK"""
+        self._configure(**kwargs)
+
+
+class _OTelSDKConfigurator(_BaseConfigurator):
     """A basic Configurator by OTel Python for initalizing OTel SDK components
 
     Initializes several crucial OTel SDK components (i.e. TracerProvider,

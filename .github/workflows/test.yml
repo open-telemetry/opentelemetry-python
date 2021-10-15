@@ -10,7 +10,14 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: dde62cebffe519c35875af6d06fae053b3be65ec
+  CONTRIB_REPO_SHA: c2e674983a265e54c5eb14e376459a992498aae6
+  # This is needed because we do not clone the core repo in contrib builds anymore.
+  # When running contrib builds as part of core builds, we use actions/checkout@v2 which
+  # does not set an environment variable (simply just runs tox), which is different when
+  # contrib builds are run directly from contrib (since test.yml is executed, which sets CORE_REPO_SHA)
+  # The solution is to include CORE_REPO_SHA as part of THIS environment so it can be accessed
+  # from within the contrib build.
+  CORE_REPO_SHA: ${{ github.sha }}
 
 jobs:
   build:
@@ -27,17 +34,11 @@ jobs:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
         python-version: [ py36, py37, py38, py39, pypy3 ]
-        package: ["instrumentation", "core", "exporter", "propagator"]
+        package: ["api", "sdk", "semantic", "getting", "shim", "exporter", "protobuf", "propagator"]
         os: [ ubuntu-20.04, windows-2019 ]
     steps:
       - name: Checkout Core Repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v2
-      - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
-        uses: actions/checkout@v2
-        with:
-          repository: open-telemetry/opentelemetry-python-contrib
-          ref: ${{ env.CONTRIB_REPO_SHA }}
-          path: opentelemetry-python-contrib
       - name: Set up Python ${{ env[matrix.python-version] }}
         uses: actions/setup-python@v2
         with:
@@ -93,12 +94,6 @@ jobs:
     steps:
       - name: Checkout Core Repo @ SHA - ${{ github.sha }}
         uses: actions/checkout@v2
-      - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
-        uses: actions/checkout@v2
-        with:
-          repository: open-telemetry/opentelemetry-python-contrib
-          ref: ${{ env.CONTRIB_REPO_SHA }}
-          path: opentelemetry-python-contrib
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
@@ -116,19 +111,19 @@ jobs:
           key: v2-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
       - name: run tox
         run: tox -e ${{ matrix.tox-environment }}
+
+  # Contrib unit test suite in order to ensure changes in core do not break anything in contrib.
+  # We only run contrib unit tests on the oldest supported Python version (3.6) as running the same tests
+  # on all versions is somewhat redundant. 
   contrib-build:
     env:
       # We use these variables to convert between tox and GHA version literals
       py36: 3.6
-      py37: 3.7
-      py38: 3.8
-      py39: 3.9
-      pypy3: pypy3
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
-        python-version: [ py36, py37, py38, py39, pypy3 ]
+        python-version: [ py36 ]
         package: ["instrumentation", "exporter"]
         os: [ ubuntu-20.04]
     steps:
@@ -159,38 +154,3 @@ jobs:
           key: v2-tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
       - name: run tox
         run: tox -f ${{ matrix.python-version }}-${{ matrix.package }}
-  contrib-misc:
-    strategy:
-      fail-fast: false
-      matrix:
-        tox-environment: [ "docker-tests"]
-    name: ${{ matrix.tox-environment }}
-    runs-on: ubuntu-20.04
-    steps:
-      - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
-        uses: actions/checkout@v2
-        with:
-          repository: open-telemetry/opentelemetry-python-contrib
-          ref: ${{ env.CONTRIB_REPO_SHA }}
-      - name: Checkout Core Repo @ SHA ${{ github.sha }}
-        uses: actions/checkout@v2
-        with:
-          repository: open-telemetry/opentelemetry-python
-          path: opentelemetry-python-core
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
-          architecture: 'x64'
-      - name: Install tox
-        run: pip install -U tox
-      - name: Cache tox environment
-        # Preserves .tox directory between runs for faster installs
-        uses: actions/cache@v2
-        with:
-          path: |
-            .tox
-            ~/.cache/pip
-          key: v2-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
-      - name: run tox
-        run: tox -e ${{ matrix.tox-environment }}

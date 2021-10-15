@@ -59,13 +59,9 @@ def _clean_attribute(
         cleaned_seq = []
 
         for element in value:
-            # None is considered valid in any sequence
+            element = _clean_attribute_value(element, max_len)
             if element is None:
                 cleaned_seq.append(element)
-
-            element = _clean_attribute_value(element, max_len)
-            # reject invalid elements
-            if element is None:
                 continue
 
             element_type = type(element)
@@ -157,8 +153,8 @@ class BoundedAttributes(MutableMapping):
         self._immutable = immutable
 
     def __repr__(self):
-        return "{}({}, maxlen={})".format(
-            type(self).__name__, dict(self._dict), self.maxlen
+        return (
+            f"{type(self).__name__}({dict(self._dict)}, maxlen={self.maxlen})"
         )
 
     def __getitem__(self, key):
