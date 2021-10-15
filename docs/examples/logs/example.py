@@ -3,18 +3,17 @@ import logging
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.log_exporter import OTLPLogExporter
 from opentelemetry.sdk.logs import (
-    OTLPHandler,
     LogEmitterProvider,
-    get_log_emitter_provider,
+    OTLPHandler,
     set_log_emitter_provider,
 )
 from opentelemetry.sdk.logs.export import SimpleLogProcessor
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
     SimpleSpanProcessor,
 )
-from opentelemetry.sdk.resources import Resource
 
 trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(
