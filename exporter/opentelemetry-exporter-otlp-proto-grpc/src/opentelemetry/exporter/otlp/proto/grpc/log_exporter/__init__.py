@@ -29,7 +29,6 @@ from opentelemetry.proto.common.v1.common_pb2 import InstrumentationLibrary
 from opentelemetry.proto.logs.v1.logs_pb2 import (
     InstrumentationLibraryLogs,
     ResourceLogs,
-    SeverityNumber,
 )
 from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord as PB2LogRecord
 from opentelemetry.sdk.logs import LogRecord as SDKLogRecord
