@@ -207,6 +207,7 @@ class TestOTLPLogExporter(TestCase):
                 mock_insecure,
             ),
         ]
+        # pylint: disable=C0209
         for endpoint, insecure, mock_method in endpoints:
             OTLPLogExporter(endpoint=endpoint, insecure=insecure)
             self.assertEqual(
