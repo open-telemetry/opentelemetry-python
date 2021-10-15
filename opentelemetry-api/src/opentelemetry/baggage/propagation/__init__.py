@@ -53,7 +53,10 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
             getter.get(carrier, self._BAGGAGE_HEADER_NAME)
         )
 
-        if not header or len(header) > self._MAX_HEADER_LENGTH:
+        if not header:
+            return context
+
+        if len(header) > self._MAX_HEADER_LENGTH:
             _logger.warning(
                 "Baggage header `%s` exceeded the maximum number of bytes per baggage-string",
                 header,
