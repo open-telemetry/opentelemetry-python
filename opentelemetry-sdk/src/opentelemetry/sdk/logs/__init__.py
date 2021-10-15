@@ -87,8 +87,8 @@ class LogRecord:
                 "severity_text": self.severity_text,
                 "attributes": self.attributes,
                 "timestamp": ns_to_iso_str(self.timestamp),
-                "trace_id": "0x{}".format(format_trace_id(self.trace_id)),
-                "span_id": "0x{}".format(format_span_id(self.span_id)),
+                "trace_id": f"0x{format_trace_id(self.trace_id)}",
+                "span_id": f"0x{format_span_id(self.span_id)}",
                 "trace_flags": self.trace_flags,
                 "resource": repr(self.resource.attributes)
                 if self.resource
