@@ -32,7 +32,7 @@ def parse_args():
     parser = argparse.ArgumentParser(
         description="""
         opentelemetry-instrument automatically instruments a Python
-        program and it's dependencies and then runs the program.
+        program and its dependencies and then runs the program.
         """
     )
 

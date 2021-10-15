@@ -18,14 +18,15 @@ Installation
 Code Generation
 ---------------
 
-These files were generated automatically from code in opentelemetry-semantic-conventions_.
+These files were generated automatically from code in semconv_.
 To regenerate the code, run ``../scripts/semconv/generate.sh``.
 
-To build against a new release or specific commit of opentelemetry-semantic-conventions_,
+To build against a new release or specific commit of opentelemetry-specification_,
 update the ``SPEC_VERSION`` variable in
 ``../scripts/semconv/generate.sh``. Then run the script and commit the changes.
 
-.. _opentelemetry-semantic-conventions: https://github.com/open-telemetry/opentelemetry-semantic-conventions
+.. _opentelemetry-specification: https://github.com/open-telemetry/opentelemetry-specification
+.. _semconv: https://github.com/open-telemetry/opentelemetry-python/tree/main/scripts/semconv
 
 
 References

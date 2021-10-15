@@ -28,13 +28,13 @@ class ResourceAttributes:
 
     CLOUD_REGION = "cloud.region"
     """
-    The geographical region the resource is running. Refer to your provider's docs to see the available regions, for example [AWS regions](https://aws.amazon.com/about-aws/global-infrastructure/regions_az/), [Azure regions](https://azure.microsoft.com/en-us/global-infrastructure/geographies/), or [Google Cloud regions](https://cloud.google.com/about/locations).
+    The geographical region the resource is running. Refer to your provider's docs to see the available regions, for example [Alibaba Cloud regions](https://www.alibabacloud.com/help/doc-detail/40654.htm), [AWS regions](https://aws.amazon.com/about-aws/global-infrastructure/regions_az/), [Azure regions](https://azure.microsoft.com/en-us/global-infrastructure/geographies/), or [Google Cloud regions](https://cloud.google.com/about/locations).
     """
 
     CLOUD_AVAILABILITY_ZONE = "cloud.availability_zone"
     """
     Cloud regions often have multiple, isolated locations known as zones to increase availability. Availability zone represents the zone where the resource is running.
-    Note: Availability zones are called "zones" on Google Cloud.
+    Note: Availability zones are called "zones" on Alibaba Cloud and Google Cloud.
     """
 
     CLOUD_PLATFORM = "cloud.platform"
@@ -460,6 +460,9 @@ As an alternative, consider setting `faas.id` as a span attribute instead.
 
 
 class CloudProviderValues(Enum):
+    ALIBABA_CLOUD = "alibaba_cloud"
+    """Alibaba Cloud."""
+
     AWS = "aws"
     """Amazon Web Services."""
 
@@ -471,6 +474,12 @@ class CloudProviderValues(Enum):
 
 
 class CloudPlatformValues(Enum):
+    ALIBABA_CLOUD_ECS = "alibaba_cloud_ecs"
+    """Alibaba Cloud Elastic Compute Service."""
+
+    ALIBABA_CLOUD_FC = "alibaba_cloud_fc"
+    """Alibaba Cloud Function Compute."""
+
     AWS_EC2 = "aws_ec2"
     """AWS Elastic Compute Cloud."""
 
