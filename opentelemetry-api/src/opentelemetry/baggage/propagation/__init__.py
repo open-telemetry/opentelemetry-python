@@ -13,9 +13,9 @@
 # limitations under the License.
 #
 import typing
-import urllib.parse
+from urllib.parse import quote_plus, unquote_plus
 
-from opentelemetry import baggage
+from opentelemetry.baggage import get_all, set_baggage
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
@@ -54,20 +54,20 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         baggage_entries = header.split(",")
         total_baggage_entries = self._MAX_PAIRS
         for entry in baggage_entries:
-            if total_baggage_entries <= 0:
-                return context
-            total_baggage_entries -= 1
             if len(entry) > self._MAX_PAIR_LENGTH:
                 continue
             try:
                 name, value = entry.split("=", 1)
             except Exception:  # pylint: disable=broad-except
                 continue
-            context = baggage.set_baggage(
-                urllib.parse.unquote(name).strip(),
-                urllib.parse.unquote(value).strip(),
+            context = set_baggage(
+                unquote_plus(name).strip(),
+                unquote_plus(value).strip(),
                 context=context,
             )
+            total_baggage_entries -= 1
+            if total_baggage_entries == 0:
+                break
 
         return context
 
@@ -82,7 +82,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         See
         `opentelemetry.propagators.textmap.TextMapPropagator.inject`
         """
-        baggage_entries = baggage.get_all(context=context)
+        baggage_entries = get_all(context=context)
         if not baggage_entries:
             return
 
@@ -97,7 +97,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
 
 def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
     return ",".join(
-        key + "=" + urllib.parse.quote_plus(str(value))
+        quote_plus(str(key)) + "=" + quote_plus(str(value))
         for key, value in baggage_entries.items()
     )
 

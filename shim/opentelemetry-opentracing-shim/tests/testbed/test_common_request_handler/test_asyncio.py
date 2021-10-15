@@ -129,9 +129,9 @@ class TestAsyncio(OpenTelemetryTestCase):
         spans = self.tracer.finished_spans()
         self.assertEqual(len(spans), 3)
 
-        spans = sorted(spans, key=lambda x: x.start_time)
         parent_span = get_one_by_operation_name(spans, "parent")
         self.assertIsNotNone(parent_span)
 
-        self.assertIsChildOf(spans[1], parent_span)
-        self.assertIsNotChildOf(spans[2], parent_span)
+        spans = [span for span in spans if span != parent_span]
+        self.assertIsChildOf(spans[0], parent_span)
+        self.assertIsNotChildOf(spans[1], parent_span)

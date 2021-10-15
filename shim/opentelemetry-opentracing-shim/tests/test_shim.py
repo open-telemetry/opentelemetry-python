@@ -482,9 +482,7 @@ class TestShim(TestCase):
 
         ex = exc_ctx.exception
         expected_stack = "".join(
-            traceback.format_exception(
-                etype=type(ex), value=ex, tb=ex.__traceback__
-            )
+            traceback.format_exception(type(ex), value=ex, tb=ex.__traceback__)
         )
         # Verify exception details have been added to span.
         exc_event = scope.span.unwrap().events[0]

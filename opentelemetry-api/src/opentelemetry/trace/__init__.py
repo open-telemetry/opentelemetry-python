@@ -320,7 +320,7 @@ class Tracer(ABC):
         as the current span in this tracer's context.
 
         Exiting the context manager will call the span's end method,
-        as well as return the current span to it's previous value by
+        as well as return the current span to its previous value by
         returning to the previous context.
 
         Example::
