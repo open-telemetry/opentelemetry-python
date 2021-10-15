@@ -38,7 +38,7 @@ from opentelemetry.proto.common.v1.common_pb2 import (
 )
 from opentelemetry.proto.logs.v1.logs_pb2 import InstrumentationLibraryLogs
 from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord as PB2LogRecord
-from opentelemetry.proto.logs.v1.logs_pb2 import ResourceLogs, SeverityNumber
+from opentelemetry.proto.logs.v1.logs_pb2 import ResourceLogs
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
@@ -113,7 +113,7 @@ class TestOTLPLogExporter(TestCase):
                 trace_id=2604504634922341076776623263868986797,
                 span_id=5213367945872657620,
                 trace_flags=TraceFlags(0x01),
-                severity_text="WARN",
+                severity_text="WARNING",
                 severity_number=SDKSeverityNumber.WARN,
                 name="name",
                 body="Zhengzhou, We have a heaviest rains in 1000 years",
@@ -291,13 +291,8 @@ class TestOTLPLogExporter(TestCase):
                                     # pylint: disable=no-member
                                     name="name",
                                     time_unix_nano=self.log_data_1.log_record.timestamp,
-                                    severity_number=getattr(
-                                        SeverityNumber,
-                                        "SEVERITY_NUMBER_{}".format(
-                                            self.log_data_1.log_record.severity_text
-                                        ),
-                                    ),
-                                    severity_text="WARN",
+                                    severity_number=self.log_data_1.log_record.severity_number.value,
+                                    severity_text="WARNING",
                                     span_id=int.to_bytes(
                                         5213367945872657620, 8, "big"
                                     ),
@@ -356,13 +351,8 @@ class TestOTLPLogExporter(TestCase):
                                     # pylint: disable=no-member
                                     name="name",
                                     time_unix_nano=self.log_data_1.log_record.timestamp,
-                                    severity_number=getattr(
-                                        SeverityNumber,
-                                        "SEVERITY_NUMBER_{}".format(
-                                            self.log_data_1.log_record.severity_text
-                                        ),
-                                    ),
-                                    severity_text="WARN",
+                                    severity_number=self.log_data_1.log_record.severity_number.value,
+                                    severity_text="WARNING",
                                     span_id=int.to_bytes(
                                         5213367945872657620, 8, "big"
                                     ),
@@ -399,12 +389,7 @@ class TestOTLPLogExporter(TestCase):
                                     # pylint: disable=no-member
                                     name="info name",
                                     time_unix_nano=self.log_data_2.log_record.timestamp,
-                                    severity_number=getattr(
-                                        SeverityNumber,
-                                        "SEVERITY_NUMBER_{}".format(
-                                            self.log_data_2.log_record.severity_text
-                                        ),
-                                    ),
+                                    severity_number=self.log_data_2.log_record.severity_number.value,
                                     severity_text="INFO",
                                     span_id=int.to_bytes(
                                         5213367945872657623, 8, "big"
@@ -450,12 +435,7 @@ class TestOTLPLogExporter(TestCase):
                                     # pylint: disable=no-member
                                     name="error name",
                                     time_unix_nano=self.log_data_3.log_record.timestamp,
-                                    severity_number=getattr(
-                                        SeverityNumber,
-                                        "SEVERITY_NUMBER_{}".format(
-                                            self.log_data_3.log_record.severity_text
-                                        ),
-                                    ),
+                                    severity_number=self.log_data_3.log_record.severity_number.value,
                                     severity_text="ERROR",
                                     span_id=int.to_bytes(
                                         5213367945872657628, 8, "big"
