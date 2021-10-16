@@ -569,6 +569,32 @@ class TestSpanCreation(unittest.TestCase):
             self.assertEqual(len(root.attributes), max_attrs)
 
 
+class TestReadableSpan(unittest.TestCase):
+    def test_links(self):
+        span = trace.ReadableSpan()
+        self.assertEqual(span.links, ())
+
+        span = trace.ReadableSpan(
+            links=[trace_api.Link(context=trace_api.INVALID_SPAN_CONTEXT)] * 2,
+        )
+        self.assertEqual(len(span.links), 2)
+        for link in span.links:
+            self.assertFalse(link.context.is_valid)
+
+    def test_events(self):
+        span = trace.ReadableSpan()
+        self.assertEqual(span.events, ())
+        
+        events = [
+            trace.Event('foo1', {'bar1': 'baz1'}),
+            trace.Event('foo2', {'bar2': 'baz2'}),
+        ]
+        span = trace.ReadableSpan(
+            events=events
+        )
+        self.assertEqual(span.events, tuple(events))
+
+
 class TestSpan(unittest.TestCase):
     # pylint: disable=too-many-public-methods
 
