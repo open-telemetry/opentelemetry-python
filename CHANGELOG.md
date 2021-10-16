@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Upgrade GRPC/protobuf related dependency and regenerate otlp protobufs
   ([#2201](https://github.com/open-telemetry/opentelemetry-python/pull/2201))
+- Propagation: only warn about oversized baggage headers when headers exist
+  ([#2212](https://github.com/open-telemetry/opentelemetry-python/pull/2212))
 
 ## [1.6.0-0.25b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.0-0.25b0) - 2021-10-13
 
