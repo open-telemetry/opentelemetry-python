@@ -2,8 +2,13 @@ import logging
 
 from opentelemetry import trace
 from opentelemetry.exporter.otlp.proto.grpc.log_exporter import OTLPLogExporter
-from opentelemetry.sdk.logs import OTLPHandler, get_log_emitter_provider
+from opentelemetry.sdk.logs import (
+    LogEmitterProvider,
+    OTLPHandler,
+    set_log_emitter_provider,
+)
 from opentelemetry.sdk.logs.export import SimpleLogProcessor
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     ConsoleSpanExporter,
@@ -15,7 +20,16 @@ trace.get_tracer_provider().add_span_processor(
     SimpleSpanProcessor(ConsoleSpanExporter())
 )
 
-log_emitter_provider = get_log_emitter_provider()
+log_emitter_provider = LogEmitterProvider(
+    resource=Resource.create(
+        {
+            "service.name": "shoppingcart",
+            "service.instance.id": "instance-12",
+        }
+    ),
+)
+set_log_emitter_provider(log_emitter_provider)
+
 exporter = OTLPLogExporter(insecure=True)
 log_emitter_provider.add_log_processor(SimpleLogProcessor(exporter))
 log_emitter = log_emitter_provider.get_log_emitter(__name__, "0.1")
