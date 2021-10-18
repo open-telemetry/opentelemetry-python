@@ -6,8 +6,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.6.0-0.25b0...HEAD)
 
+- Upgrade GRPC/protobuf related dependency and regenerate otlp protobufs
+  ([#2201](https://github.com/open-telemetry/opentelemetry-python/pull/2201))
+- Propagation: only warn about oversized baggage headers when headers exist
+  ([#2212](https://github.com/open-telemetry/opentelemetry-python/pull/2212))
 - Return proxy instruments from ProxyMeter
-  [[#2169](https://github.com/open-telemetry/opentelemetry-python/pull/2169)]
+  ([#2169](https://github.com/open-telemetry/opentelemetry-python/pull/2169))
 - Make Measurement a concrete class
   ([#2153](https://github.com/open-telemetry/opentelemetry-python/pull/2153))
 - Add metrics API
