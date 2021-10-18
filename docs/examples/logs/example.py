@@ -7,17 +7,17 @@ from opentelemetry.sdk.logs import (
     OTLPHandler,
     set_log_emitter_provider,
 )
-from opentelemetry.sdk.logs.export import SimpleLogProcessor
+from opentelemetry.sdk.logs.export import BatchLogProcessor
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
+    BatchSpanProcessor,
     ConsoleSpanExporter,
-    SimpleSpanProcessor,
 )
 
 trace.set_tracer_provider(TracerProvider())
 trace.get_tracer_provider().add_span_processor(
-    SimpleSpanProcessor(ConsoleSpanExporter())
+    BatchSpanProcessor(ConsoleSpanExporter())
 )
 
 log_emitter_provider = LogEmitterProvider(
@@ -31,7 +31,7 @@ log_emitter_provider = LogEmitterProvider(
 set_log_emitter_provider(log_emitter_provider)
 
 exporter = OTLPLogExporter(insecure=True)
-log_emitter_provider.add_log_processor(SimpleLogProcessor(exporter))
+log_emitter_provider.add_log_processor(BatchLogProcessor(exporter))
 log_emitter = log_emitter_provider.get_log_emitter(__name__, "0.1")
 handler = OTLPHandler(level=logging.NOTSET, log_emitter=log_emitter)
 
