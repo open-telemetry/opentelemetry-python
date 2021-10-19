@@ -6,10 +6,10 @@ httpretty~=1.0
 mypy==0.812
 sphinx~=3.5.4
 sphinx-rtd-theme~=0.5
-sphinx-autodoc-typehints
+sphinx-autodoc-typehints~=1.12.0
 pytest>=6.0
 pytest-cov>=2.8
 readme-renderer~=24.0
-grpcio-tools==1.29.0
-mypy-protobuf>=1.23
-protobuf>=3.13.0
+grpcio-tools~=1.41.0
+mypy-protobuf~=3.0.0
+protobuf~=3.18.1

@@ -1,12 +1,10 @@
 ---
-date: '2021-08-30T16:49:17.700Z'
+date: '2021-10-05T20:20:20.000Z'
 docname: getting-started
 images: {}
 path: /getting-started
 title: Getting Started
 ---
-
-# Getting Started
 
 This guide walks you through instrumenting a Python application with `opentelemetry-python`.
 
