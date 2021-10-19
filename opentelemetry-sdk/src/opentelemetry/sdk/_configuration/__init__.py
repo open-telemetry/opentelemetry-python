@@ -33,7 +33,7 @@ from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
 
 _EXPORTER_OTLP = "otlp"
-_EXPORTER_OTLP_SPAN = "otlp_proto_grpc_span"
+_EXPORTER_OTLP_SPAN = "otlp_proto_grpc"
 
 _RANDOM_ID_GENERATOR = "random"
 _DEFAULT_ID_GENERATOR = _RANDOM_ID_GENERATOR
