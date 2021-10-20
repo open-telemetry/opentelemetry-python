@@ -583,7 +583,7 @@ class TestReadableSpan(unittest.TestCase):
 
     def test_events(self):
         span = trace.ReadableSpan()
-        self.assertEqual(span.events, ())    
+        self.assertEqual(span.events, ())
         events = [
             trace.Event('foo1', {'bar1': 'baz1'}),
             trace.Event('foo2', {'bar2': 'baz2'}),
