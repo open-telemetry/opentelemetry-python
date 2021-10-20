@@ -6,9 +6,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.6.1-0.25b1...HEAD)
 
+## [1.6.2-0.25b2](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.2-0.25b2) - 2021-10-19
+
+
 ## [1.6.1-0.25b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.1-0.25b1) - 2021-10-18
-
-
 
 - Fix ReadableSpan property types attempting to create a mapping from a list
   ([#2215](https://github.com/open-telemetry/opentelemetry-python/pull/2215))
@@ -17,8 +18,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Propagation: only warn about oversized baggage headers when headers exist
   ([#2212](https://github.com/open-telemetry/opentelemetry-python/pull/2212))
 
-## [1.6.0-0.25b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.0-0.25b0) - 2021-10-13
+- Fix parental trace relationship for opentracing `follows_from` reference
+  ([#2180](https://github.com/open-telemetry/opentelemetry-python/pull/2180))
 
+
+## [1.6.0-0.25b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.0-0.25b0) - 2021-10-13
 
 - Fix race in `set_tracer_provider()`
   ([#2182](https://github.com/open-telemetry/opentelemetry-python/pull/2182))
@@ -31,6 +35,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix propagation bug caused by counting skipped entries
   ([#2071](https://github.com/open-telemetry/opentelemetry-python/pull/2071))
 - Add entry point for exporters with default protocol
+  ([#2093](https://github.com/open-telemetry/opentelemetry-python/pull/2093))
+- Renamed entrypoints `otlp_proto_http_span`, `otlp_proto_grpc_span`, `console_span` to remove
+  redundant `_span` suffix.
   ([#2093](https://github.com/open-telemetry/opentelemetry-python/pull/2093))
 - Do not skip sequence attribute on decode error
   ([#2097](https://github.com/open-telemetry/opentelemetry-python/pull/2097))
@@ -52,6 +59,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2167](https://github.com/open-telemetry/opentelemetry-python/pull/2167))
 - Add name to `BatchSpanProcessor` worker thread
   ([#2186](https://github.com/open-telemetry/opentelemetry-python/pull/2186))
+
 
 ## [1.5.0-0.24b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.5.0-0.24b0) - 2021-08-26
 
