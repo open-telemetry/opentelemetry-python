@@ -40,6 +40,7 @@ class B3MultiFormat(TextMapPropagator):
     SINGLE_HEADER_KEY = "b3"
     TRACE_ID_KEY = "x-b3-traceid"
     SPAN_ID_KEY = "x-b3-spanid"
+    PARENT_SPAN_ID_KEY = "x-b3-parentspanid"
     SAMPLED_KEY = "x-b3-sampled"
     FLAGS_KEY = "x-b3-flags"
     _SAMPLE_PROPAGATE_VALUES = set(["1", "True", "true", "d"])
@@ -148,6 +149,13 @@ class B3MultiFormat(TextMapPropagator):
         setter.set(
             carrier, self.SPAN_ID_KEY, format_span_id(span_context.span_id)
         )
+        span_parent = getattr(span, "parent", None)
+        if span_parent is not None:
+            setter.set(
+                carrier,
+                self.PARENT_SPAN_ID_KEY,
+                format_span_id(span_parent.span_id),
+            )
         setter.set(carrier, self.SAMPLED_KEY, "1" if sampled else "0")
 
     @property
@@ -155,6 +163,7 @@ class B3MultiFormat(TextMapPropagator):
         return {
             self.TRACE_ID_KEY,
             self.SPAN_ID_KEY,
+            self.PARENT_SPAN_ID_KEY,
             self.SAMPLED_KEY,
         }
 

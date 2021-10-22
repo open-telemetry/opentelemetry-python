@@ -103,6 +103,7 @@ class AbstractB3FormatTestCase:
         context = {
             propagator.TRACE_ID_KEY: self.serialized_trace_id,
             propagator.SPAN_ID_KEY: self.serialized_span_id,
+            propagator.PARENT_SPAN_ID_KEY: self.serialized_parent_id,
             propagator.SAMPLED_KEY: "1",
         }
         child, parent, _ = self.get_child_parent_new_carrier(context)
