@@ -36,7 +36,6 @@ def test_inject_empty_context(benchmark):
                 {
                     FORMAT.TRACE_ID_KEY: "bdb5b63237ed38aea578af665aa5aa60",
                     FORMAT.SPAN_ID_KEY: "00000000000000000c32d953d73ad225",
-                    FORMAT.PARENT_SPAN_ID_KEY: "11fd79a30b0896cd285b396ae102dd76",
                     FORMAT.SAMPLED_KEY: "1",
                 },
             )
