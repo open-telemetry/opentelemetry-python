@@ -119,7 +119,7 @@ class MeterProvider(MeterProvider):
             _logger.warning(
                 "A shutdown `MeterProvider` can not provide a `Meter`"
             )
-            return
+            return None
 
         meter = Meter(InstrumentationInfo(name, version, schema_url))
 
