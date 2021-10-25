@@ -389,6 +389,24 @@ class TestShim(TestCase):
                     parent.context.unwrap(),
                 )
 
+    def test_follows_from_references(self):
+        """Test span creation using the `references` argument with a follows from relationship."""
+
+        with self.shim.start_span("ParentSpan") as parent:
+            ref = opentracing.follows_from(parent.context)
+
+        with self.shim.start_active_span(
+            "FollowingSpan", references=[ref]
+        ) as child:
+            self.assertEqual(
+                child.span.unwrap().links[0].context,
+                parent.context.unwrap(),
+            )
+            self.assertEqual(
+                child.span.unwrap().parent,
+                parent.context.unwrap(),
+            )
+
     def test_set_operation_name(self):
         """Test `set_operation_name()` method."""
 
