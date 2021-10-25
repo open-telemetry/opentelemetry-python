@@ -74,7 +74,7 @@ class Meter(Meter):
 
 
 class MeterProvider(MeterProvider):
-    """See `opentelemetry.metrics.Provider`."""
+    """See `opentelemetry.metrics.MeterProvider`."""
 
     def __init__(
         self,
