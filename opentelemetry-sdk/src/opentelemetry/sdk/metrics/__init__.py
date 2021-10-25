@@ -121,6 +121,7 @@ class MeterProvider(MeterProvider):
         return meter
 
     def shutdown(self):
+        # FIXME implement a timeout
 
         if self._shutdown:
             _logger.warning("shutdown can only be called once")
