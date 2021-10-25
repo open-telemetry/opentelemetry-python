@@ -186,10 +186,6 @@ class B3SingleFormat(B3MultiFormat):
             "1" if sampled else "0",
         ]
 
-        span_parent = getattr(span, "parent", None)
-        if span_parent:
-            fields.append(format_span_id(span_parent.span_id))
-
         setter.set(carrier, self.SINGLE_HEADER_KEY, "-".join(fields))
 
     @property

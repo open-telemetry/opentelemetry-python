@@ -65,9 +65,6 @@ class AbstractB3FormatTestCase:
         cls.serialized_span_id = trace_api.format_span_id(
             generator.generate_span_id()
         )
-        cls.serialized_parent_id = trace_api.format_span_id(
-            generator.generate_span_id()
-        )
 
     def setUp(self) -> None:
         tracer_provider = trace.TracerProvider()
@@ -141,7 +138,7 @@ class AbstractB3FormatTestCase:
 
         child, parent, _ = self.get_child_parent_new_carrier(
             {
-                propagator.SINGLE_HEADER_KEY: f"{self.serialized_trace_id}-{self.serialized_span_id}-1-{self.serialized_parent_id}"
+                propagator.SINGLE_HEADER_KEY: f"{self.serialized_trace_id}-{self.serialized_span_id}-1"
             }
         )
 
