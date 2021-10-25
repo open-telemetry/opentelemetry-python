@@ -20,6 +20,7 @@ from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     AGGREGATION_TEMPORALITY_CUMULATIVE,
     AGGREGATION_TEMPORALITY_DELTA,
 )
+from opentelemetry.util._time import _time_ns
 
 
 class Aggregation(ABC):
@@ -77,8 +78,13 @@ class LastValueAggregation(Aggregation):
     This aggregation collects data for the SDK sum metric point.
     """
 
+    def __init__(self):
+        super().__init__()
+        self._timestamp = _time_ns()
+
     def aggregate(self, value):
         self._value = value
+        self._timestamp = _time_ns()
 
     def collect(self):
         return self._value
