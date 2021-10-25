@@ -13,23 +13,22 @@
 # limitations under the License.
 
 
-from unittest import TestCase
 from math import inf
+from unittest import TestCase
 
-from opentelemetry.sdk.metrics.aggregation import (
-    NoneAggregation,
-    SumAggregation,
-    LastValueAggregation,
-    ExplicitBucketHistogramAggregation
-)
 from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     AGGREGATION_TEMPORALITY_CUMULATIVE,
-    AGGREGATION_TEMPORALITY_DELTA
+    AGGREGATION_TEMPORALITY_DELTA,
+)
+from opentelemetry.sdk.metrics.aggregation import (
+    ExplicitBucketHistogramAggregation,
+    LastValueAggregation,
+    NoneAggregation,
+    SumAggregation,
 )
 
 
 class TestNoneAggregation(TestCase):
-
     def test_aggregate(self):
         """
         `NoneAggregation` drops all measurements.
@@ -45,7 +44,6 @@ class TestNoneAggregation(TestCase):
 
 
 class TestSumAggregation(TestCase):
-
     def test_default_temporality(self):
         """
         `SumAggregation` default temporality is
@@ -54,15 +52,13 @@ class TestSumAggregation(TestCase):
 
         sum_aggregation = SumAggregation()
         self.assertEqual(
-            sum_aggregation._temporality,
-            AGGREGATION_TEMPORALITY_CUMULATIVE
+            sum_aggregation._temporality, AGGREGATION_TEMPORALITY_CUMULATIVE
         )
         sum_aggregation = SumAggregation(
             temporality=AGGREGATION_TEMPORALITY_DELTA
         )
         self.assertEqual(
-            sum_aggregation._temporality,
-            AGGREGATION_TEMPORALITY_DELTA
+            sum_aggregation._temporality, AGGREGATION_TEMPORALITY_DELTA
         )
 
     def test_aggregate(self):
@@ -126,7 +122,6 @@ class TestSumAggregation(TestCase):
 
 
 class TestLastValueAggregation(TestCase):
-
     def test_aggregate(self):
         """
         `LastValueAggregation` collects data for gauge metric points with delta
@@ -146,24 +141,27 @@ class TestLastValueAggregation(TestCase):
 
 
 class TestExplicitBucketHistogramAggregation(TestCase):
-
     def test_default_temporality(self):
         """
         `ExplicitBucketHistogramAggregation` default temporality is
         `AGGREGATION_TEMPORALITY_CUMULATIVE`.
         """
 
-        explicit_bucket_histogram_aggregation = ExplicitBucketHistogramAggregation()
-        self.assertEqual(
-            explicit_bucket_histogram_aggregation._temporality,
-            AGGREGATION_TEMPORALITY_CUMULATIVE
-        )
-        explicit_bucket_histogram_aggregation = ExplicitBucketHistogramAggregation(
-            temporality=AGGREGATION_TEMPORALITY_DELTA
+        explicit_bucket_histogram_aggregation = (
+            ExplicitBucketHistogramAggregation()
         )
         self.assertEqual(
             explicit_bucket_histogram_aggregation._temporality,
-            AGGREGATION_TEMPORALITY_DELTA
+            AGGREGATION_TEMPORALITY_CUMULATIVE,
+        )
+        explicit_bucket_histogram_aggregation = (
+            ExplicitBucketHistogramAggregation(
+                temporality=AGGREGATION_TEMPORALITY_DELTA
+            )
+        )
+        self.assertEqual(
+            explicit_bucket_histogram_aggregation._temporality,
+            AGGREGATION_TEMPORALITY_DELTA,
         )
 
     def test_aggregate(self):
@@ -171,7 +169,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         `ExplicitBucketHistogramAggregation` collects data for explicit_bucket_histogram metric points
         """
 
-        explicit_bucket_histogram_aggregation = ExplicitBucketHistogramAggregation()
+        explicit_bucket_histogram_aggregation = (
+            ExplicitBucketHistogramAggregation()
+        )
 
         explicit_bucket_histogram_aggregation.aggregate(-1)
         explicit_bucket_histogram_aggregation.aggregate(2)
@@ -191,7 +191,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         `ExplicitBucketHistogramAggregation` supports delta temporality
         """
 
-        explicit_bucket_histogram_aggregation = ExplicitBucketHistogramAggregation(AGGREGATION_TEMPORALITY_DELTA)
+        explicit_bucket_histogram_aggregation = (
+            ExplicitBucketHistogramAggregation(AGGREGATION_TEMPORALITY_DELTA)
+        )
 
         explicit_bucket_histogram_aggregation.aggregate(-1)
         explicit_bucket_histogram_aggregation.aggregate(2)
@@ -209,16 +211,18 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         self.assertEqual(explicit_bucket_histogram_aggregation.value[0], 0)
         self.assertEqual(explicit_bucket_histogram_aggregation.value[5], 0)
         self.assertEqual(explicit_bucket_histogram_aggregation.value[10], 0)
-        self.assertEqual(
-            explicit_bucket_histogram_aggregation.value[inf], 0
-        )
+        self.assertEqual(explicit_bucket_histogram_aggregation.value[inf], 0)
 
     def test_cumulative_temporality(self):
         """
         `ExplicitBucketHistogramAggregation` supports cumulative temporality
         """
 
-        explicit_bucket_histogram_aggregation = ExplicitBucketHistogramAggregation(AGGREGATION_TEMPORALITY_CUMULATIVE)
+        explicit_bucket_histogram_aggregation = (
+            ExplicitBucketHistogramAggregation(
+                AGGREGATION_TEMPORALITY_CUMULATIVE
+            )
+        )
 
         explicit_bucket_histogram_aggregation.aggregate(-1)
         explicit_bucket_histogram_aggregation.aggregate(2)

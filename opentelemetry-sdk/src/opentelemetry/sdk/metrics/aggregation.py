@@ -18,12 +18,11 @@ from math import inf
 
 from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     AGGREGATION_TEMPORALITY_CUMULATIVE,
-    AGGREGATION_TEMPORALITY_DELTA
+    AGGREGATION_TEMPORALITY_DELTA,
 )
 
 
 class Aggregation(ABC):
-
     def __init__(self):
         self._value = 0
 
@@ -94,7 +93,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
     def __init__(
         self,
         temporality=AGGREGATION_TEMPORALITY_CUMULATIVE,
-        boundaries=(0, 5, 10, 25, 50, 75, 100, 250, 500, 1000, inf)
+        boundaries=(0, 5, 10, 25, 50, 75, 100, 250, 500, 1000, inf),
     ):
         super().__init__()
         self._temporality = temporality

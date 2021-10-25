@@ -14,27 +14,21 @@
 
 from opentelemetry.metrics.instrument import (
     Counter,
-    ObservableCounter,
-    UpDownCounter,
-    ObservableUpDownCounter,
     Histogram,
-    ObservableGauge
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
 )
-
 from opentelemetry.sdk.metrics.aggregation import (
-    SumAggregation,
-    LastValueAggregation,
     ExplicitBucketHistogramAggregation,
+    LastValueAggregation,
+    SumAggregation,
 )
 
 
 class Counter(Counter):
-
-    def __init__(
-        self,
-        aggregation=SumAggregation,
-        aggregation_config={}
-    ):
+    def __init__(self, aggregation=SumAggregation, aggregation_config={}):
         self._aggregation = aggregation(**aggregation_config)
         super().__init__()
 
@@ -43,12 +37,7 @@ class Counter(Counter):
 
 
 class UpDownCounter(UpDownCounter):
-
-    def __init__(
-        self,
-        aggregation=SumAggregation,
-        aggregation_config={}
-    ):
+    def __init__(self, aggregation=SumAggregation, aggregation_config={}):
         self._aggregation = aggregation(**aggregation_config)
         super().__init__()
 
@@ -57,33 +46,22 @@ class UpDownCounter(UpDownCounter):
 
 
 class ObservableCounter(ObservableCounter):
-
-    def __init__(
-        self,
-        aggregation=SumAggregation,
-        aggregation_config={}
-    ):
+    def __init__(self, aggregation=SumAggregation, aggregation_config={}):
         self._aggregation = aggregation(**aggregation_config)
         super().__init__()
 
 
 class ObservableUpDownCounter(ObservableUpDownCounter):
-
-    def __init__(
-        self,
-        aggregation=SumAggregation,
-        aggregation_config={}
-    ):
+    def __init__(self, aggregation=SumAggregation, aggregation_config={}):
         self._aggregation = aggregation(**aggregation_config)
         super().__init__()
 
 
 class Histogram(Histogram):
-
     def __init__(
         self,
         aggregation=ExplicitBucketHistogramAggregation,
-        aggregation_config={}
+        aggregation_config={},
     ):
         self._aggregation = aggregation(**aggregation_config)
         super().__init__()
@@ -93,11 +71,8 @@ class Histogram(Histogram):
 
 
 class ObservableGauge(ObservableGauge):
-
     def __init__(
-        self,
-        aggregation=LastValueAggregation,
-        aggregation_config={}
+        self, aggregation=LastValueAggregation, aggregation_config={}
     ):
         self._aggregation = aggregation(**aggregation_config)
         super().__init__()
