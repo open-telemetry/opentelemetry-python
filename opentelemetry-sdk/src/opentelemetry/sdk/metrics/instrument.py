@@ -12,6 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=function-redefined
+# pylint: disable=dangerous-default-value
+# Classes in this module use dictionaries as default arguments. This is
+# considered dangerous by pylint because the default dictionary is shared by
+# all instances. Implementations of these classes must not make any change to
+# this default dictionary in __init__.
+
 from opentelemetry.metrics.instrument import (
     Counter,
     Histogram,
@@ -28,43 +35,76 @@ from opentelemetry.sdk.metrics.aggregation import (
 
 
 class Counter(Counter):
-    def __init__(self, aggregation=SumAggregation, aggregation_config={}):
+    def __init__(
+        self,
+        name,
+        unit="",
+        description="",
+        aggregation=SumAggregation,
+        aggregation_config={},
+    ):
         self._aggregation = aggregation(**aggregation_config)
-        super().__init__()
+        super().__init__(name, unit=unit, description=description)
 
     def add(self, amount, attributes=None):
         pass
 
 
 class UpDownCounter(UpDownCounter):
-    def __init__(self, aggregation=SumAggregation, aggregation_config={}):
+    def __init__(
+        self,
+        name,
+        unit="",
+        description="",
+        aggregation=SumAggregation,
+        aggregation_config={},
+    ):
         self._aggregation = aggregation(**aggregation_config)
-        super().__init__()
+        super().__init__(name, unit=unit, description=description)
 
     def add(self, amount, attributes=None):
         pass
 
 
 class ObservableCounter(ObservableCounter):
-    def __init__(self, aggregation=SumAggregation, aggregation_config={}):
+    def __init__(
+        self,
+        name,
+        callback,
+        unit="",
+        description="",
+        aggregation=SumAggregation,
+        aggregation_config={},
+    ):
         self._aggregation = aggregation(**aggregation_config)
-        super().__init__()
+        super().__init__(name, callback, unit=unit, description=description)
 
 
 class ObservableUpDownCounter(ObservableUpDownCounter):
-    def __init__(self, aggregation=SumAggregation, aggregation_config={}):
+    def __init__(
+        self,
+        name,
+        callback,
+        unit="",
+        description="",
+        aggregation=SumAggregation,
+        aggregation_config={},
+    ):
         self._aggregation = aggregation(**aggregation_config)
-        super().__init__()
+        super().__init__(name, callback, unit=unit, description=description)
 
 
 class Histogram(Histogram):
     def __init__(
         self,
+        name,
+        unit="",
+        description="",
         aggregation=ExplicitBucketHistogramAggregation,
         aggregation_config={},
     ):
         self._aggregation = aggregation(**aggregation_config)
-        super().__init__()
+        super().__init__(name, unit=unit, description=description)
 
     def add(self, amount, attributes=None):
         pass
@@ -72,7 +112,13 @@ class Histogram(Histogram):
 
 class ObservableGauge(ObservableGauge):
     def __init__(
-        self, aggregation=LastValueAggregation, aggregation_config={}
+        self,
+        name,
+        callback,
+        unit="",
+        description="",
+        aggregation=LastValueAggregation,
+        aggregation_config={},
     ):
         self._aggregation = aggregation(**aggregation_config)
-        super().__init__()
+        super().__init__(name, callback, unit=unit, description=description)
