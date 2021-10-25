@@ -350,7 +350,7 @@ class ReadableSpan:
         parent: Optional[trace_api.SpanContext] = None,
         resource: Resource = Resource.create({}),
         attributes: types.Attributes = None,
-        events: Sequence[Event] = None,
+        events: Sequence[Event] = (),
         links: Sequence[trace_api.Link] = (),
         kind: trace_api.SpanKind = trace_api.SpanKind.INTERNAL,
         instrumentation_info: InstrumentationInfo = None,
@@ -426,11 +426,11 @@ class ReadableSpan:
 
     @property
     def events(self) -> Sequence[Event]:
-        return MappingProxyType(self._events)
+        return tuple(event for event in self._events)
 
     @property
     def links(self) -> Sequence[trace_api.Link]:
-        return MappingProxyType(self._links)
+        return tuple(link for link in self._links)
 
     @property
     def resource(self) -> Resource:
