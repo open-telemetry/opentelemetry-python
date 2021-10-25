@@ -21,5 +21,5 @@ tracer = trace.get_tracer(__name__)
 with tracer.start_span(name="root span") as root_span:
     ctx = baggage.set_baggage("foo", "bar")
 
-print("Global context baggage: {}".format(baggage.get_all()))
-print("Span context baggage: {}".format(baggage.get_all(context=ctx)))
+print(f"Global context baggage: {baggage.get_all()}")
+print(f"Span context baggage: {baggage.get_all(context=ctx)}")

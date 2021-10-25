@@ -5,7 +5,7 @@ import grpc
 from opentelemetry.proto.metrics.experimental import metrics_config_service_pb2 as opentelemetry_dot_proto_dot_metrics_dot_experimental_dot_metrics__config__service__pb2
 
 
-class MetricConfigStub(object):
+class MetricConfigStub:
     """MetricConfig is a service that enables updating metric schedules, trace
     parameters, and other configurations on the SDK without having to restart the
     instrumented application. The collector can also serve as the configuration
@@ -27,7 +27,7 @@ class MetricConfigStub(object):
                 )
 
 
-class MetricConfigServicer(object):
+class MetricConfigServicer:
     """MetricConfig is a service that enables updating metric schedules, trace
     parameters, and other configurations on the SDK without having to restart the
     instrumented application. The collector can also serve as the configuration
@@ -57,7 +57,7 @@ def add_MetricConfigServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class MetricConfig(object):
+class MetricConfig:
     """MetricConfig is a service that enables updating metric schedules, trace
     parameters, and other configurations on the SDK without having to restart the
     instrumented application. The collector can also serve as the configuration

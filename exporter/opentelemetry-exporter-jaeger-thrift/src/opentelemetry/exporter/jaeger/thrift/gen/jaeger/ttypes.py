@@ -13,7 +13,7 @@ import sys
 from thrift.transport import TTransport
 
 
-class TagType(object):
+class TagType:
     STRING = 0
     DOUBLE = 1
     BOOL = 2
@@ -37,7 +37,7 @@ class TagType(object):
     }
 
 
-class SpanRefType(object):
+class SpanRefType:
     CHILD_OF = 0
     FOLLOWS_FROM = 1
 
@@ -52,7 +52,7 @@ class SpanRefType(object):
     }
 
 
-class Tag(object):
+class Tag:
     """
     Attributes:
      - key
@@ -177,9 +177,9 @@ class Tag(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
+        L = [f'{key}={value!r}'
              for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        return '{}({})'.format(self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
@@ -188,7 +188,7 @@ class Tag(object):
         return not (self == other)
 
 
-class Log(object):
+class Log:
     """
     Attributes:
      - timestamp
@@ -262,9 +262,9 @@ class Log(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
+        L = [f'{key}={value!r}'
              for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        return '{}({})'.format(self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
@@ -273,7 +273,7 @@ class Log(object):
         return not (self == other)
 
 
-class SpanRef(object):
+class SpanRef:
     """
     Attributes:
      - refType
@@ -366,9 +366,9 @@ class SpanRef(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
+        L = [f'{key}={value!r}'
              for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        return '{}({})'.format(self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
@@ -377,7 +377,7 @@ class SpanRef(object):
         return not (self == other)
 
 
-class Span(object):
+class Span:
     """
     Attributes:
      - traceIdLow
@@ -589,9 +589,9 @@ class Span(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
+        L = [f'{key}={value!r}'
              for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        return '{}({})'.format(self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
@@ -600,7 +600,7 @@ class Span(object):
         return not (self == other)
 
 
-class Process(object):
+class Process:
     """
     Attributes:
      - serviceName
@@ -672,9 +672,9 @@ class Process(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
+        L = [f'{key}={value!r}'
              for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        return '{}({})'.format(self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
@@ -683,7 +683,7 @@ class Process(object):
         return not (self == other)
 
 
-class Batch(object):
+class Batch:
     """
     Attributes:
      - process
@@ -758,9 +758,9 @@ class Batch(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
+        L = [f'{key}={value!r}'
              for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        return '{}({})'.format(self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
@@ -769,7 +769,7 @@ class Batch(object):
         return not (self == other)
 
 
-class BatchSubmitResponse(object):
+class BatchSubmitResponse:
     """
     Attributes:
      - ok
@@ -820,9 +820,9 @@ class BatchSubmitResponse(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
+        L = [f'{key}={value!r}'
              for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        return '{}({})'.format(self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__

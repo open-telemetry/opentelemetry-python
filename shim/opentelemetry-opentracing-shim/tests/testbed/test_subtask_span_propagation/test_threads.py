@@ -1,5 +1,3 @@
-from __future__ import absolute_import, print_function
-
 from concurrent.futures import ThreadPoolExecutor
 
 from ..otel_ot_shim_tracer import MockTracer

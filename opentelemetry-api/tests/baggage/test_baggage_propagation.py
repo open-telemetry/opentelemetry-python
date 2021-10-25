@@ -96,16 +96,13 @@ class TestBaggagePropagation(unittest.TestCase):
 
     def test_header_too_long(self):
         long_value = "s" * (W3CBaggagePropagator._MAX_HEADER_LENGTH + 1)
-        header = "key1={}".format(long_value)
+        header = f"key1={long_value}"
         expected = {}
         self.assertEqual(self._extract(header), expected)
 
     def test_header_contains_too_many_entries(self):
         header = ",".join(
-            [
-                "key{}=val".format(k)
-                for k in range(W3CBaggagePropagator._MAX_PAIRS + 1)
-            ]
+            [f"key{k}=val" for k in range(W3CBaggagePropagator._MAX_PAIRS + 1)]
         )
         self.assertEqual(
             len(self._extract(header)), W3CBaggagePropagator._MAX_PAIRS
@@ -113,7 +110,7 @@ class TestBaggagePropagation(unittest.TestCase):
 
     def test_header_contains_pair_too_long(self):
         long_value = "s" * (W3CBaggagePropagator._MAX_PAIR_LENGTH + 1)
-        header = "key1=value1,key2={},key3=value3".format(long_value)
+        header = f"key1=value1,key2={long_value},key3=value3"
         expected = {"key1": "value1", "key3": "value3"}
         with self.assertLogs(level=WARNING) as warning:
             self.assertEqual(self._extract(header), expected)

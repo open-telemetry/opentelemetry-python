@@ -15,7 +15,7 @@ from thrift.Thrift import TProcessor
 from thrift.transport import TTransport
 
 
-class Iface(object):
+class Iface:
     def emitZipkinBatch(self, spans):
         """
         Parameters:
@@ -116,7 +116,7 @@ class Processor(Iface, TProcessor):
 # HELPER FUNCTIONS AND STRUCTURES
 
 
-class emitZipkinBatch_args(object):
+class emitZipkinBatch_args:
     """
     Attributes:
      - spans
@@ -174,9 +174,9 @@ class emitZipkinBatch_args(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
+        L = [f'{key}={value!r}'
              for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        return '{}({})'.format(self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
@@ -185,7 +185,7 @@ class emitZipkinBatch_args(object):
         return not (self == other)
 
 
-class emitBatch_args(object):
+class emitBatch_args:
     """
     Attributes:
      - batch
@@ -235,9 +235,9 @@ class emitBatch_args(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
+        L = [f'{key}={value!r}'
              for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        return '{}({})'.format(self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__

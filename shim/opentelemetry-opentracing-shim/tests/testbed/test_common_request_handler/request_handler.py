@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from opentracing.ext import tags
 
 from ..utils import get_logger

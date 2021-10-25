@@ -13,7 +13,7 @@ import sys
 from thrift.transport import TTransport
 
 
-class AnnotationType(object):
+class AnnotationType:
     BOOL = 0
     BYTES = 1
     I16 = 2
@@ -43,7 +43,7 @@ class AnnotationType(object):
     }
 
 
-class Endpoint(object):
+class Endpoint:
     """
     Indicates the network context of a service recording an annotation with two
     exceptions.
@@ -144,9 +144,9 @@ class Endpoint(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
+        L = [f'{key}={value!r}'
              for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        return '{}({})'.format(self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
@@ -155,7 +155,7 @@ class Endpoint(object):
         return not (self == other)
 
 
-class Annotation(object):
+class Annotation:
     """
     An annotation is similar to a log statement. It includes a host field which
     allows these events to be attributed properly, and also aggregatable.
@@ -236,9 +236,9 @@ class Annotation(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
+        L = [f'{key}={value!r}'
              for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        return '{}({})'.format(self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
@@ -247,7 +247,7 @@ class Annotation(object):
         return not (self == other)
 
 
-class BinaryAnnotation(object):
+class BinaryAnnotation:
     """
     Binary annotations are tags applied to a Span to give it context. For
     example, a binary annotation of "http.uri" could the path to a resource in a
@@ -352,9 +352,9 @@ class BinaryAnnotation(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
+        L = [f'{key}={value!r}'
              for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        return '{}({})'.format(self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
@@ -363,7 +363,7 @@ class BinaryAnnotation(object):
         return not (self == other)
 
 
-class Span(object):
+class Span:
     """
     A trace is a series of spans (often RPC calls) which form a latency tree.
 
@@ -574,9 +574,9 @@ class Span(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
+        L = [f'{key}={value!r}'
              for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        return '{}({})'.format(self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__
@@ -585,7 +585,7 @@ class Span(object):
         return not (self == other)
 
 
-class Response(object):
+class Response:
     """
     Attributes:
      - ok
@@ -636,9 +636,9 @@ class Response(object):
         return
 
     def __repr__(self):
-        L = ['%s=%r' % (key, value)
+        L = [f'{key}={value!r}'
              for key, value in self.__dict__.items()]
-        return '%s(%s)' % (self.__class__.__name__, ', '.join(L))
+        return '{}({})'.format(self.__class__.__name__, ', '.join(L))
 
     def __eq__(self, other):
         return isinstance(other, self.__class__) and self.__dict__ == other.__dict__

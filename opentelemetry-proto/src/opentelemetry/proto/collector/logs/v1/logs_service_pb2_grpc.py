@@ -5,7 +5,7 @@ import grpc
 from opentelemetry.proto.collector.logs.v1 import logs_service_pb2 as opentelemetry_dot_proto_dot_collector_dot_logs_dot_v1_dot_logs__service__pb2
 
 
-class LogsServiceStub(object):
+class LogsServiceStub:
     """Service that can be used to push logs between one Application instrumented with
     OpenTelemetry and an collector, or between an collector and a central collector (in this
     case logs are sent/received to/from multiple Applications).
@@ -24,7 +24,7 @@ class LogsServiceStub(object):
                 )
 
 
-class LogsServiceServicer(object):
+class LogsServiceServicer:
     """Service that can be used to push logs between one Application instrumented with
     OpenTelemetry and an collector, or between an collector and a central collector (in this
     case logs are sent/received to/from multiple Applications).
@@ -53,7 +53,7 @@ def add_LogsServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class LogsService(object):
+class LogsService:
     """Service that can be used to push logs between one Application instrumented with
     OpenTelemetry and an collector, or between an collector and a central collector (in this
     case logs are sent/received to/from multiple Applications).
