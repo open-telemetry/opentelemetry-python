@@ -41,29 +41,35 @@ class Meter(Meter):
         self._meter_provider = None
 
     def create_counter(self, name, unit=None, description=None) -> Counter:
+        # FIXME implement this method
         pass
 
     def create_up_down_counter(
         self, name, unit=None, description=None
     ) -> UpDownCounter:
+        # FIXME implement this method
         pass
 
     def create_observable_counter(
         self, name, callback, unit=None, description=None
     ) -> ObservableCounter:
+        # FIXME implement this method
         pass
 
     def create_histogram(self, name, unit=None, description=None) -> Histogram:
+        # FIXME implement this method
         pass
 
     def create_observable_gauge(
         self, name, callback, unit=None, description=None
     ) -> ObservableGauge:
+        # FIXME implement this method
         pass
 
     def create_observable_up_down_counter(
         self, name, callback, unit=None, description=None
     ) -> ObservableUpDownCounter:
+        # FIXME implement this method
         pass
 
 
