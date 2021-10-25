@@ -147,6 +147,9 @@ class MeterProvider(MeterProvider):
         return result
 
     def force_flush(self) -> bool:
+
+        # FIXME implement a timeout
+
         metric_reader_result = True
         metric_exporter_result = True
 
