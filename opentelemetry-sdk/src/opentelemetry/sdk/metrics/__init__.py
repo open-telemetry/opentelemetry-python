@@ -114,6 +114,13 @@ class MeterProvider(MeterProvider):
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
     ) -> Meter:
+
+        if self._shutdown:
+            _logger.warning(
+                "A shutdown `MeterProvider` can not provide a `Meter`"
+            )
+            return
+
         meter = Meter(InstrumentationInfo(name, version, schema_url))
 
         meter._meter_provider = self  # pylint: disable=protected-access
