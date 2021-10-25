@@ -147,15 +147,26 @@ class MeterProvider(MeterProvider):
         return result
 
     def force_flush(self) -> bool:
-        result = True
+        metric_reader_result = True
+        metric_exporter_result = True
 
         for metric_reader in self._metric_readers:
-            result = result and metric_reader.force_flush()
+            metric_reader_result = (
+                metric_reader_result and metric_reader.force_flush()
+            )
+
+        if not metric_reader_result:
+            _logger.warning("Unable to force flush all metric readers")
 
         for metric_exporter in self._metric_exporters:
-            result = result and metric_exporter.force_flush()
+            metric_exporter_result = (
+                metric_exporter_result and metric_exporter.force_flush()
+            )
 
-        return result
+        if not metric_exporter_result:
+            _logger.warning("Unable to force flush all metric exporters")
+
+        return metric_reader_result and metric_exporter_result
 
     def register_metric_reader(self, metric_reader: "MetricReader") -> None:
         self._metric_readers.append(metric_reader)
