@@ -5,7 +5,7 @@ import grpc
 from opentelemetry.proto.collector.metrics.v1 import metrics_service_pb2 as opentelemetry_dot_proto_dot_collector_dot_metrics_dot_v1_dot_metrics__service__pb2
 
 
-class MetricsServiceStub:
+class MetricsServiceStub(object):
     """Service that can be used to push metrics between one Application
     instrumented with OpenTelemetry and a collector, or between a collector and a
     central collector.
@@ -24,7 +24,7 @@ class MetricsServiceStub:
                 )
 
 
-class MetricsServiceServicer:
+class MetricsServiceServicer(object):
     """Service that can be used to push metrics between one Application
     instrumented with OpenTelemetry and a collector, or between a collector and a
     central collector.
@@ -53,7 +53,7 @@ def add_MetricsServiceServicer_to_server(servicer, server):
 
 
  # This class is part of an EXPERIMENTAL API.
-class MetricsService:
+class MetricsService(object):
     """Service that can be used to push metrics between one Application
     instrumented with OpenTelemetry and a collector, or between a collector and a
     central collector.

@@ -4,7 +4,7 @@ import grpc
 import collector_pb2 as collector__pb2
 
 
-class CollectorServiceStub:
+class CollectorServiceStub(object):
   # missing associated documentation comment in .proto file
   pass
 
@@ -21,7 +21,7 @@ class CollectorServiceStub:
         )
 
 
-class CollectorServiceServicer:
+class CollectorServiceServicer(object):
   # missing associated documentation comment in .proto file
   pass
 
