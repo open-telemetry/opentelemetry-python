@@ -21,10 +21,10 @@ import os
 import threading
 from typing import Any, Callable, Optional, Tuple, Union, cast
 
+from opentelemetry.sdk._logs.severity import SeverityNumber, std_to_otlp
 from opentelemetry.sdk.environment_variables import (
     OTEL_PYTHON_LOG_EMITTER_PROVIDER,
 )
-from opentelemetry.sdk._logs.severity import SeverityNumber, std_to_otlp
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo

@@ -44,7 +44,9 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
 )
 from opentelemetry.sdk._logs import LogData, LogRecord
 from opentelemetry.sdk._logs.export import LogExportResult
-from opentelemetry.sdk._logs.severity import SeverityNumber as SDKSeverityNumber
+from opentelemetry.sdk._logs.severity import (
+    SeverityNumber as SDKSeverityNumber,
+)
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import TraceFlags

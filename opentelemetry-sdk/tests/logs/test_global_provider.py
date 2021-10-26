@@ -19,13 +19,13 @@ from logging import WARNING
 from unittest.mock import patch
 
 from opentelemetry.sdk import _logs
-from opentelemetry.sdk.environment_variables import (
-    OTEL_PYTHON_LOG_EMITTER_PROVIDER,
-)
 from opentelemetry.sdk._logs import (
     LogEmitterProvider,
     get_log_emitter_provider,
     set_log_emitter_provider,
+)
+from opentelemetry.sdk.environment_variables import (
+    OTEL_PYTHON_LOG_EMITTER_PROVIDER,
 )
 
 
