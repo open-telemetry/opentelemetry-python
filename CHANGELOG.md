@@ -6,13 +6,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.6.1-0.25b1...HEAD)
 
-## [1.6.2-0.25b2](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.2-0.25b2) - 2021-10-19
-
+- Add support for Python 3.10
+  ([#2207](https://github.com/open-telemetry/opentelemetry-python/pull/2207))
 - remove `X-B3-ParentSpanId` for B3 propagator as per OpenTelemetry specification
   ([#2237](https://github.com/open-telemetry/opentelemetry-python/pull/2237))
 
+## [1.6.2-0.25b2](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.2-0.25b2) - 2021-10-19
+
 ## [1.6.1-0.25b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.1-0.25b1) - 2021-10-18
 
+- Fix ReadableSpan property types attempting to create a mapping from a list
+  ([#2215](https://github.com/open-telemetry/opentelemetry-python/pull/2215))
 - Upgrade GRPC/protobuf related dependency and regenerate otlp protobufs
   ([#2201](https://github.com/open-telemetry/opentelemetry-python/pull/2201))
 - Propagation: only warn about oversized baggage headers when headers exist
@@ -20,7 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix parental trace relationship for opentracing `follows_from` reference
   ([#2180](https://github.com/open-telemetry/opentelemetry-python/pull/2180))
-
 
 ## [1.6.0-0.25b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.0-0.25b0) - 2021-10-13
 
