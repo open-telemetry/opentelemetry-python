@@ -18,11 +18,11 @@ from importlib import reload
 from logging import WARNING
 from unittest.mock import patch
 
-from opentelemetry.sdk import logs
+from opentelemetry.sdk import _logs
 from opentelemetry.sdk.environment_variables import (
     OTEL_PYTHON_LOG_EMITTER_PROVIDER,
 )
-from opentelemetry.sdk.logs import (
+from opentelemetry.sdk._logs import (
     LogEmitterProvider,
     get_log_emitter_provider,
     set_log_emitter_provider,
@@ -31,7 +31,7 @@ from opentelemetry.sdk.logs import (
 
 class TestGlobals(unittest.TestCase):
     def tearDown(self):
-        reload(logs)
+        reload(_logs)
 
     def check_override_not_allowed(self):
         """set_log_emitter_provider should throw a warning when overridden"""
@@ -42,7 +42,7 @@ class TestGlobals(unittest.TestCase):
                 test.output,
                 [
                     (
-                        "WARNING:opentelemetry.sdk.logs:Overriding of current "
+                        "WARNING:opentelemetry.sdk._logs:Overriding of current "
                         "LogEmitterProvider is not allowed"
                     )
                 ],
@@ -50,14 +50,14 @@ class TestGlobals(unittest.TestCase):
         self.assertIs(provider, get_log_emitter_provider())
 
     def test_set_tracer_provider(self):
-        reload(logs)
+        reload(_logs)
         provider = LogEmitterProvider()
         set_log_emitter_provider(provider)
         retrieved_provider = get_log_emitter_provider()
         self.assertEqual(provider, retrieved_provider)
 
     def test_tracer_provider_override_warning(self):
-        reload(logs)
+        reload(_logs)
         self.check_override_not_allowed()
 
     @patch.dict(
@@ -65,11 +65,11 @@ class TestGlobals(unittest.TestCase):
         {OTEL_PYTHON_LOG_EMITTER_PROVIDER: "sdk_log_emitter_provider"},
     )
     def test_sdk_log_emitter_provider(self):
-        reload(logs)
+        reload(_logs)
         self.check_override_not_allowed()
 
     @patch.dict("os.environ", {OTEL_PYTHON_LOG_EMITTER_PROVIDER: "unknown"})
     def test_unknown_log_emitter_provider(self):
-        reload(logs)
+        reload(_logs)
         with self.assertRaises(Exception):
             get_log_emitter_provider()

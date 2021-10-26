@@ -1,7 +1,7 @@
-opentelemetry.sdk.logs.export
+opentelemetry.sdk._logs.export
 =============================
 
-.. automodule:: opentelemetry.sdk.logs.export
+.. automodule:: opentelemetry.sdk._logs.export
     :members:
     :undoc-members:
     :show-inheritance:
