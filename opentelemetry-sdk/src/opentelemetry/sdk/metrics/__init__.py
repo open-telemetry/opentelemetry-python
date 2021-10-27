@@ -17,6 +17,7 @@
 from atexit import register
 from logging import getLogger
 from typing import Optional
+from abc import ABC, abstractmethod
 
 from opentelemetry.metrics import Meter, MeterProvider
 from opentelemetry.metrics.instrument import (
@@ -27,7 +28,6 @@ from opentelemetry.metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk.metrics.api import MetricExporter, MetricReader, View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
@@ -183,15 +183,29 @@ class MeterProvider(MeterProvider):
         self._views.append(view)
 
 
-class MetricReader(MetricReader):
+class MetricReader(ABC):
+    def __init__(self):
+        self._shutdown = False
+
+    @abstractmethod
     def collect(self):
         pass
 
+    def shutdown(self):
+        self._shutdown = True
 
-class MetricExporter(MetricExporter):
+
+class MetricExporter(ABC):
+    def __init__(self):
+        self._shutdown = False
+
+    @abstractmethod
     def export(self):
         pass
 
+    def shutdown(self):
+        self._shutdown = True
 
-class View(View):
+
+class View:
     pass
