@@ -66,14 +66,18 @@ def _get_exporter_names() -> Sequence[str]:
 
 
 def _init_tracing(
-    exporters: Dict[str, Type[SpanExporter]], id_generator: IdGenerator, auto_instrumentation_version: Optional[str] = None
+    exporters: Dict[str, Type[SpanExporter]],
+    id_generator: IdGenerator,
+    auto_instrumentation_version: Optional[str] = None,
 ):
     # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
     # from the env variable else defaults to "unknown_service"
     auto_resource = {}
     # populate version if using auto-instrumentation
     if auto_instrumentation_version:
-        auto_resource[ResourceAttributes.TELEMETRY_AUTO_VERSION] = auto_instrumentation_version
+        auto_resource[
+            ResourceAttributes.TELEMETRY_AUTO_VERSION
+        ] = auto_instrumentation_version
     provider = TracerProvider(
         id_generator=id_generator(),
         resource=Resource.create(auto_resource),
