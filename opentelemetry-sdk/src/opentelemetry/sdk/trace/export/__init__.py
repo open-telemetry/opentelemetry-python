@@ -196,7 +196,8 @@ class BatchSpanProcessor(SpanProcessor):
         self.spans_list = [
             None
         ] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
-        self.worker_thread.start()
+        # self.worker_thread.start()
+        self._received_any_span = False
 
     def on_start(
         self, span: Span, parent_context: typing.Optional[Context] = None
@@ -209,6 +210,10 @@ class BatchSpanProcessor(SpanProcessor):
             return
         if not span.context.trace_flags.sampled:
             return
+        if not self._received_any_span:
+            self._received_any_span = True
+            self.worker_thread.start()
+
         if len(self.queue) == self.max_queue_size:
             if not self._spans_dropped:
                 logger.warning("Queue is full, likely spans will be dropped.")
