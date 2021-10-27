@@ -20,7 +20,6 @@ OpenTelemetry SDK Configurator for Easy Instrumentation with Distros
 from abc import ABC, abstractmethod
 from os import environ
 from typing import Dict, Optional, Sequence, Tuple, Type
-from opentelemetry.sdk.resources import Resource
 
 from pkg_resources import iter_entry_points
 
@@ -29,6 +28,7 @@ from opentelemetry.environment_variables import (
     OTEL_PYTHON_ID_GENERATOR,
     OTEL_TRACES_EXPORTER,
 )
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
