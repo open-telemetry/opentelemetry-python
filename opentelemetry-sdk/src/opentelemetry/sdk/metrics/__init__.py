@@ -14,7 +14,7 @@
 
 # pylint: disable=function-redefined,too-many-ancestors
 
-from atexit import register
+from atexit import register, unregister
 from logging import getLogger
 from typing import Optional
 from abc import ABC, abstractmethod
@@ -143,6 +143,10 @@ class MeterProvider(MeterProvider):
             result = result and metric_exporter.shutdown()
 
         self._shutdown = True
+
+        if self._atexit_handler is not None:
+            unregister(self._atexit_handler)
+            self._atexit_handler = None
 
         return result
 
