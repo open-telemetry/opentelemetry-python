@@ -1,5 +1,5 @@
 opentelemetry.sdk._logs.export
-=============================
+==============================
 
 .. automodule:: opentelemetry.sdk._logs.export
     :members:
