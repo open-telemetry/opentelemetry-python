@@ -22,7 +22,7 @@ from os import linesep
 from typing import IO, Callable, Deque, List, Optional, Sequence
 
 from opentelemetry.context import attach, detach, set_value
-from opentelemetry.sdk.logs import LogData, LogProcessor, LogRecord
+from opentelemetry.sdk._logs import LogData, LogProcessor, LogRecord
 from opentelemetry.util._time import _time_ns
 
 _logger = logging.getLogger(__name__)
@@ -39,7 +39,7 @@ class LogExporter(abc.ABC):
     Interface to be implemented by services that want to export logs received
     in their own format.
 
-    To export data this MUST be registered to the :class`opentelemetry.sdk.logs.LogEmitter` using a
+    To export data this MUST be registered to the :class`opentelemetry.sdk._logs.LogEmitter` using a
     log processor.
     """
 
