@@ -18,9 +18,9 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 from opentelemetry.sdk.metrics import (
+    ConsoleMetricExporter,
     MeterProvider,
-    MetricExporter,
-    MetricReader,
+    SDKMetricReader,
     View,
 )
 from opentelemetry.sdk.resources import Resource
@@ -35,12 +35,12 @@ class TestMeterProvider(TestCase):
         meter_provider_0 = MeterProvider()
         meter_provider_1 = MeterProvider()
 
-        self.assertIs(meter_provider_0.resource, meter_provider_1.resource)
-        self.assertIsInstance(meter_provider_0.resource, Resource)
-        self.assertIsInstance(meter_provider_1.resource, Resource)
+        self.assertIs(meter_provider_0._resource, meter_provider_1._resource)
+        self.assertIsInstance(meter_provider_0._resource, Resource)
+        self.assertIsInstance(meter_provider_1._resource, Resource)
 
         resource = Resource({"key": "value"})
-        self.assertIs(MeterProvider(resource).resource, resource)
+        self.assertIs(MeterProvider(resource)._resource, resource)
 
     def test_get_meter(self):
         """
@@ -60,14 +60,14 @@ class TestMeterProvider(TestCase):
 
     def test_register_metric_reader(self):
         """ "
-        `MeterProvider` provides a way to configure `MetricReader`s.
+        `MeterProvider` provides a way to configure `SDKMetricReader`s.
         """
 
         meter_provider = MeterProvider()
 
         self.assertTrue(hasattr(meter_provider, "register_metric_reader"))
 
-        metric_reader = MetricReader()
+        metric_reader = SDKMetricReader()
 
         meter_provider.register_metric_reader(metric_reader)
 
@@ -75,14 +75,14 @@ class TestMeterProvider(TestCase):
 
     def test_register_metric_exporter(self):
         """ "
-        `MeterProvider` provides a way to configure `MetricExporter`s.
+        `MeterProvider` provides a way to configure `ConsoleMetricExporter`s.
         """
 
         meter_provider = MeterProvider()
 
         self.assertTrue(hasattr(meter_provider, "register_metric_exporter"))
 
-        metric_exporter = MetricExporter()
+        metric_exporter = ConsoleMetricExporter()
 
         meter_provider.register_metric_exporter(metric_exporter)
 
@@ -117,15 +117,15 @@ class TestMeterProvider(TestCase):
         meter_0 = meter_provider.get_meter("meter_0")
         meter_1 = meter_provider.get_meter("meter_1")
 
-        self.assertEqual(meter_0._meter_provider.views, [view_0])
-        self.assertEqual(meter_1._meter_provider.views, [view_0])
+        self.assertEqual(meter_0._meter_provider._views, [view_0])
+        self.assertEqual(meter_1._meter_provider._views, [view_0])
 
         view_1 = View()
 
         meter_provider.register_view(view_1)
 
-        self.assertEqual(meter_0._meter_provider.views, [view_0, view_1])
-        self.assertEqual(meter_1._meter_provider.views, [view_0, view_1])
+        self.assertEqual(meter_0._meter_provider._views, [view_0, view_1])
+        self.assertEqual(meter_1._meter_provider._views, [view_0, view_1])
 
     def test_shutdown_subsequent_calls(self):
         """
@@ -148,7 +148,7 @@ class TestMeterProvider(TestCase):
         succeeded or failed.
 
         `MeterProvider.shutdown` is implemented by at least invoking
-        ``shutdown`` on all registered `MetricReader`s and `MetricExporter`s.
+        ``shutdown`` on all registered `SDKMetricReader`s and `ConsoleMetricExporter`s.
         """
 
         meter_provider = MeterProvider()
@@ -179,7 +179,7 @@ class TestMeterProvider(TestCase):
         succeeded or failed.
 
         `MeterProvider.force_flush` is implemented by at least invoking
-        ``force_flush`` on all registered `MetricReader`s and `MetricExporter`s.
+        ``force_flush`` on all registered `SDKMetricReader`s and `ConsoleMetricExporter`s.
         """
 
         meter_provider = MeterProvider()
