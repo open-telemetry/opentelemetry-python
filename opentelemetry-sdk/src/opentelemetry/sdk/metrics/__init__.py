@@ -14,14 +14,14 @@
 
 # pylint: disable=function-redefined,too-many-ancestors
 
+from abc import ABC, abstractmethod
 from atexit import register, unregister
 from logging import getLogger
 from typing import Optional
-from abc import ABC, abstractmethod
 
-from opentelemetry.metrics import (
-    Meter as APIMeter, MeterProvider as APIMeterProvider, _DefaultMeter
-)
+from opentelemetry.metrics import Meter as APIMeter
+from opentelemetry.metrics import MeterProvider as APIMeterProvider
+from opentelemetry.metrics import _DefaultMeter
 from opentelemetry.metrics.instrument import (
     Counter,
     Histogram,
@@ -40,7 +40,7 @@ class Meter(APIMeter):
     def __init__(
         self,
         instrumentation_info: InstrumentationInfo,
-        meter_provider: APIMeterProvider
+        meter_provider: APIMeterProvider,
     ):
         super().__init__(instrumentation_info)
         self._instrumentation_info = instrumentation_info
@@ -204,3 +204,13 @@ class MetricExporter(ABC):
 
 class View:
     pass
+
+
+class ConsoleMetricExporter(MetricExporter):
+    def export(self):
+        pass
+
+
+class SDKMetricReader(MetricReader):
+    def collect(self):
+        pass
