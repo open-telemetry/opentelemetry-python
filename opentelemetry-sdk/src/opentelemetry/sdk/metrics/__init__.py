@@ -19,7 +19,9 @@ from logging import getLogger
 from typing import Optional
 from abc import ABC, abstractmethod
 
-from opentelemetry.metrics import Meter, MeterProvider
+from opentelemetry.metrics import (
+    Meter as APIMeter, MeterProvider as APIMeterProvider
+)
 from opentelemetry.metrics.instrument import (
     Counter,
     Histogram,
@@ -34,7 +36,7 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 _logger = getLogger(__name__)
 
 
-class Meter(Meter):
+class Meter(APIMeter):
     def __init__(self, instrumentation_info: InstrumentationInfo):
         super().__init__(instrumentation_info)
         self._instrumentation_info = instrumentation_info
@@ -73,7 +75,7 @@ class Meter(Meter):
         pass
 
 
-class MeterProvider(MeterProvider):
+class MeterProvider(APIMeterProvider):
     """See `opentelemetry.metrics.MeterProvider`."""
 
     def __init__(
