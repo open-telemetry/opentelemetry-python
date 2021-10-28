@@ -162,14 +162,17 @@ class MeterProvider(APIMeterProvider):
         return metric_reader_result and metric_exporter_result
 
     def register_metric_reader(self, metric_reader: "MetricReader") -> None:
+        # FIXME protect this method against race conditions
         self._metric_readers.append(metric_reader)
 
     def register_metric_exporter(
         self, metric_exporter: "MetricExporter"
     ) -> None:
+        # FIXME protect this method against race conditions
         self._metric_exporters.append(metric_exporter)
 
     def register_view(self, view: "View") -> None:
+        # FIXME protect this method against race conditions
         self._views.append(view)
 
 
