@@ -94,22 +94,6 @@ class MeterProvider(APIMeterProvider):
         self._views = []
         self._shutdown = False
 
-    @property
-    def metric_readers(self):
-        return self._metric_readers
-
-    @property
-    def metric_exporters(self):
-        return self._metric_exporters
-
-    @property
-    def views(self):
-        return self._views
-
-    @property
-    def resource(self) -> Resource:
-        return self._resource
-
     def get_meter(
         self,
         name: str,
