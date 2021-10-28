@@ -1,4 +1,4 @@
-opentelemetry.sdk.logs package
+opentelemetry.sdk._logs package
 ===============================
 
 Submodules
@@ -9,7 +9,7 @@ Submodules
    logs.export
    logs.severity
 
-.. automodule:: opentelemetry.sdk.logs
+.. automodule:: opentelemetry.sdk._logs
     :members:
     :undoc-members:
     :show-inheritance:

@@ -31,9 +31,9 @@ from opentelemetry.proto.logs.v1.logs_pb2 import (
     ResourceLogs,
 )
 from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord as PB2LogRecord
-from opentelemetry.sdk.logs import LogRecord as SDKLogRecord
-from opentelemetry.sdk.logs import LogData
-from opentelemetry.sdk.logs.export import LogExporter, LogExportResult
+from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
+from opentelemetry.sdk._logs import LogData
+from opentelemetry.sdk._logs.export import LogExporter, LogExportResult
 
 
 class OTLPLogExporter(
