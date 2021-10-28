@@ -18,9 +18,8 @@ from unittest.mock import Mock, patch
 
 from pytest import fixture
 
-from opentelemetry import metrics
-from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
-from opentelemetry.metrics import (
+from opentelemetry import _metrics as metrics
+from opentelemetry._metrics import (
     _DefaultMeter,
     _DefaultMeterProvider,
     _ProxyMeter,
@@ -28,7 +27,7 @@ from opentelemetry.metrics import (
     get_meter_provider,
     set_meter_provider,
 )
-from opentelemetry.metrics.instrument import (
+from opentelemetry._metrics.instrument import (
     _ProxyCounter,
     _ProxyHistogram,
     _ProxyObservableCounter,
@@ -36,6 +35,7 @@ from opentelemetry.metrics.instrument import (
     _ProxyObservableUpDownCounter,
     _ProxyUpDownCounter,
 )
+from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.test.globals_test import (
     MetricsGlobalsTest,
     reset_metrics_globals,
@@ -67,7 +67,9 @@ def test_set_meter_provider(reset_meter_provider):
 
 
 def test_set_meter_provider_calls_proxy_provider(reset_meter_provider):
-    with patch("opentelemetry.metrics._PROXY_METER_PROVIDER") as mock_proxy_mp:
+    with patch(
+        "opentelemetry._metrics._PROXY_METER_PROVIDER"
+    ) as mock_proxy_mp:
         mock_real_mp = Mock()
         set_meter_provider(mock_real_mp)
         mock_proxy_mp.on_set_meter_provider.assert_called_once_with(
@@ -90,9 +92,9 @@ def test_get_meter_provider(reset_meter_provider):
         "os.environ", {OTEL_PYTHON_METER_PROVIDER: "test_meter_provider"}
     ):
 
-        with patch("opentelemetry.metrics._load_provider", Mock()):
+        with patch("opentelemetry._metrics._load_provider", Mock()):
             with patch(
-                "opentelemetry.metrics.cast",
+                "opentelemetry._metrics.cast",
                 Mock(**{"return_value": "test_meter_provider"}),
             ):
                 assert get_meter_provider() == "test_meter_provider"

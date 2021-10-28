@@ -1,5 +1,5 @@
-opentelemetry.metrics package
-=============================
+opentelemetry._metrics package
+==============================
 
 Submodules
 ----------
@@ -12,4 +12,4 @@ Submodules
 Module contents
 ---------------
 
-.. automodule:: opentelemetry.metrics
+.. automodule:: opentelemetry._metrics

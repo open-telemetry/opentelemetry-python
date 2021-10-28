@@ -15,7 +15,7 @@
 
 from unittest import TestCase
 
-from opentelemetry.metrics import Meter
+from opentelemetry._metrics import Meter
 
 # FIXME Test that the meter methods can be called concurrently safely.
 
