@@ -182,6 +182,7 @@ class MetricReader(ABC):
         pass
 
     def shutdown(self):
+        # FIXME this will need a Once wrapper
         self._shutdown = True
 
 
@@ -194,6 +195,7 @@ class MetricExporter(ABC):
         pass
 
     def shutdown(self):
+        # FIXME this will need a Once wrapper
         self._shutdown = True
 
 
