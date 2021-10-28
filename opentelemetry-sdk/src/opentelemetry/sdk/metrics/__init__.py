@@ -20,7 +20,7 @@ from typing import Optional
 from abc import ABC, abstractmethod
 
 from opentelemetry.metrics import (
-    Meter as APIMeter, MeterProvider as APIMeterProvider
+    Meter as APIMeter, MeterProvider as APIMeterProvider, _DefaultMeter
 )
 from opentelemetry.metrics.instrument import (
     Counter,
@@ -121,7 +121,7 @@ class MeterProvider(APIMeterProvider):
             _logger.warning(
                 "A shutdown `MeterProvider` can not provide a `Meter`"
             )
-            return None
+            return _DefaultMeter(name, version=version, schema_url=schema_url)
 
         meter = Meter(InstrumentationInfo(name, version, schema_url))
 
