@@ -37,10 +37,14 @@ _logger = getLogger(__name__)
 
 
 class Meter(APIMeter):
-    def __init__(self, instrumentation_info: InstrumentationInfo):
+    def __init__(
+        self,
+        instrumentation_info: InstrumentationInfo,
+        meter_provider: APIMeterProvider
+    ):
         super().__init__(instrumentation_info)
         self._instrumentation_info = instrumentation_info
-        self._meter_provider = None
+        self._meter_provider = meter_provider
 
     def create_counter(self, name, unit=None, description=None) -> Counter:
         # FIXME implement this method
@@ -107,11 +111,7 @@ class MeterProvider(APIMeterProvider):
             )
             return _DefaultMeter(name, version=version, schema_url=schema_url)
 
-        meter = Meter(InstrumentationInfo(name, version, schema_url))
-
-        meter._meter_provider = self  # pylint: disable=protected-access
-
-        return meter
+        return Meter(InstrumentationInfo(name, version, schema_url), self)
 
     def shutdown(self):
         # FIXME implement a timeout
