@@ -21,21 +21,21 @@ from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import Mock, patch
 
 from opentelemetry.sdk import trace
-from opentelemetry.sdk.logs import (
+from opentelemetry.sdk._logs import (
     LogData,
     LogEmitterProvider,
     LogRecord,
     OTLPHandler,
 )
-from opentelemetry.sdk.logs.export import (
+from opentelemetry.sdk._logs.export import (
     BatchLogProcessor,
     ConsoleExporter,
     SimpleLogProcessor,
 )
-from opentelemetry.sdk.logs.export.in_memory_log_exporter import (
+from opentelemetry.sdk._logs.export.in_memory_log_exporter import (
     InMemoryLogExporter,
 )
-from opentelemetry.sdk.logs.severity import SeverityNumber
+from opentelemetry.sdk._logs.severity import SeverityNumber
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.trace import TraceFlags

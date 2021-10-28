@@ -21,10 +21,10 @@ import os
 import threading
 from typing import Any, Callable, Optional, Tuple, Union, cast
 
+from opentelemetry.sdk._logs.severity import SeverityNumber, std_to_otlp
 from opentelemetry.sdk.environment_variables import (
     OTEL_PYTHON_LOG_EMITTER_PROVIDER,
 )
-from opentelemetry.sdk.logs.severity import SeverityNumber, std_to_otlp
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
@@ -124,7 +124,7 @@ class LogProcessor(abc.ABC):
 
     @abc.abstractmethod
     def shutdown(self):
-        """Called when a :class:`opentelemetry.sdk.logs.LogEmitter` is shutdown"""
+        """Called when a :class:`opentelemetry.sdk._logs.LogEmitter` is shutdown"""
 
     @abc.abstractmethod
     def force_flush(self, timeout_millis: int = 30000):
@@ -489,7 +489,7 @@ def get_log_emitter(
     """Returns a `LogEmitter` for use within a python process.
 
     This function is a convenience wrapper for
-    opentelemetry.sdk.logs.LogEmitterProvider.get_log_emitter.
+    opentelemetry.sdk._logs.LogEmitterProvider.get_log_emitter.
 
     If log_emitter_provider param is omitted the current configured one is used.
     """
