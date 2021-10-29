@@ -18,7 +18,7 @@ import sys
 import threading
 import typing
 from enum import Enum
-from os import environ, linesep
+from os import environ, linesep, register_at_fork
 from typing import Optional
 
 from opentelemetry.context import (
@@ -197,6 +197,7 @@ class BatchSpanProcessor(SpanProcessor):
             None
         ] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
         self.worker_thread.start()
+        register_at_fork(after_in_child=self._at_fork_reinit)
 
     def on_start(
         self, span: Span, parent_context: typing.Optional[Context] = None
@@ -219,6 +220,9 @@ class BatchSpanProcessor(SpanProcessor):
         if len(self.queue) >= self.max_export_batch_size:
             with self.condition:
                 self.condition.notify()
+
+    def _at_fork_reinit(self):
+        self.condition._at_fork_reinit()
 
     def worker(self):
         timeout = self.schedule_delay_millis / 1e3
