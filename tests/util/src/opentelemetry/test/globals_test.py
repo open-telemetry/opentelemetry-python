@@ -14,7 +14,7 @@
 
 import unittest
 
-from opentelemetry import metrics as metrics_api
+from opentelemetry import _metrics as metrics_api
 from opentelemetry import trace as trace_api
 from opentelemetry.util._once import Once
 

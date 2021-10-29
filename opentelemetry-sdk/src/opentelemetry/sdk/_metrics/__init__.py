@@ -19,10 +19,10 @@ from atexit import register, unregister
 from logging import getLogger
 from typing import Optional
 
-from opentelemetry.metrics import Meter as APIMeter
-from opentelemetry.metrics import MeterProvider as APIMeterProvider
-from opentelemetry.metrics import _DefaultMeter
-from opentelemetry.metrics.instrument import (
+from opentelemetry._metrics import Meter as APIMeter
+from opentelemetry._metrics import MeterProvider as APIMeterProvider
+from opentelemetry._metrics import _DefaultMeter
+from opentelemetry._metrics.instrument import (
     Counter,
     Histogram,
     ObservableCounter,
@@ -80,7 +80,7 @@ class Meter(APIMeter):
 
 
 class MeterProvider(APIMeterProvider):
-    """See `opentelemetry.metrics.MeterProvider`."""
+    """See `opentelemetry._metrics.MeterProvider`."""
 
     def __init__(
         self,

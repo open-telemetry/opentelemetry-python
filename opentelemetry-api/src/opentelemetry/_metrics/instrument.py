@@ -30,8 +30,8 @@ from typing import (
 )
 
 # pylint: disable=unused-import; needed for typing and sphinx
-from opentelemetry import metrics
-from opentelemetry.metrics.measurement import Measurement
+from opentelemetry import _metrics as metrics
+from opentelemetry._metrics.measurement import Measurement
 
 _TInstrumentCallback = Callable[[], Iterable[Measurement]]
 _TInstrumentCallbackGenerator = Generator[Iterable[Measurement], None, None]

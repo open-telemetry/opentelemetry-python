@@ -14,7 +14,7 @@
 
 from unittest import TestCase
 
-from opentelemetry.metrics.measurement import Measurement
+from opentelemetry._metrics.measurement import Measurement
 
 
 class TestMeasurement(TestCase):
