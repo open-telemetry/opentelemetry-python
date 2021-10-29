@@ -363,7 +363,7 @@ class BatchSpanProcessor(SpanProcessor):
 
     def force_flush(self, timeout_millis: int = None) -> bool:
 
-        if not self._daemon_started: # nothing to flush
+        if not self._daemon_started:  # nothing to flush
             return True
 
         if timeout_millis is None:
