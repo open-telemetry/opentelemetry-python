@@ -17,8 +17,8 @@ import io
 from typing import Generator, Iterable
 from unittest import TestCase
 
-from opentelemetry.metrics import _DefaultMeter
-from opentelemetry.metrics.measurement import Measurement
+from opentelemetry._metrics import _DefaultMeter
+from opentelemetry._metrics.measurement import Measurement
 
 # FIXME Test that the instrument methods can be called concurrently safely.
 

@@ -28,8 +28,7 @@ from os import environ
 from threading import Lock
 from typing import List, Optional, cast
 
-from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
-from opentelemetry.metrics.instrument import (
+from opentelemetry._metrics.instrument import (
     Counter,
     DefaultCounter,
     DefaultHistogram,
@@ -50,6 +49,7 @@ from opentelemetry.metrics.instrument import (
     _ProxyObservableUpDownCounter,
     _ProxyUpDownCounter,
 )
+from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 
@@ -147,7 +147,7 @@ class Meter(ABC):
 
         An observable counter observes a monotonically increasing count by
         calling a provided callback which returns multiple
-        :class:`~opentelemetry.metrics.measurement.Measurement`.
+        :class:`~opentelemetry._metrics.measurement.Measurement`.
 
         For example, an observable counter could be used to report system CPU
         time periodically. Here is a basic implementation::
@@ -187,7 +187,7 @@ class Meter(ABC):
 
         Alternatively, you can pass a generator directly instead of a callback,
         which should return iterables of
-        :class:`~opentelemetry.metrics.measurement.Measurement`::
+        :class:`~opentelemetry._metrics.measurement.Measurement`::
 
             def cpu_time_callback(states_to_include: set[str]) -> Iterable[Iterable[Measurement]]:
                 while True:
@@ -214,9 +214,9 @@ class Meter(ABC):
         Args:
             name: The name of the instrument to be created
             callback: A callback that returns an iterable of
-                :class:`~opentelemetry.metrics.measurement.Measurement`.
+                :class:`~opentelemetry._metrics.measurement.Measurement`.
                 Alternatively, can be a generator that yields iterables of
-                :class:`~opentelemetry.metrics.measurement.Measurement`.
+                :class:`~opentelemetry._metrics.measurement.Measurement`.
             unit: The unit for measurements this instrument reports. For
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
