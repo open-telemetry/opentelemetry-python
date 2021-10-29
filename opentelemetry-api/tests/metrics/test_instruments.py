@@ -16,8 +16,8 @@
 from inspect import Signature, isabstract, signature
 from unittest import TestCase
 
-from opentelemetry.metrics import Meter, _DefaultMeter
-from opentelemetry.metrics.instrument import (
+from opentelemetry._metrics import Meter, _DefaultMeter
+from opentelemetry._metrics.instrument import (
     Counter,
     DefaultCounter,
     DefaultHistogram,
