@@ -20,7 +20,6 @@ from unittest.mock import patch
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
     OTEL_PYTHON_ID_GENERATOR,
-    OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.sdk._configuration import (
     _EXPORTER_OTLP,
@@ -165,21 +164,16 @@ class TestTraceInit(TestCase):
 class TestExporterNames(TestCase):
     def test_otlp_exporter_overwrite(self):
         for exporter in [_EXPORTER_OTLP, _EXPORTER_OTLP_SPAN]:
-            with patch.dict(environ, {OTEL_TRACES_EXPORTER: exporter}):
-                self.assertEqual(_get_exporter_names(), [_EXPORTER_OTLP_SPAN])
+            self.assertEqual(_get_exporter_names(exporter), [_EXPORTER_OTLP_SPAN])
 
-    @patch.dict(environ, {OTEL_TRACES_EXPORTER: "jaeger,zipkin"})
     def test_multiple_exporters(self):
-        self.assertEqual(sorted(_get_exporter_names()), ["jaeger", "zipkin"])
+        self.assertEqual(sorted(_get_exporter_names("jaeger,zipkin")), ["jaeger", "zipkin"])
 
-    @patch.dict(environ, {OTEL_TRACES_EXPORTER: "none"})
     def test_none_exporters(self):
-        self.assertEqual(sorted(_get_exporter_names()), [])
+        self.assertEqual(sorted(_get_exporter_names("none")), [])
 
-    @patch.dict(environ, {}, clear=True)
     def test_no_exporters(self):
-        self.assertEqual(sorted(_get_exporter_names()), [])
+        self.assertEqual(sorted(_get_exporter_names(None)), [])
 
-    @patch.dict(environ, {OTEL_TRACES_EXPORTER: ""})
     def test_empty_exporters(self):
-        self.assertEqual(sorted(_get_exporter_names()), [])
+        self.assertEqual(sorted(_get_exporter_names("")), [])

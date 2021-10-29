@@ -31,6 +31,8 @@ from opentelemetry.environment_variables import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
+from opentelemetry.sdk._logs.export import BatchLogProcessor, LogExporter
+from opentelemetry.sdk._logs import LogEmitterProvider, set_log_emitter_provider
 from opentelemetry.sdk.trace.id_generator import IdGenerator
 from opentelemetry.semconv.resource import ResourceAttributes
 
@@ -40,21 +42,22 @@ _EXPORTER_OTLP_SPAN = "otlp_proto_grpc"
 _RANDOM_ID_GENERATOR = "random"
 _DEFAULT_ID_GENERATOR = _RANDOM_ID_GENERATOR
 
+# TODO: add log exporter env variable
+_OTEL_LOGS_EXPORTER = "OTEL_LOGS_EXPORTER"
+
 
 def _get_id_generator() -> str:
     return environ.get(OTEL_PYTHON_ID_GENERATOR, _DEFAULT_ID_GENERATOR)
 
 
-def _get_exporter_names() -> Sequence[str]:
-    trace_exporters = environ.get(OTEL_TRACES_EXPORTER)
-
+def _get_exporter_names(names: str) -> Sequence[str]:
     exporters = set()
 
-    if trace_exporters and trace_exporters.lower().strip() != "none":
+    if names and names.lower().strip() != "none":
         exporters.update(
             {
                 trace_exporter.strip()
-                for trace_exporter in trace_exporters.split(",")
+                for trace_exporter in names.split(",")
             }
         )
 
@@ -90,6 +93,27 @@ def _init_tracing(
             BatchSpanProcessor(exporter_class(**exporter_args))
         )
 
+def _init_logging(
+    exporters: Sequence[LogExporter],
+    auto_instrumentation_version: Optional[str] = None,
+):
+    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
+    # from the env variable else defaults to "unknown_service"
+    auto_resource = {}
+    # populate version if using auto-instrumentation
+    if auto_instrumentation_version:
+        auto_resource[
+            ResourceAttributes.TELEMETRY_AUTO_VERSION
+        ] = auto_instrumentation_version
+    provider = LogEmitterProvider(resource=Resource.create(auto_resource))
+    set_log_emitter_provider(provider)
+
+    for _, exporter_class in exporters.items():
+        exporter_args = {}
+        provider.add_log_processor(
+            BatchLogProcessor(exporter_class(**exporter_args))
+        )
+
 
 def _import_tracer_provider_config_components(
     selected_components, entry_point_name
@@ -112,21 +136,35 @@ def _import_tracer_provider_config_components(
 
 
 def _import_exporters(
-    exporter_names: Sequence[str],
-) -> Dict[str, Type[SpanExporter]]:
+    trace_exporter_names: Sequence[str],
+    log_exporter_names: Sequence[str],
+) -> Tuple[Dict[str, Type[SpanExporter]], Dict[str, Type[LogExporter]]]:
     trace_exporters = {}
+    log_exporters = {}
 
     for (
         exporter_name,
         exporter_impl,
     ) in _import_tracer_provider_config_components(
-        exporter_names, "opentelemetry_traces_exporter"
+        trace_exporter_names, "opentelemetry_traces_exporter"
     ):
         if issubclass(exporter_impl, SpanExporter):
             trace_exporters[exporter_name] = exporter_impl
         else:
             raise RuntimeError(f"{exporter_name} is not a trace exporter")
-    return trace_exporters
+
+    for (
+        exporter_name,
+        exporter_impl,
+    ) in _import_tracer_provider_config_components(
+        log_exporter_names, "opentelemetry_logs_exporter"
+    ):
+        if issubclass(exporter_impl, LogExporter):
+            log_exporters[exporter_name] = exporter_impl
+        else:
+            raise RuntimeError(f"{exporter_name} is not a log exporter")
+
+    return trace_exporters, log_exporters
 
 
 def _import_id_generator(id_generator_name: str) -> IdGenerator:
@@ -144,11 +182,14 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
 
 
 def _initialize_components(auto_instrumentation_version):
-    exporter_names = _get_exporter_names()
-    trace_exporters = _import_exporters(exporter_names)
+    trace_exporters, log_exporters = _import_exporters(
+        _get_exporter_names(environ.get(OTEL_TRACES_EXPORTER)),
+        _get_exporter_names(environ.get(_OTEL_LOGS_EXPORTER)),
+    )
     id_generator_name = _get_id_generator()
     id_generator = _import_id_generator(id_generator_name)
     _init_tracing(trace_exporters, id_generator, auto_instrumentation_version)
+    _init_logging(log_exporters)
 
 
 class _BaseConfigurator(ABC):
