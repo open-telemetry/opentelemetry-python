@@ -17,7 +17,7 @@ from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock
 
-from opentelemetry.sdk.metrics import (
+from opentelemetry.sdk._metrics import (
     ConsoleMetricExporter,
     MeterProvider,
     SDKMetricReader,
