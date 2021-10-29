@@ -1,7 +1,7 @@
 import logging
 
 from opentelemetry import trace
-from opentelemetry.exporter.otlp.proto.grpc.log_exporter import OTLPLogExporter
+from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
 from opentelemetry.sdk._logs import (
     LogEmitterProvider,
     OTLPHandler,

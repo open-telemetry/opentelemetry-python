@@ -22,7 +22,7 @@ from google.rpc.error_details_pb2 import RetryInfo
 from grpc import StatusCode, server
 
 from opentelemetry.exporter.otlp.proto.grpc.exporter import _translate_value
-from opentelemetry.exporter.otlp.proto.grpc.log_exporter import OTLPLogExporter
+from opentelemetry.exporter.otlp.proto.grpc._log_exporter import OTLPLogExporter
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
     ExportLogsServiceResponse,
@@ -168,7 +168,7 @@ class TestOTLPLogExporter(TestCase):
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
     @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.log_exporter.OTLPLogExporter._stub"
+        "opentelemetry.exporter.otlp.proto.grpc._log_exporter.OTLPLogExporter._stub"
     )
     # pylint: disable=unused-argument
     def test_no_credentials_error(
