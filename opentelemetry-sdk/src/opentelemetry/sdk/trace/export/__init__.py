@@ -223,6 +223,10 @@ class BatchSpanProcessor(SpanProcessor):
 
     def _at_fork_reinit(self):
         self.condition._at_fork_reinit()
+        self.worker_thread = threading.Thread(
+            name="OtelBatchSpanProcessor", target=self.worker, daemon=True
+        )
+        self.worker_thread.start()
 
     def worker(self):
         timeout = self.schedule_delay_millis / 1e3
