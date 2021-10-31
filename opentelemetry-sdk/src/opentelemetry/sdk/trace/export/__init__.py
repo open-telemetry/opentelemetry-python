@@ -242,7 +242,6 @@ class BatchSpanProcessor(SpanProcessor):
         )
         self.worker_thread.start()
 
-
     def worker(self):
         timeout = self.schedule_delay_millis / 1e3
         flush_request = None  # type: typing.Optional[_FlushRequest]
