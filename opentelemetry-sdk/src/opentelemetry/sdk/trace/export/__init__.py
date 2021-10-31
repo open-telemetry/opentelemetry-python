@@ -39,7 +39,6 @@ from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
 from opentelemetry.util._time import _time_ns
 
 logger = logging.getLogger(__name__)
-_lock = threading.Lock()
 
 
 class SpanExportResult(Enum):
@@ -226,23 +225,22 @@ class BatchSpanProcessor(SpanProcessor):
                 self.condition.notify()
 
     def _at_fork_reinit(self):
-        with _lock:
-            # could be in an inconsistent state after fork, reinitialise by calling `_at_fork_reinit`
-            # (creates a new lock internally https://github.com/python/cpython/blob/main/Python/thread_pthread.h#L727)
-            # if exists, otherwise create a new one.
-            if hasattr(self.condition, "_at_fork_reinit"):
-                self.condition._at_fork_reinit()
-            else:
-                self.condition = threading.Condition(threading.Lock())
+        # could be in an inconsistent state after fork, reinitialise by calling `_at_fork_reinit`
+        # (creates a new lock internally https://github.com/python/cpython/blob/main/Python/thread_pthread.h#L727)
+        # if exists, otherwise create a new one.
+        if hasattr(self.condition, "_at_fork_reinit"):
+            self.condition._at_fork_reinit()
+        else:
+            self.condition = threading.Condition(threading.Lock())
 
-            self.queue.clear()
+        self.queue.clear()
 
-            # worker_thread is local to a process, only the thread that issued fork continues
-            # to exist. A new worker thread must be started in child process.
-            self.worker_thread = threading.Thread(
-                name="OtelBatchSpanProcessor", target=self.worker, daemon=True
-            )
-            self.worker_thread.start()
+        # worker_thread is local to a process, only the thread that issued fork continues
+        # to exist. A new worker thread must be started in child process.
+        self.worker_thread = threading.Thread(
+            name="OtelBatchSpanProcessor", target=self.worker, daemon=True
+        )
+        self.worker_thread.start()
 
 
     def worker(self):
