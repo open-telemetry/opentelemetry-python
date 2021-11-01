@@ -49,7 +49,9 @@ from opentelemetry._metrics.instrument import (
     _ProxyObservableUpDownCounter,
     _ProxyUpDownCounter,
 )
-from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
+from opentelemetry.environment_variables import (
+    _OTEL_PYTHON_METER_PROVIDER as OTEL_PYTHON_METER_PROVIDER,
+)
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 
