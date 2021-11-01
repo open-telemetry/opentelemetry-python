@@ -14,10 +14,10 @@
 
 import collections
 import logging
+import os
 import sys
 import threading
 import typing
-import os
 from enum import Enum
 from os import environ, linesep
 from typing import Optional
