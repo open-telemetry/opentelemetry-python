@@ -259,7 +259,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
         def create_spans_and_flush(tno: int):
             for span_idx in range(num_spans):
                 _create_start_and_end_span(
-                    "Span {}-{}".format(tno, span_idx), span_processor
+                    f"Span {tno}-{span_idx}", span_processor
                 )
             self.assertTrue(span_processor.force_flush())
 
@@ -364,19 +364,19 @@ class TestBatchSpanProcessor(unittest.TestCase):
         my_exporter = MySpanExporter(
             destination=spans_names_list, export_event=export_event
         )
+        start_time = time.time()
         span_processor = export.BatchSpanProcessor(
             my_exporter,
-            schedule_delay_millis=50,
+            schedule_delay_millis=500,
         )
 
         # create single span
-        start_time = time.time()
         _create_start_and_end_span("foo", span_processor)
 
         self.assertTrue(export_event.wait(2))
         export_time = time.time()
         self.assertEqual(len(spans_names_list), 1)
-        self.assertGreaterEqual((export_time - start_time) * 1e3, 50)
+        self.assertGreaterEqual((export_time - start_time) * 1e3, 500)
 
         span_processor.shutdown()
 

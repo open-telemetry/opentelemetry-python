@@ -29,4 +29,4 @@ class TestAsyncio(OpenTelemetryTestCase):
     async def child_task(self, message):
         # No need to pass/activate the parent Span, as it stays in the context.
         with self.tracer.start_active_span("child"):
-            return "%s::response" % message
+            return f"{message}::response"

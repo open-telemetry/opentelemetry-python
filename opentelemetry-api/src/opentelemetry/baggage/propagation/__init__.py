@@ -12,13 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
-import typing
+from logging import getLogger
+from re import split
+from typing import Iterable, Mapping, Optional, Set
 from urllib.parse import quote_plus, unquote_plus
 
-from opentelemetry.baggage import get_all, set_baggage
+from opentelemetry.baggage import _is_valid_pair, get_all, set_baggage
 from opentelemetry.context import get_current
 from opentelemetry.context.context import Context
 from opentelemetry.propagators import textmap
+from opentelemetry.util.re import _DELIMITER_PATTERN
+
+_logger = getLogger(__name__)
 
 
 class W3CBaggagePropagator(textmap.TextMapPropagator):
@@ -32,7 +37,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
     def extract(
         self,
         carrier: textmap.CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Optional[Context] = None,
         getter: textmap.Getter = textmap.default_getter,
     ) -> Context:
         """Extract Baggage from the carrier.
@@ -48,21 +53,50 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
             getter.get(carrier, self._BAGGAGE_HEADER_NAME)
         )
 
-        if not header or len(header) > self._MAX_HEADER_LENGTH:
+        if not header:
             return context
 
-        baggage_entries = header.split(",")
+        if len(header) > self._MAX_HEADER_LENGTH:
+            _logger.warning(
+                "Baggage header `%s` exceeded the maximum number of bytes per baggage-string",
+                header,
+            )
+            return context
+
+        baggage_entries = split(_DELIMITER_PATTERN, header)
         total_baggage_entries = self._MAX_PAIRS
+
+        if len(baggage_entries) > self._MAX_PAIRS:
+            _logger.warning(
+                "Baggage header `%s` exceeded the maximum number of list-members",
+                header,
+            )
+
         for entry in baggage_entries:
             if len(entry) > self._MAX_PAIR_LENGTH:
+                _logger.warning(
+                    "Baggage entry `%s` exceeded the maximum number of bytes per list-member",
+                    entry,
+                )
+                continue
+            if not entry:  # empty string
                 continue
             try:
                 name, value = entry.split("=", 1)
             except Exception:  # pylint: disable=broad-except
+                _logger.warning(
+                    "Baggage list-member `%s` doesn't match the format", entry
+                )
                 continue
+            name = unquote_plus(name).strip().lower()
+            value = unquote_plus(value).strip()
+            if not _is_valid_pair(name, value):
+                _logger.warning("Invalid baggage entry: `%s`", entry)
+                continue
+
             context = set_baggage(
-                unquote_plus(name).strip(),
-                unquote_plus(value).strip(),
+                name,
+                value,
                 context=context,
             )
             total_baggage_entries -= 1
@@ -74,7 +108,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
     def inject(
         self,
         carrier: textmap.CarrierT,
-        context: typing.Optional[Context] = None,
+        context: Optional[Context] = None,
         setter: textmap.Setter = textmap.default_setter,
     ) -> None:
         """Injects Baggage into the carrier.
@@ -90,12 +124,12 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         setter.set(carrier, self._BAGGAGE_HEADER_NAME, baggage_string)
 
     @property
-    def fields(self) -> typing.Set[str]:
+    def fields(self) -> Set[str]:
         """Returns a set with the fields set in `inject`."""
         return {self._BAGGAGE_HEADER_NAME}
 
 
-def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
+def _format_baggage(baggage_entries: Mapping[str, object]) -> str:
     return ",".join(
         quote_plus(str(key)) + "=" + quote_plus(str(value))
         for key, value in baggage_entries.items()
@@ -103,8 +137,8 @@ def _format_baggage(baggage_entries: typing.Mapping[str, object]) -> str:
 
 
 def _extract_first_element(
-    items: typing.Optional[typing.Iterable[textmap.CarrierT]],
-) -> typing.Optional[textmap.CarrierT]:
+    items: Optional[Iterable[textmap.CarrierT]],
+) -> Optional[textmap.CarrierT]:
     if items is None:
         return None
     return next(iter(items), None)

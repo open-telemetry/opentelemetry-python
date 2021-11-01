@@ -70,3 +70,5 @@ python -m grpc_tools.protoc \
     --mypy_out=. \
     --grpc_python_out=. \
     $service_protos
+
+echo "Please update ./opentelemetry-proto/README.rst to include the updated version."

@@ -4,16 +4,71 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.5.0-0.24b0...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.6.1-0.25b1...HEAD)
 
+- Add support for Python 3.10
+  ([#2207](https://github.com/open-telemetry/opentelemetry-python/pull/2207))
+- remove `X-B3-ParentSpanId` for B3 propagator as per OpenTelemetry specification
+  ([#2237](https://github.com/open-telemetry/opentelemetry-python/pull/2237))
+
+## [1.6.2-0.25b2](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.2-0.25b2) - 2021-10-19
+
+## [1.6.1-0.25b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.1-0.25b1) - 2021-10-18
+
+- Fix ReadableSpan property types attempting to create a mapping from a list
+  ([#2215](https://github.com/open-telemetry/opentelemetry-python/pull/2215))
+- Upgrade GRPC/protobuf related dependency and regenerate otlp protobufs
+  ([#2201](https://github.com/open-telemetry/opentelemetry-python/pull/2201))
+- Propagation: only warn about oversized baggage headers when headers exist
+  ([#2212](https://github.com/open-telemetry/opentelemetry-python/pull/2212))
+
+- Fix parental trace relationship for opentracing `follows_from` reference
+  ([#2180](https://github.com/open-telemetry/opentelemetry-python/pull/2180))
+
+## [1.6.0-0.25b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.0-0.25b0) - 2021-10-13
+
+- Fix race in `set_tracer_provider()`
+  ([#2182](https://github.com/open-telemetry/opentelemetry-python/pull/2182))
+- Automatically load OTEL environment variables as options for `opentelemetry-instrument`
+  ([#1969](https://github.com/open-telemetry/opentelemetry-python/pull/1969))
 - `opentelemetry-semantic-conventions` Update to semantic conventions v1.6.1
   ([#2077](https://github.com/open-telemetry/opentelemetry-python/pull/2077))
+- Do not count invalid attributes for dropped
+  ([#2096](https://github.com/open-telemetry/opentelemetry-python/pull/2096))
 - Fix propagation bug caused by counting skipped entries
   ([#2071](https://github.com/open-telemetry/opentelemetry-python/pull/2071))
+- Add entry point for exporters with default protocol
+  ([#2093](https://github.com/open-telemetry/opentelemetry-python/pull/2093))
+- Renamed entrypoints `otlp_proto_http_span`, `otlp_proto_grpc_span`, `console_span` to remove
+  redundant `_span` suffix.
+  ([#2093](https://github.com/open-telemetry/opentelemetry-python/pull/2093))
+- Do not skip sequence attribute on decode error
+  ([#2097](https://github.com/open-telemetry/opentelemetry-python/pull/2097))
+- `opentelemetry-test`: Add `HttpTestBase` to allow tests with actual TCP sockets
+  ([#2101](https://github.com/open-telemetry/opentelemetry-python/pull/2101))
+- Fix incorrect headers parsing via environment variables
+  ([#2103](https://github.com/open-telemetry/opentelemetry-python/pull/2103))
+- Add support for OTEL_ATTRIBUTE_COUNT_LIMIT
+  ([#2139](https://github.com/open-telemetry/opentelemetry-python/pull/2139))
+- Attribute limits no longer apply to Resource attributes
+  ([#2138](https://github.com/open-telemetry/opentelemetry-python/pull/2138))
+- `opentelemetry-exporter-otlp`: Add `opentelemetry-otlp-proto-http` as dependency
+  ([#2147](https://github.com/open-telemetry/opentelemetry-python/pull/2147))
+- Fix validity calculation for trace and span IDs
+  ([#2145](https://github.com/open-telemetry/opentelemetry-python/pull/2145))
+- Add `schema_url` to `TracerProvider.get_tracer`
+  ([#2154](https://github.com/open-telemetry/opentelemetry-python/pull/2154))
+- Make baggage implementation w3c spec complaint
+  ([#2167](https://github.com/open-telemetry/opentelemetry-python/pull/2167))
+- Add name to `BatchSpanProcessor` worker thread
+  ([#2186](https://github.com/open-telemetry/opentelemetry-python/pull/2186))
+
 
 ## [1.5.0-0.24b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.5.0-0.24b0) - 2021-08-26
 
 
+- Add pre and post instrumentation entry points
+  ([#1983](https://github.com/open-telemetry/opentelemetry-python/pull/1983))
 - Fix documentation on well known exporters and variable OTEL_TRACES_EXPORTER which were misnamed
   ([#2023](https://github.com/open-telemetry/opentelemetry-python/pull/2023))
 - `opentelemetry-sdk` `get_aggregated_resource()` returns default resource and service name

@@ -29,7 +29,7 @@ class Client:
         self.executor.submit(before_handler).result()
         self.executor.submit(after_handler).result()
 
-        return "%s::response" % message
+        return f"{message}::response"
 
     def send(self, message):
         return self.executor.submit(self.send_task, message)

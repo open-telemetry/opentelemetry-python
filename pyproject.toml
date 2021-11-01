@@ -4,15 +4,11 @@ exclude = '''
 (
   /(  # generated files
     .tox|
-    opentelemetry-python-contrib|
+    venv|
     exporter/opentelemetry-exporter-jaeger-proto-grpc/src/opentelemetry/exporter/jaeger/proto/grpc/gen|
     exporter/opentelemetry-exporter-jaeger-thrift/src/opentelemetry/exporter/jaeger/thrift/gen|
     exporter/opentelemetry-exporter-zipkin-proto-http/src/opentelemetry/exporter/zipkin/proto/http/v2/gen|
-    opentelemetry-proto/src/opentelemetry/proto/collector|
-    opentelemetry-proto/src/opentelemetry/proto/common|
-    opentelemetry-proto/src/opentelemetry/proto/metrics|
-    opentelemetry-proto/src/opentelemetry/proto/resource|
-    opentelemetry-proto/src/opentelemetry/proto/trace
+    opentelemetry-proto/src/opentelemetry/proto/.*/.*
   )/
 )
 '''

@@ -13,11 +13,9 @@
 # limitations under the License.
 
 import unittest
-from abc import abstractclassmethod
+from abc import abstractmethod
 from unittest.mock import Mock
 
-import opentelemetry.sdk.trace as trace
-import opentelemetry.sdk.trace.id_generator as id_generator
 import opentelemetry.trace as trace_api
 from opentelemetry.context import Context, get_current
 from opentelemetry.propagators.b3 import (  # pylint: disable=no-name-in-module,import-error
@@ -25,6 +23,8 @@ from opentelemetry.propagators.b3 import (  # pylint: disable=no-name-in-module,
     B3SingleFormat,
 )
 from opentelemetry.propagators.textmap import DefaultGetter
+from opentelemetry.sdk import trace
+from opentelemetry.sdk.trace import id_generator
 from opentelemetry.trace.propagation import _SPAN_KEY
 
 
@@ -65,9 +65,6 @@ class AbstractB3FormatTestCase:
         cls.serialized_span_id = trace_api.format_span_id(
             generator.generate_span_id()
         )
-        cls.serialized_parent_id = trace_api.format_span_id(
-            generator.generate_span_id()
-        )
 
     def setUp(self) -> None:
         tracer_provider = trace.TracerProvider()
@@ -81,11 +78,13 @@ class AbstractB3FormatTestCase:
     def get_child_parent_new_carrier(cls, old_carrier):
         return get_child_parent_new_carrier(old_carrier, cls.get_propagator())
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def get_propagator(cls):
         pass
 
-    @abstractclassmethod
+    @classmethod
+    @abstractmethod
     def get_trace_id(cls, carrier):
         pass
 
@@ -101,7 +100,6 @@ class AbstractB3FormatTestCase:
         context = {
             propagator.TRACE_ID_KEY: self.serialized_trace_id,
             propagator.SPAN_ID_KEY: self.serialized_span_id,
-            propagator.PARENT_SPAN_ID_KEY: self.serialized_parent_id,
             propagator.SAMPLED_KEY: "1",
         }
         child, parent, _ = self.get_child_parent_new_carrier(context)
@@ -123,9 +121,7 @@ class AbstractB3FormatTestCase:
         propagator = self.get_propagator()
         child, parent, _ = self.get_child_parent_new_carrier(
             {
-                propagator.SINGLE_HEADER_KEY: "{}-{}".format(
-                    self.serialized_trace_id, self.serialized_span_id
-                )
+                propagator.SINGLE_HEADER_KEY: f"{self.serialized_trace_id}-{self.serialized_span_id}"
             }
         )
 
@@ -142,11 +138,7 @@ class AbstractB3FormatTestCase:
 
         child, parent, _ = self.get_child_parent_new_carrier(
             {
-                propagator.SINGLE_HEADER_KEY: "{}-{}-1-{}".format(
-                    self.serialized_trace_id,
-                    self.serialized_span_id,
-                    self.serialized_parent_id,
-                )
+                propagator.SINGLE_HEADER_KEY: f"{self.serialized_trace_id}-{self.serialized_span_id}-1"
             }
         )
 
@@ -171,9 +163,7 @@ class AbstractB3FormatTestCase:
 
         _, _, new_carrier = self.get_child_parent_new_carrier(
             {
-                propagator.SINGLE_HEADER_KEY: "{}-{}".format(
-                    single_header_trace_id, self.serialized_span_id
-                ),
+                propagator.SINGLE_HEADER_KEY: f"{single_header_trace_id}-{self.serialized_span_id}",
                 propagator.TRACE_ID_KEY: self.serialized_trace_id,
                 propagator.SPAN_ID_KEY: self.serialized_span_id,
                 propagator.SAMPLED_KEY: "1",

@@ -14,30 +14,177 @@ import typing_extensions
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor = ...
 
-global___AggregationTemporality = AggregationTemporality
-class _AggregationTemporality(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[AggregationTemporality.V], builtins.type):
+class AggregationTemporality(_AggregationTemporality, metaclass=_AggregationTemporalityEnumTypeWrapper):
+    """AggregationTemporality defines how a metric aggregator reports aggregated
+    values. It describes how those values relate to the time interval over
+    which they are aggregated.
+    """
+    pass
+class _AggregationTemporality:
+    V = typing.NewType('V', builtins.int)
+class _AggregationTemporalityEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_AggregationTemporality.V], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor = ...
     AGGREGATION_TEMPORALITY_UNSPECIFIED = AggregationTemporality.V(0)
+    """UNSPECIFIED is the default AggregationTemporality, it MUST not be used."""
+
     AGGREGATION_TEMPORALITY_DELTA = AggregationTemporality.V(1)
+    """DELTA is an AggregationTemporality for a metric aggregator which reports
+    changes since last report time. Successive metrics contain aggregation of
+    values from continuous and non-overlapping intervals.
+
+    The values for a DELTA metric are based only on the time interval
+    associated with one measurement cycle. There is no dependency on
+    previous measurements like is the case for CUMULATIVE metrics.
+
+    For example, consider a system measuring the number of requests that
+    it receives and reports the sum of these requests every second as a
+    DELTA metric:
+
+      1. The system starts receiving at time=t_0.
+      2. A request is received, the system measures 1 request.
+      3. A request is received, the system measures 1 request.
+      4. A request is received, the system measures 1 request.
+      5. The 1 second collection cycle ends. A metric is exported for the
+         number of requests received over the interval of time t_0 to
+         t_0+1 with a value of 3.
+      6. A request is received, the system measures 1 request.
+      7. A request is received, the system measures 1 request.
+      8. The 1 second collection cycle ends. A metric is exported for the
+         number of requests received over the interval of time t_0+1 to
+         t_0+2 with a value of 2.
+    """
+
     AGGREGATION_TEMPORALITY_CUMULATIVE = AggregationTemporality.V(2)
-class AggregationTemporality(metaclass=_AggregationTemporality):
-    V = typing.NewType('V', builtins.int)
+    """CUMULATIVE is an AggregationTemporality for a metric aggregator which
+    reports changes since a fixed start time. This means that current values
+    of a CUMULATIVE metric depend on all previous measurements since the
+    start time. Because of this, the sender is required to retain this state
+    in some form. If this state is lost or invalidated, the CUMULATIVE metric
+    values MUST be reset and a new fixed start time following the last
+    reported measurement time sent MUST be used.
+
+    For example, consider a system measuring the number of requests that
+    it receives and reports the sum of these requests every second as a
+    CUMULATIVE metric:
+
+      1. The system starts receiving at time=t_0.
+      2. A request is received, the system measures 1 request.
+      3. A request is received, the system measures 1 request.
+      4. A request is received, the system measures 1 request.
+      5. The 1 second collection cycle ends. A metric is exported for the
+         number of requests received over the interval of time t_0 to
+         t_0+1 with a value of 3.
+      6. A request is received, the system measures 1 request.
+      7. A request is received, the system measures 1 request.
+      8. The 1 second collection cycle ends. A metric is exported for the
+         number of requests received over the interval of time t_0 to
+         t_0+2 with a value of 5.
+      9. The system experiences a fault and loses state.
+      10. The system recovers and resumes receiving at time=t_1.
+      11. A request is received, the system measures 1 request.
+      12. The 1 second collection cycle ends. A metric is exported for the
+         number of requests received over the interval of time t_1 to
+         t_0+1 with a value of 1.
+
+    Note: Even though, when reporting changes since last report time, using
+    CUMULATIVE is valid, it is not recommended. This may cause problems for
+    systems that do not use start_time to determine when the aggregation
+    value was reset (e.g. Prometheus).
+    """
+
+
 AGGREGATION_TEMPORALITY_UNSPECIFIED = AggregationTemporality.V(0)
+"""UNSPECIFIED is the default AggregationTemporality, it MUST not be used."""
+
 AGGREGATION_TEMPORALITY_DELTA = AggregationTemporality.V(1)
+"""DELTA is an AggregationTemporality for a metric aggregator which reports
+changes since last report time. Successive metrics contain aggregation of
+values from continuous and non-overlapping intervals.
+
+The values for a DELTA metric are based only on the time interval
+associated with one measurement cycle. There is no dependency on
+previous measurements like is the case for CUMULATIVE metrics.
+
+For example, consider a system measuring the number of requests that
+it receives and reports the sum of these requests every second as a
+DELTA metric:
+
+  1. The system starts receiving at time=t_0.
+  2. A request is received, the system measures 1 request.
+  3. A request is received, the system measures 1 request.
+  4. A request is received, the system measures 1 request.
+  5. The 1 second collection cycle ends. A metric is exported for the
+     number of requests received over the interval of time t_0 to
+     t_0+1 with a value of 3.
+  6. A request is received, the system measures 1 request.
+  7. A request is received, the system measures 1 request.
+  8. The 1 second collection cycle ends. A metric is exported for the
+     number of requests received over the interval of time t_0+1 to
+     t_0+2 with a value of 2.
+"""
+
 AGGREGATION_TEMPORALITY_CUMULATIVE = AggregationTemporality.V(2)
+"""CUMULATIVE is an AggregationTemporality for a metric aggregator which
+reports changes since a fixed start time. This means that current values
+of a CUMULATIVE metric depend on all previous measurements since the
+start time. Because of this, the sender is required to retain this state
+in some form. If this state is lost or invalidated, the CUMULATIVE metric
+values MUST be reset and a new fixed start time following the last
+reported measurement time sent MUST be used.
+
+For example, consider a system measuring the number of requests that
+it receives and reports the sum of these requests every second as a
+CUMULATIVE metric:
+
+  1. The system starts receiving at time=t_0.
+  2. A request is received, the system measures 1 request.
+  3. A request is received, the system measures 1 request.
+  4. A request is received, the system measures 1 request.
+  5. The 1 second collection cycle ends. A metric is exported for the
+     number of requests received over the interval of time t_0 to
+     t_0+1 with a value of 3.
+  6. A request is received, the system measures 1 request.
+  7. A request is received, the system measures 1 request.
+  8. The 1 second collection cycle ends. A metric is exported for the
+     number of requests received over the interval of time t_0 to
+     t_0+2 with a value of 5.
+  9. The system experiences a fault and loses state.
+  10. The system recovers and resumes receiving at time=t_1.
+  11. A request is received, the system measures 1 request.
+  12. The 1 second collection cycle ends. A metric is exported for the
+     number of requests received over the interval of time t_1 to
+     t_0+1 with a value of 1.
+
+Note: Even though, when reporting changes since last report time, using
+CUMULATIVE is valid, it is not recommended. This may cause problems for
+systems that do not use start_time to determine when the aggregation
+value was reset (e.g. Prometheus).
+"""
+
+global___AggregationTemporality = AggregationTemporality
+
 
 class ResourceMetrics(google.protobuf.message.Message):
+    """A collection of InstrumentationLibraryMetrics from a Resource."""
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     RESOURCE_FIELD_NUMBER: builtins.int
     INSTRUMENTATION_LIBRARY_METRICS_FIELD_NUMBER: builtins.int
     SCHEMA_URL_FIELD_NUMBER: builtins.int
+    @property
+    def resource(self) -> opentelemetry.proto.resource.v1.resource_pb2.Resource:
+        """The resource for the metrics in this message.
+        If this field is not set then no resource info is known.
+        """
+        pass
+    @property
+    def instrumentation_library_metrics(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___InstrumentationLibraryMetrics]:
+        """A list of metrics that originate from a resource."""
+        pass
     schema_url: typing.Text = ...
-
-    @property
-    def resource(self) -> opentelemetry.proto.resource.v1.resource_pb2.Resource: ...
-
-    @property
-    def instrumentation_library_metrics(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___InstrumentationLibraryMetrics]: ...
+    """This schema_url applies to the data in the "resource" field. It does not apply
+    to the data in the "instrumentation_library_metrics" field which have their own
+    schema_url field.
+    """
 
     def __init__(self,
         *,
@@ -45,22 +192,29 @@ class ResourceMetrics(google.protobuf.message.Message):
         instrumentation_library_metrics : typing.Optional[typing.Iterable[global___InstrumentationLibraryMetrics]] = ...,
         schema_url : typing.Text = ...,
         ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal[u"resource",b"resource"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"instrumentation_library_metrics",b"instrumentation_library_metrics",u"resource",b"resource",u"schema_url",b"schema_url"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["resource",b"resource"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["instrumentation_library_metrics",b"instrumentation_library_metrics","resource",b"resource","schema_url",b"schema_url"]) -> None: ...
 global___ResourceMetrics = ResourceMetrics
 
 class InstrumentationLibraryMetrics(google.protobuf.message.Message):
+    """A collection of Metrics produced by an InstrumentationLibrary."""
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     INSTRUMENTATION_LIBRARY_FIELD_NUMBER: builtins.int
     METRICS_FIELD_NUMBER: builtins.int
     SCHEMA_URL_FIELD_NUMBER: builtins.int
+    @property
+    def instrumentation_library(self) -> opentelemetry.proto.common.v1.common_pb2.InstrumentationLibrary:
+        """The instrumentation library information for the metrics in this message.
+        Semantically when InstrumentationLibrary isn't set, it is equivalent with
+        an empty instrumentation library name (unknown).
+        """
+        pass
+    @property
+    def metrics(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Metric]:
+        """A list of metrics that originate from an instrumentation library."""
+        pass
     schema_url: typing.Text = ...
-
-    @property
-    def instrumentation_library(self) -> opentelemetry.proto.common.v1.common_pb2.InstrumentationLibrary: ...
-
-    @property
-    def metrics(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Metric]: ...
+    """This schema_url applies to all metrics in the "metrics" field."""
 
     def __init__(self,
         *,
@@ -68,11 +222,97 @@ class InstrumentationLibraryMetrics(google.protobuf.message.Message):
         metrics : typing.Optional[typing.Iterable[global___Metric]] = ...,
         schema_url : typing.Text = ...,
         ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal[u"instrumentation_library",b"instrumentation_library"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"instrumentation_library",b"instrumentation_library",u"metrics",b"metrics",u"schema_url",b"schema_url"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["instrumentation_library",b"instrumentation_library"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["instrumentation_library",b"instrumentation_library","metrics",b"metrics","schema_url",b"schema_url"]) -> None: ...
 global___InstrumentationLibraryMetrics = InstrumentationLibraryMetrics
 
 class Metric(google.protobuf.message.Message):
+    """Defines a Metric which has one or more timeseries.  The following is a
+    brief summary of the Metric data model.  For more details, see:
+
+      https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/datamodel.md
+
+
+    The data model and relation between entities is shown in the
+    diagram below. Here, "DataPoint" is the term used to refer to any
+    one of the specific data point value types, and "points" is the term used
+    to refer to any one of the lists of points contained in the Metric.
+
+    - Metric is composed of a metadata and data.
+    - Metadata part contains a name, description, unit.
+    - Data is one of the possible types (Sum, Gauge, Histogram, Summary).
+    - DataPoint contains timestamps, attributes, and one of the possible value type
+      fields.
+
+        Metric
+     +------------+
+     |name        |
+     |description |
+     |unit        |     +------------------------------------+
+     |data        |---> |Gauge, Sum, Histogram, Summary, ... |
+     +------------+     +------------------------------------+
+
+       Data [One of Gauge, Sum, Histogram, Summary, ...]
+     +-----------+
+     |...        |  // Metadata about the Data.
+     |points     |--+
+     +-----------+  |
+                    |      +---------------------------+
+                    |      |DataPoint 1                |
+                    v      |+------+------+   +------+ |
+                 +-----+   ||label |label |...|label | |
+                 |  1  |-->||value1|value2|...|valueN| |
+                 +-----+   |+------+------+   +------+ |
+                 |  .  |   |+-----+                    |
+                 |  .  |   ||value|                    |
+                 |  .  |   |+-----+                    |
+                 |  .  |   +---------------------------+
+                 |  .  |                   .
+                 |  .  |                   .
+                 |  .  |                   .
+                 |  .  |   +---------------------------+
+                 |  .  |   |DataPoint M                |
+                 +-----+   |+------+------+   +------+ |
+                 |  M  |-->||label |label |...|label | |
+                 +-----+   ||value1|value2|...|valueN| |
+                           |+------+------+   +------+ |
+                           |+-----+                    |
+                           ||value|                    |
+                           |+-----+                    |
+                           +---------------------------+
+
+    Each distinct type of DataPoint represents the output of a specific
+    aggregation function, the result of applying the DataPoint's
+    associated function of to one or more measurements.
+
+    All DataPoint types have three common fields:
+    - Attributes includes key-value pairs associated with the data point
+    - TimeUnixNano is required, set to the end time of the aggregation
+    - StartTimeUnixNano is optional, but strongly encouraged for DataPoints
+      having an AggregationTemporality field, as discussed below.
+
+    Both TimeUnixNano and StartTimeUnixNano values are expressed as
+    UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January 1970.
+
+    # TimeUnixNano
+
+    This field is required, having consistent interpretation across
+    DataPoint types.  TimeUnixNano is the moment corresponding to when
+    the data point's aggregate value was captured.
+
+    Data points with the 0 value for TimeUnixNano SHOULD be rejected
+    by consumers.
+
+    # StartTimeUnixNano
+
+    StartTimeUnixNano in general allows detecting when a sequence of
+    observations is unbroken.  This field indicates to consumers the
+    start time for points with cumulative and delta
+    AggregationTemporality, and it should be included whenever possible
+    to support correct rate calculation.  Although it may be omitted
+    when the start time is truly unknown, setting StartTimeUnixNano is
+    strongly encouraged.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     NAME_FIELD_NUMBER: builtins.int
     DESCRIPTION_FIELD_NUMBER: builtins.int
@@ -85,30 +325,51 @@ class Metric(google.protobuf.message.Message):
     HISTOGRAM_FIELD_NUMBER: builtins.int
     SUMMARY_FIELD_NUMBER: builtins.int
     name: typing.Text = ...
+    """name of the metric, including its DNS name prefix. It must be unique."""
+
     description: typing.Text = ...
+    """description of the metric, which can be used in documentation."""
+
     unit: typing.Text = ...
+    """unit in which the metric value is reported. Follows the format
+    described by http://unitsofmeasure.org/ucum.html.
+    """
 
     @property
-    def int_gauge(self) -> global___IntGauge: ...
-
+    def int_gauge(self) -> global___IntGauge:
+        """IntGauge and IntSum are deprecated and will be removed soon.
+        1. Old senders and receivers that are not aware of this change will
+        continue using the `int_gauge` and `int_sum` fields.
+        2. New senders, which are aware of this change MUST send only `gauge`
+        and `sum` fields.
+        3. New receivers, which are aware of this change MUST convert these into
+        `gauge` and `sum` by using the provided as_int field in the oneof values.
+        This field will be removed in ~3 months, on July 1, 2021.
+        """
+        pass
     @property
     def gauge(self) -> global___Gauge: ...
-
     @property
-    def int_sum(self) -> global___IntSum: ...
-
+    def int_sum(self) -> global___IntSum:
+        """This field will be removed in ~3 months, on July 1, 2021."""
+        pass
     @property
     def sum(self) -> global___Sum: ...
-
     @property
-    def int_histogram(self) -> global___IntHistogram: ...
-
+    def int_histogram(self) -> global___IntHistogram:
+        """IntHistogram is deprecated and will be removed soon.
+        1. Old senders and receivers that are not aware of this change will
+        continue using the `int_histogram` field.
+        2. New senders, which are aware of this change MUST send only `histogram`.
+        3. New receivers, which are aware of this change MUST convert this into
+        `histogram` by simply converting all int64 values into float.
+        This field will be removed in ~3 months, on July 1, 2021.
+        """
+        pass
     @property
     def histogram(self) -> global___Histogram: ...
-
     @property
     def summary(self) -> global___Summary: ...
-
     def __init__(self,
         *,
         name : typing.Text = ...,
@@ -122,49 +383,76 @@ class Metric(google.protobuf.message.Message):
         histogram : typing.Optional[global___Histogram] = ...,
         summary : typing.Optional[global___Summary] = ...,
         ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal[u"data",b"data",u"gauge",b"gauge",u"histogram",b"histogram",u"int_gauge",b"int_gauge",u"int_histogram",b"int_histogram",u"int_sum",b"int_sum",u"sum",b"sum",u"summary",b"summary"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"data",b"data",u"description",b"description",u"gauge",b"gauge",u"histogram",b"histogram",u"int_gauge",b"int_gauge",u"int_histogram",b"int_histogram",u"int_sum",b"int_sum",u"name",b"name",u"sum",b"sum",u"summary",b"summary",u"unit",b"unit"]) -> None: ...
-    def WhichOneof(self, oneof_group: typing_extensions.Literal[u"data",b"data"]) -> typing_extensions.Literal["int_gauge","gauge","int_sum","sum","int_histogram","histogram","summary"]: ...
+    def HasField(self, field_name: typing_extensions.Literal["data",b"data","gauge",b"gauge","histogram",b"histogram","int_gauge",b"int_gauge","int_histogram",b"int_histogram","int_sum",b"int_sum","sum",b"sum","summary",b"summary"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data",b"data","description",b"description","gauge",b"gauge","histogram",b"histogram","int_gauge",b"int_gauge","int_histogram",b"int_histogram","int_sum",b"int_sum","name",b"name","sum",b"sum","summary",b"summary","unit",b"unit"]) -> None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["data",b"data"]) -> typing.Optional[typing_extensions.Literal["int_gauge","gauge","int_sum","sum","int_histogram","histogram","summary"]]: ...
 global___Metric = Metric
 
 class IntGauge(google.protobuf.message.Message):
+    """IntGauge is deprecated.  Use Gauge with an integer value in NumberDataPoint.
+
+    IntGauge represents the type of a int scalar metric that always exports the
+    "current value" for every data point. It should be used for an "unknown"
+    aggregation.
+
+    A Gauge does not support different aggregation temporalities. Given the
+    aggregation is unknown, points cannot be combined using the same
+    aggregation, regardless of aggregation temporalities. Therefore,
+    AggregationTemporality is not included. Consequently, this also means
+    "StartTimeUnixNano" is ignored for all data points.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     DATA_POINTS_FIELD_NUMBER: builtins.int
-
     @property
     def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___IntDataPoint]: ...
-
     def __init__(self,
         *,
         data_points : typing.Optional[typing.Iterable[global___IntDataPoint]] = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"data_points",b"data_points"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data_points",b"data_points"]) -> None: ...
 global___IntGauge = IntGauge
 
 class Gauge(google.protobuf.message.Message):
+    """Gauge represents the type of a double scalar metric that always exports the
+    "current value" for every data point. It should be used for an "unknown"
+    aggregation.
+
+    A Gauge does not support different aggregation temporalities. Given the
+    aggregation is unknown, points cannot be combined using the same
+    aggregation, regardless of aggregation temporalities. Therefore,
+    AggregationTemporality is not included. Consequently, this also means
+    "StartTimeUnixNano" is ignored for all data points.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     DATA_POINTS_FIELD_NUMBER: builtins.int
-
     @property
     def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___NumberDataPoint]: ...
-
     def __init__(self,
         *,
         data_points : typing.Optional[typing.Iterable[global___NumberDataPoint]] = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"data_points",b"data_points"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data_points",b"data_points"]) -> None: ...
 global___Gauge = Gauge
 
 class IntSum(google.protobuf.message.Message):
+    """IntSum is deprecated.  Use Sum with an integer value in NumberDataPoint.
+
+    IntSum represents the type of a numeric int scalar metric that is calculated as
+    a sum of all reported measurements over a time interval.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     DATA_POINTS_FIELD_NUMBER: builtins.int
     AGGREGATION_TEMPORALITY_FIELD_NUMBER: builtins.int
     IS_MONOTONIC_FIELD_NUMBER: builtins.int
-    aggregation_temporality: global___AggregationTemporality.V = ...
-    is_monotonic: builtins.bool = ...
-
     @property
     def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___IntDataPoint]: ...
+    aggregation_temporality: global___AggregationTemporality.V = ...
+    """aggregation_temporality describes if the aggregator reports delta changes
+    since last report time, or cumulative changes since a fixed start time.
+    """
+
+    is_monotonic: builtins.bool = ...
+    """If "true" means that the sum is monotonic."""
 
     def __init__(self,
         *,
@@ -172,19 +460,26 @@ class IntSum(google.protobuf.message.Message):
         aggregation_temporality : global___AggregationTemporality.V = ...,
         is_monotonic : builtins.bool = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"aggregation_temporality",b"aggregation_temporality",u"data_points",b"data_points",u"is_monotonic",b"is_monotonic"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["aggregation_temporality",b"aggregation_temporality","data_points",b"data_points","is_monotonic",b"is_monotonic"]) -> None: ...
 global___IntSum = IntSum
 
 class Sum(google.protobuf.message.Message):
+    """Sum represents the type of a numeric double scalar metric that is calculated
+    as a sum of all reported measurements over a time interval.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     DATA_POINTS_FIELD_NUMBER: builtins.int
     AGGREGATION_TEMPORALITY_FIELD_NUMBER: builtins.int
     IS_MONOTONIC_FIELD_NUMBER: builtins.int
-    aggregation_temporality: global___AggregationTemporality.V = ...
-    is_monotonic: builtins.bool = ...
-
     @property
     def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___NumberDataPoint]: ...
+    aggregation_temporality: global___AggregationTemporality.V = ...
+    """aggregation_temporality describes if the aggregator reports delta changes
+    since last report time, or cumulative changes since a fixed start time.
+    """
+
+    is_monotonic: builtins.bool = ...
+    """If "true" means that the sum is monotonic."""
 
     def __init__(self,
         *,
@@ -192,74 +487,113 @@ class Sum(google.protobuf.message.Message):
         aggregation_temporality : global___AggregationTemporality.V = ...,
         is_monotonic : builtins.bool = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"aggregation_temporality",b"aggregation_temporality",u"data_points",b"data_points",u"is_monotonic",b"is_monotonic"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["aggregation_temporality",b"aggregation_temporality","data_points",b"data_points","is_monotonic",b"is_monotonic"]) -> None: ...
 global___Sum = Sum
 
 class IntHistogram(google.protobuf.message.Message):
+    """IntHistogram is deprecated, replaced by Histogram points using double-
+    valued exemplars.
+
+    This represents the type of a metric that is calculated by aggregating as a
+    Histogram of all reported int measurements over a time interval.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     DATA_POINTS_FIELD_NUMBER: builtins.int
     AGGREGATION_TEMPORALITY_FIELD_NUMBER: builtins.int
-    aggregation_temporality: global___AggregationTemporality.V = ...
-
     @property
     def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___IntHistogramDataPoint]: ...
+    aggregation_temporality: global___AggregationTemporality.V = ...
+    """aggregation_temporality describes if the aggregator reports delta changes
+    since last report time, or cumulative changes since a fixed start time.
+    """
 
     def __init__(self,
         *,
         data_points : typing.Optional[typing.Iterable[global___IntHistogramDataPoint]] = ...,
         aggregation_temporality : global___AggregationTemporality.V = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"aggregation_temporality",b"aggregation_temporality",u"data_points",b"data_points"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["aggregation_temporality",b"aggregation_temporality","data_points",b"data_points"]) -> None: ...
 global___IntHistogram = IntHistogram
 
 class Histogram(google.protobuf.message.Message):
+    """Histogram represents the type of a metric that is calculated by aggregating
+    as a Histogram of all reported double measurements over a time interval.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     DATA_POINTS_FIELD_NUMBER: builtins.int
     AGGREGATION_TEMPORALITY_FIELD_NUMBER: builtins.int
-    aggregation_temporality: global___AggregationTemporality.V = ...
-
     @property
     def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___HistogramDataPoint]: ...
+    aggregation_temporality: global___AggregationTemporality.V = ...
+    """aggregation_temporality describes if the aggregator reports delta changes
+    since last report time, or cumulative changes since a fixed start time.
+    """
 
     def __init__(self,
         *,
         data_points : typing.Optional[typing.Iterable[global___HistogramDataPoint]] = ...,
         aggregation_temporality : global___AggregationTemporality.V = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"aggregation_temporality",b"aggregation_temporality",u"data_points",b"data_points"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["aggregation_temporality",b"aggregation_temporality","data_points",b"data_points"]) -> None: ...
 global___Histogram = Histogram
 
 class Summary(google.protobuf.message.Message):
+    """Summary metric data are used to convey quantile summaries,
+    a Prometheus (see: https://prometheus.io/docs/concepts/metric_types/#summary)
+    and OpenMetrics (see: https://github.com/OpenObservability/OpenMetrics/blob/4dbf6075567ab43296eed941037c12951faafb92/protos/prometheus.proto#L45)
+    data type. These data points cannot always be merged in a meaningful way.
+    While they can be useful in some applications, histogram data points are
+    recommended for new applications.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     DATA_POINTS_FIELD_NUMBER: builtins.int
-
     @property
     def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___SummaryDataPoint]: ...
-
     def __init__(self,
         *,
         data_points : typing.Optional[typing.Iterable[global___SummaryDataPoint]] = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"data_points",b"data_points"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data_points",b"data_points"]) -> None: ...
 global___Summary = Summary
 
 class IntDataPoint(google.protobuf.message.Message):
+    """IntDataPoint is a single data point in a timeseries that describes the
+    time-varying values of a int64 metric.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     LABELS_FIELD_NUMBER: builtins.int
     START_TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
     TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
     VALUE_FIELD_NUMBER: builtins.int
     EXEMPLARS_FIELD_NUMBER: builtins.int
+    @property
+    def labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]:
+        """The set of labels that uniquely identify this timeseries."""
+        pass
     start_time_unix_nano: builtins.int = ...
+    """StartTimeUnixNano is optional but strongly encouraged, see the
+    the detiled comments above Metric.
+
+    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
+    1970.
+    """
+
     time_unix_nano: builtins.int = ...
+    """TimeUnixNano is required, see the detailed comments above Metric.
+
+    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
+    1970.
+    """
+
     value: builtins.int = ...
+    """value itself."""
 
     @property
-    def labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]: ...
-
-    @property
-    def exemplars(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___IntExemplar]: ...
-
+    def exemplars(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___IntExemplar]:
+        """(Optional) List of exemplars collected from
+        measurements that were used to form the data point
+        """
+        pass
     def __init__(self,
         *,
         labels : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]] = ...,
@@ -268,10 +602,13 @@ class IntDataPoint(google.protobuf.message.Message):
         value : builtins.int = ...,
         exemplars : typing.Optional[typing.Iterable[global___IntExemplar]] = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"exemplars",b"exemplars",u"labels",b"labels",u"start_time_unix_nano",b"start_time_unix_nano",u"time_unix_nano",b"time_unix_nano",u"value",b"value"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["exemplars",b"exemplars","labels",b"labels","start_time_unix_nano",b"start_time_unix_nano","time_unix_nano",b"time_unix_nano","value",b"value"]) -> None: ...
 global___IntDataPoint = IntDataPoint
 
 class NumberDataPoint(google.protobuf.message.Message):
+    """NumberDataPoint is a single data point in a timeseries that describes the
+    time-varying value of a double metric.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     ATTRIBUTES_FIELD_NUMBER: builtins.int
     LABELS_FIELD_NUMBER: builtins.int
@@ -280,20 +617,47 @@ class NumberDataPoint(google.protobuf.message.Message):
     AS_DOUBLE_FIELD_NUMBER: builtins.int
     AS_INT_FIELD_NUMBER: builtins.int
     EXEMPLARS_FIELD_NUMBER: builtins.int
+    @property
+    def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
+        """The set of key/value pairs that uniquely identify the timeseries from
+        where this point belongs. The list may be empty (may contain 0 elements).
+        """
+        pass
+    @property
+    def labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]:
+        """Labels is deprecated and will be removed soon.
+        1. Old senders and receivers that are not aware of this change will
+        continue using the `labels` field.
+        2. New senders, which are aware of this change MUST send only `attributes`.
+        3. New receivers, which are aware of this change MUST convert this into
+        `labels` by simply converting all int64 values into float.
+
+        This field will be removed in ~3 months, on July 1, 2021.
+        """
+        pass
     start_time_unix_nano: builtins.int = ...
+    """StartTimeUnixNano is optional but strongly encouraged, see the
+    the detiled comments above Metric.
+
+    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
+    1970.
+    """
+
     time_unix_nano: builtins.int = ...
+    """TimeUnixNano is required, see the detailed comments above Metric.
+
+    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
+    1970.
+    """
+
     as_double: builtins.float = ...
     as_int: builtins.int = ...
-
     @property
-    def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]: ...
-
-    @property
-    def labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]: ...
-
-    @property
-    def exemplars(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Exemplar]: ...
-
+    def exemplars(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Exemplar]:
+        """(Optional) List of exemplars collected from
+        measurements that were used to form the data point
+        """
+        pass
     def __init__(self,
         *,
         attributes : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue]] = ...,
@@ -304,12 +668,25 @@ class NumberDataPoint(google.protobuf.message.Message):
         as_int : builtins.int = ...,
         exemplars : typing.Optional[typing.Iterable[global___Exemplar]] = ...,
         ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal[u"as_double",b"as_double",u"as_int",b"as_int",u"value",b"value"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"as_double",b"as_double",u"as_int",b"as_int",u"attributes",b"attributes",u"exemplars",b"exemplars",u"labels",b"labels",u"start_time_unix_nano",b"start_time_unix_nano",u"time_unix_nano",b"time_unix_nano",u"value",b"value"]) -> None: ...
-    def WhichOneof(self, oneof_group: typing_extensions.Literal[u"value",b"value"]) -> typing_extensions.Literal["as_double","as_int"]: ...
+    def HasField(self, field_name: typing_extensions.Literal["as_double",b"as_double","as_int",b"as_int","value",b"value"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["as_double",b"as_double","as_int",b"as_int","attributes",b"attributes","exemplars",b"exemplars","labels",b"labels","start_time_unix_nano",b"start_time_unix_nano","time_unix_nano",b"time_unix_nano","value",b"value"]) -> None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["value",b"value"]) -> typing.Optional[typing_extensions.Literal["as_double","as_int"]]: ...
 global___NumberDataPoint = NumberDataPoint
 
 class IntHistogramDataPoint(google.protobuf.message.Message):
+    """IntHistogramDataPoint is deprecated; use HistogramDataPoint.
+
+    This is a single data point in a timeseries that describes
+    the time-varying values of a Histogram of int values. A Histogram contains
+    summary statistics for a population of values, it may optionally contain
+    the distribution of those values across a set of buckets.
+
+    If the histogram contains the distribution of values, then both
+    "explicit_bounds" and "bucket counts" fields must be defined.
+    If the histogram does not contain the distribution of values, then both
+    "explicit_bounds" and "bucket_counts" must be omitted and only "count" and
+    "sum" are known.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     LABELS_FIELD_NUMBER: builtins.int
     START_TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
@@ -319,19 +696,72 @@ class IntHistogramDataPoint(google.protobuf.message.Message):
     BUCKET_COUNTS_FIELD_NUMBER: builtins.int
     EXPLICIT_BOUNDS_FIELD_NUMBER: builtins.int
     EXEMPLARS_FIELD_NUMBER: builtins.int
+    @property
+    def labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]:
+        """The set of labels that uniquely identify this timeseries."""
+        pass
     start_time_unix_nano: builtins.int = ...
+    """StartTimeUnixNano is optional but strongly encouraged, see the
+    the detiled comments above Metric.
+
+    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
+    1970.
+    """
+
     time_unix_nano: builtins.int = ...
+    """TimeUnixNano is required, see the detailed comments above Metric.
+
+    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
+    1970.
+    """
+
     count: builtins.int = ...
+    """count is the number of values in the population. Must be non-negative. This
+    value must be equal to the sum of the "count" fields in buckets if a
+    histogram is provided.
+    """
+
     sum: builtins.int = ...
-    bucket_counts: google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int] = ...
-    explicit_bounds: google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.float] = ...
+    """sum of the values in the population. If count is zero then this field
+    must be zero. This value must be equal to the sum of the "sum" fields in
+    buckets if a histogram is provided.
+    """
 
     @property
-    def labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]: ...
+    def bucket_counts(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
+        """bucket_counts is an optional field contains the count values of histogram
+        for each bucket.
 
+        The sum of the bucket_counts must equal the value in the count field.
+
+        The number of elements in bucket_counts array must be by one greater than
+        the number of elements in explicit_bounds array.
+        """
+        pass
     @property
-    def exemplars(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___IntExemplar]: ...
+    def explicit_bounds(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.float]:
+        """explicit_bounds specifies buckets with explicitly defined bounds for values.
 
+        This defines size(explicit_bounds) + 1 (= N) buckets. The boundaries for
+        bucket at index i are:
+
+        (-infinity, explicit_bounds[i]] for i == 0
+        (explicit_bounds[i-1], explicit_bounds[i]] for 0 < i < N-1
+        (explicit_bounds[i], +infinity) for i == N-1
+
+        The values in the explicit_bounds array must be strictly increasing.
+
+        Histogram buckets are inclusive of their upper boundary, except the last
+        bucket where the boundary is at infinity. This format is intentionally
+        compatible with the OpenMetrics histogram definition.
+        """
+        pass
+    @property
+    def exemplars(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___IntExemplar]:
+        """(Optional) List of exemplars collected from
+        measurements that were used to form the data point
+        """
+        pass
     def __init__(self,
         *,
         labels : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]] = ...,
@@ -343,10 +773,21 @@ class IntHistogramDataPoint(google.protobuf.message.Message):
         explicit_bounds : typing.Optional[typing.Iterable[builtins.float]] = ...,
         exemplars : typing.Optional[typing.Iterable[global___IntExemplar]] = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"bucket_counts",b"bucket_counts",u"count",b"count",u"exemplars",b"exemplars",u"explicit_bounds",b"explicit_bounds",u"labels",b"labels",u"start_time_unix_nano",b"start_time_unix_nano",u"sum",b"sum",u"time_unix_nano",b"time_unix_nano"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["bucket_counts",b"bucket_counts","count",b"count","exemplars",b"exemplars","explicit_bounds",b"explicit_bounds","labels",b"labels","start_time_unix_nano",b"start_time_unix_nano","sum",b"sum","time_unix_nano",b"time_unix_nano"]) -> None: ...
 global___IntHistogramDataPoint = IntHistogramDataPoint
 
 class HistogramDataPoint(google.protobuf.message.Message):
+    """HistogramDataPoint is a single data point in a timeseries that describes the
+    time-varying values of a Histogram of double values. A Histogram contains
+    summary statistics for a population of values, it may optionally contain the
+    distribution of those values across a set of buckets.
+
+    If the histogram contains the distribution of values, then both
+    "explicit_bounds" and "bucket counts" fields must be defined.
+    If the histogram does not contain the distribution of values, then both
+    "explicit_bounds" and "bucket_counts" must be omitted and only "count" and
+    "sum" are known.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     ATTRIBUTES_FIELD_NUMBER: builtins.int
     LABELS_FIELD_NUMBER: builtins.int
@@ -357,22 +798,92 @@ class HistogramDataPoint(google.protobuf.message.Message):
     BUCKET_COUNTS_FIELD_NUMBER: builtins.int
     EXPLICIT_BOUNDS_FIELD_NUMBER: builtins.int
     EXEMPLARS_FIELD_NUMBER: builtins.int
+    @property
+    def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
+        """The set of key/value pairs that uniquely identify the timeseries from
+        where this point belongs. The list may be empty (may contain 0 elements).
+        """
+        pass
+    @property
+    def labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]:
+        """Labels is deprecated and will be removed soon.
+        1. Old senders and receivers that are not aware of this change will
+        continue using the `labels` field.
+        2. New senders, which are aware of this change MUST send only `attributes`.
+        3. New receivers, which are aware of this change MUST convert this into
+        `labels` by simply converting all int64 values into float.
+
+        This field will be removed in ~3 months, on July 1, 2021.
+        """
+        pass
     start_time_unix_nano: builtins.int = ...
+    """StartTimeUnixNano is optional but strongly encouraged, see the
+    the detiled comments above Metric.
+
+    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
+    1970.
+    """
+
     time_unix_nano: builtins.int = ...
+    """TimeUnixNano is required, see the detailed comments above Metric.
+
+    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
+    1970.
+    """
+
     count: builtins.int = ...
+    """count is the number of values in the population. Must be non-negative. This
+    value must be equal to the sum of the "count" fields in buckets if a
+    histogram is provided.
+    """
+
     sum: builtins.float = ...
-    bucket_counts: google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int] = ...
-    explicit_bounds: google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.float] = ...
+    """sum of the values in the population. If count is zero then this field
+    must be zero. This value must be equal to the sum of the "sum" fields in
+    buckets if a histogram is provided.
+
+    Note: Sum should only be filled out when measuring non-negative discrete
+    events, and is assumed to be monotonic over the values of these events.
+    Negative events *can* be recorded, but sum should not be filled out when
+    doing so.  This is specifically to enforce compatibility w/ OpenMetrics,
+    see: https://github.com/OpenObservability/OpenMetrics/blob/main/specification/OpenMetrics.md#histogram
+    """
 
     @property
-    def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]: ...
+    def bucket_counts(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
+        """bucket_counts is an optional field contains the count values of histogram
+        for each bucket.
 
+        The sum of the bucket_counts must equal the value in the count field.
+
+        The number of elements in bucket_counts array must be by one greater than
+        the number of elements in explicit_bounds array.
+        """
+        pass
     @property
-    def labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]: ...
+    def explicit_bounds(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.float]:
+        """explicit_bounds specifies buckets with explicitly defined bounds for values.
 
+        This defines size(explicit_bounds) + 1 (= N) buckets. The boundaries for
+        bucket at index i are:
+
+        (-infinity, explicit_bounds[i]] for i == 0
+        (explicit_bounds[i-1], explicit_bounds[i]] for 0 < i < N-1
+        (explicit_bounds[i], +infinity) for i == N-1
+
+        The values in the explicit_bounds array must be strictly increasing.
+
+        Histogram buckets are inclusive of their upper boundary, except the last
+        bucket where the boundary is at infinity. This format is intentionally
+        compatible with the OpenMetrics histogram definition.
+        """
+        pass
     @property
-    def exemplars(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Exemplar]: ...
-
+    def exemplars(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Exemplar]:
+        """(Optional) List of exemplars collected from
+        measurements that were used to form the data point
+        """
+        pass
     def __init__(self,
         *,
         attributes : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue]] = ...,
@@ -385,24 +896,44 @@ class HistogramDataPoint(google.protobuf.message.Message):
         explicit_bounds : typing.Optional[typing.Iterable[builtins.float]] = ...,
         exemplars : typing.Optional[typing.Iterable[global___Exemplar]] = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"attributes",b"attributes",u"bucket_counts",b"bucket_counts",u"count",b"count",u"exemplars",b"exemplars",u"explicit_bounds",b"explicit_bounds",u"labels",b"labels",u"start_time_unix_nano",b"start_time_unix_nano",u"sum",b"sum",u"time_unix_nano",b"time_unix_nano"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","bucket_counts",b"bucket_counts","count",b"count","exemplars",b"exemplars","explicit_bounds",b"explicit_bounds","labels",b"labels","start_time_unix_nano",b"start_time_unix_nano","sum",b"sum","time_unix_nano",b"time_unix_nano"]) -> None: ...
 global___HistogramDataPoint = HistogramDataPoint
 
 class SummaryDataPoint(google.protobuf.message.Message):
+    """SummaryDataPoint is a single data point in a timeseries that describes the
+    time-varying values of a Summary metric.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     class ValueAtQuantile(google.protobuf.message.Message):
+        """Represents the value at a given quantile of a distribution.
+
+        To record Min and Max values following conventions are used:
+        - The 1.0 quantile is equivalent to the maximum value observed.
+        - The 0.0 quantile is equivalent to the minimum value observed.
+
+        See the following issue for more context:
+        https://github.com/open-telemetry/opentelemetry-proto/issues/125
+        """
         DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
         QUANTILE_FIELD_NUMBER: builtins.int
         VALUE_FIELD_NUMBER: builtins.int
         quantile: builtins.float = ...
+        """The quantile of a distribution. Must be in the interval
+        [0.0, 1.0].
+        """
+
         value: builtins.float = ...
+        """The value at the given quantile of a distribution.
+
+        Quantile values must NOT be negative.
+        """
 
         def __init__(self,
             *,
             quantile : builtins.float = ...,
             value : builtins.float = ...,
             ) -> None: ...
-        def ClearField(self, field_name: typing_extensions.Literal[u"quantile",b"quantile",u"value",b"value"]) -> None: ...
+        def ClearField(self, field_name: typing_extensions.Literal["quantile",b"quantile","value",b"value"]) -> None: ...
 
     ATTRIBUTES_FIELD_NUMBER: builtins.int
     LABELS_FIELD_NUMBER: builtins.int
@@ -411,20 +942,59 @@ class SummaryDataPoint(google.protobuf.message.Message):
     COUNT_FIELD_NUMBER: builtins.int
     SUM_FIELD_NUMBER: builtins.int
     QUANTILE_VALUES_FIELD_NUMBER: builtins.int
+    @property
+    def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
+        """The set of key/value pairs that uniquely identify the timeseries from
+        where this point belongs. The list may be empty (may contain 0 elements).
+        """
+        pass
+    @property
+    def labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]:
+        """Labels is deprecated and will be removed soon.
+        1. Old senders and receivers that are not aware of this change will
+        continue using the `labels` field.
+        2. New senders, which are aware of this change MUST send only `attributes`.
+        3. New receivers, which are aware of this change MUST convert this into
+        `labels` by simply converting all int64 values into float.
+
+        This field will be removed in ~3 months, on July 1, 2021.
+        """
+        pass
     start_time_unix_nano: builtins.int = ...
+    """StartTimeUnixNano is optional but strongly encouraged, see the
+    the detiled comments above Metric.
+
+    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
+    1970.
+    """
+
     time_unix_nano: builtins.int = ...
+    """TimeUnixNano is required, see the detailed comments above Metric.
+
+    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
+    1970.
+    """
+
     count: builtins.int = ...
+    """count is the number of values in the population. Must be non-negative."""
+
     sum: builtins.float = ...
+    """sum of the values in the population. If count is zero then this field
+    must be zero.
+
+    Note: Sum should only be filled out when measuring non-negative discrete
+    events, and is assumed to be monotonic over the values of these events.
+    Negative events *can* be recorded, but sum should not be filled out when
+    doing so.  This is specifically to enforce compatibility w/ OpenMetrics,
+    see: https://github.com/OpenObservability/OpenMetrics/blob/main/specification/OpenMetrics.md#summary
+    """
 
     @property
-    def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]: ...
-
-    @property
-    def labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]: ...
-
-    @property
-    def quantile_values(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___SummaryDataPoint.ValueAtQuantile]: ...
-
+    def quantile_values(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___SummaryDataPoint.ValueAtQuantile]:
+        """(Optional) list of values at different quantiles of the distribution calculated
+        from the current snapshot. The quantiles must be strictly increasing.
+        """
+        pass
     def __init__(self,
         *,
         attributes : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue]] = ...,
@@ -435,23 +1005,49 @@ class SummaryDataPoint(google.protobuf.message.Message):
         sum : builtins.float = ...,
         quantile_values : typing.Optional[typing.Iterable[global___SummaryDataPoint.ValueAtQuantile]] = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"attributes",b"attributes",u"count",b"count",u"labels",b"labels",u"quantile_values",b"quantile_values",u"start_time_unix_nano",b"start_time_unix_nano",u"sum",b"sum",u"time_unix_nano",b"time_unix_nano"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","count",b"count","labels",b"labels","quantile_values",b"quantile_values","start_time_unix_nano",b"start_time_unix_nano","sum",b"sum","time_unix_nano",b"time_unix_nano"]) -> None: ...
 global___SummaryDataPoint = SummaryDataPoint
 
 class IntExemplar(google.protobuf.message.Message):
+    """A representation of an exemplar, which is a sample input int measurement.
+    Exemplars also hold information about the environment when the measurement
+    was recorded, for example the span and trace ID of the active span when the
+    exemplar was recorded.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     FILTERED_LABELS_FIELD_NUMBER: builtins.int
     TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
     VALUE_FIELD_NUMBER: builtins.int
     SPAN_ID_FIELD_NUMBER: builtins.int
     TRACE_ID_FIELD_NUMBER: builtins.int
-    time_unix_nano: builtins.int = ...
-    value: builtins.int = ...
-    span_id: builtins.bytes = ...
-    trace_id: builtins.bytes = ...
-
     @property
-    def filtered_labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]: ...
+    def filtered_labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]:
+        """The set of labels that were filtered out by the aggregator, but recorded
+        alongside the original measurement. Only labels that were filtered out
+        by the aggregator should be included
+        """
+        pass
+    time_unix_nano: builtins.int = ...
+    """time_unix_nano is the exact time when this exemplar was recorded
+
+    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
+    1970.
+    """
+
+    value: builtins.int = ...
+    """Numerical int value of the measurement that was recorded."""
+
+    span_id: builtins.bytes = ...
+    """(Optional) Span ID of the exemplar trace.
+    span_id may be missing if the measurement is not recorded inside a trace
+    or if the trace is not sampled.
+    """
+
+    trace_id: builtins.bytes = ...
+    """(Optional) Trace ID of the exemplar trace.
+    trace_id may be missing if the measurement is not recorded inside a trace
+    or if the trace is not sampled.
+    """
 
     def __init__(self,
         *,
@@ -461,10 +1057,15 @@ class IntExemplar(google.protobuf.message.Message):
         span_id : builtins.bytes = ...,
         trace_id : builtins.bytes = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"filtered_labels",b"filtered_labels",u"span_id",b"span_id",u"time_unix_nano",b"time_unix_nano",u"trace_id",b"trace_id",u"value",b"value"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["filtered_labels",b"filtered_labels","span_id",b"span_id","time_unix_nano",b"time_unix_nano","trace_id",b"trace_id","value",b"value"]) -> None: ...
 global___IntExemplar = IntExemplar
 
 class Exemplar(google.protobuf.message.Message):
+    """A representation of an exemplar, which is a sample input measurement.
+    Exemplars also hold information about the environment when the measurement
+    was recorded, for example the span and trace ID of the active span when the
+    exemplar was recorded.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     FILTERED_ATTRIBUTES_FIELD_NUMBER: builtins.int
     FILTERED_LABELS_FIELD_NUMBER: builtins.int
@@ -473,17 +1074,46 @@ class Exemplar(google.protobuf.message.Message):
     AS_INT_FIELD_NUMBER: builtins.int
     SPAN_ID_FIELD_NUMBER: builtins.int
     TRACE_ID_FIELD_NUMBER: builtins.int
+    @property
+    def filtered_attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
+        """The set of key/value pairs that were filtered out by the aggregator, but
+        recorded alongside the original measurement. Only key/value pairs that were
+        filtered out by the aggregator should be included
+        """
+        pass
+    @property
+    def filtered_labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]:
+        """Labels is deprecated and will be removed soon.
+        1. Old senders and receivers that are not aware of this change will
+        continue using the `filtered_labels` field.
+        2. New senders, which are aware of this change MUST send only
+        `filtered_attributes`.
+        3. New receivers, which are aware of this change MUST convert this into
+        `filtered_labels` by simply converting all int64 values into float.
+
+        This field will be removed in ~3 months, on July 1, 2021.
+        """
+        pass
     time_unix_nano: builtins.int = ...
+    """time_unix_nano is the exact time when this exemplar was recorded
+
+    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
+    1970.
+    """
+
     as_double: builtins.float = ...
     as_int: builtins.int = ...
     span_id: builtins.bytes = ...
+    """(Optional) Span ID of the exemplar trace.
+    span_id may be missing if the measurement is not recorded inside a trace
+    or if the trace is not sampled.
+    """
+
     trace_id: builtins.bytes = ...
-
-    @property
-    def filtered_attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]: ...
-
-    @property
-    def filtered_labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]: ...
+    """(Optional) Trace ID of the exemplar trace.
+    trace_id may be missing if the measurement is not recorded inside a trace
+    or if the trace is not sampled.
+    """
 
     def __init__(self,
         *,
@@ -495,7 +1125,7 @@ class Exemplar(google.protobuf.message.Message):
         span_id : builtins.bytes = ...,
         trace_id : builtins.bytes = ...,
         ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal[u"as_double",b"as_double",u"as_int",b"as_int",u"value",b"value"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal[u"as_double",b"as_double",u"as_int",b"as_int",u"filtered_attributes",b"filtered_attributes",u"filtered_labels",b"filtered_labels",u"span_id",b"span_id",u"time_unix_nano",b"time_unix_nano",u"trace_id",b"trace_id",u"value",b"value"]) -> None: ...
-    def WhichOneof(self, oneof_group: typing_extensions.Literal[u"value",b"value"]) -> typing_extensions.Literal["as_double","as_int"]: ...
+    def HasField(self, field_name: typing_extensions.Literal["as_double",b"as_double","as_int",b"as_int","value",b"value"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["as_double",b"as_double","as_int",b"as_int","filtered_attributes",b"filtered_attributes","filtered_labels",b"filtered_labels","span_id",b"span_id","time_unix_nano",b"time_unix_nano","trace_id",b"trace_id","value",b"value"]) -> None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["value",b"value"]) -> typing.Optional[typing_extensions.Literal["as_double","as_int"]]: ...
 global___Exemplar = Exemplar

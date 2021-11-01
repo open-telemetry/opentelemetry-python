@@ -75,6 +75,7 @@ either implicit or explicit context propagation consistently throughout.
 
 
 import os
+import typing
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 from enum import Enum
@@ -107,6 +108,7 @@ from opentelemetry.trace.span import (
 )
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
+from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
 
 logger = getLogger(__name__)
@@ -186,7 +188,8 @@ class TracerProvider(ABC):
     def get_tracer(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: str = "",
+        instrumenting_library_version: typing.Optional[str] = None,
+        schema_url: typing.Optional[str] = None,
     ) -> "Tracer":
         """Returns a `Tracer` for use by the given instrumentation library.
 
@@ -208,6 +211,8 @@ class TracerProvider(ABC):
             instrumenting_library_version: Optional. The version string of the
                 instrumenting library.  Usually this should be the same as
                 ``pkg_resources.get_distribution(instrumenting_library_name).version``.
+
+            schema_url: Optional. Specifies the Schema URL of the emitted telemetry.
         """
 
 
@@ -220,7 +225,8 @@ class _DefaultTracerProvider(TracerProvider):
     def get_tracer(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: str = "",
+        instrumenting_library_version: typing.Optional[str] = None,
+        schema_url: typing.Optional[str] = None,
     ) -> "Tracer":
         # pylint:disable=no-self-use,unused-argument
         return _DefaultTracer()
@@ -230,14 +236,19 @@ class ProxyTracerProvider(TracerProvider):
     def get_tracer(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: str = "",
+        instrumenting_library_version: typing.Optional[str] = None,
+        schema_url: typing.Optional[str] = None,
     ) -> "Tracer":
         if _TRACER_PROVIDER:
             return _TRACER_PROVIDER.get_tracer(
-                instrumenting_module_name, instrumenting_library_version
+                instrumenting_module_name,
+                instrumenting_library_version,
+                schema_url,
             )
         return ProxyTracer(
-            instrumenting_module_name, instrumenting_library_version
+            instrumenting_module_name,
+            instrumenting_library_version,
+            schema_url,
         )
 
 
@@ -375,10 +386,12 @@ class ProxyTracer(Tracer):
     def __init__(
         self,
         instrumenting_module_name: str,
-        instrumenting_library_version: str,
+        instrumenting_library_version: typing.Optional[str] = None,
+        schema_url: typing.Optional[str] = None,
     ):
         self._instrumenting_module_name = instrumenting_module_name
         self._instrumenting_library_version = instrumenting_library_version
+        self._schema_url = schema_url
         self._real_tracer: Optional[Tracer] = None
         self._noop_tracer = _DefaultTracer()
 
@@ -391,6 +404,7 @@ class ProxyTracer(Tracer):
             self._real_tracer = _TRACER_PROVIDER.get_tracer(
                 self._instrumenting_module_name,
                 self._instrumenting_library_version,
+                self._schema_url,
             )
             return self._real_tracer
         return self._noop_tracer
@@ -439,14 +453,16 @@ class _DefaultTracer(Tracer):
         yield INVALID_SPAN
 
 
-_TRACER_PROVIDER = None
-_PROXY_TRACER_PROVIDER = None
+_TRACER_PROVIDER_SET_ONCE = Once()
+_TRACER_PROVIDER: Optional[TracerProvider] = None
+_PROXY_TRACER_PROVIDER = ProxyTracerProvider()
 
 
 def get_tracer(
     instrumenting_module_name: str,
-    instrumenting_library_version: str = "",
+    instrumenting_library_version: typing.Optional[str] = None,
     tracer_provider: Optional[TracerProvider] = None,
+    schema_url: typing.Optional[str] = None,
 ) -> "Tracer":
     """Returns a `Tracer` for use by the given instrumentation library.
 
@@ -458,8 +474,19 @@ def get_tracer(
     if tracer_provider is None:
         tracer_provider = get_tracer_provider()
     return tracer_provider.get_tracer(
-        instrumenting_module_name, instrumenting_library_version
+        instrumenting_module_name, instrumenting_library_version, schema_url
     )
+
+
+def _set_tracer_provider(tracer_provider: TracerProvider, log: bool) -> None:
+    def set_tp() -> None:
+        global _TRACER_PROVIDER  # pylint: disable=global-statement
+        _TRACER_PROVIDER = tracer_provider
+
+    did_set = _TRACER_PROVIDER_SET_ONCE.do_once(set_tp)
+
+    if log and not did_set:
+        logger.warning("Overriding of current TracerProvider is not allowed")
 
 
 def set_tracer_provider(tracer_provider: TracerProvider) -> None:
@@ -468,34 +495,23 @@ def set_tracer_provider(tracer_provider: TracerProvider) -> None:
     This can only be done once, a warning will be logged if any furter attempt
     is made.
     """
-    global _TRACER_PROVIDER  # pylint: disable=global-statement
-
-    if _TRACER_PROVIDER is not None:
-        logger.warning("Overriding of current TracerProvider is not allowed")
-        return
-
-    _TRACER_PROVIDER = tracer_provider
+    _set_tracer_provider(tracer_provider, log=True)
 
 
 def get_tracer_provider() -> TracerProvider:
     """Gets the current global :class:`~.TracerProvider` object."""
-    # pylint: disable=global-statement
-    global _TRACER_PROVIDER
-    global _PROXY_TRACER_PROVIDER
-
     if _TRACER_PROVIDER is None:
         # if a global tracer provider has not been set either via code or env
         # vars, return a proxy tracer provider
         if OTEL_PYTHON_TRACER_PROVIDER not in os.environ:
-            if not _PROXY_TRACER_PROVIDER:
-                _PROXY_TRACER_PROVIDER = ProxyTracerProvider()
             return _PROXY_TRACER_PROVIDER
 
-        _TRACER_PROVIDER = cast(  # type: ignore
-            "TracerProvider",
-            _load_provider(OTEL_PYTHON_TRACER_PROVIDER, "tracer_provider"),
+        tracer_provider: TracerProvider = _load_provider(
+            OTEL_PYTHON_TRACER_PROVIDER, "tracer_provider"
         )
-    return _TRACER_PROVIDER
+        _set_tracer_provider(tracer_provider, log=False)
+    # _TRACER_PROVIDER will have been set by one thread
+    return cast("TracerProvider", _TRACER_PROVIDER)
 
 
 @contextmanager  # type: ignore
@@ -537,7 +553,7 @@ def use_span(
                 span.set_status(
                     Status(
                         status_code=StatusCode.ERROR,
-                        description="{}: {}".format(type(exc).__name__, exc),
+                        description=f"{type(exc).__name__}: {exc}",
                     )
                 )
         raise
