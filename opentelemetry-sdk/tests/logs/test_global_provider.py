@@ -25,7 +25,7 @@ from opentelemetry.sdk._logs import (
     set_log_emitter_provider,
 )
 from opentelemetry.sdk.environment_variables import (
-    OTEL_PYTHON_LOG_EMITTER_PROVIDER,
+    _OTEL_PYTHON_LOG_EMITTER_PROVIDER,
 )
 
 
@@ -62,13 +62,13 @@ class TestGlobals(unittest.TestCase):
 
     @patch.dict(
         "os.environ",
-        {OTEL_PYTHON_LOG_EMITTER_PROVIDER: "sdk_log_emitter_provider"},
+        {_OTEL_PYTHON_LOG_EMITTER_PROVIDER: "sdk_log_emitter_provider"},
     )
     def test_sdk_log_emitter_provider(self):
         reload(_logs)
         self.check_override_not_allowed()
 
-    @patch.dict("os.environ", {OTEL_PYTHON_LOG_EMITTER_PROVIDER: "unknown"})
+    @patch.dict("os.environ", {_OTEL_PYTHON_LOG_EMITTER_PROVIDER: "unknown"})
     def test_unknown_log_emitter_provider(self):
         reload(_logs)
         with self.assertRaises(Exception):

@@ -23,7 +23,7 @@ from typing import Any, Callable, Optional, Tuple, Union, cast
 
 from opentelemetry.sdk._logs.severity import SeverityNumber, std_to_otlp
 from opentelemetry.sdk.environment_variables import (
-    OTEL_PYTHON_LOG_EMITTER_PROVIDER,
+    _OTEL_PYTHON_LOG_EMITTER_PROVIDER,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str
@@ -450,14 +450,14 @@ def get_log_emitter_provider() -> LogEmitterProvider:
     """Gets the current global :class:`~.LogEmitterProvider` object."""
     global _LOG_EMITTER_PROVIDER  # pylint: disable=global-statement
     if _LOG_EMITTER_PROVIDER is None:
-        if OTEL_PYTHON_LOG_EMITTER_PROVIDER not in os.environ:
+        if _OTEL_PYTHON_LOG_EMITTER_PROVIDER not in os.environ:
             _LOG_EMITTER_PROVIDER = LogEmitterProvider()
             return _LOG_EMITTER_PROVIDER
 
         _LOG_EMITTER_PROVIDER = cast(
             "LogEmitterProvider",
             _load_provider(
-                OTEL_PYTHON_LOG_EMITTER_PROVIDER, "log_emitter_provider"
+                _OTEL_PYTHON_LOG_EMITTER_PROVIDER, "log_emitter_provider"
             ),
         )
 
