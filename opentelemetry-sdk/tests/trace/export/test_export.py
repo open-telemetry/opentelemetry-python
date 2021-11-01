@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import os
+import sys
 import threading
 import time
 import unittest
@@ -365,6 +366,10 @@ class TestBatchSpanProcessor(unittest.TestCase):
         for span in spans:
             self.assertIn(span.name, expected)
 
+    @unittest.skipUnless(
+        hasattr(os, "fork") and sys.version_info >= (3, 7),
+        "needs *nix and minor version 7 or later",
+    )
     def test_batch_span_processor_fork(self):
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
