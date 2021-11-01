@@ -30,6 +30,9 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_SCHEDULE_DELAY,
 )
 from opentelemetry.sdk.trace import export
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+    InMemorySpanExporter,
+)
 
 
 class MySpanExporter(export.SpanExporter):
@@ -354,6 +357,44 @@ class TestBatchSpanProcessor(unittest.TestCase):
 
         self.assertTrue(span_processor.force_flush())
         self.assertEqual(len(spans_names_list), 0)
+        span_processor.shutdown()
+
+    def _check_fork_trace(self, exporter, expected):
+        time.sleep(0.5)  # give some time for the exporter to upload spans
+        spans = exporter.get_finished_spans()
+        for span in spans:
+            self.assertIn(span.name, expected)
+
+    def test_batch_span_processor_fork(self):
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(__name__)
+
+        exporter = InMemorySpanExporter()
+        span_processor = export.BatchSpanProcessor(
+            exporter,
+            max_queue_size=256,
+            max_export_batch_size=64,
+            schedule_delay_millis=100,
+        )
+        tracer_provider.add_span_processor(span_processor)
+        with tracer.start_as_current_span("foo"):
+            pass
+        time.sleep(0.5)  # give some time for the exporter to upload spans
+
+        self.assertTrue(span_processor.force_flush())
+        self.assertEqual(len(exporter.get_finished_spans()), 1)
+        exporter.clear()
+        pid = os.fork()
+        if pid:
+            with tracer.start_as_current_span("parent"):
+                pass
+            self._check_fork_trace(exporter, ["parent"])
+        else:
+            with tracer.start_as_current_span("child"):
+                with tracer.start_as_current_span("inner"):
+                    pass
+            self._check_fork_trace(exporter, ["child", "inner"])
+
         span_processor.shutdown()
 
     def test_batch_span_processor_scheduled_delay(self):
