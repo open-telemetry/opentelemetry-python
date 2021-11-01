@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1887](https://github.com/open-telemetry/opentelemetry-python/pull/1887))
 - Make batch processor fork aware and reinit when needed
   ([#2242](https://github.com/open-telemetry/opentelemetry-python/pull/2242))
+- `opentelemetry-sdk` Sanitize env var resource attribute pairs
+  ([#2256](https://github.com/open-telemetry/opentelemetry-python/pull/2256))
 
 ## [1.6.2-0.25b2](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.2-0.25b2) - 2021-10-19
 
