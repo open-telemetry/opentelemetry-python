@@ -20,7 +20,7 @@ from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     AGGREGATION_TEMPORALITY_CUMULATIVE,
     AGGREGATION_TEMPORALITY_DELTA,
 )
-from opentelemetry.sdk.metrics.aggregation import (
+from opentelemetry.sdk._metrics.aggregation import (
     ExplicitBucketHistogramAggregation,
     LastValueAggregation,
     NoneAggregation,

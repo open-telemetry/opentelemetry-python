@@ -19,7 +19,7 @@
 # all instances. Implementations of these classes must not make any change to
 # this default dictionary in __init__.
 
-from opentelemetry.metrics.instrument import (
+from opentelemetry._metrics.instrument import (
     Counter,
     Histogram,
     ObservableCounter,
@@ -27,7 +27,7 @@ from opentelemetry.metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk.metrics.aggregation import (
+from opentelemetry.sdk._metrics.aggregation import (
     ExplicitBucketHistogramAggregation,
     LastValueAggregation,
     SumAggregation,
