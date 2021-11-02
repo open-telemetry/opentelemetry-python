@@ -372,7 +372,9 @@ class BatchSpanProcessor(SpanProcessor):
             return True
 
         if self.worker_thread is None:
-            logger.warning("worker thread not init, ignoring call to force_flush().")
+            logger.warning(
+                "worker thread not init, ignoring call to force_flush()."
+            )
             return True
 
         with self.condition:

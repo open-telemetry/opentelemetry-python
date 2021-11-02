@@ -217,12 +217,17 @@ class TestBatchSpanProcessor(unittest.TestCase):
         spans_names_list = []
         my_exporter = MySpanExporter(destination=spans_names_list)
         span_processor = export.BatchSpanProcessor(my_exporter)
-        self.assertIsNone(span_processor.worker_thread, "worker thread at __init__() not init")
+        self.assertIsNone(
+            span_processor.worker_thread,
+            "worker thread at __init__() not init",
+        )
         span_names = ["xxx", "bar", "foo"]
 
         for name in span_names:
             _create_start_and_end_span(name, span_processor)
-        self.assertIsNotNone(span_processor.worker_thread, "worker thread at on_end() init")
+        self.assertIsNotNone(
+            span_processor.worker_thread, "worker thread at on_end() init"
+        )
 
         span_processor.shutdown()
         self.assertTrue(my_exporter.is_shutdown)
