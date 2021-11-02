@@ -399,7 +399,7 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
             exporter.clear()
 
             def _target():
-                with tracer.start_as_current_span(f"span") as s:
+                with tracer.start_as_current_span("span") as s:
                     s.set_attribute("i", "1")
                     with tracer.start_as_current_span("temp"):
                         pass
