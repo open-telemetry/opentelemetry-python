@@ -180,9 +180,8 @@ class BatchSpanProcessor(SpanProcessor):
         self.queue = collections.deque(
             [], max_queue_size
         )  # type: typing.Deque[Span]
-        self.worker_thread = threading.Thread(
-            name="OtelBatchSpanProcessor", target=self.worker, daemon=True
-        )
+        # at on_end delay init worker thread
+        self.worker_thread = None
         self.condition = threading.Condition(threading.Lock())
         self._flush_request = None  # type: typing.Optional[_FlushRequest]
         self.schedule_delay_millis = schedule_delay_millis
@@ -196,7 +195,6 @@ class BatchSpanProcessor(SpanProcessor):
         self.spans_list = [
             None
         ] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
-        self.worker_thread.start()
 
     def on_start(
         self, span: Span, parent_context: typing.Optional[Context] = None
@@ -204,6 +202,13 @@ class BatchSpanProcessor(SpanProcessor):
         pass
 
     def on_end(self, span: ReadableSpan) -> None:
+        # delay init worker_thread
+        if self.worker_thread is None:
+            self.worker_thread = threading.Thread(
+                name="OtelBatchSpanProcessor", target=self.worker, daemon=True
+            )
+            self.worker_thread.start()
+
         if self.done:
             logger.warning("Already shutdown, dropping span.")
             return
@@ -366,6 +371,10 @@ class BatchSpanProcessor(SpanProcessor):
             logger.warning("Already shutdown, ignoring call to force_flush().")
             return True
 
+        if self.worker_thread is None:
+            logger.warning("worker thread not init, ignoring call to force_flush().")
+            return True
+
         with self.condition:
             flush_request = self._get_or_create_flush_request()
             # signal the worker thread to flush and wait for it to finish
@@ -382,7 +391,9 @@ class BatchSpanProcessor(SpanProcessor):
         self.done = True
         with self.condition:
             self.condition.notify_all()
-        self.worker_thread.join()
+        # worker_thread maybe not init
+        if self.worker_thread:
+            self.worker_thread.join()
         self.span_exporter.shutdown()
 
 

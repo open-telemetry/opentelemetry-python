@@ -213,6 +213,21 @@ class TestBatchSpanProcessor(unittest.TestCase):
         # force_flush()
         self.assertListEqual(span_names, spans_names_list)
 
+    def test_work_thread_delay_init(self):
+        spans_names_list = []
+        my_exporter = MySpanExporter(destination=spans_names_list)
+        span_processor = export.BatchSpanProcessor(my_exporter)
+        self.assertIsNone(span_processor.worker_thread, "worker thread at __init__() not init")
+        span_names = ["xxx", "bar", "foo"]
+
+        for name in span_names:
+            _create_start_and_end_span(name, span_processor)
+        self.assertIsNotNone(span_processor.worker_thread, "worker thread at on_end() init")
+
+        span_processor.shutdown()
+        self.assertTrue(my_exporter.is_shutdown)
+        self.assertListEqual(span_names, spans_names_list)
+
     def test_flush(self):
         spans_names_list = []
 
