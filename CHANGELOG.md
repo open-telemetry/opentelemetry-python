@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2207](https://github.com/open-telemetry/opentelemetry-python/pull/2207))
 - remove `X-B3-ParentSpanId` for B3 propagator as per OpenTelemetry specification
   ([#2237](https://github.com/open-telemetry/opentelemetry-python/pull/2237))
+- Delay init worker_thread at on_end() in the BatchProcessor, avoid fork process will thread not work ([#2257](https://github.com/open-telemetry/opentelemetry-python/pull/2257))
 
 ## [1.6.2-0.25b2](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.2-0.25b2) - 2021-10-19
 
