@@ -200,7 +200,9 @@ class BatchSpanProcessor(SpanProcessor):
         self.worker_thread.start()
         # Only available in *nix since py37.
         if hasattr(os, "register_at_fork"):
-            os.register_at_fork(after_in_child=self._at_fork_reinit)
+            os.register_at_fork(
+                after_in_child=self._at_fork_reinit
+            )  # pylint: disable=broad-except
 
     def on_start(
         self, span: Span, parent_context: typing.Optional[Context] = None

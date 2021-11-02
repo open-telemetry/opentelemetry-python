@@ -34,6 +34,7 @@ from opentelemetry.sdk.trace import export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
+from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 
 
 class MySpanExporter(export.SpanExporter):
@@ -161,7 +162,7 @@ def _create_start_and_end_span(name, span_processor):
     span.end()
 
 
-class TestBatchSpanProcessor(unittest.TestCase):
+class TestBatchSpanProcessor(ConcurrencyTestBase):
     @mock.patch.dict(
         "os.environ",
         {
@@ -379,7 +380,7 @@ class TestBatchSpanProcessor(unittest.TestCase):
             exporter,
             max_queue_size=256,
             max_export_batch_size=64,
-            schedule_delay_millis=100,
+            schedule_delay_millis=10,
         )
         tracer_provider.add_span_processor(span_processor)
         with tracer.start_as_current_span("foo"):
@@ -395,6 +396,21 @@ class TestBatchSpanProcessor(unittest.TestCase):
                 pass
             self._check_fork_trace(exporter, ["parent"])
         else:
+            exporter.clear()
+
+            def _target():
+                with tracer.start_as_current_span(f"span") as s:
+                    s.set_attribute("i", "1")
+                    with tracer.start_as_current_span("temp"):
+                        pass
+
+            self.run_with_many_threads(_target, 100)
+
+            time.sleep(0.5)
+
+            spans = exporter.get_finished_spans()
+            self.assertEqual(len(spans), 200)
+            exporter.clear()
             with tracer.start_as_current_span("child"):
                 with tracer.start_as_current_span("inner"):
                     pass
