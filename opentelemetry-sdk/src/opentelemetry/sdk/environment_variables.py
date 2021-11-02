@@ -370,7 +370,7 @@ The following two environment variables have the same effect
 If both are set, :envvar:`OTEL_SERVICE_NAME` takes precedence.
 """
 
-OTEL_PYTHON_LOG_EMITTER_PROVIDER = "OTEL_PYTHON_LOG_EMITTER_PROVIDER"
+_OTEL_PYTHON_LOG_EMITTER_PROVIDER = "OTEL_PYTHON_LOG_EMITTER_PROVIDER"
 """
 .. envvar:: OTEL_PYTHON_LOG_EMITTER_PROVIDER
 
