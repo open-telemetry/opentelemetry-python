@@ -11,9 +11,8 @@ The Python `OpenTelemetry <https://opentelemetry.io/>`_ client.
 This documentation describes the :doc:`opentelemetry-api <api/api>`,
 :doc:`opentelemetry-sdk <sdk/sdk>`, and several `integration packages <#integrations>`_.
 
-The library is currently stable for tracing. Support for `metrics <https://github.com/open-telemetry/opentelemetry-python/tree/metrics>`_
-and `logging <https://github.com/open-telemetry/opentelemetry-python/tree/logs>`_ is currently under development and is considered
-experimental.
+The library is currently stable for tracing. Support for :doc:`metrics <api/metrics>` and
+:doc:`logging <sdk/logs>` are currently under development and are considered experimental.
 
 Requirement
 -----------
