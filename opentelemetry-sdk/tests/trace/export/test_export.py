@@ -373,6 +373,7 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
         "needs *nix and minor version 7 or later",
     )
     def test_batch_span_processor_fork(self):
+        # pylint: disable=invalid-name
         tracer_provider = trace.TracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
 
@@ -391,8 +392,6 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
         self.assertTrue(span_processor.force_flush())
         self.assertEqual(len(exporter.get_finished_spans()), 1)
         exporter.clear()
-
-        multiprocessing.set_start_method("fork")
 
         def child(conn):
             def _target():

@@ -202,7 +202,7 @@ class BatchSpanProcessor(SpanProcessor):
         if hasattr(os, "register_at_fork"):
             os.register_at_fork(
                 after_in_child=self._at_fork_reinit
-            )  # pylint: disable=broad-except
+            )  # pylint: disable=protected-access
 
     def on_start(
         self, span: Span, parent_context: typing.Optional[Context] = None
