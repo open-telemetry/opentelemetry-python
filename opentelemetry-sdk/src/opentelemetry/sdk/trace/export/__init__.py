@@ -227,14 +227,7 @@ class BatchSpanProcessor(SpanProcessor):
                 self.condition.notify()
 
     def _at_fork_reinit(self):
-        # could be in an inconsistent state after fork, reinitialise by calling `_at_fork_reinit`
-        # (creates a new lock internally https://github.com/python/cpython/blob/main/Python/thread_pthread.h#L727)
-        # if exists, otherwise create a new one.
-        if hasattr(self.condition, "_at_fork_reinit"):
-            self.condition._at_fork_reinit()
-        else:
-            self.condition = threading.Condition(threading.Lock())
-
+        self.condition = threading.Condition(threading.Lock())
         self.queue.clear()
 
         # worker_thread is local to a process, only the thread that issued fork continues

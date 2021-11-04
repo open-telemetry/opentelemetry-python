@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import multiprocessing
 import os
 import sys
 import threading
@@ -390,14 +391,10 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
         self.assertTrue(span_processor.force_flush())
         self.assertEqual(len(exporter.get_finished_spans()), 1)
         exporter.clear()
-        pid = os.fork()
-        if pid:
-            with tracer.start_as_current_span("parent"):
-                pass
-            self._check_fork_trace(exporter, ["parent"])
-        else:
-            exporter.clear()
 
+        multiprocessing.set_start_method("fork")
+
+        def child(conn):
             def _target():
                 with tracer.start_as_current_span("span") as s:
                     s.set_attribute("i", "1")
@@ -409,12 +406,14 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
             time.sleep(0.5)
 
             spans = exporter.get_finished_spans()
-            self.assertEqual(len(spans), 200)
-            exporter.clear()
-            with tracer.start_as_current_span("child"):
-                with tracer.start_as_current_span("inner"):
-                    pass
-            self._check_fork_trace(exporter, ["child", "inner"])
+            conn.send(len(spans) == 200)
+            conn.close()
+
+        parent_conn, child_conn = multiprocessing.Pipe()
+        p = multiprocessing.Process(target=child, args=(child_conn,))
+        p.start()
+        self.assertTrue(parent_conn.recv())
+        p.join()
 
         span_processor.shutdown()
 
