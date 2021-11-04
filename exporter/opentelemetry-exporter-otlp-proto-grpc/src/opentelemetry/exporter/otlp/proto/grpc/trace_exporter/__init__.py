@@ -147,7 +147,7 @@ class OTLPSpanExporter(
         if sdk_span.context.trace_state is not None:
             self._collector_span_kwargs["trace_state"] = ",".join(
                 [
-                    "{}={}".format(key, value)
+                    f"{key}={value}"
                     for key, value in (sdk_span.context.trace_state.items())
                 ]
             )
@@ -302,7 +302,7 @@ class OTLPSpanExporter(
 
             self._collector_span_kwargs["kind"] = getattr(
                 CollectorSpan.SpanKind,
-                "SPAN_KIND_{}".format(sdk_span.kind.name),
+                f"SPAN_KIND_{sdk_span.kind.name}",
             )
 
             instrumentation_library_spans.spans.append(

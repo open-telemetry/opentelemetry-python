@@ -72,7 +72,7 @@ def fibonacci():
             fast_span.set_attribute("n", n)
             fast_span.set_attribute("nth_fibonacci", ans)
 
-    return "F({}) is: ({})".format(n, ans)
+    return f"F({n}) is: ({ans})"
 
 
 if __name__ == "__main__":
