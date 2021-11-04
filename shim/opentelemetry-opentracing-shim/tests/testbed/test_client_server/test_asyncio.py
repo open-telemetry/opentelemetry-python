@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import asyncio
 
 import opentracing
@@ -16,7 +14,7 @@ class Server:
     def __init__(self, *args, **kwargs):
         tracer = kwargs.pop("tracer")
         queue = kwargs.pop("queue")
-        super(Server, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.tracer = tracer
         self.queue = queue

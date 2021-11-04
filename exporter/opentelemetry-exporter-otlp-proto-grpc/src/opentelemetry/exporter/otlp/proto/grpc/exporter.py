@@ -21,7 +21,7 @@ from os import environ
 from time import sleep
 from typing import Any, Callable, Dict, Generic, List, Optional
 from typing import Sequence as TypingSequence
-from typing import Text, TypeVar
+from typing import TypeVar
 from urllib.parse import urlparse
 
 from backoff import expo
@@ -115,14 +115,12 @@ def _translate_value(value: Any) -> KeyValue:
     #     )
 
     else:
-        raise Exception(
-            "Invalid type {} of value {}".format(type(value), value)
-        )
+        raise Exception(f"Invalid type {type(value)} of value {value}")
 
     return any_value
 
 
-def _translate_key_values(key: Text, value: Any) -> KeyValue:
+def _translate_key_values(key: str, value: Any) -> KeyValue:
     return KeyValue(key=key, value=_translate_value(value))
 
 

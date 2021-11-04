@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from queue import Queue
 from threading import Thread
 
@@ -17,7 +15,7 @@ class Server(Thread):
     def __init__(self, *args, **kwargs):
         tracer = kwargs.pop("tracer")
         queue = kwargs.pop("queue")
-        super(Server, self).__init__(*args, **kwargs)
+        super().__init__(*args, **kwargs)
 
         self.daemon = True
         self.tracer = tracer
