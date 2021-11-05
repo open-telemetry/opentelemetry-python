@@ -14,6 +14,7 @@
 
 import collections
 import logging
+import os
 import sys
 import threading
 import typing
@@ -197,6 +198,11 @@ class BatchSpanProcessor(SpanProcessor):
             None
         ] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
         self.worker_thread.start()
+        # Only available in *nix since py37.
+        if hasattr(os, "register_at_fork"):
+            os.register_at_fork(
+                after_in_child=self._at_fork_reinit
+            )  # pylint: disable=protected-access
 
     def on_start(
         self, span: Span, parent_context: typing.Optional[Context] = None
@@ -219,6 +225,17 @@ class BatchSpanProcessor(SpanProcessor):
         if len(self.queue) >= self.max_export_batch_size:
             with self.condition:
                 self.condition.notify()
+
+    def _at_fork_reinit(self):
+        self.condition = threading.Condition(threading.Lock())
+        self.queue.clear()
+
+        # worker_thread is local to a process, only the thread that issued fork continues
+        # to exist. A new worker thread must be started in child process.
+        self.worker_thread = threading.Thread(
+            name="OtelBatchSpanProcessor", target=self.worker, daemon=True
+        )
+        self.worker_thread.start()
 
     def worker(self):
         timeout = self.schedule_delay_millis / 1e3

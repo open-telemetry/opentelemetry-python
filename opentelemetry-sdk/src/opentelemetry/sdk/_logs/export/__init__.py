@@ -16,6 +16,7 @@ import abc
 import collections
 import enum
 import logging
+import os
 import sys
 import threading
 from os import linesep
@@ -153,6 +154,17 @@ class BatchLogProcessor(LogProcessor):
         self._log_records = [
             None
         ] * self._max_export_batch_size  # type: List[Optional[LogData]]
+        self._worker_thread.start()
+        # Only available in *nix since py37.
+        if hasattr(os, "register_at_fork"):
+            os.register_at_fork(
+                after_in_child=self._at_fork_reinit
+            )  # pylint: disable=protected-access
+
+    def _at_fork_reinit(self):
+        self._condition = threading.Condition(threading.Lock())
+        self._queue.clear()
+        self._worker_thread = threading.Thread(target=self.worker, daemon=True)
         self._worker_thread.start()
 
     def worker(self):
