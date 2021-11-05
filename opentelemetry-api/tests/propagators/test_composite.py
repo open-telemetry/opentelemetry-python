@@ -28,8 +28,8 @@ def get_as_list(dict_object, key):
 def mock_inject(name, value="data"):
     def wrapped(carrier=None, context=None, setter=None):
         carrier[name] = value
-        setter.set({}, "inject_field_{}_0".format(name), None)
-        setter.set({}, "inject_field_{}_1".format(name), None)
+        setter.set({}, f"inject_field_{name}_0", None)
+        setter.set({}, f"inject_field_{name}_1", None)
 
     return wrapped
 
@@ -44,7 +44,7 @@ def mock_extract(name, value="context"):
 
 
 def mock_fields(name):
-    return {"inject_field_{}_0".format(name), "inject_field_{}_1".format(name)}
+    return {f"inject_field_{name}_0", f"inject_field_{name}_1"}
 
 
 class TestCompositePropagator(unittest.TestCase):

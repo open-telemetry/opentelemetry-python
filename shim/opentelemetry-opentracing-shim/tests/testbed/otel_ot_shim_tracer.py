@@ -15,7 +15,7 @@ class MockTracer(opentracingshim.TracerShim):
     def __init__(self):
         tracer_provider = trace.TracerProvider()
         oteltracer = tracer_provider.get_tracer(__name__)
-        super(MockTracer, self).__init__(oteltracer)
+        super().__init__(oteltracer)
         exporter = InMemorySpanExporter()
         span_processor = SimpleSpanProcessor(exporter)
         tracer_provider.add_span_processor(span_processor)

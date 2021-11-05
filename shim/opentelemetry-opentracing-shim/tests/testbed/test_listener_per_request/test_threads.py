@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 from concurrent.futures import ThreadPoolExecutor
 
 from opentracing.ext import tags

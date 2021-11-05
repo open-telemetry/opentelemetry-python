@@ -42,7 +42,7 @@ class B3MultiFormat(TextMapPropagator):
     SPAN_ID_KEY = "x-b3-spanid"
     SAMPLED_KEY = "x-b3-sampled"
     FLAGS_KEY = "x-b3-flags"
-    _SAMPLE_PROPAGATE_VALUES = set(["1", "True", "true", "d"])
+    _SAMPLE_PROPAGATE_VALUES = {"1", "True", "true", "d"}
     _trace_id_regex = re_compile(r"[\da-fA-F]{16}|[\da-fA-F]{32}")
     _span_id_regex = re_compile(r"[\da-fA-F]{16}")
 

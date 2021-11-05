@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import asyncio
 
 from opentracing.ext import tags

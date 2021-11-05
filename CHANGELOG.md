@@ -12,6 +12,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2237](https://github.com/open-telemetry/opentelemetry-python/pull/2237))
 - Populate `auto.version` in Resource if using auto-instrumentation
   ([#2243](https://github.com/open-telemetry/opentelemetry-python/pull/2243))
+- Return proxy instruments from ProxyMeter
+  [[#2169](https://github.com/open-telemetry/opentelemetry-python/pull/2169)]
+- Make Measurement a concrete class
+  ([#2153](https://github.com/open-telemetry/opentelemetry-python/pull/2153))
+- Add metrics API
+  ([#1887](https://github.com/open-telemetry/opentelemetry-python/pull/1887))
 
 ## [1.6.2-0.25b2](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.2-0.25b2) - 2021-10-19
 
@@ -110,6 +116,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1893](https://github.com/open-telemetry/opentelemetry-python/pull/1893))
 - Added dropped count to otlp, jaeger and zipkin exporters.
   ([#1893](https://github.com/open-telemetry/opentelemetry-python/pull/1893))
+
+### Added
+- Give OTLPHandler the ability to process attributes
+  ([#1952](https://github.com/open-telemetry/opentelemetry-python/pull/1952))
+- Add global LogEmitterProvider and convenience function get_log_emitter
+  ([#1901](https://github.com/open-telemetry/opentelemetry-python/pull/1901))
+- Add OTLPHandler for standard library logging module
+  ([#1903](https://github.com/open-telemetry/opentelemetry-python/pull/1903))
 
 ### Changed
 - Updated `opentelemetry-opencensus-exporter` to use `service_name` of spans instead of resource

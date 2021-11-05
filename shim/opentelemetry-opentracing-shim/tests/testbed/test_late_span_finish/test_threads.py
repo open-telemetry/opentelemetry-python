@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import time
 from concurrent.futures import ThreadPoolExecutor
 

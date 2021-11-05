@@ -24,7 +24,7 @@ TEST_DURATION_SECONDS = 15
 SPANS_PER_SECOND = 10_000
 
 
-class MockTraceServiceStub(object):
+class MockTraceServiceStub:
     def __init__(self, channel):
         self.Export = lambda *args, **kwargs: None
 

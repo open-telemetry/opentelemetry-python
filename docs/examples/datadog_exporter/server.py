@@ -56,7 +56,7 @@ def server_request():
     with tracer.start_as_current_span("server-inner"):
         if param == "error":
             raise ValueError("forced server error")
-        return "served: {}".format(param)
+        return f"served: {param}"
 
 
 if __name__ == "__main__":

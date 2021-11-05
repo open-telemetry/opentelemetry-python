@@ -33,7 +33,7 @@ def get_tracer_with_processor(span_processor_class):
     return tracer
 
 
-class MockTraceServiceStub(object):
+class MockTraceServiceStub:
     def __init__(self, channel):
         self.Export = lambda *args, **kwargs: None
 
@@ -51,8 +51,8 @@ def test_simple_span_processor(benchmark):
         )
         for i in range(10):
             span.set_attribute(
-                "benchmarkAttribute_{}".format(i),
-                "benchmarkAttrValue_{}".format(i),
+                f"benchmarkAttribute_{i}",
+                f"benchmarkAttrValue_{i}",
             )
         span.end()
 
@@ -79,8 +79,8 @@ def test_batch_span_processor(benchmark):
         )
         for i in range(10):
             span.set_attribute(
-                "benchmarkAttribute_{}".format(i),
-                "benchmarkAttrValue_{}".format(i),
+                f"benchmarkAttribute_{i}",
+                f"benchmarkAttrValue_{i}",
             )
         span.end()
 

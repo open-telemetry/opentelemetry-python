@@ -22,7 +22,7 @@ from .base_context import ContextTestCases
 
 class TestContextVarsContext(ContextTestCases.BaseTest):
     def setUp(self) -> None:
-        super(TestContextVarsContext, self).setUp()
+        super().setUp()
         self.mock_runtime = patch.object(
             context,
             "_RUNTIME_CONTEXT",
@@ -31,5 +31,5 @@ class TestContextVarsContext(ContextTestCases.BaseTest):
         self.mock_runtime.start()
 
     def tearDown(self) -> None:
-        super(TestContextVarsContext, self).tearDown()
+        super().tearDown()
         self.mock_runtime.stop()
