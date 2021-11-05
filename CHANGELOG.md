@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2153](https://github.com/open-telemetry/opentelemetry-python/pull/2153))
 - Add metrics API
   ([#1887](https://github.com/open-telemetry/opentelemetry-python/pull/1887))
+- Make batch processor fork aware and reinit when needed
+  ([#2242](https://github.com/open-telemetry/opentelemetry-python/pull/2242))
 
 ## [1.6.2-0.25b2](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.2-0.25b2) - 2021-10-19
 
