@@ -14,7 +14,9 @@
 
 # pylint: disable=protected-access
 import logging
+import multiprocessing
 import os
+import sys
 import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
@@ -38,6 +40,7 @@ from opentelemetry.sdk._logs.export.in_memory_log_exporter import (
 from opentelemetry.sdk._logs.severity import SeverityNumber
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 from opentelemetry.trace import TraceFlags
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
 
@@ -158,7 +161,7 @@ class TestSimpleLogProcessor(unittest.TestCase):
         self.assertEqual(len(finished_logs), 0)
 
 
-class TestBatchLogProcessor(unittest.TestCase):
+class TestBatchLogProcessor(ConcurrencyTestBase):
     def test_emit_call_log_record(self):
         exporter = InMemoryLogExporter()
         log_processor = Mock(wraps=BatchLogProcessor(exporter))
@@ -268,6 +271,54 @@ class TestBatchLogProcessor(unittest.TestCase):
 
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 2415)
+
+    @unittest.skipUnless(
+        hasattr(os, "fork") and sys.version_info >= (3, 7),
+        "needs *nix and minor version 7 or later",
+    )
+    def test_batch_log_processor_fork(self):
+        # pylint: disable=invalid-name
+        exporter = InMemoryLogExporter()
+        log_processor = BatchLogProcessor(
+            exporter,
+            max_export_batch_size=64,
+            schedule_delay_millis=10,
+        )
+        provider = LogEmitterProvider()
+        provider.add_log_processor(log_processor)
+
+        emitter = provider.get_log_emitter(__name__)
+        logger = logging.getLogger("test-fork")
+        logger.addHandler(OTLPHandler(log_emitter=emitter))
+
+        logger.critical("yolo")
+        time.sleep(0.5)  # give some time for the exporter to upload
+
+        self.assertTrue(log_processor.force_flush())
+        self.assertEqual(len(exporter.get_finished_logs()), 1)
+        exporter.clear()
+
+        multiprocessing.set_start_method("fork")
+
+        def child(conn):
+            def _target():
+                logger.critical("Critical message child")
+
+            self.run_with_many_threads(_target, 100)
+
+            time.sleep(0.5)
+
+            logs = exporter.get_finished_logs()
+            conn.send(len(logs) == 100)
+            conn.close()
+
+        parent_conn, child_conn = multiprocessing.Pipe()
+        p = multiprocessing.Process(target=child, args=(child_conn,))
+        p.start()
+        self.assertTrue(parent_conn.recv())
+        p.join()
+
+        log_processor.shutdown()
 
 
 class TestConsoleExporter(unittest.TestCase):

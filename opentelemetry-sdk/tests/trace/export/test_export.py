@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import multiprocessing
 import os
+import sys
 import threading
 import time
 import unittest
@@ -30,6 +32,10 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_SCHEDULE_DELAY,
 )
 from opentelemetry.sdk.trace import export
+from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
+    InMemorySpanExporter,
+)
+from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 
 
 class MySpanExporter(export.SpanExporter):
@@ -157,7 +163,7 @@ def _create_start_and_end_span(name, span_processor):
     span.end()
 
 
-class TestBatchSpanProcessor(unittest.TestCase):
+class TestBatchSpanProcessor(ConcurrencyTestBase):
     @mock.patch.dict(
         "os.environ",
         {
@@ -354,6 +360,60 @@ class TestBatchSpanProcessor(unittest.TestCase):
 
         self.assertTrue(span_processor.force_flush())
         self.assertEqual(len(spans_names_list), 0)
+        span_processor.shutdown()
+
+    def _check_fork_trace(self, exporter, expected):
+        time.sleep(0.5)  # give some time for the exporter to upload spans
+        spans = exporter.get_finished_spans()
+        for span in spans:
+            self.assertIn(span.name, expected)
+
+    @unittest.skipUnless(
+        hasattr(os, "fork") and sys.version_info >= (3, 7),
+        "needs *nix and minor version 7 or later",
+    )
+    def test_batch_span_processor_fork(self):
+        # pylint: disable=invalid-name
+        tracer_provider = trace.TracerProvider()
+        tracer = tracer_provider.get_tracer(__name__)
+
+        exporter = InMemorySpanExporter()
+        span_processor = export.BatchSpanProcessor(
+            exporter,
+            max_queue_size=256,
+            max_export_batch_size=64,
+            schedule_delay_millis=10,
+        )
+        tracer_provider.add_span_processor(span_processor)
+        with tracer.start_as_current_span("foo"):
+            pass
+        time.sleep(0.5)  # give some time for the exporter to upload spans
+
+        self.assertTrue(span_processor.force_flush())
+        self.assertEqual(len(exporter.get_finished_spans()), 1)
+        exporter.clear()
+
+        def child(conn):
+            def _target():
+                with tracer.start_as_current_span("span") as s:
+                    s.set_attribute("i", "1")
+                    with tracer.start_as_current_span("temp"):
+                        pass
+
+            self.run_with_many_threads(_target, 100)
+
+            time.sleep(0.5)
+
+            spans = exporter.get_finished_spans()
+            conn.send(len(spans) == 200)
+            conn.close()
+
+        parent_conn, child_conn = multiprocessing.Pipe()
+        p = multiprocessing.Process(target=child, args=(child_conn,))
+        p.start()
+        self.assertTrue(parent_conn.recv())
+        p.join()
+
         span_processor.shutdown()
 
     def test_batch_span_processor_scheduled_delay(self):
