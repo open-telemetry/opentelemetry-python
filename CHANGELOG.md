@@ -4,12 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.6.1-0.25b1...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.6.1-0.25b2...HEAD)
 
 - Add support for Python 3.10
   ([#2207](https://github.com/open-telemetry/opentelemetry-python/pull/2207))
 - remove `X-B3-ParentSpanId` for B3 propagator as per OpenTelemetry specification
   ([#2237](https://github.com/open-telemetry/opentelemetry-python/pull/2237))
+- Populate `auto.version` in Resource if using auto-instrumentation
+  ([#2243](https://github.com/open-telemetry/opentelemetry-python/pull/2243))
 - Return proxy instruments from ProxyMeter
   [[#2169](https://github.com/open-telemetry/opentelemetry-python/pull/2169)]
 - Make Measurement a concrete class

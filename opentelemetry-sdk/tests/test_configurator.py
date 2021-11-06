@@ -111,7 +111,7 @@ class TestTraceInit(TestCase):
         environ, {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-test-service"}
     )
     def test_trace_init_default(self):
-        _init_tracing({"zipkin": Exporter}, RandomIdGenerator)
+        _init_tracing({"zipkin": Exporter}, RandomIdGenerator, "test-version")
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
@@ -121,6 +121,10 @@ class TestTraceInit(TestCase):
         self.assertIsInstance(provider.processor.exporter, Exporter)
         self.assertEqual(
             provider.processor.exporter.service_name, "my-test-service"
+        )
+        self.assertEqual(
+            provider.resource.attributes.get("telemetry.auto.version"),
+            "test-version",
         )
 
     @patch.dict(
