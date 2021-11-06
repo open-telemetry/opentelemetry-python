@@ -19,7 +19,7 @@ OpenTelemetry SDK Configurator for Easy Instrumentation with Distros
 
 from abc import ABC, abstractmethod
 from os import environ
-from typing import Sequence, Tuple
+from typing import Dict, Optional, Sequence, Tuple, Type
 
 from pkg_resources import iter_entry_points
 
@@ -28,9 +28,11 @@ from opentelemetry.environment_variables import (
     OTEL_PYTHON_ID_GENERATOR,
     OTEL_TRACES_EXPORTER,
 )
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
+from opentelemetry.semconv.resource import ResourceAttributes
 
 _EXPORTER_OTLP = "otlp"
 _EXPORTER_OTLP_SPAN = "otlp_proto_grpc"
@@ -64,12 +66,21 @@ def _get_exporter_names() -> Sequence[str]:
 
 
 def _init_tracing(
-    exporters: Sequence[SpanExporter], id_generator: IdGenerator
+    exporters: Dict[str, Type[SpanExporter]],
+    id_generator: IdGenerator,
+    auto_instrumentation_version: Optional[str] = None,
 ):
     # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
     # from the env variable else defaults to "unknown_service"
+    auto_resource = {}
+    # populate version if using auto-instrumentation
+    if auto_instrumentation_version:
+        auto_resource[
+            ResourceAttributes.TELEMETRY_AUTO_VERSION
+        ] = auto_instrumentation_version
     provider = TracerProvider(
         id_generator=id_generator(),
+        resource=Resource.create(auto_resource),
     )
     trace.set_tracer_provider(provider)
 
@@ -102,7 +113,7 @@ def _import_tracer_provider_config_components(
 
 def _import_exporters(
     exporter_names: Sequence[str],
-) -> Sequence[SpanExporter]:
+) -> Dict[str, Type[SpanExporter]]:
     trace_exporters = {}
 
     for (
@@ -132,12 +143,12 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
     raise RuntimeError(f"{id_generator_name} is not an IdGenerator")
 
 
-def _initialize_components():
+def _initialize_components(auto_instrumentation_version):
     exporter_names = _get_exporter_names()
     trace_exporters = _import_exporters(exporter_names)
     id_generator_name = _get_id_generator()
     id_generator = _import_id_generator(id_generator_name)
-    _init_tracing(trace_exporters, id_generator)
+    _init_tracing(trace_exporters, id_generator, auto_instrumentation_version)
 
 
 class _BaseConfigurator(ABC):
@@ -180,4 +191,4 @@ class _OTelSDKConfigurator(_BaseConfigurator):
     """
 
     def _configure(self, **kwargs):
-        _initialize_components()
+        _initialize_components(kwargs.get("auto_instrumentation_version"))
