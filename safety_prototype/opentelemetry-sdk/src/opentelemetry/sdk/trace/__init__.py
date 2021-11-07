@@ -20,8 +20,9 @@ exceptions to be raised. SDK implementations may also raise exceptions
 intentionally. Any exception raised in one of these functions or methods will
 be caught by the safety mechanism in the API.
 """
+from contextlib import contextmanager
 
-from opentelemetry.trace.api import Class0
+from opentelemetry.trace.api import Class0, Class1
 
 
 def function(a: int, b: int) -> float:
@@ -33,5 +34,14 @@ class Class0(Class0):
     def __init__(self, a: int) -> None:
         self._a = a
 
-    def method(self, a: int, b: int) -> float:
+    def method_0(self, a: int, b: int) -> float:
         return self._a * (a / b)
+
+
+class Class1(Class1):
+
+    @contextmanager
+    def method_0(self, a: int) -> Class0:
+        print("before")
+        yield Class0(0)
+        print("after")

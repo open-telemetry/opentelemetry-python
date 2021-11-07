@@ -25,7 +25,6 @@ def _safe_function(predefined_return_value):
     This is used as a decorator on every function or method in the API.
     """
 
-
     def internal(function):
         @wraps(function)
         def wrapper(*args, **kwargs):

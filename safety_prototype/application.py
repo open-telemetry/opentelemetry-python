@@ -28,8 +28,8 @@ class0 = Class0(2)
 # argument.
 
 # This does not raise an exception, the resulting value of 4.0 is returned.
-print(class0.method(4, 2))
+print(class0.method_0(4, 2))
 
 # This is a division by zero, it raises an exception, the safety mechanism
 # catches it and returns the predefined value of 0.0.
-print(class0.method(1, 0))
+print(class0.method_0(1, 0))

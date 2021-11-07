@@ -23,6 +23,7 @@ in the exact same way as they are defined here.
 """
 
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 
 
 # There is no way to mandate the implementation of a function in a Python
@@ -40,5 +41,13 @@ class Class0(ABC):
         pass
 
     @abstractmethod
-    def method(self, a: int, b: int) -> float:
+    def method_0(self, a: int, b: int) -> float:
+        pass
+
+
+def Class1(ABC):
+
+    @contextmanager
+    @abstractmethod
+    def method_0(self, a: int) -> Class0:
         pass
