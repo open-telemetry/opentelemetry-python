@@ -146,7 +146,7 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Adds a SpanProcessor to the list handled by this instance."""
         with self._lock:
-            self._span_processors = self._span_processors + (span_processor,)
+            self._span_processors += (span_processor,)
 
     def on_start(
         self,
@@ -216,7 +216,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Adds a SpanProcessor to the list handled by this instance."""
         with self._lock:
-            self._span_processors = self._span_processors + (span_processor,)
+            self._span_processors += (span_processor,)
 
     def _submit_and_await(
         self,
