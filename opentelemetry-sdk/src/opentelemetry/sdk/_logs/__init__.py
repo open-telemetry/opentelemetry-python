@@ -159,7 +159,7 @@ class SynchronousMultiLogProcessor(LogProcessor):
     def add_log_processor(self, log_processor: LogProcessor) -> None:
         """Adds a Logprocessor to the list of log processors handled by this instance"""
         with self._lock:
-            self._log_processors = self._log_processors + (log_processor,)
+            self._log_processors += (log_processor,)
 
     def emit(self, log_data: LogData) -> None:
         for lp in self._log_processors:
@@ -218,7 +218,7 @@ class ConcurrentMultiLogProcessor(LogProcessor):
 
     def add_log_processor(self, log_processor: LogProcessor):
         with self._lock:
-            self._log_processors = self._log_processors + (log_processor,)
+            self._log_processors += (log_processor,)
 
     def _submit_and_wait(
         self,
