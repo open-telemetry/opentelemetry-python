@@ -34,7 +34,7 @@ def function(a: int, b: int) -> float:
 
 class Class0(Class0):
 
-    # @_safe_function(None)
+    @_safe_function(None)
     def __init__(self, a: int) -> None:
         self._a = a
         self._sdk_instance = None
@@ -44,7 +44,7 @@ class Class0(Class0):
         if self._sdk_instance is None:
             self._sdk_instance = _get_sdk_module("trace").Class0(self._a)
 
-        return self._sdk_instance.method(a, b)
+        return self._sdk_instance.method_0(a, b)
 
 
 class Class1(Class1):
@@ -56,4 +56,4 @@ class Class1(Class1):
     @contextmanager
     @_safe_function(Class0(0))
     def method_0(self, a: int) -> Class0:
-        return self._sdk_instance.method_1(a)
+        return self._sdk_instance.method_0(a)

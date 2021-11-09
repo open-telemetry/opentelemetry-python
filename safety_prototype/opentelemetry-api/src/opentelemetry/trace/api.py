@@ -45,7 +45,7 @@ class Class0(ABC):
         pass
 
 
-def Class1(ABC):
+class Class1(ABC):
 
     @contextmanager
     @abstractmethod
