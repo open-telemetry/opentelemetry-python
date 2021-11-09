@@ -266,13 +266,20 @@ class OTELResourceDetector(ResourceDetector):
     def detect(self) -> "Resource":
         env_resources_items = os.environ.get(OTEL_RESOURCE_ATTRIBUTES)
         env_resource_map = {}
+
         if env_resources_items:
-            env_resource_map = {
-                key.strip(): value.strip()
-                for key, value in (
-                    item.split("=") for item in env_resources_items.split(",")
-                )
-            }
+            for item in env_resources_items.split(","):
+                try:
+                    key, value = item.split("=", maxsplit=1)
+                except ValueError as exc:
+                    logger.warning(
+                        "Invalid key value resource attribute pair %s: %s",
+                        item,
+                        exc,
+                    )
+                    continue
+                env_resource_map[key.strip()] = value.strip()
+
         service_name = os.environ.get(OTEL_SERVICE_NAME)
         if service_name:
             env_resource_map[SERVICE_NAME] = service_name
