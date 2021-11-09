@@ -482,6 +482,16 @@ class TestOTELResourceDetector(unittest.TestCase):
             detector.detect(), resources.Resource({"k": "v", "k2": "v2"})
         )
 
+    def test_invalid_key_value_pairs(self):
+        detector = resources.OTELResourceDetector()
+        os.environ[
+            resources.OTEL_RESOURCE_ATTRIBUTES
+        ] = "k=v,k2=v2,invalid,,foo=bar=baz,"
+        self.assertEqual(
+            detector.detect(),
+            resources.Resource({"k": "v", "k2": "v2", "foo": "bar=baz"}),
+        )
+
     @mock.patch.dict(
         os.environ,
         {resources.OTEL_SERVICE_NAME: "test-srv-name"},
