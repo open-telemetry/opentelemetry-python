@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Populate `auto.version` in Resource if using auto-instrumentation
   ([#2243](https://github.com/open-telemetry/opentelemetry-python/pull/2243))
 - Return proxy instruments from ProxyMeter
-  [[#2169](https://github.com/open-telemetry/opentelemetry-python/pull/2169)]
+  ([#2169](https://github.com/open-telemetry/opentelemetry-python/pull/2169))
 - Make Measurement a concrete class
   ([#2153](https://github.com/open-telemetry/opentelemetry-python/pull/2153))
 - Add metrics API
