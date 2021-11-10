@@ -44,4 +44,4 @@ class Class1(Class1):
     @contextmanager
     @_safe_function(Class0(0))
     def method_0(self, a: int) -> Class0:
-        return self._sdk_instance.method_0(a)
+        yield self._sdk_instance.method_0(a)

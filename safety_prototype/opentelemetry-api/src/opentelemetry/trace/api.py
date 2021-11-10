@@ -47,8 +47,11 @@ class _BaseAPI(ABC):
 
         if object.__getattribute__(self, "_sdk_instance") is None:
             self._sdk_instance = (
-                _get_sdk_module("trace").
-                Class0(
+                getattr(
+                    _get_sdk_module("trace"),
+                    object.__getattribute__(self, "__class__").__name__
+                )
+                (
                     *object.__getattribute__(self, "_init_args"),
                     **object.__getattribute__(self, "_init_kwargs"),
                 )

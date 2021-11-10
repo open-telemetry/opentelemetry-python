@@ -1,7 +1,7 @@
 # Only API objects are imported because the user only calls API functions or
 # methods.
 from opentelemetry.configuration import set_sdk
-from opentelemetry.trace import function, Class0
+from opentelemetry.trace import function, Class0, Class1
 
 print(function(4, 2))
 # This is the function that sets the SDK. After this is set, any call to an API
@@ -34,3 +34,8 @@ print(class0.method_0(4, 2))
 # This is a division by zero, it raises an exception, the safety mechanism
 # catches it and returns the predefined value of 0.0.
 print(class0.method_0(1, 0))
+
+class1 = Class1()
+
+with class1.method_0(3) as class0:
+    class0.method_0
