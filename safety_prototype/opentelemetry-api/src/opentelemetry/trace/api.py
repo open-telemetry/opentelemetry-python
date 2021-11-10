@@ -23,7 +23,6 @@ in the exact same way as they are defined here.
 """
 
 from abc import ABC, abstractmethod
-from contextlib import contextmanager
 
 from opentelemetry.configuration import _get_sdk_module
 

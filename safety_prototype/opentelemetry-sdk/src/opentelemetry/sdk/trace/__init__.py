@@ -20,7 +20,6 @@ exceptions to be raised. SDK implementations may also raise exceptions
 intentionally. Any exception raised in one of these functions or methods will
 be caught by the safety mechanism in the API.
 """
-from contextlib import contextmanager
 
 from opentelemetry.trace.api import Class0, Class1
 
@@ -41,10 +40,5 @@ class Class0(Class0):
 
 class Class1(Class1):
 
-    def method_0(self, a: int) -> 
-
-    @contextmanager
-    def method_1(self, a: int) -> Class0:
-        print("before")
-        yield Class0(a)
-        print("after")
+    def method_0(self, a: int) -> Class0:
+        return Class0(a)

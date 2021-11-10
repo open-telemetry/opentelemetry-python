@@ -37,5 +37,9 @@ print(class0.method_0(1, 0))
 
 class1 = Class1()
 
-with class1.method_0(3) as class0:
-    print(class0.method_0(1, 0))
+# This call returns an instance of a the safe Class0 class. This is necessary
+# because the user must only handle safe objects.
+class0 = class1.method_0(7)
+
+print(class0.method_0(1, 2))
+print(class0.method_0(1, 0))

@@ -42,4 +42,6 @@ class Class1(Class1):
 
     @_safe_function(Class0(0))
     def method_0(self, a: int) -> Class0:
-        return self._sdk_instance.method_0(a)
+        safe_instance = Class0(0)
+        safe_instance._sdk_instance = self._sdk_instance.method_0(a)
+        return safe_instance
