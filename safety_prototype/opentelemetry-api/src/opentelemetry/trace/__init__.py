@@ -23,8 +23,8 @@ objects the user has contact with.
 from contextlib import contextmanager
 
 from opentelemetry._safety import _safe_function
-from opentelemetry.configuration import _get_sdk_module
 from opentelemetry.trace.api import Class0, Class1
+from opentelemetry.configuration import _get_sdk_module
 
 
 @_safe_function(0.0)
@@ -34,24 +34,12 @@ def function(a: int, b: int) -> float:
 
 class Class0(Class0):
 
-    @_safe_function(None)
-    def __init__(self, a: int) -> None:
-        self._a = a
-        self._sdk_instance = None
-
     @_safe_function(0.0)
     def method_0(self, a: int, b: int) -> float:
-        if self._sdk_instance is None:
-            self._sdk_instance = _get_sdk_module("trace").Class0(self._a)
-
         return self._sdk_instance.method_0(a, b)
 
 
 class Class1(Class1):
-
-    @_safe_function(None)
-    def __init__(self) -> None:
-        self._sdk_instance = _get_sdk_module("trace").Class1()
 
     @contextmanager
     @_safe_function(Class0(0))

@@ -25,6 +25,8 @@ in the exact same way as they are defined here.
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
 
+from opentelemetry.configuration import _get_sdk_module
+
 
 # There is no way to mandate the implementation of a function in a Python
 # module, so this is added to inform SDK implementations that this function is
@@ -34,18 +36,38 @@ def function(a: int, b: int) -> float:
     pass
 
 
-class Class0(ABC):
+class _BaseAPI(ABC):
 
-    @abstractmethod
+    def __init__(self, *args, **kwargs) -> None:
+        self._sdk_instance = None
+        self._init_args = args
+        self._init_kwargs = kwargs
+
+    def __getattribute__(self, name):
+
+        if object.__getattribute__(self, "_sdk_instance") is None:
+            self._sdk_instance = (
+                _get_sdk_module("trace").
+                Class0(
+                    *object.__getattribute__(self, "_init_args"),
+                    **object.__getattribute__(self, "_init_kwargs"),
+                )
+            )
+
+        return object.__getattribute__(self, name)
+
+
+class Class0(_BaseAPI):
+
     def __init__(self, a: int) -> None:
-        pass
+        super().__init__(a)
 
     @abstractmethod
     def method_0(self, a: int, b: int) -> float:
         pass
 
 
-class Class1(ABC):
+class Class1(_BaseAPI):
 
     @contextmanager
     @abstractmethod

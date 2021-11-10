@@ -3,6 +3,7 @@
 from opentelemetry.configuration import set_sdk
 from opentelemetry.trace import function, Class0
 
+print(function(4, 2))
 # This is the function that sets the SDK. After this is set, any call to an API
 # function or method will end up calling its corresponding SDK function or
 # method.

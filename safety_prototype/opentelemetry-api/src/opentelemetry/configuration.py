@@ -38,4 +38,7 @@ def set_sdk(sdk_name: str) -> None:
 
 
 def _get_sdk_module(path: str) -> object:
+    if _sdk is None:
+        raise Exception("SDK has not been set")
+
     return import_module(".".join([_sdk, path]))

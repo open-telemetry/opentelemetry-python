@@ -33,6 +33,7 @@ class Class0(Class0):
 
     def __init__(self, a: int) -> None:
         self._a = a
+        super().__init__(a)
 
     def method_0(self, a: int, b: int) -> float:
         return self._a * (a / b)
