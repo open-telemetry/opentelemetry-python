@@ -24,9 +24,6 @@ from opentelemetry.util._time import _time_ns
 
 
 class Aggregation(ABC):
-    def __init__(self):
-        self._value = 0
-
     @property
     def value(self):
         return self._value
@@ -45,6 +42,10 @@ class NoneAggregation(Aggregation):
     This aggregation drops all instrument measurements.
     """
 
+    def __init__(self):
+        super().__init__()
+        self._value = None
+
     def aggregate(self, value):
         pass
 
@@ -59,6 +60,7 @@ class SumAggregation(Aggregation):
 
     def __init__(self, temporality=AGGREGATION_TEMPORALITY_CUMULATIVE):
         super().__init__()
+        self._value = 0
         self._temporality = temporality
 
     def aggregate(self, value):
@@ -80,6 +82,7 @@ class LastValueAggregation(Aggregation):
 
     def __init__(self):
         super().__init__()
+        self._value = None
         self._timestamp = _time_ns()
 
     def aggregate(self, value):
