@@ -21,7 +21,9 @@ intentionally. Any exception raised in one of these functions or methods will
 be caught by the safety mechanism in the API.
 """
 
-from opentelemetry.trace.api import Class0, Class1
+from contextlib import contextmanager
+
+from opentelemetry.trace.api import Class0, Class1, Class2
 
 
 def function(a: int, b: int) -> float:
@@ -42,3 +44,12 @@ class Class1(Class1):
 
     def method_0(self, a: int) -> Class0:
         return Class0(a)
+
+
+class Class2(Class2):
+
+    @contextmanager
+    def method_0(self, a: int) -> Class0:
+        print("before")
+        yield Class0(a)
+        print("after")

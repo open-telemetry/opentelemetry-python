@@ -20,9 +20,10 @@ corresponding underlying SDK function or method. In this way, objects defined
 in this module act as proxies and (with the SDK setting function) are the only
 objects the user has contact with.
 """
+from contextlib import contextmanager
 
 from opentelemetry._safety import _safe_function
-from opentelemetry.trace.api import Class0, Class1
+from opentelemetry.trace.api import Class0, Class1, Class2
 from opentelemetry.configuration import _get_sdk_module
 
 
@@ -45,3 +46,14 @@ class Class1(Class1):
         safe_instance = Class0(0)
         safe_instance._sdk_instance = self._sdk_instance.method_0(a)
         return safe_instance
+
+
+class Class2(Class2):
+
+    @contextmanager
+    @_safe_function(Class0(0))
+    def method_0(self, a: int) -> Class0:
+        safe_instance = Class0(0)
+        with self._sdk_instance.method_0(a) as sdk_instance:
+            safe_instance._sdk_instance = sdk_instance
+            yield safe_instance

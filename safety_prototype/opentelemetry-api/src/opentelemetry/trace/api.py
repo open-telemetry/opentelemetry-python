@@ -23,6 +23,7 @@ in the exact same way as they are defined here.
 """
 
 from abc import ABC, abstractmethod
+from contextlib import contextmanager
 
 from opentelemetry.configuration import _get_sdk_module
 
@@ -61,7 +62,7 @@ class _BaseAPI(ABC):
 
 class Class0(_BaseAPI):
 
-    def __init__(self, a: int) -> None:
+    def __init__(self, a):
         super().__init__(a)
 
     @abstractmethod
@@ -71,6 +72,14 @@ class Class0(_BaseAPI):
 
 class Class1(_BaseAPI):
 
+    @abstractmethod
+    def method_0(self, a: int) -> Class0:
+        pass
+
+
+class Class2(_BaseAPI):
+
+    @contextmanager
     @abstractmethod
     def method_0(self, a: int) -> Class0:
         pass
