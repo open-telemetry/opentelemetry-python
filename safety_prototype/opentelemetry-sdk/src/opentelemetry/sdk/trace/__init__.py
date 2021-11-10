@@ -41,8 +41,10 @@ class Class0(Class0):
 
 class Class1(Class1):
 
+    def method_0(self, a: int) -> 
+
     @contextmanager
-    def method_0(self, a: int) -> Class0:
+    def method_1(self, a: int) -> Class0:
         print("before")
-        yield Class0(0)
+        yield Class0(a)
         print("after")

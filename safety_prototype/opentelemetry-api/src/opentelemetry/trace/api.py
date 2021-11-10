@@ -72,7 +72,6 @@ class Class0(_BaseAPI):
 
 class Class1(_BaseAPI):
 
-    @contextmanager
     @abstractmethod
     def method_0(self, a: int) -> Class0:
         pass

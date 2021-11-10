@@ -38,4 +38,4 @@ print(class0.method_0(1, 0))
 class1 = Class1()
 
 with class1.method_0(3) as class0:
-    class0.method_0
+    print(class0.method_0(1, 0))
