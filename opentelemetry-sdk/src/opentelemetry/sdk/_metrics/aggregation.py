@@ -16,10 +16,6 @@ from abc import ABC, abstractmethod
 from collections import OrderedDict
 from math import inf
 
-from opentelemetry.proto.metrics.v1.metrics_pb2 import (
-    AGGREGATION_TEMPORALITY_CUMULATIVE,
-    AGGREGATION_TEMPORALITY_DELTA,
-)
 from opentelemetry.util._time import _time_ns
 
 
@@ -32,9 +28,8 @@ class Aggregation(ABC):
     def aggregate(self, value):
         pass
 
-    @abstractmethod
     def collect(self):
-        pass
+        return self._value  # pylint: disable=no-member
 
 
 class NoneAggregation(Aggregation):
@@ -49,29 +44,18 @@ class NoneAggregation(Aggregation):
     def aggregate(self, value):
         pass
 
-    def collect(self):
-        return self._value
-
 
 class SumAggregation(Aggregation):
     """
     This aggregation collects data for the SDK sum metric point.
     """
 
-    def __init__(self, temporality=AGGREGATION_TEMPORALITY_CUMULATIVE):
+    def __init__(self):
         super().__init__()
         self._value = 0
-        self._temporality = temporality
 
     def aggregate(self, value):
         self._value = self._value + value
-
-    def collect(self):
-        value = self._value
-        if self._temporality == AGGREGATION_TEMPORALITY_DELTA:
-            self._value = 0
-
-        return value
 
 
 class LastValueAggregation(Aggregation):
@@ -89,9 +73,6 @@ class LastValueAggregation(Aggregation):
         self._value = value
         self._timestamp = _time_ns()
 
-    def collect(self):
-        return self._value
-
 
 class ExplicitBucketHistogramAggregation(Aggregation):
 
@@ -101,11 +82,10 @@ class ExplicitBucketHistogramAggregation(Aggregation):
 
     def __init__(
         self,
-        temporality=AGGREGATION_TEMPORALITY_CUMULATIVE,
         boundaries=(0, 5, 10, 25, 50, 75, 100, 250, 500, 1000, inf),
+        record_min_max=True,
     ):
         super().__init__()
-        self._temporality = temporality
         self._boundaries = boundaries
         self._value = OrderedDict([(key, 0) for key in boundaries])
 
@@ -116,10 +96,3 @@ class ExplicitBucketHistogramAggregation(Aggregation):
                 self._value[key] = self._value[key] + value
 
                 break
-
-    def collect(self):
-        value = self._value
-        if self._temporality == AGGREGATION_TEMPORALITY_DELTA:
-            self._value = OrderedDict([(key, 0) for key in self._boundaries])
-
-        return value
