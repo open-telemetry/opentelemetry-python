@@ -26,7 +26,7 @@ from opentelemetry.util._time import _time_ns
 class Aggregation(ABC):
     @property
     def value(self):
-        return self._value
+        return self._value  # pylint: disable=no-member
 
     @abstractmethod
     def aggregate(self, value):
