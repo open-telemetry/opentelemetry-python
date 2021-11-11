@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2242](https://github.com/open-telemetry/opentelemetry-python/pull/2242))
 - `opentelemetry-sdk` Sanitize env var resource attribute pairs
   ([#2256](https://github.com/open-telemetry/opentelemetry-python/pull/2256))
+- `opentelemetry-test` start releasing to pypi.org
+  ([#2269](https://github.com/open-telemetry/opentelemetry-python/pull/2269))
 
 ## [1.6.2-0.25b2](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.2-0.25b2) - 2021-10-19
 
