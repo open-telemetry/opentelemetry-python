@@ -47,12 +47,14 @@ class _Instrument:
         self._aggregation = aggregation
         self._aggregation_config = aggregation_config
         aggregation(**aggregation_config)
-        super().__init__(name, unit=unit, description=description)
 
 
 class _Synchronous(_Instrument):
 
     def add(self, amount, attributes=None):
+
+        if attributes is None:
+            raise Exception("Missing attributes")
 
         attributes = frozenset(attributes.items())
         if attributes not in self._attributes_aggregations.keys():
@@ -60,7 +62,7 @@ class _Synchronous(_Instrument):
             self._attributes_aggregations[attributes] = (
                 self._aggregation(**self._aggregation_config)
             )
-        self._attributes_aggregators[attributes].aggregate(amount)
+        self._attributes_aggregations[attributes].aggregate(amount)
 
 
 class Counter(_Synchronous, Counter):
