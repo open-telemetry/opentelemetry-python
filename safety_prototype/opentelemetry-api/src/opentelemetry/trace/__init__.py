@@ -57,3 +57,20 @@ class Class2(Class2):
         with self._sdk_instance.method_0(a) as sdk_instance:
             safe_instance._sdk_instance = sdk_instance
             yield safe_instance
+
+
+# This is a class that is implemented completely in the API and not in any SDK.
+class Class3:
+
+    @_safe_function(None)
+    def __init__(self, a: int, b: int):
+        self._c = a / b
+
+    @property
+    @_safe_function(0)
+    def c(self):
+        return self._c
+
+    @_safe_function(0)
+    def method_0(self, a: int) -> float:
+        return a / self._c
