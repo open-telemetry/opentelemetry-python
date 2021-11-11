@@ -34,7 +34,36 @@ from opentelemetry.sdk._metrics.aggregation import (
 )
 
 
-class Counter(Counter):
+class _Instrument:
+    def __init__(
+        self,
+        name,
+        unit="",
+        description="",
+        aggregation=None,
+        aggregation_config={},
+    ):
+        self._attributes_aggregations = {}
+        self._aggregation = aggregation
+        self._aggregation_config = aggregation_config
+        aggregation(**aggregation_config)
+        super().__init__(name, unit=unit, description=description)
+
+
+class _Synchronous(_Instrument):
+
+    def add(self, amount, attributes=None):
+
+        attributes = frozenset(attributes.items())
+        if attributes not in self._attributes_aggregations.keys():
+
+            self._attributes_aggregations[attributes] = (
+                self._aggregation(**self._aggregation_config)
+            )
+        self._attributes_aggregators[attributes].aggregate(amount)
+
+
+class Counter(_Synchronous, Counter):
     def __init__(
         self,
         name,
@@ -43,14 +72,16 @@ class Counter(Counter):
         aggregation=SumAggregation,
         aggregation_config={},
     ):
-        self._aggregation = aggregation(**aggregation_config)
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            aggregation=aggregation,
+            aggregation_config=aggregation_config
+        )
 
-    def add(self, amount, attributes=None):
-        pass
 
-
-class UpDownCounter(UpDownCounter):
+class UpDownCounter(_Synchronous, UpDownCounter):
     def __init__(
         self,
         name,
@@ -59,14 +90,16 @@ class UpDownCounter(UpDownCounter):
         aggregation=SumAggregation,
         aggregation_config={},
     ):
-        self._aggregation = aggregation(**aggregation_config)
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            aggregation=aggregation,
+            aggregation_config=aggregation_config
+        )
 
-    def add(self, amount, attributes=None):
-        pass
 
-
-class ObservableCounter(ObservableCounter):
+class ObservableCounter(_Instrument, ObservableCounter):
     def __init__(
         self,
         name,
@@ -76,11 +109,16 @@ class ObservableCounter(ObservableCounter):
         aggregation=SumAggregation,
         aggregation_config={},
     ):
-        self._aggregation = aggregation(**aggregation_config)
-        super().__init__(name, callback, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            aggregation=aggregation,
+            aggregation_config=aggregation_config
+        )
 
 
-class ObservableUpDownCounter(ObservableUpDownCounter):
+class ObservableUpDownCounter(_Instrument, ObservableUpDownCounter):
     def __init__(
         self,
         name,
@@ -90,11 +128,16 @@ class ObservableUpDownCounter(ObservableUpDownCounter):
         aggregation=SumAggregation,
         aggregation_config={},
     ):
-        self._aggregation = aggregation(**aggregation_config)
-        super().__init__(name, callback, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            aggregation=aggregation,
+            aggregation_config=aggregation_config
+        )
 
 
-class Histogram(Histogram):
+class Histogram(_Synchronous, Histogram):
     def __init__(
         self,
         name,
@@ -103,14 +146,16 @@ class Histogram(Histogram):
         aggregation=ExplicitBucketHistogramAggregation,
         aggregation_config={},
     ):
-        self._aggregation = aggregation(**aggregation_config)
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            aggregation=aggregation,
+            aggregation_config=aggregation_config
+        )
 
-    def add(self, amount, attributes=None):
-        pass
 
-
-class ObservableGauge(ObservableGauge):
+class ObservableGauge(_Instrument, ObservableGauge):
     def __init__(
         self,
         name,
@@ -120,5 +165,10 @@ class ObservableGauge(ObservableGauge):
         aggregation=LastValueAggregation,
         aggregation_config={},
     ):
-        self._aggregation = aggregation(**aggregation_config)
-        super().__init__(name, callback, unit=unit, description=description)
+        super().__init__(
+            name,
+            unit=unit,
+            description=description,
+            aggregation=aggregation,
+            aggregation_config=aggregation_config
+        )
