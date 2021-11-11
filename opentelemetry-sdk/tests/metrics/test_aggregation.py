@@ -40,7 +40,7 @@ class TestNoneAggregation(TestCase):
         none_aggregation.aggregate(2)
         none_aggregation.aggregate(3)
 
-        self.assertIs(none_aggregation.value, 0)
+        self.assertIs(none_aggregation.value, None)
 
 
 class TestSumAggregation(TestCase):
