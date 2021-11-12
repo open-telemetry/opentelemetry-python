@@ -153,7 +153,7 @@ and run the following command instead:
 
 .. code:: sh
 
-    $ opentelemetry-instrument --trace-exporter console_span python server_uninstrumented.py
+    $ opentelemetry-instrument --traces_exporter console python server_uninstrumented.py
 
 In the console where you previously executed ``client.py``, run the following
 command again:

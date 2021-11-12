@@ -4,13 +4,36 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.6.1-0.25b1...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.7.0-0.26b0...HEAD)
+
+## [1.7.1-0.26b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.7.0-0.26b0) - 2021-11-11
+
+
+- Add support for Python 3.10
+  ([#2207](https://github.com/open-telemetry/opentelemetry-python/pull/2207))
+- remove `X-B3-ParentSpanId` for B3 propagator as per OpenTelemetry specification
+  ([#2237](https://github.com/open-telemetry/opentelemetry-python/pull/2237))
+- Populate `auto.version` in Resource if using auto-instrumentation
+  ([#2243](https://github.com/open-telemetry/opentelemetry-python/pull/2243))
+- Return proxy instruments from ProxyMeter
+  [[#2169](https://github.com/open-telemetry/opentelemetry-python/pull/2169)]
+- Make Measurement a concrete class
+  ([#2153](https://github.com/open-telemetry/opentelemetry-python/pull/2153))
+- Add metrics API
+  ([#1887](https://github.com/open-telemetry/opentelemetry-python/pull/1887))
+- Make batch processor fork aware and reinit when needed
+  ([#2242](https://github.com/open-telemetry/opentelemetry-python/pull/2242))
+- `opentelemetry-sdk` Sanitize env var resource attribute pairs
+  ([#2256](https://github.com/open-telemetry/opentelemetry-python/pull/2256))
+- `opentelemetry-test` start releasing to pypi.org
+  ([#2269](https://github.com/open-telemetry/opentelemetry-python/pull/2269))
 
 ## [1.6.2-0.25b2](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.2-0.25b2) - 2021-10-19
 
-
 ## [1.6.1-0.25b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.1-0.25b1) - 2021-10-18
 
+- Fix ReadableSpan property types attempting to create a mapping from a list
+  ([#2215](https://github.com/open-telemetry/opentelemetry-python/pull/2215))
 - Upgrade GRPC/protobuf related dependency and regenerate otlp protobufs
   ([#2201](https://github.com/open-telemetry/opentelemetry-python/pull/2201))
 - Propagation: only warn about oversized baggage headers when headers exist
@@ -18,7 +41,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Fix parental trace relationship for opentracing `follows_from` reference
   ([#2180](https://github.com/open-telemetry/opentelemetry-python/pull/2180))
-
 
 ## [1.6.0-0.25b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.0-0.25b0) - 2021-10-13
 
@@ -103,6 +125,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1893](https://github.com/open-telemetry/opentelemetry-python/pull/1893))
 - Added dropped count to otlp, jaeger and zipkin exporters.
   ([#1893](https://github.com/open-telemetry/opentelemetry-python/pull/1893))
+
+### Added
+- Give OTLPHandler the ability to process attributes
+  ([#1952](https://github.com/open-telemetry/opentelemetry-python/pull/1952))
+- Add global LogEmitterProvider and convenience function get_log_emitter
+  ([#1901](https://github.com/open-telemetry/opentelemetry-python/pull/1901))
+- Add OTLPHandler for standard library logging module
+  ([#1903](https://github.com/open-telemetry/opentelemetry-python/pull/1903))
 
 ### Changed
 - Updated `opentelemetry-opencensus-exporter` to use `service_name` of spans instead of resource

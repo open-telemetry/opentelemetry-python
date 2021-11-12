@@ -14,7 +14,7 @@
 
 import logging
 from collections import abc
-from typing import Any, List, Optional, Sequence, Text
+from typing import Any, List, Optional, Sequence
 
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest as PB2ExportTraceServiceRequest,
@@ -211,10 +211,7 @@ def _encode_trace_state(trace_state: TraceState) -> Optional[str]:
     pb2_trace_state = None
     if trace_state is not None:
         pb2_trace_state = ",".join(
-            [
-                "{}={}".format(key, value)
-                for key, value in (trace_state.items())
-            ]
+            [f"{key}={value}" for key, value in (trace_state.items())]
         )
     return pb2_trace_state
 
@@ -283,13 +280,11 @@ def _encode_value(value: Any) -> PB2AnyValue:
     # elif isinstance(value, abc.Mapping):
     #     pass
     else:
-        raise Exception(
-            "Invalid type {} of value {}".format(type(value), value)
-        )
+        raise Exception(f"Invalid type {type(value)} of value {value}")
     return any_value
 
 
-def _encode_key_value(key: Text, value: Any) -> PB2KeyValue:
+def _encode_key_value(key: str, value: Any) -> PB2KeyValue:
     any_value = _encode_value(value)
     return PB2KeyValue(key=key, value=any_value)
 

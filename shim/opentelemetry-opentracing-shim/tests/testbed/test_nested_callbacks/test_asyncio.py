@@ -1,5 +1,3 @@
-from __future__ import print_function
-
 import asyncio
 
 from ..otel_ot_shim_tracer import MockTracer

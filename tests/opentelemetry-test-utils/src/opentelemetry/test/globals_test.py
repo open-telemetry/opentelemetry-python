@@ -14,6 +14,7 @@
 
 import unittest
 
+from opentelemetry import _metrics as metrics_api
 from opentelemetry import trace as trace_api
 from opentelemetry.util._once import Once
 
@@ -24,6 +25,14 @@ def reset_trace_globals() -> None:
     trace_api._TRACER_PROVIDER_SET_ONCE = Once()
     trace_api._TRACER_PROVIDER = None
     trace_api._PROXY_TRACER_PROVIDER = trace_api.ProxyTracerProvider()
+
+
+# pylint: disable=protected-access
+def reset_metrics_globals() -> None:
+    """WARNING: only use this for tests."""
+    metrics_api._METER_PROVIDER_SET_ONCE = Once()  # type: ignore[attr-defined]
+    metrics_api._METER_PROVIDER = None  # type: ignore[attr-defined]
+    metrics_api._PROXY_METER_PROVIDER = metrics_api._ProxyMeterProvider()  # type: ignore[attr-defined]
 
 
 class TraceGlobalsTest(unittest.TestCase):
@@ -39,3 +48,18 @@ class TraceGlobalsTest(unittest.TestCase):
     def tearDown(self) -> None:
         super().tearDown()
         reset_trace_globals()
+
+
+class MetricsGlobalsTest(unittest.TestCase):
+    """Resets metrics API globals in setUp/tearDown
+
+    Use as a base class or mixin for your test that modifies metrics API globals.
+    """
+
+    def setUp(self) -> None:
+        super().setUp()
+        reset_metrics_globals()
+
+    def tearDown(self) -> None:
+        super().tearDown()
+        reset_metrics_globals()
