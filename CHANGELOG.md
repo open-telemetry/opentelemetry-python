@@ -4,7 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.6.1-0.25b2...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.7.0-0.26b0...HEAD)
+
+## [1.7.1-0.26b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.7.0-0.26b0) - 2021-11-11
+
 
 - Add support for Python 3.10
   ([#2207](https://github.com/open-telemetry/opentelemetry-python/pull/2207))
@@ -22,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2242](https://github.com/open-telemetry/opentelemetry-python/pull/2242))
 - `opentelemetry-sdk` Sanitize env var resource attribute pairs
   ([#2256](https://github.com/open-telemetry/opentelemetry-python/pull/2256))
+- `opentelemetry-test` start releasing to pypi.org
+  ([#2269](https://github.com/open-telemetry/opentelemetry-python/pull/2269))
 
 ## [1.6.2-0.25b2](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.2-0.25b2) - 2021-10-19
 
