@@ -16,8 +16,9 @@
 
 from abc import ABC, abstractmethod
 from atexit import register, unregister
+from functools import partial, partialmethod
 from logging import getLogger
-from typing import Optional
+from typing import Iterable, Optional, Sequence
 
 from opentelemetry._metrics import Meter as APIMeter
 from opentelemetry._metrics import MeterProvider as APIMeterProvider
@@ -30,6 +31,19 @@ from opentelemetry._metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk._metrics._internal import instrument as sdkinstrument
+from opentelemetry.sdk._metrics._internal.measurement import (
+    Measurement,
+    SendMeasurementT,
+)
+from opentelemetry.sdk._metrics._internal.metric_processor import (
+    DefaultMetricProcessor,
+    MetricProcessor,
+    SdkConfiguration,
+)
+from opentelemetry.sdk._metrics._internal.metric_reader import MetricReader
+from opentelemetry.sdk._metrics.export import Metric
+from opentelemetry.sdk._metrics.view import View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
@@ -40,15 +54,20 @@ class Meter(APIMeter):
     def __init__(
         self,
         instrumentation_info: InstrumentationInfo,
-        meter_provider: APIMeterProvider,
+        metric_processor: MetricProcessor,
     ):
         super().__init__(instrumentation_info)
         self._instrumentation_info = instrumentation_info
-        self._meter_provider = meter_provider
+        self._metric_processor = metric_processor
 
     def create_counter(self, name, unit=None, description=None) -> Counter:
-        # FIXME implement this method
-        pass
+        return sdkinstrument.Counter(
+            name,
+            unit=unit,
+            description=description,
+            instrumentation_info=self._instrumentation_info,
+            send_measurement=self._metric_processor.consume_measurement,
+        )
 
     def create_up_down_counter(
         self, name, unit=None, description=None
@@ -59,8 +78,15 @@ class Meter(APIMeter):
     def create_observable_counter(
         self, name, callback, unit=None, description=None
     ) -> ObservableCounter:
-        # FIXME implement this method
-        pass
+        instrument = sdkinstrument.ObservableCounter(
+            name,
+            unit,
+            description,
+            callback,
+            instrumentation_info=self._instrumentation_info,
+        )
+        self._metric_processor.register_async_instrument(instrument)
+        return instrument
 
     def create_histogram(self, name, unit=None, description=None) -> Histogram:
         # FIXME implement this method
@@ -69,8 +95,15 @@ class Meter(APIMeter):
     def create_observable_gauge(
         self, name, callback, unit=None, description=None
     ) -> ObservableGauge:
-        # FIXME implement this method
-        pass
+        instrument = sdkinstrument.ObservableGauge(
+            name,
+            unit,
+            description,
+            callback,
+            instrumentation_info=self._instrumentation_info,
+        )
+        self._metric_processor.register_async_instrument(instrument)
+        return instrument
 
     def create_observable_up_down_counter(
         self, name, callback, unit=None, description=None
@@ -84,26 +117,43 @@ class MeterProvider(APIMeterProvider):
 
     def __init__(
         self,
+        *,
+        metric_readers: Sequence[MetricReader],
         resource: Resource = Resource.create({}),
+        views: Sequence[View] = (),
         shutdown_on_exit: bool = True,
     ):
         self._resource = resource
+        self._views = views
         self._atexit_handler = None
 
         if shutdown_on_exit:
             self._atexit_handler = register(self.shutdown)
 
-        self._metric_readers = []
+        self._metric_readers = metric_readers
         self._metric_exporters = []
-        self._views = []
         self._shutdown = False
+
+        self._metric_processor = DefaultMetricProcessor(
+            SdkConfiguration(
+                resource=self._resource,
+                views=self._views,
+                metric_readers=self._metric_readers,
+            )
+        )
+
+        # bind readers to collection function
+        for metric_reader in self._metric_readers:
+            metric_reader._set_collect_callback(
+                partial(self._metric_processor.collect, metric_reader)
+            )
 
     def get_meter(
         self,
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-    ) -> Meter:
+    ) -> APIMeter:
 
         if self._shutdown:
             _logger.warning(
@@ -111,7 +161,10 @@ class MeterProvider(APIMeterProvider):
             )
             return _DefaultMeter(name, version=version, schema_url=schema_url)
 
-        return Meter(InstrumentationInfo(name, version, schema_url), self)
+        return Meter(
+            InstrumentationInfo(name, version, schema_url),
+            self._metric_processor,
+        )
 
     def shutdown(self):
         # FIXME implement a timeout
@@ -161,32 +214,15 @@ class MeterProvider(APIMeterProvider):
 
         return metric_reader_result and metric_exporter_result
 
-    def register_metric_reader(self, metric_reader: "MetricReader") -> None:
-        # FIXME protect this method against race conditions
-        self._metric_readers.append(metric_reader)
-
     def register_metric_exporter(
         self, metric_exporter: "MetricExporter"
     ) -> None:
         # FIXME protect this method against race conditions
         self._metric_exporters.append(metric_exporter)
 
-    def register_view(self, view: "View") -> None:
-        # FIXME protect this method against race conditions
-        self._views.append(view)
-
-
-class MetricReader(ABC):
-    def __init__(self):
-        self._shutdown = False
-
-    @abstractmethod
-    def collect(self):
+    def _receive_measurements(self, measurement: Measurement) -> None:
+        """All instruments send measurements to this function"""
         pass
-
-    def shutdown(self):
-        # FIXME this will need a Once wrapper
-        self._shutdown = True
 
 
 class MetricExporter(ABC):
@@ -202,15 +238,6 @@ class MetricExporter(ABC):
         self._shutdown = True
 
 
-class View:
-    pass
-
-
 class ConsoleMetricExporter(MetricExporter):
     def export(self):
-        pass
-
-
-class SDKMetricReader(MetricReader):
-    def collect(self):
         pass
