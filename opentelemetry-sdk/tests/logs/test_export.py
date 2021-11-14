@@ -16,7 +16,6 @@
 import logging
 import multiprocessing
 import os
-import sys
 import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
@@ -273,8 +272,8 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
         self.assertEqual(len(finished_logs), 2415)
 
     @unittest.skipUnless(
-        hasattr(os, "fork") and sys.version_info >= (3, 7),
-        "needs *nix and minor version 7 or later",
+        hasattr(os, "fork"),
+        "needs *nix",
     )
     def test_batch_log_processor_fork(self):
         # pylint: disable=invalid-name
