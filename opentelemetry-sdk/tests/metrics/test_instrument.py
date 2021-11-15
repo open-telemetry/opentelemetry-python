@@ -15,12 +15,8 @@
 
 from unittest import TestCase
 
-from opentelemetry.sdk._metrics.instrument import (
-    _Synchronous
-)
-from opentelemetry.sdk._metrics.aggregation import (
-    SumAggregation
-)
+from opentelemetry.sdk._metrics.aggregation import SumAggregation
+from opentelemetry.sdk._metrics.instrument import _Synchronous
 
 
 class Test_Synchronous(TestCase):
@@ -38,11 +34,11 @@ class Test_Synchronous(TestCase):
             synchronous._attributes_aggregations[
                 frozenset({("name0", "value0")})
             ],
-            SumAggregation
+            SumAggregation,
         )
         self.assertIsInstance(
             synchronous._attributes_aggregations[
                 frozenset({("name1", "value1")})
             ],
-            SumAggregation
+            SumAggregation,
         )

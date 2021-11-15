@@ -46,11 +46,10 @@ class _Instrument:
         self._attributes_aggregations = {}
         self._aggregation = aggregation
         self._aggregation_config = aggregation_config
-        aggregation(**aggregation_config)
+        aggregation(self, **aggregation_config)
 
 
 class _Synchronous(_Instrument):
-
     def add(self, amount, attributes=None):
 
         if attributes is None:
@@ -59,8 +58,8 @@ class _Synchronous(_Instrument):
         attributes = frozenset(attributes.items())
         if attributes not in self._attributes_aggregations.keys():
 
-            self._attributes_aggregations[attributes] = (
-                self._aggregation(**self._aggregation_config)
+            self._attributes_aggregations[attributes] = self._aggregation(
+                self, **self._aggregation_config
             )
         self._attributes_aggregations[attributes].aggregate(amount)
 
@@ -79,7 +78,7 @@ class Counter(_Synchronous, Counter):
             unit=unit,
             description=description,
             aggregation=aggregation,
-            aggregation_config=aggregation_config
+            aggregation_config=aggregation_config,
         )
 
 
@@ -97,7 +96,7 @@ class UpDownCounter(_Synchronous, UpDownCounter):
             unit=unit,
             description=description,
             aggregation=aggregation,
-            aggregation_config=aggregation_config
+            aggregation_config=aggregation_config,
         )
 
 
@@ -116,7 +115,7 @@ class ObservableCounter(_Instrument, ObservableCounter):
             unit=unit,
             description=description,
             aggregation=aggregation,
-            aggregation_config=aggregation_config
+            aggregation_config=aggregation_config,
         )
 
 
@@ -135,7 +134,7 @@ class ObservableUpDownCounter(_Instrument, ObservableUpDownCounter):
             unit=unit,
             description=description,
             aggregation=aggregation,
-            aggregation_config=aggregation_config
+            aggregation_config=aggregation_config,
         )
 
 
@@ -153,7 +152,7 @@ class Histogram(_Synchronous, Histogram):
             unit=unit,
             description=description,
             aggregation=aggregation,
-            aggregation_config=aggregation_config
+            aggregation_config=aggregation_config,
         )
 
 
@@ -172,5 +171,5 @@ class ObservableGauge(_Instrument, ObservableGauge):
             unit=unit,
             description=description,
             aggregation=aggregation,
-            aggregation_config=aggregation_config
+            aggregation_config=aggregation_config,
         )

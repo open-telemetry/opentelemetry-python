@@ -13,8 +13,10 @@
 # limitations under the License.
 
 
+from logging import WARNING
 from math import inf
 from unittest import TestCase
+from unittest.mock import Mock
 
 from opentelemetry.sdk._metrics.aggregation import (
     ExplicitBucketHistogramAggregation,
@@ -30,7 +32,7 @@ class TestNoneAggregation(TestCase):
         `NoneAggregation` drops all measurements.
         """
 
-        none_aggregation = NoneAggregation()
+        none_aggregation = NoneAggregation(Mock())
 
         none_aggregation.aggregate(1)
         none_aggregation.aggregate(2)
@@ -45,7 +47,7 @@ class TestSumAggregation(TestCase):
         `SumAggregation` collects data for sum metric points
         """
 
-        sum_aggregation = SumAggregation()
+        sum_aggregation = SumAggregation(Mock())
 
         sum_aggregation.aggregate(1)
         sum_aggregation.aggregate(2)
@@ -61,7 +63,7 @@ class TestLastValueAggregation(TestCase):
         temporality
         """
 
-        last_value_aggregation = LastValueAggregation()
+        last_value_aggregation = LastValueAggregation(Mock())
 
         last_value_aggregation.aggregate(1)
         self.assertEqual(last_value_aggregation.value, 1)
@@ -80,7 +82,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         """
 
         explicit_bucket_histogram_aggregation = (
-            ExplicitBucketHistogramAggregation()
+            ExplicitBucketHistogramAggregation(Mock())
         )
 
         explicit_bucket_histogram_aggregation.aggregate(-1)
@@ -95,3 +97,38 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         self.assertEqual(
             explicit_bucket_histogram_aggregation.value[inf], 9999
         )
+
+    def test_min_max(self):
+        """
+        `record_min_max` indicates the aggregator to record the minimum and
+        maximum value in the population
+        """
+
+        explicit_bucket_histogram_aggregation = (
+            ExplicitBucketHistogramAggregation(Mock())
+        )
+
+        explicit_bucket_histogram_aggregation.aggregate(-1)
+        explicit_bucket_histogram_aggregation.aggregate(2)
+        explicit_bucket_histogram_aggregation.aggregate(7)
+        explicit_bucket_histogram_aggregation.aggregate(8)
+        explicit_bucket_histogram_aggregation.aggregate(9999)
+
+        self.assertEqual(explicit_bucket_histogram_aggregation.min, -1)
+        self.assertEqual(explicit_bucket_histogram_aggregation.max, 9999)
+
+        explicit_bucket_histogram_aggregation = (
+            ExplicitBucketHistogramAggregation(Mock(), record_min_max=False)
+        )
+
+        explicit_bucket_histogram_aggregation.aggregate(-1)
+        explicit_bucket_histogram_aggregation.aggregate(2)
+        explicit_bucket_histogram_aggregation.aggregate(7)
+        explicit_bucket_histogram_aggregation.aggregate(8)
+        explicit_bucket_histogram_aggregation.aggregate(9999)
+
+        with self.assertLogs(level=WARNING):
+            self.assertEqual(explicit_bucket_histogram_aggregation.min, inf)
+
+        with self.assertLogs(level=WARNING):
+            self.assertEqual(explicit_bucket_histogram_aggregation.max, -inf)
