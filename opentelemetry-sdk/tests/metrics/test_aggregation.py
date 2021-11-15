@@ -55,6 +55,14 @@ class TestSumAggregation(TestCase):
 
         self.assertEqual(sum_aggregation.value, 6)
 
+        sum_aggregation = SumAggregation(Mock())
+
+        sum_aggregation.aggregate(1)
+        sum_aggregation.aggregate(-2)
+        sum_aggregation.aggregate(3)
+
+        self.assertEqual(sum_aggregation.value, 2)
+
 
 class TestLastValueAggregation(TestCase):
     def test_aggregate(self):
