@@ -259,7 +259,7 @@ A major feature of distributed tracing is the ability to correlate a trace acros
 multiple services. However, those services need to propagate information about a
 trace from one service to the other.
 
-To enable this propagation, OpenTelemetry has the concept of [propagators](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/api-propagators.md),
+To enable this propagation, OpenTelemetry has the concept of [propagators]({{< relref "/docs/reference/specification/context/api-propagators" >}}),
 which provide a common method to encode and decode span information from a request and response, respectively.
 
 By default, `opentelemetry-python` is configured to use the [W3C Trace Context](https://www.w3.org/TR/trace-context/)
