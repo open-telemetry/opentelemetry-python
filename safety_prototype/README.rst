@@ -36,7 +36,7 @@ When an API function or method is called without an SDK being set, a warning
 will be raised and the predefined value of `None` will be returned.
 
 After an SDK is set, calling an API function or method will call its
-corresponding SDJ function or method. Any exception raised by the SDK function
+corresponding SDK function or method. Any exception raised by the SDK function
 or method will be caught by the safety mechanism and the predefined value
 returned instead.
 
