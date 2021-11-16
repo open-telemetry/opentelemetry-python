@@ -32,6 +32,10 @@ class Aggregation(ABC):
     def aggregate(self, value):
         pass
 
+    @abstractmethod
+    def make_point_and_reset(self):
+        pass
+
 
 class NoneAggregation(Aggregation):
     """
@@ -42,6 +46,9 @@ class NoneAggregation(Aggregation):
         self._value = None
 
     def aggregate(self, value):
+        pass
+
+    def make_point_and_reset(self):
         pass
 
 
@@ -55,6 +62,9 @@ class SumAggregation(Aggregation):
 
     def aggregate(self, value):
         self._value = self._value + value
+
+    def make_point_and_reset(self):
+        pass
 
 
 class LastValueAggregation(Aggregation):
@@ -70,6 +80,9 @@ class LastValueAggregation(Aggregation):
     def aggregate(self, value):
         self._value = value
         self._timestamp = _time_ns()
+
+    def make_point_and_reset(self):
+        pass
 
 
 class ExplicitBucketHistogramAggregation(Aggregation):
@@ -132,3 +145,6 @@ class ExplicitBucketHistogramAggregation(Aggregation):
                 self._value[key] = self._value[key] + value
 
                 break
+
+    def make_point_and_reset(self):
+        pass
