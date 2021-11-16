@@ -32,9 +32,6 @@ class Aggregation(ABC):
     def aggregate(self, value):
         pass
 
-    def collect(self):
-        return self._value  # pylint: disable=no-member
-
 
 class NoneAggregation(Aggregation):
     """
