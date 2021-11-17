@@ -87,8 +87,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         record_min_max=True,
     ):
         super().__init__()
-        self._boundaries = boundaries
-        self._value = OrderedDict([(key, 0) for key in boundaries])
+        self._value = OrderedDict([(key, 0) for key in (*boundaries, inf)])
         self._min = inf
         self._max = -inf
         self._sum = 0
