@@ -98,7 +98,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         self,
         instrument,
         *args,
-        boundaries=(0, 5, 10, 25, 50, 75, 100, 250, 500, 1000, inf),
+        boundaries=(0, 5, 10, 25, 50, 75, 100, 250, 500, 1000),
         record_min_max=True,
     ):
         super().__init__()
