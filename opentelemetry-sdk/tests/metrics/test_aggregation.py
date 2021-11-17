@@ -21,24 +21,8 @@ from unittest.mock import Mock
 from opentelemetry.sdk._metrics.aggregation import (
     ExplicitBucketHistogramAggregation,
     LastValueAggregation,
-    NoneAggregation,
     SumAggregation,
 )
-
-
-class TestNoneAggregation(TestCase):
-    def test_aggregate(self):
-        """
-        `NoneAggregation` drops all measurements.
-        """
-
-        none_aggregation = NoneAggregation(Mock())
-
-        none_aggregation.aggregate(1)
-        none_aggregation.aggregate(2)
-        none_aggregation.aggregate(3)
-
-        self.assertIs(none_aggregation.value, None)
 
 
 class TestSumAggregation(TestCase):
