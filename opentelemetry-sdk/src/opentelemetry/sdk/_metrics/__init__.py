@@ -36,9 +36,9 @@ from opentelemetry.sdk._metrics._internal.measurement import (
     Measurement,
     SendMeasurementT,
 )
-from opentelemetry.sdk._metrics._internal.metric_processor import (
+from opentelemetry.sdk._metrics._internal.measurement_processor import (
     DefaultMetricProcessor,
-    MetricProcessor,
+    MeasurementProcessor,
     SdkConfiguration,
 )
 from opentelemetry.sdk._metrics._internal.metric_reader import MetricReader
@@ -54,11 +54,11 @@ class Meter(APIMeter):
     def __init__(
         self,
         instrumentation_info: InstrumentationInfo,
-        metric_processor: MetricProcessor,
+        measurement_processor: MeasurementProcessor,
     ):
         super().__init__(instrumentation_info)
         self._instrumentation_info = instrumentation_info
-        self._metric_processor = metric_processor
+        self._measurement_processor = measurement_processor
 
     def create_counter(self, name, unit=None, description=None) -> Counter:
         return sdkinstrument.Counter(
@@ -66,7 +66,7 @@ class Meter(APIMeter):
             unit=unit,
             description=description,
             instrumentation_info=self._instrumentation_info,
-            send_measurement=self._metric_processor.consume_measurement,
+            send_measurement=self._measurement_processor.consume_measurement,
         )
 
     def create_up_down_counter(
@@ -85,7 +85,7 @@ class Meter(APIMeter):
             callback,
             instrumentation_info=self._instrumentation_info,
         )
-        self._metric_processor.register_async_instrument(instrument)
+        self._measurement_processor.register_async_instrument(instrument)
         return instrument
 
     def create_histogram(self, name, unit=None, description=None) -> Histogram:
@@ -102,7 +102,7 @@ class Meter(APIMeter):
             callback,
             instrumentation_info=self._instrumentation_info,
         )
-        self._metric_processor.register_async_instrument(instrument)
+        self._measurement_processor.register_async_instrument(instrument)
         return instrument
 
     def create_observable_up_down_counter(
@@ -134,7 +134,7 @@ class MeterProvider(APIMeterProvider):
         self._metric_exporters = []
         self._shutdown = False
 
-        self._metric_processor = DefaultMetricProcessor(
+        self._measurement_processor = DefaultMetricProcessor(
             SdkConfiguration(
                 resource=self._resource,
                 views=self._views,
@@ -145,7 +145,7 @@ class MeterProvider(APIMeterProvider):
         # bind readers to collection function
         for metric_reader in self._metric_readers:
             metric_reader._set_collect_callback(
-                partial(self._metric_processor.collect, metric_reader)
+                partial(self._measurement_processor.collect, metric_reader)
             )
 
     def get_meter(
@@ -163,7 +163,7 @@ class MeterProvider(APIMeterProvider):
 
         return Meter(
             InstrumentationInfo(name, version, schema_url),
-            self._metric_processor,
+            self._measurement_processor,
         )
 
     def shutdown(self):

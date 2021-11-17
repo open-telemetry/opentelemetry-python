@@ -31,10 +31,6 @@ def main() -> None:
                 name="request_count2",
                 selector=ViewSelector(instrument_name="app.request_count"),
             ),
-            View(
-                name="request_count3",
-                selector=ViewSelector(instrument_name="app.request_count"),
-            ),
             # Rename the async counter just because
             View(
                 name="app.somethingrename",
@@ -52,6 +48,7 @@ def main() -> None:
         "app.request_count", "The number of requests app has received"
     )
 
+    print("add 21")
     counter.add(21)
     print("Cumulative:")
     for m in reader1.collect():
@@ -60,6 +57,12 @@ def main() -> None:
     for m in reader2.collect():
         print(m)
 
+    print("\n\nDelta")
+    for m in reader2.collect():
+        print(m)
+    print("add 21")
+    counter.add(21)
+    print("add 10")
     counter.add(10)
     print("\n\nCumulative")
     for m in reader1.collect():
