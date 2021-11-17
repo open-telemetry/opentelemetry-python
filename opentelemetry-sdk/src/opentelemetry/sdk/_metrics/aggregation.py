@@ -40,21 +40,6 @@ class Aggregation(ABC):
         pass
 
 
-class NoneAggregation(Aggregation):
-    """
-    This aggregation drops all instrument measurements.
-    """
-
-    def __init__(self, instrument):
-        self._value = None
-
-    def aggregate(self, value):
-        pass
-
-    def make_point_and_reset(self):
-        pass
-
-
 class SumAggregation(Aggregation):
     """
     This aggregation collects data for the SDK sum metric point.
