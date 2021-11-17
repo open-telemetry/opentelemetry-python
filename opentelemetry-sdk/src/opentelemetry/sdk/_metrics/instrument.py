@@ -49,7 +49,7 @@ class _Instrument:
         aggregation(self, **aggregation_config)
 
 
-class Counter(Counter):
+class Counter(_Instrument, Counter):
     def __init__(
         self,
         name,
@@ -67,7 +67,7 @@ class Counter(Counter):
         )
 
 
-class UpDownCounter(UpDownCounter):
+class UpDownCounter(_Instrument, UpDownCounter):
     def __init__(
         self,
         name,
@@ -123,7 +123,7 @@ class ObservableUpDownCounter(_Instrument, ObservableUpDownCounter):
         )
 
 
-class Histogram(Histogram):
+class Histogram(_Instrument, Histogram):
     def __init__(
         self,
         name,

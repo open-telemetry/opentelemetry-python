@@ -37,7 +37,6 @@ class Aggregation(ABC):
         """
         Atomically return a point for the current value of the metric and reset the internal state.
         """
-        pass
 
 
 class SumAggregation(Aggregation):
@@ -117,6 +116,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
             "Sum is not filled out when the associated "
             "instrument is not monotonic"
         )
+        return None
 
     def aggregate(self, value):
         if self._record_min_max:
