@@ -90,8 +90,8 @@ class DefaultMetricProcessor(MeasurementProcessor):
     def __init__(self, sdk_config: SdkConfiguration) -> None:
         self._lock = Lock()
         # should never be mutated
-        self._reader_to_state: Mapping[MetricReader, MetricReaderState] = {
-            reader: MetricReaderState(sdk_config)
+        self._reader_to_state: Mapping[MetricReader, MetricReaderStorage] = {
+            reader: MetricReaderStorage(sdk_config)
             for reader in sdk_config.metric_readers
         }
         self._async_instruments: List[SDKAsyncInstrumentBase] = []
@@ -116,7 +116,7 @@ class DefaultMetricProcessor(MeasurementProcessor):
         return self._reader_to_state[metric_reader].collect(temporality)
 
 
-class MetricReaderState:
+class MetricReaderStorage:
     """The SDK's state for a given reader"""
 
     def __init__(self, sdk_config: SdkConfiguration) -> None:
