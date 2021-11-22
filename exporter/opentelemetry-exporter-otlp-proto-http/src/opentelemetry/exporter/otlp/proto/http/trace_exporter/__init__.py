@@ -138,13 +138,15 @@ class OTLPSpanExporter(SpanExporter):
             if resp.status_code in (200, 202):
                 return SpanExportResult.SUCCESS
             elif self._retryable(resp):
-                _logger.debug(
-                    "Waiting %ss before retrying export of span", delay
+                _logger.warning(
+                    "Transient error %s encountered while exporting span batch, retrying in %ss.",
+                    resp.reason,
+                    delay,
                 )
                 sleep(delay)
                 continue
             else:
-                _logger.warning(
+                _logger.error(
                     "Failed to export batch code: %s, reason: %s",
                     resp.status_code,
                     resp.text,

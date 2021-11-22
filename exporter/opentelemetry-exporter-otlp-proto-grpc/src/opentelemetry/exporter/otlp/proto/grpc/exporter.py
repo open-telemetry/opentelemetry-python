@@ -302,11 +302,18 @@ class OTLPExporterMixin(
                             + retry_info.retry_delay.nanos / 1.0e9
                         )
 
-                    logger.debug(
-                        "Waiting %ss before retrying export of span", delay
+                    logger.warning(
+                        "Transient error %s encountered while exporting span batch, retrying in %ss.",
+                        error.code(),
+                        delay,
                     )
                     sleep(delay)
                     continue
+                else:
+                    logger.error(
+                        "Failed to export span batch, error code: %s",
+                        error.code(),
+                    )
 
                 if error.code() == StatusCode.OK:
                     return self._result.SUCCESS
