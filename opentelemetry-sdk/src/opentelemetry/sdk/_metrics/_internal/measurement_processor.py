@@ -124,7 +124,7 @@ class MetricReaderStorage:
         self._sdk_config = sdk_config
         self._view_index: Dict[InstrumentDescriptor, List["ViewStorage"]] = {}
 
-    def _get_or_init_view_data(
+    def _get_or_init_view_storage(
         self, descriptor: InstrumentDescriptor
     ) -> List["ViewStorage"]:
         # Optimistically get the relevant views for the given instrument. Once set for a given
@@ -138,29 +138,29 @@ class MetricReaderStorage:
                 return self._view_index[descriptor]
 
             # not present, hold the lock and add a new mapping
-            view_datas = []
+            view_storages = []
             for view in self._sdk_config.views:
                 # TODO: implement all the selection matching
                 if view.selector.instrument_name == descriptor.name:
                     # Note: if a view matches multiple instruments, this will create a separate
                     # ViewStorage per instrument. If the user's View configuration includes a
                     # name, this will cause multiple writers for the same stream.
-                    view_datas.append(
+                    view_storages.append(
                         ViewStorage(view, descriptor, self._sdk_config)
                     )
 
             # if no view targeted the instrument, use the default
-            if not view_datas:
-                view_datas.append(
+            if not view_storages:
+                view_storages.append(
                     ViewStorage(
                         default_view(descriptor), descriptor, self._sdk_config
                     )
                 )
-            self._view_index[descriptor] = view_datas
-            return view_datas
+            self._view_index[descriptor] = view_storages
+            return view_storages
 
     def consume_measurement(self, measurement: Measurement) -> None:
-        view_datas = self._get_or_init_view_data(
+        view_datas = self._get_or_init_view_storage(
             measurement.instrument_descriptor
         )
         for data in view_datas:
