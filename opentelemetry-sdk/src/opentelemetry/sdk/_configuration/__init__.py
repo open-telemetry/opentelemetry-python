@@ -57,9 +57,7 @@ def _get_exporter_names(names: str) -> Sequence[str]:
     exporters = set()
 
     if names and names.lower().strip() != "none":
-        exporters.update(
-            {trace_exporter.strip() for trace_exporter in names.split(",")}
-        )
+        exporters.update({_exporter.strip() for _exporter in names.split(",")})
 
     if _EXPORTER_OTLP in exporters:
         exporters.remove(_EXPORTER_OTLP)

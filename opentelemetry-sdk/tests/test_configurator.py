@@ -24,10 +24,13 @@ from opentelemetry.sdk._configuration import (
     _EXPORTER_OTLP_SPAN,
     _get_exporter_names,
     _get_id_generator,
+    _import_exporters,
     _import_id_generator,
     _init_tracing,
 )
+from opentelemetry.sdk._logs.export import ConsoleExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 
 
@@ -179,3 +182,16 @@ class TestExporterNames(TestCase):
 
     def test_empty_exporters(self):
         self.assertEqual(sorted(_get_exporter_names("")), [])
+
+
+class TestImportExporters(TestCase):
+    def test_console_exporters(self):
+        trace_exporters, logs_exporters = _import_exporters(
+            ["console"], ["console"]
+        )
+        self.assertEqual(
+            trace_exporters["console"].__class__, ConsoleSpanExporter.__class__
+        )
+        self.assertEqual(
+            logs_exporters["console"].__class__, ConsoleExporter.__class__
+        )
