@@ -29,10 +29,13 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk._logs import (
+    LogEmitterProvider,
+    set_log_emitter_provider,
+)
+from opentelemetry.sdk._logs.export import BatchLogProcessor, LogExporter
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
-from opentelemetry.sdk._logs.export import BatchLogProcessor, LogExporter
-from opentelemetry.sdk._logs import LogEmitterProvider, set_log_emitter_provider
 from opentelemetry.sdk.trace.id_generator import IdGenerator
 from opentelemetry.semconv.resource import ResourceAttributes
 
@@ -55,10 +58,7 @@ def _get_exporter_names(names: str) -> Sequence[str]:
 
     if names and names.lower().strip() != "none":
         exporters.update(
-            {
-                trace_exporter.strip()
-                for trace_exporter in names.split(",")
-            }
+            {trace_exporter.strip() for trace_exporter in names.split(",")}
         )
 
     if _EXPORTER_OTLP in exporters:
