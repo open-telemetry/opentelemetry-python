@@ -17,25 +17,12 @@
 # type: ignore
 
 from abc import ABC, abstractmethod
-from collections import abc as collections_abc
 from logging import getLogger
-from typing import (
-    Callable,
-    Generator,
-    Generic,
-    Iterable,
-    Optional,
-    TypeVar,
-    Union,
-)
+from typing import Generic, Optional, TypeVar
 
 # pylint: disable=unused-import; needed for typing and sphinx
 from opentelemetry import _metrics as metrics
-from opentelemetry._metrics.measurement import Measurement
 
-_TInstrumentCallback = Callable[[], Iterable[Measurement]]
-_TInstrumentCallbackGenerator = Generator[Iterable[Measurement], None, None]
-TCallback = Union[_TInstrumentCallback, _TInstrumentCallbackGenerator]
 InstrumentT = TypeVar("InstrumentT", bound="Instrument")
 
 
@@ -87,45 +74,11 @@ class Asynchronous(Instrument):
     def __init__(
         self,
         name,
-        callback: TCallback,
-        *args,
+        callback,
         unit="",
         description="",
-        **kwargs
     ):
-        super().__init__(
-            name, *args, unit=unit, description=description, **kwargs
-        )
-
-        if isinstance(callback, collections_abc.Callable):
-            self._callback = callback
-        elif isinstance(callback, collections_abc.Generator):
-            self._callback = self._wrap_generator_callback(callback)
-        # FIXME check that callback is a callable or generator
-
-    @staticmethod
-    def _wrap_generator_callback(
-        generator_callback: _TInstrumentCallbackGenerator,
-    ) -> _TInstrumentCallback:
-        """Wraps a generator style callback into a callable one"""
-        has_items = True
-
-        def inner() -> Iterable[Measurement]:
-            nonlocal has_items
-            if not has_items:
-                return []
-
-            try:
-                return next(generator_callback)
-            except StopIteration:
-                has_items = False
-                # FIXME handle the situation where the callback generator has
-                # run out of measurements
-                return []
-
-        return inner
-
-    # FIXME check that callbacks return an iterable of Measurements
+        super().__init__(name, unit=unit, description=description)
 
 
 class _Adding(Instrument):
