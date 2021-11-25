@@ -16,34 +16,34 @@
 from logging import WARNING
 from math import inf
 from unittest import TestCase
-from unittest.mock import Mock
 
 from opentelemetry.sdk._metrics.aggregation import (
     ExplicitBucketHistogramAggregation,
     LastValueAggregation,
-    SumAggregation,
+    SynchronousSumAggregation,
 )
+from opentelemetry.sdk._metrics.measurement import Measurement
 
 
-class TestSumAggregation(TestCase):
+class TestSynchronousSumAggregation(TestCase):
     def test_aggregate(self):
         """
-        `SumAggregation` collects data for sum metric points
+        `SynchronousSumAggregation` collects data for sum metric points
         """
 
-        sum_aggregation = SumAggregation(Mock())
+        sum_aggregation = SynchronousSumAggregation(True)
 
-        sum_aggregation.aggregate(1)
-        sum_aggregation.aggregate(2)
-        sum_aggregation.aggregate(3)
+        sum_aggregation.aggregate(Measurement(1))
+        sum_aggregation.aggregate(Measurement(2))
+        sum_aggregation.aggregate(Measurement(3))
 
         self.assertEqual(sum_aggregation.value, 6)
 
-        sum_aggregation = SumAggregation(Mock())
+        sum_aggregation = SynchronousSumAggregation(True)
 
-        sum_aggregation.aggregate(1)
-        sum_aggregation.aggregate(-2)
-        sum_aggregation.aggregate(3)
+        sum_aggregation.aggregate(Measurement(1))
+        sum_aggregation.aggregate(Measurement(-2))
+        sum_aggregation.aggregate(Measurement(3))
 
         self.assertEqual(sum_aggregation.value, 2)
 
@@ -55,15 +55,15 @@ class TestLastValueAggregation(TestCase):
         temporality
         """
 
-        last_value_aggregation = LastValueAggregation(Mock())
+        last_value_aggregation = LastValueAggregation(True)
 
-        last_value_aggregation.aggregate(1)
+        last_value_aggregation.aggregate(Measurement(1))
         self.assertEqual(last_value_aggregation.value, 1)
 
-        last_value_aggregation.aggregate(2)
+        last_value_aggregation.aggregate(Measurement(2))
         self.assertEqual(last_value_aggregation.value, 2)
 
-        last_value_aggregation.aggregate(3)
+        last_value_aggregation.aggregate(Measurement(3))
         self.assertEqual(last_value_aggregation.value, 3)
 
 
@@ -74,14 +74,14 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         """
 
         explicit_bucket_histogram_aggregation = (
-            ExplicitBucketHistogramAggregation(Mock())
+            ExplicitBucketHistogramAggregation(True)
         )
 
-        explicit_bucket_histogram_aggregation.aggregate(-1)
-        explicit_bucket_histogram_aggregation.aggregate(2)
-        explicit_bucket_histogram_aggregation.aggregate(7)
-        explicit_bucket_histogram_aggregation.aggregate(8)
-        explicit_bucket_histogram_aggregation.aggregate(9999)
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(-1))
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(2))
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(7))
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(8))
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(9999))
 
         self.assertEqual(explicit_bucket_histogram_aggregation.value[0], -1)
         self.assertEqual(explicit_bucket_histogram_aggregation.value[5], 2)
@@ -97,27 +97,27 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         """
 
         explicit_bucket_histogram_aggregation = (
-            ExplicitBucketHistogramAggregation(Mock())
+            ExplicitBucketHistogramAggregation(True)
         )
 
-        explicit_bucket_histogram_aggregation.aggregate(-1)
-        explicit_bucket_histogram_aggregation.aggregate(2)
-        explicit_bucket_histogram_aggregation.aggregate(7)
-        explicit_bucket_histogram_aggregation.aggregate(8)
-        explicit_bucket_histogram_aggregation.aggregate(9999)
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(-1))
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(2))
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(7))
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(8))
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(9999))
 
         self.assertEqual(explicit_bucket_histogram_aggregation.min, -1)
         self.assertEqual(explicit_bucket_histogram_aggregation.max, 9999)
 
         explicit_bucket_histogram_aggregation = (
-            ExplicitBucketHistogramAggregation(Mock(), record_min_max=False)
+            ExplicitBucketHistogramAggregation(True, record_min_max=False)
         )
 
-        explicit_bucket_histogram_aggregation.aggregate(-1)
-        explicit_bucket_histogram_aggregation.aggregate(2)
-        explicit_bucket_histogram_aggregation.aggregate(7)
-        explicit_bucket_histogram_aggregation.aggregate(8)
-        explicit_bucket_histogram_aggregation.aggregate(9999)
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(-1))
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(2))
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(7))
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(8))
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(9999))
 
         with self.assertLogs(level=WARNING):
             self.assertEqual(explicit_bucket_histogram_aggregation.min, inf)

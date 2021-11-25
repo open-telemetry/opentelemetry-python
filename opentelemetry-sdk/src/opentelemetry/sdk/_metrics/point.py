@@ -13,24 +13,37 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Optional, Union
-
-from opentelemetry.util.types import Attributes
+from typing import Union
 
 
 @dataclass(frozen=True)
-class Measurement:
-    value: Union[int, float]
-    attributes: Optional[Attributes] = None
-
-
-# Can't make Exemplar a subclass of Measurement because that makes
-# time_unix_nano to be defined after attribute, a keyword argument
-@dataclass(frozen=True)
-class Exemplar:
-    value: Union[int, float]
+class Sum:
+    # NumberDataPoint attributes
+    start_time_unix_nano: int
     time_unix_nano: int
-    span_id: int
-    trace_id: int
-    attributes: Optional[Attributes] = None
-    filtered_attributes: Optional[Attributes] = None
+    value: Union[int, float]
+    # Sum attributes
+    aggregation_temporality: int
+    is_monotonic: bool
+
+
+@dataclass(frozen=True)
+class Gauge:
+    # NumberDataPoint attributes
+    # start_time_unix_nano is not added here because the proto says it is to
+    # be ignored.
+    time_unix_nano: int
+    value: Union[int, float]
+
+
+@dataclass(frozen=True)
+class Histogram:
+    # NumberDataPoint attributes
+    start_time_unix_nano: int
+    time_unix_nano: int
+    value: Union[int, float]
+    # Histogram attributes
+    aggregation_temporality: int
+
+
+PointT = Union[Sum, Gauge, Histogram]
