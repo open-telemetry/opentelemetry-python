@@ -15,14 +15,8 @@
 
 from logging import WARNING
 from unittest import TestCase
-from unittest.mock import Mock
 
-from opentelemetry.sdk._metrics import (
-    ConsoleMetricExporter,
-    MeterProvider,
-    SDKMetricReader,
-    View,
-)
+from opentelemetry.sdk._metrics import MeterProvider
 from opentelemetry.sdk.resources import Resource
 
 
@@ -40,7 +34,7 @@ class TestMeterProvider(TestCase):
         self.assertIsInstance(meter_provider_1._resource, Resource)
 
         resource = Resource({"key": "value"})
-        self.assertIs(MeterProvider(resource)._resource, resource)
+        self.assertIs(MeterProvider(resource=resource)._resource, resource)
 
     def test_get_meter(self):
         """
@@ -58,75 +52,6 @@ class TestMeterProvider(TestCase):
         self.assertEqual(meter._instrumentation_info.version, "version")
         self.assertEqual(meter._instrumentation_info.schema_url, "schema_url")
 
-    def test_register_metric_reader(self):
-        """ "
-        `MeterProvider` provides a way to configure `SDKMetricReader`s.
-        """
-
-        meter_provider = MeterProvider()
-
-        self.assertTrue(hasattr(meter_provider, "register_metric_reader"))
-
-        metric_reader = SDKMetricReader()
-
-        meter_provider.register_metric_reader(metric_reader)
-
-        self.assertTrue(meter_provider._metric_readers, [metric_reader])
-
-    def test_register_metric_exporter(self):
-        """ "
-        `MeterProvider` provides a way to configure `ConsoleMetricExporter`s.
-        """
-
-        meter_provider = MeterProvider()
-
-        self.assertTrue(hasattr(meter_provider, "register_metric_exporter"))
-
-        metric_exporter = ConsoleMetricExporter()
-
-        meter_provider.register_metric_exporter(metric_exporter)
-
-        self.assertTrue(meter_provider._metric_exporters, [metric_exporter])
-
-    def test_register_view(self):
-        """ "
-        `MeterProvider` provides a way to configure `View`s.
-        """
-
-        meter_provider = MeterProvider()
-
-        self.assertTrue(hasattr(meter_provider, "register_view"))
-
-        view = View()
-
-        meter_provider.register_view(view)
-
-        self.assertTrue(meter_provider._views, [view])
-
-    def test_meter_configuration(self):
-        """
-        Any updated configuration is applied to all returned `Meter`s.
-        """
-
-        meter_provider = MeterProvider()
-
-        view_0 = View()
-
-        meter_provider.register_view(view_0)
-
-        meter_0 = meter_provider.get_meter("meter_0")
-        meter_1 = meter_provider.get_meter("meter_1")
-
-        self.assertEqual(meter_0._meter_provider._views, [view_0])
-        self.assertEqual(meter_1._meter_provider._views, [view_0])
-
-        view_1 = View()
-
-        meter_provider.register_view(view_1)
-
-        self.assertEqual(meter_0._meter_provider._views, [view_0, view_1])
-        self.assertEqual(meter_1._meter_provider._views, [view_0, view_1])
-
     def test_shutdown_subsequent_calls(self):
         """
         No subsequent attempts to get a `Meter` are allowed after calling
@@ -141,65 +66,3 @@ class TestMeterProvider(TestCase):
 
         with self.assertLogs(level=WARNING):
             meter_provider.shutdown()
-
-    def test_shutdown_result(self):
-        """
-        `MeterProvider.shutdown` provides a way to let the caller know if it
-        succeeded or failed.
-
-        `MeterProvider.shutdown` is implemented by at least invoking
-        ``shutdown`` on all registered `SDKMetricReader`s and `ConsoleMetricExporter`s.
-        """
-
-        meter_provider = MeterProvider()
-
-        meter_provider.register_metric_reader(
-            Mock(**{"shutdown.return_value": True})
-        )
-        meter_provider.register_metric_exporter(
-            Mock(**{"shutdown.return_value": True})
-        )
-
-        self.assertTrue(meter_provider.shutdown())
-
-        meter_provider = MeterProvider()
-
-        meter_provider.register_metric_reader(
-            Mock(**{"shutdown.return_value": True})
-        )
-        meter_provider.register_metric_exporter(
-            Mock(**{"shutdown.return_value": False})
-        )
-
-        self.assertFalse(meter_provider.shutdown())
-
-    def test_force_flush_result(self):
-        """
-        `MeterProvider.force_flush` provides a way to let the caller know if it
-        succeeded or failed.
-
-        `MeterProvider.force_flush` is implemented by at least invoking
-        ``force_flush`` on all registered `SDKMetricReader`s and `ConsoleMetricExporter`s.
-        """
-
-        meter_provider = MeterProvider()
-
-        meter_provider.register_metric_reader(
-            Mock(**{"force_flush.return_value": True})
-        )
-        meter_provider.register_metric_exporter(
-            Mock(**{"force_flush.return_value": True})
-        )
-
-        self.assertTrue(meter_provider.force_flush())
-
-        meter_provider = MeterProvider()
-
-        meter_provider.register_metric_reader(
-            Mock(**{"force_flush.return_value": True})
-        )
-        meter_provider.register_metric_exporter(
-            Mock(**{"force_flush.return_value": False})
-        )
-
-        self.assertFalse(meter_provider.force_flush())
