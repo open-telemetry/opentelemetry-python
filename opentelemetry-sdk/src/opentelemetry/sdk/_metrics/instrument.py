@@ -12,149 +12,121 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=function-redefined
-# pylint: disable=dangerous-default-value
-# Classes in this module use dictionaries as default arguments. This is
-# considered dangerous by pylint because the default dictionary is shared by
-# all instances. Implementations of these classes must not make any change to
-# this default dictionary in __init__.
+# pylint: disable=too-many-ancestors
 
+
+from collections.abc import Callable, Generator
+from typing import Iterable, Union
+
+from opentelemetry._metrics.instrument import Asynchronous
+from opentelemetry._metrics.instrument import Counter as APICounter
+from opentelemetry._metrics.instrument import Histogram as APIHistogram
 from opentelemetry._metrics.instrument import (
-    Counter,
-    Histogram,
-    ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
-    UpDownCounter,
+    ObservableCounter as APIObservableCounter,
 )
+from opentelemetry._metrics.instrument import (
+    ObservableGauge as APIObservableGauge,
+)
+from opentelemetry._metrics.instrument import (
+    ObservableUpDownCounter as APIObservableUpDownCounter,
+)
+from opentelemetry._metrics.instrument import Synchronous
+from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
 from opentelemetry.sdk._metrics.aggregation import (
     ExplicitBucketHistogramAggregation,
     LastValueAggregation,
     SumAggregation,
 )
+from opentelemetry.sdk._metrics.measurement import Measurement
 
 
-class _Instrument:
+class _Synchronous(Synchronous):
     def __init__(
         self,
+        meter_provider,
         name,
         unit="",
         description="",
-        aggregation=None,
-        aggregation_config={},
     ):
-        self._attributes_aggregations = {}
-        self._aggregation = aggregation
-        self._aggregation_config = aggregation_config
-        aggregation(self, **aggregation_config)
+
+        self._meter_provider = meter_provider
+
+        super().__init__(name, unit=unit, description=description)
 
 
-class Counter(_Instrument, Counter):
+class _Asynchronous(Asynchronous):
     def __init__(
         self,
+        meter_provider,
         name,
+        callback: Union[Callable, Generator],
         unit="",
         description="",
-        aggregation=SumAggregation,
-        aggregation_config={},
     ):
-        super().__init__(
-            name,
-            unit=unit,
-            description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
+        self._meter_provider = meter_provider
+
+        super().__init__(name, callback, unit=unit, description=description)
+
+        self._callback = callback
+
+        if isinstance(callback, Generator):
+
+            def inner() -> Iterable[Measurement]:
+                return next(callback)
+
+            self._callback = inner
+
+    @property
+    def callback(self) -> Union[Callable, Generator]:
+        return self._callback
+
+
+class Counter(_Synchronous, APICounter):
+
+    _default_aggregation = SumAggregation
+
+    def add(self, amount, attributes=None):
+        if amount < 0:
+            raise Exception("amount must be non negative")
+
+        # pylint: disable=protected-access
+        self._meter_provider._measurement_processor.process(
+            self, Measurement(amount, attributes=attributes)
         )
 
 
-class UpDownCounter(_Instrument, UpDownCounter):
-    def __init__(
-        self,
-        name,
-        unit="",
-        description="",
-        aggregation=SumAggregation,
-        aggregation_config={},
-    ):
-        super().__init__(
-            name,
-            unit=unit,
-            description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
+class UpDownCounter(_Synchronous, APIUpDownCounter):
+
+    _default_aggregation = SumAggregation
+
+    def add(self, amount, attributes=None):
+        # pylint: disable=protected-access
+        self._meter_provider._measurement_processor.process(
+            self, Measurement(amount, attributes=attributes)
         )
 
 
-class ObservableCounter(_Instrument, ObservableCounter):
-    def __init__(
-        self,
-        name,
-        callback,
-        unit="",
-        description="",
-        aggregation=SumAggregation,
-        aggregation_config={},
-    ):
-        super().__init__(
-            name,
-            unit=unit,
-            description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
+class ObservableCounter(_Asynchronous, APIObservableCounter):
+
+    _default_aggregation = SumAggregation
+
+
+class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
+
+    _default_aggregation = SumAggregation
+
+
+class Histogram(_Synchronous, APIHistogram):
+
+    _default_aggregation = ExplicitBucketHistogramAggregation
+
+    def record(self, amount, attributes=None):
+        # pylint: disable=protected-access
+        self._meter_provider._measurement_processor.process(
+            self, Measurement(amount, attributes=attributes)
         )
 
 
-class ObservableUpDownCounter(_Instrument, ObservableUpDownCounter):
-    def __init__(
-        self,
-        name,
-        callback,
-        unit="",
-        description="",
-        aggregation=SumAggregation,
-        aggregation_config={},
-    ):
-        super().__init__(
-            name,
-            unit=unit,
-            description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
-        )
+class ObservableGauge(_Asynchronous, APIObservableGauge):
 
-
-class Histogram(_Instrument, Histogram):
-    def __init__(
-        self,
-        name,
-        unit="",
-        description="",
-        aggregation=ExplicitBucketHistogramAggregation,
-        aggregation_config={},
-    ):
-        super().__init__(
-            name,
-            unit=unit,
-            description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
-        )
-
-
-class ObservableGauge(_Instrument, ObservableGauge):
-    def __init__(
-        self,
-        name,
-        callback,
-        unit="",
-        description="",
-        aggregation=LastValueAggregation,
-        aggregation_config={},
-    ):
-        super().__init__(
-            name,
-            unit=unit,
-            description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
-        )
+    _default_aggregation = LastValueAggregation
