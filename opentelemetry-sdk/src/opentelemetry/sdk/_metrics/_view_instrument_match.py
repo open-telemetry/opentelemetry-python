@@ -12,28 +12,30 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Callable, Dict, List
+from typing import Callable, Dict, Iterable, List
 
-from opentelemetry._metrics.instrument import Instrument
 from opentelemetry.sdk._metrics.aggregation import Aggregation
+from opentelemetry.sdk._metrics.export import Metric
+from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry.sdk.resources import Resource
 
 
-class View:
+class _ViewInstrumentMatch:
     def __init__(
         self,
-        instrument_type: Instrument = None,
-        instrument_name: str = None,
-        meter_name: str = None,
-        meter_version: str = None,
-        meter_schema_url: str = None,
-        name: str = None,
-        description: str = None,
-        attribute_keys: Dict[str, str] = None,
-        extra_dimensions: List[str] = None,
-        aggregation: Aggregation = None,
-        exemplar_reservoir: Callable = None,
+        name: str,
+        unit: str,
+        description: str,
+        attribute_keys: Dict[str, str],
+        extra_dimensions: List[str],
+        aggregation: Aggregation,
+        exemplar_reservoir: Callable,
+        resource: Resource,
     ):
         pass
 
-    def _matches(self, instrument: Instrument) -> bool:
+    def _process(self, measurement: Measurement) -> None:
+        pass
+
+    def _collect(self, temporality: int) -> Iterable[Metric]:
         pass

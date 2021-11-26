@@ -41,3 +41,7 @@ class Gauge:
 
 
 PointT = Union[Sum, Gauge]
+
+
+class Metric:
+    pass
