@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Adds Aggregation and instruments as part of Metrics SDK
   ([#2234](https://github.com/open-telemetry/opentelemetry-python/pull/2234))
+- Update visibility of OTEL_METRICS_EXPORTER environment variable
+  ()
 
 ## [1.7.1-0.26b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.7.0-0.26b0) - 2021-11-11
 
