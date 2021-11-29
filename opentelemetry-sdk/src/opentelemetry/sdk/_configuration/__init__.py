@@ -28,12 +28,12 @@ from opentelemetry.environment_variables import (
     OTEL_PYTHON_ID_GENERATOR,
     OTEL_TRACES_EXPORTER,
 )
-from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk._logs import (
     LogEmitterProvider,
     set_log_emitter_provider,
 )
 from opentelemetry.sdk._logs.export import BatchLogProcessor, LogExporter
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
@@ -90,6 +90,7 @@ def _init_tracing(
         provider.add_span_processor(
             BatchSpanProcessor(exporter_class(**exporter_args))
         )
+
 
 def _init_logging(
     exporters: Sequence[LogExporter],
