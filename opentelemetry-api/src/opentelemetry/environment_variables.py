@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+OTEL_METRICS_EXPORTER = "OTEL_METRICS_EXPORTER"
+"""
+.. envvar:: OTEL_METRICS_EXPORTER
+
+"""
+
 OTEL_PROPAGATORS = "OTEL_PROPAGATORS"
 """
 .. envvar:: OTEL_PROPAGATORS
@@ -40,10 +46,4 @@ OTEL_PYTHON_TRACER_PROVIDER = "OTEL_PYTHON_TRACER_PROVIDER"
 _OTEL_PYTHON_METER_PROVIDER = "OTEL_PYTHON_METER_PROVIDER"
 """
 .. envvar:: OTEL_PYTHON_METER_PROVIDER
-"""
-
-_OTEL_METRICS_EXPORTER = "OTEL_METRICS_EXPORTER"
-"""
-.. envvar:: OTEL_METRICS_EXPORTER
-
 """
