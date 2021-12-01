@@ -37,8 +37,8 @@ from opentelemetry.sdk._metrics._internal.measurement import (
     SendMeasurementT,
 )
 from opentelemetry.sdk._metrics._internal.measurement_processor import (
-    DefaultMetricProcessor,
-    MeasurementProcessor,
+    DefaultMeasurementConsumer,
+    MeasurementConsumer,
     SdkConfiguration,
 )
 from opentelemetry.sdk._metrics._internal.metric_reader import MetricReader
@@ -54,7 +54,7 @@ class Meter(APIMeter):
     def __init__(
         self,
         instrumentation_info: InstrumentationInfo,
-        measurement_processor: MeasurementProcessor,
+        measurement_processor: MeasurementConsumer,
     ):
         super().__init__(instrumentation_info)
         self._instrumentation_info = instrumentation_info
@@ -134,7 +134,7 @@ class MeterProvider(APIMeterProvider):
         self._metric_exporters = []
         self._shutdown = False
 
-        self._measurement_processor = DefaultMetricProcessor(
+        self._measurement_processor = DefaultMeasurementConsumer(
             SdkConfiguration(
                 resource=self._resource,
                 views=self._views,

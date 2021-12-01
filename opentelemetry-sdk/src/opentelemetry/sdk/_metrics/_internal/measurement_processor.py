@@ -68,7 +68,7 @@ class SdkConfiguration:
 
 
 # TODO: this is not the greatest name
-class MeasurementProcessor(ABC):
+class MeasurementConsumer(ABC):
     @abstractmethod
     def consume_measurement(self, measurement: Measurement) -> None:
         pass
@@ -86,7 +86,7 @@ class MeasurementProcessor(ABC):
         pass
 
 
-class DefaultMetricProcessor(MeasurementProcessor):
+class DefaultMeasurementConsumer(MeasurementConsumer):
     def __init__(self, sdk_config: SdkConfiguration) -> None:
         self._lock = Lock()
         # should never be mutated
