@@ -63,7 +63,7 @@ class LogExporter(abc.ABC):
         """
 
 
-class ConsoleExporter(LogExporter):
+class ConsoleLogExporter(LogExporter):
     """Implementation of :class:`LogExporter` that prints log records to the
     console.
 
