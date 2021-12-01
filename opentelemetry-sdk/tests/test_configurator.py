@@ -21,7 +21,7 @@ from opentelemetry import trace
 from opentelemetry.environment_variables import OTEL_PYTHON_ID_GENERATOR
 from opentelemetry.sdk._configuration import (
     _EXPORTER_OTLP,
-    _EXPORTER_OTLP_SPAN,
+    _EXPORTER_OTLP_PROTO_GRPC,
     _get_exporter_names,
     _get_id_generator,
     _import_exporters,
@@ -164,9 +164,9 @@ class TestTraceInit(TestCase):
 
 class TestExporterNames(TestCase):
     def test_otlp_exporter_overwrite(self):
-        for exporter in [_EXPORTER_OTLP, _EXPORTER_OTLP_SPAN]:
+        for exporter in [_EXPORTER_OTLP, _EXPORTER_OTLP_PROTO_GRPC]:
             self.assertEqual(
-                _get_exporter_names(exporter), [_EXPORTER_OTLP_SPAN]
+                _get_exporter_names(exporter), [_EXPORTER_OTLP_PROTO_GRPC]
             )
 
     def test_multiple_exporters(self):

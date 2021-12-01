@@ -40,7 +40,7 @@ from opentelemetry.sdk.trace.id_generator import IdGenerator
 from opentelemetry.semconv.resource import ResourceAttributes
 
 _EXPORTER_OTLP = "otlp"
-_EXPORTER_OTLP_SPAN = "otlp_proto_grpc"
+_EXPORTER_OTLP_PROTO_GRPC = "otlp_proto_grpc"
 
 _RANDOM_ID_GENERATOR = "random"
 _DEFAULT_ID_GENERATOR = _RANDOM_ID_GENERATOR
@@ -61,7 +61,7 @@ def _get_exporter_names(names: str) -> Sequence[str]:
 
     if _EXPORTER_OTLP in exporters:
         exporters.remove(_EXPORTER_OTLP)
-        exporters.add(_EXPORTER_OTLP_SPAN)
+        exporters.add(_EXPORTER_OTLP_PROTO_GRPC)
 
     return list(exporters)
 
