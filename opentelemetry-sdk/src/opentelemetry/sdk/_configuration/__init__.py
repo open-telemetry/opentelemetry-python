@@ -93,7 +93,7 @@ def _init_tracing(
 
 
 def _init_logging(
-    exporters: Sequence[LogExporter],
+    exporters: Dict[str, Sequence[LogExporter]],
     auto_instrumentation_version: Optional[str] = None,
 ):
     # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
@@ -114,7 +114,7 @@ def _init_logging(
         )
 
 
-def _import_tracer_provider_config_components(
+def _import_config_components(
     selected_components, entry_point_name
 ) -> Sequence[Tuple[str, object]]:
     component_entry_points = {
@@ -144,7 +144,7 @@ def _import_exporters(
     for (
         exporter_name,
         exporter_impl,
-    ) in _import_tracer_provider_config_components(
+    ) in _import_config_components(
         trace_exporter_names, "opentelemetry_traces_exporter"
     ):
         if issubclass(exporter_impl, SpanExporter):
@@ -155,7 +155,7 @@ def _import_exporters(
     for (
         exporter_name,
         exporter_impl,
-    ) in _import_tracer_provider_config_components(
+    ) in _import_config_components(
         log_exporter_names, "opentelemetry_logs_exporter"
     ):
         if issubclass(exporter_impl, LogExporter):
@@ -170,7 +170,7 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
     # pylint: disable=unbalanced-tuple-unpacking
     [
         (id_generator_name, id_generator_impl)
-    ] = _import_tracer_provider_config_components(
+    ] = _import_config_components(
         [id_generator_name.strip()], "opentelemetry_id_generator"
     )
 
@@ -188,7 +188,7 @@ def _initialize_components(auto_instrumentation_version):
     id_generator_name = _get_id_generator()
     id_generator = _import_id_generator(id_generator_name)
     _init_tracing(trace_exporters, id_generator, auto_instrumentation_version)
-    _init_logging(log_exporters)
+    _init_logging(log_exporters, auto_instrumentation_version)
 
 
 class _BaseConfigurator(ABC):
