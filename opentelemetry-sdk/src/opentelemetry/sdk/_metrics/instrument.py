@@ -35,7 +35,7 @@ from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
 from opentelemetry.sdk._metrics.aggregation import (
     ExplicitBucketHistogramAggregation,
     LastValueAggregation,
-    SumAggregation,
+    SynchronousSumAggregation,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
 
@@ -83,7 +83,7 @@ class _Asynchronous(Asynchronous):
 
 class Counter(_Synchronous, APICounter):
 
-    _default_aggregation = SumAggregation
+    _default_aggregation = SynchronousSumAggregation
 
     def add(self, amount, attributes=None):
         if amount < 0:
@@ -97,7 +97,7 @@ class Counter(_Synchronous, APICounter):
 
 class UpDownCounter(_Synchronous, APIUpDownCounter):
 
-    _default_aggregation = SumAggregation
+    _default_aggregation = SynchronousSumAggregation
 
     def add(self, amount, attributes=None):
         # pylint: disable=protected-access
@@ -108,12 +108,12 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 
 class ObservableCounter(_Asynchronous, APIObservableCounter):
 
-    _default_aggregation = SumAggregation
+    _default_aggregation = SynchronousSumAggregation
 
 
 class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
 
-    _default_aggregation = SumAggregation
+    _default_aggregation = SynchronousSumAggregation
 
 
 class Histogram(_Synchronous, APIHistogram):

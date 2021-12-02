@@ -13,12 +13,31 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Optional, Union
+from typing import Union
 
-from opentelemetry.util.types import Attributes
+# FIXME this is being copied directly from
+# opentelemetry.proto.metrics.v1.metrics_pb2. The only reason for doing so is
+# to avoid havinv protobuf as a indirect dependency in the SDK. This
+# duplication of code is not ideal.
+
+AGGREGATION_TEMPORALITY_UNSPECIFIED = 0
+AGGREGATION_TEMPORALITY_DELTA = 1
+AGGREGATION_TEMPORALITY_CUMULATIVE = 2
 
 
 @dataclass(frozen=True)
-class Measurement:
+class Sum:
+    aggregation_temporality: int
+    is_monotonic: bool
+    start_time_unix_nano: int
+    time_unix_nano: int
     value: Union[int, float]
-    attributes: Optional[Attributes] = None
+
+
+@dataclass(frozen=True)
+class Gauge:
+    time_unix_nano: int
+    value: Union[int, float]
+
+
+PointT = Union[Sum, Gauge]
