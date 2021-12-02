@@ -141,10 +141,7 @@ def _import_exporters(
     trace_exporters = {}
     log_exporters = {}
 
-    for (
-        exporter_name,
-        exporter_impl,
-    ) in _import_config_components(
+    for (exporter_name, exporter_impl,) in _import_config_components(
         trace_exporter_names, "opentelemetry_traces_exporter"
     ):
         if issubclass(exporter_impl, SpanExporter):
@@ -152,10 +149,7 @@ def _import_exporters(
         else:
             raise RuntimeError(f"{exporter_name} is not a trace exporter")
 
-    for (
-        exporter_name,
-        exporter_impl,
-    ) in _import_config_components(
+    for (exporter_name, exporter_impl,) in _import_config_components(
         log_exporter_names, "opentelemetry_logs_exporter"
     ):
         if issubclass(exporter_impl, LogExporter):
@@ -168,9 +162,7 @@ def _import_exporters(
 
 def _import_id_generator(id_generator_name: str) -> IdGenerator:
     # pylint: disable=unbalanced-tuple-unpacking
-    [
-        (id_generator_name, id_generator_impl)
-    ] = _import_config_components(
+    [(id_generator_name, id_generator_impl)] = _import_config_components(
         [id_generator_name.strip()], "opentelemetry_id_generator"
     )
 
