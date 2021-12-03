@@ -31,7 +31,7 @@ from opentelemetry.sdk._logs import (
 )
 from opentelemetry.sdk._logs.export import (
     BatchLogProcessor,
-    ConsoleExporter,
+    ConsoleLogExporter,
     SimpleLogProcessor,
 )
 from opentelemetry.sdk._logs.export.in_memory_log_exporter import (
@@ -321,7 +321,7 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
         log_processor.shutdown()
 
 
-class TestConsoleExporter(unittest.TestCase):
+class TestConsoleLogExporter(unittest.TestCase):
     def test_export(self):  # pylint: disable=no-self-use
         """Check that the console exporter prints log records."""
         log_data = LogData(
@@ -341,7 +341,7 @@ class TestConsoleExporter(unittest.TestCase):
                 "first_name", "first_version"
             ),
         )
-        exporter = ConsoleExporter()
+        exporter = ConsoleLogExporter()
         # Mocking stdout interferes with debugging and test reporting, mock on
         # the exporter instance instead.
 
@@ -362,7 +362,7 @@ class TestConsoleExporter(unittest.TestCase):
             return mock_record_str
 
         mock_stdout = Mock()
-        exporter = ConsoleExporter(out=mock_stdout, formatter=formatter)
+        exporter = ConsoleLogExporter(out=mock_stdout, formatter=formatter)
         log_data = LogData(
             log_record=LogRecord(),
             instrumentation_info=InstrumentationInfo(
