@@ -138,7 +138,7 @@ class MeterProvider(APIMeterProvider):
         self.__views = views
 
         if self.__use_always_matching_view:
-            self.__views = [*self.__views, View(instrument_name="*")]
+            self.__views = (*self.__views, View(instrument_name="*"))
 
         self.__resource = resource
         self._shutdown = False
