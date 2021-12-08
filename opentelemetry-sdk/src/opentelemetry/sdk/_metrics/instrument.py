@@ -30,6 +30,7 @@ from opentelemetry._metrics.instrument import (
 from opentelemetry._metrics.instrument import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
+from opentelemetry._metrics.instrument import TCallback
 from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
@@ -39,11 +40,12 @@ class _Instrument:
         self,
         instrumentation_info: InstrumentationInfo,
         name: str,
+        *args,
         unit: str = "",
         description: str = "",
     ):
         self._instrumentation_info = instrumentation_info
-        super().__init__(name, unit=unit, description=description)
+        super().__init__(name, *args, unit=unit, description=description)
 
 
 class Counter(_Instrument, APICounter):
@@ -90,12 +92,14 @@ class ObservableCounter(_Instrument, APIObservableCounter):
         self,
         instrumentation_info: InstrumentationInfo,
         name: str,
+        callback: TCallback,
         unit: str = "",
         description: str = "",
     ):
         super().__init__(
             instrumentation_info,
             name,
+            callback,
             unit=unit,
             description=description,
         )
@@ -106,12 +110,14 @@ class ObservableUpDownCounter(_Instrument, APIObservableUpDownCounter):
         self,
         instrumentation_info: InstrumentationInfo,
         name: str,
+        callback: TCallback,
         unit: str = "",
         description: str = "",
     ):
         super().__init__(
             instrumentation_info,
             name,
+            callback,
             unit=unit,
             description=description,
         )
@@ -141,12 +147,14 @@ class ObservableGauge(_Instrument, APIObservableGauge):
         self,
         instrumentation_info: InstrumentationInfo,
         name: str,
+        callback: TCallback,
         unit: str = "",
         description: str = "",
     ):
         super().__init__(
             instrumentation_info,
             name,
+            callback,
             unit=unit,
             description=description,
         )

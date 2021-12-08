@@ -15,8 +15,17 @@
 
 from logging import WARNING
 from unittest import TestCase
+from unittest.mock import Mock
 
-from opentelemetry.sdk._metrics import MeterProvider
+from opentelemetry.sdk._metrics import Meter, MeterProvider
+from opentelemetry.sdk._metrics.instrument import (
+    Counter,
+    Histogram,
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
+)
 from opentelemetry.sdk.resources import Resource
 
 
@@ -66,3 +75,53 @@ class TestMeterProvider(TestCase):
 
         with self.assertLogs(level=WARNING):
             meter_provider.shutdown()
+
+
+class TestMeter(TestCase):
+    def setUp(self):
+        self.meter = Meter(Mock(), MeterProvider())
+
+    def test_create_counter(self):
+        counter = self.meter.create_counter(
+            "name", unit="unit", description="description"
+        )
+
+        self.assertIsInstance(counter, Counter)
+
+    def test_create_up_down_counter(self):
+        up_down_counter = self.meter.create_up_down_counter(
+            "name", unit="unit", description="description"
+        )
+
+        self.assertIsInstance(up_down_counter, UpDownCounter)
+
+    def test_create_observable_counter(self):
+        observable_counter = self.meter.create_observable_counter(
+            "name", Mock(), unit="unit", description="description"
+        )
+
+        self.assertIsInstance(observable_counter, ObservableCounter)
+
+    def test_create_histogram(self):
+        histogram = self.meter.create_histogram(
+            "name", unit="unit", description="description"
+        )
+
+        self.assertIsInstance(histogram, Histogram)
+
+    def test_create_observable_gauge(self):
+        observable_gauge = self.meter.create_observable_gauge(
+            "name", Mock(), unit="unit", description="description"
+        )
+
+        self.assertIsInstance(observable_gauge, ObservableGauge)
+
+    def test_create_observable_up_down_counter(self):
+        observable_up_down_counter = (
+            self.meter.create_observable_up_down_counter(
+                "name", Mock(), unit="unit", description="description"
+            )
+        )
+        self.assertIsInstance(
+            observable_up_down_counter, ObservableUpDownCounter
+        )
