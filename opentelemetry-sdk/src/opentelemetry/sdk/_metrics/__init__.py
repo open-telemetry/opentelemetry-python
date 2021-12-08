@@ -42,7 +42,6 @@ from opentelemetry.sdk._metrics.instrument import (
 )
 from opentelemetry.sdk._metrics.metric_exporter import MetricExporter
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
-from opentelemetry.sdk._metrics.view import View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
@@ -103,52 +102,24 @@ class MeterProvider(APIMeterProvider):
         self,
         metric_exporters: Sequence[MetricExporter] = (),
         metric_readers: Sequence[MetricReader] = (),
-        views: Sequence[View] = (),
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
-        use_always_matching_view: bool = True,
     ):
         self._lock = Lock()
         self._atexit_handler = None
-        self.__use_always_matching_view = use_always_matching_view
 
         if shutdown_on_exit:
             self._atexit_handler = register(self.shutdown)
 
-        self.__metric_readers = metric_readers
+        self._metric_readers = metric_readers
 
         for metric_reader in self._metric_readers:
             metric_reader._register_meter_provider(self)
 
-        self.__metric_exporters = metric_exporters
+        self._metric_exporters = metric_exporters
 
-        self.__views = views
-
-        if self.__use_always_matching_view:
-            self.__views = [*self.__views, View(instrument_name="*")]
-
-        self.__resource = resource
+        self._resource = resource
         self._shutdown = False
-
-    @property
-    def _metric_readers(self):
-        return self.__metric_readers
-
-    @property
-    def _use_always_matching_view(self):
-        return self.__use_always_matching_view
-
-    @property
-    def _resource(self):
-        return self.__resource
-
-    @property
-    def _metric_exporters(self):
-        return self.__metric_exporters
-
-    @property
-    def _views(self):
-        return self.__views
 
     def force_flush(self) -> bool:
 
