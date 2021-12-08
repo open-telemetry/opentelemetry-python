@@ -52,8 +52,8 @@ def parse_headers(s: str) -> Mapping[str, str]:
             continue
         # value may contain any number of `=`
         name, value = match.string.split("=", 1)
-        name = unquote(name.strip()).lower()
-        value = unquote(value.strip())
+        name = unquote(name).strip().lower()
+        value = unquote(value).strip()
         headers[name] = value
 
     return headers
