@@ -158,8 +158,14 @@ class MeterProvider(APIMeterProvider):
         for metric_reader in self._metric_readers:
             result = result and metric_reader.shutdown()
 
+            if not result:
+                _logger.warning("A MetricReader failed to shutdown")
+
         for metric_exporter in self._metric_exporters:
             result = result and metric_exporter.shutdown()
+
+            if not result:
+                _logger.warning("A MetricExporter failed to shutdown")
 
         self._shutdown = True
 
