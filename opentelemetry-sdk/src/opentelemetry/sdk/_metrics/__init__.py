@@ -20,7 +20,6 @@ from typing import Optional, Sequence
 from opentelemetry._metrics import Meter as APIMeter
 from opentelemetry._metrics import MeterProvider as APIMeterProvider
 from opentelemetry._metrics import _DefaultMeter
-from opentelemetry._metrics.instrument import Asynchronous
 from opentelemetry._metrics.instrument import Counter as APICounter
 from opentelemetry._metrics.instrument import Histogram as APIHistogram
 from opentelemetry._metrics.instrument import (
@@ -166,65 +165,56 @@ class MeterProvider(APIMeterProvider):
     def _asynchronous_instruments(self):
         return self.__asynchronous_instruments
 
-    def _create_instrument(
-        self, instrument_type, instrumentation_info, name, unit, description
-    ):
-
-        instrument = instrument_type(
-            instrumentation_info, name, unit=unit, description=description
-        )
-
-        if isinstance(instrument, Asynchronous):
-            with self._lock:
-                self.__asynchronous_instruments.append(instrument)
-
-        return instrument
-
-    def _create_counter(
+    def _create_counter(  # pylint: disable=no-self-use
         self, instrumentation_info, name, unit, description
     ) -> APICounter:
-        return self._create_instrument(
-            Counter, instrumentation_info, name, unit, description
-        )
+        return Counter(instrumentation_info, name, unit, description)
 
-    def _create_up_down_counter(
+    def _create_up_down_counter(  # pylint: disable=no-self-use
         self, instrumentation_info, name, unit, description
     ) -> APIUpDownCounter:
-        return self._create_instrument(
-            UpDownCounter, instrumentation_info, name, unit, description
-        )
+        return UpDownCounter(instrumentation_info, name, unit, description)
 
     def _create_observable_counter(
         self, instrumentation_info, name, unit, description
     ) -> APIObservableCounter:
-        return self._create_instrument(
-            ObservableCounter, instrumentation_info, name, unit, description
+        instrument = ObservableCounter(
+            instrumentation_info, name, unit, description
         )
 
-    def _create_histogram(
+        with self._lock:
+            self.__asynchronous_instruments.append(instrument)
+
+        return instrument
+
+    def _create_histogram(  # pylint: disable=no-self-use
         self, instrumentation_info, name, unit, description
     ) -> APIHistogram:
-        return self._create_instrument(
-            Histogram, instrumentation_info, name, unit, description
-        )
+        return Histogram(instrumentation_info, name, unit, description)
 
     def _create_observable_gauge(
         self, instrumentation_info, name, unit, description
     ) -> ObservableGauge:
-        return self._create_instrument(
-            ObservableGauge, instrumentation_info, name, unit, description
+        instrument = ObservableGauge(
+            instrumentation_info, name, unit, description
         )
+
+        with self._lock:
+            self.__asynchronous_instruments.append(instrument)
+
+        return instrument
 
     def _create_observable_up_down_counter(
         self, instrumentation_info, name, unit, description
     ) -> ObservableUpDownCounter:
-        return self._create_instrument(
-            ObservableUpDownCounter,
-            instrumentation_info,
-            name,
-            unit,
-            description,
+        instrument = ObservableUpDownCounter(
+            instrumentation_info, name, unit, description
         )
+
+        with self._lock:
+            self.__asynchronous_instruments.append(instrument)
+
+        return instrument
 
     def force_flush(self) -> bool:
 

@@ -19,142 +19,134 @@
 # all instances. Implementations of these classes must not make any change to
 # this default dictionary in __init__.
 
+from opentelemetry._metrics.instrument import Counter as APICounter
+from opentelemetry._metrics.instrument import Histogram as APIHistogram
 from opentelemetry._metrics.instrument import (
-    Counter,
-    Histogram,
-    ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
-    UpDownCounter,
+    ObservableCounter as APIObservableCounter,
 )
-from opentelemetry.sdk._metrics.aggregation import (
-    ExplicitBucketHistogramAggregation,
-    LastValueAggregation,
-    SumAggregation,
+from opentelemetry._metrics.instrument import (
+    ObservableGauge as APIObservableGauge,
 )
+from opentelemetry._metrics.instrument import (
+    ObservableUpDownCounter as APIObservableUpDownCounter,
+)
+from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
 
 class _Instrument:
     def __init__(
         self,
-        name,
-        unit="",
-        description="",
-        aggregation=None,
-        aggregation_config={},
+        instrumentation_info: InstrumentationInfo,
+        name: str,
+        unit: str = "",
+        description: str = "",
     ):
-        self._attributes_aggregations = {}
-        self._aggregation = aggregation
-        self._aggregation_config = aggregation_config
-        aggregation(self, **aggregation_config)
+        self._instrumentation_info = instrumentation_info
+        super().__init__(name, unit=unit, description=description)
 
 
-class Counter(_Instrument, Counter):
+class Counter(_Instrument, APICounter):
     def __init__(
         self,
-        name,
-        unit="",
-        description="",
-        aggregation=SumAggregation,
-        aggregation_config={},
+        instrumentation_info: InstrumentationInfo,
+        name: str,
+        unit: str = "",
+        description: str = "",
     ):
         super().__init__(
+            instrumentation_info,
             name,
             unit=unit,
             description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
+        )
+
+    def add(self, amount, attributes=None):
+        # FIXME check that the amount is non negative
+        pass
+
+
+class UpDownCounter(_Instrument, APIUpDownCounter):
+    def __init__(
+        self,
+        instrumentation_info: InstrumentationInfo,
+        name: str,
+        unit: str = "",
+        description: str = "",
+    ):
+        super().__init__(
+            instrumentation_info,
+            name,
+            unit=unit,
+            description=description,
+        )
+
+    def add(self, amount, attributes=None):
+        pass
+
+
+class ObservableCounter(_Instrument, APIObservableCounter):
+    def __init__(
+        self,
+        instrumentation_info: InstrumentationInfo,
+        name: str,
+        unit: str = "",
+        description: str = "",
+    ):
+        super().__init__(
+            instrumentation_info,
+            name,
+            unit=unit,
+            description=description,
         )
 
 
-class UpDownCounter(_Instrument, UpDownCounter):
+class ObservableUpDownCounter(_Instrument, APIObservableUpDownCounter):
     def __init__(
         self,
-        name,
-        unit="",
-        description="",
-        aggregation=SumAggregation,
-        aggregation_config={},
+        instrumentation_info: InstrumentationInfo,
+        name: str,
+        unit: str = "",
+        description: str = "",
     ):
         super().__init__(
+            instrumentation_info,
             name,
             unit=unit,
             description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
         )
 
 
-class ObservableCounter(_Instrument, ObservableCounter):
+class Histogram(_Instrument, APIHistogram):
     def __init__(
         self,
-        name,
-        callback,
-        unit="",
-        description="",
-        aggregation=SumAggregation,
-        aggregation_config={},
+        instrumentation_info: InstrumentationInfo,
+        name: str,
+        unit: str = "",
+        description: str = "",
     ):
         super().__init__(
+            instrumentation_info,
             name,
             unit=unit,
             description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
         )
 
+    def record(self, amount, attributes=None):
+        pass
 
-class ObservableUpDownCounter(_Instrument, ObservableUpDownCounter):
+
+class ObservableGauge(_Instrument, APIObservableGauge):
     def __init__(
         self,
-        name,
-        callback,
-        unit="",
-        description="",
-        aggregation=SumAggregation,
-        aggregation_config={},
+        instrumentation_info: InstrumentationInfo,
+        name: str,
+        unit: str = "",
+        description: str = "",
     ):
         super().__init__(
+            instrumentation_info,
             name,
             unit=unit,
             description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
-        )
-
-
-class Histogram(_Instrument, Histogram):
-    def __init__(
-        self,
-        name,
-        unit="",
-        description="",
-        aggregation=ExplicitBucketHistogramAggregation,
-        aggregation_config={},
-    ):
-        super().__init__(
-            name,
-            unit=unit,
-            description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
-        )
-
-
-class ObservableGauge(_Instrument, ObservableGauge):
-    def __init__(
-        self,
-        name,
-        callback,
-        unit="",
-        description="",
-        aggregation=LastValueAggregation,
-        aggregation_config={},
-    ):
-        super().__init__(
-            name,
-            unit=unit,
-            description=description,
-            aggregation=aggregation,
-            aggregation_config=aggregation_config,
         )
