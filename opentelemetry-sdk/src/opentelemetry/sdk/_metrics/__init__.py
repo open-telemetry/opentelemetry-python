@@ -60,48 +60,38 @@ class Meter(APIMeter):
         self._meter_provider = meter_provider
 
     def create_counter(self, name, unit=None, description=None) -> APICounter:
-        # pylint: disable=protected-access
-        return self._meter_provider._create_counter(
-            self._instrumentation_info, name, unit, description
-        )
+        return Counter(self._instrumentation_info, name, unit, description)
 
     def create_up_down_counter(
         self, name, unit=None, description=None
     ) -> APIUpDownCounter:
-        # pylint: disable=protected-access
-        return self._meter_provider._create_up_down_counter(
+        return UpDownCounter(
             self._instrumentation_info, name, unit, description
         )
 
     def create_observable_counter(
         self, name, callback, unit=None, description=None
     ) -> APIObservableCounter:
-        # pylint: disable=protected-access
-        return self._meter_provider._create_observable_counter(
+        return ObservableCounter(
             self._instrumentation_info, name, unit, description
         )
 
     def create_histogram(
         self, name, unit=None, description=None
     ) -> APIHistogram:
-        # pylint: disable=protected-access
-        return self._meter_provider._create_histogram(
-            self._instrumentation_info, name, unit, description
-        )
+        return Histogram(self._instrumentation_info, name, unit, description)
 
     def create_observable_gauge(
         self, name, callback, unit=None, description=None
     ) -> APIObservableGauge:
-        # pylint: disable=protected-access
-        return self._meter_provider._create_observable_gauge(
+        return ObservableGauge(
             self._instrumentation_info, name, unit, description
         )
 
     def create_observable_up_down_counter(
         self, name, callback, unit=None, description=None
     ) -> APIObservableUpDownCounter:
-        # pylint: disable=protected-access
-        return self._meter_provider._create_observable_up_down_counter(
+        return ObservableUpDownCounter(
             self._instrumentation_info, name, unit, description
         )
 
@@ -139,7 +129,6 @@ class MeterProvider(APIMeterProvider):
 
         self.__resource = resource
         self._shutdown = False
-        self.__asynchronous_instruments = []
 
     @property
     def _metric_readers(self):
@@ -160,61 +149,6 @@ class MeterProvider(APIMeterProvider):
     @property
     def _views(self):
         return self.__views
-
-    @property
-    def _asynchronous_instruments(self):
-        return self.__asynchronous_instruments
-
-    def _create_counter(  # pylint: disable=no-self-use
-        self, instrumentation_info, name, unit, description
-    ) -> APICounter:
-        return Counter(instrumentation_info, name, unit, description)
-
-    def _create_up_down_counter(  # pylint: disable=no-self-use
-        self, instrumentation_info, name, unit, description
-    ) -> APIUpDownCounter:
-        return UpDownCounter(instrumentation_info, name, unit, description)
-
-    def _create_observable_counter(
-        self, instrumentation_info, name, unit, description
-    ) -> APIObservableCounter:
-        instrument = ObservableCounter(
-            instrumentation_info, name, unit, description
-        )
-
-        with self._lock:
-            self.__asynchronous_instruments.append(instrument)
-
-        return instrument
-
-    def _create_histogram(  # pylint: disable=no-self-use
-        self, instrumentation_info, name, unit, description
-    ) -> APIHistogram:
-        return Histogram(instrumentation_info, name, unit, description)
-
-    def _create_observable_gauge(
-        self, instrumentation_info, name, unit, description
-    ) -> ObservableGauge:
-        instrument = ObservableGauge(
-            instrumentation_info, name, unit, description
-        )
-
-        with self._lock:
-            self.__asynchronous_instruments.append(instrument)
-
-        return instrument
-
-    def _create_observable_up_down_counter(
-        self, instrumentation_info, name, unit, description
-    ) -> ObservableUpDownCounter:
-        instrument = ObservableUpDownCounter(
-            instrumentation_info, name, unit, description
-        )
-
-        with self._lock:
-            self.__asynchronous_instruments.append(instrument)
-
-        return instrument
 
     def force_flush(self) -> bool:
 
