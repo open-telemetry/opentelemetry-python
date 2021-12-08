@@ -32,6 +32,7 @@ from opentelemetry._metrics.instrument import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
 from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
+from opentelemetry.sdk._metrics.export.metric_exporter import MetricExporter
 from opentelemetry.sdk._metrics.instrument import (
     Counter,
     Histogram,
@@ -40,7 +41,6 @@ from opentelemetry.sdk._metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk._metrics.metric_exporter import MetricExporter
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
