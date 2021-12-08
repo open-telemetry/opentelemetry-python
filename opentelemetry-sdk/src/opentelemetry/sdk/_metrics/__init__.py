@@ -20,6 +20,7 @@ from typing import Optional, Sequence
 from opentelemetry._metrics import Meter as APIMeter
 from opentelemetry._metrics import MeterProvider as APIMeterProvider
 from opentelemetry._metrics import _DefaultMeter
+from opentelemetry._metrics.instrument import Asynchronous
 from opentelemetry._metrics.instrument import Counter as APICounter
 from opentelemetry._metrics.instrument import Histogram as APIHistogram
 from opentelemetry._metrics.instrument import (
@@ -31,7 +32,6 @@ from opentelemetry._metrics.instrument import (
 from opentelemetry._metrics.instrument import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
-from opentelemetry._metrics.instrument import Synchronous
 from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
 from opentelemetry.sdk._metrics.instrument import (
     Counter,
@@ -142,7 +142,6 @@ class MeterProvider(APIMeterProvider):
 
         self.__resource = resource
         self._shutdown = False
-        self.__synchronous_instruments = []
         self.__asynchronous_instruments = []
 
     @property
@@ -166,10 +165,6 @@ class MeterProvider(APIMeterProvider):
         return self.__views
 
     @property
-    def _synchronous_instruments(self):
-        return self.__synchronous_instruments
-
-    @property
     def _asynchronous_instruments(self):
         return self.__asynchronous_instruments
 
@@ -181,11 +176,8 @@ class MeterProvider(APIMeterProvider):
             instrumentation_info, name, unit=unit, description=description
         )
 
-        with self._lock:
-            if isinstance(instrument, Synchronous):
-                self.__synchronous_instruments.append(instrument)
-
-            else:
+        if isinstance(instrument, Asynchronous):
+            with self._lock:
                 self.__asynchronous_instruments.append(instrument)
 
         return instrument
