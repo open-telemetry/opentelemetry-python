@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2253](https://github.com/open-telemetry/opentelemetry-python/pull/2253))
 - Rename ConsoleExporter to ConsoleLogExporter
   ([#2307](https://github.com/open-telemetry/opentelemetry-python/pull/2307))
+- Decode URL-encoded headers in environment variables
+  ([#2312](https://github.com/open-telemetry/opentelemetry-python/pull/2312))
 
 ## [1.7.1-0.26b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.7.0-0.26b0) - 2021-11-11
 
