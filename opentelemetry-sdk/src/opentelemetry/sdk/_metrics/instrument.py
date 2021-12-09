@@ -15,8 +15,9 @@
 # pylint: disable=too-many-ancestors
 
 from abc import ABC, abstractmethod
-from typing import Callable, Dict, Generator, Iterable, Union
+from typing import Dict, Generator, Iterable, Union
 
+from opentelemetry._metrics.instrument import CallbackT
 from opentelemetry._metrics.instrument import Counter as APICounter
 from opentelemetry._metrics.instrument import Histogram as APIHistogram
 from opentelemetry._metrics.instrument import (
@@ -36,11 +37,6 @@ from opentelemetry.sdk._metrics.aggregation import (
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-
-TCallback = Union[
-    Callable[[], Iterable[Measurement]],
-    Generator[Iterable[Measurement], None, None],
-]
 
 
 class _Instrument(ABC):
@@ -67,7 +63,7 @@ class _Asynchronous(_Instrument):
         self,
         instrumentation_info: InstrumentationInfo,
         name: str,
-        callback: TCallback,
+        callback: CallbackT,
         unit: str = "",
         description: str = "",
     ):
@@ -85,7 +81,7 @@ class _Asynchronous(_Instrument):
             self._callback = inner
 
     @property
-    def callback(self) -> TCallback:
+    def callback(self) -> CallbackT:
         return self._callback
 
 

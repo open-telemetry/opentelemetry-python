@@ -18,12 +18,25 @@
 
 from abc import ABC, abstractmethod
 from logging import getLogger
-from typing import Generic, Optional, TypeVar
+from typing import (
+    Callable,
+    Generator,
+    Generic,
+    Iterable,
+    Optional,
+    TypeVar,
+    Union,
+)
 
 # pylint: disable=unused-import; needed for typing and sphinx
 from opentelemetry import _metrics as metrics
+from opentelemetry.sdk._metrics.measurement import Measurement
 
 InstrumentT = TypeVar("InstrumentT", bound="Instrument")
+CallbackT = Union[
+    Callable[[], Iterable[Measurement]],
+    Generator[Iterable[Measurement], None, None],
+]
 
 
 _logger = getLogger(__name__)
