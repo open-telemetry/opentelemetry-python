@@ -72,16 +72,20 @@ Install
 -------
 
 Run the following commands to install the appropriate packages. The
-``opentelemetry-instrumentation`` package provides several 
-commands that help automatically instruments a program.
+``opentelemetry-distro`` package depends on a few others, like ``opentelemetry-sdk``
+for custom instrumentation of your own code and ``opentelemetry-instrumentation`` which
+provides several commands that help automatically instrument a program.
 
 .. code:: sh
 
-    $ pip install opentelemetry-sdk
-    $ pip install opentelemetry-instrumentation
+    $ pip install opentelemetry-distro
     $ pip install opentelemetry-instrumentation-flask
     $ pip install flask
     $ pip install requests
+
+The examples that follow send instrumentation results to the console. Learn more
+about installing and configuring the `OpenTelemetry Distro <../distro>`_ to send
+telemetry to other destinations, like an OpenTelemetry Collector.
 
 Execute
 ---------
@@ -227,11 +231,3 @@ reloader. To run instrumentation while the debug mode is enabled, set the
 
     if __name__ == "__main__":
         app.run(port=8082, debug=True, use_reloader=False)
-
-
-Additional resources 
-~~~~~~~~~~~~~~~~~~~~
-
-In order to send telemetry to an OpenTelemetry Collector without doing any
-additional configuration, read about the `OpenTelemetry Distro <../distro>`_
-package.
