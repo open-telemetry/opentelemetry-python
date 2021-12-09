@@ -34,7 +34,7 @@ class TestCounter(TestCase):
     def test_default_aggregation(self):
 
         self.assertIs(
-            Counter(Mock(), "name")._default_aggregation, SumAggregation
+            Counter(Mock(), "name").default_aggregation, SumAggregation
         )
 
 
@@ -42,7 +42,7 @@ class TestUpDownCounter(TestCase):
     def test_default_aggregation(self):
 
         self.assertIs(
-            UpDownCounter(Mock(), "name")._default_aggregation, SumAggregation
+            UpDownCounter(Mock(), "name").default_aggregation, SumAggregation
         )
 
 
@@ -50,7 +50,7 @@ class TestHistogram(TestCase):
     def test_default_aggregation(self):
 
         self.assertIs(
-            Histogram(Mock(), "name")._default_aggregation,
+            Histogram(Mock(), "name").default_aggregation,
             ExplicitBucketHistogramAggregation,
         )
 
@@ -59,7 +59,7 @@ class TestObservableGauge(TestCase):
     def test_default_aggregation(self):
 
         self.assertIs(
-            ObservableGauge(Mock(), "name", Mock())._default_aggregation,
+            ObservableGauge(Mock(), "name", Mock()).default_aggregation,
             LastValueAggregation,
         )
 
@@ -84,7 +84,7 @@ class TestObservableCounter(TestCase):
     def test_default_aggregation(self):
 
         self.assertIs(
-            ObservableCounter(Mock(), "name", Mock())._default_aggregation,
+            ObservableCounter(Mock(), "name", Mock()).default_aggregation,
             SumAggregation,
         )
 
@@ -111,7 +111,7 @@ class TestObservableUpDownCounter(TestCase):
         self.assertIs(
             ObservableUpDownCounter(
                 Mock(), "name", Mock()
-            )._default_aggregation,
+            ).default_aggregation,
             SumAggregation,
         )
 

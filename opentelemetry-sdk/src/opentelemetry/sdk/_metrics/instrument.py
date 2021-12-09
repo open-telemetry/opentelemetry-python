@@ -42,7 +42,7 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 class _Instrument(ABC):
     @property
     @abstractmethod
-    def _default_aggregation(self):
+    def default_aggregation(self):
         pass
 
 
@@ -87,7 +87,7 @@ class _Asynchronous(_Instrument):
 
 class Counter(_Synchronous, APICounter):
     @property
-    def _default_aggregation(self):
+    def default_aggregation(self):
         return SumAggregation
 
     def add(
@@ -99,7 +99,7 @@ class Counter(_Synchronous, APICounter):
 
 class UpDownCounter(_Synchronous, APIUpDownCounter):
     @property
-    def _default_aggregation(self):
+    def default_aggregation(self):
         return SumAggregation
 
     def add(
@@ -110,19 +110,19 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 
 class ObservableCounter(_Asynchronous, APIObservableCounter):
     @property
-    def _default_aggregation(self):
+    def default_aggregation(self):
         return SumAggregation
 
 
 class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
     @property
-    def _default_aggregation(self):
+    def default_aggregation(self):
         return SumAggregation
 
 
 class Histogram(_Synchronous, APIHistogram):
     @property
-    def _default_aggregation(self):
+    def default_aggregation(self):
         return ExplicitBucketHistogramAggregation
 
     def record(self, amount, attributes=None):
@@ -131,5 +131,5 @@ class Histogram(_Synchronous, APIHistogram):
 
 class ObservableGauge(_Asynchronous, APIObservableGauge):
     @property
-    def _default_aggregation(self):
+    def default_aggregation(self):
         return LastValueAggregation
