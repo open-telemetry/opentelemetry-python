@@ -30,7 +30,7 @@ from typing import (
 
 # pylint: disable=unused-import; needed for typing and sphinx
 from opentelemetry import _metrics as metrics
-from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry._metrics.measurement import Measurement
 
 InstrumentT = TypeVar("InstrumentT", bound="Instrument")
 CallbackT = Union[
