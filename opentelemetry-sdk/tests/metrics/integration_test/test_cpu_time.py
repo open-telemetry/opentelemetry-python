@@ -16,10 +16,9 @@
 import io
 from typing import Generator, Iterable
 from unittest import TestCase
-from unittest.mock import Mock
 
 from opentelemetry._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.instrument import ObservableCounter
+from opentelemetry.sdk._metrics import MeterProvider
 
 # FIXME Test that the instrument methods can be called concurrently safely.
 
@@ -97,10 +96,10 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
                     int(states[8]) // 100, {"cpu": cpu, "state": "guest_nice"}
                 )
 
-        observable_counter = ObservableCounter(
-            Mock(),
+        meter = MeterProvider().get_meter("name")
+        observable_counter = meter.create_observable_counter(
             "system.cpu.time",
-            callback=cpu_time_callback,
+            cpu_time_callback,
             unit="s",
             description="CPU time",
         )
@@ -174,8 +173,8 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
                     )
                 yield measurements
 
-        observable_counter = ObservableCounter(
-            Mock(),
+        meter = MeterProvider().get_meter("name")
+        observable_counter = meter.create_observable_counter(
             "system.cpu.time",
             callback=cpu_time_generator(),
             unit="s",
