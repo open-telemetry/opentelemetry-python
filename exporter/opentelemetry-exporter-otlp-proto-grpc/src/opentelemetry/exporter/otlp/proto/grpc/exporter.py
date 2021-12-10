@@ -204,8 +204,8 @@ class OTLPExporterMixin(
         endpoint: Optional[str] = None,
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
-        headers: Union[
-            TypingSequence[Tuple[str, str]], Dict[str, str], None
+        headers: Optional[
+            Union[TypingSequence[Tuple[str, str]], Dict[str, str]]
         ] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
