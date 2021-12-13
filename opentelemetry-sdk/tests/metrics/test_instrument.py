@@ -15,54 +15,14 @@
 from unittest import TestCase
 from unittest.mock import Mock
 
-from opentelemetry.sdk._metrics.aggregation import (
-    ExplicitBucketHistogramAggregation,
-    LastValueAggregation,
-    SumAggregation,
-)
 from opentelemetry.sdk._metrics.instrument import (
-    Counter,
-    Histogram,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
-    UpDownCounter,
 )
 
 
-class TestCounter(TestCase):
-    def test_default_aggregation(self):
-
-        self.assertIs(
-            Counter(Mock(), "name").default_aggregation, SumAggregation
-        )
-
-
-class TestUpDownCounter(TestCase):
-    def test_default_aggregation(self):
-
-        self.assertIs(
-            UpDownCounter(Mock(), "name").default_aggregation, SumAggregation
-        )
-
-
-class TestHistogram(TestCase):
-    def test_default_aggregation(self):
-
-        self.assertIs(
-            Histogram(Mock(), "name").default_aggregation,
-            ExplicitBucketHistogramAggregation,
-        )
-
-
 class TestObservableGauge(TestCase):
-    def test_default_aggregation(self):
-
-        self.assertIs(
-            ObservableGauge(Mock(), "name", Mock()).default_aggregation,
-            LastValueAggregation,
-        )
-
     def test_callable_callback(self):
         def callback():
             return [1, 2, 3]
@@ -81,13 +41,6 @@ class TestObservableGauge(TestCase):
 
 
 class TestObservableCounter(TestCase):
-    def test_default_aggregation(self):
-
-        self.assertIs(
-            ObservableCounter(Mock(), "name", Mock()).default_aggregation,
-            SumAggregation,
-        )
-
     def test_callable_callback(self):
         def callback():
             return [1, 2, 3]
@@ -106,15 +59,6 @@ class TestObservableCounter(TestCase):
 
 
 class TestObservableUpDownCounter(TestCase):
-    def test_default_aggregation(self):
-
-        self.assertIs(
-            ObservableUpDownCounter(
-                Mock(), "name", Mock()
-            ).default_aggregation,
-            SumAggregation,
-        )
-
     def test_callable_callback(self):
         def callback():
             return [1, 2, 3]

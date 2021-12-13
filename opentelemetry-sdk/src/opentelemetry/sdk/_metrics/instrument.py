@@ -14,7 +14,6 @@
 
 # pylint: disable=too-many-ancestors
 
-from abc import ABC, abstractmethod
 from typing import Dict, Generator, Iterable, Union
 
 from opentelemetry._metrics.instrument import CallbackT
@@ -30,23 +29,11 @@ from opentelemetry._metrics.instrument import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
 from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
-from opentelemetry.sdk._metrics.aggregation import (
-    ExplicitBucketHistogramAggregation,
-    LastValueAggregation,
-    SumAggregation,
-)
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
 
-class _Instrument(ABC):
-    @property
-    @abstractmethod
-    def default_aggregation(self):
-        pass
-
-
-class _Synchronous(_Instrument):
+class _Synchronous:
     def __init__(
         self,
         instrumentation_info: InstrumentationInfo,
@@ -58,7 +45,7 @@ class _Synchronous(_Instrument):
         super().__init__(name, unit=unit, description=description)
 
 
-class _Asynchronous(_Instrument):
+class _Asynchronous:
     def __init__(
         self,
         instrumentation_info: InstrumentationInfo,
@@ -86,10 +73,6 @@ class _Asynchronous(_Instrument):
 
 
 class Counter(_Synchronous, APICounter):
-    @property
-    def default_aggregation(self):
-        return SumAggregation
-
     def add(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
@@ -98,10 +81,6 @@ class Counter(_Synchronous, APICounter):
 
 
 class UpDownCounter(_Synchronous, APIUpDownCounter):
-    @property
-    def default_aggregation(self):
-        return SumAggregation
-
     def add(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
@@ -109,27 +88,17 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 
 
 class ObservableCounter(_Asynchronous, APIObservableCounter):
-    @property
-    def default_aggregation(self):
-        return SumAggregation
+    pass
 
 
 class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
-    @property
-    def default_aggregation(self):
-        return SumAggregation
+    pass
 
 
 class Histogram(_Synchronous, APIHistogram):
-    @property
-    def default_aggregation(self):
-        return ExplicitBucketHistogramAggregation
-
     def record(self, amount, attributes=None):
         pass
 
 
 class ObservableGauge(_Asynchronous, APIObservableGauge):
-    @property
-    def default_aggregation(self):
-        return LastValueAggregation
+    pass
