@@ -12,6 +12,34 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import abc
+from enum import Enum
 
-class MetricExporter:
-    pass
+
+class MetricExportResult(Enum):
+    SUCCESS = 0
+    FAILURE = 1
+
+
+class MetricExporter(abc.ABC):
+    """Interface for exporting metrics.
+
+    Interface to be implemented by services that want to export metrics received
+    in their own format.
+    """
+
+    @abc.abstractmethod
+    def shutdown(self):
+        """Shuts down the exporter.
+
+        Called when the SDK is shut down.
+        """
+
+
+class ConsoleMetricExporter(MetricExporter):
+    """Implementation of :class:`MetricExporter` that prints metrics to the
+    console.
+
+    This class can be used for diagnostic purposes. It prints the exported
+    metrics to the console STDOUT.
+    """

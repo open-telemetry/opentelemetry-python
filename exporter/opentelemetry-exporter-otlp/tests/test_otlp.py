@@ -17,6 +17,9 @@ import unittest
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
     OTLPLogExporter,
 )
+from opentelemetry.exporter.otlp.proto.grpc._metric_exporter import (
+    OTLPMetricExporter,
+)
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
@@ -27,7 +30,12 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
 
 class TestOTLPExporters(unittest.TestCase):
     def test_constructors(self):
-        for exporter in [OTLPSpanExporter, HTTPSpanExporter, OTLPLogExporter]:
+        for exporter in [
+            OTLPSpanExporter,
+            HTTPSpanExporter,
+            OTLPLogExporter,
+            OTLPMetricExporter,
+        ]:
             try:
                 exporter()
             except Exception:  # pylint: disable=broad-except
