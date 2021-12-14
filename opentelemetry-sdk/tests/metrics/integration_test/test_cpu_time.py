@@ -17,8 +17,8 @@ import io
 from typing import Generator, Iterable
 from unittest import TestCase
 
-from opentelemetry._metrics import _DefaultMeter
 from opentelemetry._metrics.measurement import Measurement
+from opentelemetry.sdk._metrics import MeterProvider
 
 # FIXME Test that the instrument methods can be called concurrently safely.
 
@@ -61,8 +61,6 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
     ]
 
     def test_cpu_time_callback(self):
-        meter = _DefaultMeter("foo")
-
         def cpu_time_callback() -> Iterable[Measurement]:
             procstat = io.StringIO(self.procstat_str)
             procstat.readline()  # skip the first line
@@ -98,9 +96,10 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
                     int(states[8]) // 100, {"cpu": cpu, "state": "guest_nice"}
                 )
 
+        meter = MeterProvider().get_meter("name")
         observable_counter = meter.create_observable_counter(
             "system.cpu.time",
-            callback=cpu_time_callback,
+            cpu_time_callback,
             unit="s",
             description="CPU time",
         )
@@ -108,8 +107,6 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
         self.assertEqual(measurements, self.measurements_expected)
 
     def test_cpu_time_generator(self):
-        meter = _DefaultMeter("foo")
-
         def cpu_time_generator() -> Generator[
             Iterable[Measurement], None, None
         ]:
@@ -176,6 +173,7 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
                     )
                 yield measurements
 
+        meter = MeterProvider().get_meter("name")
         observable_counter = meter.create_observable_counter(
             "system.cpu.time",
             callback=cpu_time_generator(),
