@@ -12,6 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+OTEL_LOGS_EXPORTER = "OTEL_LOGS_EXPORTER"
+"""
+.. envvar:: OTEL_LOGS_EXPORTER
+
+"""
+
 OTEL_METRICS_EXPORTER = "OTEL_METRICS_EXPORTER"
 """
 .. envvar:: OTEL_METRICS_EXPORTER
