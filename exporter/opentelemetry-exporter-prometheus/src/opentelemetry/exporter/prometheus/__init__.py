@@ -74,10 +74,10 @@ from prometheus_client.core import (
     UnknownMetricFamily,
 )
 
-from opentelemetry.metrics import Counter, ValueRecorder
-from opentelemetry.sdk.metrics.export import (
+from opentelemetry._metrics import Counter, Histogram
+from opentelemetry.sdk._metrics.export import (
     ExportRecord,
-    MetricsExporter,
+    MetricExporter,
     MetricsExportResult,
 )
 from opentelemetry.sdk.metrics.export.aggregate import MinMaxSumCountAggregator
@@ -85,7 +85,7 @@ from opentelemetry.sdk.metrics.export.aggregate import MinMaxSumCountAggregator
 logger = logging.getLogger(__name__)
 
 
-class PrometheusMetricsExporter(MetricsExporter):
+class PrometheusMetricExporter(MetricExporter):
     """Prometheus metric exporter for OpenTelemetry.
 
     Args:
@@ -159,7 +159,7 @@ class CustomCollector:
                 labels=label_values, value=export_record.aggregator.checkpoint
             )
         # TODO: Add support for histograms when supported in OT
-        elif isinstance(export_record.instrument, ValueRecorder):
+        elif isinstance(export_record.instrument, Histogram):
             value = export_record.aggregator.checkpoint
             if isinstance(export_record.aggregator, MinMaxSumCountAggregator):
                 prometheus_metric = SummaryMetricFamily(
