@@ -17,13 +17,20 @@ import unittest
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
+from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
+    OTLPSpanExporter as HTTPSpanExporter,
+)
+from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
+    OTLPLogExporter,
+)
 
 
 class TestOTLPExporters(unittest.TestCase):
     def test_constructors(self):
-        try:
-            OTLPSpanExporter()
-        except Exception:  # pylint: disable=broad-except
-            self.fail(
-                "Unexpected exception raised when instantiating OTLPSpanExporter"
-            )
+        for exporter in [OTLPSpanExporter, HTTPSpanExporter, OTLPLogExporter]:
+            try:
+                exporter()
+            except Exception:  # pylint: disable=broad-except
+                self.fail(
+                    f"Unexpected exception raised when instantiating {exporter.__name__}"
+                )
