@@ -67,6 +67,10 @@ class SynchronousSumAggregation(Aggregation[Sum]):
             self._value = self._value + measurement.value
 
     def collect(self) -> Optional[_PointVarT]:
+        """
+        Atomically return a point for the current value of the metric and
+        reset the aggregation value.
+        """
         now = _time_ns()
 
         with self._lock:
@@ -92,6 +96,9 @@ class AsynchronousSumAggregation(Aggregation[Sum]):
             self._value = measurement.value
 
     def collect(self) -> Optional[_PointVarT]:
+        """
+        Atomically return a point for the current value of the metric.
+        """
         if self._value is None:
             return None
 
@@ -110,6 +117,9 @@ class LastValueAggregation(Aggregation[Gauge]):
             self._value = measurement.value
 
     def collect(self) -> Optional[_PointVarT]:
+        """
+        Atomically return a point for the current value of the metric.
+        """
         if self._value is None:
             return None
 
@@ -185,6 +195,9 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
                 break
 
     def collect(self) -> Optional[_PointVarT]:
+        """
+        Atomically return a point for the current value of the metric.
+        """
         now = _time_ns()
 
         with self._lock:
