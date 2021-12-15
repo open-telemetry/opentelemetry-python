@@ -164,10 +164,6 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
         if self._is_monotonic:
             return self._sum
 
-        _logger.warning(
-            "Sum is not filled out when the associated "
-            "instrument is not monotonic"
-        )
         return None
 
     def aggregate(self, measurement: Measurement) -> None:
