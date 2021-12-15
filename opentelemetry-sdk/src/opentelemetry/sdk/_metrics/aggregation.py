@@ -52,7 +52,7 @@ class Aggregation(ABC, Generic[_PointVarT]):
         pass
 
     @abstractmethod
-    def _collect(self) -> Optional[_PointVarT]:
+    def collect(self) -> Optional[_PointVarT]:
         pass
 
 
@@ -66,7 +66,7 @@ class SynchronousSumAggregation(Aggregation[Sum]):
         with self._lock:
             self._value = self._value + measurement.value
 
-    def _collect(self):
+    def collect(self) -> Optional[_PointVarT]:
         now = _time_ns()
 
         with self._lock:
@@ -91,7 +91,7 @@ class AsynchronousSumAggregation(Aggregation[Sum]):
         with self._lock:
             self._value = measurement.value
 
-    def _collect(self):
+    def collect(self) -> Optional[_PointVarT]:
         if self._value is None:
             return None
 
@@ -109,7 +109,7 @@ class LastValueAggregation(Aggregation[Gauge]):
         with self._lock:
             self._value = measurement.value
 
-    def _collect(self):
+    def collect(self) -> Optional[_PointVarT]:
         if self._value is None:
             return None
 
@@ -170,7 +170,7 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
         )
         return None
 
-    def aggregate(self, measurement: Measurement):
+    def aggregate(self, measurement: Measurement) -> None:
 
         value = measurement.value
 
@@ -188,7 +188,7 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
 
                 break
 
-    def _collect(self):
+    def collect(self) -> Optional[_PointVarT]:
         now = _time_ns()
 
         with self._lock:
