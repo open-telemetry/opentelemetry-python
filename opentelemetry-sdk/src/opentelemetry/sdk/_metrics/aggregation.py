@@ -17,7 +17,7 @@ from collections import OrderedDict
 from logging import getLogger
 from math import inf
 from threading import Lock
-from typing import Generic, Optional, Sequence, TypeVar
+from typing import Optional, Sequence, TypeVar
 from enum import IntEnum
 
 from opentelemetry.sdk._metrics.measurement import Measurement
@@ -36,7 +36,7 @@ _PointVarT = TypeVar("_PointVarT", bound=PointT)
 _logger = getLogger(__name__)
 
 
-class Aggregation(ABC, Generic[_PointVarT]):
+class Aggregation(ABC):
     def __init__(self, is_monotonic: bool):
         self._value = None
         self._is_monotonic = is_monotonic
