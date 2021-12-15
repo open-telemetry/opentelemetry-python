@@ -18,7 +18,7 @@ from enum import IntEnum
 from logging import getLogger
 from math import inf
 from threading import Lock
-from typing import Optional, Sequence, TypeVar
+from typing import Generic, Optional, Sequence, TypeVar
 
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import Gauge, Histogram, PointT, Sum
@@ -36,7 +36,7 @@ _PointVarT = TypeVar("_PointVarT", bound=PointT)
 _logger = getLogger(__name__)
 
 
-class Aggregation(ABC):
+class Aggregation(ABC, Generic[_PointVarT]):
     def __init__(self, is_monotonic: bool):
         self._value = None
         self._is_monotonic = is_monotonic
