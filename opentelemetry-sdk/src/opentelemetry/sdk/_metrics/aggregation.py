@@ -44,10 +44,6 @@ class Aggregation(ABC, Generic[_PointVarT]):
         self._lock = Lock()
 
     @property
-    def is_monotonic(self):
-        return self._is_monotonic
-
-    @property
     def value(self):
         return self._value
 
