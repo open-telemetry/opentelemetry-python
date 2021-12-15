@@ -18,19 +18,18 @@ from logging import getLogger
 from math import inf
 from threading import Lock
 from typing import Generic, Optional, Sequence, TypeVar
+from enum import IntEnum
 
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import Gauge, Histogram, PointT, Sum
 from opentelemetry.util._time import _time_ns
 
-# FIXME this is being copied directly from
-# opentelemetry.proto.metrics.v1.metrics_pb2. The only reason for doing so is
-# to avoid havinv protobuf as a indirect dependency in the SDK. This
-# duplication of code is not ideal.
 
-AGGREGATION_TEMPORALITY_UNSPECIFIED = 0
-AGGREGATION_TEMPORALITY_DELTA = 1
-AGGREGATION_TEMPORALITY_CUMULATIVE = 2
+class AggregationTemporality(IntEnum):
+    AGGREGATION_TEMPORALITY_UNSPECIFIED = 0
+    AGGREGATION_TEMPORALITY_DELTA = 1
+    AGGREGATION_TEMPORALITY_CUMULATIVE = 2
+
 
 _PointVarT = TypeVar("_PointVarT", bound=PointT)
 
@@ -78,7 +77,9 @@ class SynchronousSumAggregation(Aggregation[Sum]):
             self._start_time_unix_nano = now + 1
 
         return Sum(
-            aggregation_temporality=AGGREGATION_TEMPORALITY_DELTA,
+            aggregation_temporality=(
+                AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA
+            ),
             is_monotonic=self._is_monotonic,
             start_time_unix_nano=self._start_time_unix_nano,
             time_unix_nano=now,
@@ -106,7 +107,9 @@ class AsynchronousSumAggregation(Aggregation[Sum]):
             start_time_unix_nano=self._start_time_unix_nano,
             time_unix_nano=_time_ns(),
             value=self._value,
-            aggregation_temporality=AGGREGATION_TEMPORALITY_CUMULATIVE,
+            aggregation_temporality=(
+                AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
+            ),
             is_monotonic=self._is_monotonic,
         )
 
@@ -187,5 +190,7 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
             start_time_unix_nano=self._start_time_unix_nano,
             time_unix_nano=now,
             value=self._value,
-            aggregation_temporality=AGGREGATION_TEMPORALITY_DELTA,
+            aggregation_temporality=(
+                AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA
+            ),
         )

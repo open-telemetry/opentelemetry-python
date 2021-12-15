@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Union
+from typing import Union, Sequence
 
 
 @dataclass(frozen=True)
