@@ -36,7 +36,7 @@ class TestSynchronousSumAggregation(TestCase):
         sum_aggregation.aggregate(Measurement(2))
         sum_aggregation.aggregate(Measurement(3))
 
-        self.assertEqual(sum_aggregation.value, 6)
+        self.assertEqual(sum_aggregation._value, 6)
 
         sum_aggregation = SynchronousSumAggregation(True)
 
@@ -44,7 +44,7 @@ class TestSynchronousSumAggregation(TestCase):
         sum_aggregation.aggregate(Measurement(-2))
         sum_aggregation.aggregate(Measurement(3))
 
-        self.assertEqual(sum_aggregation.value, 2)
+        self.assertEqual(sum_aggregation._value, 2)
 
 
 class TestLastValueAggregation(TestCase):
@@ -57,13 +57,13 @@ class TestLastValueAggregation(TestCase):
         last_value_aggregation = LastValueAggregation(True)
 
         last_value_aggregation.aggregate(Measurement(1))
-        self.assertEqual(last_value_aggregation.value, 1)
+        self.assertEqual(last_value_aggregation._value, 1)
 
         last_value_aggregation.aggregate(Measurement(2))
-        self.assertEqual(last_value_aggregation.value, 2)
+        self.assertEqual(last_value_aggregation._value, 2)
 
         last_value_aggregation.aggregate(Measurement(3))
-        self.assertEqual(last_value_aggregation.value, 3)
+        self.assertEqual(last_value_aggregation._value, 3)
 
 
 class TestExplicitBucketHistogramAggregation(TestCase):
@@ -82,10 +82,10 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         explicit_bucket_histogram_aggregation.aggregate(Measurement(8))
         explicit_bucket_histogram_aggregation.aggregate(Measurement(9999))
 
-        self.assertEqual(explicit_bucket_histogram_aggregation.value[0], 1)
-        self.assertEqual(explicit_bucket_histogram_aggregation.value[5], 1)
-        self.assertEqual(explicit_bucket_histogram_aggregation.value[10], 2)
-        self.assertEqual(explicit_bucket_histogram_aggregation.value[inf], 1)
+        self.assertEqual(explicit_bucket_histogram_aggregation._value[0], 1)
+        self.assertEqual(explicit_bucket_histogram_aggregation._value[5], 1)
+        self.assertEqual(explicit_bucket_histogram_aggregation._value[10], 2)
+        self.assertEqual(explicit_bucket_histogram_aggregation._value[inf], 1)
 
     def test_min_max(self):
         """

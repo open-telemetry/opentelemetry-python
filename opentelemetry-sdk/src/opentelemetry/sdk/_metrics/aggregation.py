@@ -38,13 +38,8 @@ _logger = getLogger(__name__)
 
 class Aggregation(ABC, Generic[_PointVarT]):
     def __init__(self, is_monotonic: bool):
-        self._value = None
         self._is_monotonic = is_monotonic
         self._lock = Lock()
-
-    @property
-    def value(self):
-        return self._value
 
     @abstractmethod
     def aggregate(self, measurement: Measurement) -> None:
@@ -90,6 +85,7 @@ class SynchronousSumAggregation(Aggregation[Sum]):
 class AsynchronousSumAggregation(Aggregation[Sum]):
     def __init__(self, is_monotonic: bool):
         super().__init__(is_monotonic)
+        self._value = 0
         self._start_time_unix_nano = _time_ns()
 
     def aggregate(self, measurement: Measurement) -> None:
@@ -115,6 +111,10 @@ class AsynchronousSumAggregation(Aggregation[Sum]):
 
 
 class LastValueAggregation(Aggregation[Gauge]):
+    def __init__(self, is_monotonic: bool):
+        super().__init__(is_monotonic)
+        self._value = None
+
     def aggregate(self, measurement: Measurement):
         with self._lock:
             self._value = measurement.value
