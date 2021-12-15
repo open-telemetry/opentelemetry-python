@@ -16,6 +16,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2307](https://github.com/open-telemetry/opentelemetry-python/pull/2307))
 - Adding OTEL_LOGS_EXPORTER environment variable
   ([#2320](https://github.com/open-telemetry/opentelemetry-python/pull/2320))
+- Add `setuptools` to `install_requires`
+  ([#2334](https://github.com/open-telemetry/opentelemetry-python/pull/2334))
 
 ## [1.7.1-0.26b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.7.0-0.26b0) - 2021-11-11
 
