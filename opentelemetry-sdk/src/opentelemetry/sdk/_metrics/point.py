@@ -18,20 +18,15 @@ from typing import Union
 
 @dataclass(frozen=True)
 class Sum:
-    # NumberDataPoint attributes
     start_time_unix_nano: int
     time_unix_nano: int
     value: Union[int, float]
-    # Sum attributes
     aggregation_temporality: int
     is_monotonic: bool
 
 
 @dataclass(frozen=True)
 class Gauge:
-    # NumberDataPoint attributes
-    # start_time_unix_nano is not added here because the proto says it is to
-    # be ignored.
     time_unix_nano: int
     value: Union[int, float]
 
@@ -41,7 +36,6 @@ class Histogram:
     start_time_unix_nano: int
     time_unix_nano: int
     value: Union[int, float]
-    # Histogram attributes
     aggregation_temporality: int
 
 
