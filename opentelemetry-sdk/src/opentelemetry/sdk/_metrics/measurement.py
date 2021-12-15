@@ -21,7 +21,7 @@ from opentelemetry.util.types import Attributes
 @dataclass(frozen=True)
 class Measurement:
     value: Union[int, float]
-    attributes: Optional[Attributes] = None
+    attributes: Attributes = None
 
 
 # Can't make Exemplar a subclass of Measurement because that makes
