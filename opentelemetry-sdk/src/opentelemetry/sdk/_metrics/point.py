@@ -38,7 +38,6 @@ class Gauge:
 
 @dataclass(frozen=True)
 class Histogram:
-    # NumberDataPoint attributes
     start_time_unix_nano: int
     time_unix_nano: int
     value: Union[int, float]
