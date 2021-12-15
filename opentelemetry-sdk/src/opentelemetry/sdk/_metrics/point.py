@@ -35,7 +35,8 @@ class Gauge:
 class Histogram:
     start_time_unix_nano: int
     time_unix_nano: int
-    value: Union[int, float]
+    bucket_counts: Sequence[int]
+    explicit_bounds: Sequence[float]
     aggregation_temporality: int
 
 
