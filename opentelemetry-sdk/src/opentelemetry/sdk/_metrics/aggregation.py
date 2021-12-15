@@ -55,7 +55,7 @@ class Aggregation(ABC, Generic[_PointVarT]):
         pass
 
 
-class SynchronousSumAggregation(Aggregation):
+class SynchronousSumAggregation(Aggregation[Sum]):
     def __init__(self, is_monotonic: bool):
         super().__init__(is_monotonic)
         self._value = 0
@@ -87,7 +87,7 @@ class SynchronousSumAggregation(Aggregation):
         )
 
 
-class AsynchronousSumAggregation(Aggregation):
+class AsynchronousSumAggregation(Aggregation[Sum]):
     def __init__(self, is_monotonic: bool):
         super().__init__(is_monotonic)
         self._start_time_unix_nano = _time_ns()
@@ -114,7 +114,7 @@ class AsynchronousSumAggregation(Aggregation):
         )
 
 
-class LastValueAggregation(Aggregation):
+class LastValueAggregation(Aggregation[Gauge]):
     def aggregate(self, measurement: Measurement):
         with self._lock:
             self._value = measurement.value
@@ -132,7 +132,7 @@ class LastValueAggregation(Aggregation):
         )
 
 
-class ExplicitBucketHistogramAggregation(Aggregation):
+class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
     def __init__(
         self,
         is_monotonic: bool,
