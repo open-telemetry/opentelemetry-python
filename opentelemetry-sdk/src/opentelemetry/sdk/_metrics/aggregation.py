@@ -155,27 +155,6 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
         self._record_min_max = record_min_max
         self._start_time_unix_nano = _time_ns()
 
-    @property
-    def min(self):
-        if not self._record_min_max:
-            _logger.warning("Min is not being recorded")
-
-        return self._min
-
-    @property
-    def max(self):
-        if not self._record_min_max:
-            _logger.warning("Max is not being recorded")
-
-        return self._max
-
-    @property
-    def sum(self):
-        if self._is_monotonic:
-            return self._sum
-
-        return None
-
     def aggregate(self, measurement: Measurement) -> None:
 
         value = measurement.value

@@ -13,7 +13,6 @@
 # limitations under the License.
 
 
-from logging import WARNING
 from math import inf
 from unittest import TestCase
 
@@ -106,8 +105,8 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         explicit_bucket_histogram_aggregation.aggregate(Measurement(8))
         explicit_bucket_histogram_aggregation.aggregate(Measurement(9999))
 
-        self.assertEqual(explicit_bucket_histogram_aggregation.min, -1)
-        self.assertEqual(explicit_bucket_histogram_aggregation.max, 9999)
+        self.assertEqual(explicit_bucket_histogram_aggregation._min, -1)
+        self.assertEqual(explicit_bucket_histogram_aggregation._max, 9999)
 
         explicit_bucket_histogram_aggregation = (
             ExplicitBucketHistogramAggregation(True, record_min_max=False)
@@ -119,8 +118,5 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         explicit_bucket_histogram_aggregation.aggregate(Measurement(8))
         explicit_bucket_histogram_aggregation.aggregate(Measurement(9999))
 
-        with self.assertLogs(level=WARNING):
-            self.assertEqual(explicit_bucket_histogram_aggregation.min, inf)
-
-        with self.assertLogs(level=WARNING):
-            self.assertEqual(explicit_bucket_histogram_aggregation.max, -inf)
+        self.assertEqual(explicit_bucket_histogram_aggregation._min, inf)
+        self.assertEqual(explicit_bucket_histogram_aggregation._max, -inf)
