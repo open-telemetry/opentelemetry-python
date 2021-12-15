@@ -82,12 +82,10 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         explicit_bucket_histogram_aggregation.aggregate(Measurement(8))
         explicit_bucket_histogram_aggregation.aggregate(Measurement(9999))
 
-        self.assertEqual(explicit_bucket_histogram_aggregation.value[0], -1)
-        self.assertEqual(explicit_bucket_histogram_aggregation.value[5], 2)
-        self.assertEqual(explicit_bucket_histogram_aggregation.value[10], 15)
-        self.assertEqual(
-            explicit_bucket_histogram_aggregation.value[inf], 9999
-        )
+        self.assertEqual(explicit_bucket_histogram_aggregation.value[0], 1)
+        self.assertEqual(explicit_bucket_histogram_aggregation.value[5], 1)
+        self.assertEqual(explicit_bucket_histogram_aggregation.value[10], 2)
+        self.assertEqual(explicit_bucket_histogram_aggregation.value[inf], 1)
 
     def test_min_max(self):
         """

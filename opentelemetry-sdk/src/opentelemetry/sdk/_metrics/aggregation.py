@@ -151,9 +151,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         record_min_max: bool = True,
     ):
         super().__init__(is_monotonic)
-        self._bucket_counts = OrderedDict(
-            [(key, 0) for key in (*boundaries, inf)]
-        )
+        self._value = OrderedDict([(key, 0) for key in (*boundaries, inf)])
         self._min = inf
         self._max = -inf
         self._sum = 0
@@ -172,10 +170,10 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         if self._is_monotonic:
             self._sum += value
 
-        for key in self._bucket_counts.keys():
+        for key in self._value.keys():
 
             if value < key:
-                self._bucket_counts[key] = self._value[key] + 1
+                self._value[key] = self._value[key] + 1
 
                 break
 
@@ -192,7 +190,7 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         return Histogram(
             start_time_unix_nano=self._start_time_unix_nano,
             time_unix_nano=now,
-            bucket_counts=self._bucket_counts,
+            bucket_counts=tuple(self._value.values()),
             explicit_bounds=self._boundaries,
             aggregation_temporality=(
                 AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA
