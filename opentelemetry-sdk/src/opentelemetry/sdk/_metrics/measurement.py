@@ -22,15 +22,3 @@ from opentelemetry.util.types import Attributes
 class Measurement:
     value: Union[int, float]
     attributes: Attributes = None
-
-
-# Can't make Exemplar a subclass of Measurement because that makes
-# time_unix_nano to be defined after attribute, a keyword argument
-@dataclass(frozen=True)
-class Exemplar:
-    value: Union[int, float]
-    time_unix_nano: int
-    span_id: int
-    trace_id: int
-    attributes: Optional[Attributes] = None
-    filtered_attributes: Optional[Attributes] = None
