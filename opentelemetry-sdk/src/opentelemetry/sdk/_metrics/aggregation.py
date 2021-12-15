@@ -187,5 +187,5 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
             start_time_unix_nano=self._start_time_unix_nano,
             time_unix_nano=now,
             value=self._value,
-            aggregation_temporality=AGGREGATION_TEMPORALITY_CUMULATIVE,
+            aggregation_temporality=AGGREGATION_TEMPORALITY_DELTA,
         )
