@@ -14,11 +14,11 @@
 
 from abc import ABC, abstractmethod
 from collections import OrderedDict
+from enum import IntEnum
 from logging import getLogger
 from math import inf
 from threading import Lock
 from typing import Optional, Sequence, TypeVar
-from enum import IntEnum
 
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import Gauge, Histogram, PointT, Sum
@@ -151,12 +151,15 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         record_min_max: bool = True,
     ):
         super().__init__(is_monotonic)
-        self._value = OrderedDict([(key, 0) for key in (*boundaries, inf)])
+        self._bucket_counts = OrderedDict(
+            [(key, 0) for key in (*boundaries, inf)]
+        )
         self._min = inf
         self._max = -inf
         self._sum = 0
         self._record_min_max = record_min_max
         self._start_time_unix_nano = _time_ns()
+        self._boundaries = boundaries
 
     def aggregate(self, measurement: Measurement) -> None:
 
@@ -169,10 +172,10 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         if self._is_monotonic:
             self._sum += value
 
-        for key in self._value.keys():
+        for key in self._bucket_counts.keys():
 
             if value < key:
-                self._value[key] = self._value[key] + value
+                self._bucket_counts[key] = self._value[key] + 1
 
                 break
 
@@ -189,7 +192,8 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         return Histogram(
             start_time_unix_nano=self._start_time_unix_nano,
             time_unix_nano=now,
-            value=self._value,
+            bucket_counts=self._bucket_counts,
+            explicit_bounds=self._boundaries,
             aggregation_temporality=(
                 AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA
             ),
