@@ -119,7 +119,7 @@ class LastValueAggregation(Aggregation[Gauge]):
         with self._lock:
             self._value = measurement.value
 
-    def collect(self) -> Optional[_PointVarT]:
+    def collect(self) -> Optional[Gauge]:
         """
         Atomically return a point for the current value of the metric.
         """
