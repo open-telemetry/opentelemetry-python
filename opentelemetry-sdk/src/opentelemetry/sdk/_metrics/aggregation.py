@@ -184,7 +184,9 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
         now = _time_ns()
 
         with self._lock:
-            self._value = OrderedDict([(key, 0) for key in (*boundaries, inf)])
+            self._value = OrderedDict(
+                [(key, 0) for key in (*self._boundaries, inf)]
+            )
             self._start_time_unix_nano = now + 1
 
         return Histogram(
