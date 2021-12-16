@@ -177,7 +177,7 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
 
                 break
 
-    def collect(self) -> Optional[_PointVarT]:
+    def collect(self) -> Optional[Histogram]:
         """
         Atomically return a point for the current value of the metric.
         """
