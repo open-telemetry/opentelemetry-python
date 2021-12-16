@@ -60,7 +60,7 @@ class SynchronousSumAggregation(Aggregation[Sum]):
         with self._lock:
             self._value = self._value + measurement.value
 
-    def collect(self) -> Optional[_PointVarT]:
+    def collect(self) -> Optional[Sum]:
         """
         Atomically return a point for the current value of the metric and
         reset the aggregation value.
