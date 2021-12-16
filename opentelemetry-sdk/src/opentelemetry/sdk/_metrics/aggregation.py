@@ -26,9 +26,9 @@ from opentelemetry.util._time import _time_ns
 
 
 class AggregationTemporality(IntEnum):
-    AGGREGATION_TEMPORALITY_UNSPECIFIED = 0
-    AGGREGATION_TEMPORALITY_DELTA = 1
-    AGGREGATION_TEMPORALITY_CUMULATIVE = 2
+    UNSPECIFIED = 0
+    DELTA = 1
+    CUMULATIVE = 2
 
 
 _PointVarT = TypeVar("_PointVarT", bound=PointT)
@@ -72,9 +72,7 @@ class SynchronousSumAggregation(Aggregation[Sum]):
             self._start_time_unix_nano = now + 1
 
         return Sum(
-            aggregation_temporality=(
-                AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA
-            ),
+            aggregation_temporality=(AggregationTemporality.DELTA),
             is_monotonic=self._is_monotonic,
             start_time_unix_nano=self._start_time_unix_nano,
             time_unix_nano=now,
@@ -103,9 +101,7 @@ class AsynchronousSumAggregation(Aggregation[Sum]):
             start_time_unix_nano=self._start_time_unix_nano,
             time_unix_nano=_time_ns(),
             value=self._value,
-            aggregation_temporality=(
-                AggregationTemporality.AGGREGATION_TEMPORALITY_CUMULATIVE
-            ),
+            aggregation_temporality=(AggregationTemporality.CUMULATIVE),
             is_monotonic=self._is_monotonic,
         )
 
@@ -194,7 +190,5 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
             time_unix_nano=now,
             bucket_counts=tuple(self._value.values()),
             explicit_bounds=self._boundaries,
-            aggregation_temporality=(
-                AggregationTemporality.AGGREGATION_TEMPORALITY_DELTA
-            ),
+            aggregation_temporality=(AggregationTemporality.DELTA),
         )
