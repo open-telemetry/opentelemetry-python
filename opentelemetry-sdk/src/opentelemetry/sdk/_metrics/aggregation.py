@@ -75,15 +75,18 @@ class SynchronousSumAggregation(
         now = _time_ns()
 
         with self._lock:
+            value = self._value
+            start_time_unix_nano = self._start_time_unix_nano
+
             self._value = 0
             self._start_time_unix_nano = now + 1
 
         return Sum(
-            aggregation_temporality=(AggregationTemporality.DELTA),
+            aggregation_temporality=AggregationTemporality.DELTA,
             is_monotonic=self._is_monotonic,
-            start_time_unix_nano=self._start_time_unix_nano,
+            start_time_unix_nano=start_time_unix_nano,
             time_unix_nano=now,
-            value=self._value,
+            value=value,
         )
 
 
@@ -92,7 +95,7 @@ class AsynchronousSumAggregation(
 ):
     def __init__(self, is_monotonic: bool):
         super().__init__(is_monotonic)
-        self._value = 0
+        self._value = None
         self._start_time_unix_nano = _time_ns()
 
     def aggregate(self, measurement: Measurement) -> None:
@@ -110,7 +113,7 @@ class AsynchronousSumAggregation(
             start_time_unix_nano=self._start_time_unix_nano,
             time_unix_nano=_time_ns(),
             value=self._value,
-            aggregation_temporality=(AggregationTemporality.CUMULATIVE),
+            aggregation_temporality=AggregationTemporality.CUMULATIVE,
             is_monotonic=self._is_monotonic,
         )
 
@@ -191,15 +194,18 @@ class ExplicitBucketHistogramAggregation(
         now = _time_ns()
 
         with self._lock:
+            value = self._value
+            start_time_unix_nano = self._start_time_unix_nano
+
             self._value = OrderedDict(
                 [(key, 0) for key in (*self._boundaries, inf)]
             )
             self._start_time_unix_nano = now + 1
 
         return Histogram(
-            start_time_unix_nano=self._start_time_unix_nano,
+            start_time_unix_nano=start_time_unix_nano,
             time_unix_nano=now,
-            bucket_counts=tuple(self._value.values()),
+            bucket_counts=tuple(value.values()),
             explicit_bounds=self._boundaries,
-            aggregation_temporality=(AggregationTemporality.DELTA),
+            aggregation_temporality=AggregationTemporality.DELTA,
         )
