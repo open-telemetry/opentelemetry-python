@@ -14,6 +14,7 @@
 
 
 from math import inf
+from time import sleep
 from unittest import TestCase
 
 from opentelemetry.sdk._metrics.aggregation import (
@@ -197,6 +198,10 @@ class TestLastValueAggregation(TestCase):
         self.assertEqual(first_gauge.value, 1)
 
         last_value_aggregation.aggregate(Measurement(1))
+
+        # CI fails the last assertion without this
+        sleep(0.1)
+
         second_gauge = last_value_aggregation.collect()
 
         self.assertEqual(second_gauge.value, 1)
@@ -289,6 +294,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         self.assertEqual(
             first_histogram.bucket_counts, (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         )
+
+        # CI fails the last assertion without this
+        sleep(0.1)
 
         explicit_bucket_histogram_aggregation.aggregate(Measurement(1))
         second_histogram = explicit_bucket_histogram_aggregation.collect()
