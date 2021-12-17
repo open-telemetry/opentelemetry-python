@@ -15,22 +15,38 @@
 
 from math import inf
 from unittest import TestCase
+from unittest.mock import Mock
 
 from opentelemetry.sdk._metrics.aggregation import (
     ExplicitBucketHistogramAggregation,
     LastValueAggregation,
     SynchronousSumAggregation,
+    _MonotonicitySensitiveAggregation,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
 
 
 class TestSynchronousSumAggregation(TestCase):
+    def test_monotonicity_sensitivity(self):
+        """
+        `SynchronousSumAggregation` is sensitive to instrument monotonicity
+        """
+
+        sum_aggregation = SynchronousSumAggregation(True)
+        self.assertIsInstance(
+            sum_aggregation, _MonotonicitySensitiveAggregation
+        )
+        self.assertTrue(sum_aggregation._is_monotonic)
+
+        sum_aggregation = SynchronousSumAggregation(False)
+        self.assertFalse(sum_aggregation._is_monotonic)
+
     def test_aggregate(self):
         """
         `SynchronousSumAggregation` collects data for sum metric points
         """
 
-        sum_aggregation = SynchronousSumAggregation(True)
+        sum_aggregation = SynchronousSumAggregation(Mock())
 
         sum_aggregation.aggregate(Measurement(1))
         sum_aggregation.aggregate(Measurement(2))
@@ -38,7 +54,7 @@ class TestSynchronousSumAggregation(TestCase):
 
         self.assertEqual(sum_aggregation._value, 6)
 
-        sum_aggregation = SynchronousSumAggregation(True)
+        sum_aggregation = SynchronousSumAggregation(Mock())
 
         sum_aggregation.aggregate(Measurement(1))
         sum_aggregation.aggregate(Measurement(-2))
@@ -48,13 +64,23 @@ class TestSynchronousSumAggregation(TestCase):
 
 
 class TestLastValueAggregation(TestCase):
+    def test_monotonicity_sensitivity(self):
+        """
+        `LastValueAggregation` is not sensitive to instrument monotonicity
+        """
+
+        sum_aggregation = LastValueAggregation()
+        self.assertNotIsInstance(
+            sum_aggregation, _MonotonicitySensitiveAggregation
+        )
+
     def test_aggregate(self):
         """
         `LastValueAggregation` collects data for gauge metric points with delta
         temporality
         """
 
-        last_value_aggregation = LastValueAggregation(True)
+        last_value_aggregation = LastValueAggregation()
 
         last_value_aggregation.aggregate(Measurement(1))
         self.assertEqual(last_value_aggregation._value, 1)
@@ -67,6 +93,21 @@ class TestLastValueAggregation(TestCase):
 
 
 class TestExplicitBucketHistogramAggregation(TestCase):
+    def test_monotonicity_sensitivity(self):
+        """
+        `ExplicitBucketHistogramAggregation` is sensitive to instrument
+        monotonicity
+        """
+
+        sum_aggregation = ExplicitBucketHistogramAggregation(True)
+        self.assertIsInstance(
+            sum_aggregation, _MonotonicitySensitiveAggregation
+        )
+        self.assertTrue(sum_aggregation._is_monotonic)
+
+        sum_aggregation = ExplicitBucketHistogramAggregation(False)
+        self.assertFalse(sum_aggregation._is_monotonic)
+
     def test_aggregate(self):
         """
         `ExplicitBucketHistogramAggregation` collects data for explicit_bucket_histogram metric points
