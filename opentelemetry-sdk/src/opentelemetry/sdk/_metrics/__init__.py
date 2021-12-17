@@ -65,6 +65,7 @@ class Meter(APIMeter):
         return Counter(
             self._instrumentation_info,
             name,
+            # pylint: disable=protected-access
             self._meter_provider._measurement_consumer,
             unit,
             description,
@@ -76,6 +77,7 @@ class Meter(APIMeter):
         return UpDownCounter(
             self._instrumentation_info,
             name,
+            # pylint: disable=protected-access
             self._meter_provider._measurement_consumer,
             unit,
             description,
@@ -87,6 +89,7 @@ class Meter(APIMeter):
         return ObservableCounter(
             self._instrumentation_info,
             name,
+            # pylint: disable=protected-access
             self._meter_provider._measurement_consumer,
             callback,
             unit,
@@ -99,6 +102,7 @@ class Meter(APIMeter):
         return Histogram(
             self._instrumentation_info,
             name,
+            # pylint: disable=protected-access
             self._meter_provider._measurement_consumer,
             unit,
             description,
@@ -110,6 +114,7 @@ class Meter(APIMeter):
         return ObservableGauge(
             self._instrumentation_info,
             name,
+            # pylint: disable=protected-access
             self._meter_provider._measurement_consumer,
             callback,
             unit,
@@ -122,6 +127,7 @@ class Meter(APIMeter):
         return ObservableUpDownCounter(
             self._instrumentation_info,
             name,
+            # pylint: disable=protected-access
             self._meter_provider._measurement_consumer,
             callback,
             unit,
@@ -137,12 +143,14 @@ class MeterProvider(APIMeterProvider):
         metric_readers: Sequence[MetricReader] = (),
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
-        measurement_consumer: MeasurementConsumer = SerialMeasurementConsumer,
+        measurement_consumer_class: MeasurementConsumer = (
+            SerialMeasurementConsumer
+        ),
     ):
         self._lock = Lock()
         self._atexit_handler = None
 
-        self._measurement_consumer = SerialMeasurementConsumer()
+        self._measurement_consumer = measurement_consumer_class()
 
         if shutdown_on_exit:
             self._atexit_handler = register(self.shutdown)
