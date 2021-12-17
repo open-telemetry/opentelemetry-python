@@ -22,20 +22,20 @@ from opentelemetry.sdk._metrics.aggregation import (
     ExplicitBucketHistogramAggregation,
     LastValueAggregation,
     SynchronousSumAggregation,
-    _MonotonicitySensitiveAggregation,
+    _MonotonicityAwareAggregation,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
 
 
 class TestSynchronousSumAggregation(TestCase):
-    def test_monotonicity_sensitivity(self):
+    def test_monotonicity_awareness(self):
         """
-        `SynchronousSumAggregation` is sensitive to instrument monotonicity
+        `SynchronousSumAggregation` is aware of the instrument monotonicity
         """
 
         synchronous_sum_aggregation = SynchronousSumAggregation(True)
         self.assertIsInstance(
-            synchronous_sum_aggregation, _MonotonicitySensitiveAggregation
+            synchronous_sum_aggregation, _MonotonicityAwareAggregation
         )
         self.assertTrue(synchronous_sum_aggregation._is_monotonic)
 
@@ -88,14 +88,14 @@ class TestSynchronousSumAggregation(TestCase):
 
 
 class TestAsynchronousSumAggregation(TestCase):
-    def test_monotonicity_sensitivity(self):
+    def test_monotonicity_awareness(self):
         """
-        `AsynchronousSumAggregation` is sensitive to instrument monotonicity
+        `AsynchronousSumAggregation` is aware of the instrument monotonicity
         """
 
         asynchronous_sum_aggregation = AsynchronousSumAggregation(True)
         self.assertIsInstance(
-            asynchronous_sum_aggregation, _MonotonicitySensitiveAggregation
+            asynchronous_sum_aggregation, _MonotonicityAwareAggregation
         )
         self.assertTrue(asynchronous_sum_aggregation._is_monotonic)
 
@@ -156,14 +156,14 @@ class TestAsynchronousSumAggregation(TestCase):
 
 
 class TestLastValueAggregation(TestCase):
-    def test_monotonicity_sensitivity(self):
+    def test_monotonicity_awareness(self):
         """
-        `LastValueAggregation` is not sensitive to instrument monotonicity
+        `LastValueAggregation` is not aware of the instrument monotonicity
         """
 
         sum_aggregation = LastValueAggregation()
         self.assertNotIsInstance(
-            sum_aggregation, _MonotonicitySensitiveAggregation
+            sum_aggregation, _MonotonicityAwareAggregation
         )
 
     def test_aggregate(self):
@@ -212,16 +212,14 @@ class TestLastValueAggregation(TestCase):
 
 
 class TestExplicitBucketHistogramAggregation(TestCase):
-    def test_monotonicity_sensitivity(self):
+    def test_monotonicity_awareness(self):
         """
-        `ExplicitBucketHistogramAggregation` is sensitive to instrument
+        `ExplicitBucketHistogramAggregation` is aware of the instrument
         monotonicity
         """
 
         sum_aggregation = ExplicitBucketHistogramAggregation(True)
-        self.assertIsInstance(
-            sum_aggregation, _MonotonicitySensitiveAggregation
-        )
+        self.assertIsInstance(sum_aggregation, _MonotonicityAwareAggregation)
         self.assertTrue(sum_aggregation._is_monotonic)
 
         sum_aggregation = ExplicitBucketHistogramAggregation(False)
@@ -229,7 +227,8 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
     def test_aggregate(self):
         """
-        `ExplicitBucketHistogramAggregation` collects data for explicit_bucket_histogram metric points
+        `ExplicitBucketHistogramAggregation` collects data for
+        explicit bucket histogram metric points
         """
 
         explicit_bucket_histogram_aggregation = (

@@ -36,7 +36,7 @@ _PointVarT = TypeVar("_PointVarT", bound=PointT)
 _logger = getLogger(__name__)
 
 
-class _MonotonicitySensitiveAggregation:
+class _MonotonicityAwareAggregation:
     def __init__(self, is_monotonic: bool):
         self._is_monotonic = is_monotonic
         super().__init__()
@@ -56,7 +56,7 @@ class Aggregation(ABC, Generic[_PointVarT]):
 
 
 class SynchronousSumAggregation(
-    _MonotonicitySensitiveAggregation, Aggregation[Sum]
+    _MonotonicityAwareAggregation, Aggregation[Sum]
 ):
     def __init__(self, is_monotonic: bool):
         super().__init__(is_monotonic)
@@ -91,7 +91,7 @@ class SynchronousSumAggregation(
 
 
 class AsynchronousSumAggregation(
-    _MonotonicitySensitiveAggregation, Aggregation[Sum]
+    _MonotonicityAwareAggregation, Aggregation[Sum]
 ):
     def __init__(self, is_monotonic: bool):
         super().__init__(is_monotonic)
@@ -141,7 +141,7 @@ class LastValueAggregation(Aggregation[Gauge]):
 
 
 class ExplicitBucketHistogramAggregation(
-    _MonotonicitySensitiveAggregation, Aggregation[Histogram]
+    _MonotonicityAwareAggregation, Aggregation[Histogram]
 ):
     def __init__(
         self,
