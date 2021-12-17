@@ -72,13 +72,13 @@ class TestSynchronousSumAggregation(TestCase):
         synchronous_sum_aggregation.aggregate(Measurement(1))
         first_sum = synchronous_sum_aggregation.collect()
 
-        self.assertEquals(first_sum.value, 1)
+        self.assertEqual(first_sum.value, 1)
         self.assertTrue(first_sum.is_monotonic)
 
         synchronous_sum_aggregation.aggregate(Measurement(1))
         second_sum = synchronous_sum_aggregation.collect()
 
-        self.assertEquals(second_sum.value, 1)
+        self.assertEqual(second_sum.value, 1)
         self.assertTrue(second_sum.is_monotonic)
 
         self.assertGreater(
@@ -140,13 +140,13 @@ class TestAsynchronousSumAggregation(TestCase):
         asynchronous_sum_aggregation.aggregate(Measurement(1))
         first_sum = asynchronous_sum_aggregation.collect()
 
-        self.assertEquals(first_sum.value, 1)
+        self.assertEqual(first_sum.value, 1)
         self.assertTrue(first_sum.is_monotonic)
 
         asynchronous_sum_aggregation.aggregate(Measurement(1))
         second_sum = asynchronous_sum_aggregation.collect()
 
-        self.assertEquals(second_sum.value, 1)
+        self.assertEqual(second_sum.value, 1)
         self.assertTrue(second_sum.is_monotonic)
 
         self.assertEqual(
@@ -194,12 +194,12 @@ class TestLastValueAggregation(TestCase):
         last_value_aggregation.aggregate(Measurement(1))
         first_gauge = last_value_aggregation.collect()
 
-        self.assertEquals(first_gauge.value, 1)
+        self.assertEqual(first_gauge.value, 1)
 
         last_value_aggregation.aggregate(Measurement(1))
         second_gauge = last_value_aggregation.collect()
 
-        self.assertEquals(second_gauge.value, 1)
+        self.assertEqual(second_gauge.value, 1)
 
         self.assertGreater(
             second_gauge.time_unix_nano, first_gauge.time_unix_nano
@@ -286,14 +286,14 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         explicit_bucket_histogram_aggregation.aggregate(Measurement(1))
         first_histogram = explicit_bucket_histogram_aggregation.collect()
 
-        self.assertEquals(
+        self.assertEqual(
             first_histogram.bucket_counts, (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         )
 
         explicit_bucket_histogram_aggregation.aggregate(Measurement(1))
         second_histogram = explicit_bucket_histogram_aggregation.collect()
 
-        self.assertEquals(
+        self.assertEqual(
             second_histogram.bucket_counts, (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         )
 
