@@ -40,6 +40,10 @@ from opentelemetry.sdk._metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk._metrics.measurement_consumer import (
+    MeasurementConsumer,
+    SerialMeasurementConsumer,
+)
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
@@ -58,39 +62,70 @@ class Meter(APIMeter):
         self._meter_provider = meter_provider
 
     def create_counter(self, name, unit=None, description=None) -> APICounter:
-        return Counter(self._instrumentation_info, name, unit, description)
+        return Counter(
+            self._instrumentation_info,
+            name,
+            self._meter_provider._measurement_consumer,
+            unit,
+            description,
+        )
 
     def create_up_down_counter(
         self, name, unit=None, description=None
     ) -> APIUpDownCounter:
         return UpDownCounter(
-            self._instrumentation_info, name, unit, description
+            self._instrumentation_info,
+            name,
+            self._meter_provider._measurement_consumer,
+            unit,
+            description,
         )
 
     def create_observable_counter(
         self, name, callback, unit=None, description=None
     ) -> APIObservableCounter:
         return ObservableCounter(
-            self._instrumentation_info, name, callback, unit, description
+            self._instrumentation_info,
+            name,
+            self._meter_provider._measurement_consumer,
+            callback,
+            unit,
+            description,
         )
 
     def create_histogram(
         self, name, unit=None, description=None
     ) -> APIHistogram:
-        return Histogram(self._instrumentation_info, name, unit, description)
+        return Histogram(
+            self._instrumentation_info,
+            name,
+            self._meter_provider._measurement_consumer,
+            unit,
+            description,
+        )
 
     def create_observable_gauge(
         self, name, callback, unit=None, description=None
     ) -> APIObservableGauge:
         return ObservableGauge(
-            self._instrumentation_info, name, callback, unit, description
+            self._instrumentation_info,
+            name,
+            self._meter_provider._measurement_consumer,
+            callback,
+            unit,
+            description,
         )
 
     def create_observable_up_down_counter(
         self, name, callback, unit=None, description=None
     ) -> APIObservableUpDownCounter:
         return ObservableUpDownCounter(
-            self._instrumentation_info, name, callback, unit, description
+            self._instrumentation_info,
+            name,
+            self._meter_provider._measurement_consumer,
+            callback,
+            unit,
+            description,
         )
 
 
@@ -102,9 +137,12 @@ class MeterProvider(APIMeterProvider):
         metric_readers: Sequence[MetricReader] = (),
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
+        measurement_consumer: MeasurementConsumer = SerialMeasurementConsumer,
     ):
         self._lock = Lock()
         self._atexit_handler = None
+
+        self._measurement_consumer = SerialMeasurementConsumer()
 
         if shutdown_on_exit:
             self._atexit_handler = register(self.shutdown)

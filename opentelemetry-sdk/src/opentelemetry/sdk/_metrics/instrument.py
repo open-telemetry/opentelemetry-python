@@ -30,6 +30,7 @@ from opentelemetry._metrics.instrument import (
 )
 from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
 from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry.sdk._metrics.measurement_consumer import MeasurementConsumer
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
 
@@ -38,10 +39,12 @@ class _Synchronous:
         self,
         instrumentation_info: InstrumentationInfo,
         name: str,
+        measurement_consumer: MeasurementConsumer,
         unit: str = "",
         description: str = "",
     ):
         self._instrumentation_info = instrumentation_info
+        self._measurement_consumer = measurement_consumer
         super().__init__(name, unit=unit, description=description)
 
 
@@ -50,12 +53,14 @@ class _Asynchronous:
         self,
         instrumentation_info: InstrumentationInfo,
         name: str,
+        measurement_consumer: MeasurementConsumer,
         callback: CallbackT,
         unit: str = "",
         description: str = "",
     ):
 
         self._instrumentation_info = instrumentation_info
+        self._measurement_consumer = measurement_consumer
         super().__init__(name, callback, unit=unit, description=description)
 
         self._callback = callback
@@ -67,9 +72,9 @@ class _Asynchronous:
 
             self._callback = inner
 
-    @property
-    def callback(self) -> CallbackT:
-        return self._callback
+    def callback(self):
+        for measurement in self._callback():
+            self._measurement_consumer.consume(measurement)
 
 
 class Counter(_Synchronous, APICounter):
@@ -79,12 +84,14 @@ class Counter(_Synchronous, APICounter):
         if amount < 0:
             raise Exception("amount must be non negative")
 
+        self._measurement_consumer.consume(Measurement(amount, attributes))
+
 
 class UpDownCounter(_Synchronous, APIUpDownCounter):
     def add(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
-        pass
+        self._measurement_consumer.consume(Measurement(amount, attributes))
 
 
 class ObservableCounter(_Asynchronous, APIObservableCounter):
@@ -97,7 +104,7 @@ class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
 
 class Histogram(_Synchronous, APIHistogram):
     def record(self, amount, attributes=None):
-        pass
+        self._measurement_consumer.consume(Measurement(amount, attributes))
 
 
 class ObservableGauge(_Asynchronous, APIObservableGauge):

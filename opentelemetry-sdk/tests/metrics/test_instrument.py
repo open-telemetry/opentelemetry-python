@@ -27,17 +27,27 @@ class TestObservableGauge(TestCase):
         def callback():
             return [1, 2, 3]
 
-        observable_gauge = ObservableGauge(Mock(), "name", callback)
+        observable_gauge = ObservableGauge(Mock(), "name", Mock(), callback)
 
-        self.assertEqual(observable_gauge.callback(), [1, 2, 3])
+        mock = Mock()
+        observable_gauge._measurement_consumer = mock
+
+        observable_gauge.callback()
+
+        mock.consume.assert_called_with(3)
 
     def test_generator_callback(self):
         def callback():
             yield [1, 2, 3]
 
-        observable_gauge = ObservableGauge(Mock(), "name", callback())
+        observable_gauge = ObservableGauge(Mock(), "name", Mock(), callback())
 
-        self.assertEqual(observable_gauge.callback(), [1, 2, 3])
+        mock = Mock()
+        observable_gauge._measurement_consumer = mock
+
+        observable_gauge.callback()
+
+        mock.consume.assert_called_with(3)
 
 
 class TestObservableCounter(TestCase):
@@ -45,17 +55,31 @@ class TestObservableCounter(TestCase):
         def callback():
             return [1, 2, 3]
 
-        observable_counter = ObservableCounter(Mock(), "name", callback)
+        observable_counter = ObservableCounter(
+            Mock(), "name", Mock(), callback
+        )
 
-        self.assertEqual(observable_counter.callback(), [1, 2, 3])
+        mock = Mock()
+        observable_counter._measurement_consumer = mock
+
+        observable_counter.callback()
+
+        mock.consume.assert_called_with(3)
 
     def test_generator_callback(self):
         def callback():
             yield [1, 2, 3]
 
-        observable_counter = ObservableCounter(Mock(), "name", callback())
+        observable_counter = ObservableCounter(
+            Mock(), "name", Mock(), callback()
+        )
 
-        self.assertEqual(observable_counter.callback(), [1, 2, 3])
+        mock = Mock()
+        observable_counter._measurement_consumer = mock
+
+        observable_counter.callback()
+
+        mock.consume.assert_called_with(3)
 
 
 class TestObservableUpDownCounter(TestCase):
@@ -64,17 +88,27 @@ class TestObservableUpDownCounter(TestCase):
             return [1, 2, 3]
 
         observable_up_down_counter = ObservableUpDownCounter(
-            Mock(), "name", callback
+            Mock(), "name", Mock(), callback
         )
 
-        self.assertEqual(observable_up_down_counter.callback(), [1, 2, 3])
+        mock = Mock()
+        observable_up_down_counter._measurement_consumer = mock
+
+        observable_up_down_counter.callback()
+
+        mock.consume.assert_called_with(3)
 
     def test_generator_callback(self):
         def callback():
             yield [1, 2, 3]
 
         observable_up_down_counter = ObservableUpDownCounter(
-            Mock(), "name", callback()
+            Mock(), "name", Mock(), callback()
         )
 
-        self.assertEqual(observable_up_down_counter.callback(), [1, 2, 3])
+        mock = Mock()
+        observable_up_down_counter._measurement_consumer = mock
+
+        observable_up_down_counter.callback()
+
+        mock.consume.assert_called_with(3)
