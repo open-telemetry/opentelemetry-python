@@ -12,6 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from abc import ABC, abstractmethod
 
-class MetricReader:
-    pass
+
+class MetricReader(ABC):
+    @abstractmethod
+    def collect(self):
+        pass
+
+    @abstractmethod
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        pass
+
+    @abstractmethod
+    def shutdown(self) -> bool:
+        pass
