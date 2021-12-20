@@ -19,7 +19,7 @@ from opentelemetry.exporter.otlp.proto.grpc.exporter import (
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
     MetricsServiceStub,
 )
-from opentelemetry.sdk._metrics import (
+from opentelemetry.sdk._metrics.data import (
     MetricData,
 )
 

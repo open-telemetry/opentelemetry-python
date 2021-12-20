@@ -18,7 +18,7 @@ from enum import Enum
 from os import linesep
 from typing import IO, Callable, Sequence
 
-from opentelemetry.sdk._metrics import MetricData
+from opentelemetry.sdk._metrics.data import MetricData
 from opentelemetry.sdk._metrics.measurement import Measurement
 
 
