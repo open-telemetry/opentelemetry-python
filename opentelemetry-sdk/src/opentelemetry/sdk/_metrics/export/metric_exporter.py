@@ -13,7 +13,13 @@
 # limitations under the License.
 
 import abc
+import sys
 from enum import Enum
+from os import linesep
+from typing import IO, Callable, Sequence
+
+from opentelemetry.sdk._metrics import MetricData
+from opentelemetry.sdk._metrics.measurement import Measurement
 
 
 class MetricExportResult(Enum):
@@ -28,8 +34,18 @@ class MetricExporter(abc.ABC):
     in their own format.
     """
 
+    def export(self, metrics: Sequence[MetricData]) -> "MetricExportResult":
+        """Exports a batch of telemetry data.
+
+        Args:
+            metrics: The list of `opentelemetry.trace.Span` objects to be exported
+
+        Returns:
+            The result of the export
+        """
+
     @abc.abstractmethod
-    def shutdown(self):
+    def shutdown(self) -> None:
         """Shuts down the exporter.
 
         Called when the SDK is shut down.
@@ -43,3 +59,23 @@ class ConsoleMetricExporter(MetricExporter):
     This class can be used for diagnostic purposes. It prints the exported
     metrics to the console STDOUT.
     """
+
+    def __init__(
+        self,
+        out: IO = sys.stdout,
+        formatter: Callable[
+            [Measurement], str
+        ] = lambda record: record.to_json()
+        + linesep,
+    ):
+        self.out = out
+        self.formatter = formatter
+
+    def export(self, batch: Sequence[MetricData]) -> MetricExportResult:
+        for data in batch:
+            self.out.write(self.formatter(data.log_record))
+        self.out.flush()
+        return MetricExportResult.SUCCESS
+
+    def shutdown(self) -> None:
+        pass

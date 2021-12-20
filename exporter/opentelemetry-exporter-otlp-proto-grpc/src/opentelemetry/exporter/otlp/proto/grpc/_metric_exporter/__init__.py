@@ -16,6 +16,9 @@ from grpc import ChannelCredentials, Compression
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     OTLPExporterMixin,
 )
+from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
+    MetricsServiceStub,
+)
 from opentelemetry.sdk._metrics import (
     MetricData,
 )
@@ -30,6 +33,9 @@ class OTLPMetricExporter(
     MetricExporter,
     OTLPExporterMixin,
 ):
+    _result = MetricExportResult
+    _stub = MetricsServiceStub
+
     def __init__(
         self,
         endpoint: Optional[str] = None,
@@ -54,3 +60,12 @@ class OTLPMetricExporter(
         self, data: Sequence[MetricData]
     ) -> MetricExportResult:
         return super()._translate_data(data)
+
+    def export(self, batch: Sequence[MetricData]) -> MetricExportResult:
+        for data in batch:
+            # TODO: do something with the data
+            pass
+        return MetricExportResult.SUCCESS
+
+    def shutdown(self):
+        pass
