@@ -17,7 +17,7 @@ from google.rpc.error_details_pb2 import RetryInfo
 from grpc import StatusCode
 
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
-    ExportMetricsServiceRequest,
+    # ExportMetricsServiceRequest,
     ExportMetricsServiceResponse,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
