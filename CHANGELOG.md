@@ -6,6 +6,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.8.0-0.27b0...HEAD)
 
+- [exporter/opentelemetry-exporter-otlp-proto-grpc] Add OTLPMetricExporter
+  ([#2323](https://github.com/open-telemetry/opentelemetry-python/pull/2323))
+
 ## [1.8.0-0.27b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.8.0-0.27b0) - 2021-12-17
 
 - Adds Aggregation and instruments as part of Metrics SDK
