@@ -315,6 +315,7 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
         parent_conn, child_conn = multiprocessing.Pipe()
         p = multiprocessing.Process(target=child, args=(child_conn,))
         p.start()
+        time.sleep(0.5)
         self.assertTrue(parent_conn.recv())
         p.join()
 
