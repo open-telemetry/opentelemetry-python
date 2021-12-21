@@ -36,9 +36,9 @@ _PointVarT = TypeVar("_PointVarT", bound=PointT)
 _logger = getLogger(__name__)
 
 
-class _MonotonicityAwareAggregation:
-    def __init__(self, is_monotonic: bool):
-        self._is_monotonic = is_monotonic
+class _InstrumentMonotonicityAwareAggregation:
+    def __init__(self, instrument_is_monotonic: bool):
+        self._instrument_is_monotonic = instrument_is_monotonic
         super().__init__()
 
 
@@ -56,10 +56,10 @@ class Aggregation(ABC, Generic[_PointVarT]):
 
 
 class SynchronousSumAggregation(
-    _MonotonicityAwareAggregation, Aggregation[Sum]
+    _InstrumentMonotonicityAwareAggregation, Aggregation[Sum]
 ):
-    def __init__(self, is_monotonic: bool):
-        super().__init__(is_monotonic)
+    def __init__(self, instrument_is_monotonic: bool):
+        super().__init__(instrument_is_monotonic)
         self._value = 0
         self._start_time_unix_nano = _time_ns()
 
@@ -83,7 +83,7 @@ class SynchronousSumAggregation(
 
         return Sum(
             aggregation_temporality=AggregationTemporality.DELTA,
-            is_monotonic=self._is_monotonic,
+            is_monotonic=self._instrument_is_monotonic,
             start_time_unix_nano=start_time_unix_nano,
             time_unix_nano=now,
             value=value,
@@ -91,10 +91,10 @@ class SynchronousSumAggregation(
 
 
 class AsynchronousSumAggregation(
-    _MonotonicityAwareAggregation, Aggregation[Sum]
+    _InstrumentMonotonicityAwareAggregation, Aggregation[Sum]
 ):
-    def __init__(self, is_monotonic: bool):
-        super().__init__(is_monotonic)
+    def __init__(self, instrument_is_monotonic: bool):
+        super().__init__(instrument_is_monotonic)
         self._value = None
         self._start_time_unix_nano = _time_ns()
 
@@ -114,7 +114,7 @@ class AsynchronousSumAggregation(
             time_unix_nano=_time_ns(),
             value=self._value,
             aggregation_temporality=AggregationTemporality.CUMULATIVE,
-            is_monotonic=self._is_monotonic,
+            is_monotonic=self._instrument_is_monotonic,
         )
 
 
@@ -141,11 +141,11 @@ class LastValueAggregation(Aggregation[Gauge]):
 
 
 class ExplicitBucketHistogramAggregation(
-    _MonotonicityAwareAggregation, Aggregation[Histogram]
+    _InstrumentMonotonicityAwareAggregation, Aggregation[Histogram]
 ):
     def __init__(
         self,
-        is_monotonic: bool,
+        instrument_is_monotonic: bool,
         boundaries: Sequence[int] = (
             0,
             5,
@@ -160,7 +160,7 @@ class ExplicitBucketHistogramAggregation(
         ),
         record_min_max: bool = True,
     ):
-        super().__init__(is_monotonic)
+        super().__init__(instrument_is_monotonic)
         self._value = OrderedDict([(key, 0) for key in (*boundaries, inf)])
         self._min = inf
         self._max = -inf
@@ -177,7 +177,7 @@ class ExplicitBucketHistogramAggregation(
             self._min = min(self._min, value)
             self._max = max(self._max, value)
 
-        if self._is_monotonic:
+        if self._instrument_is_monotonic:
             self._sum += value
 
         for key in self._value.keys():

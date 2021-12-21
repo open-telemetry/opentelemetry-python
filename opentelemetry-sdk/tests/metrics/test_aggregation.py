@@ -22,25 +22,26 @@ from opentelemetry.sdk._metrics.aggregation import (
     ExplicitBucketHistogramAggregation,
     LastValueAggregation,
     SynchronousSumAggregation,
-    _MonotonicityAwareAggregation,
+    _InstrumentMonotonicityAwareAggregation,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
 
 
 class TestSynchronousSumAggregation(TestCase):
-    def test_monotonicity_awareness(self):
+    def test_instrument_monotonicity_awareness(self):
         """
         `SynchronousSumAggregation` is aware of the instrument monotonicity
         """
 
         synchronous_sum_aggregation = SynchronousSumAggregation(True)
         self.assertIsInstance(
-            synchronous_sum_aggregation, _MonotonicityAwareAggregation
+            synchronous_sum_aggregation,
+            _InstrumentMonotonicityAwareAggregation,
         )
-        self.assertTrue(synchronous_sum_aggregation._is_monotonic)
+        self.assertTrue(synchronous_sum_aggregation._instrument_is_monotonic)
 
         synchronous_sum_aggregation = SynchronousSumAggregation(False)
-        self.assertFalse(synchronous_sum_aggregation._is_monotonic)
+        self.assertFalse(synchronous_sum_aggregation._instrument_is_monotonic)
 
     def test_aggregate(self):
         """
@@ -88,19 +89,20 @@ class TestSynchronousSumAggregation(TestCase):
 
 
 class TestAsynchronousSumAggregation(TestCase):
-    def test_monotonicity_awareness(self):
+    def test_instrument_monotonicity_awareness(self):
         """
         `AsynchronousSumAggregation` is aware of the instrument monotonicity
         """
 
         asynchronous_sum_aggregation = AsynchronousSumAggregation(True)
         self.assertIsInstance(
-            asynchronous_sum_aggregation, _MonotonicityAwareAggregation
+            asynchronous_sum_aggregation,
+            _InstrumentMonotonicityAwareAggregation,
         )
-        self.assertTrue(asynchronous_sum_aggregation._is_monotonic)
+        self.assertTrue(asynchronous_sum_aggregation._instrument_is_monotonic)
 
         asynchronous_sum_aggregation = AsynchronousSumAggregation(False)
-        self.assertFalse(asynchronous_sum_aggregation._is_monotonic)
+        self.assertFalse(asynchronous_sum_aggregation._instrument_is_monotonic)
 
     def test_aggregate(self):
         """
@@ -156,14 +158,14 @@ class TestAsynchronousSumAggregation(TestCase):
 
 
 class TestLastValueAggregation(TestCase):
-    def test_monotonicity_awareness(self):
+    def test_instrument_monotonicity_awareness(self):
         """
         `LastValueAggregation` is not aware of the instrument monotonicity
         """
 
         sum_aggregation = LastValueAggregation()
         self.assertNotIsInstance(
-            sum_aggregation, _MonotonicityAwareAggregation
+            sum_aggregation, _InstrumentMonotonicityAwareAggregation
         )
 
     def test_aggregate(self):
@@ -212,18 +214,20 @@ class TestLastValueAggregation(TestCase):
 
 
 class TestExplicitBucketHistogramAggregation(TestCase):
-    def test_monotonicity_awareness(self):
+    def test_instrument_monotonicity_awareness(self):
         """
         `ExplicitBucketHistogramAggregation` is aware of the instrument
         monotonicity
         """
 
         sum_aggregation = ExplicitBucketHistogramAggregation(True)
-        self.assertIsInstance(sum_aggregation, _MonotonicityAwareAggregation)
-        self.assertTrue(sum_aggregation._is_monotonic)
+        self.assertIsInstance(
+            sum_aggregation, _InstrumentMonotonicityAwareAggregation
+        )
+        self.assertTrue(sum_aggregation._instrument_is_monotonic)
 
         sum_aggregation = ExplicitBucketHistogramAggregation(False)
-        self.assertFalse(sum_aggregation._is_monotonic)
+        self.assertFalse(sum_aggregation._instrument_is_monotonic)
 
     def test_aggregate(self):
         """
