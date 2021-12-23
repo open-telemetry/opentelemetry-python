@@ -15,6 +15,7 @@
 # type: ignore
 
 from importlib import reload
+from logging import ERROR
 from os import environ
 from unittest import TestCase
 from unittest.mock import Mock, patch
@@ -47,7 +48,7 @@ class TestPropagators(TestCase):
 
         reload(opentelemetry.propagate)
 
-    @patch.dict(environ, {OTEL_PROPAGATORS: "a,b,c"})
+    @patch.dict(environ, {OTEL_PROPAGATORS: "a,  b,   c  "})
     @patch("opentelemetry.propagators.composite.CompositePropagator")
     @patch("pkg_resources.iter_entry_points")
     def test_non_default_propagators(
@@ -81,3 +82,18 @@ class TestPropagators(TestCase):
         import opentelemetry.propagate
 
         reload(opentelemetry.propagate)
+
+    @patch.dict(
+        environ, {OTEL_PROPAGATORS: "tracecontext , unknown , baggage"}
+    )
+    def test_default_composite_propagators(self):
+
+        import opentelemetry.propagate
+
+        with self.assertRaises(Exception) as ctx:
+            with self.assertLogs(level=ERROR) as err:
+                reload(opentelemetry.propagate)
+                self.assertIn(
+                    "Failed to load configured propagator `unknown`",
+                    err.output[0],
+                )
