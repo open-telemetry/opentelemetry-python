@@ -28,6 +28,7 @@ from opentelemetry.propagators.textmap import (
     default_setter,
 )
 from opentelemetry.trace import format_span_id, format_trace_id
+from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 
 
 class B3MultiFormat(TextMapPropagator):
@@ -45,6 +46,7 @@ class B3MultiFormat(TextMapPropagator):
     _SAMPLE_PROPAGATE_VALUES = {"1", "True", "true", "d"}
     _trace_id_regex = re_compile(r"[\da-fA-F]{16}|[\da-fA-F]{32}")
     _span_id_regex = re_compile(r"[\da-fA-F]{16}")
+    _id_generator = RandomIdGenerator()
 
     def extract(
         self,
@@ -95,16 +97,6 @@ class B3MultiFormat(TextMapPropagator):
                 or flags
             )
 
-        if (
-            trace_id == trace.INVALID_TRACE_ID
-            or span_id == trace.INVALID_SPAN_ID
-            or self._trace_id_regex.fullmatch(trace_id) is None
-            or self._span_id_regex.fullmatch(span_id) is None
-        ):
-            return context
-
-        trace_id = int(trace_id, 16)
-        span_id = int(span_id, 16)
         options = 0
         # The b3 spec provides no defined behavior for both sample and
         # flag values set. Since the setting of at least one implies
@@ -112,6 +104,31 @@ class B3MultiFormat(TextMapPropagator):
         # header is set to allow.
         if sampled in self._SAMPLE_PROPAGATE_VALUES or flags == "1":
             options |= trace.TraceFlags.SAMPLED
+
+        if (
+            trace_id == trace.INVALID_TRACE_ID
+            or span_id == trace.INVALID_SPAN_ID
+            or self._trace_id_regex.fullmatch(trace_id) is None
+            or self._span_id_regex.fullmatch(span_id) is None
+        ):
+            if sampled in self._SAMPLE_PROPAGATE_VALUES or flags == "1":
+                return context
+            else:
+                return trace.set_span_in_context(
+                    trace.NonRecordingSpan(
+                        trace.SpanContext(
+                            trace_id=self._id_generator.generate_trace_id(),
+                            span_id=self._id_generator.generate_span_id(),
+                            is_remote=False,
+                            trace_flags=trace.TraceFlags(options),
+                            trace_state=trace.TraceState(),
+                        )
+                    ),
+                    context,
+                )
+
+        trace_id = int(trace_id, 16)
+        span_id = int(span_id, 16)
 
         return trace.set_span_in_context(
             trace.NonRecordingSpan(
