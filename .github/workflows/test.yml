@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: 6b83f1680f9a10900cb1da4e935252176ee05c21
+  CONTRIB_REPO_SHA: 30d0c2ea90dffa7d958a28a699a9021ecb04aa71
   # This is needed because we do not clone the core repo in contrib builds anymore.
   # When running contrib builds as part of core builds, we use actions/checkout@v2 which
   # does not set an environment variable (simply just runs tox), which is different when
@@ -54,7 +54,7 @@ jobs:
           path: |
             .tox
             ~/.cache/pip
-          key: v2-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
+          key: v3-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
       # tox fails on windows and Python3.6 when tox dir is reused between builds so we remove it
       - name: fix for windows + py3.6
         if: ${{ matrix.os == 'windows-2019' && matrix.python-version == 'py36' }} 
@@ -109,7 +109,7 @@ jobs:
           path: |
             .tox
             ~/.cache/pip
-          key: v2-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
+          key: v3-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
       - name: run tox
         run: tox -e ${{ matrix.tox-environment }}
 
@@ -152,6 +152,6 @@ jobs:
           path: |
             .tox
             ~/.cache/pip
-          key: v2-tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
+          key: v3-tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
       - name: run tox
         run: tox -f ${{ matrix.python-version }}-${{ matrix.package }}
