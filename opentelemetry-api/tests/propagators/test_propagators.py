@@ -86,11 +86,11 @@ class TestPropagators(TestCase):
     @patch.dict(
         environ, {OTEL_PROPAGATORS: "tracecontext , unknown , baggage"}
     )
-    def test_default_composite_propagators(self):
+    def test_composite_propagators_error(self):
 
         import opentelemetry.propagate
 
-        with self.assertRaises(Exception) as ctx:
+        with self.assertRaises(Exception):
             with self.assertLogs(level=ERROR) as err:
                 reload(opentelemetry.propagate)
                 self.assertIn(
