@@ -44,6 +44,9 @@ from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 from opentelemetry.trace import TraceFlags
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
 
+is_pypy = hasattr(sys, "pypy_version_info")
+supports_register_at_fork = hasattr(os, "fork") and sys.version_info >= (3, 7)
+
 
 class TestSimpleLogProcessor(unittest.TestCase):
     def test_simple_log_processor_default_level(self):
@@ -272,8 +275,9 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 2415)
 
-    @unittest.skipUnless(
-        hasattr(os, "fork") and sys.version_info >= (3, 7),
+    # TODO: fix https://github.com/open-telemetry/opentelemetry-python/issues/2346
+    @unittest.skipIf(
+        is_pypy or not supports_register_at_fork,
         "needs *nix and minor version 7 or later",
     )
     def test_batch_log_processor_fork(self):
