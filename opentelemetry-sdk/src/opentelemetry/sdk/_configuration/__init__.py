@@ -25,6 +25,7 @@ from pkg_resources import iter_entry_points
 
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
+    OTEL_LOGS_EXPORTER,
     OTEL_PYTHON_ID_GENERATOR,
     OTEL_TRACES_EXPORTER,
 )
@@ -44,9 +45,6 @@ _EXPORTER_OTLP_PROTO_GRPC = "otlp_proto_grpc"
 
 _RANDOM_ID_GENERATOR = "random"
 _DEFAULT_ID_GENERATOR = _RANDOM_ID_GENERATOR
-
-# TODO: add log exporter env variable
-_OTEL_LOGS_EXPORTER = "OTEL_LOGS_EXPORTER"
 
 
 def _get_id_generator() -> str:
@@ -175,7 +173,7 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
 def _initialize_components(auto_instrumentation_version):
     trace_exporters, log_exporters = _import_exporters(
         _get_exporter_names(environ.get(OTEL_TRACES_EXPORTER)),
-        _get_exporter_names(environ.get(_OTEL_LOGS_EXPORTER)),
+        _get_exporter_names(environ.get(OTEL_LOGS_EXPORTER)),
     )
     id_generator_name = _get_id_generator()
     id_generator = _import_id_generator(id_generator_name)

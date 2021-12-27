@@ -4,7 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.7.0-0.26b0...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.8.0-0.27b0...HEAD)
+
+- Decode URL-encoded headers in environment variables
+  ([#2312](https://github.com/open-telemetry/opentelemetry-python/pull/2312))
+
+## [1.8.0-0.27b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.8.0-0.27b0) - 2021-12-17
 
 - Adds Aggregation and instruments as part of Metrics SDK
   ([#2234](https://github.com/open-telemetry/opentelemetry-python/pull/2234))
@@ -14,8 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2253](https://github.com/open-telemetry/opentelemetry-python/pull/2253))
 - Rename ConsoleExporter to ConsoleLogExporter
   ([#2307](https://github.com/open-telemetry/opentelemetry-python/pull/2307))
-- Decode URL-encoded headers in environment variables
-  ([#2312](https://github.com/open-telemetry/opentelemetry-python/pull/2312))
+- Adding OTEL_LOGS_EXPORTER environment variable
+  ([#2320](https://github.com/open-telemetry/opentelemetry-python/pull/2320))
+- Add `setuptools` to `install_requires`
+  ([#2334](https://github.com/open-telemetry/opentelemetry-python/pull/2334))
+- Add otlp entrypoint for log exporter
+  ([#2322](https://github.com/open-telemetry/opentelemetry-python/pull/2322))
 
 ## [1.7.1-0.26b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.7.0-0.26b0) - 2021-11-11
 
