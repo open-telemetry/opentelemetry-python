@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
 import random
+import time
 from collections import namedtuple
 from functools import partial
 from unittest.mock import Mock
