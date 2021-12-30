@@ -14,6 +14,8 @@
 
 import logging
 import threading
+from os import environ
+from typing import Optional
 
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
@@ -36,10 +38,20 @@ class PeriodicExportingMetricReader(MetricReader):
     def __init__(
         self,
         exporter: MetricExporter,
-        export_interval_millis: float = 60000,
-        export_timeout_millis: float = 30000,
+        export_interval_millis: Optional[float] = None,
+        export_timeout_millis: Optional[float] = None,
     ) -> None:
         self._exporter = exporter
+        if export_interval_millis is None:
+            try:
+                export_interval_millis = float(environ.get("OTEL_METRIC_EXPORT_INTERVAL", 60000))
+            except ValueError:
+                export_interval_millis = 60000
+        if export_timeout_millis is None:
+            try:
+                export_timeout_millis = float(environ.get("OTEL_METRIC_EXPORT_TIMEOUT", 30000))
+            except ValueError:
+                export_timeout_millis = 30000
         self._export_interval_millis = export_interval_millis
         self._export_timeout_millis = export_timeout_millis
         self._measurement_consumer = None  # odd name
@@ -48,14 +60,14 @@ class PeriodicExportingMetricReader(MetricReader):
             target=self.collect, daemon=True
         )
         self._condition = threading.Condition()
-        self._flush_event = None  # type: threading.Event
+        self._flush_event = None  # type: Optional[threading.Event]
         self._lock = threading.Lock()
         self._daemon_thread.start()
 
     def _set_measurement_consumer(self, consumer) -> None:
         self._measurement_consumer = consumer
 
-    def collect(self):
+    def collect(self) -> None:
         while not self._shutdown:
             with self._condition:
                 # might have received flush/shutdown request
@@ -70,10 +82,10 @@ class PeriodicExportingMetricReader(MetricReader):
         self._export()
 
     @property
-    def _flush_pending(self):
+    def _flush_pending(self) -> bool:
         return self._flush_event is not None
 
-    def _export(self):
+    def _export(self) -> None:
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             self._exporter.export(self._measurement_consumer.collect())
@@ -108,4 +120,4 @@ class PeriodicExportingMetricReader(MetricReader):
         with self._condition:
             self._condition.notify_all()
         self._daemon_thread.join()
-        self._exporter.shutdown()
+        return self._exporter.shutdown()
