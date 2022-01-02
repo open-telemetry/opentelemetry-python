@@ -47,6 +47,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
+    OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -217,6 +218,8 @@ class OTLPExporterMixin(
         )
 
         parsed_url = urlparse(endpoint)
+
+        insecure = insecure or environ.get(OTEL_EXPORTER_OTLP_INSECURE, False)
 
         if insecure and parsed_url.scheme != "https":
             insecure = True

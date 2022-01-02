@@ -58,6 +58,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+    OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -287,6 +288,22 @@ class TestOTLPSpanExporter(TestCase):
         # pylint: disable=protected-access
         self.assertEqual(
             exporter._headers, (("key5", "value5"), ("key6", "value6"))
+        )
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_INSECURE: "True"},
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    # pylint: disable=unused-argument
+    def test_otlp_insecure_from_env(self, mock_insecure):
+        exporter = OTLPSpanExporter()
+        # pylint: disable=protected-access
+        self.assertTrue(mock_insecure.called)
+        self.assertEqual(
+            1,
+            mock_insecure.call_count,
+            f"expected {mock_insecure} to be called",
         )
 
     # pylint: disable=no-self-use
