@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2334](https://github.com/open-telemetry/opentelemetry-python/pull/2334))
 - Add otlp entrypoint for log exporter
   ([#2322](https://github.com/open-telemetry/opentelemetry-python/pull/2322))
+- Support insecure configuration for OTLP gRPC exporter
+  ([#2350](https://github.com/open-telemetry/opentelemetry-python/pull/2350))
 
 ## [1.7.1-0.26b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.7.0-0.26b0) - 2021-11-11
 
