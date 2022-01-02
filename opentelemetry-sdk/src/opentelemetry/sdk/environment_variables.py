@@ -281,9 +281,9 @@ OTEL_EXPORTER_OTLP_ENDPOINT = "OTEL_EXPORTER_OTLP_ENDPOINT"
 .. envvar:: OTEL_EXPORTER_OTLP_ENDPOINT
 
 The :envvar:`OTEL_EXPORTER_OTLP_ENDPOINT` target to which the exporter is going to send spans or metrics.
-The endpoint MUST be a valid URL with scheme (http or https) and host, and MAY contain a port and path.
-A scheme of https indicates a secure connection.
-Default: "https://localhost:4317"
+The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https), port and path.
+A scheme of https indicates a secure connection and takes precedence over the `insecure` configuration setting.
+Default: "http://localhost:4317"
 """
 
 OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"
@@ -291,8 +291,8 @@ OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
 
 The :envvar:`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` target to which the span exporter is going to send spans.
-The endpoint MUST be a valid URL with scheme (http or https) and host, and MAY contain a port and path.
-A scheme of https indicates a secure connection.
+The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https), port and path.
+A scheme of https indicates a secure connection and takes precedence over the `insecure` configuration setting.
 """
 
 OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"

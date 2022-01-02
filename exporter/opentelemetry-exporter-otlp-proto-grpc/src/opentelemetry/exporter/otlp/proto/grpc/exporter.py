@@ -218,11 +218,10 @@ class OTLPExporterMixin(
 
         parsed_url = urlparse(endpoint)
 
-        if insecure is None:
-            if parsed_url.scheme == "https":
-                insecure = False
-            else:
-                insecure = True
+        if insecure and parsed_url.scheme != "https":
+            insecure = True
+        else:
+            insecure = False
 
         if parsed_url.netloc:
             endpoint = parsed_url.netloc

@@ -299,15 +299,35 @@ class TestOTLPSpanExporter(TestCase):
             (
                 "http://localhost:4317",
                 None,
-                mock_insecure,
+                mock_secure,  # Default secure
             ),
             (
                 "localhost:4317",
                 None,
+                mock_secure,  # Default secure
+            ),
+            (
+                "http://localhost:4317",
+                True,
                 mock_insecure,
             ),
             (
                 "localhost:4317",
+                True,
+                mock_insecure,
+            ),
+            (
+                "http://localhost:4317",
+                False,
+                mock_secure,
+            ),
+            (
+                "localhost:4317",
+                False,
+                mock_secure,
+            ),
+            (
+                "https://localhost:4317",
                 False,
                 mock_secure,
             ),
@@ -319,7 +339,7 @@ class TestOTLPSpanExporter(TestCase):
             (
                 "https://localhost:4317",
                 True,
-                mock_insecure,
+                mock_secure,  # https scheme overrides explicit insecure
             ),
         ]
         for endpoint, insecure, mock_method in endpoints:

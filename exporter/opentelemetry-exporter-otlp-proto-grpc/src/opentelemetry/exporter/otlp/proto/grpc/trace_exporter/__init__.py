@@ -84,10 +84,7 @@ class OTLPSpanExporter(
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
-        if (
-            not insecure
-            and environ.get(OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE) is not None
-        ):
+        if environ.get(OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE) is not None:
             credentials = _get_credentials(
                 credentials, OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE
             )
