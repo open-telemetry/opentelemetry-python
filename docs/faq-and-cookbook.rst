@@ -26,6 +26,31 @@ Getting and modifying a span
     current_span = trace.get_current_span()
     current_span.set_attribute("hometown", "seattle")
 
+Create a nested span
+--------------------
+
+.. code-block:: python
+
+    from opentelemetry import trace
+    import time
+
+    tracer = trace.get_tracer(__name__)
+
+    # Create a new span to track some work
+    with tracer.start_as_current_span("parent"):    
+        time.sleep(1)
+
+        # Create a nested span to track nested work
+        with tracer.start_as_current_span("child"):
+            time.sleep(2)
+            # the nested span is closed when it's out of scope
+
+        # Now the parent span is the current span again
+        time.sleep(1)
+
+        # This span is also closed when it goes out of scope
+
+
 Capturing baggage at different contexts
 ---------------------------------------
 
