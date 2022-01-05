@@ -15,6 +15,7 @@
 import logging
 from re import compile, split
 from typing import Mapping
+from urllib.parse import unquote
 
 _logger = logging.getLogger(__name__)
 
@@ -51,8 +52,8 @@ def parse_headers(s: str) -> Mapping[str, str]:
             continue
         # value may contain any number of `=`
         name, value = match.string.split("=", 1)
-        name = name.strip().lower()
-        value = value.strip()
+        name = unquote(name).strip().lower()
+        value = unquote(value).strip()
         headers[name] = value
 
     return headers
