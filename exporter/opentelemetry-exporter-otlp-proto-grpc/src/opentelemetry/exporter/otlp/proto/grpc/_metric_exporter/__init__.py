@@ -23,7 +23,7 @@ from opentelemetry.sdk._metrics.data import (
     MetricData,
 )
 
-from opentelemetry.sdk._metrics.export.metric_exporter import (
+from opentelemetry.sdk._metrics.export import (
     MetricExporter,
     MetricExportResult,
 )
