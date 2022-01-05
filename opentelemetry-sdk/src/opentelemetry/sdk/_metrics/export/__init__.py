@@ -71,8 +71,8 @@ class ConsoleMetricExporter(MetricExporter):
         self.out = out
         self.formatter = formatter
 
-    def export(self, batch: Sequence[MetricData]) -> MetricExportResult:
-        for data in batch:
+    def export(self, metrics: Sequence[MetricData]) -> MetricExportResult:
+        for data in metrics:
             self.out.write(self.formatter(data.log_record))
         self.out.flush()
         return MetricExportResult.SUCCESS
