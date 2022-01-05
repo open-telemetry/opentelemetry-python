@@ -189,9 +189,3 @@ class MeterProvider(APIMeterProvider):
             return _DefaultMeter(name, version=version, schema_url=schema_url)
 
         return Meter(InstrumentationInfo(name, version, schema_url), self)
-
-
-class MetricData:
-    """TODO"""
-
-    pass
