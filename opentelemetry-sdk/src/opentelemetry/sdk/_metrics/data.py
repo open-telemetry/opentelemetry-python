@@ -24,8 +24,6 @@ class Metric:
 
 
 class MetricData:
-    """TODO fill this in"""
-
     """Readable Metric data plus associated InstrumentationLibrary."""
 
     def __init__(
