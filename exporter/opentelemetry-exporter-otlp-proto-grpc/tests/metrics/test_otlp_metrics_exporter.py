@@ -30,13 +30,8 @@ from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
     MetricsServiceServicer,
     add_MetricsServiceServicer_to_server,
 )
-from opentelemetry.sdk._metrics.data import (
-    Metric,
-    MetricData,
-)
-from opentelemetry.sdk._metrics.export import (
-    MetricExportResult,
-)
+from opentelemetry.sdk._metrics.data import Metric, MetricData
+from opentelemetry.sdk._metrics.export import MetricExportResult
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
@@ -85,6 +80,7 @@ class MetricsServiceServicerALREADY_EXISTS(MetricsServiceServicer):
         context.set_code(StatusCode.ALREADY_EXISTS)
 
         return ExportMetricsServiceResponse()
+
 
 class TestOTLPMetricExporter(TestCase):
     def setUp(self):
@@ -184,7 +180,8 @@ class TestOTLPMetricExporter(TestCase):
             MetricsServiceServicerUNAVAILABLE(), self.server
         )
         self.assertEqual(
-            self.exporter.export([self.metric_data_1]), MetricExportResult.FAILURE
+            self.exporter.export([self.metric_data_1]),
+            MetricExportResult.FAILURE,
         )
         mock_sleep.assert_called_with(1)
 
@@ -198,7 +195,8 @@ class TestOTLPMetricExporter(TestCase):
             MetricsServiceServicerUNAVAILABLEDelay(), self.server
         )
         self.assertEqual(
-            self.exporter.export([self.metric_data_1]), MetricExportResult.FAILURE
+            self.exporter.export([self.metric_data_1]),
+            MetricExportResult.FAILURE,
         )
         mock_sleep.assert_called_with(4)
 
@@ -207,7 +205,8 @@ class TestOTLPMetricExporter(TestCase):
             MetricsServiceServicerSUCCESS(), self.server
         )
         self.assertEqual(
-            self.exporter.export([self.metric_data_1]), MetricExportResult.SUCCESS
+            self.exporter.export([self.metric_data_1]),
+            MetricExportResult.SUCCESS,
         )
 
     def test_failure(self):
@@ -215,5 +214,6 @@ class TestOTLPMetricExporter(TestCase):
             MetricsServiceServicerALREADY_EXISTS(), self.server
         )
         self.assertEqual(
-            self.exporter.export([self.metric_data_1]), MetricExportResult.FAILURE
+            self.exporter.export([self.metric_data_1]),
+            MetricExportResult.FAILURE,
         )

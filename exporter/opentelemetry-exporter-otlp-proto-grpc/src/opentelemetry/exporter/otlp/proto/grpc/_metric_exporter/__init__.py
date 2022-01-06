@@ -81,11 +81,9 @@ class OTLPMetricExporter(
                 sdk_resource_instrumentation_library_metrics[
                     resource
                 ] = instrumentation_library_map
-            
-            instrumentation_library_metrics = (
-                instrumentation_library_map.get(
-                    metric_data.instrumentation_info
-                )
+
+            instrumentation_library_metrics = instrumentation_library_map.get(
+                metric_data.instrumentation_info
             )
 
             if not instrumentation_library_metrics:
@@ -103,10 +101,8 @@ class OTLPMetricExporter(
                         metric_data.instrumentation_info
                     ] = InstrumentationLibraryMetrics()
 
-            instrumentation_library_metrics = (
-                instrumentation_library_map.get(
-                    metric_data.instrumentation_info
-                )
+            instrumentation_library_metrics = instrumentation_library_map.get(
+                metric_data.instrumentation_info
             )
 
             instrumentation_library_metrics.metrics.append(

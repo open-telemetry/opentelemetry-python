@@ -12,10 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import abc
-import sys
+from abc import ABC, abstractmethod
 from enum import Enum
 from os import linesep
+from sys import stdout
 from typing import IO, Callable, Sequence
 
 from opentelemetry.sdk._metrics.data import MetricData
@@ -27,7 +27,7 @@ class MetricExportResult(Enum):
     FAILURE = 1
 
 
-class MetricExporter(abc.ABC):
+class MetricExporter(ABC):
     """Interface for exporting metrics.
 
     Interface to be implemented by services that want to export metrics received
@@ -44,7 +44,7 @@ class MetricExporter(abc.ABC):
             The result of the export
         """
 
-    @abc.abstractmethod
+    @abstractmethod
     def shutdown(self) -> None:
         """Shuts down the exporter.
 
@@ -62,7 +62,7 @@ class ConsoleMetricExporter(MetricExporter):
 
     def __init__(
         self,
-        out: IO = sys.stdout,
+        out: IO = stdout,
         formatter: Callable[
             [Measurement], str
         ] = lambda record: record.to_json()
