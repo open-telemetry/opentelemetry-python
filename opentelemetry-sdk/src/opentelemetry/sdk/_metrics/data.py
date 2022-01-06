@@ -12,6 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+
+class Metric:
+    """ TODO fill this in """
+    def __init__(self, resource: Resource) -> None:
+        self.resource = resource
 
 class MetricData:
-    """TODO"""
+    """ TODO fill this in """
+    """Readable Metric data plus associated InstrumentationLibrary."""
+
+    def __init__(
+        self,
+        metric: Metric,
+        instrumentation_info: InstrumentationInfo,
+    ):
+        self.metric = metric
+        self.instrumentation_info = instrumentation_info
+

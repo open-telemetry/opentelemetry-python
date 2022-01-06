@@ -15,10 +15,20 @@ from typing import Optional, Sequence
 from grpc import ChannelCredentials, Compression
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     OTLPExporterMixin,
+    get_resource_data,
+)
+from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
+    ExportMetricsServiceRequest,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
     MetricsServiceStub,
 )
+from opentelemetry.proto.common.v1.common_pb2 import InstrumentationLibrary
+from opentelemetry.proto.metrics.v1.metrics_pb2 import (
+    InstrumentationLibraryMetrics,
+    ResourceMetrics,
+)
+from opentelemetry.proto.metrics.v1.metrics_pb2 import Metric as PB2Metric
 from opentelemetry.sdk._metrics.data import (
     MetricData,
 )
@@ -58,14 +68,60 @@ class OTLPMetricExporter(
 
     def _translate_data(
         self, data: Sequence[MetricData]
-    ) -> MetricExportResult:
-        return super()._translate_data(data)
+    ) -> ExportMetricsServiceRequest:
+        sdk_resource_instrumentation_library_metrics = {}
+        self._collector_metric_kwargs = {}
 
-    def export(self, batch: Sequence[MetricData]) -> MetricExportResult:
-        for data in batch:
-            # TODO: do something with the data
-            pass
-        return MetricExportResult.SUCCESS
+        for metric_data in data:
+            resource = metric_data.metric.resource
+            instrumentation_library_map = (
+                sdk_resource_instrumentation_library_metrics.get(resource, {})
+            )
+            if not instrumentation_library_map:
+                sdk_resource_instrumentation_library_metrics[
+                    resource
+                ] = instrumentation_library_map
+            
+            instrumentation_library_metrics = (
+                instrumentation_library_map.get(
+                    metric_data.instrumentation_info
+                )
+            )
+
+            if not instrumentation_library_metrics:
+                if metric_data.instrumentation_info is not None:
+                    instrumentation_library_map[
+                        metric_data.instrumentation_info
+                    ] = InstrumentationLibraryMetrics(
+                        instrumentation_library=InstrumentationLibrary(
+                            name=metric_data.instrumentation_info.name,
+                            version=metric_data.instrumentation_info.version,
+                        )
+                    )
+                else:
+                    instrumentation_library_map[
+                        metric_data.instrumentation_info
+                    ] = InstrumentationLibraryMetrics()
+
+            instrumentation_library_metrics = (
+                instrumentation_library_map.get(
+                    metric_data.instrumentation_info
+                )
+            )
+
+            instrumentation_library_metrics.metrics.append(
+                PB2Metric(**self._collector_metric_kwargs)
+            )
+        return ExportMetricsServiceRequest(
+            resource_metrics=get_resource_data(
+                sdk_resource_instrumentation_library_metrics,
+                ResourceMetrics,
+                "metrics",
+            )
+        )
+
+    def export(self, metrics: Sequence[MetricData]) -> MetricExportResult:
+        return self._export(metrics)
 
     def shutdown(self):
         pass
