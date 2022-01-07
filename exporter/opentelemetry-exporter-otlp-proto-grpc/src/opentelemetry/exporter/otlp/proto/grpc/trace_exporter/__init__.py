@@ -117,58 +117,44 @@ class OTLPSpanExporter(
         )
 
     def _translate_name(self, sdk_span: ReadableSpan) -> None:
-        self._collector_span_kwargs["name"] = sdk_span.name
+        self._collector_kwargs["name"] = sdk_span.name
 
     def _translate_start_time(self, sdk_span: ReadableSpan) -> None:
-        self._collector_span_kwargs[
+        self._collector_kwargs[
             "start_time_unix_nano"
         ] = sdk_span.start_time
 
     def _translate_end_time(self, sdk_span: ReadableSpan) -> None:
-        self._collector_span_kwargs["end_time_unix_nano"] = sdk_span.end_time
+        self._collector_kwargs["end_time_unix_nano"] = sdk_span.end_time
 
     def _translate_span_id(self, sdk_span: ReadableSpan) -> None:
-        self._collector_span_kwargs[
+        self._collector_kwargs[
             "span_id"
         ] = sdk_span.context.span_id.to_bytes(8, "big")
 
     def _translate_trace_id(self, sdk_span: ReadableSpan) -> None:
-        self._collector_span_kwargs[
+        self._collector_kwargs[
             "trace_id"
         ] = sdk_span.context.trace_id.to_bytes(16, "big")
 
     def _translate_parent(self, sdk_span: ReadableSpan) -> None:
         if sdk_span.parent is not None:
-            self._collector_span_kwargs[
+            self._collector_kwargs[
                 "parent_span_id"
             ] = sdk_span.parent.span_id.to_bytes(8, "big")
 
     def _translate_context_trace_state(self, sdk_span: ReadableSpan) -> None:
         if sdk_span.context.trace_state is not None:
-            self._collector_span_kwargs["trace_state"] = ",".join(
+            self._collector_kwargs["trace_state"] = ",".join(
                 [
                     f"{key}={value}"
                     for key, value in (sdk_span.context.trace_state.items())
                 ]
             )
 
-    def _translate_attributes(self, sdk_span: ReadableSpan) -> None:
-        if sdk_span.attributes:
-
-            self._collector_span_kwargs["attributes"] = []
-
-            for key, value in sdk_span.attributes.items():
-
-                try:
-                    self._collector_span_kwargs["attributes"].append(
-                        _translate_key_values(key, value)
-                    )
-                except Exception as error:  # pylint: disable=broad-except
-                    logger.exception(error)
-
     def _translate_events(self, sdk_span: ReadableSpan) -> None:
         if sdk_span.events:
-            self._collector_span_kwargs["events"] = []
+            self._collector_kwargs["events"] = []
 
             for sdk_span_event in sdk_span.events:
 
@@ -187,13 +173,13 @@ class OTLPSpanExporter(
                     except Exception as error:
                         logger.exception(error)
 
-                self._collector_span_kwargs["events"].append(
+                self._collector_kwargs["events"].append(
                     collector_span_event
                 )
 
     def _translate_links(self, sdk_span: ReadableSpan) -> None:
         if sdk_span.links:
-            self._collector_span_kwargs["links"] = []
+            self._collector_kwargs["links"] = []
 
             for sdk_span_link in sdk_span.links:
 
@@ -214,7 +200,7 @@ class OTLPSpanExporter(
                     except Exception as error:
                         logger.exception(error)
 
-                self._collector_span_kwargs["links"].append(
+                self._collector_kwargs["links"].append(
                     collector_span_link
                 )
 
@@ -224,7 +210,7 @@ class OTLPSpanExporter(
             deprecated_code = Status.DEPRECATED_STATUS_CODE_OK
             if sdk_span.status.status_code == StatusCode.ERROR:
                 deprecated_code = Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR
-            self._collector_span_kwargs["status"] = Status(
+            self._collector_kwargs["status"] = Status(
                 deprecated_code=deprecated_code,
                 code=sdk_span.status.status_code.value,
                 message=sdk_span.status.description,
@@ -274,7 +260,7 @@ class OTLPSpanExporter(
                     sdk_span.instrumentation_info
                 )
             )
-            self._collector_span_kwargs = {}
+            self._collector_kwargs = {}
 
             self._translate_name(sdk_span)
             self._translate_start_time(sdk_span)
@@ -283,30 +269,30 @@ class OTLPSpanExporter(
             self._translate_trace_id(sdk_span)
             self._translate_parent(sdk_span)
             self._translate_context_trace_state(sdk_span)
-            self._translate_attributes(sdk_span)
+            self._translate_attributes(sdk_span.attributes)
             self._translate_events(sdk_span)
             self._translate_links(sdk_span)
             self._translate_status(sdk_span)
             if sdk_span.dropped_attributes:
-                self._collector_span_kwargs[
+                self._collector_kwargs[
                     "dropped_attributes_count"
                 ] = sdk_span.dropped_attributes
             if sdk_span.dropped_events:
-                self._collector_span_kwargs[
+                self._collector_kwargs[
                     "dropped_events_count"
                 ] = sdk_span.dropped_events
             if sdk_span.dropped_links:
-                self._collector_span_kwargs[
+                self._collector_kwargs[
                     "dropped_links_count"
                 ] = sdk_span.dropped_links
 
-            self._collector_span_kwargs["kind"] = getattr(
+            self._collector_kwargs["kind"] = getattr(
                 CollectorSpan.SpanKind,
                 f"SPAN_KIND_{sdk_span.kind.name}",
             )
 
             instrumentation_library_spans.spans.append(
-                CollectorSpan(**self._collector_span_kwargs)
+                CollectorSpan(**self._collector_kwargs)
             )
 
         return ExportTraceServiceRequest(

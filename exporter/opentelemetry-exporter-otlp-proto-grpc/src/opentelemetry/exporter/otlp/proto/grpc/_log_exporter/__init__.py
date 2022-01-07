@@ -65,48 +65,37 @@ class OTLPLogExporter(
         )
 
     def _translate_name(self, log_data: LogData) -> None:
-        self._collector_log_kwargs["name"] = log_data.log_record.name
+        self._collector_kwargs["name"] = log_data.log_record.name
 
     def _translate_time(self, log_data: LogData) -> None:
-        self._collector_log_kwargs[
+        self._collector_kwargs[
             "time_unix_nano"
         ] = log_data.log_record.timestamp
 
     def _translate_span_id(self, log_data: LogData) -> None:
-        self._collector_log_kwargs[
+        self._collector_kwargs[
             "span_id"
         ] = log_data.log_record.span_id.to_bytes(8, "big")
 
     def _translate_trace_id(self, log_data: LogData) -> None:
-        self._collector_log_kwargs[
+        self._collector_kwargs[
             "trace_id"
         ] = log_data.log_record.trace_id.to_bytes(16, "big")
 
     def _translate_trace_flags(self, log_data: LogData) -> None:
-        self._collector_log_kwargs["flags"] = int(
+        self._collector_kwargs["flags"] = int(
             log_data.log_record.trace_flags
         )
 
     def _translate_body(self, log_data: LogData):
-        self._collector_log_kwargs["body"] = _translate_value(
+        self._collector_kwargs["body"] = _translate_value(
             log_data.log_record.body
         )
 
     def _translate_severity_text(self, log_data: LogData):
-        self._collector_log_kwargs[
+        self._collector_kwargs[
             "severity_text"
         ] = log_data.log_record.severity_text
-
-    def _translate_attributes(self, log_data: LogData) -> None:
-        if log_data.log_record.attributes:
-            self._collector_log_kwargs["attributes"] = []
-            for key, value in log_data.log_record.attributes.items():
-                try:
-                    self._collector_log_kwargs["attributes"].append(
-                        _translate_key_values(key, value)
-                    )
-                except Exception:  # pylint: disable=broad-except
-                    pass
 
     def _translate_data(
         self, data: Sequence[LogData]
@@ -152,7 +141,7 @@ class OTLPLogExporter(
                 )
             )
 
-            self._collector_log_kwargs = {}
+            self._collector_kwargs = {}
 
             self._translate_name(log_data)
             self._translate_time(log_data)
@@ -161,14 +150,14 @@ class OTLPLogExporter(
             self._translate_trace_flags(log_data)
             self._translate_body(log_data)
             self._translate_severity_text(log_data)
-            self._translate_attributes(log_data)
+            self._translate_attributes(log_data.log_record.attributes)
 
-            self._collector_log_kwargs[
+            self._collector_kwargs[
                 "severity_number"
             ] = log_data.log_record.severity_number.value
 
             instrumentation_library_logs.logs.append(
-                PB2LogRecord(**self._collector_log_kwargs)
+                PB2LogRecord(**self._collector_kwargs)
             )
 
         return ExportLogsServiceRequest(
