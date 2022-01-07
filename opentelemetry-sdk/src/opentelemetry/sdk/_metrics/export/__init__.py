@@ -38,7 +38,7 @@ class MetricExporter(ABC):
         """Exports a batch of telemetry data.
 
         Args:
-            metrics: The list of `opentelemetry.trace.Span` objects to be exported
+            metrics: The list of `opentelemetry.sdk._metrics.data.MetricData` objects to be exported
 
         Returns:
             The result of the export
