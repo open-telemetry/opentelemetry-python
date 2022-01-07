@@ -237,7 +237,7 @@ class OTLPExporterMixin(
         self._timeout = timeout or int(
             environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10)
         )
-        self._collector_span_kwargs = None
+        self._collector_kwargs = None
 
         compression = (
             environ_to_compression(OTEL_EXPORTER_OTLP_COMPRESSION)
@@ -262,6 +262,20 @@ class OTLPExporterMixin(
         self, data: TypingSequence[SDKDataT]
     ) -> ExportServiceRequestT:
         pass
+
+    def _translate_attributes(self, attributes) -> None:
+        if attributes:
+
+            self._collector_kwargs["attributes"] = []
+
+            for key, value in attributes.items():
+
+                try:
+                    self._collector_kwargs["attributes"].append(
+                        _translate_key_values(key, value)
+                    )
+                except Exception as error:  # pylint: disable=broad-except
+                    logger.exception(error)
 
     def _export(self, data: TypingSequence[SDKDataT]) -> ExportResultT:
 
