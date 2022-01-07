@@ -65,7 +65,7 @@ class ConsoleMetricExporter(MetricExporter):
         out: IO = stdout,
         formatter: Callable[
             [Measurement], str
-        ] = lambda record: record.to_json()
+        ] = lambda metric: metric.to_json()
         + linesep,
     ):
         self.out = out
@@ -73,7 +73,7 @@ class ConsoleMetricExporter(MetricExporter):
 
     def export(self, metrics: Sequence[MetricData]) -> MetricExportResult:
         for data in metrics:
-            self.out.write(self.formatter(data.log_record))
+            self.out.write(self.formatter(data.metric))
         self.out.flush()
         return MetricExportResult.SUCCESS
 
