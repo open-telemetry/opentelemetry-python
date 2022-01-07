@@ -41,7 +41,7 @@ from opentelemetry.sdk._metrics.export import (
 
 class OTLPMetricExporter(
     MetricExporter,
-    OTLPExporterMixin,
+    OTLPExporterMixin[MetricData, ExportMetricsServiceRequest, MetricExportResult]
 ):
     _result = MetricExportResult
     _stub = MetricsServiceStub
