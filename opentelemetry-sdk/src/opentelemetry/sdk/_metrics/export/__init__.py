@@ -18,8 +18,7 @@ from os import linesep
 from sys import stdout
 from typing import IO, Callable, Sequence
 
-from opentelemetry.sdk._metrics.data import MetricData
-from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry.sdk._metrics.data import Metric, MetricData
 
 
 class MetricExportResult(Enum):
@@ -64,7 +63,7 @@ class ConsoleMetricExporter(MetricExporter):
         self,
         out: IO = stdout,
         formatter: Callable[
-            [Measurement], str
+            [Metric], str
         ] = lambda metric: metric.to_json()
         + linesep,
     ):
