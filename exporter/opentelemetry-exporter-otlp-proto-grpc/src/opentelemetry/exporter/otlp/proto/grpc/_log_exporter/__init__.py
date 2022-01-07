@@ -15,7 +15,6 @@ from typing import Optional, Sequence
 from grpc import ChannelCredentials, Compression
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     OTLPExporterMixin,
-    _translate_key_values,
     get_resource_data,
     _translate_value,
 )
@@ -83,9 +82,7 @@ class OTLPLogExporter(
         ] = log_data.log_record.trace_id.to_bytes(16, "big")
 
     def _translate_trace_flags(self, log_data: LogData) -> None:
-        self._collector_kwargs["flags"] = int(
-            log_data.log_record.trace_flags
-        )
+        self._collector_kwargs["flags"] = int(log_data.log_record.trace_flags)
 
     def _translate_body(self, log_data: LogData):
         self._collector_kwargs["body"] = _translate_value(

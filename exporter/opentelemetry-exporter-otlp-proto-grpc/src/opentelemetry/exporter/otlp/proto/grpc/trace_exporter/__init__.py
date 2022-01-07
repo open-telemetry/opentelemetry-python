@@ -120,17 +120,15 @@ class OTLPSpanExporter(
         self._collector_kwargs["name"] = sdk_span.name
 
     def _translate_start_time(self, sdk_span: ReadableSpan) -> None:
-        self._collector_kwargs[
-            "start_time_unix_nano"
-        ] = sdk_span.start_time
+        self._collector_kwargs["start_time_unix_nano"] = sdk_span.start_time
 
     def _translate_end_time(self, sdk_span: ReadableSpan) -> None:
         self._collector_kwargs["end_time_unix_nano"] = sdk_span.end_time
 
     def _translate_span_id(self, sdk_span: ReadableSpan) -> None:
-        self._collector_kwargs[
-            "span_id"
-        ] = sdk_span.context.span_id.to_bytes(8, "big")
+        self._collector_kwargs["span_id"] = sdk_span.context.span_id.to_bytes(
+            8, "big"
+        )
 
     def _translate_trace_id(self, sdk_span: ReadableSpan) -> None:
         self._collector_kwargs[
@@ -173,9 +171,7 @@ class OTLPSpanExporter(
                     except Exception as error:
                         logger.exception(error)
 
-                self._collector_kwargs["events"].append(
-                    collector_span_event
-                )
+                self._collector_kwargs["events"].append(collector_span_event)
 
     def _translate_links(self, sdk_span: ReadableSpan) -> None:
         if sdk_span.links:
@@ -200,9 +196,7 @@ class OTLPSpanExporter(
                     except Exception as error:
                         logger.exception(error)
 
-                self._collector_kwargs["links"].append(
-                    collector_span_link
-                )
+                self._collector_kwargs["links"].append(collector_span_link)
 
     def _translate_status(self, sdk_span: ReadableSpan) -> None:
         # pylint: disable=no-member
