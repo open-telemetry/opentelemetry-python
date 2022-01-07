@@ -62,9 +62,7 @@ class ConsoleMetricExporter(MetricExporter):
     def __init__(
         self,
         out: IO = stdout,
-        formatter: Callable[
-            [Metric], str
-        ] = lambda metric: metric.to_json()
+        formatter: Callable[[Metric], str] = lambda metric: metric.to_json()
         + linesep,
     ):
         self.out = out
