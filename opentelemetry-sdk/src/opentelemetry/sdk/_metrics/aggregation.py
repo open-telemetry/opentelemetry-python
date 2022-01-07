@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
+from bisect import bisect
 from collections import OrderedDict
 from logging import getLogger
 from math import inf
@@ -156,7 +157,11 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
         record_min_max: bool = True,
     ):
         super().__init__()
-        self._value = OrderedDict([(key, 0) for key in (*boundaries, inf)])
+        # pylint: disable=unnecessary-comprehension
+        self._boundaries = [boundary for boundary in (*boundaries, inf)]
+        self._value = OrderedDict(
+            [(boundary, 0) for boundary in self._boundaries]
+        )
         self._min = inf
         self._max = -inf
         self._sum = 0
@@ -174,12 +179,7 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
 
         self._sum += value
 
-        for key in self._value.keys():
-
-            if value < key:
-                self._value[key] = self._value[key] + 1
-
-                break
+        self._value[self._boundaries[bisect(self._boundaries, value)]] += 1
 
     def collect(self) -> Optional[Histogram]:
         """
