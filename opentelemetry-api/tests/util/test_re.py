@@ -34,6 +34,12 @@ class TestParseHeaders(unittest.TestCase):
             # different header values
             ("name=", [("name", "")], False),
             ("name===value=", [("name", "==value=")], False),
+            # url-encoded headers
+            ("key=value%20with%20space", [("key", "value with space")], False),
+            ("key%21=value", [("key!", "value")], False),
+            ("%20key%20=%20value%20", [("key", "value")], False),
+            # header name case normalization
+            ("Key=Value", [("key", "Value")], False),
             # mix of valid and invalid headers
             (
                 "name1=value1,invalidName, name2 =   value2   , name3=value3==",

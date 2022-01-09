@@ -281,6 +281,13 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(
             exporter._headers, (("key3", "value3"), ("key4", "value4"))
         )
+        exporter = OTLPSpanExporter(
+            headers={"key5": "value5", "key6": "value6"}
+        )
+        # pylint: disable=protected-access
+        self.assertEqual(
+            exporter._headers, (("key5", "value5"), ("key6", "value6"))
+        )
 
     # pylint: disable=no-self-use
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")

@@ -19,7 +19,7 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from os import environ
 from time import sleep
-from typing import Any, Callable, Dict, Generic, List, Optional
+from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, Union
 from typing import Sequence as TypingSequence
 from typing import TypeVar
 from urllib.parse import urlparse
@@ -204,7 +204,9 @@ class OTLPExporterMixin(
         endpoint: Optional[str] = None,
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
-        headers: Optional[Sequence] = None,
+        headers: Optional[
+            Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
+        ] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
@@ -229,11 +231,13 @@ class OTLPExporterMixin(
         if isinstance(self._headers, str):
             temp_headers = parse_headers(self._headers)
             self._headers = tuple(temp_headers.items())
+        elif isinstance(self._headers, dict):
+            self._headers = tuple(self._headers.items())
 
         self._timeout = timeout or int(
             environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10)
         )
-        self._collector_span_kwargs = None
+        self._collector_kwargs = None
 
         compression = (
             environ_to_compression(OTEL_EXPORTER_OTLP_COMPRESSION)
@@ -258,6 +262,20 @@ class OTLPExporterMixin(
         self, data: TypingSequence[SDKDataT]
     ) -> ExportServiceRequestT:
         pass
+
+    def _translate_attributes(self, attributes) -> None:
+        if attributes:
+
+            self._collector_kwargs["attributes"] = []
+
+            for key, value in attributes.items():
+
+                try:
+                    self._collector_kwargs["attributes"].append(
+                        _translate_key_values(key, value)
+                    )
+                except Exception as error:  # pylint: disable=broad-except
+                    logger.exception(error)
 
     def _export(self, data: TypingSequence[SDKDataT]) -> ExportResultT:
 

@@ -121,26 +121,27 @@ def inject(
     get_global_textmap().inject(carrier, context=context, setter=setter)
 
 
-try:
+propagators = []
 
-    propagators = []
+# Single use variable here to hack black and make lint pass
+environ_propagators = environ.get(
+    OTEL_PROPAGATORS,
+    "tracecontext,baggage",
+)
 
-    # Single use variable here to hack black and make lint pass
-    environ_propagators = environ.get(
-        OTEL_PROPAGATORS,
-        "tracecontext,baggage",
-    )
-
-    for propagator in environ_propagators.split(","):
+for propagator in environ_propagators.split(","):
+    propagator = propagator.strip()
+    try:
         propagators.append(  # type: ignore
             next(  # type: ignore
                 iter_entry_points("opentelemetry_propagator", propagator)
             ).load()()
         )
-
-except Exception:  # pylint: disable=broad-except
-    logger.exception("Failed to load configured propagators")
-    raise
+    except Exception:  # pylint: disable=broad-except
+        logger.exception(
+            "Failed to load configured propagator `%s`", propagator
+        )
+        raise
 
 _HTTP_TEXT_FORMAT = composite.CompositePropagator(propagators)  # type: ignore
 
