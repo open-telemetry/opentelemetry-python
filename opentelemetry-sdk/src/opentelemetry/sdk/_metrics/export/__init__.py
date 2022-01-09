@@ -44,12 +44,16 @@ class PeriodicExportingMetricReader(MetricReader):
         self._exporter = exporter
         if export_interval_millis is None:
             try:
-                export_interval_millis = float(environ.get("OTEL_METRIC_EXPORT_INTERVAL", 60000))
+                export_interval_millis = float(
+                    environ.get("OTEL_METRIC_EXPORT_INTERVAL", 60000)
+                )
             except ValueError:
                 export_interval_millis = 60000
         if export_timeout_millis is None:
             try:
-                export_timeout_millis = float(environ.get("OTEL_METRIC_EXPORT_TIMEOUT", 30000))
+                export_timeout_millis = float(
+                    environ.get("OTEL_METRIC_EXPORT_TIMEOUT", 30000)
+                )
             except ValueError:
                 export_timeout_millis = 30000
         self._export_interval_millis = export_interval_millis
