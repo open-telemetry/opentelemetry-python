@@ -58,7 +58,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
-    OTEL_EXPORTER_OTLP_INSECURE,
+    OTEL_EXPORTER_OTLP_TRACES_INSECURE,
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -292,7 +292,7 @@ class TestOTLPSpanExporter(TestCase):
 
     @patch.dict(
         "os.environ",
-        {OTEL_EXPORTER_OTLP_INSECURE: "True"},
+        {OTEL_EXPORTER_OTLP_TRACES_INSECURE: "True"},
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     # pylint: disable=unused-argument

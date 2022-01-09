@@ -296,6 +296,16 @@ Default: False
 """
 
 
+OTEL_EXPORTER_OTLP_TRACES_INSECURE = "OTEL_EXPORTER_OTLP_TRACES_INSECURE"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_TRACES_INSECURE
+
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_INSECURE` represents whether to enable client transport security 
+for gRPC requests for spans. An scheme of https takes precedence over the `insecure` configuration setting.
+Default: False
+"""
+
+
 OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT

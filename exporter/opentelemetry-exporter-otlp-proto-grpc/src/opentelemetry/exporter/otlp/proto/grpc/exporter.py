@@ -203,7 +203,7 @@ class OTLPExporterMixin(
     def __init__(
         self,
         endpoint: Optional[str] = None,
-        insecure: Optional[bool] = None,
+        insecure: Optional[bool] = False,
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[
             Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
@@ -252,9 +252,10 @@ class OTLPExporterMixin(
                 insecure_channel(endpoint, compression=compression)
             )
         else:
-            credentials = _get_credentials(
-                credentials, OTEL_EXPORTER_OTLP_CERTIFICATE
-            )
+            if not credentials:
+                credentials = _get_credentials(
+                    credentials, OTEL_EXPORTER_OTLP_CERTIFICATE
+                )
             self._client = self._stub(
                 secure_channel(endpoint, credentials, compression=compression)
             )

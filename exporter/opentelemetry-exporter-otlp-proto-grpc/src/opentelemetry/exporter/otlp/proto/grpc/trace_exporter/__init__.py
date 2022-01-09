@@ -40,11 +40,11 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as CollectorSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
 from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+    OTEL_EXPORTER_OTLP_TRACES_INSECURE,
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
 )
 from opentelemetry.sdk.trace import ReadableSpan
@@ -79,15 +79,16 @@ class OTLPSpanExporter(
     def __init__(
         self,
         endpoint: Optional[str] = None,
-        insecure: Optional[bool] = None,
+        insecure: Optional[bool] = False,
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[Sequence] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
 
-
-        insecure = insecure or environ.get(OTEL_EXPORTER_OTLP_INSECURE, False)
+        insecure = insecure or environ.get(
+            OTEL_EXPORTER_OTLP_TRACES_INSECURE, False
+        )
         if (
             not insecure
             and environ.get(OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE) is not None
