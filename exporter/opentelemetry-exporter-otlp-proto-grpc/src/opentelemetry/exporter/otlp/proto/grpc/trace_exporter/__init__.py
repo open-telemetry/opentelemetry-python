@@ -40,6 +40,7 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as CollectorSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
 from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
@@ -84,7 +85,13 @@ class OTLPSpanExporter(
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
-        if environ.get(OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE) is not None:
+
+
+        insecure = insecure or environ.get(OTEL_EXPORTER_OTLP_INSECURE, False)
+        if (
+            not insecure
+            and environ.get(OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE) is not None
+        ):
             credentials = _get_credentials(
                 credentials, OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE
             )
