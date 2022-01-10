@@ -16,7 +16,7 @@ The library is currently stable for tracing. Support for :doc:`metrics <api/metr
 
 Requirement
 -----------
-OpenTelemetry-Python supports Python 3.6 and higher.
+OpenTelemetry-Python supports Python 3.7 and higher.
 
 Installation
 ------------
