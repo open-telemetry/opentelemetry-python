@@ -203,7 +203,7 @@ class OTLPExporterMixin(
     def __init__(
         self,
         endpoint: Optional[str] = None,
-        insecure: Optional[bool] = False,
+        insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[
             Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
@@ -219,12 +219,16 @@ class OTLPExporterMixin(
 
         parsed_url = urlparse(endpoint)
 
-        insecure = insecure or environ.get(OTEL_EXPORTER_OTLP_INSECURE, False)
+        if insecure is None:
+            insecure = environ.get(OTEL_EXPORTER_OTLP_INSECURE)
 
-        if insecure and parsed_url.scheme != "https":
-            insecure = True
-        else:
+        if parsed_url.scheme == "https":
             insecure = False
+        if insecure is None:
+            if parsed_url.scheme == "http":
+                insecure = True
+            else:
+                insecure = False
 
         if parsed_url.netloc:
             endpoint = parsed_url.netloc
@@ -252,10 +256,9 @@ class OTLPExporterMixin(
                 insecure_channel(endpoint, compression=compression)
             )
         else:
-            if not credentials:
-                credentials = _get_credentials(
-                    credentials, OTEL_EXPORTER_OTLP_CERTIFICATE
-                )
+            credentials = _get_credentials(
+                credentials, OTEL_EXPORTER_OTLP_CERTIFICATE
+            )
             self._client = self._stub(
                 secure_channel(endpoint, credentials, compression=compression)
             )

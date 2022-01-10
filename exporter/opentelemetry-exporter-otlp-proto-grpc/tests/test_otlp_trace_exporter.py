@@ -316,12 +316,12 @@ class TestOTLPSpanExporter(TestCase):
             (
                 "http://localhost:4317",
                 None,
-                mock_secure,  # Default secure
+                mock_insecure,
             ),
             (
                 "localhost:4317",
                 None,
-                mock_secure,  # Default secure
+                mock_secure,
             ),
             (
                 "http://localhost:4317",

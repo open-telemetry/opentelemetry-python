@@ -193,7 +193,7 @@ class TestOTLPLogExporter(TestCase):
             (
                 "localhost:4317",
                 None,
-                mock_insecure,
+                mock_secure,
             ),
             (
                 "localhost:4317",
@@ -208,7 +208,7 @@ class TestOTLPLogExporter(TestCase):
             (
                 "https://localhost:4317",
                 True,
-                mock_insecure,
+                mock_secure,
             ),
         ]
         # pylint: disable=C0209

@@ -79,16 +79,16 @@ class OTLPSpanExporter(
     def __init__(
         self,
         endpoint: Optional[str] = None,
-        insecure: Optional[bool] = False,
+        insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
         headers: Optional[Sequence] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
 
-        insecure = insecure or environ.get(
-            OTEL_EXPORTER_OTLP_TRACES_INSECURE, False
-        )
+        if insecure is None:
+            insecure = environ.get(OTEL_EXPORTER_OTLP_TRACES_INSECURE)
+
         if (
             not insecure
             and environ.get(OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE) is not None
