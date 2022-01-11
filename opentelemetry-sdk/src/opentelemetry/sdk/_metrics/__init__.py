@@ -32,7 +32,6 @@ from opentelemetry._metrics.instrument import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
 from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
-from opentelemetry.sdk._metrics.export import MetricExporter
 from opentelemetry.sdk._metrics.instrument import (
     Counter,
     Histogram,
@@ -100,7 +99,6 @@ class MeterProvider(APIMeterProvider):
 
     def __init__(
         self,
-        metric_exporters: Sequence[MetricExporter] = (),
         metric_readers: Sequence[MetricReader] = (),
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
@@ -116,8 +114,6 @@ class MeterProvider(APIMeterProvider):
         for metric_reader in self._metric_readers:
             metric_reader._register_meter_provider(self)
 
-        self._metric_exporters = metric_exporters
-
         self._resource = resource
         self._shutdown = False
 
@@ -126,7 +122,6 @@ class MeterProvider(APIMeterProvider):
         # FIXME implement a timeout
 
         metric_reader_result = True
-        metric_exporter_result = True
 
         for metric_reader in self._metric_readers:
             metric_reader_result = (
@@ -136,15 +131,7 @@ class MeterProvider(APIMeterProvider):
         if not metric_reader_result:
             _logger.warning("Unable to force flush all metric readers")
 
-        for metric_exporter in self._metric_exporters:
-            metric_exporter_result = (
-                metric_exporter_result and metric_exporter.force_flush()
-            )
-
-        if not metric_exporter_result:
-            _logger.warning("Unable to force flush all metric exporters")
-
-        return metric_reader_result and metric_exporter_result
+        return metric_reader_result
 
     def shutdown(self):
         # FIXME implement a timeout
@@ -160,12 +147,6 @@ class MeterProvider(APIMeterProvider):
 
             if not result:
                 _logger.warning("A MetricReader failed to shutdown")
-
-        for metric_exporter in self._metric_exporters:
-            result = result and metric_exporter.shutdown()
-
-            if not result:
-                _logger.warning("A MetricExporter failed to shutdown")
 
         self._shutdown = True
 
