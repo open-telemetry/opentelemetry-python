@@ -295,7 +295,6 @@ A scheme of https takes precedence over this configuration setting.
 Default: False
 """
 
-
 OTEL_EXPORTER_OTLP_TRACES_INSECURE = "OTEL_EXPORTER_OTLP_TRACES_INSECURE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_INSECURE
@@ -353,6 +352,15 @@ OTEL_EXPORTER_OTLP_TRACES_TIMEOUT = "OTEL_EXPORTER_OTLP_TRACES_TIMEOUT"
 
 The :envvar:`OTEL_EXPORTER_OTLP_TRACES_TIMEOUT` is the maximum time the OTLP exporter will
 wait for each batch export for spans.
+"""
+
+OTEL_EXPORTER_OTLP_METRICS_INSECURE = "OTEL_EXPORTER_OTLP_METRICS_INSECURE"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_INSECURE
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_INSECURE` represents whether to enable client transport security
+for gRPC requests for metrics. A scheme of https takes precedence over the this configuration setting.
+Default: False
 """
 
 OTEL_EXPORTER_JAEGER_CERTIFICATE = "OTEL_EXPORTER_JAEGER_CERTIFICATE"
