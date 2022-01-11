@@ -140,12 +140,9 @@ class LastValueAggregation(Aggregation[Gauge]):
         )
 
 
-class ExplicitBucketHistogramAggregation(
-    _InstrumentMonotonicityAwareAggregation, Aggregation[Histogram]
-):
+class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
     def __init__(
         self,
-        instrument_is_monotonic: bool,
         boundaries: Sequence[int] = (
             0,
             5,
@@ -160,7 +157,7 @@ class ExplicitBucketHistogramAggregation(
         ),
         record_min_max: bool = True,
     ):
-        super().__init__(instrument_is_monotonic)
+        super().__init__()
         self._value = OrderedDict([(key, 0) for key in (*boundaries, inf)])
         self._min = inf
         self._max = -inf
@@ -177,8 +174,7 @@ class ExplicitBucketHistogramAggregation(
             self._min = min(self._min, value)
             self._max = max(self._max, value)
 
-        if self._instrument_is_monotonic:
-            self._sum += value
+        self._sum += value
 
         for key in self._value.keys():
 

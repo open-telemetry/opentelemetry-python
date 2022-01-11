@@ -214,21 +214,6 @@ class TestLastValueAggregation(TestCase):
 
 
 class TestExplicitBucketHistogramAggregation(TestCase):
-    def test_instrument_monotonicity_awareness(self):
-        """
-        `ExplicitBucketHistogramAggregation` is aware of the instrument
-        monotonicity
-        """
-
-        sum_aggregation = ExplicitBucketHistogramAggregation(True)
-        self.assertIsInstance(
-            sum_aggregation, _InstrumentMonotonicityAwareAggregation
-        )
-        self.assertTrue(sum_aggregation._instrument_is_monotonic)
-
-        sum_aggregation = ExplicitBucketHistogramAggregation(False)
-        self.assertFalse(sum_aggregation._instrument_is_monotonic)
-
     def test_aggregate(self):
         """
         `ExplicitBucketHistogramAggregation` collects data for
@@ -236,7 +221,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         """
 
         explicit_bucket_histogram_aggregation = (
-            ExplicitBucketHistogramAggregation(True)
+            ExplicitBucketHistogramAggregation()
         )
 
         explicit_bucket_histogram_aggregation.aggregate(Measurement(-1))
@@ -257,7 +242,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         """
 
         explicit_bucket_histogram_aggregation = (
-            ExplicitBucketHistogramAggregation(True)
+            ExplicitBucketHistogramAggregation()
         )
 
         explicit_bucket_histogram_aggregation.aggregate(Measurement(-1))
@@ -270,7 +255,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         self.assertEqual(explicit_bucket_histogram_aggregation._max, 9999)
 
         explicit_bucket_histogram_aggregation = (
-            ExplicitBucketHistogramAggregation(True, record_min_max=False)
+            ExplicitBucketHistogramAggregation(record_min_max=False)
         )
 
         explicit_bucket_histogram_aggregation.aggregate(Measurement(-1))
@@ -288,7 +273,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         """
 
         explicit_bucket_histogram_aggregation = (
-            ExplicitBucketHistogramAggregation(True)
+            ExplicitBucketHistogramAggregation()
         )
 
         explicit_bucket_histogram_aggregation.aggregate(Measurement(1))
