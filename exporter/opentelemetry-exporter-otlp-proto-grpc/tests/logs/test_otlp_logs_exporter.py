@@ -196,7 +196,27 @@ class TestOTLPLogExporter(TestCase):
                 mock_secure,
             ),
             (
+                "http://localhost:4317",
+                True,
+                mock_insecure,
+            ),
+            (
                 "localhost:4317",
+                True,
+                mock_insecure,
+            ),
+            (
+                "http://localhost:4317",
+                False,
+                mock_secure,
+            ),
+            (
+                "localhost:4317",
+                False,
+                mock_secure,
+            ),
+            (
+                "https://localhost:4317",
                 False,
                 mock_secure,
             ),
@@ -211,6 +231,7 @@ class TestOTLPLogExporter(TestCase):
                 mock_secure,
             ),
         ]
+
         # pylint: disable=C0209
         for endpoint, insecure, mock_method in endpoints:
             OTLPLogExporter(endpoint=endpoint, insecure=insecure)

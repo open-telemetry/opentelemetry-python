@@ -133,10 +133,30 @@ class TestOTLPMetricExporter(TestCase):
             (
                 "localhost:4317",
                 None,
+                mock_secure,
+            ),
+            (
+                "http://localhost:4317",
+                True,
                 mock_insecure,
             ),
             (
                 "localhost:4317",
+                True,
+                mock_insecure,
+            ),
+            (
+                "http://localhost:4317",
+                False,
+                mock_secure,
+            ),
+            (
+                "localhost:4317",
+                False,
+                mock_secure,
+            ),
+            (
+                "https://localhost:4317",
                 False,
                 mock_secure,
             ),
@@ -148,7 +168,7 @@ class TestOTLPMetricExporter(TestCase):
             (
                 "https://localhost:4317",
                 True,
-                mock_insecure,
+                mock_secure,
             ),
         ]
         # pylint: disable=C0209

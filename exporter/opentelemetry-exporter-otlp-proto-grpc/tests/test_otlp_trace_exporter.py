@@ -124,6 +124,8 @@ class TraceServiceServicerALREADY_EXISTS(TraceServiceServicer):
 
 
 class TestOTLPSpanExporter(TestCase):
+    # pylint: disable=too-many-public-methods
+
     def setUp(self):
         tracer_provider = TracerProvider()
         self.exporter = OTLPSpanExporter(insecure=True)
@@ -356,7 +358,7 @@ class TestOTLPSpanExporter(TestCase):
             (
                 "https://localhost:4317",
                 True,
-                mock_secure,  # https scheme overrides explicit insecure
+                mock_secure,
             ),
         ]
         for endpoint, insecure, mock_method in endpoints:
