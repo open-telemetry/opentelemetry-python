@@ -88,6 +88,8 @@ class OTLPSpanExporter(
 
         if insecure is None:
             insecure = environ.get(OTEL_EXPORTER_OTLP_TRACES_INSECURE)
+            if insecure is not None:
+                insecure = insecure.lower() == "true"
 
         if (
             not insecure
