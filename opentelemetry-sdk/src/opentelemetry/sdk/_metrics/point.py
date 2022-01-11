@@ -13,12 +13,31 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Union
-
-from opentelemetry.util.types import Attributes
+from typing import Sequence, Union
 
 
 @dataclass(frozen=True)
-class Measurement:
+class Sum:
+    start_time_unix_nano: int
+    time_unix_nano: int
     value: Union[int, float]
-    attributes: Attributes = None
+    aggregation_temporality: int
+    is_monotonic: bool
+
+
+@dataclass(frozen=True)
+class Gauge:
+    time_unix_nano: int
+    value: Union[int, float]
+
+
+@dataclass(frozen=True)
+class Histogram:
+    start_time_unix_nano: int
+    time_unix_nano: int
+    bucket_counts: Sequence[int]
+    explicit_bounds: Sequence[float]
+    aggregation_temporality: int
+
+
+PointT = Union[Sum, Gauge, Histogram]

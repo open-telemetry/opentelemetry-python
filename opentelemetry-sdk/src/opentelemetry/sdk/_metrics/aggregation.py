@@ -14,124 +14,194 @@
 
 from abc import ABC, abstractmethod
 from collections import OrderedDict
+from enum import IntEnum
 from logging import getLogger
 from math import inf
+from threading import Lock
+from typing import Generic, Optional, Sequence, TypeVar
 
-from opentelemetry._metrics.instrument import _Monotonic
+from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry.sdk._metrics.point import Gauge, Histogram, PointT, Sum
 from opentelemetry.util._time import _time_ns
+
+
+class AggregationTemporality(IntEnum):
+    UNSPECIFIED = 0
+    DELTA = 1
+    CUMULATIVE = 2
+
+
+_PointVarT = TypeVar("_PointVarT", bound=PointT)
 
 _logger = getLogger(__name__)
 
 
-class Aggregation(ABC):
-    @property
-    def value(self):
-        return self._value  # pylint: disable=no-member
+class _InstrumentMonotonicityAwareAggregation:
+    def __init__(self, instrument_is_monotonic: bool):
+        self._instrument_is_monotonic = instrument_is_monotonic
+        super().__init__()
+
+
+class Aggregation(ABC, Generic[_PointVarT]):
+    def __init__(self):
+        self._lock = Lock()
 
     @abstractmethod
-    def aggregate(self, value):
+    def aggregate(self, measurement: Measurement) -> None:
         pass
 
     @abstractmethod
-    def make_point_and_reset(self):
-        """
-        Atomically return a point for the current value of the metric and reset the internal state.
-        """
+    def collect(self) -> Optional[_PointVarT]:
+        pass
 
 
-class SumAggregation(Aggregation):
-    """
-    This aggregation collects data for the SDK sum metric point.
-    """
-
-    def __init__(self, instrument):
+class SynchronousSumAggregation(
+    _InstrumentMonotonicityAwareAggregation, Aggregation[Sum]
+):
+    def __init__(self, instrument_is_monotonic: bool):
+        super().__init__(instrument_is_monotonic)
         self._value = 0
+        self._start_time_unix_nano = _time_ns()
 
-    def aggregate(self, value):
-        self._value = self._value + value
+    def aggregate(self, measurement: Measurement) -> None:
+        with self._lock:
+            self._value = self._value + measurement.value
 
-    def make_point_and_reset(self):
-        pass
+    def collect(self) -> Optional[Sum]:
+        """
+        Atomically return a point for the current value of the metric and
+        reset the aggregation value.
+        """
+        now = _time_ns()
+
+        with self._lock:
+            value = self._value
+            start_time_unix_nano = self._start_time_unix_nano
+
+            self._value = 0
+            self._start_time_unix_nano = now + 1
+
+        return Sum(
+            aggregation_temporality=AggregationTemporality.DELTA,
+            is_monotonic=self._instrument_is_monotonic,
+            start_time_unix_nano=start_time_unix_nano,
+            time_unix_nano=now,
+            value=value,
+        )
 
 
-class LastValueAggregation(Aggregation):
-
-    """
-    This aggregation collects data for the SDK sum metric point.
-    """
-
-    def __init__(self, instrument):
+class AsynchronousSumAggregation(
+    _InstrumentMonotonicityAwareAggregation, Aggregation[Sum]
+):
+    def __init__(self, instrument_is_monotonic: bool):
+        super().__init__(instrument_is_monotonic)
         self._value = None
-        self._timestamp = _time_ns()
+        self._start_time_unix_nano = _time_ns()
 
-    def aggregate(self, value):
-        self._value = value
-        self._timestamp = _time_ns()
+    def aggregate(self, measurement: Measurement) -> None:
+        with self._lock:
+            self._value = measurement.value
 
-    def make_point_and_reset(self):
-        pass
+    def collect(self) -> Optional[Sum]:
+        """
+        Atomically return a point for the current value of the metric.
+        """
+        if self._value is None:
+            return None
+
+        return Sum(
+            start_time_unix_nano=self._start_time_unix_nano,
+            time_unix_nano=_time_ns(),
+            value=self._value,
+            aggregation_temporality=AggregationTemporality.CUMULATIVE,
+            is_monotonic=self._instrument_is_monotonic,
+        )
 
 
-class ExplicitBucketHistogramAggregation(Aggregation):
+class LastValueAggregation(Aggregation[Gauge]):
+    def __init__(self):
+        super().__init__()
+        self._value = None
 
-    """
-    This aggregation collects data for the SDK sum metric point.
-    """
+    def aggregate(self, measurement: Measurement):
+        with self._lock:
+            self._value = measurement.value
 
+    def collect(self) -> Optional[Gauge]:
+        """
+        Atomically return a point for the current value of the metric.
+        """
+        if self._value is None:
+            return None
+
+        return Gauge(
+            time_unix_nano=_time_ns(),
+            value=self._value,
+        )
+
+
+class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
     def __init__(
         self,
-        instrument,
-        *args,
-        boundaries=(0, 5, 10, 25, 50, 75, 100, 250, 500, 1000),
-        record_min_max=True,
+        boundaries: Sequence[int] = (
+            0,
+            5,
+            10,
+            25,
+            50,
+            75,
+            100,
+            250,
+            500,
+            1000,
+        ),
+        record_min_max: bool = True,
     ):
         super().__init__()
         self._value = OrderedDict([(key, 0) for key in (*boundaries, inf)])
         self._min = inf
         self._max = -inf
         self._sum = 0
-        self._instrument = instrument
         self._record_min_max = record_min_max
+        self._start_time_unix_nano = _time_ns()
+        self._boundaries = boundaries
 
-    @property
-    def min(self):
-        if not self._record_min_max:
-            _logger.warning("Min is not being recorded")
+    def aggregate(self, measurement: Measurement) -> None:
 
-        return self._min
+        value = measurement.value
 
-    @property
-    def max(self):
-        if not self._record_min_max:
-            _logger.warning("Max is not being recorded")
-
-        return self._max
-
-    @property
-    def sum(self):
-        if isinstance(self._instrument, _Monotonic):
-            return self._sum
-
-        _logger.warning(
-            "Sum is not filled out when the associated "
-            "instrument is not monotonic"
-        )
-        return None
-
-    def aggregate(self, value):
         if self._record_min_max:
             self._min = min(self._min, value)
             self._max = max(self._max, value)
 
-        if isinstance(self._instrument, _Monotonic):
-            self._sum += value
+        self._sum += value
 
         for key in self._value.keys():
 
             if value < key:
-                self._value[key] = self._value[key] + value
+                self._value[key] = self._value[key] + 1
 
                 break
 
-    def make_point_and_reset(self):
-        pass
+    def collect(self) -> Optional[Histogram]:
+        """
+        Atomically return a point for the current value of the metric.
+        """
+        now = _time_ns()
+
+        with self._lock:
+            value = self._value
+            start_time_unix_nano = self._start_time_unix_nano
+
+            self._value = OrderedDict(
+                [(key, 0) for key in (*self._boundaries, inf)]
+            )
+            self._start_time_unix_nano = now + 1
+
+        return Histogram(
+            start_time_unix_nano=start_time_unix_nano,
+            time_unix_nano=now,
+            bucket_counts=tuple(value.values()),
+            explicit_bounds=self._boundaries,
+            aggregation_temporality=AggregationTemporality.DELTA,
+        )
