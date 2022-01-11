@@ -132,7 +132,7 @@ class TestOTLPSpanExporter(TestCase):
 
         self.server = server(ThreadPoolExecutor(max_workers=10))
 
-        self.server.add_insecure_port("[::]:4317")
+        self.server.add_insecure_port("127.0.0.1:4317")
 
         self.server.start()
 
