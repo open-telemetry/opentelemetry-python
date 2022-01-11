@@ -32,6 +32,9 @@ from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
 )
 from opentelemetry.sdk._metrics.data import Metric, MetricData
 from opentelemetry.sdk._metrics.export import MetricExportResult
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_METRICS_INSECURE,
+)
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
@@ -119,6 +122,22 @@ class TestOTLPMetricExporter(TestCase):
         OTLPMetricExporter(insecure=False)
         self.assertTrue(mock_ssl_channel.called)
 
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_METRICS_INSECURE: "True"},
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    # pylint: disable=unused-argument
+    def test_otlp_insecure_from_env(self, mock_insecure):
+        OTLPMetricExporter()
+        # pylint: disable=protected-access
+        self.assertTrue(mock_insecure.called)
+        self.assertEqual(
+            1,
+            mock_insecure.call_count,
+            f"expected {mock_insecure} to be called",
+        )
+
     # pylint: disable=no-self-use
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
@@ -133,10 +152,30 @@ class TestOTLPMetricExporter(TestCase):
             (
                 "localhost:4317",
                 None,
+                mock_secure,
+            ),
+            (
+                "http://localhost:4317",
+                True,
                 mock_insecure,
             ),
             (
                 "localhost:4317",
+                True,
+                mock_insecure,
+            ),
+            (
+                "http://localhost:4317",
+                False,
+                mock_secure,
+            ),
+            (
+                "localhost:4317",
+                False,
+                mock_secure,
+            ),
+            (
+                "https://localhost:4317",
                 False,
                 mock_secure,
             ),
@@ -148,7 +187,7 @@ class TestOTLPMetricExporter(TestCase):
             (
                 "https://localhost:4317",
                 True,
-                mock_insecure,
+                mock_secure,
             ),
         ]
         # pylint: disable=C0209

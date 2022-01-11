@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from os import environ
 from typing import Optional, Sequence
 from grpc import ChannelCredentials, Compression
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
@@ -29,6 +30,9 @@ from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     ResourceMetrics,
 )
 from opentelemetry.proto.metrics.v1.metrics_pb2 import Metric as PB2Metric
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_METRICS_INSECURE,
+)
 from opentelemetry.sdk._metrics.data import (
     MetricData,
 )
@@ -57,6 +61,12 @@ class OTLPMetricExporter(
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
+
+        if insecure is None:
+            insecure = environ.get(OTEL_EXPORTER_OTLP_METRICS_INSECURE)
+            if insecure is not None:
+                insecure = insecure.lower() == "true"
+
         super().__init__(
             **{
                 "endpoint": endpoint,
