@@ -282,7 +282,7 @@ OTEL_EXPORTER_OTLP_ENDPOINT = "OTEL_EXPORTER_OTLP_ENDPOINT"
 
 The :envvar:`OTEL_EXPORTER_OTLP_ENDPOINT` target to which the exporter is going to send spans or metrics.
 The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https), port and path.
-A scheme of https indicates a secure connection and takes precedence over the `insecure` configuration setting.
+A scheme of https indicates a secure connection and takes precedence over the insecure configuration setting.
 Default: "http://localhost:4317"
 """
 
@@ -291,7 +291,7 @@ OTEL_EXPORTER_OTLP_INSECURE = "OTEL_EXPORTER_OTLP_INSECURE"
 .. envvar:: OTEL_EXPORTER_OTLP_INSECURE
 
 The :envvar:`OTEL_EXPORTER_OTLP_INSECURE` represents whether to enable client transport security for gRPC requests.
-An scheme of https takes precedence over the `insecure` configuration setting.
+A scheme of https takes precedence over this configuration setting.
 Default: False
 """
 
@@ -300,8 +300,8 @@ OTEL_EXPORTER_OTLP_TRACES_INSECURE = "OTEL_EXPORTER_OTLP_TRACES_INSECURE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_INSECURE
 
-The :envvar:`OTEL_EXPORTER_OTLP_TRACES_INSECURE` represents whether to enable client transport security 
-for gRPC requests for spans. An scheme of https takes precedence over the `insecure` configuration setting.
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_INSECURE` represents whether to enable client transport security
+for gRPC requests for spans. A scheme of https takes precedence over the this configuration setting.
 Default: False
 """
 
@@ -312,7 +312,7 @@ OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"
 
 The :envvar:`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` target to which the span exporter is going to send spans.
 The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https), port and path.
-A scheme of https indicates a secure connection and takes precedence over the `insecure` configuration setting.
+A scheme of https indicates a secure connection and takes precedence over this configuration setting.
 """
 
 OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"

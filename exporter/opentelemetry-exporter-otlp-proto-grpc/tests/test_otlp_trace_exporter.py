@@ -297,7 +297,7 @@ class TestOTLPSpanExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     # pylint: disable=unused-argument
     def test_otlp_insecure_from_env(self, mock_insecure):
-        exporter = OTLPSpanExporter()
+        OTLPSpanExporter()
         # pylint: disable=protected-access
         self.assertTrue(mock_insecure.called)
         self.assertEqual(
