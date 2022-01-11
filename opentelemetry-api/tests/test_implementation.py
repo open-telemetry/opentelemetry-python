@@ -34,7 +34,7 @@ class TestAPIOnlyImplementation(unittest.TestCase):
 
     def test_default_tracer(self):
         # pylint: disable=protected-access
-        tracer_provider = trace._DefaultTracerProvider()
+        tracer_provider = trace._NoOpTracerProvider()
         tracer = tracer_provider.get_tracer(__name__)
         with tracer.start_span("test") as span:
             self.assertEqual(
