@@ -39,7 +39,7 @@ class MeasurementConsumer(ABC):
         pass
 
 
-class SerialMeasurementConsumer(MeasurementConsumer):
+class SynchronousMeasurementConsumer(MeasurementConsumer):
     def consume_measurement(self, measurement: Measurement) -> None:
         pass
 

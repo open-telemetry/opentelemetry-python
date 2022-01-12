@@ -41,7 +41,7 @@ from opentelemetry.sdk._metrics.instrument import (
     UpDownCounter,
 )
 from opentelemetry.sdk._metrics.measurement_consumer import (
-    SerialMeasurementConsumer,
+    SynchronousMeasurementConsumer,
 )
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk.resources import Resource
@@ -170,7 +170,7 @@ class MeterProvider(APIMeterProvider):
         self._lock = Lock()
         self._atexit_handler = None
 
-        self._measurement_consumer = SerialMeasurementConsumer()
+        self._measurement_consumer = SynchronousMeasurementConsumer()
 
         if shutdown_on_exit:
             self._atexit_handler = register(self.shutdown)

@@ -18,16 +18,18 @@ from unittest.mock import Mock, patch
 from opentelemetry.sdk._metrics import MeterProvider
 from opentelemetry.sdk._metrics.measurement_consumer import (
     MeasurementConsumer,
-    SerialMeasurementConsumer,
+    SynchronousMeasurementConsumer,
 )
 
 
-class TestSerialMeasurementConsumer(TestCase):
+class TestSynchronousMeasurementConsumer(TestCase):
     def test_parent(self):
 
-        self.assertIsInstance(SerialMeasurementConsumer(), MeasurementConsumer)
+        self.assertIsInstance(
+            SynchronousMeasurementConsumer(), MeasurementConsumer
+        )
 
-    @patch("opentelemetry.sdk._metrics.SerialMeasurementConsumer")
+    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
     def test_measurement_consumer_class(
         self, mock_serial_measurement_consumer
     ):
@@ -35,7 +37,7 @@ class TestSerialMeasurementConsumer(TestCase):
 
         mock_serial_measurement_consumer.assert_called()
 
-    @patch("opentelemetry.sdk._metrics.SerialMeasurementConsumer")
+    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
     def test_register_asynchronous_instrument(
         self, mock_serial_measurement_consumer
     ):
@@ -47,11 +49,9 @@ class TestSerialMeasurementConsumer(TestCase):
             )
         )
 
-        (
-            meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called()
-        )
+        meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called()
 
-    @patch("opentelemetry.sdk._metrics.SerialMeasurementConsumer")
+    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
     def test_consume_measurement(self, mock_serial_measurement_consumer):
 
         meter_provider = MeterProvider()
@@ -59,6 +59,4 @@ class TestSerialMeasurementConsumer(TestCase):
 
         counter.add(1)
 
-        (
-            meter_provider._measurement_consumer.consume_measurement.assert_called()
-        )
+        meter_provider._measurement_consumer.consume_measurement.assert_called()
