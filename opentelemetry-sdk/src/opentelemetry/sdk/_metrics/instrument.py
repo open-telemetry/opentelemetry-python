@@ -72,9 +72,9 @@ class _Asynchronous:
 
             self._callback = inner
 
+    @property
     def callback(self):
-        for measurement in self._callback():
-            self._measurement_consumer.consume(measurement)
+        return self._callback
 
 
 class Counter(_Synchronous, APICounter):
@@ -84,14 +84,18 @@ class Counter(_Synchronous, APICounter):
         if amount < 0:
             raise Exception("amount must be non negative")
 
-        self._measurement_consumer.consume(Measurement(amount, attributes))
+        self._measurement_consumer.consume_measurement(
+            Measurement(amount, attributes)
+        )
 
 
 class UpDownCounter(_Synchronous, APIUpDownCounter):
     def add(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
-        self._measurement_consumer.consume(Measurement(amount, attributes))
+        self._measurement_consumer.consume_measurement(
+            Measurement(amount, attributes)
+        )
 
 
 class ObservableCounter(_Asynchronous, APIObservableCounter):
@@ -104,7 +108,9 @@ class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
 
 class Histogram(_Synchronous, APIHistogram):
     def record(self, amount, attributes=None):
-        self._measurement_consumer.consume(Measurement(amount, attributes))
+        self._measurement_consumer.consume_measurement(
+            Measurement(amount, attributes)
+        )
 
 
 class ObservableGauge(_Asynchronous, APIObservableGauge):

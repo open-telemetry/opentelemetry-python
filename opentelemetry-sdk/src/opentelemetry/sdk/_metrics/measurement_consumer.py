@@ -14,16 +14,41 @@
 
 
 from abc import ABC, abstractmethod
+from typing import Iterable
 
+from opentelemetry._metrics.instrument import Asynchronous
+from opentelemetry.sdk._metrics.aggregation import AggregationTemporality
+from opentelemetry.sdk._metrics.data import Metric
 from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry.sdk._metrics.metric_reader import MetricReader
 
 
 class MeasurementConsumer(ABC):
     @abstractmethod
-    def consume(self, measurement: Measurement):
+    def consume_measurement(self, measurement: Measurement) -> None:
+        pass
+
+    @abstractmethod
+    def register_asynchronous_instrument(self, instrument: Asynchronous):
+        pass
+
+    @abstractmethod
+    def collect(
+        self, metric_reader: MetricReader, temporality: AggregationTemporality
+    ) -> Iterable[Metric]:
         pass
 
 
 class SerialMeasurementConsumer(MeasurementConsumer):
-    def consume(self, measurement: Measurement):
+    def consume_measurement(self, measurement: Measurement) -> None:
+        pass
+
+    def register_asynchronous_instrument(
+        self, instrument: Asynchronous
+    ) -> None:
+        pass
+
+    def collect(
+        self, metric_reader: MetricReader, temporality: AggregationTemporality
+    ) -> Iterable[Metric]:
         pass

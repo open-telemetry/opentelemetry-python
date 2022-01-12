@@ -41,7 +41,6 @@ from opentelemetry.sdk._metrics.instrument import (
     UpDownCounter,
 )
 from opentelemetry.sdk._metrics.measurement_consumer import (
-    MeasurementConsumer,
     SerialMeasurementConsumer,
 )
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
@@ -86,6 +85,14 @@ class Meter(APIMeter):
     def create_observable_counter(
         self, name, callback, unit=None, description=None
     ) -> APIObservableCounter:
+
+        # pylint: disable=protected-access
+        (
+            self._meter_provider._measurement_consumer.register_asynchronous_instrument(
+                self
+            )
+        )
+
         return ObservableCounter(
             self._instrumentation_info,
             name,
@@ -111,6 +118,14 @@ class Meter(APIMeter):
     def create_observable_gauge(
         self, name, callback, unit=None, description=None
     ) -> APIObservableGauge:
+
+        # pylint: disable=protected-access
+        (
+            self._meter_provider._measurement_consumer.register_asynchronous_instrument(
+                self
+            )
+        )
+
         return ObservableGauge(
             self._instrumentation_info,
             name,
@@ -124,6 +139,14 @@ class Meter(APIMeter):
     def create_observable_up_down_counter(
         self, name, callback, unit=None, description=None
     ) -> APIObservableUpDownCounter:
+
+        # pylint: disable=protected-access
+        (
+            self._meter_provider._measurement_consumer.register_asynchronous_instrument(
+                self
+            )
+        )
+
         return ObservableUpDownCounter(
             self._instrumentation_info,
             name,
@@ -143,14 +166,11 @@ class MeterProvider(APIMeterProvider):
         metric_readers: Sequence[MetricReader] = (),
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
-        measurement_consumer_class: MeasurementConsumer = (
-            SerialMeasurementConsumer
-        ),
     ):
         self._lock = Lock()
         self._atexit_handler = None
 
-        self._measurement_consumer = measurement_consumer_class()
+        self._measurement_consumer = SerialMeasurementConsumer()
 
         if shutdown_on_exit:
             self._atexit_handler = register(self.shutdown)
