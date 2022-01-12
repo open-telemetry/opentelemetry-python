@@ -14,22 +14,20 @@
 
 from abc import ABC, abstractmethod
 from collections import OrderedDict
-from enum import IntEnum
 from logging import getLogger
 from math import inf
 from threading import Lock
 from typing import Generic, Optional, Sequence, TypeVar
 
 from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.point import Gauge, Histogram, PointT, Sum
+from opentelemetry.sdk._metrics.point import (
+    AggregationTemporality,
+    Gauge,
+    Histogram,
+    PointT,
+    Sum,
+)
 from opentelemetry.util._time import _time_ns
-
-
-class AggregationTemporality(IntEnum):
-    UNSPECIFIED = 0
-    DELTA = 1
-    CUMULATIVE = 2
-
 
 _PointVarT = TypeVar("_PointVarT", bound=PointT)
 
