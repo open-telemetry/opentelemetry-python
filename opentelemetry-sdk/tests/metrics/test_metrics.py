@@ -26,6 +26,9 @@ from opentelemetry.sdk._metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk._metrics.measurement_consumer import (
+    SynchronousMeasurementConsumer,
+)
 from opentelemetry.sdk.resources import Resource
 
 
@@ -79,7 +82,7 @@ class TestMeterProvider(TestCase):
 
 class TestMeter(TestCase):
     def setUp(self):
-        self.meter = Meter(Mock(), MeterProvider())
+        self.meter = Meter(Mock(), SynchronousMeasurementConsumer())
 
     def test_create_counter(self):
         counter = self.meter.create_counter(
