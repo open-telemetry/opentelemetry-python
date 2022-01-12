@@ -12,8 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import dataclass
+import json
+from dataclasses import asdict, dataclass
+from enum import IntEnum
 from typing import Sequence, Union
+
+from opentelemetry.sdk.resources import Attributes, Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+
+
+class AggregationTemporality(IntEnum):
+    UNSPECIFIED = 0
+    DELTA = 1
+    CUMULATIVE = 2
 
 
 @dataclass(frozen=True)
@@ -21,7 +32,7 @@ class Sum:
     start_time_unix_nano: int
     time_unix_nano: int
     value: Union[int, float]
-    aggregation_temporality: int
+    aggregation_temporality: AggregationTemporality
     is_monotonic: bool
 
 
@@ -37,7 +48,30 @@ class Histogram:
     time_unix_nano: int
     bucket_counts: Sequence[int]
     explicit_bounds: Sequence[float]
-    aggregation_temporality: int
+    aggregation_temporality: AggregationTemporality
 
 
 PointT = Union[Sum, Gauge, Histogram]
+
+
+@dataclass(frozen=True)
+class Metric:
+    """Represents a metric point in the OpenTelemetry data model to be exported
+
+    Concrete metric types contain all the information as in the OTLP proto definitions
+    (https://tinyurl.com/7h6yx24v) but are flattened as much as possible.
+    """
+
+    # common fields to all metric kinds
+    attributes: Attributes
+    description: str
+    instrumentation_info: InstrumentationInfo
+    name: str
+    resource: Resource
+    unit: str
+
+    point: PointT
+    """Contains non-common fields for the given metric"""
+
+    def to_json(self) -> str:
+        raise NotImplementedError()

@@ -30,8 +30,12 @@ from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
     MetricsServiceServicer,
     add_MetricsServiceServicer_to_server,
 )
-from opentelemetry.sdk._metrics.data import Metric, MetricData
 from opentelemetry.sdk._metrics.export import MetricExportResult
+from opentelemetry.sdk._metrics.point import (
+    AggregationTemporality,
+    Metric,
+    Sum,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
 )
@@ -96,12 +100,21 @@ class TestOTLPMetricExporter(TestCase):
 
         self.server.start()
 
-        self.metric_data_1 = MetricData(
-            metric=Metric(
-                resource=SDKResource({"key": "value"}),
-            ),
+        self.metric_data_1 = Metric(
+            resource=SDKResource({"key": "value"}),
             instrumentation_info=InstrumentationInfo(
                 "first_name", "first_version"
+            ),
+            attributes={},
+            description="foo",
+            name="foometric",
+            unit="s",
+            point=Sum(
+                aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                is_monotonic=True,
+                start_time_unix_nano=1641946015139533244,
+                time_unix_nano=1641946016139533244,
+                value=33,
             ),
         )
 

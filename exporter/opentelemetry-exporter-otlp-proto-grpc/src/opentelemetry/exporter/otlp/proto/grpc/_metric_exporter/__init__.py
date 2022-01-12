@@ -33,8 +33,8 @@ from opentelemetry.proto.metrics.v1.metrics_pb2 import Metric as PB2Metric
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
 )
-from opentelemetry.sdk._metrics.data import (
-    MetricData,
+from opentelemetry.sdk._metrics.point import (
+    Metric,
 )
 
 from opentelemetry.sdk._metrics.export import (
@@ -45,9 +45,7 @@ from opentelemetry.sdk._metrics.export import (
 
 class OTLPMetricExporter(
     MetricExporter,
-    OTLPExporterMixin[
-        MetricData, ExportMetricsServiceRequest, MetricExportResult
-    ],
+    OTLPExporterMixin[Metric, ExportMetricsServiceRequest, MetricExportResult],
 ):
     _result = MetricExportResult
     _stub = MetricsServiceStub
@@ -79,13 +77,13 @@ class OTLPMetricExporter(
         )
 
     def _translate_data(
-        self, data: Sequence[MetricData]
+        self, data: Sequence[Metric]
     ) -> ExportMetricsServiceRequest:
         sdk_resource_instrumentation_library_metrics = {}
         self._collector_metric_kwargs = {}
 
-        for metric_data in data:
-            resource = metric_data.metric.resource
+        for metric in data:
+            resource = metric.resource
             instrumentation_library_map = (
                 sdk_resource_instrumentation_library_metrics.get(resource, {})
             )
@@ -95,26 +93,26 @@ class OTLPMetricExporter(
                 ] = instrumentation_library_map
 
             instrumentation_library_metrics = instrumentation_library_map.get(
-                metric_data.instrumentation_info
+                metric.instrumentation_info
             )
 
             if not instrumentation_library_metrics:
-                if metric_data.instrumentation_info is not None:
+                if metric.instrumentation_info is not None:
                     instrumentation_library_map[
-                        metric_data.instrumentation_info
+                        metric.instrumentation_info
                     ] = InstrumentationLibraryMetrics(
                         instrumentation_library=InstrumentationLibrary(
-                            name=metric_data.instrumentation_info.name,
-                            version=metric_data.instrumentation_info.version,
+                            name=metric.instrumentation_info.name,
+                            version=metric.instrumentation_info.version,
                         )
                     )
                 else:
                     instrumentation_library_map[
-                        metric_data.instrumentation_info
+                        metric.instrumentation_info
                     ] = InstrumentationLibraryMetrics()
 
             instrumentation_library_metrics = instrumentation_library_map.get(
-                metric_data.instrumentation_info
+                metric.instrumentation_info
             )
 
             instrumentation_library_metrics.metrics.append(
@@ -128,7 +126,8 @@ class OTLPMetricExporter(
             )
         )
 
-    def export(self, metrics: Sequence[MetricData]) -> MetricExportResult:
+    def export(self, metrics: Sequence[Metric]) -> MetricExportResult:
+        print("Got metrics!!!\n", metrics)
         return self._export(metrics)
 
     def shutdown(self):
