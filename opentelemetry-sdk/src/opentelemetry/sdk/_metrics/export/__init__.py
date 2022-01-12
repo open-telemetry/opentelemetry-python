@@ -18,7 +18,7 @@ from os import linesep
 from sys import stdout
 from typing import IO, Callable, Sequence
 
-from opentelemetry.sdk._metrics.data import Metric, MetricData
+from opentelemetry.sdk._metrics.point import Metric
 
 
 class MetricExportResult(Enum):
@@ -33,7 +33,8 @@ class MetricExporter(ABC):
     in their own format.
     """
 
-    def export(self, metrics: Sequence[MetricData]) -> "MetricExportResult":
+    @abstractmethod
+    def export(self, metrics: Sequence[Metric]) -> "MetricExportResult":
         """Exports a batch of telemetry data.
 
         Args:
@@ -68,9 +69,9 @@ class ConsoleMetricExporter(MetricExporter):
         self.out = out
         self.formatter = formatter
 
-    def export(self, metrics: Sequence[MetricData]) -> MetricExportResult:
-        for data in metrics:
-            self.out.write(self.formatter(data.metric))
+    def export(self, metrics: Sequence[Metric]) -> MetricExportResult:
+        for metric in metrics:
+            self.out.write(self.formatter(metric))
         self.out.flush()
         return MetricExportResult.SUCCESS
 
