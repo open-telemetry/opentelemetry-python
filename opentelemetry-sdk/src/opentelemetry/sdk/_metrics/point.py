@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-from dataclasses import asdict, dataclass
+from dataclasses import dataclass
 from enum import IntEnum
 from typing import Sequence, Union
 
-from opentelemetry.sdk.resources import Attributes, Resource
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.util.types import Attributes
 
 
 class AggregationTemporality(IntEnum):
