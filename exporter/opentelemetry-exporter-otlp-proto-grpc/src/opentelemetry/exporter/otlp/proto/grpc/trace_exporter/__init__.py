@@ -44,6 +44,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+    OTEL_EXPORTER_OTLP_TRACES_INSECURE,
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
 )
 from opentelemetry.sdk.trace import ReadableSpan
@@ -84,6 +85,12 @@ class OTLPSpanExporter(
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
+
+        if insecure is None:
+            insecure = environ.get(OTEL_EXPORTER_OTLP_TRACES_INSECURE)
+            if insecure is not None:
+                insecure = insecure.lower() == "true"
+
         if (
             not insecure
             and environ.get(OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE) is not None
