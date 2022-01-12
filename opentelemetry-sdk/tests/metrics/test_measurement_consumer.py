@@ -61,11 +61,39 @@ class TestSynchronousMeasurementConsumer(TestCase):
         )
 
     @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
-    def test_consume_measurement(self, mock_serial_measurement_consumer):
+    def test_consume_measurement_counter(
+        self, mock_serial_measurement_consumer
+    ):
 
         meter_provider = MeterProvider()
         counter = meter_provider.get_meter("name").create_counter("name")
 
         counter.add(1)
+
+        meter_provider._measurement_consumer.consume_measurement.assert_called()
+
+    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
+    def test_consume_measurement_up_down_counter(
+        self, mock_serial_measurement_consumer
+    ):
+
+        meter_provider = MeterProvider()
+        counter = meter_provider.get_meter("name").create_up_down_counter(
+            "name"
+        )
+
+        counter.add(1)
+
+        meter_provider._measurement_consumer.consume_measurement.assert_called()
+
+    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
+    def test_consume_measurement_histogram(
+        self, mock_serial_measurement_consumer
+    ):
+
+        meter_provider = MeterProvider()
+        counter = meter_provider.get_meter("name").create_histogram("name")
+
+        counter.record(1)
 
         meter_provider._measurement_consumer.consume_measurement.assert_called()
