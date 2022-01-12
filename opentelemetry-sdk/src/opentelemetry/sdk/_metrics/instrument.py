@@ -73,7 +73,7 @@ class _Asynchronous:
             self._callback = inner
 
     @property
-    def callback(self):
+    def callback(self) -> CallbackT:
         return self._callback
 
 
