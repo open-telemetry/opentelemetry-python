@@ -127,7 +127,6 @@ class OTLPMetricExporter(
         )
 
     def export(self, metrics: Sequence[Metric]) -> MetricExportResult:
-        print("Got metrics!!!\n", metrics)
         return self._export(metrics)
 
     def shutdown(self):
