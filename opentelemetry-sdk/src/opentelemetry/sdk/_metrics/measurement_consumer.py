@@ -17,10 +17,10 @@ from abc import ABC, abstractmethod
 from typing import Iterable
 
 from opentelemetry.sdk._metrics.aggregation import AggregationTemporality
-from opentelemetry.sdk._metrics.point import Metric
 from opentelemetry.sdk._metrics.instrument import _Asynchronous
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
+from opentelemetry.sdk._metrics.point import Metric
 
 
 class MeasurementConsumer(ABC):
