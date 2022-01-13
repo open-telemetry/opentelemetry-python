@@ -26,6 +26,9 @@ from opentelemetry.sdk._metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk._metrics.measurement_consumer import (
+    SynchronousMeasurementConsumer,
+)
 from opentelemetry.sdk.resources import Resource
 
 
@@ -105,7 +108,7 @@ class TestMeterProvider(TestCase):
 
 class TestMeter(TestCase):
     def setUp(self):
-        self.meter = Meter(Mock(), MeterProvider())
+        self.meter = Meter(Mock(), SynchronousMeasurementConsumer())
 
     def test_create_counter(self):
         counter = self.meter.create_counter(
@@ -113,6 +116,7 @@ class TestMeter(TestCase):
         )
 
         self.assertIsInstance(counter, Counter)
+        self.assertEqual(counter.name, "name")
 
     def test_create_up_down_counter(self):
         up_down_counter = self.meter.create_up_down_counter(
@@ -120,6 +124,7 @@ class TestMeter(TestCase):
         )
 
         self.assertIsInstance(up_down_counter, UpDownCounter)
+        self.assertEqual(up_down_counter.name, "name")
 
     def test_create_observable_counter(self):
         observable_counter = self.meter.create_observable_counter(
@@ -127,6 +132,7 @@ class TestMeter(TestCase):
         )
 
         self.assertIsInstance(observable_counter, ObservableCounter)
+        self.assertEqual(observable_counter.name, "name")
 
     def test_create_histogram(self):
         histogram = self.meter.create_histogram(
@@ -134,6 +140,7 @@ class TestMeter(TestCase):
         )
 
         self.assertIsInstance(histogram, Histogram)
+        self.assertEqual(histogram.name, "name")
 
     def test_create_observable_gauge(self):
         observable_gauge = self.meter.create_observable_gauge(
@@ -141,6 +148,7 @@ class TestMeter(TestCase):
         )
 
         self.assertIsInstance(observable_gauge, ObservableGauge)
+        self.assertEqual(observable_gauge.name, "name")
 
     def test_create_observable_up_down_counter(self):
         observable_up_down_counter = (
@@ -151,3 +159,4 @@ class TestMeter(TestCase):
         self.assertIsInstance(
             observable_up_down_counter, ObservableUpDownCounter
         )
+        self.assertEqual(observable_up_down_counter.name, "name")
