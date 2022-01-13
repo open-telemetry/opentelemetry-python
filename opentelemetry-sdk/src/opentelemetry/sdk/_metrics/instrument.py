@@ -14,7 +14,6 @@
 
 # pylint: disable=too-many-ancestors
 
-from abc import ABC, abstractmethod
 from typing import Dict, Generator, Iterable, Union
 
 from opentelemetry._metrics.instrument import CallbackT
@@ -30,42 +29,9 @@ from opentelemetry._metrics.instrument import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
 from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
-from opentelemetry.sdk._metrics.aggregation import AggregationTemporality
 from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.metric_reader import MetricReader
-from opentelemetry.sdk._metrics.point import Metric
+from opentelemetry.sdk._metrics.measurement_consumer import MeasurementConsumer
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-
-
-class MeasurementConsumer(ABC):
-    @abstractmethod
-    def consume_measurement(self, measurement: Measurement) -> None:
-        pass
-
-    @abstractmethod
-    def register_asynchronous_instrument(self, instrument: "_Asynchronous"):
-        pass
-
-    @abstractmethod
-    def collect(
-        self, metric_reader: MetricReader, temporality: AggregationTemporality
-    ) -> Iterable[Metric]:
-        pass
-
-
-class SynchronousMeasurementConsumer(MeasurementConsumer):
-    def consume_measurement(self, measurement: Measurement) -> None:
-        pass
-
-    def register_asynchronous_instrument(
-        self, instrument: "_Asynchronous"
-    ) -> None:
-        pass
-
-    def collect(
-        self, metric_reader: MetricReader, temporality: AggregationTemporality
-    ) -> Iterable[Metric]:
-        pass
 
 
 class _Synchronous:

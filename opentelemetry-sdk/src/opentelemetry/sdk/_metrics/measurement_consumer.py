@@ -12,11 +12,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# This is done in order to avoid a ciruclar import between instrument.py and
-# measurement_consumer.py
-from opentelemetry.sdk._metrics.instrument import (
-    MeasurementConsumer,
-    SynchronousMeasurementConsumer,
-)
+from abc import ABC, abstractmethod
+from typing import TYPE_CHECKING, Iterable
 
-__all__ = ["MeasurementConsumer", "SynchronousMeasurementConsumer"]
+from opentelemetry.sdk._metrics.aggregation import AggregationTemporality
+from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry.sdk._metrics.metric_reader import MetricReader
+from opentelemetry.sdk._metrics.point import Metric
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk._metrics.instrument import _Asynchronous
+
+
+class MeasurementConsumer(ABC):
+    @abstractmethod
+    def consume_measurement(self, measurement: Measurement) -> None:
+        pass
+
+    @abstractmethod
+    def register_asynchronous_instrument(self, instrument: "_Asynchronous"):
+        pass
+
+    @abstractmethod
+    def collect(
+        self, metric_reader: MetricReader, temporality: AggregationTemporality
+    ) -> Iterable[Metric]:
+        pass
+
+
+class SynchronousMeasurementConsumer(MeasurementConsumer):
+    def consume_measurement(self, measurement: Measurement) -> None:
+        pass
+
+    def register_asynchronous_instrument(
+        self, instrument: "_Asynchronous"
+    ) -> None:
+        pass
+
+    def collect(
+        self, metric_reader: MetricReader, temporality: AggregationTemporality
+    ) -> Iterable[Metric]:
+        pass
