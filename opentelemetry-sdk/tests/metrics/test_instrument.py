@@ -27,7 +27,7 @@ class TestObservableGauge(TestCase):
         def callback():
             return [1, 2, 3]
 
-        observable_gauge = ObservableGauge(Mock(), "name", Mock(), callback)
+        observable_gauge = ObservableGauge("name", Mock(), Mock(), callback)
 
         self.assertEqual(observable_gauge.callback(), [1, 2, 3])
 
@@ -35,7 +35,7 @@ class TestObservableGauge(TestCase):
         def callback():
             yield [1, 2, 3]
 
-        observable_gauge = ObservableGauge(Mock(), "name", Mock(), callback())
+        observable_gauge = ObservableGauge("name", Mock(), Mock(), callback())
 
         self.assertEqual(observable_gauge.callback(), [1, 2, 3])
 
@@ -46,7 +46,7 @@ class TestObservableCounter(TestCase):
             return [1, 2, 3]
 
         observable_counter = ObservableCounter(
-            Mock(), "name", Mock(), callback
+            "name", Mock(), Mock(), callback
         )
 
         self.assertEqual(observable_counter.callback(), [1, 2, 3])
@@ -56,7 +56,7 @@ class TestObservableCounter(TestCase):
             yield [1, 2, 3]
 
         observable_counter = ObservableCounter(
-            Mock(), "name", Mock(), callback()
+            "name", Mock(), Mock(), callback()
         )
 
         self.assertEqual(observable_counter.callback(), [1, 2, 3])
@@ -68,7 +68,7 @@ class TestObservableUpDownCounter(TestCase):
             return [1, 2, 3]
 
         observable_up_down_counter = ObservableUpDownCounter(
-            Mock(), "name", Mock(), callback
+            "name", Mock(), Mock(), callback
         )
 
         self.assertEqual(observable_up_down_counter.callback(), [1, 2, 3])
@@ -78,7 +78,7 @@ class TestObservableUpDownCounter(TestCase):
             yield [1, 2, 3]
 
         observable_up_down_counter = ObservableUpDownCounter(
-            Mock(), "name", Mock(), callback()
+            "name", Mock(), Mock(), callback()
         )
 
         self.assertEqual(observable_up_down_counter.callback(), [1, 2, 3])

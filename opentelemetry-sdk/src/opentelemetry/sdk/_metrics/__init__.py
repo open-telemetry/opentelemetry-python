@@ -63,8 +63,8 @@ class Meter(APIMeter):
 
     def create_counter(self, name, unit=None, description=None) -> APICounter:
         return Counter(
-            self._instrumentation_info,
             name,
+            self._instrumentation_info,
             self._measurement_consumer,
             unit,
             description,
@@ -74,8 +74,8 @@ class Meter(APIMeter):
         self, name, unit=None, description=None
     ) -> APIUpDownCounter:
         return UpDownCounter(
-            self._instrumentation_info,
             name,
+            self._instrumentation_info,
             self._measurement_consumer,
             unit,
             description,
@@ -86,8 +86,8 @@ class Meter(APIMeter):
     ) -> APIObservableCounter:
 
         instrument = ObservableCounter(
-            self._instrumentation_info,
             name,
+            self._instrumentation_info,
             self._measurement_consumer,
             callback,
             unit,
@@ -102,8 +102,8 @@ class Meter(APIMeter):
         self, name, unit=None, description=None
     ) -> APIHistogram:
         return Histogram(
-            self._instrumentation_info,
             name,
+            self._instrumentation_info,
             self._measurement_consumer,
             unit,
             description,
@@ -114,8 +114,8 @@ class Meter(APIMeter):
     ) -> APIObservableGauge:
 
         instrument = ObservableGauge(
-            self._instrumentation_info,
             name,
+            self._instrumentation_info,
             self._measurement_consumer,
             callback,
             unit,
@@ -131,8 +131,8 @@ class Meter(APIMeter):
     ) -> APIObservableUpDownCounter:
 
         instrument = ObservableUpDownCounter(
-            self._instrumentation_info,
             name,
+            self._instrumentation_info,
             self._measurement_consumer,
             callback,
             unit,

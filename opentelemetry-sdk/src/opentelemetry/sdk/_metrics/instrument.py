@@ -71,12 +71,15 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
 class _Synchronous:
     def __init__(
         self,
-        instrumentation_info: InstrumentationInfo,
         name: str,
+        instrumentation_info: InstrumentationInfo,
         measurement_consumer: MeasurementConsumer,
         unit: str = "",
         description: str = "",
     ):
+        self.name = name
+        self.unit = unit
+        self.description = description
         self._instrumentation_info = instrumentation_info
         self._measurement_consumer = measurement_consumer
         super().__init__(name, unit=unit, description=description)
@@ -85,14 +88,16 @@ class _Synchronous:
 class _Asynchronous:
     def __init__(
         self,
-        instrumentation_info: InstrumentationInfo,
         name: str,
+        instrumentation_info: InstrumentationInfo,
         measurement_consumer: MeasurementConsumer,
         callback: CallbackT,
         unit: str = "",
         description: str = "",
     ):
-
+        self.name = name
+        self.unit = unit
+        self.description = description
         self._instrumentation_info = instrumentation_info
         self._measurement_consumer = measurement_consumer
         super().__init__(name, callback, unit=unit, description=description)
