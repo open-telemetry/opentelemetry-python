@@ -64,7 +64,6 @@ class TestMeterProvider(TestCase):
         self.assertEqual(meter._instrumentation_info.version, "version")
         self.assertEqual(meter._instrumentation_info.schema_url, "schema_url")
 
-
     def test_get_meter_duplicate(self):
         """
         Subsequent calls to `MeterProvider.get_meter` with the same arguments
@@ -88,7 +87,6 @@ class TestMeterProvider(TestCase):
         )
         self.assertEqual(meter1, meter2)
         self.assertNotEqual(meter1, meter3)
-
 
     def test_shutdown_subsequent_calls(self):
         """
