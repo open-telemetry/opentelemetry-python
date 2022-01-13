@@ -12,6 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from dataclasses import dataclass
+from typing import Union
 
+from opentelemetry.util.types import Attributes
+
+
+@dataclass(frozen=True)
 class Measurement:
-    pass
+    value: Union[int, float]
+    attributes: Attributes = None

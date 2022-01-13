@@ -29,6 +29,7 @@ from opentelemetry.sdk._configuration import (
     _init_tracing,
 )
 from opentelemetry.sdk._logs.export import ConsoleLogExporter
+from opentelemetry.sdk._metrics.export import ConsoleMetricExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
@@ -194,4 +195,8 @@ class TestImportExporters(TestCase):
         )
         self.assertEqual(
             logs_exporters["console"].__class__, ConsoleLogExporter.__class__
+        )
+        self.assertEqual(
+            logs_exporters["console"].__class__,
+            ConsoleMetricExporter.__class__,
         )

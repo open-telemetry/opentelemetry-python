@@ -14,8 +14,11 @@
 
 import logging
 import threading
-from os import environ
-from typing import Optional
+from abc import ABC, abstractmethod
+from enum import Enum
+from os import environ, linesep
+from sys import stdout
+from typing import IO, Callable, Optional, Sequence
 
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
@@ -25,9 +28,65 @@ from opentelemetry.context import (
 )
 from opentelemetry.sdk._metrics.export.metric_exporter import MetricExporter
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
+from opentelemetry.sdk._metrics.point import Metric
 
 _logger = logging.getLogger(__name__)
 
+class MetricExportResult(Enum):
+    SUCCESS = 0
+    FAILURE = 1
+
+
+class MetricExporter(ABC):
+    """Interface for exporting metrics.
+
+    Interface to be implemented by services that want to export metrics received
+    in their own format.
+    """
+
+    @abstractmethod
+    def export(self, metrics: Sequence[Metric]) -> "MetricExportResult":
+        """Exports a batch of telemetry data.
+
+        Args:
+            metrics: The list of `opentelemetry.sdk._metrics.data.MetricData` objects to be exported
+
+        Returns:
+            The result of the export
+        """
+
+    @abstractmethod
+    def shutdown(self) -> None:
+        """Shuts down the exporter.
+
+        Called when the SDK is shut down.
+        """
+
+
+class ConsoleMetricExporter(MetricExporter):
+    """Implementation of :class:`MetricExporter` that prints metrics to the
+    console.
+
+    This class can be used for diagnostic purposes. It prints the exported
+    metrics to the console STDOUT.
+    """
+    def __init__(
+        self,
+        out: IO = stdout,
+        formatter: Callable[[Metric], str] = lambda metric: metric.to_json()
+        + linesep,
+    ):
+        self.out = out
+        self.formatter = formatter
+
+    def export(self, metrics: Sequence[Metric]) -> MetricExportResult:
+        for metric in metrics:
+            self.out.write(self.formatter(metric))
+        self.out.flush()
+        return MetricExportResult.SUCCESS
+
+    def shutdown(self) -> None:
+        pass
 
 class PeriodicExportingMetricReader(MetricReader):
     """`PeriodicExportingMetricReader` is an implementation of `MetricReader`

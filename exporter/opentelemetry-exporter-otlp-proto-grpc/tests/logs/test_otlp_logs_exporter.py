@@ -107,7 +107,7 @@ class TestOTLPLogExporter(TestCase):
 
         self.server = server(ThreadPoolExecutor(max_workers=10))
 
-        self.server.add_insecure_port("[::]:4317")
+        self.server.add_insecure_port("127.0.0.1:4317")
 
         self.server.start()
 
@@ -193,10 +193,30 @@ class TestOTLPLogExporter(TestCase):
             (
                 "localhost:4317",
                 None,
+                mock_secure,
+            ),
+            (
+                "http://localhost:4317",
+                True,
                 mock_insecure,
             ),
             (
                 "localhost:4317",
+                True,
+                mock_insecure,
+            ),
+            (
+                "http://localhost:4317",
+                False,
+                mock_secure,
+            ),
+            (
+                "localhost:4317",
+                False,
+                mock_secure,
+            ),
+            (
+                "https://localhost:4317",
                 False,
                 mock_secure,
             ),
@@ -208,9 +228,10 @@ class TestOTLPLogExporter(TestCase):
             (
                 "https://localhost:4317",
                 True,
-                mock_insecure,
+                mock_secure,
             ),
         ]
+
         # pylint: disable=C0209
         for endpoint, insecure, mock_method in endpoints:
             OTLPLogExporter(endpoint=endpoint, insecure=insecure)

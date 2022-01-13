@@ -58,6 +58,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
     OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
+    OTEL_EXPORTER_OTLP_TRACES_INSECURE,
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -123,6 +124,8 @@ class TraceServiceServicerALREADY_EXISTS(TraceServiceServicer):
 
 
 class TestOTLPSpanExporter(TestCase):
+    # pylint: disable=too-many-public-methods
+
     def setUp(self):
         tracer_provider = TracerProvider()
         self.exporter = OTLPSpanExporter(insecure=True)
@@ -131,7 +134,7 @@ class TestOTLPSpanExporter(TestCase):
 
         self.server = server(ThreadPoolExecutor(max_workers=10))
 
-        self.server.add_insecure_port("[::]:4317")
+        self.server.add_insecure_port("127.0.0.1:4317")
 
         self.server.start()
 
@@ -289,6 +292,22 @@ class TestOTLPSpanExporter(TestCase):
             exporter._headers, (("key5", "value5"), ("key6", "value6"))
         )
 
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_TRACES_INSECURE: "True"},
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    # pylint: disable=unused-argument
+    def test_otlp_insecure_from_env(self, mock_insecure):
+        OTLPSpanExporter()
+        # pylint: disable=protected-access
+        self.assertTrue(mock_insecure.called)
+        self.assertEqual(
+            1,
+            mock_insecure.call_count,
+            f"expected {mock_insecure} to be called",
+        )
+
     # pylint: disable=no-self-use
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
@@ -304,10 +323,30 @@ class TestOTLPSpanExporter(TestCase):
             (
                 "localhost:4317",
                 None,
+                mock_secure,
+            ),
+            (
+                "http://localhost:4317",
+                True,
                 mock_insecure,
             ),
             (
                 "localhost:4317",
+                True,
+                mock_insecure,
+            ),
+            (
+                "http://localhost:4317",
+                False,
+                mock_secure,
+            ),
+            (
+                "localhost:4317",
+                False,
+                mock_secure,
+            ),
+            (
+                "https://localhost:4317",
                 False,
                 mock_secure,
             ),
@@ -319,7 +358,7 @@ class TestOTLPSpanExporter(TestCase):
             (
                 "https://localhost:4317",
                 True,
-                mock_insecure,
+                mock_secure,
             ),
         ]
         for endpoint, insecure, mock_method in endpoints:

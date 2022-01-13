@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Decode URL-encoded headers in environment variables
   ([#2312](https://github.com/open-telemetry/opentelemetry-python/pull/2312))
+- [exporter/opentelemetry-exporter-otlp-proto-grpc] Add OTLPMetricExporter
+  ([#2323](https://github.com/open-telemetry/opentelemetry-python/pull/2323))
+- Complete metric exporter format and update OTLP exporter
+  ([#2364](https://github.com/open-telemetry/opentelemetry-python/pull/2364))
 
 ## [1.8.0-0.27b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.8.0-0.27b0) - 2021-12-17
 
@@ -25,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2334](https://github.com/open-telemetry/opentelemetry-python/pull/2334))
 - Add otlp entrypoint for log exporter
   ([#2322](https://github.com/open-telemetry/opentelemetry-python/pull/2322))
+- Support insecure configuration for OTLP gRPC exporter
+  ([#2350](https://github.com/open-telemetry/opentelemetry-python/pull/2350))
 
 ## [1.7.1-0.26b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.7.0-0.26b0) - 2021-11-11
 
