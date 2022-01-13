@@ -13,4 +13,17 @@
 # limitations under the License.
 
 # metrics.py
-# TODO
+# This is still work in progress as the metrics SDK is being implemented
+
+from opentelemetry._metrics import get_meter_provider, set_meter_provider
+from opentelemetry.sdk._metrics import MeterProvider
+from opentelemetry.sdk._metrics.export import ConsoleMetricExporter
+
+provider = MeterProvider()
+exporter = ConsoleMetricExporter()
+# TODO: fill in details for metric reader
+set_meter_provider(provider)
+
+meter = get_meter_provider().get_meter("getting-started")
+counter = meter.create_counter("first_counter")
+# TODO: fill in details for additional metrics
