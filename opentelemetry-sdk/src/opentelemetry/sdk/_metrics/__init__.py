@@ -228,6 +228,6 @@ class MeterProvider(APIMeterProvider):
             if not self._meters.get(info):
                 self._meters[info] = Meter(
                     InstrumentationInfo(name, version, schema_url),
-                    self._measurement_consumer
+                    self._measurement_consumer,
                 )
             return self._meters[info]
