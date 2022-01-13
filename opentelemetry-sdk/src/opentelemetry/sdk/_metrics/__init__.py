@@ -104,11 +104,13 @@ class MeterProvider(APIMeterProvider):
         shutdown_on_exit: bool = True,
     ):
         self._lock = Lock()
+        self._meter_lock = Lock()
         self._atexit_handler = None
 
         if shutdown_on_exit:
             self._atexit_handler = register(self.shutdown)
 
+        self._meters = {}
         self._metric_readers = metric_readers
 
         for metric_reader in self._metric_readers:
@@ -169,4 +171,8 @@ class MeterProvider(APIMeterProvider):
             )
             return _DefaultMeter(name, version=version, schema_url=schema_url)
 
-        return Meter(InstrumentationInfo(name, version, schema_url), self)
+        with self._meter_lock:
+            info = InstrumentationInfo(name, version, schema_url)
+            if not self._meters.get(info):
+                self._meters[info] = Meter(InstrumentationInfo(name, version, schema_url), self)
+            return self._meters[info]
