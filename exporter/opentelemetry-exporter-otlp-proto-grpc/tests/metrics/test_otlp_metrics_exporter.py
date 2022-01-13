@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from unittest import TestCase
 from unittest.mock import patch
@@ -20,15 +21,34 @@ from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import StatusCode, server
 
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.exporter.otlp.proto.grpc._metric_exporter import (
     OTLPMetricExporter,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
+    ExportMetricsServiceRequest,
     ExportMetricsServiceResponse,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
     MetricsServiceServicer,
     add_MetricsServiceServicer_to_server,
+)
+from opentelemetry.proto.common.v1.common_pb2 import (
+    AnyValue,
+    InstrumentationLibrary,
+    KeyValue,
+)
+from opentelemetry.proto.metrics.v1.metrics_pb2 import (
+    InstrumentationLibraryMetrics,
+)
+from opentelemetry.proto.metrics.v1.metrics_pb2 import Metric as OTLPMetric
+from opentelemetry.proto.metrics.v1.metrics_pb2 import (
+    NumberDataPoint as OTLPNumberDataPoint,
+)
+from opentelemetry.proto.metrics.v1.metrics_pb2 import ResourceMetrics
+from opentelemetry.proto.metrics.v1.metrics_pb2 import Sum as OTLPSum
+from opentelemetry.proto.resource.v1.resource_pb2 import (
+    Resource as OTLPResource,
 )
 from opentelemetry.sdk._metrics.export import MetricExportResult
 from opentelemetry.sdk._metrics.point import (
@@ -89,6 +109,33 @@ class MetricsServiceServicerALREADY_EXISTS(MetricsServiceServicer):
         return ExportMetricsServiceResponse()
 
 
+def _generate_metric(name, point) -> Metric:
+    return Metric(
+        resource=SDKResource(OrderedDict([("a", 1), ("b", False)])),
+        instrumentation_info=InstrumentationInfo(
+            "first_name", "first_version"
+        ),
+        attributes=BoundedAttributes(attributes={"a": 1, "b": True}),
+        description="foo",
+        name=name,
+        unit="s",
+        point=point,
+    )
+
+
+def _generate_sum(name, val) -> Sum:
+    return _generate_metric(
+        name,
+        Sum(
+            aggregation_temporality=AggregationTemporality.CUMULATIVE,
+            is_monotonic=True,
+            start_time_unix_nano=1641946015139533244,
+            time_unix_nano=1641946016139533244,
+            value=val,
+        ),
+    )
+
+
 class TestOTLPMetricExporter(TestCase):
     def setUp(self):
 
@@ -100,23 +147,10 @@ class TestOTLPMetricExporter(TestCase):
 
         self.server.start()
 
-        self.metric_data_1 = Metric(
-            resource=SDKResource({"key": "value"}),
-            instrumentation_info=InstrumentationInfo(
-                "first_name", "first_version"
-            ),
-            attributes={},
-            description="foo",
-            name="foometric",
-            unit="s",
-            point=Sum(
-                aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                is_monotonic=True,
-                start_time_unix_nano=1641946015139533244,
-                time_unix_nano=1641946016139533244,
-                value=33,
-            ),
-        )
+        self.metrics = {
+            "sum_int": _generate_sum("sum_int", 33),
+            "sum_float": _generate_sum("sum_float", 2.98),
+        }
 
     def tearDown(self):
         self.server.stop(None)
@@ -232,7 +266,7 @@ class TestOTLPMetricExporter(TestCase):
             MetricsServiceServicerUNAVAILABLE(), self.server
         )
         self.assertEqual(
-            self.exporter.export([self.metric_data_1]),
+            self.exporter.export([self.metrics["sum_int"]]),
             MetricExportResult.FAILURE,
         )
         mock_sleep.assert_called_with(1)
@@ -247,7 +281,7 @@ class TestOTLPMetricExporter(TestCase):
             MetricsServiceServicerUNAVAILABLEDelay(), self.server
         )
         self.assertEqual(
-            self.exporter.export([self.metric_data_1]),
+            self.exporter.export([self.metrics["sum_int"]]),
             MetricExportResult.FAILURE,
         )
         mock_sleep.assert_called_with(4)
@@ -257,7 +291,7 @@ class TestOTLPMetricExporter(TestCase):
             MetricsServiceServicerSUCCESS(), self.server
         )
         self.assertEqual(
-            self.exporter.export([self.metric_data_1]),
+            self.exporter.export([self.metrics["sum_int"]]),
             MetricExportResult.SUCCESS,
         )
 
@@ -266,6 +300,120 @@ class TestOTLPMetricExporter(TestCase):
             MetricsServiceServicerALREADY_EXISTS(), self.server
         )
         self.assertEqual(
-            self.exporter.export([self.metric_data_1]),
+            self.exporter.export([self.metrics["sum_int"]]),
             MetricExportResult.FAILURE,
         )
+
+    def test_translate_sum_int(self):
+        expected = ExportMetricsServiceRequest(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=OTLPResource(
+                        attributes=[
+                            KeyValue(key="a", value=AnyValue(int_value=1)),
+                            KeyValue(
+                                key="b", value=AnyValue(bool_value=False)
+                            ),
+                        ]
+                    ),
+                    instrumentation_library_metrics=[
+                        InstrumentationLibraryMetrics(
+                            instrumentation_library=InstrumentationLibrary(
+                                name="first_name", version="first_version"
+                            ),
+                            metrics=[
+                                OTLPMetric(
+                                    name="sum_int",
+                                    unit="s",
+                                    description="foo",
+                                    sum=OTLPSum(
+                                        data_points=[
+                                            OTLPNumberDataPoint(
+                                                attributes=[
+                                                    KeyValue(
+                                                        key="a",
+                                                        value=AnyValue(
+                                                            int_value=1
+                                                        ),
+                                                    ),
+                                                    KeyValue(
+                                                        key="b",
+                                                        value=AnyValue(
+                                                            bool_value=True
+                                                        ),
+                                                    ),
+                                                ],
+                                                start_time_unix_nano=1641946015139533244,
+                                                time_unix_nano=1641946016139533244,
+                                                as_int=33,
+                                            )
+                                        ],
+                                        aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                                        is_monotonic=True,
+                                    ),
+                                )
+                            ],
+                        )
+                    ],
+                )
+            ]
+        )
+        actual = self.exporter._translate_data([self.metrics["sum_int"]])
+        self.assertEqual(expected, actual)
+
+    def test_translate_sum_float(self):
+        expected = ExportMetricsServiceRequest(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=OTLPResource(
+                        attributes=[
+                            KeyValue(key="a", value=AnyValue(int_value=1)),
+                            KeyValue(
+                                key="b", value=AnyValue(bool_value=False)
+                            ),
+                        ]
+                    ),
+                    instrumentation_library_metrics=[
+                        InstrumentationLibraryMetrics(
+                            instrumentation_library=InstrumentationLibrary(
+                                name="first_name", version="first_version"
+                            ),
+                            metrics=[
+                                OTLPMetric(
+                                    name="sum_float",
+                                    unit="s",
+                                    description="foo",
+                                    sum=OTLPSum(
+                                        data_points=[
+                                            OTLPNumberDataPoint(
+                                                attributes=[
+                                                    KeyValue(
+                                                        key="a",
+                                                        value=AnyValue(
+                                                            int_value=1
+                                                        ),
+                                                    ),
+                                                    KeyValue(
+                                                        key="b",
+                                                        value=AnyValue(
+                                                            bool_value=True
+                                                        ),
+                                                    ),
+                                                ],
+                                                start_time_unix_nano=1641946015139533244,
+                                                time_unix_nano=1641946016139533244,
+                                                as_double=2.98,
+                                            )
+                                        ],
+                                        aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                                        is_monotonic=True,
+                                    ),
+                                )
+                            ],
+                        )
+                    ],
+                )
+            ]
+        )
+        actual = self.exporter._translate_data([self.metrics["sum_float"]])
+        self.assertEqual(expected, actual)

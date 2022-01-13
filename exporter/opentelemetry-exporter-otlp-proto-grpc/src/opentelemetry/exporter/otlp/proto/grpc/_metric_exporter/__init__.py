@@ -12,6 +12,7 @@
 # limitations under the License.
 
 from os import environ
+from time import monotonic
 from typing import Optional, Sequence
 from grpc import ChannelCredentials, Compression
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
@@ -29,12 +30,19 @@ from opentelemetry.proto.metrics.v1.metrics_pb2 import (
     InstrumentationLibraryMetrics,
     ResourceMetrics,
 )
-from opentelemetry.proto.metrics.v1.metrics_pb2 import Metric as PB2Metric
+from opentelemetry.proto.metrics.v1.metrics_pb2 import NumberDataPoint as OTLPNumberDataPoint
+from opentelemetry.proto.metrics.v1.metrics_pb2 import Gauge as OTLPGauge
+from opentelemetry.proto.metrics.v1.metrics_pb2 import Histogram as OTLPHistogram
+from opentelemetry.proto.metrics.v1.metrics_pb2 import Metric as OTLPMetric
+from opentelemetry.proto.metrics.v1.metrics_pb2 import Sum as OTLPSum
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
 )
 from opentelemetry.sdk._metrics.point import (
+    Gauge,
+    Histogram,
     Metric,
+    Sum,
 )
 
 from opentelemetry.sdk._metrics.export import (
@@ -80,7 +88,7 @@ class OTLPMetricExporter(
         self, data: Sequence[Metric]
     ) -> ExportMetricsServiceRequest:
         sdk_resource_instrumentation_library_metrics = {}
-        self._collector_metric_kwargs = {}
+        self._collector_kwargs = {}
 
         for metric in data:
             resource = metric.resource
@@ -114,9 +122,43 @@ class OTLPMetricExporter(
             instrumentation_library_metrics = instrumentation_library_map.get(
                 metric.instrumentation_info
             )
+            
+            # translate all data points for that metric
+            self._collector_kwargs["name"] = metric.name
+            self._collector_kwargs["description"] = metric.description
+            self._collector_kwargs["unit"] = metric.unit
+            if isinstance(metric.point, Gauge):
+                # TODO: implement
+                self._collector_kwargs["gauge"] = OTLPGauge(
+                    data_points=[],
+                )
+            elif isinstance(metric.point, Histogram):
+                # TODO: implement
+                self._collector_kwargs["histogram"] = OTLPHistogram(
+                    data_points=[],
+                )
+            elif isinstance(metric.point, Sum):
+                args = {
+                    "attributes":self._translate_attributes(metric.attributes),
+                    "start_time_unix_nano":metric.point.start_time_unix_nano,
+                    "time_unix_nano":metric.point.time_unix_nano,
+                }
+                if isinstance( metric.point.value, int):
+                    args["as_int"] = metric.point.value
+                else:
+                    args["as_double"] = metric.point.value
+                pt = OTLPNumberDataPoint(**args)
+                self._collector_kwargs["sum"] = OTLPSum(
+                    aggregation_temporality=metric.point.aggregation_temporality,
+                    is_monotonic=metric.point.is_monotonic,
+                    data_points=[pt],
+                )
+            else:
+                # TODO: what to do with unsupported types? skip or skip and log?
+                continue
 
             instrumentation_library_metrics.metrics.append(
-                PB2Metric(**self._collector_metric_kwargs)
+                OTLPMetric(**self._collector_kwargs),
             )
         return ExportMetricsServiceRequest(
             resource_metrics=get_resource_data(

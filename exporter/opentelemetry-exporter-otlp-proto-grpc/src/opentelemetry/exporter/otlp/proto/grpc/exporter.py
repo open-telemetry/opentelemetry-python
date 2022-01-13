@@ -271,18 +271,18 @@ class OTLPExporterMixin(
         pass
 
     def _translate_attributes(self, attributes) -> None:
+        output = []
         if attributes:
 
-            self._collector_kwargs["attributes"] = []
-
             for key, value in attributes.items():
-
                 try:
-                    self._collector_kwargs["attributes"].append(
+                    output.append(
                         _translate_key_values(key, value)
                     )
                 except Exception as error:  # pylint: disable=broad-except
                     logger.exception(error)
+        return output
+
 
     def _export(self, data: TypingSequence[SDKDataT]) -> ExportResultT:
 

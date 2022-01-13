@@ -147,7 +147,7 @@ class OTLPLogExporter(
             self._translate_trace_flags(log_data)
             self._translate_body(log_data)
             self._translate_severity_text(log_data)
-            self._translate_attributes(log_data.log_record.attributes)
+            self._collector_kwargs["attributes"] = self._translate_attributes(log_data.log_record.attributes)
 
             self._collector_kwargs[
                 "severity_number"
