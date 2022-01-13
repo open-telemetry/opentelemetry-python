@@ -12,15 +12,21 @@ Start the Collector locally to see data being exported. Write the following file
 
     # otel-collector-config.yaml
     receivers:
-        otlp:
-            protocols:
-                grpc:
-  
+    otlp:
+        protocols:
+        grpc:
+
     exporters:
-        logging:
-  
+    logging:
+
     processors:
-        batch:
+    batch:
+
+    service:
+        pipelines:
+            logs:
+                receivers: [otlp]
+                exporters: [logging]
   
 Then start the Docker container:
 
@@ -39,42 +45,37 @@ The resulting logs will appear in the output from the collector and look similar
 
 .. code-block:: sh
 
-        ResourceLog #0
+        Resource SchemaURL: 
         Resource labels:
-             -> telemetry.sdk.language: STRING(python)
-             -> telemetry.sdk.name: STRING(opentelemetry)
-             -> telemetry.sdk.version: STRING(1.5.0.dev0)
-             -> service.name: STRING(unknown_service)
+            -> telemetry.sdk.language: STRING(python)
+            -> telemetry.sdk.name: STRING(opentelemetry)
+            -> telemetry.sdk.version: STRING(1.8.0)
+            -> service.name: STRING(shoppingcart)
+            -> service.instance.id: STRING(instance-12)
         InstrumentationLibraryLogs #0
+        InstrumentationLibraryMetrics SchemaURL: 
         InstrumentationLibrary __main__ 0.1
         LogRecord #0
-        Timestamp: 2021-08-18 08:26:53.837349888 +0000 UTC
+        Timestamp: 2022-01-13 20:37:03.998733056 +0000 UTC
+        Severity: WARNING
+        ShortName: 
+        Body: Jail zesty vixen who grabbed pay from quack.
+        Trace ID: 
+        Span ID: 
+        Flags: 0
+        LogRecord #1
+        Timestamp: 2022-01-13 20:37:04.082757888 +0000 UTC
         Severity: ERROR
-        ShortName:
-        Body: Exception while exporting logs.
-        ResourceLog #1
-        Resource labels:
-             -> telemetry.sdk.language: STRING(python)
-             -> telemetry.sdk.name: STRING(opentelemetry)
-             -> telemetry.sdk.version: STRING(1.5.0.dev0)
-             -> service.name: STRING(unknown_service)
-        InstrumentationLibraryLogs #0
-        InstrumentationLibrary __main__ 0.1
-        LogRecord #0
-        Timestamp: 2021-08-18 08:26:53.842546944 +0000 UTC
-        Severity: ERROR
-        ShortName:
+        ShortName: 
         Body: The five boxing wizards jump quickly.
-        ResourceLog #2
-        Resource labels:
-             -> telemetry.sdk.language: STRING(python)
-             -> telemetry.sdk.name: STRING(opentelemetry)
-             -> telemetry.sdk.version: STRING(1.5.0.dev0)
-             -> service.name: STRING(unknown_service)
-        InstrumentationLibraryLogs #0
-        InstrumentationLibrary __main__ 0.1
-        LogRecord #0
-        Timestamp: 2021-08-18 08:26:53.843979008 +0000 UTC
+        Trace ID: 
+        Span ID: 
+        Flags: 0
+        LogRecord #2
+        Timestamp: 2022-01-13 20:37:04.082979072 +0000 UTC
         Severity: ERROR
-        ShortName:
+        ShortName: 
         Body: Hyderabad, we have a major problem.
+        Trace ID: 63491217958f126f727622e41d4460f3
+        Span ID: d90c57d6e1ca4f6c
+        Flags: 1
