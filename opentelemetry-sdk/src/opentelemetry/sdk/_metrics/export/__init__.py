@@ -32,6 +32,7 @@ from opentelemetry.sdk._metrics.point import Metric
 
 _logger = logging.getLogger(__name__)
 
+
 class MetricExportResult(Enum):
     SUCCESS = 0
     FAILURE = 1
@@ -70,6 +71,7 @@ class ConsoleMetricExporter(MetricExporter):
     This class can be used for diagnostic purposes. It prints the exported
     metrics to the console STDOUT.
     """
+
     def __init__(
         self,
         out: IO = stdout,
@@ -87,6 +89,7 @@ class ConsoleMetricExporter(MetricExporter):
 
     def shutdown(self) -> None:
         pass
+
 
 class PeriodicExportingMetricReader(MetricReader):
     """`PeriodicExportingMetricReader` is an implementation of `MetricReader`
