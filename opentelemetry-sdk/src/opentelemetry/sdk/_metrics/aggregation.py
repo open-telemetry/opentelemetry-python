@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from collections import OrderedDict
+from bisect import bisect_left
 from logging import getLogger
 from math import inf
 from threading import Lock
@@ -156,13 +156,14 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
         record_min_max: bool = True,
     ):
         super().__init__()
-        self._value = OrderedDict([(key, 0) for key in (*boundaries, inf)])
+        # pylint: disable=unnecessary-comprehension
+        self._boundaries = [boundary for boundary in (*boundaries, inf)]
+        self.value = [0 for _ in range(len(self._boundaries))]
         self._min = inf
         self._max = -inf
         self._sum = 0
         self._record_min_max = record_min_max
         self._start_time_unix_nano = _time_ns()
-        self._boundaries = boundaries
 
     def aggregate(self, measurement: Measurement) -> None:
 
@@ -174,12 +175,7 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
 
         self._sum += value
 
-        for key in self._value.keys():
-
-            if value < key:
-                self._value[key] = self._value[key] + 1
-
-                break
+        self.value[bisect_left(self._boundaries, value)] += 1
 
     def collect(self) -> Optional[Histogram]:
         """
@@ -188,18 +184,16 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
         now = _time_ns()
 
         with self._lock:
-            value = self._value
+            value = self.value
             start_time_unix_nano = self._start_time_unix_nano
 
-            self._value = OrderedDict(
-                [(key, 0) for key in (*self._boundaries, inf)]
-            )
+            self.value = [0 for _ in range(len(self._boundaries))]
             self._start_time_unix_nano = now + 1
 
         return Histogram(
             start_time_unix_nano=start_time_unix_nano,
             time_unix_nano=now,
-            bucket_counts=tuple(value.values()),
+            bucket_counts=tuple(value),
             explicit_bounds=self._boundaries,
             aggregation_temporality=AggregationTemporality.DELTA,
         )
