@@ -8,3 +8,9 @@ exporters:
 
 processors:
   batch:
+
+service:
+    pipelines:
+        logs:
+            receivers: [otlp]
+            exporters: [logging]
