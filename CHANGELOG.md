@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2323](https://github.com/open-telemetry/opentelemetry-python/pull/2323))
 - Complete metric exporter format and update OTLP exporter
   ([#2364](https://github.com/open-telemetry/opentelemetry-python/pull/2364))
+- [exporter/opentelemetry-exporter-otlp-proto-grpc] Add Sum to OTLPMetricExporter
+  ([#2370](https://github.com/open-telemetry/opentelemetry-python/pull/2370))
 
 ## [1.8.0-0.27b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.8.0-0.27b0) - 2021-12-17
 
