@@ -216,7 +216,8 @@ class TracerProvider(ABC):
             schema_url: Optional. Specifies the Schema URL of the emitted telemetry.
         """
 
-class _NoOpTracerProvider(TracerProvider):
+
+class NoOpTracerProvider(TracerProvider):
     """The default TracerProvider, used when no implementation is available.
 
     All operations are no-op.
@@ -229,14 +230,16 @@ class _NoOpTracerProvider(TracerProvider):
         schema_url: typing.Optional[str] = None,
     ) -> "Tracer":
         # pylint:disable=no-self-use,unused-argument
-        return _NoOpTracer()
+        return NoOpTracer()
 
-@deprecated(version="1.9.0", reason="You should use _NoOpTracerProvider")  # type: ignore
-class _DefaultTracerProvider(_NoOpTracerProvider):
+
+@deprecated(version="1.9.0", reason="You should use NoOpTracerProvider")  # type: ignore
+class _DefaultTracerProvider(NoOpTracerProvider):
     """The default TracerProvider, used when no implementation is available.
 
     All operations are no-op.
     """
+
 
 class ProxyTracerProvider(TracerProvider):
     def get_tracer(
@@ -399,7 +402,7 @@ class ProxyTracer(Tracer):
         self._instrumenting_library_version = instrumenting_library_version
         self._schema_url = schema_url
         self._real_tracer: Optional[Tracer] = None
-        self._noop_tracer = _NoOpTracer()
+        self._noop_tracer = NoOpTracer()
 
     @property
     def _tracer(self) -> Tracer:
@@ -422,7 +425,7 @@ class ProxyTracer(Tracer):
         return self._tracer.start_as_current_span(*args, **kwargs)  # type: ignore
 
 
-class _NoOpTracer(Tracer):
+class NoOpTracer(Tracer):
     """The default Tracer, used when no Tracer implementation is available.
 
     All operations are no-op.
@@ -459,12 +462,13 @@ class _NoOpTracer(Tracer):
         yield INVALID_SPAN
 
 
-@deprecated(version="1.9.0", reason="You should use _NoOpTracer")  # type: ignore
-class _DefaultTracer(_NoOpTracer):
+@deprecated(version="1.9.0", reason="You should use NoOpTracer")  # type: ignore
+class _DefaultTracer(NoOpTracer):
     """The default Tracer, used when no Tracer implementation is available.
 
     All operations are no-op.
     """
+
 
 _TRACER_PROVIDER_SET_ONCE = Once()
 _TRACER_PROVIDER: Optional[TracerProvider] = None

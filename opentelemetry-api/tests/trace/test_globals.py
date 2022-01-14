@@ -83,11 +83,10 @@ class TestGlobalsConcurrency(TraceGlobalsTest, ConcurrencyTestBase):
 
 class TestTracer(unittest.TestCase):
     def setUp(self):
-        # pylint: disable=protected-access
-        self.tracer = trace._NoOpTracer()
+        self.tracer = trace.NoOpTracer()
 
     def test_get_current_span(self):
-        """_NoOpTracer's start_span will also
+        """NoOpTracer's start_span will also
         be retrievable via get_current_span
         """
         self.assertEqual(trace.get_current_span(), trace.INVALID_SPAN)
