@@ -85,8 +85,8 @@ class TestMeterProvider(TestCase):
             version="version",
             schema_url="schema_url",
         )
-        self.assertEqual(meter1, meter2)
-        self.assertNotEqual(meter1, meter3)
+        self.assertIs(meter1, meter2)
+        self.assertIsNot(meter1, meter3)
 
     def test_shutdown_subsequent_calls(self):
         """

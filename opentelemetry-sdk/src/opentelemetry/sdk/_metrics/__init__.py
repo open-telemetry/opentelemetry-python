@@ -223,11 +223,11 @@ class MeterProvider(APIMeterProvider):
             )
             return _DefaultMeter(name, version=version, schema_url=schema_url)
 
+        info = InstrumentationInfo(name, version, schema_url)
         with self._meter_lock:
-            info = InstrumentationInfo(name, version, schema_url)
             if not self._meters.get(info):
                 self._meters[info] = Meter(
-                    InstrumentationInfo(name, version, schema_url),
+                    info,
                     self._measurement_consumer,
                 )
             return self._meters[info]
