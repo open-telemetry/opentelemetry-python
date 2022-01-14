@@ -270,7 +270,7 @@ class OTLPExporterMixin(
     ) -> ExportServiceRequestT:
         pass
 
-    def _translate_attributes(self, attributes) -> None:
+    def _translate_attributes(self, attributes) -> TypingSequence[KeyValue]:
         output = []
         if attributes:
 

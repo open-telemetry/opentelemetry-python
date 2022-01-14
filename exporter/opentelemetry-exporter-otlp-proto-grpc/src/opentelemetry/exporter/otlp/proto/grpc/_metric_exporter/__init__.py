@@ -11,8 +11,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 from os import environ
-from time import monotonic
 from typing import Optional, Sequence
 from grpc import ChannelCredentials, Compression
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
@@ -49,6 +49,8 @@ from opentelemetry.sdk._metrics.export import (
     MetricExporter,
     MetricExportResult,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class OTLPMetricExporter(
@@ -128,33 +130,33 @@ class OTLPMetricExporter(
             self._collector_kwargs["description"] = metric.description
             self._collector_kwargs["unit"] = metric.unit
             if isinstance(metric.point, Gauge):
-                # TODO: implement
+                # TODO: implement gauge
                 self._collector_kwargs["gauge"] = OTLPGauge(
                     data_points=[],
                 )
             elif isinstance(metric.point, Histogram):
-                # TODO: implement
+                # TODO: implement histogram
                 self._collector_kwargs["histogram"] = OTLPHistogram(
                     data_points=[],
                 )
             elif isinstance(metric.point, Sum):
-                args = {
-                    "attributes":self._translate_attributes(metric.attributes),
-                    "start_time_unix_nano":metric.point.start_time_unix_nano,
-                    "time_unix_nano":metric.point.time_unix_nano,
-                }
-                if isinstance( metric.point.value, int):
-                    args["as_int"] = metric.point.value
+                pt = OTLPNumberDataPoint(
+                    attributes=self._translate_attributes(metric.attributes),
+                    start_time_unix_nano=metric.point.start_time_unix_nano,
+                    time_unix_nano=metric.point.time_unix_nano,
+                )
+                if isinstance(metric.point.value, int):
+                    pt.as_int = metric.point.value
                 else:
-                    args["as_double"] = metric.point.value
-                pt = OTLPNumberDataPoint(**args)
+                    pt.as_double = metric.point.value
+                
                 self._collector_kwargs["sum"] = OTLPSum(
                     aggregation_temporality=metric.point.aggregation_temporality,
                     is_monotonic=metric.point.is_monotonic,
                     data_points=[pt],
                 )
             else:
-                # TODO: what to do with unsupported types? skip or skip and log?
+                logger.warn("unsupported datapoint type %s", metric.point)
                 continue
 
             instrumentation_library_metrics.metrics.append(
