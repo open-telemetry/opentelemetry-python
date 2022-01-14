@@ -78,10 +78,11 @@ import os
 import typing
 from abc import ABC, abstractmethod
 from contextlib import contextmanager
-from deprecated import deprecated
 from enum import Enum
 from logging import getLogger
 from typing import Iterator, Optional, Sequence, cast
+
+from deprecated import deprecated
 
 from opentelemetry import context as context_api
 from opentelemetry.attributes import BoundedAttributes  # type: ignore
