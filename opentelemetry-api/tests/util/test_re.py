@@ -16,11 +16,11 @@
 
 import unittest
 
-from opentelemetry.util.re import parse_headers
+from opentelemetry.util.re import parse_env_headers
 
 
 class TestParseHeaders(unittest.TestCase):
-    def test_parse_headers(self):
+    def test_parse_env_headers(self):
         inp = [
             # invalid header name
             ("=value", [], True),
@@ -63,10 +63,12 @@ class TestParseHeaders(unittest.TestCase):
             s, expected, warn = case
             if warn:
                 with self.assertLogs(level="WARNING") as cm:
-                    self.assertEqual(parse_headers(s), dict(expected))
+                    self.assertEqual(parse_env_headers(s), dict(expected))
                     self.assertTrue(
-                        "Header doesn't match the format:"
+                        "Header format invalid! Header values in environment "
+                        "variables must be URL encoded per the OpenTelemetry "
+                        "Protocol Exporter specification:"
                         in cm.records[0].message,
                     )
             else:
-                self.assertEqual(parse_headers(s), dict(expected))
+                self.assertEqual(parse_env_headers(s), dict(expected))
