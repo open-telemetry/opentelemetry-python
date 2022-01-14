@@ -1,5 +1,3 @@
-#!/bin/env python3
-
 from opentelemetry._metrics import set_meter_provider, get_meter_provider
 from opentelemetry.exporter.otlp.proto.grpc._metric_exporter import (
     OTLPMetricExporter,
