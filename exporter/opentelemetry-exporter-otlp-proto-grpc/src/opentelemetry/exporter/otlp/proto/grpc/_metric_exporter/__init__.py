@@ -26,15 +26,7 @@ from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
     MetricsServiceStub,
 )
 from opentelemetry.proto.common.v1.common_pb2 import InstrumentationLibrary
-from opentelemetry.proto.metrics.v1.metrics_pb2 import (
-    InstrumentationLibraryMetrics,
-    ResourceMetrics,
-)
-from opentelemetry.proto.metrics.v1.metrics_pb2 import NumberDataPoint as OTLPNumberDataPoint
-from opentelemetry.proto.metrics.v1.metrics_pb2 import Gauge as OTLPGauge
-from opentelemetry.proto.metrics.v1.metrics_pb2 import Histogram as OTLPHistogram
-from opentelemetry.proto.metrics.v1.metrics_pb2 import Metric as OTLPMetric
-from opentelemetry.proto.metrics.v1.metrics_pb2 import Sum as OTLPSum
+from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
 )
@@ -110,7 +102,7 @@ class OTLPMetricExporter(
                 if metric.instrumentation_info is not None:
                     instrumentation_library_map[
                         metric.instrumentation_info
-                    ] = InstrumentationLibraryMetrics(
+                    ] = pb2.InstrumentationLibraryMetrics(
                         instrumentation_library=InstrumentationLibrary(
                             name=metric.instrumentation_info.name,
                             version=metric.instrumentation_info.version,
@@ -119,7 +111,7 @@ class OTLPMetricExporter(
                 else:
                     instrumentation_library_map[
                         metric.instrumentation_info
-                    ] = InstrumentationLibraryMetrics()
+                    ] = pb2.InstrumentationLibraryMetrics()
 
             instrumentation_library_metrics = instrumentation_library_map.get(
                 metric.instrumentation_info
@@ -131,16 +123,16 @@ class OTLPMetricExporter(
             self._collector_kwargs["unit"] = metric.unit
             if isinstance(metric.point, Gauge):
                 # TODO: implement gauge
-                self._collector_kwargs["gauge"] = OTLPGauge(
+                self._collector_kwargs["gauge"] = pb2.Gauge(
                     data_points=[],
                 )
             elif isinstance(metric.point, Histogram):
                 # TODO: implement histogram
-                self._collector_kwargs["histogram"] = OTLPHistogram(
+                self._collector_kwargs["histogram"] = pb2.Histogram(
                     data_points=[],
                 )
             elif isinstance(metric.point, Sum):
-                pt = OTLPNumberDataPoint(
+                pt = pb2.NumberDataPoint(
                     attributes=self._translate_attributes(metric.attributes),
                     start_time_unix_nano=metric.point.start_time_unix_nano,
                     time_unix_nano=metric.point.time_unix_nano,
@@ -150,7 +142,7 @@ class OTLPMetricExporter(
                 else:
                     pt.as_double = metric.point.value
                 
-                self._collector_kwargs["sum"] = OTLPSum(
+                self._collector_kwargs["sum"] = pb2.Sum(
                     aggregation_temporality=metric.point.aggregation_temporality,
                     is_monotonic=metric.point.is_monotonic,
                     data_points=[pt],
@@ -160,12 +152,12 @@ class OTLPMetricExporter(
                 continue
 
             instrumentation_library_metrics.metrics.append(
-                OTLPMetric(**self._collector_kwargs),
+                pb2.Metric(**self._collector_kwargs),
             )
         return ExportMetricsServiceRequest(
             resource_metrics=get_resource_data(
                 sdk_resource_instrumentation_library_metrics,
-                ResourceMetrics,
+                pb2.ResourceMetrics,
                 "metrics",
             )
         )
