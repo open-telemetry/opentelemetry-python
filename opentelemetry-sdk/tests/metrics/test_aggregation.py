@@ -216,24 +216,32 @@ class TestLastValueAggregation(TestCase):
 class TestExplicitBucketHistogramAggregation(TestCase):
     def test_aggregate(self):
         """
-        `ExplicitBucketHistogramAggregation` collects data for
-        explicit bucket histogram metric points
+        Test `ExplicitBucketHistogramAggregation with custom boundaries
         """
 
         explicit_bucket_histogram_aggregation = (
-            ExplicitBucketHistogramAggregation()
+            ExplicitBucketHistogramAggregation(boundaries=[0, 2, 4])
         )
 
         explicit_bucket_histogram_aggregation.aggregate(Measurement(-1))
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(0))
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(1))
         explicit_bucket_histogram_aggregation.aggregate(Measurement(2))
-        explicit_bucket_histogram_aggregation.aggregate(Measurement(7))
-        explicit_bucket_histogram_aggregation.aggregate(Measurement(8))
-        explicit_bucket_histogram_aggregation.aggregate(Measurement(9999))
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(3))
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(4))
+        explicit_bucket_histogram_aggregation.aggregate(Measurement(5))
 
-        self.assertEqual(explicit_bucket_histogram_aggregation.value[0], 1)
-        self.assertEqual(explicit_bucket_histogram_aggregation.value[5], 1)
-        self.assertEqual(explicit_bucket_histogram_aggregation.value[10], 2)
-        self.assertEqual(explicit_bucket_histogram_aggregation.value[inf], 1)
+        # The first bucket keeps count of values between (-inf, 0] (-1 and 0)
+        self.assertEqual(explicit_bucket_histogram_aggregation.value[0], 2)
+
+        # The second bucket keeps count of values between (0, 2] (1 and 2)
+        self.assertEqual(explicit_bucket_histogram_aggregation.value[1], 2)
+
+        # The third bucket keeps count of values between (2, 4] (3 and 4)
+        self.assertEqual(explicit_bucket_histogram_aggregation.value[2], 2)
+
+        # The fourth bucket keeps count of values between (4, inf) (3 and 4)
+        self.assertEqual(explicit_bucket_histogram_aggregation.value[3], 1)
 
     def test_min_max(self):
         """
@@ -273,15 +281,13 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         """
 
         explicit_bucket_histogram_aggregation = (
-            ExplicitBucketHistogramAggregation()
+            ExplicitBucketHistogramAggregation(boundaries=[0, 1, 2])
         )
 
         explicit_bucket_histogram_aggregation.aggregate(Measurement(1))
         first_histogram = explicit_bucket_histogram_aggregation.collect()
 
-        self.assertEqual(
-            first_histogram.bucket_counts, (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-        )
+        self.assertEqual(first_histogram.bucket_counts, (0, 1, 0, 0))
 
         # CI fails the last assertion without this
         sleep(0.1)
@@ -289,9 +295,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         explicit_bucket_histogram_aggregation.aggregate(Measurement(1))
         second_histogram = explicit_bucket_histogram_aggregation.collect()
 
-        self.assertEqual(
-            second_histogram.bucket_counts, (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0)
-        )
+        self.assertEqual(second_histogram.bucket_counts, (0, 1, 0, 0))
 
         self.assertGreater(
             second_histogram.time_unix_nano, first_histogram.time_unix_nano
