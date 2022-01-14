@@ -27,6 +27,7 @@ from opentelemetry.sdk._metrics.instrument import (
     UpDownCounter,
 )
 from opentelemetry.sdk._metrics.measurement_consumer import (
+    MeasurementConsumer,
     SynchronousMeasurementConsumer,
 )
 from opentelemetry.sdk.resources import Resource
@@ -47,6 +48,25 @@ class TestMeterProvider(TestCase):
 
         resource = Resource({"key": "value"})
         self.assertIs(MeterProvider(resource=resource)._resource, resource)
+
+    def test_meter_provider_measurement_consumer(self):
+        """
+        `MeterProvider` provides a way to allow a `MeasurementConsumer`
+        to be specified.
+        """
+
+        self.assertIsInstance(
+            MeterProvider()._measurement_consumer, MeasurementConsumer
+        )
+
+        measurement_consumer = Mock()
+
+        self.assertIs(
+            MeterProvider(
+                measurement_consumer=measurement_consumer
+            )._measurement_consumer,
+            measurement_consumer,
+        )
 
     def test_get_meter(self):
         """

@@ -152,11 +152,14 @@ class MeterProvider(APIMeterProvider):
         metric_readers: Sequence[MetricReader] = (),
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
+        measurement_consumer: MeasurementConsumer = (
+            SynchronousMeasurementConsumer()
+        ),
     ):
         self._lock = Lock()
         self._atexit_handler = None
 
-        self._measurement_consumer = SynchronousMeasurementConsumer()
+        self._measurement_consumer = measurement_consumer
 
         if shutdown_on_exit:
             self._atexit_handler = register(self.shutdown)

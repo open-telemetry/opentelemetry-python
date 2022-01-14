@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from unittest import TestCase
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from opentelemetry.sdk._metrics import MeterProvider
 from opentelemetry.sdk._metrics.measurement_consumer import (
@@ -29,20 +29,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
             SynchronousMeasurementConsumer(), MeasurementConsumer
         )
 
-    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
-    def test_measurement_consumer_class(
-        self, mock_serial_measurement_consumer
-    ):
-        MeterProvider()
+    def test_register_asynchronous_instrument(self):
 
-        mock_serial_measurement_consumer.assert_called()
-
-    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
-    def test_register_asynchronous_instrument(
-        self, mock_serial_measurement_consumer
-    ):
-
-        meter_provider = MeterProvider()
+        meter_provider = MeterProvider(measurement_consumer=Mock())
 
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
             meter_provider.get_meter("name").create_observable_counter(
@@ -60,24 +49,18 @@ class TestSynchronousMeasurementConsumer(TestCase):
             )
         )
 
-    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
-    def test_consume_measurement_counter(
-        self, mock_serial_measurement_consumer
-    ):
+    def test_consume_measurement_counter(self):
 
-        meter_provider = MeterProvider()
+        meter_provider = MeterProvider(measurement_consumer=Mock())
         counter = meter_provider.get_meter("name").create_counter("name")
 
         counter.add(1)
 
         meter_provider._measurement_consumer.consume_measurement.assert_called()
 
-    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
-    def test_consume_measurement_up_down_counter(
-        self, mock_serial_measurement_consumer
-    ):
+    def test_consume_measurement_up_down_counter(self):
 
-        meter_provider = MeterProvider()
+        meter_provider = MeterProvider(measurement_consumer=Mock())
         counter = meter_provider.get_meter("name").create_up_down_counter(
             "name"
         )
@@ -86,12 +69,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
 
         meter_provider._measurement_consumer.consume_measurement.assert_called()
 
-    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
-    def test_consume_measurement_histogram(
-        self, mock_serial_measurement_consumer
-    ):
+    def test_consume_measurement_histogram(self):
 
-        meter_provider = MeterProvider()
+        meter_provider = MeterProvider(measurement_consumer=Mock())
         counter = meter_provider.get_meter("name").create_histogram("name")
 
         counter.record(1)
