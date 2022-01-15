@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import replace
 from abc import ABC, abstractmethod
 from bisect import bisect_left
+from dataclasses import replace
 from logging import getLogger
 from math import inf
 from threading import Lock
@@ -209,7 +209,6 @@ def _convert_aggregation_temporality(
     aggregation_temporality: int,
 ) -> _PointVarT:
 
-    previous_point_type = type(previous_point)
     current_point_type = type(current_point)
 
     if previous_point is not None and type(previous_point) is not type(
@@ -218,7 +217,7 @@ def _convert_aggregation_temporality(
         _logger.warning(
             "convert_aggregation_temporality called with mismatched "
             "point types: %s and %s",
-            previous_point_type,
+            type(previous_point),
             current_point_type,
         )
 
@@ -245,12 +244,14 @@ def _convert_aggregation_temporality(
         )
 
         return Sum(
-            aggregation_temporality=aggregation_temporality,
-            is_monotonic=is_monotonic,
             start_time_unix_nano=previous_point.start_time_unix_nano,
             time_unix_nano=current_point.time_unix_nano,
             value=value,
+            aggregation_temporality=aggregation_temporality,
+            is_monotonic=is_monotonic,
         )
 
-    elif current_point_type is Gauge:
+    if current_point_type is Gauge:
         return current_point
+
+    return None

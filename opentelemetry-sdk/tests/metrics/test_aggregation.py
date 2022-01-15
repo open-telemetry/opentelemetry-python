@@ -18,19 +18,16 @@ from time import sleep
 from unittest import TestCase
 
 from opentelemetry.sdk._metrics.aggregation import (
+    AggregationTemporality,
     AsynchronousSumAggregation,
     ExplicitBucketHistogramAggregation,
     LastValueAggregation,
     SynchronousSumAggregation,
+    _convert_aggregation_temporality,
     _InstrumentMonotonicityAwareAggregation,
-    _convert_aggregation_temporality
 )
-from opentelemetry.sdk._metrics.aggregation import AggregationTemporality
 from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.point import (
-    Gauge,
-    Sum,
-)
+from opentelemetry.sdk._metrics.point import Gauge, Sum
 
 
 class TestSynchronousSumAggregation(TestCase):
@@ -326,7 +323,13 @@ class TestConvertAggregationTemporality(TestCase):
 
     def test_mismatched_point_types(self):
 
-        current_point = Sum(0, 0, 0, AggregationTemporality.DELTA, False)
+        current_point = Sum(
+            start_time_unix_nano=0,
+            time_unix_nano=0,
+            value=0,
+            aggregation_temporality=AggregationTemporality.DELTA,
+            is_monotonic=False,
+        )
 
         self.assertIs(
             _convert_aggregation_temporality(
@@ -337,18 +340,254 @@ class TestConvertAggregationTemporality(TestCase):
 
     def test_current_point_sum_previous_point_none(self):
 
-        point_arguments = (0, 0, 0, AggregationTemporality.DELTA, False)
-
-        current_point = Sum(*point_arguments)
+        current_point = Sum(
+            start_time_unix_nano=0,
+            time_unix_nano=0,
+            value=0,
+            aggregation_temporality=AggregationTemporality.DELTA,
+            is_monotonic=False,
+        )
 
         self.assertEqual(
             _convert_aggregation_temporality(
-                None,
-                current_point,
-                AggregationTemporality.CUMULATIVE
+                None, current_point, AggregationTemporality.CUMULATIVE
             ),
             replace(
                 current_point,
-                aggregation_temporality=AggregationTemporality.CUMULATIVE
-            )
+                aggregation_temporality=AggregationTemporality.CUMULATIVE,
+            ),
+        )
+
+    def test_current_point_sum_current_point_same_aggregation_temporality(
+        self,
+    ):
+
+        current_point = Sum(
+            start_time_unix_nano=0,
+            time_unix_nano=0,
+            value=0,
+            aggregation_temporality=AggregationTemporality.DELTA,
+            is_monotonic=False,
+        )
+
+        self.assertEqual(
+            _convert_aggregation_temporality(
+                Sum(
+                    start_time_unix_nano=0,
+                    time_unix_nano=0,
+                    value=0,
+                    aggregation_temporality=AggregationTemporality.DELTA,
+                    is_monotonic=False,
+                ),
+                current_point,
+                AggregationTemporality.DELTA,
+            ),
+            current_point,
+        )
+
+        current_point = Sum(
+            start_time_unix_nano=0,
+            time_unix_nano=0,
+            value=0,
+            aggregation_temporality=AggregationTemporality.CUMULATIVE,
+            is_monotonic=False,
+        )
+
+        self.assertEqual(
+            _convert_aggregation_temporality(
+                Sum(
+                    start_time_unix_nano=0,
+                    time_unix_nano=0,
+                    value=0,
+                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                    is_monotonic=False,
+                ),
+                current_point,
+                AggregationTemporality.CUMULATIVE,
+            ),
+            current_point,
+        )
+
+    def test_current_point_sum_aggregation_temporality_delta(self):
+
+        self.assertEqual(
+            _convert_aggregation_temporality(
+                Sum(
+                    start_time_unix_nano=1,
+                    time_unix_nano=2,
+                    value=3,
+                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                    is_monotonic=False,
+                ),
+                Sum(
+                    start_time_unix_nano=4,
+                    time_unix_nano=5,
+                    value=6,
+                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                    is_monotonic=False,
+                ),
+                AggregationTemporality.DELTA,
+            ),
+            Sum(
+                start_time_unix_nano=1,
+                time_unix_nano=5,
+                value=3,
+                aggregation_temporality=AggregationTemporality.DELTA,
+                is_monotonic=False,
+            ),
+        )
+
+        self.assertEqual(
+            _convert_aggregation_temporality(
+                Sum(
+                    start_time_unix_nano=1,
+                    time_unix_nano=2,
+                    value=3,
+                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                    is_monotonic=True,
+                ),
+                Sum(
+                    start_time_unix_nano=4,
+                    time_unix_nano=5,
+                    value=6,
+                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                    is_monotonic=False,
+                ),
+                AggregationTemporality.DELTA,
+            ),
+            Sum(
+                start_time_unix_nano=1,
+                time_unix_nano=5,
+                value=3,
+                aggregation_temporality=AggregationTemporality.DELTA,
+                is_monotonic=False,
+            ),
+        )
+
+        self.assertEqual(
+            _convert_aggregation_temporality(
+                Sum(
+                    start_time_unix_nano=1,
+                    time_unix_nano=2,
+                    value=3,
+                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                    is_monotonic=True,
+                ),
+                Sum(
+                    start_time_unix_nano=4,
+                    time_unix_nano=5,
+                    value=6,
+                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                    is_monotonic=True,
+                ),
+                AggregationTemporality.DELTA,
+            ),
+            Sum(
+                start_time_unix_nano=1,
+                time_unix_nano=5,
+                value=3,
+                aggregation_temporality=AggregationTemporality.DELTA,
+                is_monotonic=True,
+            ),
+        )
+
+    def test_current_point_sum_aggregation_temporality_cumulative(self):
+
+        self.assertEqual(
+            _convert_aggregation_temporality(
+                Sum(
+                    start_time_unix_nano=1,
+                    time_unix_nano=2,
+                    value=3,
+                    aggregation_temporality=AggregationTemporality.DELTA,
+                    is_monotonic=False,
+                ),
+                Sum(
+                    start_time_unix_nano=4,
+                    time_unix_nano=5,
+                    value=6,
+                    aggregation_temporality=AggregationTemporality.DELTA,
+                    is_monotonic=False,
+                ),
+                AggregationTemporality.CUMULATIVE,
+            ),
+            Sum(
+                start_time_unix_nano=1,
+                time_unix_nano=5,
+                value=9,
+                aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                is_monotonic=False,
+            ),
+        )
+
+        self.assertEqual(
+            _convert_aggregation_temporality(
+                Sum(
+                    start_time_unix_nano=1,
+                    time_unix_nano=2,
+                    value=3,
+                    aggregation_temporality=AggregationTemporality.DELTA,
+                    is_monotonic=True,
+                ),
+                Sum(
+                    start_time_unix_nano=4,
+                    time_unix_nano=5,
+                    value=6,
+                    aggregation_temporality=AggregationTemporality.DELTA,
+                    is_monotonic=False,
+                ),
+                AggregationTemporality.CUMULATIVE,
+            ),
+            Sum(
+                start_time_unix_nano=1,
+                time_unix_nano=5,
+                value=9,
+                aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                is_monotonic=False,
+            ),
+        )
+
+        self.assertEqual(
+            _convert_aggregation_temporality(
+                Sum(
+                    start_time_unix_nano=1,
+                    time_unix_nano=2,
+                    value=3,
+                    aggregation_temporality=AggregationTemporality.DELTA,
+                    is_monotonic=True,
+                ),
+                Sum(
+                    start_time_unix_nano=4,
+                    time_unix_nano=5,
+                    value=6,
+                    aggregation_temporality=AggregationTemporality.DELTA,
+                    is_monotonic=True,
+                ),
+                AggregationTemporality.CUMULATIVE,
+            ),
+            Sum(
+                start_time_unix_nano=1,
+                time_unix_nano=5,
+                value=9,
+                aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                is_monotonic=True,
+            ),
+        )
+
+    def test_current_point_gauge(self):
+
+        current_point = (Gauge(0, 0),)
+        self.assertEqual(
+            _convert_aggregation_temporality(
+                Sum(
+                    start_time_unix_nano=1,
+                    time_unix_nano=2,
+                    value=3,
+                    aggregation_temporality=AggregationTemporality.DELTA,
+                    is_monotonic=True,
+                ),
+                current_point,
+                AggregationTemporality.CUMULATIVE,
+            ),
+            current_point,
         )
