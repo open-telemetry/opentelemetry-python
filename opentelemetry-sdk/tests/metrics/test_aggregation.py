@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
+from dataclasses import replace
 from math import inf
 from time import sleep
 from unittest import TestCase
@@ -23,8 +23,14 @@ from opentelemetry.sdk._metrics.aggregation import (
     LastValueAggregation,
     SynchronousSumAggregation,
     _InstrumentMonotonicityAwareAggregation,
+    _convert_aggregation_temporality
 )
+from opentelemetry.sdk._metrics.aggregation import AggregationTemporality
 from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry.sdk._metrics.point import (
+    Gauge,
+    Sum,
+)
 
 
 class TestSynchronousSumAggregation(TestCase):
@@ -310,4 +316,39 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
         self.assertGreater(
             second_histogram.time_unix_nano, first_histogram.time_unix_nano
+        )
+
+
+class TestConvertAggregationTemporality(TestCase):
+    """
+    Test aggregation temporality conversion algorithm
+    """
+
+    def test_mismatched_point_types(self):
+
+        current_point = Sum(0, 0, 0, AggregationTemporality.DELTA, False)
+
+        self.assertIs(
+            _convert_aggregation_temporality(
+                Gauge(0, 0), current_point, AggregationTemporality.DELTA
+            ),
+            current_point,
+        )
+
+    def test_current_point_sum_previous_point_none(self):
+
+        point_arguments = (0, 0, 0, AggregationTemporality.DELTA, False)
+
+        current_point = Sum(*point_arguments)
+
+        self.assertEqual(
+            _convert_aggregation_temporality(
+                None,
+                current_point,
+                AggregationTemporality.CUMULATIVE
+            ),
+            replace(
+                current_point,
+                aggregation_temporality=AggregationTemporality.CUMULATIVE
+            )
         )

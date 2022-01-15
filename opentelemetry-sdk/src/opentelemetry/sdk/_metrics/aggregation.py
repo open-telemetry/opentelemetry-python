@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from dataclasses import replace
 from abc import ABC, abstractmethod
 from bisect import bisect_left
 from logging import getLogger
@@ -200,3 +201,56 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
             aggregation_temporality=AggregationTemporality.DELTA,
             sum=self._sum,
         )
+
+
+def _convert_aggregation_temporality(
+    previous_point: Optional[_PointVarT],
+    current_point: _PointVarT,
+    aggregation_temporality: int,
+) -> _PointVarT:
+
+    previous_point_type = type(previous_point)
+    current_point_type = type(current_point)
+
+    if previous_point is not None and type(previous_point) is not type(
+        current_point
+    ):
+        _logger.warning(
+            "convert_aggregation_temporality called with mismatched "
+            "point types: %s and %s",
+            previous_point_type,
+            current_point_type,
+        )
+
+        return current_point
+
+    if current_point_type is Sum:
+        if previous_point is None:
+
+            return replace(
+                current_point, aggregation_temporality=aggregation_temporality
+            )
+
+        if current_point.aggregation_temporality is aggregation_temporality:
+            return current_point
+
+        if aggregation_temporality == AggregationTemporality.DELTA:
+            value = current_point.value - previous_point.value
+
+        else:
+            value = current_point.value + previous_point.value
+
+        is_monotonic = (
+            previous_point.is_monotonic and current_point.is_monotonic
+        )
+
+        return Sum(
+            aggregation_temporality=aggregation_temporality,
+            is_monotonic=is_monotonic,
+            start_time_unix_nano=previous_point.start_time_unix_nano,
+            time_unix_nano=current_point.time_unix_nano,
+            value=value,
+        )
+
+    elif current_point_type is Gauge:
+        return current_point
