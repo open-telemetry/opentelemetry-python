@@ -64,6 +64,30 @@ class TestMeterProvider(TestCase):
         self.assertEqual(meter._instrumentation_info.version, "version")
         self.assertEqual(meter._instrumentation_info.schema_url, "schema_url")
 
+    def test_get_meter_duplicate(self):
+        """
+        Subsequent calls to `MeterProvider.get_meter` with the same arguments
+        should return the same `Meter` instance.
+        """
+        mp = MeterProvider()
+        meter1 = mp.get_meter(
+            "name",
+            version="version",
+            schema_url="schema_url",
+        )
+        meter2 = mp.get_meter(
+            "name",
+            version="version",
+            schema_url="schema_url",
+        )
+        meter3 = mp.get_meter(
+            "name2",
+            version="version",
+            schema_url="schema_url",
+        )
+        self.assertIs(meter1, meter2)
+        self.assertIsNot(meter1, meter3)
+
     def test_shutdown_subsequent_calls(self):
         """
         No subsequent attempts to get a `Meter` are allowed after calling
