@@ -358,6 +358,7 @@ class TestOTLPMetricExporter(TestCase):
                 )
             ]
         )
+        # pylint: disable=protected-access
         actual = self.exporter._translate_data([self.metrics["sum_int"]])
         self.assertEqual(expected, actual)
 
@@ -415,5 +416,6 @@ class TestOTLPMetricExporter(TestCase):
                 )
             ]
         )
+        # pylint: disable=protected-access
         actual = self.exporter._translate_data([self.metrics["sum_float"]])
         self.assertEqual(expected, actual)
