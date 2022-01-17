@@ -82,7 +82,6 @@ class OTLPMetricExporter(
         self, data: Sequence[Metric]
     ) -> ExportMetricsServiceRequest:
         sdk_resource_instrumentation_library_metrics = {}
-        self._collector_kwargs = {}
 
         for metric in data:
             resource = metric.resource
@@ -117,18 +116,19 @@ class OTLPMetricExporter(
                 metric.instrumentation_info
             )
 
-            # translate all data points for that metric
-            self._collector_kwargs["name"] = metric.name
-            self._collector_kwargs["description"] = metric.description
-            self._collector_kwargs["unit"] = metric.unit
+            pbmetric = pb2.Metric(
+                name=metric.name,
+                description=metric.description,
+                unit=metric.unit,
+            )
             if isinstance(metric.point, Gauge):
                 # TODO: implement gauge
-                self._collector_kwargs["gauge"] = pb2.Gauge(
+                pbmetric.gauge = pb2.Gauge(
                     data_points=[],
                 )
             elif isinstance(metric.point, Histogram):
                 # TODO: implement histogram
-                self._collector_kwargs["histogram"] = pb2.Histogram(
+                pbmetric.histogram = pb2.Histogram(
                     data_points=[],
                 )
             elif isinstance(metric.point, Sum):
@@ -141,18 +141,20 @@ class OTLPMetricExporter(
                     pt.as_int = metric.point.value
                 else:
                     pt.as_double = metric.point.value
-
-                self._collector_kwargs["sum"] = pb2.Sum(
-                    aggregation_temporality=metric.point.aggregation_temporality,
-                    is_monotonic=metric.point.is_monotonic,
-                    data_points=[pt],
+                # note that because sum is a message type, the fields must be
+                # set individually rather than instantiating a pb2.Sum and setting
+                # it once
+                pbmetric.sum.aggregation_temporality = (
+                    metric.point.aggregation_temporality
                 )
+                pbmetric.sum.is_monotonic = metric.point.is_monotonic
+                pbmetric.sum.data_points.append(pt)
             else:
                 logger.warn("unsupported datapoint type %s", metric.point)
                 continue
 
             instrumentation_library_metrics.metrics.append(
-                pb2.Metric(**self._collector_kwargs),
+                pbmetric,
             )
         return ExportMetricsServiceRequest(
             resource_metrics=get_resource_data(
