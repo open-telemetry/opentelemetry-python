@@ -116,7 +116,7 @@ class OTLPMetricExporter(
             instrumentation_library_metrics = instrumentation_library_map.get(
                 metric.instrumentation_info
             )
-            
+
             # translate all data points for that metric
             self._collector_kwargs["name"] = metric.name
             self._collector_kwargs["description"] = metric.description
@@ -141,7 +141,7 @@ class OTLPMetricExporter(
                     pt.as_int = metric.point.value
                 else:
                     pt.as_double = metric.point.value
-                
+
                 self._collector_kwargs["sum"] = pb2.Sum(
                     aggregation_temporality=metric.point.aggregation_temporality,
                     is_monotonic=metric.point.is_monotonic,
