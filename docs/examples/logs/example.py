@@ -38,7 +38,7 @@ log_emitter = log_emitter_provider.get_log_emitter(__name__, "0.1")
 handler = OTLPHandler(level=logging.NOTSET, log_emitter=log_emitter)
 
 # Attach OTLP handler to root logger
-logging.getLogger("root").addHandler(handler)
+logging.getLogger().addHandler(handler)
 
 # Log directly
 logging.info("Jackdaws love my big sphinx of quartz.")

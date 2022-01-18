@@ -16,7 +16,7 @@
 from inspect import Signature, isabstract, signature
 from unittest import TestCase
 
-from opentelemetry._metrics import Meter, _DefaultMeter
+from opentelemetry._metrics import Meter, NoOpMeter
 from opentelemetry._metrics.instrument import (
     Counter,
     DefaultCounter,
@@ -47,7 +47,7 @@ class TestCounter(TestCase):
         """
 
         self.assertTrue(
-            isinstance(_DefaultMeter("name").create_counter("name"), Counter)
+            isinstance(NoOpMeter("name").create_counter("name"), Counter)
         )
 
     def test_api_counter_abstract(self):
@@ -117,7 +117,7 @@ class TestObservableCounter(TestCase):
 
         self.assertTrue(
             isinstance(
-                _DefaultMeter("name").create_observable_counter(
+                NoOpMeter("name").create_observable_counter(
                     "name", callback()
                 ),
                 ObservableCounter,
@@ -211,9 +211,7 @@ class TestHistogram(TestCase):
         """
 
         self.assertTrue(
-            isinstance(
-                _DefaultMeter("name").create_histogram("name"), Histogram
-            )
+            isinstance(NoOpMeter("name").create_histogram("name"), Histogram)
         )
 
     def test_api_histogram_abstract(self):
@@ -287,9 +285,7 @@ class TestObservableGauge(TestCase):
 
         self.assertTrue(
             isinstance(
-                _DefaultMeter("name").create_observable_gauge(
-                    "name", callback()
-                ),
+                NoOpMeter("name").create_observable_gauge("name", callback()),
                 ObservableGauge,
             )
         )
@@ -379,7 +375,7 @@ class TestUpDownCounter(TestCase):
 
         self.assertTrue(
             isinstance(
-                _DefaultMeter("name").create_up_down_counter("name"),
+                NoOpMeter("name").create_up_down_counter("name"),
                 UpDownCounter,
             )
         )
@@ -464,7 +460,7 @@ class TestObservableUpDownCounter(TestCase):
 
         self.assertTrue(
             isinstance(
-                _DefaultMeter("name").create_observable_up_down_counter(
+                NoOpMeter("name").create_observable_up_down_counter(
                     "name", callback()
                 ),
                 ObservableUpDownCounter,

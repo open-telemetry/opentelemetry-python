@@ -1,3 +1,4 @@
+## OpenTelemetry Python
 ---
 <p align="center">
   <strong>
@@ -35,8 +36,6 @@
 </p>
 
 ---
-
-## OpenTelemetry Python
 
 This page describes the Python [OpenTelemetry](https://opentelemetry.io/) implementation. OpenTelemetry is an observability framework for cloud-native software.
 

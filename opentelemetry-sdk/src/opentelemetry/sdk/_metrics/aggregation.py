@@ -13,11 +13,11 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from collections import OrderedDict
+from bisect import bisect_left
 from logging import getLogger
 from math import inf
 from threading import Lock
-from typing import Generic, Optional, Sequence, TypeVar
+from typing import Generic, List, Optional, Sequence, TypeVar
 
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import (
@@ -141,28 +141,31 @@ class LastValueAggregation(Aggregation[Gauge]):
 class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
     def __init__(
         self,
-        boundaries: Sequence[int] = (
-            0,
-            5,
-            10,
-            25,
-            50,
-            75,
-            100,
-            250,
-            500,
-            1000,
+        boundaries: Sequence[float] = (
+            0.0,
+            5.0,
+            10.0,
+            25.0,
+            50.0,
+            75.0,
+            100.0,
+            250.0,
+            500.0,
+            1000.0,
         ),
         record_min_max: bool = True,
     ):
         super().__init__()
-        self._value = OrderedDict([(key, 0) for key in (*boundaries, inf)])
+        self._boundaries = tuple(boundaries)
+        self._bucket_counts = self._get_empty_bucket_counts()
         self._min = inf
         self._max = -inf
         self._sum = 0
         self._record_min_max = record_min_max
         self._start_time_unix_nano = _time_ns()
-        self._boundaries = boundaries
+
+    def _get_empty_bucket_counts(self) -> List[int]:
+        return [0] * (len(self._boundaries) + 1)
 
     def aggregate(self, measurement: Measurement) -> None:
 
@@ -174,12 +177,7 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
 
         self._sum += value
 
-        for key in self._value.keys():
-
-            if value < key:
-                self._value[key] = self._value[key] + 1
-
-                break
+        self._bucket_counts[bisect_left(self._boundaries, value)] += 1
 
     def collect(self) -> Optional[Histogram]:
         """
@@ -188,18 +186,16 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
         now = _time_ns()
 
         with self._lock:
-            value = self._value
+            value = self._bucket_counts
             start_time_unix_nano = self._start_time_unix_nano
 
-            self._value = OrderedDict(
-                [(key, 0) for key in (*self._boundaries, inf)]
-            )
+            self._bucket_counts = self._get_empty_bucket_counts()
             self._start_time_unix_nano = now + 1
 
         return Histogram(
             start_time_unix_nano=start_time_unix_nano,
             time_unix_nano=now,
-            bucket_counts=tuple(value.values()),
+            bucket_counts=tuple(value),
             explicit_bounds=self._boundaries,
             aggregation_temporality=AggregationTemporality.DELTA,
         )
