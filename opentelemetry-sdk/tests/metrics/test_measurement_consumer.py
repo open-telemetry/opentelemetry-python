@@ -13,87 +13,78 @@
 # limitations under the License.
 
 from unittest import TestCase
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
-from opentelemetry.sdk._metrics import MeterProvider
 from opentelemetry.sdk._metrics.measurement_consumer import (
     MeasurementConsumer,
     SynchronousMeasurementConsumer,
 )
+from opentelemetry.sdk._metrics.point import AggregationTemporality
+from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
 
 
+@patch("opentelemetry.sdk._metrics.measurement_consumer.MetricReaderStorage")
 class TestSynchronousMeasurementConsumer(TestCase):
-    def test_parent(self):
+    def test_parent(self, _):
 
         self.assertIsInstance(
-            SynchronousMeasurementConsumer(), MeasurementConsumer
+            SynchronousMeasurementConsumer(MagicMock()), MeasurementConsumer
         )
 
-    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
-    def test_measurement_consumer_class(
-        self, mock_serial_measurement_consumer
+    def test_creates_metric_reader_storages(self, MockMetricReaderStorage):
+        """It should create one MetricReaderStorage per metric reader passed in the SdkConfiguration"""
+        reader_mocks = [Mock() for _ in range(5)]
+        SynchronousMeasurementConsumer(
+            SdkConfiguration(resource=Mock(), metric_readers=reader_mocks)
+        )
+        self.assertEqual(len(MockMetricReaderStorage.mock_calls), 5)
+
+    def test_measurements_passed_to_each_reader_state(
+        self, MockMetricReaderStorage
     ):
-        MeterProvider()
+        reader_mocks = [Mock() for _ in range(5)]
+        reader_storage_mocks = [Mock() for _ in range(5)]
+        MockMetricReaderStorage.side_effect = reader_storage_mocks
 
-        mock_serial_measurement_consumer.assert_called()
+        consumer = SynchronousMeasurementConsumer(
+            SdkConfiguration(resource=Mock(), metric_readers=reader_mocks)
+        )
+        measurement_mock = Mock()
+        consumer.consume_measurement(measurement_mock)
 
-    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
-    def test_register_asynchronous_instrument(
-        self, mock_serial_measurement_consumer
-    ):
-
-        meter_provider = MeterProvider()
-
-        meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
-            meter_provider.get_meter("name").create_observable_counter(
-                "name", Mock()
+        for rs_mock in reader_storage_mocks:
+            rs_mock.consume_measurement.assert_called_once_with(
+                measurement_mock
             )
+
+    def test_collect_passed_to_reader_stage(self, MockMetricReaderStorage):
+        """Its collect() method should defer to the underlying MetricReaderStorage"""
+        reader_mocks = [Mock() for _ in range(5)]
+        reader_storage_mocks = [Mock() for _ in range(5)]
+        MockMetricReaderStorage.side_effect = reader_storage_mocks
+
+        consumer = SynchronousMeasurementConsumer(
+            SdkConfiguration(resource=Mock(), metric_readers=reader_mocks)
         )
-        meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
-            meter_provider.get_meter("name").create_observable_up_down_counter(
-                "name", Mock()
+        for r_mock, rs_mock in zip(reader_mocks, reader_storage_mocks):
+            rs_mock.collect.assert_not_called()
+            consumer.collect(r_mock, AggregationTemporality.CUMULATIVE)
+            rs_mock.collect.assert_called_once_with(
+                AggregationTemporality.CUMULATIVE
             )
+
+    def test_collect_calls_async_instruments(self, _):
+        """Its collect() method should invoke async instruments"""
+        reader_mock = Mock()
+        consumer = SynchronousMeasurementConsumer(
+            SdkConfiguration(resource=Mock(), metric_readers=[reader_mock])
         )
-        meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
-            meter_provider.get_meter("name").create_observable_gauge(
-                "name", Mock()
-            )
-        )
+        async_instrument_mocks = [MagicMock() for _ in range(5)]
+        for i_mock in async_instrument_mocks:
+            consumer.register_asynchronous_instrument(i_mock)
 
-    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
-    def test_consume_measurement_counter(
-        self, mock_serial_measurement_consumer
-    ):
+        consumer.collect(reader_mock, AggregationTemporality.CUMULATIVE)
 
-        meter_provider = MeterProvider()
-        counter = meter_provider.get_meter("name").create_counter("name")
-
-        counter.add(1)
-
-        meter_provider._measurement_consumer.consume_measurement.assert_called()
-
-    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
-    def test_consume_measurement_up_down_counter(
-        self, mock_serial_measurement_consumer
-    ):
-
-        meter_provider = MeterProvider()
-        counter = meter_provider.get_meter("name").create_up_down_counter(
-            "name"
-        )
-
-        counter.add(1)
-
-        meter_provider._measurement_consumer.consume_measurement.assert_called()
-
-    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
-    def test_consume_measurement_histogram(
-        self, mock_serial_measurement_consumer
-    ):
-
-        meter_provider = MeterProvider()
-        counter = meter_provider.get_meter("name").create_histogram("name")
-
-        counter.record(1)
-
-        meter_provider._measurement_consumer.consume_measurement.assert_called()
+        # it should call async instruments
+        for i_mock in async_instrument_mocks:
+            i_mock.callback.assert_called_once()

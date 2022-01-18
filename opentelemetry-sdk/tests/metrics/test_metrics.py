@@ -15,7 +15,7 @@
 
 from logging import WARNING
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from opentelemetry.sdk._metrics import Meter, MeterProvider
 from opentelemetry.sdk._metrics.instrument import (
@@ -26,14 +26,11 @@ from opentelemetry.sdk._metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk._metrics.measurement_consumer import (
-    SynchronousMeasurementConsumer,
-)
 from opentelemetry.sdk.resources import Resource
 
 
 class TestMeterProvider(TestCase):
-    def test_meter_provider_resource(self):
+    def test_resource(self):
         """
         `MeterProvider` provides a way to allow a `Resource` to be specified.
         """
@@ -41,12 +38,17 @@ class TestMeterProvider(TestCase):
         meter_provider_0 = MeterProvider()
         meter_provider_1 = MeterProvider()
 
-        self.assertIs(meter_provider_0._resource, meter_provider_1._resource)
-        self.assertIsInstance(meter_provider_0._resource, Resource)
-        self.assertIsInstance(meter_provider_1._resource, Resource)
+        self.assertIs(
+            meter_provider_0._sdk_config.resource,
+            meter_provider_1._sdk_config.resource,
+        )
+        self.assertIsInstance(meter_provider_0._sdk_config.resource, Resource)
+        self.assertIsInstance(meter_provider_1._sdk_config.resource, Resource)
 
         resource = Resource({"key": "value"})
-        self.assertIs(MeterProvider(resource=resource)._resource, resource)
+        self.assertIs(
+            MeterProvider(resource=resource)._sdk_config.resource, resource
+        )
 
     def test_get_meter(self):
         """
@@ -103,10 +105,76 @@ class TestMeterProvider(TestCase):
         with self.assertLogs(level=WARNING):
             meter_provider.shutdown()
 
+    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
+    def test_creates_sync_measurement_consumer(
+        self, mock_sync_measurement_consumer
+    ):
+        MeterProvider()
+        mock_sync_measurement_consumer.assert_called()
+
+    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
+    def test_register_asynchronous_instrument(
+        self, mock_sync_measurement_consumer
+    ):
+
+        meter_provider = MeterProvider()
+
+        meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
+            meter_provider.get_meter("name").create_observable_counter(
+                "name", Mock()
+            )
+        )
+        meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
+            meter_provider.get_meter("name").create_observable_up_down_counter(
+                "name", Mock()
+            )
+        )
+        meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
+            meter_provider.get_meter("name").create_observable_gauge(
+                "name", Mock()
+            )
+        )
+
+    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
+    def test_consume_measurement_counter(self, mock_sync_measurement_consumer):
+        sync_consumer_instance = mock_sync_measurement_consumer()
+        meter_provider = MeterProvider()
+        counter = meter_provider.get_meter("name").create_counter("name")
+
+        counter.add(1)
+
+        sync_consumer_instance.consume_measurement.assert_called()
+
+    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
+    def test_consume_measurement_up_down_counter(
+        self, mock_sync_measurement_consumer
+    ):
+        sync_consumer_instance = mock_sync_measurement_consumer()
+        meter_provider = MeterProvider()
+        counter = meter_provider.get_meter("name").create_up_down_counter(
+            "name"
+        )
+
+        counter.add(1)
+
+        sync_consumer_instance.consume_measurement.assert_called()
+
+    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
+    def test_consume_measurement_histogram(
+        self, mock_sync_measurement_consumer
+    ):
+        sync_consumer_instance = mock_sync_measurement_consumer()
+        meter_provider = MeterProvider()
+        counter = meter_provider.get_meter("name").create_histogram("name")
+
+        counter.record(1)
+
+        sync_consumer_instance.consume_measurement.assert_called()
+
 
 class TestMeter(TestCase):
     def setUp(self):
-        self.meter = Meter(Mock(), SynchronousMeasurementConsumer())
+        self.meter = Meter(Mock(), Mock())
 
     def test_create_counter(self):
         counter = self.meter.create_counter(
