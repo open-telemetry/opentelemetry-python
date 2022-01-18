@@ -50,15 +50,15 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         self._lock = Lock()
         self._sdk_config = sdk_config
         # should never be mutated
-        self._reader_to_state: Mapping[MetricReader, MetricReaderStorage] = {
+        self._reader_storages: Mapping[MetricReader, MetricReaderStorage] = {
             reader: MetricReaderStorage(sdk_config)
             for reader in sdk_config.metric_readers
         }
         self._async_instruments: List["_Asynchronous"] = []
 
     def consume_measurement(self, measurement: Measurement) -> None:
-        for reader_state in self._reader_to_state.values():
-            reader_state.consume_measurement(measurement)
+        for reader_storage in self._reader_storages.values():
+            reader_storage.consume_measurement(measurement)
 
     def register_asynchronous_instrument(
         self, instrument: "_Asynchronous"
@@ -73,4 +73,4 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             for async_instrument in self._async_instruments:
                 for measurement in async_instrument.callback():
                     self.consume_measurement(measurement)
-        return self._reader_to_state[metric_reader].collect(temporality)
+        return self._reader_storages[metric_reader].collect(temporality)
