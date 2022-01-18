@@ -429,7 +429,7 @@ class TestConvertAggregationTemporality(TestCase):
                 AggregationTemporality.DELTA,
             ),
             Sum(
-                start_time_unix_nano=1,
+                start_time_unix_nano=2,
                 time_unix_nano=5,
                 value=3,
                 aggregation_temporality=AggregationTemporality.DELTA,
@@ -456,7 +456,7 @@ class TestConvertAggregationTemporality(TestCase):
                 AggregationTemporality.DELTA,
             ),
             Sum(
-                start_time_unix_nano=1,
+                start_time_unix_nano=2,
                 time_unix_nano=5,
                 value=3,
                 aggregation_temporality=AggregationTemporality.DELTA,
@@ -483,7 +483,7 @@ class TestConvertAggregationTemporality(TestCase):
                 AggregationTemporality.DELTA,
             ),
             Sum(
-                start_time_unix_nano=1,
+                start_time_unix_nano=2,
                 time_unix_nano=5,
                 value=3,
                 aggregation_temporality=AggregationTemporality.DELTA,

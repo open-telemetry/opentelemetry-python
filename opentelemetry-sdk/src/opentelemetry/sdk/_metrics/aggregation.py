@@ -235,16 +235,18 @@ def _convert_aggregation_temporality(
 
         if aggregation_temporality == AggregationTemporality.DELTA:
             value = current_point.value - previous_point.value
+            output_start_time_unix_nano = previous_point.time_unix_nano
 
         else:
             value = current_point.value + previous_point.value
+            output_start_time_unix_nano = previous_point.start_time_unix_nano
 
         is_monotonic = (
             previous_point.is_monotonic and current_point.is_monotonic
         )
 
         return Sum(
-            start_time_unix_nano=previous_point.start_time_unix_nano,
+            start_time_unix_nano=output_start_time_unix_nano,
             time_unix_nano=current_point.time_unix_nano,
             value=value,
             aggregation_temporality=aggregation_temporality,
