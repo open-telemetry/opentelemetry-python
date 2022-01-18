@@ -171,7 +171,7 @@ class PeriodicExportingMetricReader(MetricReader):
             for reader in self._meter_provider._metric_readers:
                 metrics.extend(reader.collect())
             self._exporter.export(metrics)
-        except Exception as e:  # pylint: disable=broad-except
+        except Exception as e:  # pylint: disable
             _logger.exception("Exception while exporting metrics %s", str(e))
         detach(token)
 
