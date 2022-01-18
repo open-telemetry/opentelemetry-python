@@ -57,11 +57,7 @@ class SumAggregation(Aggregation[Sum]):
         super().__init__()
         self._instrument_is_monotonic = instrument_is_monotonic
 
-        if instrument_temporality is AggregationTemporality.DELTA:
-            self._value = 0
-
-        else:
-            self._value = None
+        self._value = 0
 
         self._start_time_unix_nano = _time_ns()
         self._instrument_temporality = instrument_temporality
@@ -75,7 +71,7 @@ class SumAggregation(Aggregation[Sum]):
             with self._lock:
                 self._value = measurement.value
 
-    def collect(self) -> Optional[Sum]:
+    def collect(self) -> Sum:
         """
         Atomically return a point for the current value of the metric and
         reset the aggregation value.
@@ -98,9 +94,6 @@ class SumAggregation(Aggregation[Sum]):
                 value=value,
             )
 
-        if self._value is None:
-            return None
-
         return Sum(
             start_time_unix_nano=self._start_time_unix_nano,
             time_unix_nano=_time_ns(),
@@ -113,19 +106,16 @@ class SumAggregation(Aggregation[Sum]):
 class LastValueAggregation(Aggregation[Gauge]):
     def __init__(self):
         super().__init__()
-        self._value = None
+        self._value = 0
 
     def aggregate(self, measurement: Measurement):
         with self._lock:
             self._value = measurement.value
 
-    def collect(self) -> Optional[Gauge]:
+    def collect(self) -> Gauge:
         """
         Atomically return a point for the current value of the metric.
         """
-        if self._value is None:
-            return None
-
         return Gauge(
             time_unix_nano=_time_ns(),
             value=self._value,
@@ -173,7 +163,7 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
 
         self._bucket_counts[bisect_left(self._boundaries, value)] += 1
 
-    def collect(self) -> Optional[Histogram]:
+    def collect(self) -> Histogram:
         """
         Atomically return a point for the current value of the metric.
         """

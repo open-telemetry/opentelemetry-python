@@ -106,7 +106,7 @@ class TestLastValueAggregation(TestCase):
 
         last_value_aggregation = LastValueAggregation()
 
-        self.assertIsNone(last_value_aggregation.collect())
+        self.assertIsInstance(last_value_aggregation.collect(), Gauge)
 
         last_value_aggregation.aggregate(Measurement(1))
         first_gauge = last_value_aggregation.collect()
