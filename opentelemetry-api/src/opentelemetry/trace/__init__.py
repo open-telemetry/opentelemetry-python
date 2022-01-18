@@ -82,6 +82,8 @@ from enum import Enum
 from logging import getLogger
 from typing import Iterator, Optional, Sequence, cast
 
+from deprecated import deprecated
+
 from opentelemetry import context as context_api
 from opentelemetry.attributes import BoundedAttributes  # type: ignore
 from opentelemetry.context.context import Context
@@ -216,7 +218,7 @@ class TracerProvider(ABC):
         """
 
 
-class _DefaultTracerProvider(TracerProvider):
+class NoOpTracerProvider(TracerProvider):
     """The default TracerProvider, used when no implementation is available.
 
     All operations are no-op.
@@ -229,7 +231,15 @@ class _DefaultTracerProvider(TracerProvider):
         schema_url: typing.Optional[str] = None,
     ) -> "Tracer":
         # pylint:disable=no-self-use,unused-argument
-        return _DefaultTracer()
+        return NoOpTracer()
+
+
+@deprecated(version="1.9.0", reason="You should use NoOpTracerProvider")  # type: ignore
+class _DefaultTracerProvider(NoOpTracerProvider):
+    """The default TracerProvider, used when no implementation is available.
+
+    All operations are no-op.
+    """
 
 
 class ProxyTracerProvider(TracerProvider):
@@ -393,7 +403,7 @@ class ProxyTracer(Tracer):
         self._instrumenting_library_version = instrumenting_library_version
         self._schema_url = schema_url
         self._real_tracer: Optional[Tracer] = None
-        self._noop_tracer = _DefaultTracer()
+        self._noop_tracer = NoOpTracer()
 
     @property
     def _tracer(self) -> Tracer:
@@ -416,7 +426,7 @@ class ProxyTracer(Tracer):
         return self._tracer.start_as_current_span(*args, **kwargs)  # type: ignore
 
 
-class _DefaultTracer(Tracer):
+class NoOpTracer(Tracer):
     """The default Tracer, used when no Tracer implementation is available.
 
     All operations are no-op.
@@ -451,6 +461,14 @@ class _DefaultTracer(Tracer):
     ) -> Iterator["Span"]:
         # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN
+
+
+@deprecated(version="1.9.0", reason="You should use NoOpTracer")  # type: ignore
+class _DefaultTracer(NoOpTracer):
+    """The default Tracer, used when no Tracer implementation is available.
+
+    All operations are no-op.
+    """
 
 
 _TRACER_PROVIDER_SET_ONCE = Once()
