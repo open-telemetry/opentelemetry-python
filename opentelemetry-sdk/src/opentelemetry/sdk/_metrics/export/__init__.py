@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+import os
 import threading
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -20,13 +21,13 @@ from os import environ, linesep
 from sys import stdout
 from typing import IO, Callable, Optional, Sequence
 
+from opentelemetry._metrics import MeterProvider
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
     attach,
     detach,
     set_value,
 )
-from opentelemetry.sdk._metrics.export.metric_exporter import MetricExporter
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.point import Metric
 
@@ -120,7 +121,7 @@ class PeriodicExportingMetricReader(MetricReader):
                 export_timeout_millis = 30000
         self._export_interval_millis = export_interval_millis
         self._export_timeout_millis = export_timeout_millis
-        self._measurement_consumer = None  # odd name
+        self._meter_provider = None  # type: MeterProvider
         self._shutdown = False
         self._daemon_thread = threading.Thread(
             target=self.collect, daemon=True
@@ -129,9 +130,21 @@ class PeriodicExportingMetricReader(MetricReader):
         self._flush_event = None  # type: Optional[threading.Event]
         self._lock = threading.Lock()
         self._daemon_thread.start()
+        if hasattr(os, "register_at_fork"):
+            os.register_at_fork(
+                after_in_child=self._at_fork_reinit
+            )  # pylint: disable=protected-access
 
-    def _set_measurement_consumer(self, consumer) -> None:
-        self._measurement_consumer = consumer
+    def _at_fork_reinit(self):
+        self._condition = threading.Condition()
+        self._lock = threading.Lock()
+        self._daemon_thread = threading.Thread(
+            target=self.collect, daemon=True
+        )
+        self._daemon_thread.start()
+
+    def _register_meter_provider(self, provider: MeterProvider) -> None:
+        self._meter_provider = provider
 
     def collect(self) -> None:
         while not self._shutdown:
@@ -154,7 +167,10 @@ class PeriodicExportingMetricReader(MetricReader):
     def _export(self) -> None:
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
-            self._exporter.export(self._measurement_consumer.collect())
+            metrics = []
+            for reader in self._meter_provider._metric_readers:
+                metrics.extend(reader.collect())
+            self._exporter.export(metrics)
         except Exception as e:
             _logger.exception("Exception while exporting metrics %s", str(e))
         detach(token)

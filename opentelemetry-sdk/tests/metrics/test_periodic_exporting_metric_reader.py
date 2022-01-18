@@ -14,25 +14,28 @@
 
 import random
 import time
-from collections import namedtuple
 from functools import partial
 from unittest.mock import Mock
 
-from opentelemetry.sdk._metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk._metrics.export import (
+    MetricExporter,
+    PeriodicExportingMetricReader,
+)
+from opentelemetry.sdk._metrics.point import Gauge, Metric, Sum
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase
+from opentelemetry.util._time import _time_ns
 
 
-class FakeMeasurementConsumer:
-    def __init__(self, metrics=None, wait=0):
-        self.metrics = metrics
-        self.wait = wait
+class FakeProvider:
+    def __init__(self, readers):
+        self._metric_readers = readers
 
-    def collect(self):
-        time.sleep(self.wait)
-        return self.metrics
+    def register_periodic_reader(self, periodic_reader):
+        periodic_reader._register_meter_provider(self)
 
 
-class FakeMetricsExporter:
+class FakeMetricsExporter(MetricExporter):
     def __init__(self, wait=0):
         self.wait = wait
         self.metrics = []
@@ -46,7 +49,35 @@ class FakeMetricsExporter:
         pass
 
 
-Metric = namedtuple("Metric", ["type", "value"])
+metrics_list = [
+    Metric(
+        name="sum_name",
+        attributes={},
+        description="",
+        instrumentation_info=None,
+        resource=Resource.create(),
+        unit="",
+        point=Sum(
+            start_time_unix_nano=_time_ns(),
+            time_unix_nano=_time_ns(),
+            value=2,
+            aggregation_temporality=1,
+            is_monotonic=True,
+        ),
+    ),
+    Metric(
+        name="gauge_name",
+        attributes={},
+        description="",
+        instrumentation_info=None,
+        resource=Resource.create(),
+        unit="",
+        point=Gauge(
+            time_unix_nano=_time_ns(),
+            value=2,
+        ),
+    ),
+]
 
 
 class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
@@ -55,47 +86,50 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         self.assertEqual(r._export_interval_millis, 60000)
         self.assertEqual(r._export_timeout_millis, 30000)
 
-    def test_force_flush(self):
-        consumer_metrics = [Metric("Sum", 2), Metric("Histogram", 3)]
-        consumer = FakeMeasurementConsumer(consumer_metrics)
-        exporter = FakeMetricsExporter(wait=1)
+    def _create_periodic_reader(self, metrics, exporter, wait=0):
+        mock = Mock()
+
+        def _collect():
+            time.sleep(wait)
+            return metrics
+
+        mock.collect = _collect
+        provider = FakeProvider([mock])
         pmr = PeriodicExportingMetricReader(exporter)
-        pmr._set_measurement_consumer(consumer)
+        provider.register_periodic_reader(pmr)
+        return pmr
+
+    def test_force_flush(self):
+        exporter = FakeMetricsExporter(wait=1)
+        pmr = self._create_periodic_reader(metrics_list, exporter)
         ret = pmr.force_flush()
         self.assertTrue(ret)
-        self.assertEqual(exporter.metrics, consumer_metrics)
+        self.assertEqual(exporter.metrics, metrics_list)
 
     def test_force_flush_timeout(self):
-        con = FakeMeasurementConsumer(wait=70)
         exporter = FakeMetricsExporter(wait=1)
-        pmr = PeriodicExportingMetricReader(exporter)
-        pmr._set_measurement_consumer(con)
+        pmr = self._create_periodic_reader(metrics_list, exporter, 70)
         ret = pmr.force_flush(10)
         self.assertFalse(ret)
 
     def test_force_flush_mutiple_times(self):
-        metrics = {Metric("Gauge", 5), Metric("Sum", 10)}
         exporter = FakeMetricsExporter()
-        pmr = PeriodicExportingMetricReader(exporter)
-        pmr._set_measurement_consumer(
-            FakeMeasurementConsumer(metrics=metrics, wait=5)
-        )
+        pmr = self._create_periodic_reader(metrics_list, exporter, wait=5)
 
         self.run_with_many_threads(partial(pmr.force_flush, 8000))
 
-        self.assertTrue(exporter.metrics, metrics)
+        self.assertTrue(exporter.metrics, metrics_list)
 
     def test_shutdown(self):
         exporter = FakeMetricsExporter()
-        pmr = PeriodicExportingMetricReader(exporter)
-        pmr._set_measurement_consumer(FakeMeasurementConsumer(metrics=[]))
+
+        pmr = self._create_periodic_reader([], exporter)
         pmr.shutdown()
         self.assertEqual(exporter.metrics, [])
         self.assertTrue(pmr._shutdown)
 
     def test_shutdown_multiple_times(self):
-        pmr = PeriodicExportingMetricReader(Mock())
-        pmr._set_measurement_consumer(Mock())
+        pmr = self._create_periodic_reader([], Mock())
         with self.assertLogs(level="WARNING") as w:
             self.run_with_many_threads(pmr.shutdown)
             self.assertTrue("Can't shutdown multiple times", w.output[0])
