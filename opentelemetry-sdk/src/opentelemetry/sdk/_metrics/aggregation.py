@@ -157,14 +157,14 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
     ):
         super().__init__()
         self._boundaries = tuple(boundaries)
-        self._bucket_counts = self._new_explicit_bounds()
+        self._bucket_counts = self._get_empty_bucket_counts()
         self._min = inf
         self._max = -inf
         self._sum = 0
         self._record_min_max = record_min_max
         self._start_time_unix_nano = _time_ns()
 
-    def _new_explicit_bounds(self) -> List[int]:
+    def _get_empty_bucket_counts(self) -> List[int]:
         return [0] * (len(self._boundaries) + 1)
 
     def aggregate(self, measurement: Measurement) -> None:
@@ -189,7 +189,7 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
             value = self._bucket_counts
             start_time_unix_nano = self._start_time_unix_nano
 
-            self._bucket_counts = self._new_explicit_bounds()
+            self._bucket_counts = self._get_empty_bucket_counts()
             self._start_time_unix_nano = now + 1
 
         return Histogram(
