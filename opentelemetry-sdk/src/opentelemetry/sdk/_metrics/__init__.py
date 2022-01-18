@@ -19,7 +19,7 @@ from typing import Optional, Sequence
 
 from opentelemetry._metrics import Meter as APIMeter
 from opentelemetry._metrics import MeterProvider as APIMeterProvider
-from opentelemetry._metrics import _DefaultMeter
+from opentelemetry._metrics import NoOpMeter
 from opentelemetry._metrics.instrument import Counter as APICounter
 from opentelemetry._metrics.instrument import Histogram as APIHistogram
 from opentelemetry._metrics.instrument import (
@@ -221,7 +221,7 @@ class MeterProvider(APIMeterProvider):
             _logger.warning(
                 "A shutdown `MeterProvider` can not provide a `Meter`"
             )
-            return _DefaultMeter(name, version=version, schema_url=schema_url)
+            return NoOpMeter(name, version=version, schema_url=schema_url)
 
         info = InstrumentationInfo(name, version, schema_url)
         with self._meter_lock:
