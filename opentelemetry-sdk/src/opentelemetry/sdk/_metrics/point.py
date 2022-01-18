@@ -69,7 +69,6 @@ class Metric:
     name: str
     resource: Resource
     unit: str
-
     point: PointT
     """Contains non-common fields for the given metric"""
 
