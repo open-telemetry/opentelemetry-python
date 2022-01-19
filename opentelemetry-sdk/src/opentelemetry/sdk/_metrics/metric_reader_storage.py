@@ -22,7 +22,7 @@ from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
 
 # TODO: #2378
 class MetricReaderStorage:
-    """The SDK's state for a given reader"""
+    """The SDK's storage for a given reader"""
 
     def __init__(self, sdk_config: SdkConfiguration) -> None:
         pass
