@@ -13,18 +13,17 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import Iterable, final
+from typing import Iterable
 
 from opentelemetry.sdk._metrics.point import Metric
 
 
 class MetricReader(ABC):
-    @final
     def collect(self):
         pass
 
     @abstractmethod
-    def _receive_metrics(metrics: Iterable[Metric]):
+    def _receive_metrics(self, metrics: Iterable[Metric]):
         pass
 
     @abstractmethod
