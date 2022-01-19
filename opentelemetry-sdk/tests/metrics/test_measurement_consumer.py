@@ -39,7 +39,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
         )
         self.assertEqual(len(MockMetricReaderStorage.mock_calls), 5)
 
-    def test_measurements_passed_to_each_reader_state(
+    def test_measurements_passed_to_each_reader_storage(
         self, MockMetricReaderStorage
     ):
         reader_mocks = [Mock() for _ in range(5)]
