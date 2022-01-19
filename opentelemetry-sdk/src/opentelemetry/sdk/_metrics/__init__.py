@@ -45,6 +45,7 @@ from opentelemetry.sdk._metrics.measurement_consumer import (
     SynchronousMeasurementConsumer,
 )
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
+from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
@@ -156,8 +157,12 @@ class MeterProvider(APIMeterProvider):
         self._lock = Lock()
         self._meter_lock = Lock()
         self._atexit_handler = None
-
-        self._measurement_consumer = SynchronousMeasurementConsumer()
+        self._sdk_config = SdkConfiguration(
+            resource=resource, metric_readers=metric_readers
+        )
+        self._measurement_consumer = SynchronousMeasurementConsumer(
+            sdk_config=self._sdk_config
+        )
 
         if shutdown_on_exit:
             self._atexit_handler = register(self.shutdown)
@@ -165,10 +170,9 @@ class MeterProvider(APIMeterProvider):
         self._meters = {}
         self._metric_readers = metric_readers
 
-        for metric_reader in self._metric_readers:
+        for metric_reader in self._sdk_config.metric_readers:
             metric_reader._register_measurement_consumer(self)
 
-        self._resource = resource
         self._shutdown = False
 
     def force_flush(self) -> bool:
@@ -177,7 +181,7 @@ class MeterProvider(APIMeterProvider):
 
         metric_reader_result = True
 
-        for metric_reader in self._metric_readers:
+        for metric_reader in self._sdk_config.metric_readers:
             metric_reader_result = (
                 metric_reader_result and metric_reader.force_flush()
             )
@@ -196,7 +200,7 @@ class MeterProvider(APIMeterProvider):
 
         result = True
 
-        for metric_reader in self._metric_readers:
+        for metric_reader in self._sdk_config.metric_readers:
             result = result and metric_reader.shutdown()
 
             if not result:
