@@ -14,14 +14,13 @@
 
 import logging
 import os
-import threading
 from abc import ABC, abstractmethod
 from enum import Enum
 from os import environ, linesep
 from sys import stdout
-from typing import IO, Callable, Optional, Sequence
+from threading import Condition, Event, Lock, Thread
+from typing import IO, Callable, Iterable, Optional, Sequence
 
-from opentelemetry._metrics import MeterProvider
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
     attach,
@@ -111,6 +110,9 @@ class PeriodicExportingMetricReader(MetricReader):
                     environ.get("OTEL_METRIC_EXPORT_INTERVAL", 60000)
                 )
             except ValueError:
+                _logger.warning(
+                    "Found invalid value for export interval, using default"
+                )
                 export_interval_millis = 60000
         if export_timeout_millis is None:
             try:
@@ -118,17 +120,16 @@ class PeriodicExportingMetricReader(MetricReader):
                     environ.get("OTEL_METRIC_EXPORT_TIMEOUT", 30000)
                 )
             except ValueError:
+                _logger.warning(
+                    "Found invalid value for export timeout, using default"
+                )
                 export_timeout_millis = 30000
         self._export_interval_millis = export_interval_millis
         self._export_timeout_millis = export_timeout_millis
-        self._meter_provider = None  # type: MeterProvider
         self._shutdown = False
-        self._daemon_thread = threading.Thread(
-            target=self.collect, daemon=True
-        )
-        self._condition = threading.Condition()
-        self._flush_event = None  # type: Optional[threading.Event]
-        self._lock = threading.Lock()
+        self._daemon_thread = Thread(target=self._ticker, daemon=True)
+        self._condition = Condition()
+        self._lock = Lock()
         self._daemon_thread.start()
         if hasattr(os, "register_at_fork"):
             os.register_at_fork(
@@ -136,62 +137,31 @@ class PeriodicExportingMetricReader(MetricReader):
             )  # pylint: disable=protected-access
 
     def _at_fork_reinit(self):
-        self._condition = threading.Condition()
-        self._lock = threading.Lock()
-        self._daemon_thread = threading.Thread(
-            target=self.collect, daemon=True
-        )
+        self._condition = Condition()
+        self._lock = Lock()
+        self._daemon_thread = Thread(target=self._ticker, daemon=True)
         self._daemon_thread.start()
 
-    def _register_meter_provider(self, provider: MeterProvider) -> None:
-        self._meter_provider = provider
-
-    def collect(self) -> None:
+    def _ticker(self) -> None:
+        interval_secs = self._export_interval_millis / 1e3
         while not self._shutdown:
             with self._condition:
-                # might have received flush/shutdown request
-                if not self._flush_pending and not self._shutdown:
-                    self._condition.wait(self._export_interval_millis / 1e3)
-                # any pending flush request would be fulfilled later
+                # might have received shutdown request
+                if not self._shutdown:
+                    self._condition.wait(interval_secs)
                 if self._shutdown:
                     break
-            # export and set flush event if exists
-            self._export()
-        # one last flush below before shutting down completely
-        self._export()
+            self.collect()
+        # one last collection below before shutting down completely
+        self.collect()
 
-    @property
-    def _flush_pending(self) -> bool:
-        return self._flush_event is not None
-
-    def _export(self) -> None:
+    def _receive_metrics(self, metrics: Iterable[Metric]) -> None:
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
-            metrics = []
-            for reader in self._meter_provider._metric_readers:
-                metrics.extend(reader.collect())
             self._exporter.export(metrics)
         except Exception as e:  # pylint: disable=broad-except,invalid-name
             _logger.exception("Exception while exporting metrics %s", str(e))
         detach(token)
-
-        if self._flush_event is not None:
-            self._flush_event.set()
-        self._flush_event = None
-
-    def force_flush(self, timeout_millis: float = 30000) -> bool:
-        with self._lock:
-            if self._shutdown:
-                _logger.warning("Can't perform flush after shutdown")
-                return False
-        with self._condition:
-            flush_event = threading.Event()
-            self._flush_event = flush_event
-            self._condition.notify_all()
-        successful = flush_event.wait(timeout_millis / 1e3)
-        if not successful:
-            _logger.warning("Timed out while performing force flush")
-        return successful
 
     def shutdown(self) -> bool:
         with self._lock:

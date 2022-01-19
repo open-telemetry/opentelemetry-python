@@ -14,7 +14,6 @@
 
 import random
 import time
-from functools import partial
 from unittest.mock import Mock
 
 from opentelemetry.sdk._metrics.export import (
@@ -27,14 +26,6 @@ from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 from opentelemetry.util._time import _time_ns
 
 
-class FakeProvider:
-    def __init__(self, readers):
-        self._metric_readers = readers
-
-    def register_periodic_reader(self, periodic_reader):
-        periodic_reader._register_meter_provider(self)
-
-
 class FakeMetricsExporter(MetricExporter):
     def __init__(self, wait=0):
         self.wait = wait
@@ -42,8 +33,8 @@ class FakeMetricsExporter(MetricExporter):
 
     def export(self, metrics):
         time.sleep(self.wait)
-        self.metrics += metrics
-        return random.choice([True, False])
+        self.metrics.extend(metrics)
+        return True
 
     def shutdown(self):
         pass
@@ -86,39 +77,35 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         self.assertEqual(r._export_interval_millis, 60000)
         self.assertEqual(r._export_timeout_millis, 30000)
 
-    def _create_periodic_reader(self, metrics, exporter, wait=0):
-        mock = Mock()
+    def _create_periodic_reader(
+        self, metrics, exporter, collect_wait=0, interval=60000
+    ):
+
+        pmr = PeriodicExportingMetricReader(exporter, interval)
 
         def _collect():
-            time.sleep(wait)
-            return metrics
+            time.sleep(collect_wait)
+            pmr._receive_metrics(metrics)
 
-        mock.collect = _collect
-        provider = FakeProvider([mock])
-        pmr = PeriodicExportingMetricReader(exporter)
-        provider.register_periodic_reader(pmr)
+        pmr.collect = _collect
         return pmr
 
-    def test_force_flush(self):
-        exporter = FakeMetricsExporter(wait=1)
-        pmr = self._create_periodic_reader(metrics_list, exporter)
-        ret = pmr.force_flush()
-        self.assertTrue(ret)
-        self.assertEqual(exporter.metrics, metrics_list)
+    def test_ticker_called(self):
+        collect_mock = Mock()
+        pmr = PeriodicExportingMetricReader(Mock(), 1)
+        pmr.collect = collect_mock
+        time.sleep(0.1)
+        self.assertTrue(collect_mock.assert_called_once)
 
-    def test_force_flush_timeout(self):
-        exporter = FakeMetricsExporter(wait=1)
-        pmr = self._create_periodic_reader(metrics_list, exporter, 70)
-        ret = pmr.force_flush(10)
-        self.assertFalse(ret)
-
-    def test_force_flush_mutiple_times(self):
+    def test_ticker_collects_metrics(self):
         exporter = FakeMetricsExporter()
-        pmr = self._create_periodic_reader(metrics_list, exporter, wait=5)
 
-        self.run_with_many_threads(partial(pmr.force_flush, 8000))
-
-        self.assertTrue(exporter.metrics, metrics_list)
+        pmr = self._create_periodic_reader(
+            metrics_list, exporter, interval=2000
+        )
+        time.sleep(3)
+        self.assertEqual(exporter.metrics, metrics_list)
+        pmr.shutdown()
 
     def test_shutdown(self):
         exporter = FakeMetricsExporter()
