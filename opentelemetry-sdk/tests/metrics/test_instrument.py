@@ -32,11 +32,12 @@ class TestCounter(TestCase):
         counter.add(1.0)
         mc.consume_measurement.assert_called_once()
 
-    def test_add_monotonic(self):
+    def test_add_non_monotonic(self):
         mc = Mock()
         counter = Counter("name", Mock(), mc)
         counter.add(-1.0)
         mc.consume_measurement.assert_not_called()
+
 
 class TestUpDownCounter(TestCase):
     def test_add(self):
@@ -50,6 +51,7 @@ class TestUpDownCounter(TestCase):
         counter = UpDownCounter("name", Mock(), mc)
         counter.add(-1.0)
         mc.consume_measurement.assert_called_once()
+
 
 class TestObservableGauge(TestCase):
     def test_callable_callback(self):
@@ -112,6 +114,7 @@ class TestObservableUpDownCounter(TestCase):
 
         self.assertEqual(observable_up_down_counter.callback(), [1, 2, 3])
 
+
 class TestHistogram(TestCase):
     def test_record(self):
         mc = Mock()
@@ -119,7 +122,7 @@ class TestHistogram(TestCase):
         hist.record(1.0)
         mc.consume_measurement.assert_called_once()
 
-    def test_add_monotonic(self):
+    def test_record_non_monotonic(self):
         mc = Mock()
         hist = Histogram("name", Mock(), mc)
         hist.record(-1.0)

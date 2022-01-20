@@ -34,7 +34,8 @@ from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.measurement_consumer import MeasurementConsumer
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
+
 
 class _Synchronous:
     def __init__(
@@ -89,8 +90,9 @@ class Counter(_Synchronous, APICounter):
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
         if amount < 0:
-            logger.warning(
-                "Add amount must be non-negative on Counter %s.", self.name)
+            _logger.warning(
+                "Add amount must be non-negative on Counter %s.", self.name
+            )
             return
         self._measurement_consumer.consume_measurement(
             Measurement(amount, attributes)
@@ -116,13 +118,13 @@ class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
 
 class Histogram(_Synchronous, APIHistogram):
     def record(
-        self,
-        amount: Union[int, float],
-        attributes: Dict[str, str] = None
+        self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
         if amount < 0:
-            logger.warning(
-                "Record amount must be non-negative on Histogram %s.", self.name)
+            _logger.warning(
+                "Record amount must be non-negative on Histogram %s.",
+                self.name,
+            )
             return
         self._measurement_consumer.consume_measurement(
             Measurement(amount, attributes)
