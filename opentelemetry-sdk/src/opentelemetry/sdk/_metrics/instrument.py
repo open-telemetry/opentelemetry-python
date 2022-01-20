@@ -14,6 +14,7 @@
 
 # pylint: disable=too-many-ancestors
 
+import logging
 from typing import Dict, Generator, Iterable, Union
 
 from opentelemetry._metrics.instrument import CallbackT
@@ -32,6 +33,8 @@ from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.measurement_consumer import MeasurementConsumer
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+
+_logger = logging.getLogger(__name__)
 
 
 class _Synchronous:
@@ -87,8 +90,10 @@ class Counter(_Synchronous, APICounter):
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
         if amount < 0:
-            raise Exception("amount must be non negative")
-
+            _logger.warning(
+                "Add amount must be non-negative on Counter %s.", self.name
+            )
+            return
         self._measurement_consumer.consume_measurement(
             Measurement(amount, attributes)
         )
@@ -112,7 +117,15 @@ class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
 
 
 class Histogram(_Synchronous, APIHistogram):
-    def record(self, amount, attributes=None):
+    def record(
+        self, amount: Union[int, float], attributes: Dict[str, str] = None
+    ):
+        if amount < 0:
+            _logger.warning(
+                "Record amount must be non-negative on Histogram %s.",
+                self.name,
+            )
+            return
         self._measurement_consumer.consume_measurement(
             Measurement(amount, attributes)
         )
