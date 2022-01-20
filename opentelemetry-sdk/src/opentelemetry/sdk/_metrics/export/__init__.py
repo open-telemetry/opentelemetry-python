@@ -18,7 +18,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from os import environ, linesep
 from sys import stdout
-from threading import Condition, Event, Lock, Thread
+from threading import Condition, Lock, Thread
 from typing import IO, Callable, Iterable, Optional, Sequence
 
 from opentelemetry.context import (
@@ -28,7 +28,7 @@ from opentelemetry.context import (
     set_value,
 )
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
-from opentelemetry.sdk._metrics.point import Metric
+from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
 
 _logger = logging.getLogger(__name__)
 
@@ -102,7 +102,9 @@ class PeriodicExportingMetricReader(MetricReader):
         exporter: MetricExporter,
         export_interval_millis: Optional[float] = None,
         export_timeout_millis: Optional[float] = None,
+        preferred_temporality: AggregationTemporality = AggregationTemporality.CUMULATIVE,
     ) -> None:
+        super().__init__(preferred_temporality=preferred_temporality)
         self._exporter = exporter
         if export_interval_millis is None:
             try:

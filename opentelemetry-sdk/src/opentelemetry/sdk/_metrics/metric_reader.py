@@ -12,15 +12,44 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 from abc import ABC, abstractmethod
-from typing import Iterable
+from typing import Callable, Iterable
 
-from opentelemetry.sdk._metrics.point import Metric
+from typing_extensions import final
+
+from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
+
+_logger = logging.getLogger(__name__)
 
 
 class MetricReader(ABC):
-    def collect(self):
-        pass
+    def __init__(
+        self,
+        preferred_temporality: AggregationTemporality = AggregationTemporality.CUMULATIVE,
+    ) -> None:
+        self._collect: Callable[
+            ["MetricReader", AggregationTemporality], Iterable[Metric]
+        ] = None
+        self._preferred_temporality = preferred_temporality
+
+    @final
+    def collect(self) -> None:
+        if self._collect is None:
+            _logger.warning(
+                "Cannot call collect on a MetricReader until it is registered on a MeterProvider"
+            )
+            return
+        self._receive_metrics(self._collect(self, self._preferred_temporality))
+
+    @final
+    def _set_collect_callback(
+        self,
+        func: Callable[
+            ["MetricReader", AggregationTemporality], Iterable[Metric]
+        ],
+    ) -> None:
+        self._collect = func
 
     @abstractmethod
     def _receive_metrics(self, metrics: Iterable[Metric]):
