@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.8.0-0.27b0...HEAD)
 
+- Fix SpanLimits global span limit defaulting when set to 0
+  ([#2398](https://github.com/open-telemetry/opentelemetry-python/pull/2398))
 - Decode URL-encoded headers in environment variables
   ([#2312](https://github.com/open-telemetry/opentelemetry-python/pull/2312))
 - [exporter/opentelemetry-exporter-otlp-proto-grpc] Add OTLPMetricExporter
