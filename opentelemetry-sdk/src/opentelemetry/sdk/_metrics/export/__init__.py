@@ -46,6 +46,10 @@ class MetricExporter(ABC):
     in their own format.
     """
 
+    @property
+    def preferred_temporality(self) -> AggregationTemporality:
+        return AggregationTemporality.CUMULATIVE
+
     @abstractmethod
     def export(self, metrics: Sequence[Metric]) -> "MetricExportResult":
         """Exports a batch of telemetry data.
@@ -103,9 +107,8 @@ class PeriodicExportingMetricReader(MetricReader):
         exporter: MetricExporter,
         export_interval_millis: Optional[float] = None,
         export_timeout_millis: Optional[float] = None,
-        preferred_temporality: AggregationTemporality = AggregationTemporality.CUMULATIVE,
     ) -> None:
-        super().__init__(preferred_temporality=preferred_temporality)
+        super().__init__(preferred_temporality=exporter.preferred_temporality)
         self._exporter = exporter
         if export_interval_millis is None:
             try:

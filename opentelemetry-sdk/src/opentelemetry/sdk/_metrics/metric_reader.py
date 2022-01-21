@@ -52,7 +52,7 @@ class MetricReader(ABC):
             ["MetricReader", AggregationTemporality], Iterable[Metric]
         ],
     ) -> None:
-    """This function is internal to the SDK. It should not be called or overriden by users"""
+        """This function is internal to the SDK. It should not be called or overriden by users"""
         self._collect = func
 
     @abstractmethod
