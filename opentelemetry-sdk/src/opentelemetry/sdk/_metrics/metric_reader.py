@@ -58,7 +58,6 @@ class MetricReader(ABC):
     @abstractmethod
     def _receive_metrics(self, metrics: Iterable[Metric]):
         """Called by `MetricReader.collect` when it receives a batch of metrics"""
-        pass
 
     @abstractmethod
     def shutdown(self) -> bool:
