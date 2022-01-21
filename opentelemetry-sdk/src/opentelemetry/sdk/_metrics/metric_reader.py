@@ -35,6 +35,9 @@ class MetricReader(ABC):
 
     @final
     def collect(self) -> None:
+        """Collects the metrics from the internal SDK state and
+        invokes the `_receive_metrics` with the collection.
+        """
         if self._collect is None:
             _logger.warning(
                 "Cannot call collect on a MetricReader until it is registered on a MeterProvider"
@@ -57,4 +60,10 @@ class MetricReader(ABC):
 
     @abstractmethod
     def shutdown(self) -> bool:
-        pass
+        """Shuts down the MetricReader. This method provides a way
+        for the MetricReader to do any cleanup required. A metric reader can
+        only be shutdown once, any subsequent calls are ignored and return
+        failure status.
+
+        Called when the SDK is shut down.
+        """

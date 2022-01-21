@@ -18,7 +18,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from os import environ, linesep
 from sys import stdout
-from threading import Condition, Lock, Thread
+from threading import Event, Thread
 from typing import IO, Callable, Iterable, Optional, Sequence
 
 from opentelemetry.context import (
@@ -29,6 +29,7 @@ from opentelemetry.context import (
 )
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
+from opentelemetry.util._once import Once
 
 _logger = logging.getLogger(__name__)
 
@@ -129,9 +130,9 @@ class PeriodicExportingMetricReader(MetricReader):
         self._export_interval_millis = export_interval_millis
         self._export_timeout_millis = export_timeout_millis
         self._shutdown = False
+        self._shutdown_event = Event()
+        self._shutdown_once = Once()
         self._daemon_thread = Thread(target=self._ticker, daemon=True)
-        self._condition = Condition()
-        self._lock = Lock()
         self._daemon_thread.start()
         if hasattr(os, "register_at_fork"):
             os.register_at_fork(
@@ -139,20 +140,12 @@ class PeriodicExportingMetricReader(MetricReader):
             )  # pylint: disable=protected-access
 
     def _at_fork_reinit(self):
-        self._condition = Condition()
-        self._lock = Lock()
         self._daemon_thread = Thread(target=self._ticker, daemon=True)
         self._daemon_thread.start()
 
     def _ticker(self) -> None:
         interval_secs = self._export_interval_millis / 1e3
-        while not self._shutdown:
-            with self._condition:
-                # might have received shutdown request
-                if not self._shutdown:
-                    self._condition.wait(interval_secs)
-                if self._shutdown:
-                    break
+        while not self._shutdown_event.wait(interval_secs):
             self.collect()
         # one last collection below before shutting down completely
         self.collect()
@@ -166,12 +159,14 @@ class PeriodicExportingMetricReader(MetricReader):
         detach(token)
 
     def shutdown(self) -> bool:
-        with self._lock:
-            if self._shutdown:
-                _logger.warning("Can't shutdown multiple times")
-                return False
+        def _shutdown():
             self._shutdown = True
-        with self._condition:
-            self._condition.notify_all()
+
+        did_set = self._shutdown_once.do_once(_shutdown)
+        if not did_set:
+            _logger.warning("Can't shutdown multiple times")
+            return False
+
+        self._shutdown_event.set()
         self._daemon_thread.join()
         return self._exporter.shutdown()

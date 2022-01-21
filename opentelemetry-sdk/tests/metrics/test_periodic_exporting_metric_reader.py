@@ -29,6 +29,7 @@ class FakeMetricsExporter(MetricExporter):
     def __init__(self, wait=0):
         self.wait = wait
         self.metrics = []
+        self._shutdown = False
 
     def export(self, metrics):
         time.sleep(self.wait)
@@ -36,7 +37,7 @@ class FakeMetricsExporter(MetricExporter):
         return True
 
     def shutdown(self):
-        pass
+        self._shutdown = True
 
 
 metrics_list = [
@@ -72,9 +73,10 @@ metrics_list = [
 
 class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
     def test_defaults(self):
-        r = PeriodicExportingMetricReader(FakeMetricsExporter())
-        self.assertEqual(r._export_interval_millis, 60000)
-        self.assertEqual(r._export_timeout_millis, 30000)
+        pmr = PeriodicExportingMetricReader(FakeMetricsExporter())
+        self.assertEqual(pmr._export_interval_millis, 60000)
+        self.assertEqual(pmr._export_timeout_millis, 30000)
+        pmr.shutdown()
 
     def _create_periodic_reader(
         self, metrics, exporter, collect_wait=0, interval=60000
@@ -82,19 +84,20 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
 
         pmr = PeriodicExportingMetricReader(exporter, interval)
 
-        def _collect():
+        def _collect(reader, temp):
             time.sleep(collect_wait)
             pmr._receive_metrics(metrics)
 
-        pmr.collect = _collect
+        pmr._set_collect_callback(_collect)
         return pmr
 
     def test_ticker_called(self):
         collect_mock = Mock()
         pmr = PeriodicExportingMetricReader(Mock(), 1)
-        pmr.collect = collect_mock
+        pmr._set_collect_callback(collect_mock)
         time.sleep(0.1)
         self.assertTrue(collect_mock.assert_called_once)
+        pmr.shutdown()
 
     def test_ticker_collects_metrics(self):
         exporter = FakeMetricsExporter()
@@ -113,9 +116,11 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         pmr.shutdown()
         self.assertEqual(exporter.metrics, [])
         self.assertTrue(pmr._shutdown)
+        self.assertTrue(exporter._shutdown)
 
     def test_shutdown_multiple_times(self):
         pmr = self._create_periodic_reader([], Mock())
         with self.assertLogs(level="WARNING") as w:
             self.run_with_many_threads(pmr.shutdown)
             self.assertTrue("Can't shutdown multiple times", w.output[0])
+        pmr.shutdown()
