@@ -3,9 +3,7 @@ from opentelemetry.exporter.otlp.proto.grpc._metric_exporter import (
     OTLPMetricExporter,
 )
 from opentelemetry.sdk._metrics import MeterProvider
-from opentelemetry.sdk._metrics.export import (
-    PeriodicExportingMetricReader,
-)
+from opentelemetry.sdk._metrics.export import PeriodicExportingMetricReader
 
 exporter = OTLPMetricExporter(insecure=True)
 reader = PeriodicExportingMetricReader(exporter)
