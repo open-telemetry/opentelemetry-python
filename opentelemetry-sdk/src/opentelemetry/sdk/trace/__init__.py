@@ -594,23 +594,31 @@ class SpanLimits:
             max_attributes, OTEL_ATTRIBUTE_COUNT_LIMIT
         )
         self.max_attributes = (
-            global_max_attributes or _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT
+            global_max_attributes
+            if global_max_attributes is not None
+            else _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT
         )
 
         self.max_span_attributes = self._from_env_if_absent(
             max_span_attributes,
             OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
-            global_max_attributes or _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+            global_max_attributes
+            if global_max_attributes is not None
+            else _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
         )
         self.max_event_attributes = self._from_env_if_absent(
             max_event_attributes,
             OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
-            global_max_attributes or _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
+            global_max_attributes
+            if global_max_attributes is not None
+            else _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
         )
         self.max_link_attributes = self._from_env_if_absent(
             max_link_attributes,
             OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
-            global_max_attributes or _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
+            global_max_attributes
+            if global_max_attributes is not None
+            else _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
         )
 
         # attribute length
