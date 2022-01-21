@@ -103,9 +103,9 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         exporter = FakeMetricsExporter()
 
         pmr = self._create_periodic_reader(
-            metrics_list, exporter, interval=2000
+            metrics_list, exporter, interval=100
         )
-        time.sleep(3)
+        time.sleep(0.2)
         self.assertEqual(exporter.metrics, metrics_list)
         pmr.shutdown()
 

@@ -52,10 +52,12 @@ class MetricReader(ABC):
             ["MetricReader", AggregationTemporality], Iterable[Metric]
         ],
     ) -> None:
+    """This function is internal to the SDK. It should not be called or overriden by users"""
         self._collect = func
 
     @abstractmethod
     def _receive_metrics(self, metrics: Iterable[Metric]):
+        """Called by `MetricReader.collect` when it receives a batch of metrics"""
         pass
 
     @abstractmethod
@@ -65,5 +67,5 @@ class MetricReader(ABC):
         only be shutdown once, any subsequent calls are ignored and return
         failure status.
 
-        Called when the SDK is shut down.
+        When a `MetricReader` is registered on a `MeterProvider`, `MeterProvider.shutdown` will invoke this automatically.
         """
