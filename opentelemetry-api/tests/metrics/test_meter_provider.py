@@ -20,8 +20,8 @@ from pytest import fixture
 
 from opentelemetry import _metrics as metrics
 from opentelemetry._metrics import (
-    _DefaultMeter,
-    _DefaultMeterProvider,
+    NoOpMeter,
+    NoOpMeterProvider,
     _ProxyMeter,
     _ProxyMeterProvider,
     get_meter_provider,
@@ -108,7 +108,7 @@ class TestGetMeter(TestCase):
         Test that get_meter accepts name, version and schema_url
         """
         try:
-            _DefaultMeterProvider().get_meter(
+            NoOpMeterProvider().get_meter(
                 "name", version="version", schema_url="schema_url"
             )
         except Exception as error:
@@ -125,15 +125,15 @@ class TestGetMeter(TestCase):
         Test that a message is logged reporting the specified value for the
         fallback meter is invalid.
         """
-        meter = _DefaultMeterProvider().get_meter("")
+        meter = NoOpMeterProvider().get_meter("")
 
-        self.assertTrue(isinstance(meter, _DefaultMeter))
+        self.assertTrue(isinstance(meter, NoOpMeter))
 
         self.assertEqual(meter.name, "")
 
-        meter = _DefaultMeterProvider().get_meter(None)
+        meter = NoOpMeterProvider().get_meter(None)
 
-        self.assertTrue(isinstance(meter, _DefaultMeter))
+        self.assertTrue(isinstance(meter, NoOpMeter))
 
         self.assertEqual(meter.name, None)
 

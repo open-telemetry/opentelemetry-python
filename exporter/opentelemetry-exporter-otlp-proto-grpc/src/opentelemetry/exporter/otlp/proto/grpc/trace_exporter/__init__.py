@@ -270,7 +270,9 @@ class OTLPSpanExporter(
             self._translate_trace_id(sdk_span)
             self._translate_parent(sdk_span)
             self._translate_context_trace_state(sdk_span)
-            self._translate_attributes(sdk_span.attributes)
+            self._collector_kwargs["attributes"] = self._translate_attributes(
+                sdk_span.attributes
+            )
             self._translate_events(sdk_span)
             self._translate_links(sdk_span)
             self._translate_status(sdk_span)

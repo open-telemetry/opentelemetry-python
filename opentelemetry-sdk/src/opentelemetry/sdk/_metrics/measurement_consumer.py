@@ -13,12 +13,17 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from typing import TYPE_CHECKING, Iterable
+from threading import Lock
+from typing import TYPE_CHECKING, Iterable, List, Mapping
 
 from opentelemetry.sdk._metrics.aggregation import AggregationTemporality
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
+from opentelemetry.sdk._metrics.metric_reader_storage import (
+    MetricReaderStorage,
+)
 from opentelemetry.sdk._metrics.point import Metric
+from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
 
 if TYPE_CHECKING:
     from opentelemetry.sdk._metrics.instrument import _Asynchronous
@@ -41,15 +46,31 @@ class MeasurementConsumer(ABC):
 
 
 class SynchronousMeasurementConsumer(MeasurementConsumer):
+    def __init__(self, sdk_config: SdkConfiguration) -> None:
+        self._lock = Lock()
+        self._sdk_config = sdk_config
+        # should never be mutated
+        self._reader_storages: Mapping[MetricReader, MetricReaderStorage] = {
+            reader: MetricReaderStorage(sdk_config)
+            for reader in sdk_config.metric_readers
+        }
+        self._async_instruments: List["_Asynchronous"] = []
+
     def consume_measurement(self, measurement: Measurement) -> None:
-        pass
+        for reader_storage in self._reader_storages.values():
+            reader_storage.consume_measurement(measurement)
 
     def register_asynchronous_instrument(
         self, instrument: "_Asynchronous"
     ) -> None:
-        pass
+        with self._lock:
+            self._async_instruments.append(instrument)
 
     def collect(
         self, metric_reader: MetricReader, temporality: AggregationTemporality
     ) -> Iterable[Metric]:
-        pass
+        with self._lock:
+            for async_instrument in self._async_instruments:
+                for measurement in async_instrument.callback():
+                    self.consume_measurement(measurement)
+        return self._reader_storages[metric_reader].collect(temporality)
