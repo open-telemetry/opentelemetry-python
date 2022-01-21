@@ -113,11 +113,11 @@ scalene opentelemetry-<PACKAGE>/tests/performance/resource-usage/<PATH_TO_TEST>/
 ## Python Version Support Addition and Removal
 
 This project supports the latest Python versions. As new Python versions are released, support for them is added and
-as Python versions are deprecated, support for them is removed.
+as old Python versions reach their end of life, support for them is removed.
 
-We add support for new Python versions as soon as possible after they become stable.
+We add support for new Python versions as no later than 3 months after they become stable.
 
-We remove support for old Python versions 6 months after they reach their [end of life](https://endoflife.date/python).
+We remove support for old Python versions 6 months after they reach their [end of life](https://devguide.python.org/devcycle/#end-of-life-branches).
 
 ## Documentation
 
