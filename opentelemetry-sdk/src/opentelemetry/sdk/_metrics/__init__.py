@@ -48,6 +48,7 @@ from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.util._once import Once
 
 _logger = getLogger(__name__)
 
@@ -171,30 +172,30 @@ class MeterProvider(APIMeterProvider):
         self._metric_readers = metric_readers
 
         for metric_reader in self._sdk_config.metric_readers:
-            metric_reader._register_measurement_consumer(self)
+            metric_reader._set_collect_callback(
+                self._measurement_consumer.collect
+            )
 
+        self._shutdown_once = Once()
         self._shutdown = False
 
     def force_flush(self) -> bool:
 
         # FIXME implement a timeout
 
-        metric_reader_result = True
-
         for metric_reader in self._sdk_config.metric_readers:
-            metric_reader_result = (
-                metric_reader_result and metric_reader.force_flush()
-            )
-
-        if not metric_reader_result:
-            _logger.warning("Unable to force flush all metric readers")
-
-        return metric_reader_result
+            metric_reader.collect()
+        return True
 
     def shutdown(self):
         # FIXME implement a timeout
 
-        if self._shutdown:
+        def _shutdown():
+            self._shutdown = True
+
+        did_shutdown = self._shutdown_once.do_once(_shutdown)
+
+        if not did_shutdown:
             _logger.warning("shutdown can only be called once")
             return False
 
@@ -205,8 +206,6 @@ class MeterProvider(APIMeterProvider):
 
             if not result:
                 _logger.warning("A MetricReader failed to shutdown")
-
-        self._shutdown = True
 
         if self._atexit_handler is not None:
             unregister(self._atexit_handler)
