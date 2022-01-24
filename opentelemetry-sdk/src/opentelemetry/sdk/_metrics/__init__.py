@@ -201,7 +201,7 @@ class MeterProvider(APIMeterProvider):
         result = True
 
         for metric_reader in self._sdk_config.metric_readers:
-            result = result and metric_reader.shutdown()
+            result = metric_reader.shutdown() and result
 
             if not result:
                 _logger.warning("A MetricReader failed to shutdown")
