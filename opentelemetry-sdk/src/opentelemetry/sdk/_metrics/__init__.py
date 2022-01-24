@@ -50,6 +50,7 @@ from opentelemetry.sdk._metrics.view import View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.util._once import Once
+from opentelemetry.util.exceptions import Failure
 
 _logger = getLogger(__name__)
 
@@ -315,25 +316,25 @@ class MeterProvider(APIMeterProvider):
 
         if not did_shutdown:
             _logger.warning("shutdown can only be called once")
-            return False
+            return
 
-        overall_result = True
+        metric_reader_errors = []
 
         for metric_reader in self._sdk_config.metric_readers:
-            metric_reader_result = metric_reader.shutdown()
+            try:
+                metric_reader.shutdown()
 
-            if not metric_reader_result:
-                _logger.warning(
-                    "MetricReader %s failed to shutdown", metric_reader
-                )
+            # pylint: disable=broad-except
+            except Exception as error:
 
-            overall_result = overall_result and metric_reader_result
+                metric_reader_errors.append(error)
 
         if self._atexit_handler is not None:
             unregister(self._atexit_handler)
             self._atexit_handler = None
 
-        return overall_result
+        if metric_reader_errors:
+            raise Failure("MeterProvider.shutdown", metric_reader_errors)
 
     def get_meter(
         self,

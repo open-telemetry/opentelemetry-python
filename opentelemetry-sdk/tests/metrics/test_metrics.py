@@ -32,6 +32,7 @@ from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.point import AggregationTemporality
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
+from opentelemetry.util.exceptions import Failure
 
 
 class DummyMetricReader(MetricReader):
@@ -151,7 +152,7 @@ class TestMeterProvider(ConcurrencyTestBase):
 
         mock_metric_reader_0 = MagicMock(
             **{
-                "shutdown.return_value": False,
+                "shutdown.side_effect": ZeroDivisionError(),
                 "__str__.return_value": "mock_metric_reader_0",
             }
         )
@@ -161,23 +162,31 @@ class TestMeterProvider(ConcurrencyTestBase):
             metric_readers=[mock_metric_reader_0, mock_metric_reader_1]
         )
 
-        with self.assertLogs(level=WARNING) as log:
-            self.assertFalse(meter_provider.shutdown())
-            self.assertEqual(
-                log.records[0].getMessage(),
-                "MetricReader mock_metric_reader_0 failed to shutdown",
-            )
+        with self.assertRaises(Failure) as error:
+            meter_provider.shutdown()
+
+        error = error.exception
+
+        self.assertIsInstance(error, Failure)
+        self.assertEqual(
+            str(error),
+            (
+                "MeterProvider.shutdown failed with the following exceptions:"
+                " ZeroDivisionError()"
+            ),
+        )
+
         mock_metric_reader_0.shutdown.assert_called_once()
         mock_metric_reader_1.shutdown.assert_called_once()
 
-        mock_metric_reader_0 = Mock(**{"shutdown.return_value": True})
-        mock_metric_reader_1 = Mock(**{"shutdown.return_value": True})
+        mock_metric_reader_0 = Mock()
+        mock_metric_reader_1 = Mock()
 
         meter_provider = MeterProvider(
             metric_readers=[mock_metric_reader_0, mock_metric_reader_1]
         )
 
-        self.assertTrue(meter_provider.shutdown())
+        self.assertIsNone(meter_provider.shutdown())
         mock_metric_reader_0.shutdown.assert_called_once()
         mock_metric_reader_1.shutdown.assert_called_once()
 
