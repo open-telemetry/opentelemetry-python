@@ -198,13 +198,15 @@ class MeterProvider(APIMeterProvider):
             _logger.warning("shutdown can only be called once")
             return False
 
-        result = True
+        overall_result = True
 
         for metric_reader in self._sdk_config.metric_readers:
-            result = metric_reader.shutdown() and result
+            metric_reader_result = metric_reader.shutdown()
 
-            if not result:
+            if not metric_reader_result:
                 _logger.warning("A MetricReader failed to shutdown")
+
+            overall_result = overall_result and metric_reader_result
 
         self._shutdown = True
 
@@ -212,7 +214,7 @@ class MeterProvider(APIMeterProvider):
             unregister(self._atexit_handler)
             self._atexit_handler = None
 
-        return result
+        return overall_result
 
     def get_meter(
         self,
