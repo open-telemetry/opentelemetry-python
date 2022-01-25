@@ -154,6 +154,8 @@ class PeriodicExportingMetricReader(MetricReader):
         self.collect()
 
     def _receive_metrics(self, metrics: Iterable[Metric]) -> None:
+        if metrics is None:
+            return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             self._exporter.export(metrics)
@@ -172,4 +174,5 @@ class PeriodicExportingMetricReader(MetricReader):
 
         self._shutdown_event.set()
         self._daemon_thread.join()
-        return self._exporter.shutdown()
+        self._exporter.shutdown()
+        return True
