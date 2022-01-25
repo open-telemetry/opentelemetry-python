@@ -38,21 +38,14 @@ from opentelemetry.proto.common.v1.common_pb2 import (
     InstrumentationLibrary,
     KeyValue,
 )
-from opentelemetry.proto.metrics.v1.metrics_pb2 import (
-    InstrumentationLibraryMetrics,
-)
-from opentelemetry.proto.metrics.v1.metrics_pb2 import Metric as OTLPMetric
-from opentelemetry.proto.metrics.v1.metrics_pb2 import (
-    NumberDataPoint as OTLPNumberDataPoint,
-)
-from opentelemetry.proto.metrics.v1.metrics_pb2 import ResourceMetrics
-from opentelemetry.proto.metrics.v1.metrics_pb2 import Sum as OTLPSum
+from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
 from opentelemetry.sdk._metrics.export import MetricExportResult
 from opentelemetry.sdk._metrics.point import (
     AggregationTemporality,
+    Gauge,
     Metric,
     Sum,
 )
@@ -136,6 +129,16 @@ def _generate_sum(name, val) -> Sum:
     )
 
 
+def _generate_gauge(name, val) -> Gauge:
+    return _generate_metric(
+        name,
+        Gauge(
+            time_unix_nano=1641946016139533244,
+            value=val,
+        ),
+    )
+
+
 class TestOTLPMetricExporter(TestCase):
     def setUp(self):
 
@@ -150,6 +153,8 @@ class TestOTLPMetricExporter(TestCase):
         self.metrics = {
             "sum_int": _generate_sum("sum_int", 33),
             "sum_float": _generate_sum("sum_float", 2.98),
+            "gauge_int": _generate_gauge("gauge_int", 9000),
+            "gauge_float": _generate_gauge("gauge_float", 52.028),
         }
 
     def tearDown(self):
@@ -307,7 +312,7 @@ class TestOTLPMetricExporter(TestCase):
     def test_translate_sum_int(self):
         expected = ExportMetricsServiceRequest(
             resource_metrics=[
-                ResourceMetrics(
+                pb2.ResourceMetrics(
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
@@ -317,18 +322,18 @@ class TestOTLPMetricExporter(TestCase):
                         ]
                     ),
                     instrumentation_library_metrics=[
-                        InstrumentationLibraryMetrics(
+                        pb2.InstrumentationLibraryMetrics(
                             instrumentation_library=InstrumentationLibrary(
                                 name="first_name", version="first_version"
                             ),
                             metrics=[
-                                OTLPMetric(
+                                pb2.Metric(
                                     name="sum_int",
                                     unit="s",
                                     description="foo",
-                                    sum=OTLPSum(
+                                    sum=pb2.Sum(
                                         data_points=[
-                                            OTLPNumberDataPoint(
+                                            pb2.NumberDataPoint(
                                                 attributes=[
                                                     KeyValue(
                                                         key="a",
@@ -365,7 +370,7 @@ class TestOTLPMetricExporter(TestCase):
     def test_translate_sum_float(self):
         expected = ExportMetricsServiceRequest(
             resource_metrics=[
-                ResourceMetrics(
+                pb2.ResourceMetrics(
                     resource=OTLPResource(
                         attributes=[
                             KeyValue(key="a", value=AnyValue(int_value=1)),
@@ -375,18 +380,18 @@ class TestOTLPMetricExporter(TestCase):
                         ]
                     ),
                     instrumentation_library_metrics=[
-                        InstrumentationLibraryMetrics(
+                        pb2.InstrumentationLibraryMetrics(
                             instrumentation_library=InstrumentationLibrary(
                                 name="first_name", version="first_version"
                             ),
                             metrics=[
-                                OTLPMetric(
+                                pb2.Metric(
                                     name="sum_float",
                                     unit="s",
                                     description="foo",
-                                    sum=OTLPSum(
+                                    sum=pb2.Sum(
                                         data_points=[
-                                            OTLPNumberDataPoint(
+                                            pb2.NumberDataPoint(
                                                 attributes=[
                                                     KeyValue(
                                                         key="a",
@@ -418,4 +423,114 @@ class TestOTLPMetricExporter(TestCase):
         )
         # pylint: disable=protected-access
         actual = self.exporter._translate_data([self.metrics["sum_float"]])
+        self.assertEqual(expected, actual)
+
+    def test_translate_gauge_int(self):
+        expected = ExportMetricsServiceRequest(
+            resource_metrics=[
+                pb2.ResourceMetrics(
+                    resource=OTLPResource(
+                        attributes=[
+                            KeyValue(key="a", value=AnyValue(int_value=1)),
+                            KeyValue(
+                                key="b", value=AnyValue(bool_value=False)
+                            ),
+                        ]
+                    ),
+                    instrumentation_library_metrics=[
+                        pb2.InstrumentationLibraryMetrics(
+                            instrumentation_library=InstrumentationLibrary(
+                                name="first_name", version="first_version"
+                            ),
+                            metrics=[
+                                pb2.Metric(
+                                    name="gauge_int",
+                                    unit="s",
+                                    description="foo",
+                                    gauge=pb2.Gauge(
+                                        data_points=[
+                                            pb2.NumberDataPoint(
+                                                attributes=[
+                                                    KeyValue(
+                                                        key="a",
+                                                        value=AnyValue(
+                                                            int_value=1
+                                                        ),
+                                                    ),
+                                                    KeyValue(
+                                                        key="b",
+                                                        value=AnyValue(
+                                                            bool_value=True
+                                                        ),
+                                                    ),
+                                                ],
+                                                time_unix_nano=1641946016139533244,
+                                                as_int=9000,
+                                            )
+                                        ],
+                                    ),
+                                )
+                            ],
+                        )
+                    ],
+                )
+            ]
+        )
+        # pylint: disable=protected-access
+        actual = self.exporter._translate_data([self.metrics["gauge_int"]])
+        self.assertEqual(expected, actual)
+
+    def test_translate_gauge_float(self):
+        expected = ExportMetricsServiceRequest(
+            resource_metrics=[
+                pb2.ResourceMetrics(
+                    resource=OTLPResource(
+                        attributes=[
+                            KeyValue(key="a", value=AnyValue(int_value=1)),
+                            KeyValue(
+                                key="b", value=AnyValue(bool_value=False)
+                            ),
+                        ]
+                    ),
+                    instrumentation_library_metrics=[
+                        pb2.InstrumentationLibraryMetrics(
+                            instrumentation_library=InstrumentationLibrary(
+                                name="first_name", version="first_version"
+                            ),
+                            metrics=[
+                                pb2.Metric(
+                                    name="gauge_float",
+                                    unit="s",
+                                    description="foo",
+                                    gauge=pb2.Gauge(
+                                        data_points=[
+                                            pb2.NumberDataPoint(
+                                                attributes=[
+                                                    KeyValue(
+                                                        key="a",
+                                                        value=AnyValue(
+                                                            int_value=1
+                                                        ),
+                                                    ),
+                                                    KeyValue(
+                                                        key="b",
+                                                        value=AnyValue(
+                                                            bool_value=True
+                                                        ),
+                                                    ),
+                                                ],
+                                                time_unix_nano=1641946016139533244,
+                                                as_double=52.028,
+                                            )
+                                        ],
+                                    ),
+                                )
+                            ],
+                        )
+                    ],
+                )
+            ]
+        )
+        # pylint: disable=protected-access
+        actual = self.exporter._translate_data([self.metrics["gauge_float"]])
         self.assertEqual(expected, actual)

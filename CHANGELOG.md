@@ -23,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2370](https://github.com/open-telemetry/opentelemetry-python/pull/2370))
 - [api] Rename `_DefaultMeter` and `_DefaultMeterProvider` to `NoOpMeter` and `NoOpMeterProvider`.
   ([#2383](https://github.com/open-telemetry/opentelemetry-python/pull/2383))
+- [exporter/opentelemetry-exporter-otlp-proto-grpc] Add Gauge to OTLPMetricExporter
+  ([#2408](https://github.com/open-telemetry/opentelemetry-python/pull/2408))
 
 ## [1.8.0-0.27b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.8.0-0.27b0) - 2021-12-17
 
