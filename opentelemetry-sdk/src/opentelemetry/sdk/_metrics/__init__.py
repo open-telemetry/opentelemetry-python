@@ -204,7 +204,9 @@ class MeterProvider(APIMeterProvider):
             metric_reader_result = metric_reader.shutdown()
 
             if not metric_reader_result:
-                _logger.warning("A MetricReader failed to shutdown")
+                _logger.warning(
+                    "MetricReader {metric_reader} failed to shutdown"
+                )
 
             overall_result = overall_result and metric_reader_result
 
