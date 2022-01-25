@@ -206,7 +206,7 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
 def _convert_aggregation_temporality(
     previous_point: Optional[_PointVarT],
     current_point: _PointVarT,
-    aggregation_temporality: int,
+    aggregation_temporality: AggregationTemporality,
 ) -> _PointVarT:
 
     current_point_type = type(current_point)
