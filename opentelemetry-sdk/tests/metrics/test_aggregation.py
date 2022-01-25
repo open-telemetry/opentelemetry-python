@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from dataclasses import replace
+from logging import WARNING
 from math import inf
 from time import sleep
 from unittest import TestCase
@@ -331,12 +332,13 @@ class TestConvertAggregationTemporality(TestCase):
             is_monotonic=False,
         )
 
-        self.assertIs(
-            _convert_aggregation_temporality(
-                Gauge(0, 0), current_point, AggregationTemporality.DELTA
-            ),
-            current_point,
-        )
+        with self.assertLogs(level=WARNING):
+            self.assertIs(
+                _convert_aggregation_temporality(
+                    Gauge(0, 0), current_point, AggregationTemporality.DELTA
+                ),
+                current_point,
+            )
 
     def test_current_point_sum_previous_point_none(self):
 
