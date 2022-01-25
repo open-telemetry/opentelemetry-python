@@ -129,7 +129,7 @@ def _generate_sum(name, val) -> Sum:
     )
 
 
-def _generate_gauge(name, val) -> Sum:
+def _generate_gauge(name, val) -> Gauge:
     return _generate_metric(
         name,
         Gauge(
