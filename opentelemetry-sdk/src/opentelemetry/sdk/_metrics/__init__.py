@@ -65,6 +65,7 @@ class Meter(APIMeter):
         self._measurement_consumer = measurement_consumer
 
     def create_counter(self, name, unit=None, description=None) -> APICounter:
+        super().create_counter(name, unit=unit, description=description)
         return Counter(
             name,
             self._instrumentation_info,
@@ -76,6 +77,9 @@ class Meter(APIMeter):
     def create_up_down_counter(
         self, name, unit=None, description=None
     ) -> APIUpDownCounter:
+        super().create_up_down_counter(
+            name, unit=unit, description=description
+        )
         return UpDownCounter(
             name,
             self._instrumentation_info,
@@ -87,6 +91,9 @@ class Meter(APIMeter):
     def create_observable_counter(
         self, name, callback, unit=None, description=None
     ) -> APIObservableCounter:
+        super().create_observable_counter(
+            name, callback, unit=unit, description=description
+        )
 
         instrument = ObservableCounter(
             name,
@@ -104,6 +111,7 @@ class Meter(APIMeter):
     def create_histogram(
         self, name, unit=None, description=None
     ) -> APIHistogram:
+        super().create_histogram(name, unit=unit, description=description)
         return Histogram(
             name,
             self._instrumentation_info,
@@ -115,6 +123,9 @@ class Meter(APIMeter):
     def create_observable_gauge(
         self, name, callback, unit=None, description=None
     ) -> APIObservableGauge:
+        super().create_observable_gauge(
+            name, callback, unit=unit, description=description
+        )
 
         instrument = ObservableGauge(
             name,
@@ -132,6 +143,9 @@ class Meter(APIMeter):
     def create_observable_up_down_counter(
         self, name, callback, unit=None, description=None
     ) -> APIObservableUpDownCounter:
+        super().create_observable_up_down_counter(
+            name, callback, unit=unit, description=description
+        )
 
         instrument = ObservableUpDownCounter(
             name,

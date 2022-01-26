@@ -132,7 +132,11 @@ class Meter(ABC):
     def schema_url(self):
         return self._schema_url
 
-    # FIXME check that the instrument name has not been used already
+    def _check_instrument_name(self, name):
+        if name in self._instrument_names:
+            raise Exception(f"Instrument name {name} has been used already")
+
+        self._instrument_names.add(name)
 
     @abstractmethod
     def create_counter(self, name, unit="", description="") -> Counter:
@@ -144,6 +148,7 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
+        self._check_instrument_name(name)
 
     @abstractmethod
     def create_up_down_counter(
@@ -157,6 +162,7 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
+        self._check_instrument_name(name)
 
     @abstractmethod
     def create_observable_counter(
@@ -240,6 +246,7 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
+        self._check_instrument_name(name)
 
     @abstractmethod
     def create_histogram(self, name, unit="", description="") -> Histogram:
@@ -251,6 +258,7 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
+        self._check_instrument_name(name)
 
     @abstractmethod
     def create_observable_gauge(
@@ -268,13 +276,13 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
+        self._check_instrument_name(name)
 
     @abstractmethod
     def create_observable_up_down_counter(
         self, name, callback, unit="", description=""
     ) -> ObservableUpDownCounter:
-        """Creates an `ObservableUpDownCounter` instrument
-
+        """
         Args:
             name: The name of the instrument to be created
             callback: A callback that returns an iterable of
@@ -285,6 +293,7 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
+        self._check_instrument_name(name)
 
 
 class _ProxyMeter(Meter):

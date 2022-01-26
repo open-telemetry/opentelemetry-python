@@ -243,17 +243,17 @@ class TestMeterProvider(ConcurrencyTestBase):
 
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
             meter_provider.get_meter("name").create_observable_counter(
-                "name", Mock()
+                "name0", Mock()
             )
         )
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
             meter_provider.get_meter("name").create_observable_up_down_counter(
-                "name", Mock()
+                "name1", Mock()
             )
         )
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
             meter_provider.get_meter("name").create_observable_gauge(
-                "name", Mock()
+                "name2", Mock()
             )
         )
 

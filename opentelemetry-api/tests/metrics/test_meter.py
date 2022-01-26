@@ -14,8 +14,17 @@
 # type: ignore
 
 from unittest import TestCase
+from unittest.mock import Mock
 
 from opentelemetry._metrics import Meter
+from opentelemetry._metrics.instrument import (
+    Counter,
+    Histogram,
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
+)
 
 # FIXME Test that the meter methods can be called concurrently safely.
 
@@ -53,6 +62,75 @@ class ChildMeter(Meter):
 
 
 class TestMeter(TestCase):
+    def test_repeated_instrument_names(self):
+        class TestMeter(Meter):
+            def create_counter(self, name, unit="", description="") -> Counter:
+                super().create_counter(
+                    name, unit=unit, description=description
+                )
+
+            def create_up_down_counter(
+                self, name, unit="", description=""
+            ) -> UpDownCounter:
+                super().create_up_down_counter(
+                    name, unit=unit, description=description
+                )
+
+            def create_observable_counter(
+                self, name, callback, unit="", description=""
+            ) -> ObservableCounter:
+                super().create_observable_up_down_counter(
+                    name, callback, unit=unit, description=description
+                )
+
+            def create_histogram(
+                self, name, unit="", description=""
+            ) -> Histogram:
+                super().create_histogram(
+                    name, unit=unit, description=description
+                )
+
+            def create_observable_gauge(
+                self, name, callback, unit="", description=""
+            ) -> ObservableGauge:
+                super().create_observable_gauge(
+                    name, callback, unit=unit, description=description
+                )
+
+            def create_observable_up_down_counter(
+                self, name, callback, unit="", description=""
+            ) -> ObservableUpDownCounter:
+                super().create_observable_up_down_counter(
+                    name, callback, unit=unit, description=description
+                )
+
+        try:
+            test_meter = TestMeter("name")
+
+            test_meter.create_counter("counter")
+            test_meter.create_up_down_counter("up_down_counter")
+            test_meter.create_observable_counter("observable_counter", Mock())
+            test_meter.create_histogram("histogram")
+            test_meter.create_observable_gauge("observable_gauge", Mock())
+            test_meter.create_observable_up_down_counter(
+                "observable_up_down_counter", Mock()
+            )
+        except Exception as error:
+            self.fail(f"Unexpected exception raised {error}")
+
+        for instrument_name in [
+            "counter",
+            "up_down_counter",
+            "observable_counter",
+            "histogram",
+            "observable_gauge",
+            "observable_up_down_counter",
+        ]:
+            with self.assertRaises(Exception):
+                getattr(test_meter, f"create_{instrument_name}")(
+                    instrument_name
+                )
+
     def test_create_counter(self):
         """
         Test that the meter provides a function to create a new Counter
