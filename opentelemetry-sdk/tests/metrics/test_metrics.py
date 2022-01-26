@@ -15,7 +15,7 @@
 
 from logging import WARNING
 from unittest import TestCase
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.sdk._metrics import Meter, MeterProvider
 from opentelemetry.sdk._metrics.instrument import (
@@ -92,14 +92,24 @@ class TestMeterProvider(TestCase):
 
     def test_shutdown(self):
 
-        mock_metric_reader_0 = Mock(**{"shutdown.return_value": False})
+        mock_metric_reader_0 = MagicMock(
+            **{
+                "shutdown.return_value": False,
+                "__str__.return_value": "mock_metric_reader_0",
+            }
+        )
         mock_metric_reader_1 = Mock(**{"shutdown.return_value": True})
 
         meter_provider = MeterProvider(
             metric_readers=[mock_metric_reader_0, mock_metric_reader_1]
         )
 
-        self.assertFalse(meter_provider.shutdown())
+        with self.assertLogs(level=WARNING) as log:
+            self.assertFalse(meter_provider.shutdown())
+            self.assertEqual(
+                log.records[0].getMessage(),
+                "MetricReader mock_metric_reader_0 failed to shutdown",
+            )
         mock_metric_reader_0.shutdown.assert_called_once()
         mock_metric_reader_1.shutdown.assert_called_once()
 
