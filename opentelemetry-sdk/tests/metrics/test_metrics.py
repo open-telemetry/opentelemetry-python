@@ -104,6 +104,30 @@ class TestMeterProvider(ConcurrencyTestBase):
         self.assertIs(meter1, meter2)
         self.assertIsNot(meter1, meter3)
 
+    def test_shutdown(self):
+
+        mock_metric_reader_0 = Mock(**{"shutdown.return_value": False})
+        mock_metric_reader_1 = Mock(**{"shutdown.return_value": True})
+
+        meter_provider = MeterProvider(
+            metric_readers=[mock_metric_reader_0, mock_metric_reader_1]
+        )
+
+        self.assertFalse(meter_provider.shutdown())
+        mock_metric_reader_0.shutdown.assert_called_once()
+        mock_metric_reader_1.shutdown.assert_called_once()
+
+        mock_metric_reader_0 = Mock(**{"shutdown.return_value": True})
+        mock_metric_reader_1 = Mock(**{"shutdown.return_value": True})
+
+        meter_provider = MeterProvider(
+            metric_readers=[mock_metric_reader_0, mock_metric_reader_1]
+        )
+
+        self.assertTrue(meter_provider.shutdown())
+        mock_metric_reader_0.shutdown.assert_called_once()
+        mock_metric_reader_1.shutdown.assert_called_once()
+
     def test_shutdown_subsequent_calls(self):
         """
         No subsequent attempts to get a `Meter` are allowed after calling

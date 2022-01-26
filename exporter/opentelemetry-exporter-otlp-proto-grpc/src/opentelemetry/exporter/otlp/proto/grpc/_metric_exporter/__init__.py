@@ -122,10 +122,15 @@ class OTLPMetricExporter(
                 unit=metric.unit,
             )
             if isinstance(metric.point, Gauge):
-                # TODO: implement gauge
-                pbmetric.gauge = pb2.Gauge(
-                    data_points=[],
+                pt = pb2.NumberDataPoint(
+                    attributes=self._translate_attributes(metric.attributes),
+                    time_unix_nano=metric.point.time_unix_nano,
                 )
+                if isinstance(metric.point.value, int):
+                    pt.as_int = metric.point.value
+                else:
+                    pt.as_double = metric.point.value
+                pbmetric.gauge.data_points.append(pt)
             elif isinstance(metric.point, Histogram):
                 # TODO: implement histogram
                 pbmetric.histogram = pb2.Histogram(
