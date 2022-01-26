@@ -312,7 +312,7 @@ class TestOTLPLogExporter(TestCase):
                             instrumentation_library=InstrumentationLibrary(
                                 name="first_name", version="first_version"
                             ),
-                            logs=[
+                            log_records=[
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     name="name",
@@ -372,7 +372,7 @@ class TestOTLPLogExporter(TestCase):
                             instrumentation_library=InstrumentationLibrary(
                                 name="first_name", version="first_version"
                             ),
-                            logs=[
+                            log_records=[
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     name="name",
@@ -410,7 +410,7 @@ class TestOTLPLogExporter(TestCase):
                             instrumentation_library=InstrumentationLibrary(
                                 name="second_name", version="second_version"
                             ),
-                            logs=[
+                            log_records=[
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     name="info name",
@@ -456,7 +456,7 @@ class TestOTLPLogExporter(TestCase):
                             instrumentation_library=InstrumentationLibrary(
                                 name="third_name", version="third_version"
                             ),
-                            logs=[
+                            log_records=[
                                 PB2LogRecord(
                                     # pylint: disable=no-member
                                     name="error name",
