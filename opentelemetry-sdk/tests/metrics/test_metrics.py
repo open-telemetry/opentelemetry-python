@@ -26,10 +26,24 @@ from opentelemetry.sdk._metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk._metrics.metric_reader import MetricReader
+from opentelemetry.sdk._metrics.point import AggregationTemporality
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
 
 
-class TestMeterProvider(TestCase):
+class DummyMetricReader(MetricReader):
+    def __init__(self):
+        super().__init__(AggregationTemporality.CUMULATIVE)
+
+    def _receive_metrics(self, metrics):
+        pass
+
+    def shutdown(self):
+        return True
+
+
+class TestMeterProvider(ConcurrencyTestBase):
     def test_resource(self):
         """
         `MeterProvider` provides a way to allow a `Resource` to be specified.
@@ -138,6 +152,31 @@ class TestMeterProvider(TestCase):
 
         with self.assertLogs(level=WARNING):
             meter_provider.shutdown()
+
+    @patch("opentelemetry.sdk._metrics._logger")
+    def test_shutdown_race(self, mock_logger):
+        mock_logger.warning = MockFunc()
+        meter_provider = MeterProvider()
+        num_threads = 70
+        self.run_with_many_threads(
+            meter_provider.shutdown, num_threads=num_threads
+        )
+        self.assertEqual(mock_logger.warning.call_count, num_threads - 1)
+
+    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
+    def test_measurement_collect_callback(
+        self, mock_sync_measurement_consumer
+    ):
+        metric_readers = [DummyMetricReader()] * 5
+        sync_consumer_instance = mock_sync_measurement_consumer()
+        sync_consumer_instance.collect = MockFunc()
+        MeterProvider(metric_readers=metric_readers)
+
+        for reader in metric_readers:
+            reader.collect()
+        self.assertEqual(
+            sync_consumer_instance.collect.call_count, len(metric_readers)
+        )
 
     @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
     def test_creates_sync_measurement_consumer(
