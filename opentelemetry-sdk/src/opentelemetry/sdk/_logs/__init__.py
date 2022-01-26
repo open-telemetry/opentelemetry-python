@@ -91,7 +91,7 @@ class LogRecord:
                 if self.trace_id is not None
                 else "",
                 "span_id": f"0x{format_span_id(self.span_id)}"
-                if self.span_id
+                if self.span_id is not None
                 else "",
                 "trace_flags": self.trace_flags,
                 "resource": repr(self.resource.attributes)
