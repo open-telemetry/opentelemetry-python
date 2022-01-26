@@ -94,6 +94,36 @@ LOG_RECORD_FLAG_TRACE_FLAGS_MASK = LogRecordFlags.V(255)
 global___LogRecordFlags = LogRecordFlags
 
 
+class LogsData(google.protobuf.message.Message):
+    """LogsData represents the logs data that can be stored in a persistent storage,
+    OR can be embedded by other protocols that transfer OTLP logs data but do not
+    implement the OTLP protocol.
+
+    The main difference between this message and collector protocol is that
+    in this message there will not be any "control" or "metadata" specific to
+    OTLP protocol.
+
+    When new fields are added into this message, the OTLP request MUST be updated
+    as well.
+    """
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    RESOURCE_LOGS_FIELD_NUMBER: builtins.int
+    @property
+    def resource_logs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ResourceLogs]:
+        """An array of ResourceLogs.
+        For data coming from a single resource this array will typically contain
+        one element. Intermediary nodes that receive data from multiple origins
+        typically batch the data before forwarding further and in that case this
+        array will contain multiple elements.
+        """
+        pass
+    def __init__(self,
+        *,
+        resource_logs : typing.Optional[typing.Iterable[global___ResourceLogs]] = ...,
+        ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["resource_logs",b"resource_logs"]) -> None: ...
+global___LogsData = LogsData
+
 class ResourceLogs(google.protobuf.message.Message):
     """A collection of InstrumentationLibraryLogs from a Resource."""
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
@@ -130,7 +160,7 @@ class InstrumentationLibraryLogs(google.protobuf.message.Message):
     """A collection of Logs produced by an InstrumentationLibrary."""
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     INSTRUMENTATION_LIBRARY_FIELD_NUMBER: builtins.int
-    LOGS_FIELD_NUMBER: builtins.int
+    LOG_RECORDS_FIELD_NUMBER: builtins.int
     SCHEMA_URL_FIELD_NUMBER: builtins.int
     @property
     def instrumentation_library(self) -> opentelemetry.proto.common.v1.common_pb2.InstrumentationLibrary:
@@ -140,7 +170,7 @@ class InstrumentationLibraryLogs(google.protobuf.message.Message):
         """
         pass
     @property
-    def logs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___LogRecord]:
+    def log_records(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___LogRecord]:
         """A list of log records."""
         pass
     schema_url: typing.Text = ...
@@ -149,11 +179,11 @@ class InstrumentationLibraryLogs(google.protobuf.message.Message):
     def __init__(self,
         *,
         instrumentation_library : typing.Optional[opentelemetry.proto.common.v1.common_pb2.InstrumentationLibrary] = ...,
-        logs : typing.Optional[typing.Iterable[global___LogRecord]] = ...,
+        log_records : typing.Optional[typing.Iterable[global___LogRecord]] = ...,
         schema_url : typing.Text = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["instrumentation_library",b"instrumentation_library"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["instrumentation_library",b"instrumentation_library","logs",b"logs","schema_url",b"schema_url"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["instrumentation_library",b"instrumentation_library","log_records",b"log_records","schema_url",b"schema_url"]) -> None: ...
 global___InstrumentationLibraryLogs = InstrumentationLibraryLogs
 
 class LogRecord(google.protobuf.message.Message):
