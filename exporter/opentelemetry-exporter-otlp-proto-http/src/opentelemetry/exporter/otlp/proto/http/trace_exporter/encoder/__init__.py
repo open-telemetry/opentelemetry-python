@@ -45,7 +45,6 @@ from opentelemetry.sdk.trace import Span as SDKSpan
 from opentelemetry.trace import Link
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.span import SpanContext, TraceState, Status
-from opentelemetry.trace.status import StatusCode
 from opentelemetry.util.types import Attributes
 
 # pylint: disable=E1101
