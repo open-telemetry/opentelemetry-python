@@ -298,6 +298,32 @@ class TestMeter(TestCase):
     def setUp(self):
         self.meter = Meter(Mock(), Mock())
 
+    def test_repeated_instrument_names(self):
+        try:
+            self.meter.create_counter("counter")
+            self.meter.create_up_down_counter("up_down_counter")
+            self.meter.create_observable_counter("observable_counter", Mock())
+            self.meter.create_histogram("histogram")
+            self.meter.create_observable_gauge("observable_gauge", Mock())
+            self.meter.create_observable_up_down_counter(
+                "observable_up_down_counter", Mock()
+            )
+        except Exception as error:
+            self.fail(f"Unexpected exception raised {error}")
+
+        for instrument_name in [
+            "counter",
+            "up_down_counter",
+            "observable_counter",
+            "histogram",
+            "observable_gauge",
+            "observable_up_down_counter",
+        ]:
+            with self.assertRaises(Exception):
+                getattr(self.meter, f"create_{instrument_name}")(
+                    instrument_name
+                )
+
     def test_create_counter(self):
         counter = self.meter.create_counter(
             "name", unit="unit", description="description"
