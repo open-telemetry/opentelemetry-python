@@ -762,7 +762,6 @@ class TestOTLPSpanExporter(TestCase):
         self,
         translated: ExportTraceServiceRequest,
         code_expected: Status,
-        deprecated_code_expected: Status,
     ):
         status = (
             translated.resource_spans[0]
@@ -774,10 +773,6 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(
             status.code,
             code_expected,
-        )
-        self.assertEqual(
-            status.deprecated_code,
-            deprecated_code_expected,
         )
 
     def test_span_status_translate(self):
@@ -797,17 +792,14 @@ class TestOTLPSpanExporter(TestCase):
         self._check_translated_status(
             unset_translated,
             Status.STATUS_CODE_UNSET,
-            Status.DEPRECATED_STATUS_CODE_OK,
         )
         self._check_translated_status(
             ok_translated,
             Status.STATUS_CODE_OK,
-            Status.DEPRECATED_STATUS_CODE_OK,
         )
         self._check_translated_status(
             error_translated,
             Status.STATUS_CODE_ERROR,
-            Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR,
         )
 
     # pylint:disable=no-member

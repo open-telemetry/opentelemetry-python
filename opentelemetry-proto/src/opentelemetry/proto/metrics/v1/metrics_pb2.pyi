@@ -164,6 +164,67 @@ value was reset (e.g. Prometheus).
 global___AggregationTemporality = AggregationTemporality
 
 
+class DataPointFlags(_DataPointFlags, metaclass=_DataPointFlagsEnumTypeWrapper):
+    """DataPointFlags is defined as a protobuf 'uint32' type and is to be used as a
+    bit-field representing 32 distinct boolean flags.  Each flag defined in this
+    enum is a bit-mask.  To test the presence of a single flag in the flags of
+    a data point, for example, use an expression like:
+
+      (point.flags & FLAG_NO_RECORDED_VALUE) == FLAG_NO_RECORDED_VALUE
+    """
+    pass
+class _DataPointFlags:
+    V = typing.NewType('V', builtins.int)
+class _DataPointFlagsEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_DataPointFlags.V], builtins.type):
+    DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor = ...
+    FLAG_NONE = DataPointFlags.V(0)
+    FLAG_NO_RECORDED_VALUE = DataPointFlags.V(1)
+    """This DataPoint is valid but has no recorded value.  This value
+    SHOULD be used to reflect explicitly missing data in a series, as
+    for an equivalent to the Prometheus "staleness marker".
+    """
+
+
+FLAG_NONE = DataPointFlags.V(0)
+FLAG_NO_RECORDED_VALUE = DataPointFlags.V(1)
+"""This DataPoint is valid but has no recorded value.  This value
+SHOULD be used to reflect explicitly missing data in a series, as
+for an equivalent to the Prometheus "staleness marker".
+"""
+
+global___DataPointFlags = DataPointFlags
+
+
+class MetricsData(google.protobuf.message.Message):
+    """MetricsData represents the metrics data that can be stored in a persistent
+    storage, OR can be embedded by other protocols that transfer OTLP metrics
+    data but do not implement the OTLP protocol.
+
+    The main difference between this message and collector protocol is that
+    in this message there will not be any "control" or "metadata" specific to
+    OTLP protocol.
+
+    When new fields are added into this message, the OTLP request MUST be updated
+    as well.
+    """
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    RESOURCE_METRICS_FIELD_NUMBER: builtins.int
+    @property
+    def resource_metrics(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ResourceMetrics]:
+        """An array of ResourceMetrics.
+        For data coming from a single resource this array will typically contain
+        one element. Intermediary nodes that receive data from multiple origins
+        typically batch the data before forwarding further and in that case this
+        array will contain multiple elements.
+        """
+        pass
+    def __init__(self,
+        *,
+        resource_metrics : typing.Optional[typing.Iterable[global___ResourceMetrics]] = ...,
+        ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["resource_metrics",b"resource_metrics"]) -> None: ...
+global___MetricsData = MetricsData
+
 class ResourceMetrics(google.protobuf.message.Message):
     """A collection of InstrumentationLibraryMetrics from a Resource."""
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
@@ -317,12 +378,10 @@ class Metric(google.protobuf.message.Message):
     NAME_FIELD_NUMBER: builtins.int
     DESCRIPTION_FIELD_NUMBER: builtins.int
     UNIT_FIELD_NUMBER: builtins.int
-    INT_GAUGE_FIELD_NUMBER: builtins.int
     GAUGE_FIELD_NUMBER: builtins.int
-    INT_SUM_FIELD_NUMBER: builtins.int
     SUM_FIELD_NUMBER: builtins.int
-    INT_HISTOGRAM_FIELD_NUMBER: builtins.int
     HISTOGRAM_FIELD_NUMBER: builtins.int
+    EXPONENTIAL_HISTOGRAM_FIELD_NUMBER: builtins.int
     SUMMARY_FIELD_NUMBER: builtins.int
     name: typing.Text = ...
     """name of the metric, including its DNS name prefix. It must be unique."""
@@ -336,38 +395,13 @@ class Metric(google.protobuf.message.Message):
     """
 
     @property
-    def int_gauge(self) -> global___IntGauge:
-        """IntGauge and IntSum are deprecated and will be removed soon.
-        1. Old senders and receivers that are not aware of this change will
-        continue using the `int_gauge` and `int_sum` fields.
-        2. New senders, which are aware of this change MUST send only `gauge`
-        and `sum` fields.
-        3. New receivers, which are aware of this change MUST convert these into
-        `gauge` and `sum` by using the provided as_int field in the oneof values.
-        This field will be removed in ~3 months, on July 1, 2021.
-        """
-        pass
-    @property
     def gauge(self) -> global___Gauge: ...
-    @property
-    def int_sum(self) -> global___IntSum:
-        """This field will be removed in ~3 months, on July 1, 2021."""
-        pass
     @property
     def sum(self) -> global___Sum: ...
     @property
-    def int_histogram(self) -> global___IntHistogram:
-        """IntHistogram is deprecated and will be removed soon.
-        1. Old senders and receivers that are not aware of this change will
-        continue using the `int_histogram` field.
-        2. New senders, which are aware of this change MUST send only `histogram`.
-        3. New receivers, which are aware of this change MUST convert this into
-        `histogram` by simply converting all int64 values into float.
-        This field will be removed in ~3 months, on July 1, 2021.
-        """
-        pass
-    @property
     def histogram(self) -> global___Histogram: ...
+    @property
+    def exponential_histogram(self) -> global___ExponentialHistogram: ...
     @property
     def summary(self) -> global___Summary: ...
     def __init__(self,
@@ -375,45 +409,19 @@ class Metric(google.protobuf.message.Message):
         name : typing.Text = ...,
         description : typing.Text = ...,
         unit : typing.Text = ...,
-        int_gauge : typing.Optional[global___IntGauge] = ...,
         gauge : typing.Optional[global___Gauge] = ...,
-        int_sum : typing.Optional[global___IntSum] = ...,
         sum : typing.Optional[global___Sum] = ...,
-        int_histogram : typing.Optional[global___IntHistogram] = ...,
         histogram : typing.Optional[global___Histogram] = ...,
+        exponential_histogram : typing.Optional[global___ExponentialHistogram] = ...,
         summary : typing.Optional[global___Summary] = ...,
         ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["data",b"data","gauge",b"gauge","histogram",b"histogram","int_gauge",b"int_gauge","int_histogram",b"int_histogram","int_sum",b"int_sum","sum",b"sum","summary",b"summary"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data",b"data","description",b"description","gauge",b"gauge","histogram",b"histogram","int_gauge",b"int_gauge","int_histogram",b"int_histogram","int_sum",b"int_sum","name",b"name","sum",b"sum","summary",b"summary","unit",b"unit"]) -> None: ...
-    def WhichOneof(self, oneof_group: typing_extensions.Literal["data",b"data"]) -> typing.Optional[typing_extensions.Literal["int_gauge","gauge","int_sum","sum","int_histogram","histogram","summary"]]: ...
+    def HasField(self, field_name: typing_extensions.Literal["data",b"data","exponential_histogram",b"exponential_histogram","gauge",b"gauge","histogram",b"histogram","sum",b"sum","summary",b"summary"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["data",b"data","description",b"description","exponential_histogram",b"exponential_histogram","gauge",b"gauge","histogram",b"histogram","name",b"name","sum",b"sum","summary",b"summary","unit",b"unit"]) -> None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["data",b"data"]) -> typing.Optional[typing_extensions.Literal["gauge","sum","histogram","exponential_histogram","summary"]]: ...
 global___Metric = Metric
 
-class IntGauge(google.protobuf.message.Message):
-    """IntGauge is deprecated.  Use Gauge with an integer value in NumberDataPoint.
-
-    IntGauge represents the type of a int scalar metric that always exports the
-    "current value" for every data point. It should be used for an "unknown"
-    aggregation.
-
-    A Gauge does not support different aggregation temporalities. Given the
-    aggregation is unknown, points cannot be combined using the same
-    aggregation, regardless of aggregation temporalities. Therefore,
-    AggregationTemporality is not included. Consequently, this also means
-    "StartTimeUnixNano" is ignored for all data points.
-    """
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    DATA_POINTS_FIELD_NUMBER: builtins.int
-    @property
-    def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___IntDataPoint]: ...
-    def __init__(self,
-        *,
-        data_points : typing.Optional[typing.Iterable[global___IntDataPoint]] = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["data_points",b"data_points"]) -> None: ...
-global___IntGauge = IntGauge
-
 class Gauge(google.protobuf.message.Message):
-    """Gauge represents the type of a double scalar metric that always exports the
+    """Gauge represents the type of a scalar metric that always exports the
     "current value" for every data point. It should be used for an "unknown"
     aggregation.
 
@@ -434,38 +442,9 @@ class Gauge(google.protobuf.message.Message):
     def ClearField(self, field_name: typing_extensions.Literal["data_points",b"data_points"]) -> None: ...
 global___Gauge = Gauge
 
-class IntSum(google.protobuf.message.Message):
-    """IntSum is deprecated.  Use Sum with an integer value in NumberDataPoint.
-
-    IntSum represents the type of a numeric int scalar metric that is calculated as
-    a sum of all reported measurements over a time interval.
-    """
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    DATA_POINTS_FIELD_NUMBER: builtins.int
-    AGGREGATION_TEMPORALITY_FIELD_NUMBER: builtins.int
-    IS_MONOTONIC_FIELD_NUMBER: builtins.int
-    @property
-    def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___IntDataPoint]: ...
-    aggregation_temporality: global___AggregationTemporality.V = ...
-    """aggregation_temporality describes if the aggregator reports delta changes
-    since last report time, or cumulative changes since a fixed start time.
-    """
-
-    is_monotonic: builtins.bool = ...
-    """If "true" means that the sum is monotonic."""
-
-    def __init__(self,
-        *,
-        data_points : typing.Optional[typing.Iterable[global___IntDataPoint]] = ...,
-        aggregation_temporality : global___AggregationTemporality.V = ...,
-        is_monotonic : builtins.bool = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["aggregation_temporality",b"aggregation_temporality","data_points",b"data_points","is_monotonic",b"is_monotonic"]) -> None: ...
-global___IntSum = IntSum
-
 class Sum(google.protobuf.message.Message):
-    """Sum represents the type of a numeric double scalar metric that is calculated
-    as a sum of all reported measurements over a time interval.
+    """Sum represents the type of a scalar metric that is calculated as a sum of all
+    reported measurements over a time interval.
     """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     DATA_POINTS_FIELD_NUMBER: builtins.int
@@ -490,34 +469,9 @@ class Sum(google.protobuf.message.Message):
     def ClearField(self, field_name: typing_extensions.Literal["aggregation_temporality",b"aggregation_temporality","data_points",b"data_points","is_monotonic",b"is_monotonic"]) -> None: ...
 global___Sum = Sum
 
-class IntHistogram(google.protobuf.message.Message):
-    """IntHistogram is deprecated, replaced by Histogram points using double-
-    valued exemplars.
-
-    This represents the type of a metric that is calculated by aggregating as a
-    Histogram of all reported int measurements over a time interval.
-    """
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    DATA_POINTS_FIELD_NUMBER: builtins.int
-    AGGREGATION_TEMPORALITY_FIELD_NUMBER: builtins.int
-    @property
-    def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___IntHistogramDataPoint]: ...
-    aggregation_temporality: global___AggregationTemporality.V = ...
-    """aggregation_temporality describes if the aggregator reports delta changes
-    since last report time, or cumulative changes since a fixed start time.
-    """
-
-    def __init__(self,
-        *,
-        data_points : typing.Optional[typing.Iterable[global___IntHistogramDataPoint]] = ...,
-        aggregation_temporality : global___AggregationTemporality.V = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["aggregation_temporality",b"aggregation_temporality","data_points",b"data_points"]) -> None: ...
-global___IntHistogram = IntHistogram
-
 class Histogram(google.protobuf.message.Message):
     """Histogram represents the type of a metric that is calculated by aggregating
-    as a Histogram of all reported double measurements over a time interval.
+    as a Histogram of all reported measurements over a time interval.
     """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     DATA_POINTS_FIELD_NUMBER: builtins.int
@@ -536,6 +490,28 @@ class Histogram(google.protobuf.message.Message):
         ) -> None: ...
     def ClearField(self, field_name: typing_extensions.Literal["aggregation_temporality",b"aggregation_temporality","data_points",b"data_points"]) -> None: ...
 global___Histogram = Histogram
+
+class ExponentialHistogram(google.protobuf.message.Message):
+    """ExponentialHistogram represents the type of a metric that is calculated by aggregating
+    as a ExponentialHistogram of all reported double measurements over a time interval.
+    """
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    DATA_POINTS_FIELD_NUMBER: builtins.int
+    AGGREGATION_TEMPORALITY_FIELD_NUMBER: builtins.int
+    @property
+    def data_points(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ExponentialHistogramDataPoint]: ...
+    aggregation_temporality: global___AggregationTemporality.V = ...
+    """aggregation_temporality describes if the aggregator reports delta changes
+    since last report time, or cumulative changes since a fixed start time.
+    """
+
+    def __init__(self,
+        *,
+        data_points : typing.Optional[typing.Iterable[global___ExponentialHistogramDataPoint]] = ...,
+        aggregation_temporality : global___AggregationTemporality.V = ...,
+        ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["aggregation_temporality",b"aggregation_temporality","data_points",b"data_points"]) -> None: ...
+global___ExponentialHistogram = ExponentialHistogram
 
 class Summary(google.protobuf.message.Message):
     """Summary metric data are used to convey quantile summaries,
@@ -556,88 +532,27 @@ class Summary(google.protobuf.message.Message):
     def ClearField(self, field_name: typing_extensions.Literal["data_points",b"data_points"]) -> None: ...
 global___Summary = Summary
 
-class IntDataPoint(google.protobuf.message.Message):
-    """IntDataPoint is a single data point in a timeseries that describes the
-    time-varying values of a int64 metric.
-    """
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    LABELS_FIELD_NUMBER: builtins.int
-    START_TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
-    TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
-    VALUE_FIELD_NUMBER: builtins.int
-    EXEMPLARS_FIELD_NUMBER: builtins.int
-    @property
-    def labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]:
-        """The set of labels that uniquely identify this timeseries."""
-        pass
-    start_time_unix_nano: builtins.int = ...
-    """StartTimeUnixNano is optional but strongly encouraged, see the
-    the detiled comments above Metric.
-
-    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
-    1970.
-    """
-
-    time_unix_nano: builtins.int = ...
-    """TimeUnixNano is required, see the detailed comments above Metric.
-
-    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
-    1970.
-    """
-
-    value: builtins.int = ...
-    """value itself."""
-
-    @property
-    def exemplars(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___IntExemplar]:
-        """(Optional) List of exemplars collected from
-        measurements that were used to form the data point
-        """
-        pass
-    def __init__(self,
-        *,
-        labels : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]] = ...,
-        start_time_unix_nano : builtins.int = ...,
-        time_unix_nano : builtins.int = ...,
-        value : builtins.int = ...,
-        exemplars : typing.Optional[typing.Iterable[global___IntExemplar]] = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["exemplars",b"exemplars","labels",b"labels","start_time_unix_nano",b"start_time_unix_nano","time_unix_nano",b"time_unix_nano","value",b"value"]) -> None: ...
-global___IntDataPoint = IntDataPoint
-
 class NumberDataPoint(google.protobuf.message.Message):
     """NumberDataPoint is a single data point in a timeseries that describes the
-    time-varying value of a double metric.
+    time-varying scalar value of a metric.
     """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     ATTRIBUTES_FIELD_NUMBER: builtins.int
-    LABELS_FIELD_NUMBER: builtins.int
     START_TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
     TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
     AS_DOUBLE_FIELD_NUMBER: builtins.int
     AS_INT_FIELD_NUMBER: builtins.int
     EXEMPLARS_FIELD_NUMBER: builtins.int
+    FLAGS_FIELD_NUMBER: builtins.int
     @property
     def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
         """The set of key/value pairs that uniquely identify the timeseries from
         where this point belongs. The list may be empty (may contain 0 elements).
         """
         pass
-    @property
-    def labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]:
-        """Labels is deprecated and will be removed soon.
-        1. Old senders and receivers that are not aware of this change will
-        continue using the `labels` field.
-        2. New senders, which are aware of this change MUST send only `attributes`.
-        3. New receivers, which are aware of this change MUST convert this into
-        `labels` by simply converting all int64 values into float.
-
-        This field will be removed in ~3 months, on July 1, 2021.
-        """
-        pass
     start_time_unix_nano: builtins.int = ...
     """StartTimeUnixNano is optional but strongly encouraged, see the
-    the detiled comments above Metric.
+    the detailed comments above Metric.
 
     Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
     1970.
@@ -658,129 +573,31 @@ class NumberDataPoint(google.protobuf.message.Message):
         measurements that were used to form the data point
         """
         pass
+    flags: builtins.int = ...
+    """Flags that apply to this specific data point.  See DataPointFlags
+    for the available flags and their meaning.
+    """
+
     def __init__(self,
         *,
         attributes : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue]] = ...,
-        labels : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]] = ...,
         start_time_unix_nano : builtins.int = ...,
         time_unix_nano : builtins.int = ...,
         as_double : builtins.float = ...,
         as_int : builtins.int = ...,
         exemplars : typing.Optional[typing.Iterable[global___Exemplar]] = ...,
+        flags : builtins.int = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["as_double",b"as_double","as_int",b"as_int","value",b"value"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["as_double",b"as_double","as_int",b"as_int","attributes",b"attributes","exemplars",b"exemplars","labels",b"labels","start_time_unix_nano",b"start_time_unix_nano","time_unix_nano",b"time_unix_nano","value",b"value"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["as_double",b"as_double","as_int",b"as_int","attributes",b"attributes","exemplars",b"exemplars","flags",b"flags","start_time_unix_nano",b"start_time_unix_nano","time_unix_nano",b"time_unix_nano","value",b"value"]) -> None: ...
     def WhichOneof(self, oneof_group: typing_extensions.Literal["value",b"value"]) -> typing.Optional[typing_extensions.Literal["as_double","as_int"]]: ...
 global___NumberDataPoint = NumberDataPoint
 
-class IntHistogramDataPoint(google.protobuf.message.Message):
-    """IntHistogramDataPoint is deprecated; use HistogramDataPoint.
-
-    This is a single data point in a timeseries that describes
-    the time-varying values of a Histogram of int values. A Histogram contains
-    summary statistics for a population of values, it may optionally contain
-    the distribution of those values across a set of buckets.
-
-    If the histogram contains the distribution of values, then both
-    "explicit_bounds" and "bucket counts" fields must be defined.
-    If the histogram does not contain the distribution of values, then both
-    "explicit_bounds" and "bucket_counts" must be omitted and only "count" and
-    "sum" are known.
-    """
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    LABELS_FIELD_NUMBER: builtins.int
-    START_TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
-    TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
-    COUNT_FIELD_NUMBER: builtins.int
-    SUM_FIELD_NUMBER: builtins.int
-    BUCKET_COUNTS_FIELD_NUMBER: builtins.int
-    EXPLICIT_BOUNDS_FIELD_NUMBER: builtins.int
-    EXEMPLARS_FIELD_NUMBER: builtins.int
-    @property
-    def labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]:
-        """The set of labels that uniquely identify this timeseries."""
-        pass
-    start_time_unix_nano: builtins.int = ...
-    """StartTimeUnixNano is optional but strongly encouraged, see the
-    the detiled comments above Metric.
-
-    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
-    1970.
-    """
-
-    time_unix_nano: builtins.int = ...
-    """TimeUnixNano is required, see the detailed comments above Metric.
-
-    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
-    1970.
-    """
-
-    count: builtins.int = ...
-    """count is the number of values in the population. Must be non-negative. This
-    value must be equal to the sum of the "count" fields in buckets if a
-    histogram is provided.
-    """
-
-    sum: builtins.int = ...
-    """sum of the values in the population. If count is zero then this field
-    must be zero. This value must be equal to the sum of the "sum" fields in
-    buckets if a histogram is provided.
-    """
-
-    @property
-    def bucket_counts(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
-        """bucket_counts is an optional field contains the count values of histogram
-        for each bucket.
-
-        The sum of the bucket_counts must equal the value in the count field.
-
-        The number of elements in bucket_counts array must be by one greater than
-        the number of elements in explicit_bounds array.
-        """
-        pass
-    @property
-    def explicit_bounds(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.float]:
-        """explicit_bounds specifies buckets with explicitly defined bounds for values.
-
-        This defines size(explicit_bounds) + 1 (= N) buckets. The boundaries for
-        bucket at index i are:
-
-        (-infinity, explicit_bounds[i]] for i == 0
-        (explicit_bounds[i-1], explicit_bounds[i]] for 0 < i < N-1
-        (explicit_bounds[i], +infinity) for i == N-1
-
-        The values in the explicit_bounds array must be strictly increasing.
-
-        Histogram buckets are inclusive of their upper boundary, except the last
-        bucket where the boundary is at infinity. This format is intentionally
-        compatible with the OpenMetrics histogram definition.
-        """
-        pass
-    @property
-    def exemplars(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___IntExemplar]:
-        """(Optional) List of exemplars collected from
-        measurements that were used to form the data point
-        """
-        pass
-    def __init__(self,
-        *,
-        labels : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]] = ...,
-        start_time_unix_nano : builtins.int = ...,
-        time_unix_nano : builtins.int = ...,
-        count : builtins.int = ...,
-        sum : builtins.int = ...,
-        bucket_counts : typing.Optional[typing.Iterable[builtins.int]] = ...,
-        explicit_bounds : typing.Optional[typing.Iterable[builtins.float]] = ...,
-        exemplars : typing.Optional[typing.Iterable[global___IntExemplar]] = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["bucket_counts",b"bucket_counts","count",b"count","exemplars",b"exemplars","explicit_bounds",b"explicit_bounds","labels",b"labels","start_time_unix_nano",b"start_time_unix_nano","sum",b"sum","time_unix_nano",b"time_unix_nano"]) -> None: ...
-global___IntHistogramDataPoint = IntHistogramDataPoint
-
 class HistogramDataPoint(google.protobuf.message.Message):
     """HistogramDataPoint is a single data point in a timeseries that describes the
-    time-varying values of a Histogram of double values. A Histogram contains
-    summary statistics for a population of values, it may optionally contain the
-    distribution of those values across a set of buckets.
+    time-varying values of a Histogram. A Histogram contains summary statistics
+    for a population of values, it may optionally contain the distribution of
+    those values across a set of buckets.
 
     If the histogram contains the distribution of values, then both
     "explicit_bounds" and "bucket counts" fields must be defined.
@@ -790,7 +607,6 @@ class HistogramDataPoint(google.protobuf.message.Message):
     """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     ATTRIBUTES_FIELD_NUMBER: builtins.int
-    LABELS_FIELD_NUMBER: builtins.int
     START_TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
     TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
     COUNT_FIELD_NUMBER: builtins.int
@@ -798,27 +614,16 @@ class HistogramDataPoint(google.protobuf.message.Message):
     BUCKET_COUNTS_FIELD_NUMBER: builtins.int
     EXPLICIT_BOUNDS_FIELD_NUMBER: builtins.int
     EXEMPLARS_FIELD_NUMBER: builtins.int
+    FLAGS_FIELD_NUMBER: builtins.int
     @property
     def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
         """The set of key/value pairs that uniquely identify the timeseries from
         where this point belongs. The list may be empty (may contain 0 elements).
         """
         pass
-    @property
-    def labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]:
-        """Labels is deprecated and will be removed soon.
-        1. Old senders and receivers that are not aware of this change will
-        continue using the `labels` field.
-        2. New senders, which are aware of this change MUST send only `attributes`.
-        3. New receivers, which are aware of this change MUST convert this into
-        `labels` by simply converting all int64 values into float.
-
-        This field will be removed in ~3 months, on July 1, 2021.
-        """
-        pass
     start_time_unix_nano: builtins.int = ...
     """StartTimeUnixNano is optional but strongly encouraged, see the
-    the detiled comments above Metric.
+    the detailed comments above Metric.
 
     Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
     1970.
@@ -839,8 +644,7 @@ class HistogramDataPoint(google.protobuf.message.Message):
 
     sum: builtins.float = ...
     """sum of the values in the population. If count is zero then this field
-    must be zero. This value must be equal to the sum of the "sum" fields in
-    buckets if a histogram is provided.
+    must be zero.
 
     Note: Sum should only be filled out when measuring non-negative discrete
     events, and is assumed to be monotonic over the values of these events.
@@ -864,12 +668,11 @@ class HistogramDataPoint(google.protobuf.message.Message):
     def explicit_bounds(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.float]:
         """explicit_bounds specifies buckets with explicitly defined bounds for values.
 
-        This defines size(explicit_bounds) + 1 (= N) buckets. The boundaries for
-        bucket at index i are:
+        The boundaries for bucket at index i are:
 
         (-infinity, explicit_bounds[i]] for i == 0
-        (explicit_bounds[i-1], explicit_bounds[i]] for 0 < i < N-1
-        (explicit_bounds[i], +infinity) for i == N-1
+        (explicit_bounds[i-1], explicit_bounds[i]] for 0 < i < size(explicit_bounds)
+        (explicit_bounds[i-1], +infinity) for i == size(explicit_bounds)
 
         The values in the explicit_bounds array must be strictly increasing.
 
@@ -884,10 +687,14 @@ class HistogramDataPoint(google.protobuf.message.Message):
         measurements that were used to form the data point
         """
         pass
+    flags: builtins.int = ...
+    """Flags that apply to this specific data point.  See DataPointFlags
+    for the available flags and their meaning.
+    """
+
     def __init__(self,
         *,
         attributes : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue]] = ...,
-        labels : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]] = ...,
         start_time_unix_nano : builtins.int = ...,
         time_unix_nano : builtins.int = ...,
         count : builtins.int = ...,
@@ -895,9 +702,165 @@ class HistogramDataPoint(google.protobuf.message.Message):
         bucket_counts : typing.Optional[typing.Iterable[builtins.int]] = ...,
         explicit_bounds : typing.Optional[typing.Iterable[builtins.float]] = ...,
         exemplars : typing.Optional[typing.Iterable[global___Exemplar]] = ...,
+        flags : builtins.int = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","bucket_counts",b"bucket_counts","count",b"count","exemplars",b"exemplars","explicit_bounds",b"explicit_bounds","labels",b"labels","start_time_unix_nano",b"start_time_unix_nano","sum",b"sum","time_unix_nano",b"time_unix_nano"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","bucket_counts",b"bucket_counts","count",b"count","exemplars",b"exemplars","explicit_bounds",b"explicit_bounds","flags",b"flags","start_time_unix_nano",b"start_time_unix_nano","sum",b"sum","time_unix_nano",b"time_unix_nano"]) -> None: ...
 global___HistogramDataPoint = HistogramDataPoint
+
+class ExponentialHistogramDataPoint(google.protobuf.message.Message):
+    """ExponentialHistogramDataPoint is a single data point in a timeseries that describes the
+    time-varying values of a ExponentialHistogram of double values. A ExponentialHistogram contains
+    summary statistics for a population of values, it may optionally contain the
+    distribution of those values across a set of buckets.
+    """
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    class Buckets(google.protobuf.message.Message):
+        """Buckets are a set of bucket counts, encoded in a contiguous array
+        of counts.
+        """
+        DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+        OFFSET_FIELD_NUMBER: builtins.int
+        BUCKET_COUNTS_FIELD_NUMBER: builtins.int
+        offset: builtins.int = ...
+        """Offset is the bucket index of the first entry in the bucket_counts array.
+
+        Note: This uses a varint encoding as a simple form of compression.
+        """
+
+        @property
+        def bucket_counts(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
+            """Count is an array of counts, where count[i] carries the count
+            of the bucket at index (offset+i).  count[i] is the count of
+            values greater than or equal to base^(offset+i) and less than
+            base^(offset+i+1).
+
+            Note: By contrast, the explicit HistogramDataPoint uses
+            fixed64.  This field is expected to have many buckets,
+            especially zeros, so uint64 has been selected to ensure
+            varint encoding.
+            """
+            pass
+        def __init__(self,
+            *,
+            offset : builtins.int = ...,
+            bucket_counts : typing.Optional[typing.Iterable[builtins.int]] = ...,
+            ) -> None: ...
+        def ClearField(self, field_name: typing_extensions.Literal["bucket_counts",b"bucket_counts","offset",b"offset"]) -> None: ...
+
+    ATTRIBUTES_FIELD_NUMBER: builtins.int
+    START_TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
+    TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
+    COUNT_FIELD_NUMBER: builtins.int
+    SUM_FIELD_NUMBER: builtins.int
+    SCALE_FIELD_NUMBER: builtins.int
+    ZERO_COUNT_FIELD_NUMBER: builtins.int
+    POSITIVE_FIELD_NUMBER: builtins.int
+    NEGATIVE_FIELD_NUMBER: builtins.int
+    FLAGS_FIELD_NUMBER: builtins.int
+    EXEMPLARS_FIELD_NUMBER: builtins.int
+    @property
+    def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
+        """The set of key/value pairs that uniquely identify the timeseries from
+        where this point belongs. The list may be empty (may contain 0 elements).
+        """
+        pass
+    start_time_unix_nano: builtins.int = ...
+    """StartTimeUnixNano is optional but strongly encouraged, see the
+    the detailed comments above Metric.
+
+    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
+    1970.
+    """
+
+    time_unix_nano: builtins.int = ...
+    """TimeUnixNano is required, see the detailed comments above Metric.
+
+    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
+    1970.
+    """
+
+    count: builtins.int = ...
+    """count is the number of values in the population. Must be
+    non-negative. This value must be equal to the sum of the "bucket_counts"
+    values in the positive and negative Buckets plus the "zero_count" field.
+    """
+
+    sum: builtins.float = ...
+    """sum of the values in the population. If count is zero then this field
+    must be zero.
+
+    Note: Sum should only be filled out when measuring non-negative discrete
+    events, and is assumed to be monotonic over the values of these events.
+    Negative events *can* be recorded, but sum should not be filled out when
+    doing so.  This is specifically to enforce compatibility w/ OpenMetrics,
+    see: https://github.com/OpenObservability/OpenMetrics/blob/main/specification/OpenMetrics.md#histogram
+    """
+
+    scale: builtins.int = ...
+    """scale describes the resolution of the histogram.  Boundaries are
+    located at powers of the base, where:
+
+      base = (2^(2^-scale))
+
+    The histogram bucket identified by `index`, a signed integer,
+    contains values that are greater than or equal to (base^index) and
+    less than (base^(index+1)).
+
+    The positive and negative ranges of the histogram are expressed
+    separately.  Negative values are mapped by their absolute value
+    into the negative range using the same scale as the positive range.
+
+    scale is not restricted by the protocol, as the permissible
+    values depend on the range of the data.
+    """
+
+    zero_count: builtins.int = ...
+    """zero_count is the count of values that are either exactly zero or
+    within the region considered zero by the instrumentation at the
+    tolerated degree of precision.  This bucket stores values that
+    cannot be expressed using the standard exponential formula as
+    well as values that have been rounded to zero.
+
+    Implementations MAY consider the zero bucket to have probability
+    mass equal to (zero_count / count).
+    """
+
+    @property
+    def positive(self) -> global___ExponentialHistogramDataPoint.Buckets:
+        """positive carries the positive range of exponential bucket counts."""
+        pass
+    @property
+    def negative(self) -> global___ExponentialHistogramDataPoint.Buckets:
+        """negative carries the negative range of exponential bucket counts."""
+        pass
+    flags: builtins.int = ...
+    """Flags that apply to this specific data point.  See DataPointFlags
+    for the available flags and their meaning.
+    """
+
+    @property
+    def exemplars(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Exemplar]:
+        """(Optional) List of exemplars collected from
+        measurements that were used to form the data point
+        """
+        pass
+    def __init__(self,
+        *,
+        attributes : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue]] = ...,
+        start_time_unix_nano : builtins.int = ...,
+        time_unix_nano : builtins.int = ...,
+        count : builtins.int = ...,
+        sum : builtins.float = ...,
+        scale : builtins.int = ...,
+        zero_count : builtins.int = ...,
+        positive : typing.Optional[global___ExponentialHistogramDataPoint.Buckets] = ...,
+        negative : typing.Optional[global___ExponentialHistogramDataPoint.Buckets] = ...,
+        flags : builtins.int = ...,
+        exemplars : typing.Optional[typing.Iterable[global___Exemplar]] = ...,
+        ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["negative",b"negative","positive",b"positive"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","count",b"count","exemplars",b"exemplars","flags",b"flags","negative",b"negative","positive",b"positive","scale",b"scale","start_time_unix_nano",b"start_time_unix_nano","sum",b"sum","time_unix_nano",b"time_unix_nano","zero_count",b"zero_count"]) -> None: ...
+global___ExponentialHistogramDataPoint = ExponentialHistogramDataPoint
 
 class SummaryDataPoint(google.protobuf.message.Message):
     """SummaryDataPoint is a single data point in a timeseries that describes the
@@ -936,33 +899,21 @@ class SummaryDataPoint(google.protobuf.message.Message):
         def ClearField(self, field_name: typing_extensions.Literal["quantile",b"quantile","value",b"value"]) -> None: ...
 
     ATTRIBUTES_FIELD_NUMBER: builtins.int
-    LABELS_FIELD_NUMBER: builtins.int
     START_TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
     TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
     COUNT_FIELD_NUMBER: builtins.int
     SUM_FIELD_NUMBER: builtins.int
     QUANTILE_VALUES_FIELD_NUMBER: builtins.int
+    FLAGS_FIELD_NUMBER: builtins.int
     @property
     def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
         """The set of key/value pairs that uniquely identify the timeseries from
         where this point belongs. The list may be empty (may contain 0 elements).
         """
         pass
-    @property
-    def labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]:
-        """Labels is deprecated and will be removed soon.
-        1. Old senders and receivers that are not aware of this change will
-        continue using the `labels` field.
-        2. New senders, which are aware of this change MUST send only `attributes`.
-        3. New receivers, which are aware of this change MUST convert this into
-        `labels` by simply converting all int64 values into float.
-
-        This field will be removed in ~3 months, on July 1, 2021.
-        """
-        pass
     start_time_unix_nano: builtins.int = ...
     """StartTimeUnixNano is optional but strongly encouraged, see the
-    the detiled comments above Metric.
+    the detailed comments above Metric.
 
     Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
     1970.
@@ -995,70 +946,23 @@ class SummaryDataPoint(google.protobuf.message.Message):
         from the current snapshot. The quantiles must be strictly increasing.
         """
         pass
+    flags: builtins.int = ...
+    """Flags that apply to this specific data point.  See DataPointFlags
+    for the available flags and their meaning.
+    """
+
     def __init__(self,
         *,
         attributes : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue]] = ...,
-        labels : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]] = ...,
         start_time_unix_nano : builtins.int = ...,
         time_unix_nano : builtins.int = ...,
         count : builtins.int = ...,
         sum : builtins.float = ...,
         quantile_values : typing.Optional[typing.Iterable[global___SummaryDataPoint.ValueAtQuantile]] = ...,
+        flags : builtins.int = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","count",b"count","labels",b"labels","quantile_values",b"quantile_values","start_time_unix_nano",b"start_time_unix_nano","sum",b"sum","time_unix_nano",b"time_unix_nano"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","count",b"count","flags",b"flags","quantile_values",b"quantile_values","start_time_unix_nano",b"start_time_unix_nano","sum",b"sum","time_unix_nano",b"time_unix_nano"]) -> None: ...
 global___SummaryDataPoint = SummaryDataPoint
-
-class IntExemplar(google.protobuf.message.Message):
-    """A representation of an exemplar, which is a sample input int measurement.
-    Exemplars also hold information about the environment when the measurement
-    was recorded, for example the span and trace ID of the active span when the
-    exemplar was recorded.
-    """
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    FILTERED_LABELS_FIELD_NUMBER: builtins.int
-    TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
-    VALUE_FIELD_NUMBER: builtins.int
-    SPAN_ID_FIELD_NUMBER: builtins.int
-    TRACE_ID_FIELD_NUMBER: builtins.int
-    @property
-    def filtered_labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]:
-        """The set of labels that were filtered out by the aggregator, but recorded
-        alongside the original measurement. Only labels that were filtered out
-        by the aggregator should be included
-        """
-        pass
-    time_unix_nano: builtins.int = ...
-    """time_unix_nano is the exact time when this exemplar was recorded
-
-    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January
-    1970.
-    """
-
-    value: builtins.int = ...
-    """Numerical int value of the measurement that was recorded."""
-
-    span_id: builtins.bytes = ...
-    """(Optional) Span ID of the exemplar trace.
-    span_id may be missing if the measurement is not recorded inside a trace
-    or if the trace is not sampled.
-    """
-
-    trace_id: builtins.bytes = ...
-    """(Optional) Trace ID of the exemplar trace.
-    trace_id may be missing if the measurement is not recorded inside a trace
-    or if the trace is not sampled.
-    """
-
-    def __init__(self,
-        *,
-        filtered_labels : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]] = ...,
-        time_unix_nano : builtins.int = ...,
-        value : builtins.int = ...,
-        span_id : builtins.bytes = ...,
-        trace_id : builtins.bytes = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["filtered_labels",b"filtered_labels","span_id",b"span_id","time_unix_nano",b"time_unix_nano","trace_id",b"trace_id","value",b"value"]) -> None: ...
-global___IntExemplar = IntExemplar
 
 class Exemplar(google.protobuf.message.Message):
     """A representation of an exemplar, which is a sample input measurement.
@@ -1068,7 +972,6 @@ class Exemplar(google.protobuf.message.Message):
     """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     FILTERED_ATTRIBUTES_FIELD_NUMBER: builtins.int
-    FILTERED_LABELS_FIELD_NUMBER: builtins.int
     TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
     AS_DOUBLE_FIELD_NUMBER: builtins.int
     AS_INT_FIELD_NUMBER: builtins.int
@@ -1079,19 +982,6 @@ class Exemplar(google.protobuf.message.Message):
         """The set of key/value pairs that were filtered out by the aggregator, but
         recorded alongside the original measurement. Only key/value pairs that were
         filtered out by the aggregator should be included
-        """
-        pass
-    @property
-    def filtered_labels(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]:
-        """Labels is deprecated and will be removed soon.
-        1. Old senders and receivers that are not aware of this change will
-        continue using the `filtered_labels` field.
-        2. New senders, which are aware of this change MUST send only
-        `filtered_attributes`.
-        3. New receivers, which are aware of this change MUST convert this into
-        `filtered_labels` by simply converting all int64 values into float.
-
-        This field will be removed in ~3 months, on July 1, 2021.
         """
         pass
     time_unix_nano: builtins.int = ...
@@ -1118,7 +1008,6 @@ class Exemplar(google.protobuf.message.Message):
     def __init__(self,
         *,
         filtered_attributes : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue]] = ...,
-        filtered_labels : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.StringKeyValue]] = ...,
         time_unix_nano : builtins.int = ...,
         as_double : builtins.float = ...,
         as_int : builtins.int = ...,
@@ -1126,6 +1015,6 @@ class Exemplar(google.protobuf.message.Message):
         trace_id : builtins.bytes = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["as_double",b"as_double","as_int",b"as_int","value",b"value"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["as_double",b"as_double","as_int",b"as_int","filtered_attributes",b"filtered_attributes","filtered_labels",b"filtered_labels","span_id",b"span_id","time_unix_nano",b"time_unix_nano","trace_id",b"trace_id","value",b"value"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["as_double",b"as_double","as_int",b"as_int","filtered_attributes",b"filtered_attributes","span_id",b"span_id","time_unix_nano",b"time_unix_nano","trace_id",b"trace_id","value",b"value"]) -> None: ...
     def WhichOneof(self, oneof_group: typing_extensions.Literal["value",b"value"]) -> typing.Optional[typing_extensions.Literal["as_double","as_int"]]: ...
 global___Exemplar = Exemplar

@@ -268,7 +268,6 @@ class TestProtobufEncoder(unittest.TestCase):
                                         )
                                     ],
                                     status=PB2Status(
-                                        deprecated_code=PB2Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR,  # pylint: disable=no-member
                                         code=SDKStatusCode.ERROR.value,
                                         message="Example description",
                                     ),
@@ -374,7 +373,6 @@ class TestProtobufEncoder(unittest.TestCase):
         self.assertEqual(
             _encode_status(SDKStatus(status_code=SDKStatusCode.UNSET)),
             PB2Status(
-                deprecated_code=PB2Status.DEPRECATED_STATUS_CODE_OK,  # pylint: disable=no-member
                 code=SDKStatusCode.UNSET.value,
             ),
         )
@@ -382,7 +380,6 @@ class TestProtobufEncoder(unittest.TestCase):
         self.assertEqual(
             _encode_status(SDKStatus(status_code=SDKStatusCode.OK)),
             PB2Status(
-                deprecated_code=PB2Status.DEPRECATED_STATUS_CODE_OK,  # pylint: disable=no-member
                 code=SDKStatusCode.OK.value,
             ),
         )
@@ -390,7 +387,6 @@ class TestProtobufEncoder(unittest.TestCase):
         self.assertEqual(
             _encode_status(SDKStatus(status_code=SDKStatusCode.ERROR)),
             PB2Status(
-                deprecated_code=PB2Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR,  # pylint: disable=no-member
                 code=SDKStatusCode.ERROR.value,
             ),
         )
