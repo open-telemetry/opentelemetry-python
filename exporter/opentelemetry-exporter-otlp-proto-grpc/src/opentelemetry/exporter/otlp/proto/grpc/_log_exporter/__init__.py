@@ -155,7 +155,7 @@ class OTLPLogExporter(
                 "severity_number"
             ] = log_data.log_record.severity_number.value
 
-            instrumentation_library_logs.logs.append(
+            instrumentation_library_logs.log_records.append(
                 PB2LogRecord(**self._collector_kwargs)
             )
 

@@ -14,6 +14,36 @@ import typing_extensions
 
 DESCRIPTOR: google.protobuf.descriptor.FileDescriptor = ...
 
+class TracesData(google.protobuf.message.Message):
+    """TracesData represents the traces data that can be stored in a persistent storage,
+    OR can be embedded by other protocols that transfer OTLP traces data but do
+    not implement the OTLP protocol.
+
+    The main difference between this message and collector protocol is that
+    in this message there will not be any "control" or "metadata" specific to
+    OTLP protocol.
+
+    When new fields are added into this message, the OTLP request MUST be updated
+    as well.
+    """
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    RESOURCE_SPANS_FIELD_NUMBER: builtins.int
+    @property
+    def resource_spans(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ResourceSpans]:
+        """An array of ResourceSpans.
+        For data coming from a single resource this array will typically contain
+        one element. Intermediary nodes that receive data from multiple origins
+        typically batch the data before forwarding further and in that case this
+        array will contain multiple elements.
+        """
+        pass
+    def __init__(self,
+        *,
+        resource_spans : typing.Optional[typing.Iterable[global___ResourceSpans]] = ...,
+        ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["resource_spans",b"resource_spans"]) -> None: ...
+global___TracesData = TracesData
+
 class ResourceSpans(google.protobuf.message.Message):
     """A collection of InstrumentationLibrarySpans from a Resource."""
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
@@ -295,9 +325,7 @@ class Span(google.protobuf.message.Message):
     This makes it easier to correlate spans in different traces.
 
     This field is semantically required to be set to non-empty string.
-    When null or empty string received - receiver may use string "name"
-    as a replacement. There might be smarted algorithms implemented by
-    receiver to fix the empty span name.
+    Empty value is equivalent to an unknown span name.
 
     This field is required.
     """
@@ -328,14 +356,16 @@ class Span(google.protobuf.message.Message):
 
     @property
     def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
-        """attributes is a collection of key/value pairs. The value can be a string,
-        an integer, a double or the Boolean values `true` or `false`. Note, global attributes
+        """attributes is a collection of key/value pairs. Note, global attributes
         like server name can be set using the resource API. Examples of attributes:
 
             "/http/user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36"
             "/http/server_latency": 300
             "abc.com/myattribute": true
             "abc.com/score": 10.239
+
+        The OpenTelemetry API specification further restricts the allowed value types:
+        https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/common/common.md#attributes
         """
         pass
     dropped_attributes_count: builtins.int = ...
@@ -395,88 +425,8 @@ global___Span = Span
 class Status(google.protobuf.message.Message):
     """The Status type defines a logical error model that is suitable for different
     programming environments, including REST APIs and RPC APIs.
-    IMPORTANT: Backward compatibility notes:
-
-    To ensure any pair of senders and receivers continues to correctly signal and
-    interpret erroneous situations, the senders and receivers MUST follow these rules:
-
-    1. Old senders and receivers that are not aware of `code` field will continue using
-    the `deprecated_code` field to signal and interpret erroneous situation.
-
-    2. New senders, which are aware of the `code` field MUST set both the
-    `deprecated_code` and `code` fields according to the following rules:
-
-      if code==STATUS_CODE_UNSET then `deprecated_code` MUST be
-      set to DEPRECATED_STATUS_CODE_OK.
-
-      if code==STATUS_CODE_OK then `deprecated_code` MUST be
-      set to DEPRECATED_STATUS_CODE_OK.
-
-      if code==STATUS_CODE_ERROR then `deprecated_code` MUST be
-      set to DEPRECATED_STATUS_CODE_UNKNOWN_ERROR.
-
-    These rules allow old receivers to correctly interpret data received from new senders.
-
-    3. New receivers MUST look at both the `code` and `deprecated_code` fields in order
-    to interpret the overall status:
-
-      If code==STATUS_CODE_UNSET then the value of `deprecated_code` is the
-      carrier of the overall status according to these rules:
-
-        if deprecated_code==DEPRECATED_STATUS_CODE_OK then the receiver MUST interpret
-        the overall status to be STATUS_CODE_UNSET.
-
-        if deprecated_code!=DEPRECATED_STATUS_CODE_OK then the receiver MUST interpret
-        the overall status to be STATUS_CODE_ERROR.
-
-      If code!=STATUS_CODE_UNSET then the value of `deprecated_code` MUST be
-      ignored, the `code` field is the sole carrier of the status.
-
-    These rules allow new receivers to correctly interpret data received from old senders.
     """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    class DeprecatedStatusCode(_DeprecatedStatusCode, metaclass=_DeprecatedStatusCodeEnumTypeWrapper):
-        pass
-    class _DeprecatedStatusCode:
-        V = typing.NewType('V', builtins.int)
-    class _DeprecatedStatusCodeEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_DeprecatedStatusCode.V], builtins.type):
-        DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor = ...
-        DEPRECATED_STATUS_CODE_OK = Status.DeprecatedStatusCode.V(0)
-        DEPRECATED_STATUS_CODE_CANCELLED = Status.DeprecatedStatusCode.V(1)
-        DEPRECATED_STATUS_CODE_UNKNOWN_ERROR = Status.DeprecatedStatusCode.V(2)
-        DEPRECATED_STATUS_CODE_INVALID_ARGUMENT = Status.DeprecatedStatusCode.V(3)
-        DEPRECATED_STATUS_CODE_DEADLINE_EXCEEDED = Status.DeprecatedStatusCode.V(4)
-        DEPRECATED_STATUS_CODE_NOT_FOUND = Status.DeprecatedStatusCode.V(5)
-        DEPRECATED_STATUS_CODE_ALREADY_EXISTS = Status.DeprecatedStatusCode.V(6)
-        DEPRECATED_STATUS_CODE_PERMISSION_DENIED = Status.DeprecatedStatusCode.V(7)
-        DEPRECATED_STATUS_CODE_RESOURCE_EXHAUSTED = Status.DeprecatedStatusCode.V(8)
-        DEPRECATED_STATUS_CODE_FAILED_PRECONDITION = Status.DeprecatedStatusCode.V(9)
-        DEPRECATED_STATUS_CODE_ABORTED = Status.DeprecatedStatusCode.V(10)
-        DEPRECATED_STATUS_CODE_OUT_OF_RANGE = Status.DeprecatedStatusCode.V(11)
-        DEPRECATED_STATUS_CODE_UNIMPLEMENTED = Status.DeprecatedStatusCode.V(12)
-        DEPRECATED_STATUS_CODE_INTERNAL_ERROR = Status.DeprecatedStatusCode.V(13)
-        DEPRECATED_STATUS_CODE_UNAVAILABLE = Status.DeprecatedStatusCode.V(14)
-        DEPRECATED_STATUS_CODE_DATA_LOSS = Status.DeprecatedStatusCode.V(15)
-        DEPRECATED_STATUS_CODE_UNAUTHENTICATED = Status.DeprecatedStatusCode.V(16)
-
-    DEPRECATED_STATUS_CODE_OK = Status.DeprecatedStatusCode.V(0)
-    DEPRECATED_STATUS_CODE_CANCELLED = Status.DeprecatedStatusCode.V(1)
-    DEPRECATED_STATUS_CODE_UNKNOWN_ERROR = Status.DeprecatedStatusCode.V(2)
-    DEPRECATED_STATUS_CODE_INVALID_ARGUMENT = Status.DeprecatedStatusCode.V(3)
-    DEPRECATED_STATUS_CODE_DEADLINE_EXCEEDED = Status.DeprecatedStatusCode.V(4)
-    DEPRECATED_STATUS_CODE_NOT_FOUND = Status.DeprecatedStatusCode.V(5)
-    DEPRECATED_STATUS_CODE_ALREADY_EXISTS = Status.DeprecatedStatusCode.V(6)
-    DEPRECATED_STATUS_CODE_PERMISSION_DENIED = Status.DeprecatedStatusCode.V(7)
-    DEPRECATED_STATUS_CODE_RESOURCE_EXHAUSTED = Status.DeprecatedStatusCode.V(8)
-    DEPRECATED_STATUS_CODE_FAILED_PRECONDITION = Status.DeprecatedStatusCode.V(9)
-    DEPRECATED_STATUS_CODE_ABORTED = Status.DeprecatedStatusCode.V(10)
-    DEPRECATED_STATUS_CODE_OUT_OF_RANGE = Status.DeprecatedStatusCode.V(11)
-    DEPRECATED_STATUS_CODE_UNIMPLEMENTED = Status.DeprecatedStatusCode.V(12)
-    DEPRECATED_STATUS_CODE_INTERNAL_ERROR = Status.DeprecatedStatusCode.V(13)
-    DEPRECATED_STATUS_CODE_UNAVAILABLE = Status.DeprecatedStatusCode.V(14)
-    DEPRECATED_STATUS_CODE_DATA_LOSS = Status.DeprecatedStatusCode.V(15)
-    DEPRECATED_STATUS_CODE_UNAUTHENTICATED = Status.DeprecatedStatusCode.V(16)
-
     class StatusCode(_StatusCode, metaclass=_StatusCodeEnumTypeWrapper):
         """For the semantics of status codes see
         https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/api.md#set-status
@@ -510,18 +460,8 @@ class Status(google.protobuf.message.Message):
     """The Span contains an error."""
 
 
-    DEPRECATED_CODE_FIELD_NUMBER: builtins.int
     MESSAGE_FIELD_NUMBER: builtins.int
     CODE_FIELD_NUMBER: builtins.int
-    deprecated_code: global___Status.DeprecatedStatusCode.V = ...
-    """The deprecated status code. This is an optional field.
-
-    This field is deprecated and is replaced by the `code` field below. See backward
-    compatibility notes below. According to our stability guarantees this field
-    will be removed in 12 months, on Oct 22, 2021. All usage of old senders and
-    receivers that do not understand the `code` field MUST be phased out by then.
-    """
-
     message: typing.Text = ...
     """A developer-facing human readable error message."""
 
@@ -530,9 +470,8 @@ class Status(google.protobuf.message.Message):
 
     def __init__(self,
         *,
-        deprecated_code : global___Status.DeprecatedStatusCode.V = ...,
         message : typing.Text = ...,
         code : global___Status.StatusCode.V = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["code",b"code","deprecated_code",b"deprecated_code","message",b"message"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["code",b"code","message",b"message"]) -> None: ...
 global___Status = Status
