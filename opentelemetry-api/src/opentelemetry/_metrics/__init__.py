@@ -133,7 +133,7 @@ class Meter(ABC):
         return self._schema_url
 
     def _check_instrument_name(self, name):
-        if name in self._instrument_names:
+        if name.strip().lower() in self._instrument_names:
             raise Exception(f"Instrument name {name} has been used already")
 
         self._instrument_names.add(name)
