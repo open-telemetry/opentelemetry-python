@@ -52,12 +52,7 @@ class MetricReader:
     ) -> List[_ViewInstrumentMatch]:
 
         # pylint: disable=consider-iterating-dictionary
-        if instrument in self._instrument_view_instrument_matches.keys():
-            view_instrument_matches = self._instrument_view_instrument_matches[
-                instrument
-            ]
-
-        else:
+        if instrument not in self._instrument_view_instrument_matches.keys():
 
             with self._rlock:
 
@@ -100,11 +95,13 @@ class MetricReader:
                                 )
                             )
 
-        self._instrument_view_instrument_matches[
-            instrument
-        ] = view_instrument_matches
+                    self._instrument_view_instrument_matches[
+                        instrument
+                    ] = view_instrument_matches
 
-        for view_instrument_match in view_instrument_matches:
+        for view_instrument_match in self._instrument_view_instrument_matches[
+            instrument
+        ]:
 
             # pylint: disable=protected-access
             view_instrument_match._process(measurement)
