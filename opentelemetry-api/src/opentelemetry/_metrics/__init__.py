@@ -119,6 +119,7 @@ class Meter(ABC):
         self._version = version
         self._schema_url = schema_url
         self._instrument_names = set()
+        self._instrument_names_lock = Lock()
 
     @property
     def name(self):
@@ -136,7 +137,8 @@ class Meter(ABC):
         if name.strip().lower() in self._instrument_names:
             raise Exception(f"Instrument name {name} has been used already")
 
-        self._instrument_names.add(name)
+        with self._instrument_names_lock:
+            self._instrument_names.add(name)
 
     @abstractmethod
     def create_counter(self, name, unit="", description="") -> Counter:
