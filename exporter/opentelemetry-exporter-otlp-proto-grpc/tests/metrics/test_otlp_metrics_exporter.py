@@ -46,6 +46,7 @@ from opentelemetry.sdk._metrics.export import MetricExportResult
 from opentelemetry.sdk._metrics.point import (
     AggregationTemporality,
     Gauge,
+    Histogram,
     Metric,
     Sum,
 )
@@ -152,9 +153,19 @@ class TestOTLPMetricExporter(TestCase):
 
         self.metrics = {
             "sum_int": _generate_sum("sum_int", 33),
-            "sum_float": _generate_sum("sum_float", 2.98),
+            "sum_double": _generate_sum("sum_double", 2.98),
             "gauge_int": _generate_gauge("gauge_int", 9000),
-            "gauge_float": _generate_gauge("gauge_float", 52.028),
+            "gauge_double": _generate_gauge("gauge_double", 52.028),
+            "histogram": _generate_metric(
+                "histogram",
+                Histogram(
+                    time_unix_nano=1641946016139533244,
+                    start_time_unix_nano=1641946016139533244,
+                    bucket_counts=[1, 4],
+                    explicit_bounds=[10.0, 20.0],
+                    aggregation_temporality=AggregationTemporality.DELTA,
+                ),
+            ),
         }
 
     def tearDown(self):
@@ -367,7 +378,7 @@ class TestOTLPMetricExporter(TestCase):
         actual = self.exporter._translate_data([self.metrics["sum_int"]])
         self.assertEqual(expected, actual)
 
-    def test_translate_sum_float(self):
+    def test_translate_sum_double(self):
         expected = ExportMetricsServiceRequest(
             resource_metrics=[
                 pb2.ResourceMetrics(
@@ -386,7 +397,7 @@ class TestOTLPMetricExporter(TestCase):
                             ),
                             metrics=[
                                 pb2.Metric(
-                                    name="sum_float",
+                                    name="sum_double",
                                     unit="s",
                                     description="foo",
                                     sum=pb2.Sum(
@@ -422,7 +433,7 @@ class TestOTLPMetricExporter(TestCase):
             ]
         )
         # pylint: disable=protected-access
-        actual = self.exporter._translate_data([self.metrics["sum_float"]])
+        actual = self.exporter._translate_data([self.metrics["sum_double"]])
         self.assertEqual(expected, actual)
 
     def test_translate_gauge_int(self):
@@ -480,7 +491,7 @@ class TestOTLPMetricExporter(TestCase):
         actual = self.exporter._translate_data([self.metrics["gauge_int"]])
         self.assertEqual(expected, actual)
 
-    def test_translate_gauge_float(self):
+    def test_translate_gauge_double(self):
         expected = ExportMetricsServiceRequest(
             resource_metrics=[
                 pb2.ResourceMetrics(
@@ -499,7 +510,7 @@ class TestOTLPMetricExporter(TestCase):
                             ),
                             metrics=[
                                 pb2.Metric(
-                                    name="gauge_float",
+                                    name="gauge_double",
                                     unit="s",
                                     description="foo",
                                     gauge=pb2.Gauge(
@@ -532,5 +543,66 @@ class TestOTLPMetricExporter(TestCase):
             ]
         )
         # pylint: disable=protected-access
-        actual = self.exporter._translate_data([self.metrics["gauge_float"]])
+        actual = self.exporter._translate_data([self.metrics["gauge_double"]])
+        self.assertEqual(expected, actual)
+
+    def test_translate_histogram(self):
+        expected = ExportMetricsServiceRequest(
+            resource_metrics=[
+                pb2.ResourceMetrics(
+                    resource=OTLPResource(
+                        attributes=[
+                            KeyValue(key="a", value=AnyValue(int_value=1)),
+                            KeyValue(
+                                key="b", value=AnyValue(bool_value=False)
+                            ),
+                        ]
+                    ),
+                    instrumentation_library_metrics=[
+                        pb2.InstrumentationLibraryMetrics(
+                            instrumentation_library=InstrumentationLibrary(
+                                name="first_name", version="first_version"
+                            ),
+                            metrics=[
+                                pb2.Metric(
+                                    name="histogram",
+                                    unit="s",
+                                    description="foo",
+                                    histogram=pb2.Histogram(
+                                        data_points=[
+                                            pb2.HistogramDataPoint(
+                                                attributes=[
+                                                    KeyValue(
+                                                        key="a",
+                                                        value=AnyValue(
+                                                            int_value=1
+                                                        ),
+                                                    ),
+                                                    KeyValue(
+                                                        key="b",
+                                                        value=AnyValue(
+                                                            bool_value=True
+                                                        ),
+                                                    ),
+                                                ],
+                                                start_time_unix_nano=1641946016139533244,
+                                                time_unix_nano=1641946016139533244,
+                                                count=5,
+                                                bucket_counts=[1, 4],
+                                                explicit_bounds=[10.0, 20.0],
+                                                exemplars=[],
+                                                flags=pb2.DataPointFlags.FLAG_NONE,
+                                            )
+                                        ],
+                                        aggregation_temporality=AggregationTemporality.DELTA,
+                                    ),
+                                )
+                            ],
+                        )
+                    ],
+                )
+            ]
+        )
+        # pylint: disable=protected-access
+        actual = self.exporter._translate_data([self.metrics["histogram"]])
         self.assertEqual(expected, actual)
