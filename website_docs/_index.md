@@ -23,9 +23,9 @@ get started using OpenTelemetry for Python.
 The current status of the major functional components for OpenTelemetry Python
 is as follows:
 
-| Tracing   | Metrics | Logging             |
-| -------   | ------- | ------------------- |
-| Stable    | Alpha   | Not Yet Implemented |
+| Tracing   | Metrics | Logging      |
+| -------   | ------- | ------------ |
+| Stable    | Alpha   | Experimental |
 
 {{% latest_release "python" /%}}
 
