@@ -33,14 +33,14 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
         return ProtobufEncoder(*args, **kwargs)
 
     def test_encode_trace_id(self):
-        for trace_id in (1, 1024, 2 ** 32, 2 ** 64, 2 ** 127):
+        for trace_id in (1, 1024, 2**32, 2**64, 2**127):
             self.assertEqual(
                 self.get_encoder_default()._encode_trace_id(trace_id),
                 trace_id.to_bytes(length=16, byteorder="big", signed=False),
             )
 
     def test_encode_span_id(self):
-        for span_id in (1, 1024, 2 ** 8, 2 ** 16, 2 ** 32, 2 ** 63):
+        for span_id in (1, 1024, 2**8, 2**16, 2**32, 2**63):
             self.assertEqual(
                 self.get_encoder_default()._encode_span_id(span_id),
                 span_id.to_bytes(length=8, byteorder="big", signed=False),

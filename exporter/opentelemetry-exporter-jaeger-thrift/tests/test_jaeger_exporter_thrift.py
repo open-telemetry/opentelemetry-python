@@ -230,13 +230,13 @@ class TestJaegerExporter(TraceGlobalsTest, unittest.TestCase):
         parent_id = 0x1111111111111111
         other_id = 0x2222222222222222
 
-        base_time = 683647322 * 10 ** 9  # in ns
+        base_time = 683647322 * 10**9  # in ns
         start_times = (
             base_time,
-            base_time + 150 * 10 ** 6,
-            base_time + 300 * 10 ** 6,
+            base_time + 150 * 10**6,
+            base_time + 300 * 10**6,
         )
-        durations = (50 * 10 ** 6, 100 * 10 ** 6, 200 * 10 ** 6)
+        durations = (50 * 10**6, 100 * 10**6, 200 * 10**6)
         end_times = (
             start_times[0] + durations[0],
             start_times[1] + durations[1],
@@ -259,7 +259,7 @@ class TestJaegerExporter(TraceGlobalsTest, unittest.TestCase):
             "key_float": 0.3,
         }
 
-        event_timestamp = base_time + 50 * 10 ** 6
+        event_timestamp = base_time + 50 * 10**6
         event = trace.Event(
             name="event0",
             timestamp=event_timestamp,
@@ -338,8 +338,8 @@ class TestJaegerExporter(TraceGlobalsTest, unittest.TestCase):
                 traceIdLow=trace_id_low,
                 spanId=span_id,
                 parentSpanId=parent_id,
-                startTime=start_times[0] // 10 ** 3,
-                duration=durations[0] // 10 ** 3,
+                startTime=start_times[0] // 10**3,
+                duration=durations[0] // 10**3,
                 flags=0,
                 tags=[
                     jaeger.Tag(
@@ -394,7 +394,7 @@ class TestJaegerExporter(TraceGlobalsTest, unittest.TestCase):
                 ],
                 logs=[
                     jaeger.Log(
-                        timestamp=event_timestamp // 10 ** 3,
+                        timestamp=event_timestamp // 10**3,
                         fields=[
                             jaeger.Tag(
                                 key="annotation_bool",
@@ -426,8 +426,8 @@ class TestJaegerExporter(TraceGlobalsTest, unittest.TestCase):
                 traceIdLow=trace_id_low,
                 spanId=parent_id,
                 parentSpanId=0,
-                startTime=start_times[1] // 10 ** 3,
-                duration=durations[1] // 10 ** 3,
+                startTime=start_times[1] // 10**3,
+                duration=durations[1] // 10**3,
                 flags=0,
                 tags=default_tags,
             ),
@@ -437,8 +437,8 @@ class TestJaegerExporter(TraceGlobalsTest, unittest.TestCase):
                 traceIdLow=trace_id_low,
                 spanId=other_id,
                 parentSpanId=0,
-                startTime=start_times[2] // 10 ** 3,
-                duration=durations[2] // 10 ** 3,
+                startTime=start_times[2] // 10**3,
+                duration=durations[2] // 10**3,
                 flags=0,
                 tags=[
                     jaeger.Tag(
