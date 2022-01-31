@@ -108,13 +108,13 @@ class TestJaegerExporter(unittest.TestCase):
         parent_id = 0x1111111111111111
         other_id = 0x2222222222222222
 
-        base_time = 683647322 * 10 ** 9  # in ns
+        base_time = 683647322 * 10**9  # in ns
         start_times = (
             base_time,
-            base_time + 150 * 10 ** 6,
-            base_time + 300 * 10 ** 6,
+            base_time + 150 * 10**6,
+            base_time + 300 * 10**6,
         )
-        durations = (50 * 10 ** 6, 100 * 10 ** 6, 200 * 10 ** 6)
+        durations = (50 * 10**6, 100 * 10**6, 200 * 10**6)
         end_times = (
             start_times[0] + durations[0],
             start_times[1] + durations[1],
@@ -139,7 +139,7 @@ class TestJaegerExporter(unittest.TestCase):
             ]
         )
 
-        event_timestamp = base_time + 50 * 10 ** 6
+        event_timestamp = base_time + 50 * 10**6
         # pylint:disable=protected-access
         event_timestamp_proto = (
             pb_translator._proto_timestamp_from_epoch_nanos(event_timestamp)

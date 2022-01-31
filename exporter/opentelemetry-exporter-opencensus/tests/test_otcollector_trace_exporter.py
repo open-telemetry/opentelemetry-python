@@ -84,13 +84,13 @@ class TestCollectorSpanExporter(TraceGlobalsTest, unittest.TestCase):
         trace_id = 0x6E0C63257DE34C926F9EFCD03927272E
         span_id = 0x34BF92DEEFC58C92
         parent_id = 0x1111111111111111
-        base_time = 683647322 * 10 ** 9  # in ns
+        base_time = 683647322 * 10**9  # in ns
         start_times = (
             base_time,
-            base_time + 150 * 10 ** 6,
-            base_time + 300 * 10 ** 6,
+            base_time + 150 * 10**6,
+            base_time + 300 * 10**6,
         )
-        durations = (50 * 10 ** 6, 100 * 10 ** 6, 200 * 10 ** 6)
+        durations = (50 * 10**6, 100 * 10**6, 200 * 10**6)
         end_times = (
             start_times[0] + durations[0],
             start_times[1] + durations[1],
@@ -114,7 +114,7 @@ class TestCollectorSpanExporter(TraceGlobalsTest, unittest.TestCase):
             "annotation_string": "annotation_test",
             "key_float": 0.3,
         }
-        event_timestamp = base_time + 50 * 10 ** 6
+        event_timestamp = base_time + 50 * 10**6
         event = trace.Event(
             name="event0",
             timestamp=event_timestamp,
