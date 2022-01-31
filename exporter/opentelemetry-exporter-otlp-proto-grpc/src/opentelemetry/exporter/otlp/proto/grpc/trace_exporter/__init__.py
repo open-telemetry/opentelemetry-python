@@ -49,7 +49,6 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
-from opentelemetry.trace import StatusCode
 
 logger = logging.getLogger(__name__)
 
@@ -208,11 +207,7 @@ class OTLPSpanExporter(
     def _translate_status(self, sdk_span: ReadableSpan) -> None:
         # pylint: disable=no-member
         if sdk_span.status is not None:
-            deprecated_code = Status.DEPRECATED_STATUS_CODE_OK
-            if sdk_span.status.status_code == StatusCode.ERROR:
-                deprecated_code = Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR
             self._collector_kwargs["status"] = Status(
-                deprecated_code=deprecated_code,
                 code=sdk_span.status.status_code.value,
                 message=sdk_span.status.description,
             )

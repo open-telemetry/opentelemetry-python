@@ -45,7 +45,6 @@ from opentelemetry.sdk.trace import Span as SDKSpan
 from opentelemetry.trace import Link
 from opentelemetry.trace import SpanKind
 from opentelemetry.trace.span import SpanContext, TraceState, Status
-from opentelemetry.trace.status import StatusCode
 from opentelemetry.util.types import Attributes
 
 # pylint: disable=E1101
@@ -196,11 +195,7 @@ def _encode_links(links: List[Link]) -> List[PB2SPan.Link]:
 def _encode_status(status: Status) -> Optional[PB2Status]:
     pb2_status = None
     if status is not None:
-        deprecated_code = PB2Status.DEPRECATED_STATUS_CODE_OK
-        if status.status_code is StatusCode.ERROR:
-            deprecated_code = PB2Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR
         pb2_status = PB2Status(
-            deprecated_code=deprecated_code,
             code=status.status_code.value,
             message=status.description,
         )

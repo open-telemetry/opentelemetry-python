@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.8.0-0.27b0...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.9.0-0.28b0...HEAD)
+
+- Update opentelemetry-proto to v0.12.0. Note that this update removes deprecated status codes.
+  ([#2415](https://github.com/open-telemetry/opentelemetry-python/pull/2415))
+
+## [1.9.0-0.28b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.9.0-0.28b0) - 2022-01-26
+
 
 - Fix SpanLimits global span limit defaulting when set to 0
   ([#2398](https://github.com/open-telemetry/opentelemetry-python/pull/2398))
@@ -23,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2370](https://github.com/open-telemetry/opentelemetry-python/pull/2370))
 - [api] Rename `_DefaultMeter` and `_DefaultMeterProvider` to `NoOpMeter` and `NoOpMeterProvider`.
   ([#2383](https://github.com/open-telemetry/opentelemetry-python/pull/2383))
+- [exporter/opentelemetry-exporter-otlp-proto-grpc] Add Gauge to OTLPMetricExporter
+  ([#2408](https://github.com/open-telemetry/opentelemetry-python/pull/2408))
+- [logs] prevent None from causing problems
+  ([#2410](https://github.com/open-telemetry/opentelemetry-python/pull/2410))
 
 ## [1.8.0-0.27b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.8.0-0.27b0) - 2021-12-17
 
