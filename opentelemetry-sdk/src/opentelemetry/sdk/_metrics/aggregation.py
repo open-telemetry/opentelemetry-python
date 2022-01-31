@@ -198,4 +198,5 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
             bucket_counts=tuple(value),
             explicit_bounds=self._boundaries,
             aggregation_temporality=AggregationTemporality.DELTA,
+            sum=self._sum,
         )
