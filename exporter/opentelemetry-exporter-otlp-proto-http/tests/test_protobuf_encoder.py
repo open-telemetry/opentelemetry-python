@@ -80,18 +80,18 @@ class TestProtobufEncoder(unittest.TestCase):
     def get_exhaustive_otel_span_list() -> List[SDKSpan]:
         trace_id = 0x3E0C63257DE34C926F9EFCD03927272E
 
-        base_time = 683647322 * 10 ** 9  # in ns
+        base_time = 683647322 * 10**9  # in ns
         start_times = (
             base_time,
-            base_time + 150 * 10 ** 6,
-            base_time + 300 * 10 ** 6,
-            base_time + 400 * 10 ** 6,
+            base_time + 150 * 10**6,
+            base_time + 300 * 10**6,
+            base_time + 400 * 10**6,
         )
         end_times = (
-            start_times[0] + (50 * 10 ** 6),
-            start_times[1] + (100 * 10 ** 6),
-            start_times[2] + (200 * 10 ** 6),
-            start_times[3] + (300 * 10 ** 6),
+            start_times[0] + (50 * 10**6),
+            start_times[1] + (100 * 10**6),
+            start_times[2] + (200 * 10**6),
+            start_times[3] + (300 * 10**6),
         )
 
         parent_span_context = SDKSpanContext(
@@ -114,7 +114,7 @@ class TestProtobufEncoder(unittest.TestCase):
             events=(
                 SDKEvent(
                     name="event0",
-                    timestamp=base_time + 50 * 10 ** 6,
+                    timestamp=base_time + 50 * 10**6,
                     attributes={
                         "annotation_bool": True,
                         "annotation_string": "annotation_test",

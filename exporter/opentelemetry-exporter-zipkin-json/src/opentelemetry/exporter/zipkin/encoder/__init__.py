@@ -256,7 +256,7 @@ class Encoder(abc.ABC):
         Timestamp in zipkin spans is int of microseconds.
         See: https://zipkin.io/pages/instrumenting.html
         """
-        return (nsec + 500) // 10 ** 3
+        return (nsec + 500) // 10**3
 
 
 class JsonEncoder(Encoder):
