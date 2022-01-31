@@ -64,12 +64,8 @@ class SumAggregation(Aggregation[Sum]):
 
     def aggregate(self, measurement: Measurement) -> None:
 
-        if self._instrument_temporality is AggregationTemporality.DELTA:
-            with self._lock:
-                self._value = self._value + measurement.value
-        else:
-            with self._lock:
-                self._value = measurement.value
+        with self._lock:
+            self._value = self._value + measurement.value
 
     def collect(self) -> Sum:
         """
