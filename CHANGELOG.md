@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update opentelemetry-proto to v0.12.0. Note that this update removes deprecated status codes.
   ([#2415](https://github.com/open-telemetry/opentelemetry-python/pull/2415))
+- [exporter/opentelemetry-exporter-otlp-proto-grpc] Add Histogram to OTLPMetricExporter
+  ([#2429](https://github.com/open-telemetry/opentelemetry-python/pull/2429))
 
 ## [1.9.0-0.28b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.9.0-0.28b0) - 2022-01-26
 
