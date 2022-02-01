@@ -30,7 +30,7 @@ from opentelemetry.sdk._metrics.point import Gauge, Sum
 
 
 class TestSynchronousSumAggregation(TestCase):
-    def test_aggregate(self):
+    def test_aggregate_delta(self):
         """
         `SynchronousSumAggregation` aggregates data for sum metric points
         """
@@ -55,7 +55,32 @@ class TestSynchronousSumAggregation(TestCase):
 
         self.assertEqual(synchronous_sum_aggregation._value, 2)
 
-    def test_collect(self):
+    def test_aggregate_cumulative(self):
+        """
+        `SynchronousSumAggregation` aggregates data for sum metric points
+        """
+
+        synchronous_sum_aggregation = SumAggregation(
+            True, AggregationTemporality.CUMULATIVE
+        )
+
+        synchronous_sum_aggregation.aggregate(Measurement(1))
+        synchronous_sum_aggregation.aggregate(Measurement(2))
+        synchronous_sum_aggregation.aggregate(Measurement(3))
+
+        self.assertEqual(synchronous_sum_aggregation._value, 6)
+
+        synchronous_sum_aggregation = SumAggregation(
+            True, AggregationTemporality.CUMULATIVE
+        )
+
+        synchronous_sum_aggregation.aggregate(Measurement(1))
+        synchronous_sum_aggregation.aggregate(Measurement(-2))
+        synchronous_sum_aggregation.aggregate(Measurement(3))
+
+        self.assertEqual(synchronous_sum_aggregation._value, 2)
+
+    def test_collect_delta(self):
         """
         `SynchronousSumAggregation` collects sum metric points
         """
@@ -77,6 +102,31 @@ class TestSynchronousSumAggregation(TestCase):
         self.assertTrue(second_sum.is_monotonic)
 
         self.assertGreater(
+            second_sum.start_time_unix_nano, first_sum.start_time_unix_nano
+        )
+
+    def test_collect_cumulative(self):
+        """
+        `SynchronousSumAggregation` collects sum metric points
+        """
+
+        synchronous_sum_aggregation = SumAggregation(
+            True, AggregationTemporality.CUMULATIVE
+        )
+
+        synchronous_sum_aggregation.aggregate(Measurement(1))
+        first_sum = synchronous_sum_aggregation.collect()
+
+        self.assertEqual(first_sum.value, 1)
+        self.assertTrue(first_sum.is_monotonic)
+
+        synchronous_sum_aggregation.aggregate(Measurement(1))
+        second_sum = synchronous_sum_aggregation.collect()
+
+        self.assertEqual(second_sum.value, 2)
+        self.assertTrue(second_sum.is_monotonic)
+
+        self.assertEqual(
             second_sum.start_time_unix_nano, first_sum.start_time_unix_nano
         )
 
