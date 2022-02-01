@@ -232,7 +232,7 @@ class MeterProvider(APIMeterProvider):
 
         if not name:
             _logger.warning(
-                "`Meter` name cannot be None or empty."
+                "Meter name cannot be None or empty."
             )
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
