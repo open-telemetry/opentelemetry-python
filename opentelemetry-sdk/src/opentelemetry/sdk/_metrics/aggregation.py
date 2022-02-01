@@ -63,7 +63,6 @@ class SumAggregation(Aggregation[Sum]):
         self._instrument_temporality = instrument_temporality
 
     def aggregate(self, measurement: Measurement) -> None:
-
         with self._lock:
             self._value = self._value + measurement.value
 
