@@ -208,6 +208,12 @@ def _convert_aggregation_temporality(
     current_point: _PointVarT,
     aggregation_temporality: AggregationTemporality,
 ) -> _PointVarT:
+    """Converts current_point to the requested aggregation_temporality given the previous_point
+    
+    previous_point must have CUMULATIVE temporality. current_point may be DELTA or CUMULATIVE.
+    The output point will have temporality aggregation_temporality. Since GAUGE points have no
+    temporality, they are returned unchanged.
+    """
 
     current_point_type = type(current_point)
 
