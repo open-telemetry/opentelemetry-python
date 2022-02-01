@@ -17,6 +17,7 @@ from logging import WARNING
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
+from opentelemetry._metrics import NoOpMeter
 from opentelemetry.sdk._metrics import Meter, MeterProvider
 from opentelemetry.sdk._metrics.instrument import (
     Counter,
@@ -79,6 +80,28 @@ class TestMeterProvider(ConcurrencyTestBase):
         self.assertEqual(meter._instrumentation_info.name, "name")
         self.assertEqual(meter._instrumentation_info.version, "version")
         self.assertEqual(meter._instrumentation_info.schema_url, "schema_url")
+
+    def test_get_meter_empty(self):
+        """
+        `MeterProvider.get_meter` called with None or empty string as name
+        should return a NoOpMeter.
+        """
+
+        meter = MeterProvider().get_meter(
+            None,
+            version="version",
+            schema_url="schema_url",
+        )
+        self.assertIsInstance(meter, NoOpMeter)
+        self.assertEqual(meter._name, None)
+
+        meter = MeterProvider().get_meter(
+            "",
+            version="version",
+            schema_url="schema_url",
+        )
+        self.assertIsInstance(meter, NoOpMeter)
+        self.assertEqual(meter._name, "")
 
     def test_get_meter_duplicate(self):
         """
