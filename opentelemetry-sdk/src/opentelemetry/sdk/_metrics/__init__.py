@@ -231,9 +231,7 @@ class MeterProvider(APIMeterProvider):
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
         if not name:
-            _logger.warning(
-                "Meter name cannot be None or empty."
-            )
+            _logger.warning("Meter name cannot be None or empty.")
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
         info = InstrumentationInfo(name, version, schema_url)
