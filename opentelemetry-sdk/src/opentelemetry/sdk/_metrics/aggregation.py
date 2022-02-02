@@ -240,6 +240,12 @@ def _convert_aggregation_temporality(
             return replace(
                 current_point, aggregation_temporality=aggregation_temporality
             )
+        if previous_point.aggregation_temporality is not (
+            AggregationTemporality.CUMULATIVE
+        ):
+            raise Exception(
+                "previous_point aggregation temporality must be CUMULATIVE"
+            )
 
         if current_point.aggregation_temporality is aggregation_temporality:
             # 1 Output DELTA for a synchronous instrument

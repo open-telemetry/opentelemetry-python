@@ -322,6 +322,28 @@ class TestConvertAggregationTemporality(TestCase):
     Test aggregation temporality conversion algorithm
     """
 
+    def test_previous_point_non_cumulative(self):
+
+        with self.assertRaises(Exception):
+
+            _convert_aggregation_temporality(
+                Sum(
+                    start_time_unix_nano=0,
+                    time_unix_nano=0,
+                    value=0,
+                    aggregation_temporality=AggregationTemporality.DELTA,
+                    is_monotonic=False,
+                ),
+                Sum(
+                    start_time_unix_nano=0,
+                    time_unix_nano=0,
+                    value=0,
+                    aggregation_temporality=AggregationTemporality.DELTA,
+                    is_monotonic=False,
+                ),
+                AggregationTemporality.DELTA,
+            ),
+
     def test_mismatched_point_types(self):
 
         current_point = Sum(
@@ -378,7 +400,7 @@ class TestConvertAggregationTemporality(TestCase):
                     start_time_unix_nano=0,
                     time_unix_nano=0,
                     value=0,
-                    aggregation_temporality=AggregationTemporality.DELTA,
+                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
                     is_monotonic=False,
                 ),
                 current_point,
@@ -501,7 +523,7 @@ class TestConvertAggregationTemporality(TestCase):
                     start_time_unix_nano=1,
                     time_unix_nano=2,
                     value=3,
-                    aggregation_temporality=AggregationTemporality.DELTA,
+                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
                     is_monotonic=False,
                 ),
                 Sum(
@@ -528,7 +550,7 @@ class TestConvertAggregationTemporality(TestCase):
                     start_time_unix_nano=1,
                     time_unix_nano=2,
                     value=3,
-                    aggregation_temporality=AggregationTemporality.DELTA,
+                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
                     is_monotonic=True,
                 ),
                 Sum(
@@ -555,7 +577,7 @@ class TestConvertAggregationTemporality(TestCase):
                     start_time_unix_nano=1,
                     time_unix_nano=2,
                     value=3,
-                    aggregation_temporality=AggregationTemporality.DELTA,
+                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
                     is_monotonic=True,
                 ),
                 Sum(
