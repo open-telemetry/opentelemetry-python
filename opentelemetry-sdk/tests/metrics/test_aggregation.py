@@ -602,16 +602,10 @@ class TestConvertAggregationTemporality(TestCase):
 
     def test_current_point_gauge(self):
 
-        current_point = Gauge(time_unix_nano=0, value=0)
+        current_point = Gauge(time_unix_nano=1, value=0)
         self.assertEqual(
             _convert_aggregation_temporality(
-                Sum(
-                    start_time_unix_nano=1,
-                    time_unix_nano=2,
-                    value=3,
-                    aggregation_temporality=AggregationTemporality.DELTA,
-                    is_monotonic=True,
-                ),
+                Gauge(time_unix_nano=0, value=0),
                 current_point,
                 AggregationTemporality.CUMULATIVE,
             ),

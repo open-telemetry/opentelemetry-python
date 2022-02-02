@@ -220,6 +220,9 @@ def _convert_aggregation_temporality(
 
     current_point_type = type(current_point)
 
+    if current_point_type is Gauge:
+        return current_point
+
     if previous_point is not None and type(previous_point) is not type(
         current_point
     ):
