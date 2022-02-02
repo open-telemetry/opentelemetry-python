@@ -357,7 +357,9 @@ class TestConvertAggregationTemporality(TestCase):
         with self.assertLogs(level=WARNING):
             self.assertIs(
                 _convert_aggregation_temporality(
-                    Gauge(0, 0), current_point, AggregationTemporality.DELTA
+                    Gauge(time_unix_nano=0, value=0),
+                    current_point,
+                    AggregationTemporality.DELTA
                 ),
                 current_point,
             )
@@ -600,7 +602,7 @@ class TestConvertAggregationTemporality(TestCase):
 
     def test_current_point_gauge(self):
 
-        current_point = (Gauge(0, 0),)
+        current_point = Gauge(time_unix_nano=0, value=0)
         self.assertEqual(
             _convert_aggregation_temporality(
                 Sum(
