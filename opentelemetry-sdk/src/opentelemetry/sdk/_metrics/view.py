@@ -14,27 +14,70 @@
 
 # pylint: disable=protected-access
 
+from dataclasses import dataclass
 from logging import getLogger
 from re import match
+from typing import Dict
+
+from opentelemetry._metrics.instrument import Instrument
+from opentelemetry.sdk._metrics.aggregation import Aggregation
 
 _logger = getLogger(__name__)
 
 
+@dataclass
 class View:
     def __init__(
         self,
-        instrument_type=None,
-        instrument_name=None,
-        meter_name=None,
-        meter_version=None,
-        meter_schema_url=None,
-        name=None,
-        description=None,
-        attribute_keys=None,
-        extra_dimensions=None,
-        aggregation=None,
-        exemplar_reservoir=None,
+        instrument_type: Instrument = None,
+        instrument_name: str = None,
+        meter_name: str = None,
+        meter_version: str = None,
+        meter_schema_url: str = None,
+        name: str = None,
+        description: str = None,
+        attribute_keys: Dict[str, str] = None,
+        aggregation: Aggregation = None,
     ):
+        """
+        An instance of `View` is an object that can perform two actions:
+
+        1. Match instruments: When an instrument matches a view, measurements
+           received by that instrument will be processed.
+        2. Customize metric streams: A metric stream is identified by a match
+           between a view and an instrument and a set of attributes. The metric
+           stream can be customized by certain attributes of the corresponding
+           view.
+
+        The attributes documented next serve one of the previous two purposes.
+
+        Args:
+            instrument_type: This is an instrument matching attribute: the class
+            the instrument must be to match the view.
+            instrument_name: This is an instrument matching attribute: the name
+            the instrument must have to match the view.
+            meter_name: This is an instrument matching attribute: the name
+            the instrument meter must have to match the view.
+            meter_version : This is an instrument matching attribute: the
+            version the instrument meter must have to match the view.
+            meter_schema URL : This is an instrument matching attribute: the
+            schema URL the instrument meter must have to match the view.
+            name: This is a metric stream customizing attribute: the name of
+            the metric stream. If `None`, the name of the instrument will be
+            used.
+            description: This is a metric stream customizing attribute: the
+            description of the metric stream. If `None`, the description of the
+            instrument will be used.
+            attribute_keys: This is a metric stream customizing attribute: this
+            is a set of attribute keys. If not `None` then only the measurement
+            attributes that are in `attribute_keys` will be used to identify
+            the metric stream.
+            aggregation: This is a metric stream customizing attribute: every
+            metric stream has an aggregation instance, this is the class of
+            aggregation this instance will be. If `None` the default
+            aggregation class of the instrument will be used.
+        """
+
         if (
             name
             is instrument_type
@@ -73,9 +116,7 @@ class View:
 
         self._description = description
         self._attribute_keys = attribute_keys
-        self._extra_dimensions = extra_dimensions
         self._aggregation = aggregation
-        self._exemplar_reservoir = exemplar_reservoir
 
         self._has_name_and_has_matched = False
 
