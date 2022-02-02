@@ -251,6 +251,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
             explicit_bucket_histogram_aggregation._bucket_counts[3], 1
         )
 
+        histo = explicit_bucket_histogram_aggregation.collect()
+        self.assertEqual(histo.sum, 14)
+
     def test_min_max(self):
         """
         `record_min_max` indicates the aggregator to record the minimum and

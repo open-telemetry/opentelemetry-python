@@ -48,6 +48,7 @@ class Histogram:
     time_unix_nano: int
     bucket_counts: Sequence[int]
     explicit_bounds: Sequence[float]
+    sum: Union[int, float]
     aggregation_temporality: AggregationTemporality
 
 
