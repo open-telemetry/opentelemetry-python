@@ -359,7 +359,7 @@ class TestConvertAggregationTemporality(TestCase):
                 _convert_aggregation_temporality(
                     Gauge(time_unix_nano=0, value=0),
                     current_point,
-                    AggregationTemporality.DELTA
+                    AggregationTemporality.DELTA,
                 ),
                 current_point,
             )
