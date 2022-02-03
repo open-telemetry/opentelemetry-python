@@ -14,6 +14,7 @@
 
 from abc import ABC, abstractmethod
 from bisect import bisect_left
+from dataclasses import replace
 from logging import getLogger
 from math import inf
 from threading import Lock
@@ -200,3 +201,80 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
             aggregation_temporality=AggregationTemporality.DELTA,
             sum=self._sum,
         )
+
+
+def _convert_aggregation_temporality(
+    previous_point: Optional[_PointVarT],
+    current_point: _PointVarT,
+    aggregation_temporality: AggregationTemporality,
+) -> _PointVarT:
+    """Converts `current_point` to the requested `aggregation_temporality`
+    given the `previous_point`.
+
+    `previous_point` must have `CUMULATIVE` temporality. `current_point` may
+    have `DELTA` or `CUMULATIVE` temporality.
+
+    The output point will have temporality `aggregation_temporality`. Since
+    `GAUGE` points have no temporality, they are returned unchanged.
+    """
+
+    current_point_type = type(current_point)
+
+    if current_point_type is Gauge:
+        return current_point
+
+    if previous_point is not None and type(previous_point) is not type(
+        current_point
+    ):
+        _logger.warning(
+            "convert_aggregation_temporality called with mismatched "
+            "point types: %s and %s",
+            type(previous_point),
+            current_point_type,
+        )
+
+        return current_point
+
+    if current_point_type is Sum:
+        if previous_point is None:
+            # Output CUMULATIVE for a synchronous instrument
+            # There is no previous value, return the delta point as a
+            # cumulative
+            return replace(
+                current_point, aggregation_temporality=aggregation_temporality
+            )
+        if previous_point.aggregation_temporality is not (
+            AggregationTemporality.CUMULATIVE
+        ):
+            raise Exception(
+                "previous_point aggregation temporality must be CUMULATIVE"
+            )
+
+        if current_point.aggregation_temporality is aggregation_temporality:
+            # Output DELTA for a synchronous instrument
+            # Output CUMULATIVE for an asynchronous instrument
+            return current_point
+
+        if aggregation_temporality is AggregationTemporality.DELTA:
+            # Output temporality DELTA for an asynchronous instrument
+            value = current_point.value - previous_point.value
+            output_start_time_unix_nano = previous_point.time_unix_nano
+
+        else:
+            # Output CUMULATIVE for a synchronous instrument
+            value = current_point.value + previous_point.value
+            output_start_time_unix_nano = previous_point.start_time_unix_nano
+
+        is_monotonic = (
+            previous_point.is_monotonic and current_point.is_monotonic
+        )
+
+        return Sum(
+            start_time_unix_nano=output_start_time_unix_nano,
+            time_unix_nano=current_point.time_unix_nano,
+            value=value,
+            aggregation_temporality=aggregation_temporality,
+            is_monotonic=is_monotonic,
+        )
+
+    return None
