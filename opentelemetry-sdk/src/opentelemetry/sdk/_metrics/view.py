@@ -114,6 +114,27 @@ class View:
                 )
                 self._instrument_name = None
 
+            if self._meter_name is not None:
+                _logger.warning(
+                    "Instrument meter name matching disabled "
+                    "for view with a defined name"
+                )
+                self._meter_name = None
+
+            if self._meter_version is not None:
+                _logger.warning(
+                    "Instrument meter version matching disabled "
+                    "for view with a defined version"
+                )
+                self._meter_version = None
+
+            if self._meter_schema_url is not None:
+                _logger.warning(
+                    "Instrument meter schema URL matching disabled "
+                    "for view with a defined version"
+                )
+                self._meter_schema_url = None
+
         self._description = description
         self._attribute_keys = attribute_keys
         self._aggregation = aggregation
