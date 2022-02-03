@@ -204,9 +204,9 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
 
 
 def _convert_aggregation_temporality(
-    aggregation_temporality: AggregationTemporality,
+    previous_point: Optional[_PointVarT],
     current_point: _PointVarT,
-    previous_point: Optional[_PointVarT] = None,
+    aggregation_temporality: AggregationTemporality,
 ) -> _PointVarT:
     """Converts `current_point` to the requested `aggregation_temporality`
     given the `previous_point`.
