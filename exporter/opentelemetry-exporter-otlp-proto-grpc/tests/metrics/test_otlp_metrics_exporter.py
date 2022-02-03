@@ -589,6 +589,7 @@ class TestOTLPMetricExporter(TestCase):
                                                 start_time_unix_nano=1641946016139533244,
                                                 time_unix_nano=1641946016139533244,
                                                 count=5,
+                                                sum=67,
                                                 bucket_counts=[1, 4],
                                                 explicit_bounds=[10.0, 20.0],
                                                 exemplars=[],
