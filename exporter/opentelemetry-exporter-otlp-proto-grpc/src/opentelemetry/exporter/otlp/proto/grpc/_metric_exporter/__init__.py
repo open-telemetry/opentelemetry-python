@@ -132,10 +132,18 @@ class OTLPMetricExporter(
                     pt.as_double = metric.point.value
                 pbmetric.gauge.data_points.append(pt)
             elif isinstance(metric.point, Histogram):
-                # TODO: implement histogram
-                pbmetric.histogram = pb2.Histogram(
-                    data_points=[],
+                pt = pb2.HistogramDataPoint(
+                    attributes=self._translate_attributes(metric.attributes),
+                    time_unix_nano=metric.point.time_unix_nano,
+                    start_time_unix_nano=metric.point.start_time_unix_nano,
+                    count=sum(metric.point.bucket_counts),
+                    bucket_counts=metric.point.bucket_counts,
+                    explicit_bounds=metric.point.explicit_bounds,
                 )
+                pbmetric.histogram.aggregation_temporality = (
+                    metric.point.aggregation_temporality
+                )
+                pbmetric.histogram.data_points.append(pt)
             elif isinstance(metric.point, Sum):
                 pt = pb2.NumberDataPoint(
                     attributes=self._translate_attributes(metric.attributes),
