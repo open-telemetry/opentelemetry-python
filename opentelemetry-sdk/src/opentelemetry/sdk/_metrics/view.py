@@ -121,7 +121,7 @@ class View:
         self._has_name_and_has_matched = False
 
     # pylint: disable=too-many-return-statements
-    def _match(self, instrument) -> bool:
+    def _match(self, instrument: Instrument) -> bool:
 
         if self._has_name_and_has_matched:
             return False
