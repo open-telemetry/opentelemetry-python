@@ -156,7 +156,7 @@ class View:
                 return False
 
         if self._meter_name is not None:
-            if match(self._meter_name, instrument._meter.name) is None:
+            if self._meter_name != instrument._meter.name:
                 return False
 
         if self._meter_version is not None:
