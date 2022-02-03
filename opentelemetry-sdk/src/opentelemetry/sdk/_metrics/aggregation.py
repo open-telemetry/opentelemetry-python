@@ -237,8 +237,8 @@ def _convert_aggregation_temporality(
 
     if current_point_type is Sum:
         if previous_point is None:
-            # 3 Output CUMULATIVE for a synchronous instrument
-            # 3 There is no previous value, return the delta point as a
+            # Output CUMULATIVE for a synchronous instrument
+            # There is no previous value, return the delta point as a
             # cumulative
             return replace(
                 current_point, aggregation_temporality=aggregation_temporality
@@ -251,17 +251,17 @@ def _convert_aggregation_temporality(
             )
 
         if current_point.aggregation_temporality is aggregation_temporality:
-            # 1 Output DELTA for a synchronous instrument
-            # 4 Output CUMULATIVE for an asynchronous instrument
+            # Output DELTA for a synchronous instrument
+            # Output CUMULATIVE for an asynchronous instrument
             return current_point
 
         if aggregation_temporality is AggregationTemporality.DELTA:
-            # 2 Output temporality DELTA for an asynchronous instrument
+            # Output temporality DELTA for an asynchronous instrument
             value = current_point.value - previous_point.value
             output_start_time_unix_nano = previous_point.time_unix_nano
 
         else:
-            # 3 Output CUMULATIVE for a synchronous instrument
+            # Output CUMULATIVE for a synchronous instrument
             value = current_point.value + previous_point.value
             output_start_time_unix_nano = previous_point.start_time_unix_nano
 
