@@ -137,6 +137,7 @@ class OTLPMetricExporter(
                     time_unix_nano=metric.point.time_unix_nano,
                     start_time_unix_nano=metric.point.start_time_unix_nano,
                     count=sum(metric.point.bucket_counts),
+                    sum=metric.point.sum,
                     bucket_counts=metric.point.bucket_counts,
                     explicit_bounds=metric.point.explicit_bounds,
                 )
