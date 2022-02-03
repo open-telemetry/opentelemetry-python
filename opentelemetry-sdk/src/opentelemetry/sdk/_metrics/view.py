@@ -79,8 +79,7 @@ class View:
         """
 
         if (
-            name
-            is instrument_type
+            instrument_type
             is instrument_name
             is meter_name
             is meter_version
