@@ -15,6 +15,8 @@
 import time
 from unittest.mock import Mock
 
+from flaky import flaky
+
 from opentelemetry.sdk._metrics.export import (
     MetricExporter,
     PeriodicExportingMetricReader,
@@ -99,13 +101,14 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         self.assertTrue(collect_mock.assert_called_once)
         pmr.shutdown()
 
+    @flaky(max_runs=3, min_passes=1)
     def test_ticker_collects_metrics(self):
         exporter = FakeMetricsExporter()
 
         pmr = self._create_periodic_reader(
             metrics_list, exporter, interval=100
         )
-        time.sleep(0.11)
+        time.sleep(0.15)
         self.assertEqual(exporter.metrics, metrics_list)
         pmr.shutdown()
 
