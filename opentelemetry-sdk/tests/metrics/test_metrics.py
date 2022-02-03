@@ -179,18 +179,18 @@ class TestMeterProvider(ConcurrencyTestBase):
             with self.assertLogs(level=WARNING):
                 meter_provider = MeterProvider(
                     views=(
-                        View(name="a"),
-                        View(name="b"),
-                        View(name="c"),
+                        View(instrument_name="a"),
+                        View(instrument_name="b"),
+                        View(instrument_name="c"),
                     )
                 )
 
         with self.assertLogs(level=WARNING):
             meter_provider = MeterProvider(
                 views=(
-                    View(name="a"),
-                    View(name="b"),
-                    View(name="a"),
+                    View(name="a", instrument_name="a"),
+                    View(name="b", instrument_name="b"),
+                    View(name="c", instrument_name="a"),
                 )
             )
 

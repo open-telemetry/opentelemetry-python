@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=protected-access
 
 from dataclasses import dataclass
 from logging import getLogger
@@ -155,14 +154,17 @@ class View:
                 return False
 
         if self._meter_name is not None:
+            # pylint: disable=protected-access
             if self._meter_name != instrument._meter.name:
                 return False
 
         if self._meter_version is not None:
+            # pylint: disable=protected-access
             if self._meter_version != instrument._meter.version:
                 return False
 
         if self._meter_schema_url is not None:
+            # pylint: disable=protected-access
             if self._meter_schema_url != instrument._meter.schema_url:
                 return False
 

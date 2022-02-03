@@ -101,10 +101,12 @@ class TestView(TestCase):
         with self.assertLogs(level=WARNING):
             View(name="name", instrument_type=Mock)
 
-        view = View(name="name")
+        view = View(name="name", instrument_name="instrument_name")
 
         mock_instrument = Mock()
-        mock_instrument.configure_mock(**{"name": "name"})
+        mock_instrument.configure_mock(
+            **{"instrument_name": "instrument_name"}
+        )
 
         self.assertTrue(view._match(mock_instrument))
         self.assertFalse(view._match(mock_instrument))
