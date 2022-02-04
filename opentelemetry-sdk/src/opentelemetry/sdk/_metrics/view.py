@@ -13,10 +13,9 @@
 # limitations under the License.
 
 
-from dataclasses import dataclass
 from logging import getLogger
 from re import match
-from typing import Set
+from typing import Set, Optional, Type
 
 from opentelemetry._metrics.instrument import Instrument
 from opentelemetry.sdk._metrics.aggregation import Aggregation
@@ -24,19 +23,18 @@ from opentelemetry.sdk._metrics.aggregation import Aggregation
 _logger = getLogger(__name__)
 
 
-@dataclass
 class View:
     def __init__(
         self,
         instrument_type: Optional[Type[Instrument]] = None,
-        instrument_name: str = None,
-        meter_name: str = None,
-        meter_version: str = None,
-        meter_schema_url: str = None,
-        name: str = None,
-        description: str = None,
+        instrument_name: Optional[str] = None,
+        meter_name: Optional[str] = None,
+        meter_version: Optional[str] = None,
+        meter_schema_url: Optional[str] = None,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
         attribute_keys: Set[str] = None,
-        aggregation: Aggregation = None,
+        aggregation: Optional[Type[Aggregation]] = None,
     ):
         """
         An instance of `View` is an object that can perform two actions:
