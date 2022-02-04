@@ -16,7 +16,7 @@
 from dataclasses import dataclass
 from logging import getLogger
 from re import match
-from typing import Dict
+from typing import Set
 
 from opentelemetry._metrics.instrument import Instrument
 from opentelemetry.sdk._metrics.aggregation import Aggregation
@@ -35,7 +35,7 @@ class View:
         meter_schema_url: str = None,
         name: str = None,
         description: str = None,
-        attribute_keys: Dict[str, str] = None,
+        attribute_keys: Set[str] = None,
         aggregation: Aggregation = None,
     ):
         """
