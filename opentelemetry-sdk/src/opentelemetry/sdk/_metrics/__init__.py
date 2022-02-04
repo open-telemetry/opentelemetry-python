@@ -156,7 +156,7 @@ class MeterProvider(APIMeterProvider):
         views: Sequence[View] = (),
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
-        use_always_matching_view: bool = True,
+        enable_default_view: bool = True,
     ):
         self._lock = Lock()
         self._meter_lock = Lock()
