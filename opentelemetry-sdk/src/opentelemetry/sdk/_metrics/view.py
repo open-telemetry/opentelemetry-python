@@ -28,7 +28,7 @@ _logger = getLogger(__name__)
 class View:
     def __init__(
         self,
-        instrument_type: Instrument = None,
+        instrument_type: Optional[Type[Instrument]] = None,
         instrument_name: str = None,
         meter_name: str = None,
         meter_version: str = None,
