@@ -35,7 +35,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
         """It should create one MetricReaderStorage per metric reader passed in the SdkConfiguration"""
         reader_mocks = [Mock() for _ in range(5)]
         SynchronousMeasurementConsumer(
-            SdkConfiguration(resource=Mock(), metric_readers=reader_mocks)
+            SdkConfiguration(
+                resource=Mock(), metric_readers=reader_mocks, views=()
+            )
         )
         self.assertEqual(len(MockMetricReaderStorage.mock_calls), 5)
 
@@ -47,7 +49,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
         MockMetricReaderStorage.side_effect = reader_storage_mocks
 
         consumer = SynchronousMeasurementConsumer(
-            SdkConfiguration(resource=Mock(), metric_readers=reader_mocks)
+            SdkConfiguration(
+                resource=Mock(), metric_readers=reader_mocks, views=()
+            )
         )
         measurement_mock = Mock()
         consumer.consume_measurement(measurement_mock)
@@ -64,7 +68,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
         MockMetricReaderStorage.side_effect = reader_storage_mocks
 
         consumer = SynchronousMeasurementConsumer(
-            SdkConfiguration(resource=Mock(), metric_readers=reader_mocks)
+            SdkConfiguration(
+                resource=Mock(), metric_readers=reader_mocks, views=()
+            )
         )
         for r_mock, rs_mock in zip(reader_mocks, reader_storage_mocks):
             rs_mock.collect.assert_not_called()
@@ -77,7 +83,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
         """Its collect() method should invoke async instruments"""
         reader_mock = Mock()
         consumer = SynchronousMeasurementConsumer(
-            SdkConfiguration(resource=Mock(), metric_readers=[reader_mock])
+            SdkConfiguration(
+                resource=Mock(), metric_readers=[reader_mock], views=()
+            )
         )
         async_instrument_mocks = [MagicMock() for _ in range(5)]
         for i_mock in async_instrument_mocks:
