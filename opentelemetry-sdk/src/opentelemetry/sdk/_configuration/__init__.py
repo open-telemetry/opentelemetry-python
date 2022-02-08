@@ -17,6 +17,7 @@
 OpenTelemetry SDK Configurator for Easy Instrumentation with Distros
 """
 
+import logging
 from abc import ABC, abstractmethod
 from os import environ
 from typing import Dict, Optional, Sequence, Tuple, Type
@@ -31,6 +32,7 @@ from opentelemetry.environment_variables import (
 )
 from opentelemetry.sdk._logs import (
     LogEmitterProvider,
+    OTLPHandler,
     set_log_emitter_provider,
 )
 from opentelemetry.sdk._logs.export import BatchLogProcessor, LogExporter
@@ -110,6 +112,11 @@ def _init_logging(
         provider.add_log_processor(
             BatchLogProcessor(exporter_class(**exporter_args))
         )
+
+    log_emitter = provider.get_log_emitter(__name__)
+    handler = OTLPHandler(level=logging.NOTSET, log_emitter=log_emitter)
+
+    logging.getLogger().addHandler(handler)
 
 
 def _import_config_components(
