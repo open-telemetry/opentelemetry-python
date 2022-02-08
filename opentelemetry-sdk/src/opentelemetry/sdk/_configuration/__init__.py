@@ -113,7 +113,7 @@ def _init_logging(
             BatchLogProcessor(exporter_class(**exporter_args))
         )
 
-    log_emitter = provider.get_log_emitter("auto-instrumentation")
+    log_emitter = provider.get_log_emitter(__name__)
     handler = OTLPHandler(level=logging.NOTSET, log_emitter=log_emitter)
 
     logging.getLogger().addHandler(handler)
