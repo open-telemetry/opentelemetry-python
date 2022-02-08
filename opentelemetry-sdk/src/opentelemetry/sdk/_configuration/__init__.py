@@ -93,7 +93,7 @@ def _init_tracing(
 
 
 def _init_logging(
-    exporters: Dict[str, Sequence[LogExporter]],
+    exporters: Dict[str, Type[LogExporter]],
     auto_instrumentation_version: Optional[str] = None,
 ):
     # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
@@ -113,7 +113,7 @@ def _init_logging(
             BatchLogProcessor(exporter_class(**exporter_args))
         )
 
-    log_emitter = provider.get_log_emitter(__name__)
+    log_emitter = provider.get_log_emitter("auto-instrumentation")
     handler = OTLPHandler(level=logging.NOTSET, log_emitter=log_emitter)
 
     logging.getLogger().addHandler(handler)
