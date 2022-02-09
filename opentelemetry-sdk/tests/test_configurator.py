@@ -110,7 +110,7 @@ class OTLPSpanExporter:
 
 
 class DummyOTLPLogExporter:
-    def __int__(self, *args, **kwargs):
+    def __init__(self, *args, **kwargs):
         self.export_called = False
 
     def export(self, batch):
