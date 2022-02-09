@@ -57,13 +57,15 @@ class SumAggregation(Aggregation[Sum]):
         super().__init__()
         self._instrument_is_monotonic = instrument_is_monotonic
 
-        self._value = 0
+        self._value = None
 
         self._start_time_unix_nano = _time_ns()
         self._instrument_temporality = instrument_temporality
 
     def aggregate(self, measurement: Measurement) -> None:
         with self._lock:
+            if self._value is None:
+                self._value = 0
             self._value = self._value + measurement.value
 
     def collect(self) -> Sum:
@@ -78,7 +80,7 @@ class SumAggregation(Aggregation[Sum]):
                 value = self._value
                 start_time_unix_nano = self._start_time_unix_nano
 
-                self._value = 0
+                self._value = None
                 self._start_time_unix_nano = now + 1
 
             return Sum(
