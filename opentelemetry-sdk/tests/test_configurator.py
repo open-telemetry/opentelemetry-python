@@ -27,8 +27,8 @@ from opentelemetry.sdk._configuration import (
     _get_id_generator,
     _import_exporters,
     _import_id_generator,
-    _init_tracing,
     _init_logging,
+    _init_tracing,
 )
 from opentelemetry.sdk._logs import OTLPHandler
 from opentelemetry.sdk._logs.export import ConsoleLogExporter
