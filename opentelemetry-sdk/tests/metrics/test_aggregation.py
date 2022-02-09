@@ -22,8 +22,8 @@ from opentelemetry.sdk._metrics.aggregation import (
     AggregationTemporality,
     ExplicitBucketHistogramAggregation,
     LastValueAggregation,
-    _convert_aggregation_temporality,
     SumAggregation,
+    _convert_aggregation_temporality,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import Gauge, Sum
