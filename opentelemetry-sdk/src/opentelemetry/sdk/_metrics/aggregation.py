@@ -55,12 +55,15 @@ class SumAggregation(Aggregation[Sum]):
         instrument_temporality: AggregationTemporality,
     ):
         super().__init__()
-        self._instrument_is_monotonic = instrument_is_monotonic
-
-        self._value = None
 
         self._start_time_unix_nano = _time_ns()
         self._instrument_temporality = instrument_temporality
+        self._instrument_is_monotonic = instrument_is_monotonic
+
+        if self._instrument_temporality is AggregationTemporality.DELTA:
+            self._value = 0
+        else:
+            self._value = None
 
     def aggregate(self, measurement: Measurement) -> None:
         with self._lock:
