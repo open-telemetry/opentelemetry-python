@@ -203,6 +203,7 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
         )
 
 
+# pylint: disable=too-many-return-statements,too-many-branches
 def _convert_aggregation_temporality(
     previous_point: Optional[_PointVarT],
     current_point: _PointVarT,
