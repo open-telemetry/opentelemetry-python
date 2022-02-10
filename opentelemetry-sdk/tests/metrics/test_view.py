@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock
 
@@ -95,18 +94,15 @@ class TestView(TestCase):
 
     def test_view_name(self):
 
-        with self.assertLogs(level=WARNING):
+        with self.assertRaises(Exception):
             View(name="name", instrument_name="instrument_name")
 
-        with self.assertLogs(level=WARNING):
+        with self.assertRaises(Exception):
             View(name="name", instrument_type=Mock)
 
-        view = View(name="name", instrument_name="instrument_name")
+        view = View(instrument_name="instrument_name")
 
         mock_instrument = Mock()
-        mock_instrument.configure_mock(
-            **{"instrument_name": "instrument_name"}
-        )
+        mock_instrument.configure_mock(**{"name": "instrument_name"})
 
         self.assertTrue(view._match(mock_instrument))
-        self.assertFalse(view._match(mock_instrument))

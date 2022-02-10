@@ -185,7 +185,7 @@ class TestMeterProvider(ConcurrencyTestBase):
                     )
                 )
 
-        with self.assertLogs(level=WARNING):
+        with self.assertRaises(Exception):
             meter_provider = MeterProvider(
                 views=(
                     View(name="a", instrument_name="a"),
