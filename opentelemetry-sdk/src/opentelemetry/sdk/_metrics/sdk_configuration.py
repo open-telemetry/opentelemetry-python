@@ -11,3 +11,4 @@ class SdkConfiguration:
     resource: Resource
     metric_readers: Sequence[MetricReader]
     views: Sequence[View]
+    enable_default_view: bool

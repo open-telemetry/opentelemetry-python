@@ -153,16 +153,19 @@ class MeterProvider(APIMeterProvider):
     def __init__(
         self,
         metric_readers: Sequence[MetricReader] = (),
-        views: Sequence[View] = (),
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
+        views: Sequence[View] = (),
         enable_default_view: bool = True,
     ):
         self._lock = Lock()
         self._meter_lock = Lock()
         self._atexit_handler = None
         self._sdk_config = SdkConfiguration(
-            resource=resource, metric_readers=metric_readers, views=()
+            resource=resource,
+            metric_readers=metric_readers,
+            views=views,
+            enable_default_view=enable_default_view,
         )
         self._measurement_consumer = SynchronousMeasurementConsumer(
             sdk_config=self._sdk_config
@@ -183,9 +186,6 @@ class MeterProvider(APIMeterProvider):
         self._shutdown = False
 
         self._views = views
-
-        if use_always_matching_view:
-            self._views = (*self._views, View(instrument_name=".*"))
 
         previous_view_names = set()
         checked_views = []

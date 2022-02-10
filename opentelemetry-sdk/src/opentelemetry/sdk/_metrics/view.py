@@ -14,8 +14,7 @@
 
 
 from logging import getLogger
-from re import match
-from typing import Set, Optional, Type
+from typing import Optional, Set, Type
 
 from opentelemetry._metrics.instrument import Instrument
 from opentelemetry.sdk._metrics.aggregation import Aggregation
@@ -148,7 +147,7 @@ class View:
                 return False
 
         if self._instrument_name is not None:
-            if match(self._instrument_name, instrument.name) is None:
+            if self._instrument_name != instrument.name:
                 return False
 
         if self._meter_name is not None:
