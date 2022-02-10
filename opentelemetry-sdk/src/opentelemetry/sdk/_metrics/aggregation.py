@@ -305,8 +305,8 @@ def _convert_aggregation_temporality(
             start_time_unix_nano = previous_point.time_unix_nano
             sum_ = current_point.sum - previous_point.sum
             bucket_counts = [
-                curr_point - prev_point
-                for curr_point, prev_point in zip(
+                curr_count - prev_count
+                for curr_count, prev_count in zip(
                     current_point.bucket_counts, previous_point.bucket_counts
                 )
             ]
