@@ -200,7 +200,6 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
             explicit_bounds=self._boundaries,
             aggregation_temporality=AggregationTemporality.DELTA,
             sum=self._sum,
-            count=sum(value),
         )
 
 
@@ -295,14 +294,22 @@ def _convert_aggregation_temporality(
 
         if aggregation_temporality is AggregationTemporality.CUMULATIVE:
             start_time_unix_nano = previous_point.start_time_unix_nano
-            count = current_point.count + previous_point.count
             sum_ = current_point.sum + previous_point.sum
-            bucket_counts = [c+p for c, p in zip(current_point.bucket_counts, previous_point.bucket_counts)]
+            bucket_counts = [
+                curr_count + prev_count
+                for curr_count, prev_count in zip(
+                    current_point.bucket_counts, previous_point.bucket_counts
+                )
+            ]
         else:
             start_time_unix_nano = previous_point.time_unix_nano
-            count = current_point.count - previous_point.count
             sum_ = current_point.sum - previous_point.sum
-            bucket_counts = [c-p for c, p in zip(current_point.bucket_counts, previous_point.bucket_counts)]
+            bucket_counts = [
+                curr_point - prev_point
+                for curr_point, prev_point in zip(
+                    current_point.bucket_counts, previous_point.bucket_counts
+                )
+            ]
 
         return Histogram(
             start_time_unix_nano=start_time_unix_nano,
@@ -310,7 +317,6 @@ def _convert_aggregation_temporality(
             bucket_counts=bucket_counts,
             explicit_bounds=current_point.explicit_bounds,
             sum=sum_,
-            count=count,
             aggregation_temporality=aggregation_temporality,
         )
     return None

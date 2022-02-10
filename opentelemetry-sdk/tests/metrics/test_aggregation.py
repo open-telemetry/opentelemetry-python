@@ -28,7 +28,7 @@ from opentelemetry.sdk._metrics.aggregation import (
     _InstrumentMonotonicityAwareAggregation,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.point import Gauge, Sum
+from opentelemetry.sdk._metrics.point import Gauge, Histogram, Sum
 
 
 class TestSynchronousSumAggregation(TestCase):
@@ -610,4 +610,168 @@ class TestConvertAggregationTemporality(TestCase):
                 AggregationTemporality.CUMULATIVE,
             ),
             current_point,
+        )
+
+
+class TestHistogramConvertAggregationTemporality(TestCase):
+    def test_previous_point_none(self):
+
+        current_point = Histogram(
+            start_time_unix_nano=0,
+            time_unix_nano=1,
+            bucket_counts=[0, 2, 1, 2, 0],
+            explicit_bounds=[0, 5, 10, 25],
+            sum=70,
+            aggregation_temporality=AggregationTemporality.DELTA,
+        )
+
+        self.assertEqual(
+            _convert_aggregation_temporality(
+                None, current_point, AggregationTemporality.CUMULATIVE
+            ),
+            replace(
+                current_point,
+                aggregation_temporality=AggregationTemporality.CUMULATIVE,
+            ),
+        )
+
+    def test_previous_point_non_cumulative(self):
+
+        with self.assertRaises(Exception):
+
+            _convert_aggregation_temporality(
+                Histogram(
+                    start_time_unix_nano=0,
+                    time_unix_nano=1,
+                    bucket_counts=[0, 2, 1, 2, 0],
+                    explicit_bounds=[0, 5, 10, 25],
+                    sum=70,
+                    aggregation_temporality=AggregationTemporality.DELTA,
+                ),
+                Histogram(
+                    start_time_unix_nano=1,
+                    time_unix_nano=2,
+                    bucket_counts=[0, 1, 3, 0, 0],
+                    explicit_bounds=[0, 5, 10, 25],
+                    sum=35,
+                    aggregation_temporality=AggregationTemporality.DELTA,
+                ),
+                AggregationTemporality.DELTA,
+            ),
+
+    def test_same_aggregation_temporality_cumulative(self):
+        current_point = Histogram(
+            start_time_unix_nano=0,
+            time_unix_nano=2,
+            bucket_counts=[0, 3, 4, 2, 0],
+            explicit_bounds=[0, 5, 10, 25],
+            sum=105,
+            aggregation_temporality=AggregationTemporality.CUMULATIVE,
+        )
+        self.assertEqual(
+            _convert_aggregation_temporality(
+                Histogram(
+                    start_time_unix_nano=0,
+                    time_unix_nano=1,
+                    bucket_counts=[0, 2, 1, 2, 0],
+                    explicit_bounds=[0, 5, 10, 25],
+                    sum=70,
+                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                ),
+                current_point,
+                AggregationTemporality.CUMULATIVE,
+            ),
+            current_point,
+        )
+
+    def test_same_aggregation_temporality_delta(self):
+        current_point = Histogram(
+            start_time_unix_nano=1,
+            time_unix_nano=2,
+            bucket_counts=[0, 1, 3, 0, 0],
+            explicit_bounds=[0, 5, 10, 25],
+            sum=35,
+            aggregation_temporality=AggregationTemporality.DELTA,
+        )
+
+        self.assertEqual(
+            _convert_aggregation_temporality(
+                Histogram(
+                    start_time_unix_nano=0,
+                    time_unix_nano=2,
+                    bucket_counts=[0, 3, 4, 2, 0],
+                    explicit_bounds=[0, 5, 10, 25],
+                    sum=105,
+                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                ),
+                current_point,
+                AggregationTemporality.DELTA,
+            ),
+            current_point,
+        )
+
+    def test_aggregation_temporality_to_cumulative(self):
+        current_point = Histogram(
+            start_time_unix_nano=1,
+            time_unix_nano=2,
+            bucket_counts=[0, 1, 3, 0, 0],
+            explicit_bounds=[0, 5, 10, 25],
+            sum=35,
+            aggregation_temporality=AggregationTemporality.DELTA,
+        )
+
+        self.assertEqual(
+            _convert_aggregation_temporality(
+                Histogram(
+                    start_time_unix_nano=0,
+                    time_unix_nano=1,
+                    bucket_counts=[0, 2, 1, 2, 0],
+                    explicit_bounds=[0, 5, 10, 25],
+                    sum=70,
+                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                ),
+                current_point,
+                AggregationTemporality.CUMULATIVE,
+            ),
+            Histogram(
+                start_time_unix_nano=0,
+                time_unix_nano=2,
+                bucket_counts=[0, 3, 4, 2, 0],
+                explicit_bounds=[0, 5, 10, 25],
+                sum=105,
+                aggregation_temporality=AggregationTemporality.CUMULATIVE,
+            ),
+        )
+
+    def test_aggregation_temporality_to_delta(self):
+        current_point = Histogram(
+            start_time_unix_nano=0,
+            time_unix_nano=2,
+            bucket_counts=[0, 3, 4, 2, 0],
+            explicit_bounds=[0, 5, 10, 25],
+            sum=105,
+            aggregation_temporality=AggregationTemporality.CUMULATIVE,
+        )
+
+        self.assertEqual(
+            _convert_aggregation_temporality(
+                Histogram(
+                    start_time_unix_nano=0,
+                    time_unix_nano=1,
+                    bucket_counts=[0, 2, 1, 2, 0],
+                    explicit_bounds=[0, 5, 10, 25],
+                    sum=70,
+                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                ),
+                current_point,
+                AggregationTemporality.DELTA,
+            ),
+            Histogram(
+                start_time_unix_nano=1,
+                time_unix_nano=2,
+                bucket_counts=[0, 1, 3, 0, 0],
+                explicit_bounds=[0, 5, 10, 25],
+                sum=35,
+                aggregation_temporality=AggregationTemporality.DELTA,
+            ),
         )

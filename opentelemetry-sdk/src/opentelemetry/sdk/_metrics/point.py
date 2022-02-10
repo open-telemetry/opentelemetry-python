@@ -49,7 +49,6 @@ class Histogram:
     bucket_counts: Sequence[int]
     explicit_bounds: Sequence[float]
     sum: Union[int, float]
-    count: int
     aggregation_temporality: AggregationTemporality
 
 
