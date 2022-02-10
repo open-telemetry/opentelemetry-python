@@ -242,3 +242,5 @@ class MeterProvider(APIMeterProvider):
                     self._measurement_consumer,
                 )
             return self._meters[info]
+
+Foo = "Should not fail"

@@ -66,3 +66,5 @@ class TestStatus(unittest.TestCase):
         )
         self.assertIs(status.status_code, StatusCode.ERROR)
         self.assertEqual(status.description, "status description")
+
+Foo = "should not fail"

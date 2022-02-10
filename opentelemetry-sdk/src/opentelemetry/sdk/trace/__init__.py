@@ -1165,3 +1165,5 @@ class TracerProvider(trace_api.TracerProvider):
             False if the timeout is exceeded, True otherwise.
         """
         return self._active_span_processor.force_flush(timeout_millis)
+
+Foo = "should fail"

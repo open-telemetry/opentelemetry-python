@@ -1,0 +1,1 @@
+Foo = "should fail"
