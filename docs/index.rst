@@ -5,7 +5,7 @@ OpenTelemetry-Python API Reference
    :target: https://cloud-native.slack.com/archives/C01PD4HUVBL
    :alt: Slack Chat
 
-Welcome to the **API docs** for the `Python OpenTelemetry client
+Welcome to the docs for the `Python OpenTelemetry implementation
 <https://opentelemetry.io/docs/instrumentation/python/>`_.
 
 For an introduction to OpenTelemetry, see the `OpenTelemetry website docs
