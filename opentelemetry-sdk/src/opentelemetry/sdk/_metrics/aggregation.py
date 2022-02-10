@@ -68,19 +68,20 @@ class SumAggregation(Aggregation[Sum]):
                 self._value = 0
             self._value = self._value + measurement.value
 
-    def collect(self) -> Sum:
+    def collect(self) -> Optional[Sum]:
         """
         Atomically return a point for the current value of the metric and
         reset the aggregation value.
         """
+        now = _time_ns()
+
         if self._instrument_temporality is AggregationTemporality.DELTA:
-            now = _time_ns()
 
             with self._lock:
                 value = self._value
                 start_time_unix_nano = self._start_time_unix_nano
 
-                self._value = None
+                self._value = 0
                 self._start_time_unix_nano = now + 1
 
             return Sum(
@@ -91,12 +92,15 @@ class SumAggregation(Aggregation[Sum]):
                 value=value,
             )
 
+        if self._value is None:
+            return None
+
         return Sum(
-            start_time_unix_nano=self._start_time_unix_nano,
-            time_unix_nano=_time_ns(),
-            value=self._value,
             aggregation_temporality=AggregationTemporality.CUMULATIVE,
             is_monotonic=self._instrument_is_monotonic,
+            start_time_unix_nano=self._start_time_unix_nano,
+            time_unix_nano=now,
+            value=self._value,
         )
 
 
