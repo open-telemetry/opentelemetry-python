@@ -75,7 +75,8 @@ class View:
         """
 
         if (
-            instrument_type
+            name
+            is instrument_type
             is instrument_name
             is meter_name
             is meter_version
@@ -83,7 +84,8 @@ class View:
             is None
         ):
             raise Exception(
-                "Some instrument selection criteria must be provided"
+                "View name or some instrument selection "
+                "criteria must be provided for View {name}"
             )
 
         self._instrument_type = instrument_type
