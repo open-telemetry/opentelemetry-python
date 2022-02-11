@@ -110,7 +110,7 @@ class TestSynchronousSumAggregation(TestCase):
         `SynchronousSumAggregation` collects sum metric points
         """
 
-        synchronous_sum_aggregation = SumAggregation(
+        sum_aggregation = SumAggregation(
             True, AggregationTemporality.CUMULATIVE
         )
 
