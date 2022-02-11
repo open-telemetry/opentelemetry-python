@@ -110,16 +110,19 @@ class SumAggregation(Aggregation[Sum]):
 class LastValueAggregation(Aggregation[Gauge]):
     def __init__(self):
         super().__init__()
-        self._value = 0
+        self._value = None
 
     def aggregate(self, measurement: Measurement):
         with self._lock:
             self._value = measurement.value
 
-    def collect(self) -> Gauge:
+    def collect(self) -> Optional[Gauge]:
         """
         Atomically return a point for the current value of the metric.
         """
+        if self._value is None:
+            return None
+
         return Gauge(
             time_unix_nano=_time_ns(),
             value=self._value,
