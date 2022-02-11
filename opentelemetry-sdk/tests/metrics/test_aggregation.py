@@ -114,20 +114,24 @@ class TestSynchronousSumAggregation(TestCase):
             True, AggregationTemporality.CUMULATIVE
         )
 
-        synchronous_sum_aggregation.aggregate(Measurement(1))
-        first_sum = synchronous_sum_aggregation.collect()
+        sum_aggregation.aggregate(Measurement(1))
+        first_sum = sum_aggregation.collect()
 
         self.assertEqual(first_sum.value, 1)
         self.assertTrue(first_sum.is_monotonic)
 
-        synchronous_sum_aggregation.aggregate(Measurement(1))
-        second_sum = synchronous_sum_aggregation.collect()
+        sum_aggregation.aggregate(Measurement(1))
+        second_sum = sum_aggregation.collect()
 
         self.assertEqual(second_sum.value, 2)
         self.assertTrue(second_sum.is_monotonic)
 
         self.assertEqual(
             second_sum.start_time_unix_nano, first_sum.start_time_unix_nano
+        )
+
+        self.assertIsNone(
+            SumAggregation(True, AggregationTemporality.CUMULATIVE).collect()
         )
 
 
