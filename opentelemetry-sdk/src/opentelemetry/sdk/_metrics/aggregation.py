@@ -35,12 +35,6 @@ _PointVarT = TypeVar("_PointVarT", bound=PointT)
 _logger = getLogger(__name__)
 
 
-class _InstrumentMonotonicityAwareAggregation:
-    def __init__(self, instrument_is_monotonic: bool):
-        self._instrument_is_monotonic = instrument_is_monotonic
-        super().__init__()
-
-
 class Aggregation(ABC, Generic[_PointVarT]):
     def __init__(self):
         self._lock = Lock()
@@ -54,16 +48,27 @@ class Aggregation(ABC, Generic[_PointVarT]):
         pass
 
 
-class SynchronousSumAggregation(
-    _InstrumentMonotonicityAwareAggregation, Aggregation[Sum]
-):
-    def __init__(self, instrument_is_monotonic: bool):
-        super().__init__(instrument_is_monotonic)
-        self._value = 0
+class SumAggregation(Aggregation[Sum]):
+    def __init__(
+        self,
+        instrument_is_monotonic: bool,
+        instrument_temporality: AggregationTemporality,
+    ):
+        super().__init__()
+
         self._start_time_unix_nano = _time_ns()
+        self._instrument_temporality = instrument_temporality
+        self._instrument_is_monotonic = instrument_is_monotonic
+
+        if self._instrument_temporality is AggregationTemporality.DELTA:
+            self._value = 0
+        else:
+            self._value = None
 
     def aggregate(self, measurement: Measurement) -> None:
         with self._lock:
+            if self._value is None:
+                self._value = 0
             self._value = self._value + measurement.value
 
     def collect(self) -> Optional[Sum]:
@@ -73,47 +78,32 @@ class SynchronousSumAggregation(
         """
         now = _time_ns()
 
-        with self._lock:
-            value = self._value
-            start_time_unix_nano = self._start_time_unix_nano
+        if self._instrument_temporality is AggregationTemporality.DELTA:
 
-            self._value = 0
-            self._start_time_unix_nano = now + 1
+            with self._lock:
+                value = self._value
+                start_time_unix_nano = self._start_time_unix_nano
 
-        return Sum(
-            aggregation_temporality=AggregationTemporality.DELTA,
-            is_monotonic=self._instrument_is_monotonic,
-            start_time_unix_nano=start_time_unix_nano,
-            time_unix_nano=now,
-            value=value,
-        )
+                self._value = 0
+                self._start_time_unix_nano = now + 1
 
+            return Sum(
+                aggregation_temporality=AggregationTemporality.DELTA,
+                is_monotonic=self._instrument_is_monotonic,
+                start_time_unix_nano=start_time_unix_nano,
+                time_unix_nano=now,
+                value=value,
+            )
 
-class AsynchronousSumAggregation(
-    _InstrumentMonotonicityAwareAggregation, Aggregation[Sum]
-):
-    def __init__(self, instrument_is_monotonic: bool):
-        super().__init__(instrument_is_monotonic)
-        self._value = None
-        self._start_time_unix_nano = _time_ns()
-
-    def aggregate(self, measurement: Measurement) -> None:
-        with self._lock:
-            self._value = measurement.value
-
-    def collect(self) -> Optional[Sum]:
-        """
-        Atomically return a point for the current value of the metric.
-        """
         if self._value is None:
             return None
 
         return Sum(
-            start_time_unix_nano=self._start_time_unix_nano,
-            time_unix_nano=_time_ns(),
-            value=self._value,
             aggregation_temporality=AggregationTemporality.CUMULATIVE,
             is_monotonic=self._instrument_is_monotonic,
+            start_time_unix_nano=self._start_time_unix_nano,
+            time_unix_nano=now,
+            value=self._value,
         )
 
 
@@ -180,7 +170,7 @@ class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
 
         self._bucket_counts[bisect_left(self._boundaries, value)] += 1
 
-    def collect(self) -> Optional[Histogram]:
+    def collect(self) -> Histogram:
         """
         Atomically return a point for the current value of the metric.
         """
