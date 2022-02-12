@@ -93,7 +93,7 @@ def _encode_resource_logs(batch: Sequence[LogData]) -> List[ResourceLogs]:
                     instrumentation_library=(
                         _encode_instrumentation_library(sdk_instrumentation)
                     ),
-                    logs=pb2_logs,
+                    log_records=pb2_logs,
                 )
             )
         pb2_resource_logs.append(
