@@ -17,7 +17,6 @@ from typing import Sequence, List
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
-from opentelemetry.proto.common.v1.common_pb2 import InstrumentationLibrary
 from opentelemetry.proto.logs.v1.logs_pb2 import (
     InstrumentationLibraryLogs,
     ResourceLogs,
