@@ -7,10 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.9.1-0.28b1...HEAD)
 
-- `opentelemetry-exporter-otlp-grpc` update SDK dependency to ~1.9.
+- `opentelemetry-exporter-otlp-proto-grpc` update SDK dependency to ~1.9.
   ([#2442](https://github.com/open-telemetry/opentelemetry-python/pull/2442))
 - bugfix(auto-instrumentation): attach OTLPHandler to root logger
   ([#2450](https://github.com/open-telemetry/opentelemetry-python/pull/2450))
+- `opentelemetry-exporter-otlp-proto-http` Add support for OTLP/HTTP log exporter
+  ([#2462](https://github.com/open-telemetry/opentelemetry-python/pull/2462))
 
 ## [1.9.1-0.28b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.9.1-0.28b1) - 2022-01-29
 
