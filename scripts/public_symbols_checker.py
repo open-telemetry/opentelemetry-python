@@ -34,10 +34,18 @@ def get_symbols(change_type, diff_lines_getter, prefix):
     ):
 
         b_file_path = diff_lines.b_blob.path
+        b_file_path_obj = Path(b_file_path)
 
         if (
-            Path(b_file_path).suffix != ".py"
+            b_file_path_obj.suffix != ".py"
             or "opentelemetry" not in b_file_path
+            or any(
+                # single leading underscore
+                part[0] == "_" and part[1] != "_"
+                # tests directories
+                or part == "tests"
+                for part in b_file_path_obj.parts
+            )
         ):
             continue
 
