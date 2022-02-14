@@ -48,30 +48,38 @@ class View:
         The attributes documented next serve one of the previous two purposes.
 
         Args:
-            instrument_type: This is an instrument matching attribute: the class
-            the instrument must be to match the view.
+            instrument_type: This is an instrument matching attribute: the
+                class the instrument must be to match the view.
+
             instrument_name: This is an instrument matching attribute: the name
-            the instrument must have to match the view.
+                the instrument must have to match the view.
+
             meter_name: This is an instrument matching attribute: the name
-            the instrument meter must have to match the view.
+                the instrument meter must have to match the view.
+
             meter_version : This is an instrument matching attribute: the
-            version the instrument meter must have to match the view.
+                version the instrument meter must have to match the view.
+
             meter_schema URL : This is an instrument matching attribute: the
-            schema URL the instrument meter must have to match the view.
+                schema URL the instrument meter must have to match the view.
+
             name: This is a metric stream customizing attribute: the name of
-            the metric stream. If `None`, the name of the instrument will be
-            used.
+                the metric stream. If `None`, the name of the instrument will
+                be used.
+
             description: This is a metric stream customizing attribute: the
-            description of the metric stream. If `None`, the description of the
-            instrument will be used.
+                description of the metric stream. If `None`, the description of
+                the instrument will be used.
+
             attribute_keys: This is a metric stream customizing attribute: this
-            is a set of attribute keys. If not `None` then only the measurement
-            attributes that are in `attribute_keys` will be used to identify
-            the metric stream.
+                is a set of attribute keys. If not `None` then only the
+                measurement attributes that are in `attribute_keys` will be
+                used to identify the metric stream.
+
             aggregation: This is a metric stream customizing attribute: every
-            metric stream has an aggregation instance, this is the class of
-            aggregation this instance will be. If `None` the default
-            aggregation class of the instrument will be used.
+                metric stream has an aggregation instance, this is the class of
+                aggregation this instance will be. If `None` the default
+                aggregation class of the instrument will be used.
         """
 
         if (
