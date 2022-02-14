@@ -15,9 +15,11 @@
 
 from logging import getLogger
 from threading import Lock
-from typing import Callable, Dict, Iterable, List, Optional
+from typing import Callable, Dict, Iterable, List, Set
 
-from opentelemetry.sdk._metrics.aggregation import Aggregation, _PointVarT
+from opentelemetry.sdk._metrics.aggregation import (
+    Aggregation, _convert_aggregation_temporality
+)
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
 from opentelemetry.sdk.resources import Resource
@@ -31,13 +33,9 @@ class _ViewInstrumentMatch:
         self,
         name: str,
         unit: str,
-        description: str,
-        attribute_keys: Dict[str, str],
-        extra_dimensions: List[str],
+        attribute_keys: Set[str] = None,
         aggregation: Aggregation,
         exemplar_reservoir: Callable,
-        resource: Resource,
-        instrumentation_info: InstrumentationInfo,
     ):
         self._name = name
         self._unit = unit
@@ -58,7 +56,7 @@ class _ViewInstrumentMatch:
         self._lock = Lock()
 
     def consume_measurement(self, measurement: Measurement) -> None:
-        if measurement.attributes is None:
+        if measurement.attributes is not None:
             measurement_attributes = set()
 
         else:
@@ -113,11 +111,3 @@ class _ViewInstrumentMatch:
                             temporality,
                         ),
                     )
-
-
-def _convert_aggregation_temporality(
-    previous_point: Optional[_PointVarT],
-    current_point: _PointVarT,
-    aggregation_temporality: int,
-) -> _PointVarT:
-    return None
