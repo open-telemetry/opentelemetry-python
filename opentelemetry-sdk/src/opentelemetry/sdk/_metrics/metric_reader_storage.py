@@ -89,7 +89,9 @@ class MetricReaderStorage:
             return view_storages
 
     def consume_measurement(self, measurement: Measurement) -> None:
-        for view_storage in self._get_or_init_view_storage(measurement.instrument)
+        for view_storage in self._get_or_init_view_storage(
+            measurement.instrument
+        ):
             view_storage.consume_measurement(measurement)
 
     def collect(self, temporality: AggregationTemporality) -> Iterable[Metric]:
