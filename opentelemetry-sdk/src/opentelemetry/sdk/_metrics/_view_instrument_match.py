@@ -15,10 +15,10 @@
 
 from logging import getLogger
 from threading import Lock
-from typing import Callable, Dict, Iterable, List, Set
+from typing import Iterable, Set
 
 from opentelemetry.sdk._metrics.aggregation import (
-    Aggregation, _convert_aggregation_temporality
+    _convert_aggregation_temporality,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
@@ -33,48 +33,51 @@ class _ViewInstrumentMatch:
         self,
         name: str,
         unit: str,
+        description: str,
+        aggregation: type,
+        instrumentation_info: InstrumentationInfo,
+        resource: Resource,
         attribute_keys: Set[str] = None,
-        aggregation: Aggregation,
-        exemplar_reservoir: Callable,
     ):
         self._name = name
         self._unit = unit
         self._description = description
-        self._resource = resource
-        self._instrumentation_info = instrumentation_info
-
-        if attribute_keys is None:
-            self._attribute_keys = set()
-        else:
-            self._attribute_keys = set(attribute_keys.items())
-
-        self._extra_dimensions = extra_dimensions
         self._aggregation = aggregation
-        self._exemplar_reservoir = exemplar_reservoir
+        self._instrumentation_info = instrumentation_info
+        self._resource = resource
+        self._attribute_keys = attribute_keys
         self._attributes_aggregation = {}
         self._attributes_previous_point = {}
         self._lock = Lock()
 
     def consume_measurement(self, measurement: Measurement) -> None:
-        if measurement.attributes is not None:
-            measurement_attributes = set()
 
+        if self._attribute_keys is not None:
+
+            attributes = {}
+
+            for key, value in measurement.attributes.items():
+                if key in self._attribute_keys:
+                    attributes[key] = value
         else:
-            measurement_attributes = set(measurement.attributes.items())
+            attributes = measurement.attributes
 
-        attributes = frozenset(
-            measurement_attributes.intersection(self._attribute_keys)
-        )
+        if not attributes:
 
-        # What if attributes == frozenset()?
+            _logger.warning("Empty measurement attributes found")
+
+            return
+
+        attributes = frozenset(attributes.items())
 
         if attributes not in self._attributes_aggregation.keys():
             with self._lock:
-                self._attributes_aggregation[attributes] = self._aggregation
+                self._attributes_aggregation[attributes] = self._aggregation()
 
         self._attributes_aggregation[attributes].aggregate(measurement.value)
 
     def collect(self, temporality: int) -> Iterable[Metric]:
+
         with self._lock:
             for (
                 attributes,

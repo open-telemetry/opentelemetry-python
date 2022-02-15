@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock
 
@@ -26,37 +27,81 @@ class Test_ViewInstrumentMatch(TestCase):
     @classmethod
     def setUpClass(cls):
 
-        cls.mock_aggregation = Mock()
-        cls.mock_exemplar_reservoir = Mock()
+        cls.mock_aggregation_instance = Mock()
+        cls.mock_aggregation_class = Mock(
+            return_value=cls.mock_aggregation_instance
+        )
         cls.mock_resource = Mock()
         cls.mock_instrumentation_info = Mock()
 
-        cls.view_instrument_match = _ViewInstrumentMatch(
+    def test_consume_measurement(self):
+
+        view_instrument_match = _ViewInstrumentMatch(
             "name",
             "unit",
             "description",
-            {"a": "b", "c": "d"},
-            ["a", "b", "c"],
-            cls.mock_aggregation,
-            cls.mock_exemplar_reservoir,
-            cls.mock_resource,
-            cls.mock_instrumentation_info,
+            self.mock_aggregation_class,
+            self.mock_instrumentation_info,
+            self.mock_resource,
+            {"a", "c"},
         )
-        cls.view_instrument_match.consume_measurement(
+
+        view_instrument_match.consume_measurement(
             Measurement(value=0, attributes={"c": "d", "f": "g"})
         )
+        self.assertEqual(
+            view_instrument_match._attributes_aggregation,
+            {frozenset([("c", "d")]): self.mock_aggregation_instance},
+        )
 
-    def test_consume_measurement(self):
+        with self.assertLogs(level=WARNING):
+            view_instrument_match.consume_measurement(
+                Measurement(value=0, attributes={"w": "x", "y": "z"})
+            )
 
         self.assertEqual(
-            self.view_instrument_match._attributes_aggregation,
-            {frozenset([("c", "d")]): self.mock_aggregation},
+            view_instrument_match._attributes_aggregation,
+            {frozenset([("c", "d")]): self.mock_aggregation_instance},
+        )
+
+        view_instrument_match = _ViewInstrumentMatch(
+            "name",
+            "unit",
+            "description",
+            self.mock_aggregation_class,
+            self.mock_instrumentation_info,
+            self.mock_resource,
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(value=0, attributes={"c": "d", "f": "g"})
+        )
+        self.assertEqual(
+            view_instrument_match._attributes_aggregation,
+            {
+                frozenset(
+                    [("c", "d"), ("f", "g")]
+                ): self.mock_aggregation_instance
+            },
         )
 
     def test_collect(self):
 
+        view_instrument_match = _ViewInstrumentMatch(
+            "name",
+            "unit",
+            "description",
+            self.mock_aggregation_class,
+            self.mock_instrumentation_info,
+            self.mock_resource,
+            {"a", "c"},
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(value=0, attributes={"c": "d", "f": "g"})
+        )
         self.assertEqual(
-            next(self.view_instrument_match.collect(1)),
+            next(view_instrument_match.collect(1)),
             Metric(
                 attributes={"c": "d"},
                 description="description",
