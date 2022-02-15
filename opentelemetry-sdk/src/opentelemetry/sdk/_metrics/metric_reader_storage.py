@@ -89,9 +89,8 @@ class MetricReaderStorage:
             return view_storages
 
     def consume_measurement(self, measurement: Measurement) -> None:
-        storages = self._get_or_init_view_storage(measurement.instrument)
-        for storage in storages:
-            storage.consume_measurement(measurement)
+        for view_storage in self._get_or_init_view_storage(measurement.instrument)
+            view_storage.consume_measurement(measurement)
 
     def collect(self, temporality: AggregationTemporality) -> Iterable[Metric]:
         # use a list instead of yielding to prevent a slow reader from holding SDK locks
@@ -104,9 +103,9 @@ class MetricReaderStorage:
         # that end times can be slightly skewed among the metric streams produced by the SDK,
         # but we still align the output timestamps for a single instrument.
         with self._lock:
-            for storages in self._view_storages.values():
-                for storage in storages:
-                    metrics.extend(storage.collect(temporality))
+            for view_storages in self._view_storages.values():
+                for view_storage in view_storages:
+                    metrics.extend(view_storage.collect(temporality))
 
         return metrics
 
