@@ -175,24 +175,16 @@ class TestMeterProvider(ConcurrencyTestBase):
         self.assertIs(meter_provider._views[0], view_0)
         self.assertIs(meter_provider._views[1], view_1)
 
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=WARNING):
-                meter_provider = MeterProvider(
-                    views=(
-                        View(instrument_name="a"),
-                        View(instrument_name="b"),
-                        View(instrument_name="c"),
-                    )
-                )
-
-        with self.assertRaises(Exception):
-            meter_provider = MeterProvider(
+        try:
+            MeterProvider(
                 views=(
-                    View(name="a", instrument_name="a"),
-                    View(name="b", instrument_name="b"),
-                    View(name="c", instrument_name="a"),
+                    View(instrument_name="a"),
+                    View(instrument_name="b"),
+                    View(instrument_name="c"),
                 )
             )
+        except Exception as error:
+            self.fail(f"Unexpected exception {error} raised")
 
     def test_shutdown_subsequent_calls(self):
         """
