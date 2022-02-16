@@ -98,6 +98,11 @@ class MetricReaderStorage:
         # use a list instead of yielding to prevent a slow reader from holding SDK locks
         metrics: List[Metric] = []
 
+        # call async instruments
+        for async_instrument in self._sdk_config.async_instruments:
+            for measurement in async_instrument.callback():
+                self.consume_measurement(measurement)
+
         # While holding the lock, new ViewStorage can't be added from another thread (so we are
         # sure we collect all existing view). However, instruments can still send measurements
         # that will make it into the individual aggregations; collection will acquire those
