@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.metric_reader_storage import (
@@ -101,6 +101,30 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         view_storage2.collect.assert_called_once()
         view_storage3.collect.assert_called_once()
         self.assertEqual(result, all_metrics)
+
+    def test_collect_calls_async_instruments(self, MockViewStorage: Mock):
+        """Its collect() method should invoke async instruments"""
+        mock_view_storages = [MagicMock() for _ in range(5)]
+        MockViewStorage.side_effect = mock_view_storages
+
+        # mock async instruments with callbacks which return a single measurement
+        async_instrument_mocks = [
+            MagicMock(**{"callback.return_value": (Mock(),)}) for _ in range(5)
+        ]
+        sdk_config_mock = Mock(spec=SdkConfiguration)
+        sdk_config_mock.async_instruments = async_instrument_mocks
+        sdk_config_mock.views = []
+
+        storage = MetricReaderStorage(sdk_config_mock)
+        storage.collect(AggregationTemporality.CUMULATIVE)
+
+        # it should call async instruments
+        for i_mock in async_instrument_mocks:
+            i_mock.callback.assert_called_once()
+
+        # and their measurements should be passed on to the auto-created view storages
+        for storage in mock_view_storages:
+            storage.consume_measurement.assert_called_once()
 
     def test_race_concurrent_measurements(self, MockViewStorage: Mock):
         mock_view_storage_ctor = MockFunc()
