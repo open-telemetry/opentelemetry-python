@@ -49,7 +49,7 @@ class _Synchronous:
         self.name = name
         self.unit = unit
         self.description = description
-        self._instrumentation_info = instrumentation_info
+        self.instrumentation_info = instrumentation_info
         self._measurement_consumer = measurement_consumer
         super().__init__(name, unit=unit, description=description)
 
@@ -67,7 +67,7 @@ class _Asynchronous:
         self.name = name
         self.unit = unit
         self.description = description
-        self._instrumentation_info = instrumentation_info
+        self.instrumentation_info = instrumentation_info
         self._measurement_consumer = measurement_consumer
         super().__init__(name, callback, unit=unit, description=description)
 

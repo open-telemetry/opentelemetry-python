@@ -13,6 +13,7 @@
 # limitations under the License.
 
 
+from fnmatch import fnmatch
 from logging import getLogger
 from typing import Optional, Set, Type
 
@@ -83,8 +84,7 @@ class View:
         """
 
         if (
-            name
-            is instrument_type
+            instrument_type
             is instrument_name
             is meter_name
             is meter_version
@@ -92,85 +92,63 @@ class View:
             is None
         ):
             raise Exception(
-                "View name or some instrument selection "
+                "Some instrument selection "
                 "criteria must be provided for View {name}"
             )
 
+        self._name = name
         self._instrument_type = instrument_type
         self._instrument_name = instrument_name
         self._meter_name = meter_name
         self._meter_version = meter_version
         self._meter_schema_url = meter_schema_url
 
-        self._name = name
-
-        if self._name is not None:
-            if self._instrument_type is not None:
-                raise Exception(
-                    "Instrument type matching disabled "
-                    "for view with a defined name"
-                )
-
-            if self._instrument_name is not None:
-                raise Exception(
-                    "Instrument name matching disabled "
-                    "for view with a defined name"
-                )
-
-            if self._meter_name is not None:
-                raise Exception(
-                    "Instrument meter name matching disabled "
-                    "for view with a defined name"
-                )
-
-            if self._meter_version is not None:
-                raise Exception(
-                    "Instrument meter version matching disabled "
-                    "for view with a defined version"
-                )
-
-            if self._meter_schema_url is not None:
-                raise Exception(
-                    "Instrument meter schema URL matching disabled "
-                    "for view with a defined version"
-                )
-
         self._description = description
         self._attribute_keys = attribute_keys
         self._aggregation = aggregation
 
-        self._has_name_and_has_matched = False
+        if self._name is not None:
+            self._previously_matched_instrumentation_infos = set()
 
     # pylint: disable=too-many-return-statements
+    # pylint: disable=too-many-branches
     def _match(self, instrument: Instrument) -> bool:
-
-        if self._has_name_and_has_matched:
-            return False
 
         if self._instrument_type is not None:
             if not isinstance(instrument, self._instrument_type):
                 return False
 
         if self._instrument_name is not None:
-            if self._instrument_name != instrument.name:
+            if not fnmatch(instrument.name, self._instrument_name):
                 return False
 
         if self._meter_name is not None:
-            # pylint: disable=protected-access
-            if self._meter_name != instrument._meter.name:
+            if not fnmatch(
+                instrument.instrumentation_info.name, self._meter_name
+            ):
                 return False
 
         if self._meter_version is not None:
-            # pylint: disable=protected-access
-            if self._meter_version != instrument._meter.version:
+            if not fnmatch(
+                instrument.instrumentation_info.version, self._meter_version
+            ):
                 return False
 
         if self._meter_schema_url is not None:
-            # pylint: disable=protected-access
-            if self._meter_schema_url != instrument._meter.schema_url:
+            if not fnmatch(
+                instrument.instrumentation_info.schema_url,
+                self._meter_schema_url,
+            ):
                 return False
 
         if self._name is not None:
-            self._has_name_and_has_matched = True
+            if instrument.instrumentation_info not in (
+                self._previously_matched_instrumentation_infos
+            ):
+                self._previously_matched_instrumentation_infos.add(
+                    instrument.instrumentation_info
+                )
+            else:
+                return False
 
         return True
