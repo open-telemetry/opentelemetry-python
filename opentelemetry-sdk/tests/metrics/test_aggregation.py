@@ -22,6 +22,7 @@ from unittest.mock import Mock
 
 from opentelemetry.sdk._metrics.aggregation import (
     AggregationTemporality,
+    SumAggregation,
     ExplicitBucketHistogramAggregation,
     LastValueAggregation,
     SumAggregation,
@@ -48,9 +49,9 @@ class TestSynchronousSumAggregation(TestCase):
             True, AggregationTemporality.DELTA
         )
 
-        synchronous_sum_aggregation.aggregate(Measurement(1))
-        synchronous_sum_aggregation.aggregate(Measurement(2))
-        synchronous_sum_aggregation.aggregate(Measurement(3))
+        synchronous_sum_aggregation.aggregate(measurement(1))
+        synchronous_sum_aggregation.aggregate(measurement(2))
+        synchronous_sum_aggregation.aggregate(measurement(3))
 
         self.assertEqual(synchronous_sum_aggregation._value, 6)
 
@@ -58,9 +59,9 @@ class TestSynchronousSumAggregation(TestCase):
             True, AggregationTemporality.DELTA
         )
 
-        synchronous_sum_aggregation.aggregate(Measurement(1))
-        synchronous_sum_aggregation.aggregate(Measurement(-2))
-        synchronous_sum_aggregation.aggregate(Measurement(3))
+        synchronous_sum_aggregation.aggregate(measurement(1))
+        synchronous_sum_aggregation.aggregate(measurement(-2))
+        synchronous_sum_aggregation.aggregate(measurement(3))
 
         self.assertEqual(synchronous_sum_aggregation._value, 2)
 
@@ -125,49 +126,6 @@ class TestSynchronousSumAggregation(TestCase):
 
         sum_aggregation.aggregate(measurement(1))
         first_sum = sum_aggregation.collect()
-        self.assertTrue(asynchronous_sum_aggregation._instrument_is_monotonic)
-
-        asynchronous_sum_aggregation = AsynchronousSumAggregation(False)
-        self.assertFalse(asynchronous_sum_aggregation._instrument_is_monotonic)
-
-    def test_aggregate(self):
-        """
-        `AsynchronousSumAggregation` aggregates data for sum metric points
-        """
-
-        asynchronous_sum_aggregation = AsynchronousSumAggregation(True)
-
-        asynchronous_sum_aggregation.aggregate(measurement(1))
-        self.assertEqual(asynchronous_sum_aggregation._value, 1)
-
-        asynchronous_sum_aggregation.aggregate(measurement(2))
-        self.assertEqual(asynchronous_sum_aggregation._value, 2)
-
-        asynchronous_sum_aggregation.aggregate(measurement(3))
-        self.assertEqual(asynchronous_sum_aggregation._value, 3)
-
-        asynchronous_sum_aggregation = AsynchronousSumAggregation(True)
-
-        asynchronous_sum_aggregation.aggregate(measurement(1))
-        self.assertEqual(asynchronous_sum_aggregation._value, 1)
-
-        asynchronous_sum_aggregation.aggregate(measurement(-2))
-        self.assertEqual(asynchronous_sum_aggregation._value, -2)
-
-        asynchronous_sum_aggregation.aggregate(measurement(3))
-        self.assertEqual(asynchronous_sum_aggregation._value, 3)
-
-    def test_collect(self):
-        """
-        `AsynchronousSumAggregation` collects sum metric points
-        """
-
-        asynchronous_sum_aggregation = AsynchronousSumAggregation(True)
-
-        self.assertIsNone(asynchronous_sum_aggregation.collect())
-
-        asynchronous_sum_aggregation.aggregate(measurement(1))
-        first_sum = asynchronous_sum_aggregation.collect()
 
         self.assertEqual(first_sum.value, 1)
         self.assertTrue(first_sum.is_monotonic)

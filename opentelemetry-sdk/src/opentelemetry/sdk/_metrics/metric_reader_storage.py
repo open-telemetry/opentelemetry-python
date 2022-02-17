@@ -16,28 +16,12 @@ from threading import RLock
 from typing import Dict, Iterable, List
 
 from opentelemetry._metrics.instrument import Instrument
-from opentelemetry.sdk._metrics.aggregation import AggregationTemporality
+from opentelemetry.sdk._metrics.aggregation import AggregationTemporality, LastValueAggregation
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import Metric
 from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
 from opentelemetry.sdk._metrics.view import View
-
-
-# TODO: #2300
-class ViewStorage:
-    def __init__(
-        self,
-        view: View,
-        instrument: Instrument,
-        sdk_config: SdkConfiguration,
-    ) -> None:
-        pass
-
-    def consume_measurement(self, measurement: Measurement) -> None:
-        pass
-
-    def collect(self, temporality: AggregationTemporality) -> Iterable[Metric]:
-        pass
+from opentelemetry.sdk._metrics._view_instrument_match import _ViewInstrumentMatch
 
 
 class MetricReaderStorage:
@@ -46,53 +30,59 @@ class MetricReaderStorage:
     def __init__(self, sdk_config: SdkConfiguration) -> None:
         self._lock = RLock()
         self._sdk_config = sdk_config
-        self._view_storages: Dict[Instrument, List[ViewStorage]] = {}
+        self._view_instrument_match: Dict[Instrument, List[_ViewInstrumentMatch]] = {}
 
-    def _get_or_init_view_storage(
+    def _get_or_init_view_instrument_match(
         self, instrument: Instrument
-    ) -> List["ViewStorage"]:
+    ) -> List["_ViewInstrumentMatch"]:
         # Optimistically get the relevant views for the given instrument. Once set for a given
         # instrument, the mapping will never change
-        if instrument in self._view_storages:
-            return self._view_storages[instrument]
+        if instrument in self._view_instrument_match:
+            return self._view_instrument_match[instrument]
 
         with self._lock:
             # double check if it was set before we held the lock
-            if instrument in self._view_storages:
-                return self._view_storages[instrument]
+            if instrument in self._view_instrument_match:
+                return self._view_instrument_match[instrument]
 
             # not present, hold the lock and add a new mapping
-            view_storages = []
+            matches = []
             for view in self._sdk_config.views:
                 if view.match(instrument):
                     # Note: if a view matches multiple instruments, this will create a separate
-                    # ViewStorage per instrument. If the user's View configuration includes a
+                    # _ViewInstrumentMatch per instrument. If the user's View configuration includes a
                     # name, this will cause multiple conflicting output streams.
-                    view_storages.append(
-                        ViewStorage(
-                            view=view,
-                            instrument=instrument,
-                            sdk_config=self._sdk_config,
+                    matches.append(
+                        _ViewInstrumentMatch(
+                            name=view.name or instrument.name,
+                            resource=self._sdk_config.resource,
+                            instrumentation_info=None,
+                            aggregation=view.aggregation,
+                            unit=instrument.unit,
+                            description=view.description,
                         )
                     )
 
             # if no view targeted the instrument, use the default
-            if not view_storages:
-                view_storages.append(
-                    ViewStorage(
-                        view=default_view(instrument),
-                        instrument=instrument,
-                        sdk_config=self._sdk_config,
+            if not matches:
+                matches.append(
+                    _ViewInstrumentMatch(
+                        resource=self._sdk_config.resource,
+                            instrumentation_info=None,
+                            aggregation=LastValueAggregation, # TODO: this needs to be set to the aggregation on the instrument
+                            unit=instrument.unit,
+                            description=instrument.description,
+                            name=instrument.name,
                     )
                 )
-            self._view_storages[instrument] = view_storages
-            return view_storages
+            self._view_instrument_match[instrument] = matches
+            return matches
 
     def consume_measurement(self, measurement: Measurement) -> None:
-        for view_storage in self._get_or_init_view_storage(
+        for matches in self._get_or_init_view_instrument_match(
             measurement.instrument
         ):
-            view_storage.consume_measurement(measurement)
+            matches.consume_measurement(measurement)
 
     def collect(self, temporality: AggregationTemporality) -> Iterable[Metric]:
         # use a list instead of yielding to prevent a slow reader from holding SDK locks
@@ -103,16 +93,16 @@ class MetricReaderStorage:
             for measurement in async_instrument.callback():
                 self.consume_measurement(measurement)
 
-        # While holding the lock, new ViewStorage can't be added from another thread (so we are
+        # While holding the lock, new _ViewInstrumentMatch can't be added from another thread (so we are
         # sure we collect all existing view). However, instruments can still send measurements
         # that will make it into the individual aggregations; collection will acquire those
         # locks iteratively to keep locking as fine-grained as possible. One side effect is
         # that end times can be slightly skewed among the metric streams produced by the SDK,
         # but we still align the output timestamps for a single instrument.
         with self._lock:
-            for view_storages in self._view_storages.values():
-                for view_storage in view_storages:
-                    metrics.extend(view_storage.collect(temporality))
+            for matches in self._view_instrument_match.values():
+                for m in matches:
+                    metrics.extend(m.collect(temporality))
 
         return metrics
 

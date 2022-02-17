@@ -45,8 +45,10 @@ class Test_ViewInstrumentMatch(TestCase):
             {"a", "c"},
         )
 
+        instrument1 = Mock(name="instrument1")
+
         view_instrument_match.consume_measurement(
-            Measurement(value=0, attributes={"c": "d", "f": "g"})
+            Measurement(value=0, instrument=instrument1, attributes={"c": "d", "f": "g"})
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
@@ -54,7 +56,7 @@ class Test_ViewInstrumentMatch(TestCase):
         )
 
         view_instrument_match.consume_measurement(
-            Measurement(value=0, attributes={"w": "x", "y": "z"})
+            Measurement(value=0, instrument=instrument1, attributes={"w": "x", "y": "z"})
         )
 
         self.assertEqual(
@@ -75,7 +77,7 @@ class Test_ViewInstrumentMatch(TestCase):
         )
 
         view_instrument_match.consume_measurement(
-            Measurement(value=0, attributes={"c": "d", "f": "g"})
+            Measurement(value=0, instrument=instrument1, attributes={"c": "d", "f": "g"})
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
@@ -95,7 +97,7 @@ class Test_ViewInstrumentMatch(TestCase):
             self.mock_resource,
         )
         view_instrument_match.consume_measurement(
-            Measurement(value=0, attributes=None)
+            Measurement(value=0, instrument=instrument1, attributes=None)
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
@@ -115,7 +117,7 @@ class Test_ViewInstrumentMatch(TestCase):
         )
 
         view_instrument_match.consume_measurement(
-            Measurement(value=0, attributes={"c": "d", "f": "g"})
+            Measurement(value=0, instrument=Mock(name="instrument1"), attributes={"c": "d", "f": "g"})
         )
         self.assertEqual(
             next(view_instrument_match.collect(1)),
