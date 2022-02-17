@@ -99,9 +99,7 @@ class Test_ViewInstrumentMatch(TestCase):
         )
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
-            {
-                frozenset({}): self.mock_aggregation_instance
-            },
+            {frozenset({}): self.mock_aggregation_instance},
         )
 
     def test_collect(self):
