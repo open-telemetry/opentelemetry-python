@@ -29,10 +29,10 @@ def mock_view_matching(*instruments) -> Mock:
     return mock
 
 
-@patch("opentelemetry.sdk._metrics.metric_reader_storage.ViewStorage")
+@patch("opentelemetry.sdk._metrics._view_instrument_match._ViewInstrumentMatch")
 class TestMetricReaderStorage(ConcurrencyTestBase):
-    def test_creates_view_storages(self, MockViewStorage: Mock):
-        """It should create a ViewStorage when an instrument matches a view"""
+    def test_creates_view_instrument_matches(self, MockViewInstrumentMatch: Mock):
+        """It should create a MockViewInstrumentMatch when an instrument matches a view"""
         instrument1 = Mock(name="instrument1")
         instrument2 = Mock(name="instrument2")
 
@@ -44,28 +44,28 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             )
         )
 
-        # instrument1 matches view1 and view2, so should create two ViewStorages
+        # instrument1 matches view1 and view2, so should create two ViewInstrumentMatch objects
         storage.consume_measurement(Measurement(1, instrument1))
         self.assertEqual(
-            len(MockViewStorage.call_args_list), 2, MockViewStorage.mock_calls
+            len(MockViewInstrumentMatch.call_args_list), 2, MockViewInstrumentMatch.mock_calls
         )
         # they should only be created the first time the instrument is seen
         storage.consume_measurement(Measurement(1, instrument1))
-        self.assertEqual(len(MockViewStorage.call_args_list), 2)
+        self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 2)
 
-        # instrument2 matches view2, so should create a single ViewStorage
-        MockViewStorage.call_args_list.clear()
+        # instrument2 matches view2, so should create a single ViewInstrumentMatch
+        MockViewInstrumentMatch.call_args_list.clear()
         storage.consume_measurement(Measurement(1, instrument2))
-        self.assertEqual(len(MockViewStorage.call_args_list), 1)
+        self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
 
-    def test_forwards_calls_to_view_storage(self, MockViewStorage: Mock):
-        view_storage1 = Mock()
-        view_storage2 = Mock()
-        view_storage3 = Mock()
-        MockViewStorage.side_effect = [
-            view_storage1,
-            view_storage2,
-            view_storage3,
+    def test_forwards_calls_to_view_instrument_match(self, MockViewInstrumentMatch: Mock):
+        view_instrument_match1 = Mock()
+        view_instrument_match2 = Mock()
+        view_instrument_match3 = Mock()
+        MockViewInstrumentMatch.side_effect = [
+            view_instrument_match1,
+            view_instrument_match2,
+            view_instrument_match3,
         ]
 
         instrument1 = Mock(name="instrument1")
@@ -78,34 +78,34 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             )
         )
 
-        # Measurements from an instrument should be passed on to each ViewStorage created for
-        # that instrument
+        # Measurements from an instrument should be passed on to each ViewInstrumentMatch objects
+        # created for that instrument
         measurement = Measurement(1, instrument1)
         storage.consume_measurement(measurement)
-        view_storage1.consume_measurement.assert_called_once_with(measurement)
-        view_storage2.consume_measurement.assert_called_once_with(measurement)
-        view_storage3.consume_measurement.assert_not_called()
+        view_instrument_match1.consume_measurement.assert_called_once_with(measurement)
+        view_instrument_match2.consume_measurement.assert_called_once_with(measurement)
+        view_instrument_match3.consume_measurement.assert_not_called()
 
         measurement = Measurement(1, instrument2)
         storage.consume_measurement(measurement)
-        view_storage3.consume_measurement.assert_called_once_with(measurement)
+        view_instrument_match3.consume_measurement.assert_called_once_with(measurement)
 
-        # collect() should call collect on all of its ViewStorages and combine them together
+        # collect() should call collect on all of its _ViewInstrumentMatch objects and combine them together
         all_metrics = [Mock() for _ in range(6)]
-        view_storage1.collect.return_value = all_metrics[:2]
-        view_storage2.collect.return_value = all_metrics[2:4]
-        view_storage3.collect.return_value = all_metrics[4:]
+        view_instrument_match1.collect.return_value = all_metrics[:2]
+        view_instrument_match2.collect.return_value = all_metrics[2:4]
+        view_instrument_match3.collect.return_value = all_metrics[4:]
 
         result = storage.collect(AggregationTemporality.CUMULATIVE)
-        view_storage1.collect.assert_called_once()
-        view_storage2.collect.assert_called_once()
-        view_storage3.collect.assert_called_once()
+        view_instrument_match1.collect.assert_called_once()
+        view_instrument_match2.collect.assert_called_once()
+        view_instrument_match3.collect.assert_called_once()
         self.assertEqual(result, all_metrics)
 
-    def test_collect_calls_async_instruments(self, MockViewStorage: Mock):
+    def test_collect_calls_async_instruments(self, MockViewInstrumentMatch: Mock):
         """Its collect() method should invoke async instruments"""
-        mock_view_storages = [MagicMock() for _ in range(5)]
-        MockViewStorage.side_effect = mock_view_storages
+        mock_view_instrument_matches = [MagicMock() for _ in range(5)]
+        MockViewInstrumentMatch.side_effect = mock_view_instrument_matches
 
         # mock async instruments with callbacks which return a single measurement
         async_instrument_mocks = [
@@ -123,12 +123,12 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             i_mock.callback.assert_called_once()
 
         # and their measurements should be passed on to the auto-created view storages
-        for storage in mock_view_storages:
+        for storage in mock_view_instrument_matches:
             storage.consume_measurement.assert_called_once()
 
-    def test_race_concurrent_measurements(self, MockViewStorage: Mock):
-        mock_view_storage_ctor = MockFunc()
-        MockViewStorage.side_effect = mock_view_storage_ctor
+    def test_race_concurrent_measurements(self, MockViewInstrumentMatch: Mock):
+        mock_view_instrument_match_ctor = MockFunc()
+        MockViewInstrumentMatch.side_effect = mock_view_instrument_match_ctor
 
         instrument1 = Mock(name="instrument1")
         view1 = mock_view_matching(instrument1)
@@ -144,5 +144,5 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # race sending many measurements concurrently
         self.run_with_many_threads(send_measurement)
 
-        # ViewStorage constructor should have only been called once
-        self.assertEqual(mock_view_storage_ctor.call_count, 1)
+        # _ViewInstrumentMatch constructor should have only been called once
+        self.assertEqual(mock_view_instrument_match_ctor.call_count, 1)
