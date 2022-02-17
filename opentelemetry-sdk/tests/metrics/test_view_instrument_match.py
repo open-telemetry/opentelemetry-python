@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock
 
@@ -54,14 +53,16 @@ class Test_ViewInstrumentMatch(TestCase):
             {frozenset([("c", "d")]): self.mock_aggregation_instance},
         )
 
-        with self.assertLogs(level=WARNING):
-            view_instrument_match.consume_measurement(
-                Measurement(value=0, attributes={"w": "x", "y": "z"})
-            )
+        view_instrument_match.consume_measurement(
+            Measurement(value=0, attributes={"w": "x", "y": "z"})
+        )
 
         self.assertEqual(
             view_instrument_match._attributes_aggregation,
-            {frozenset([("c", "d")]): self.mock_aggregation_instance},
+            {
+                frozenset(): self.mock_aggregation_instance,
+                frozenset([("c", "d")]): self.mock_aggregation_instance,
+            },
         )
 
         view_instrument_match = _ViewInstrumentMatch(

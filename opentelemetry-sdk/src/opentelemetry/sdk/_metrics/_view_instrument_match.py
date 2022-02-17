@@ -62,12 +62,6 @@ class _ViewInstrumentMatch:
         else:
             attributes = measurement.attributes
 
-        if not attributes:
-
-            _logger.warning("Empty measurement attributes found")
-
-            return
-
         attributes = frozenset(attributes.items())
 
         if attributes not in self._attributes_aggregation.keys():
