@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
+
 from dataclasses import dataclass
 from enum import IntEnum
 from typing import Sequence, Union
@@ -35,11 +37,26 @@ class Sum:
     aggregation_temporality: AggregationTemporality
     is_monotonic: bool
 
+    def _dict(self):
+        return {
+            "start_time_unix_nano": self.start_time_unix_nano,
+            "time_unix_nano": self.time_unix_nano,
+            "value": self.value,
+            "aggregation_temporality": self.aggregation_temporality,
+            "is_monotonic": self.is_monotonic,
+        }
+
 
 @dataclass(frozen=True)
 class Gauge:
     time_unix_nano: int
     value: Union[int, float]
+
+    def _dict(self):
+        return {
+            "time_unix_nano": self.time_unix_nano,
+            "value": self.value,
+        }
 
 
 @dataclass(frozen=True)
@@ -50,6 +67,16 @@ class Histogram:
     explicit_bounds: Sequence[float]
     sum: Union[int, float]
     aggregation_temporality: AggregationTemporality
+
+    def _dict(self):
+        return {
+            "start_time_unix_nano": self.start_time_unix_nano,
+            "time_unix_nano": self.time_unix_nano,
+            "bucket_counts": self.bucket_counts,
+            "explicit_bounds": self.explicit_bounds,
+            "sum": self.sum,
+            "aggregation_temporality": self.aggregation_temporality,
+        }
 
 
 PointT = Union[Sum, Gauge, Histogram]
@@ -74,4 +101,18 @@ class Metric:
     """Contains non-common fields for the given metric"""
 
     def to_json(self) -> str:
-        raise NotImplementedError()
+        return json.dumps(
+            {
+                "attributes": self.attributes if self.attributes else "",
+                "description": self.description if self.description else "",
+                "instrumentation_info": self.instrumentation_info
+                if self.instrumentation_info
+                else "",
+                "name": self.name,
+                "resource": repr(self.resource.attributes)
+                if self.resource
+                else "",
+                "unit": self.unit if self.unit else "",
+                "point": self.point._dict() if self.point else "",
+            }
+        )
