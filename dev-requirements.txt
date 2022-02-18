@@ -13,3 +13,4 @@ readme-renderer~=24.0
 grpcio-tools~=1.41.0
 mypy-protobuf~=3.0.0
 protobuf~=3.18.1
+markupsafe<2.1
