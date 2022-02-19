@@ -86,6 +86,22 @@ class Test_ViewInstrumentMatch(TestCase):
             },
         )
 
+        view_instrument_match = _ViewInstrumentMatch(
+            "name",
+            "unit",
+            "description",
+            self.mock_aggregation_class,
+            self.mock_instrumentation_info,
+            self.mock_resource,
+        )
+        view_instrument_match.consume_measurement(
+            Measurement(value=0, attributes=None)
+        )
+        self.assertEqual(
+            view_instrument_match._attributes_aggregation,
+            {frozenset({}): self.mock_aggregation_instance},
+        )
+
     def test_collect(self):
 
         view_instrument_match = _ViewInstrumentMatch(
