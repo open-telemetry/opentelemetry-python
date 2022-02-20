@@ -13,9 +13,10 @@
 # limitations under the License.
 
 from unittest import TestCase
-from opentelemetry.sdk._metrics.point import Metric, Sum, Gauge, Histogram
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+
+from opentelemetry.sdk._metrics.point import Gauge, Histogram, Metric, Sum
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
 
 def _create_metric(value):

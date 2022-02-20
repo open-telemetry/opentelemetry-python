@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import json
-
 from dataclasses import asdict, dataclass
 from enum import IntEnum
 from typing import Sequence, Union
