@@ -14,7 +14,7 @@
 
 import json
 
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from enum import IntEnum
 from typing import Sequence, Union
 
@@ -37,26 +37,11 @@ class Sum:
     aggregation_temporality: AggregationTemporality
     is_monotonic: bool
 
-    def _dict(self):
-        return {
-            "start_time_unix_nano": self.start_time_unix_nano,
-            "time_unix_nano": self.time_unix_nano,
-            "value": self.value,
-            "aggregation_temporality": self.aggregation_temporality,
-            "is_monotonic": self.is_monotonic,
-        }
-
 
 @dataclass(frozen=True)
 class Gauge:
     time_unix_nano: int
     value: Union[int, float]
-
-    def _dict(self):
-        return {
-            "time_unix_nano": self.time_unix_nano,
-            "value": self.value,
-        }
 
 
 @dataclass(frozen=True)
@@ -67,16 +52,6 @@ class Histogram:
     explicit_bounds: Sequence[float]
     sum: Union[int, float]
     aggregation_temporality: AggregationTemporality
-
-    def _dict(self):
-        return {
-            "start_time_unix_nano": self.start_time_unix_nano,
-            "time_unix_nano": self.time_unix_nano,
-            "bucket_counts": self.bucket_counts,
-            "explicit_bounds": self.explicit_bounds,
-            "sum": self.sum,
-            "aggregation_temporality": self.aggregation_temporality,
-        }
 
 
 PointT = Union[Sum, Gauge, Histogram]
@@ -105,7 +80,7 @@ class Metric:
             {
                 "attributes": self.attributes if self.attributes else "",
                 "description": self.description if self.description else "",
-                "instrumentation_info": self.instrumentation_info
+                "instrumentation_info": repr(self.instrumentation_info)
                 if self.instrumentation_info
                 else "",
                 "name": self.name,
@@ -113,6 +88,6 @@ class Metric:
                 if self.resource
                 else "",
                 "unit": self.unit if self.unit else "",
-                "point": self.point._dict() if self.point else "",
+                "point": asdict(self.point) if self.point else "",
             }
         )
