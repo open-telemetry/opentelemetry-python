@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2450](https://github.com/open-telemetry/opentelemetry-python/pull/2450))
 - Bump semantic conventions from 1.6.1 to 1.8.0
   ([#2461](https://github.com/open-telemetry/opentelemetry-python/pull/2461))
+- fix exception handling in get_aggregated_resources
+  ([#2464](https://github.com/open-telemetry/opentelemetry-python/pull/2464))
 
 ## [1.9.1-0.28b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.9.1-0.28b1) - 2022-01-29
 

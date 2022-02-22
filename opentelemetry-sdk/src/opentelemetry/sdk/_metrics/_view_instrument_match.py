@@ -59,8 +59,10 @@ class _ViewInstrumentMatch:
             for key, value in measurement.attributes.items():
                 if key in self._attribute_keys:
                     attributes[key] = value
-        else:
+        elif measurement.attributes is not None:
             attributes = measurement.attributes
+        else:
+            attributes = {}
 
         attributes = frozenset(attributes.items())
 
@@ -68,7 +70,7 @@ class _ViewInstrumentMatch:
             with self._lock:
                 self._attributes_aggregation[attributes] = self._aggregation()
 
-        self._attributes_aggregation[attributes].aggregate(measurement.value)
+        self._attributes_aggregation[attributes].aggregate(measurement)
 
     def collect(self, temporality: int) -> Iterable[Metric]:
 
