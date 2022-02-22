@@ -12,7 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import dataclass
+import json
+from dataclasses import asdict, dataclass
 from enum import IntEnum
 from typing import Sequence, Union
 
@@ -74,4 +75,18 @@ class Metric:
     """Contains non-common fields for the given metric"""
 
     def to_json(self) -> str:
-        raise NotImplementedError()
+        return json.dumps(
+            {
+                "attributes": self.attributes if self.attributes else "",
+                "description": self.description if self.description else "",
+                "instrumentation_info": repr(self.instrumentation_info)
+                if self.instrumentation_info
+                else "",
+                "name": self.name,
+                "resource": repr(self.resource.attributes)
+                if self.resource
+                else "",
+                "unit": self.unit if self.unit else "",
+                "point": asdict(self.point) if self.point else "",
+            }
+        )
