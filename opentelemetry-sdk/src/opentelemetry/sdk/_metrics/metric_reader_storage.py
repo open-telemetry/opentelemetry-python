@@ -117,8 +117,8 @@ class MetricReaderStorage:
         # but we still align the output timestamps for a single instrument.
         with self._lock:
             for matches in self._view_instrument_match.values():
-                for m in matches:
-                    metrics.extend(m.collect(temporality))
+                for match in matches:
+                    metrics.extend(match.collect(temporality))
 
         return metrics
 
