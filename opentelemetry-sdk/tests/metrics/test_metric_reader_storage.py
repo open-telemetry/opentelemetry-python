@@ -34,9 +34,12 @@ def mock_instrument() -> Mock:
     instr.attributes = {}
     return instr
 
+
 @patch("opentelemetry.sdk._metrics.metric_reader_storage._ViewInstrumentMatch")
 class TestMetricReaderStorage(ConcurrencyTestBase):
-    def test_creates_view_instrument_matches(self, MockViewInstrumentMatch: Mock):
+    def test_creates_view_instrument_matches(
+        self, MockViewInstrumentMatch: Mock
+    ):
         """It should create a MockViewInstrumentMatch when an instrument matches a view"""
         instrument1 = Mock(name="instrument1")
         instrument2 = Mock(name="instrument2")
@@ -52,7 +55,9 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # instrument1 matches view1 and view2, so should create two ViewInstrumentMatch objects
         storage.consume_measurement(Measurement(1, instrument1))
         self.assertEqual(
-            len(MockViewInstrumentMatch.call_args_list), 2, MockViewInstrumentMatch.mock_calls
+            len(MockViewInstrumentMatch.call_args_list),
+            2,
+            MockViewInstrumentMatch.mock_calls,
         )
         # they should only be created the first time the instrument is seen
         storage.consume_measurement(Measurement(1, instrument1))
@@ -63,7 +68,9 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         storage.consume_measurement(Measurement(1, instrument2))
         self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
 
-    def test_forwards_calls_to_view_instrument_match(self, MockViewInstrumentMatch: Mock):
+    def test_forwards_calls_to_view_instrument_match(
+        self, MockViewInstrumentMatch: Mock
+    ):
         view_instrument_match1 = Mock()
         view_instrument_match2 = Mock()
         view_instrument_match3 = Mock()
@@ -87,13 +94,19 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # created for that instrument
         measurement = Measurement(1, instrument1)
         storage.consume_measurement(measurement)
-        view_instrument_match1.consume_measurement.assert_called_once_with(measurement)
-        view_instrument_match2.consume_measurement.assert_called_once_with(measurement)
+        view_instrument_match1.consume_measurement.assert_called_once_with(
+            measurement
+        )
+        view_instrument_match2.consume_measurement.assert_called_once_with(
+            measurement
+        )
         view_instrument_match3.consume_measurement.assert_not_called()
 
         measurement = Measurement(1, instrument2)
         storage.consume_measurement(measurement)
-        view_instrument_match3.consume_measurement.assert_called_once_with(measurement)
+        view_instrument_match3.consume_measurement.assert_called_once_with(
+            measurement
+        )
 
         # collect() should call collect on all of its _ViewInstrumentMatch objects and combine them together
         all_metrics = [Mock() for _ in range(6)]
@@ -107,14 +120,17 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         view_instrument_match3.collect.assert_called_once()
         self.assertEqual(result, all_metrics)
 
-    def test_collect_calls_async_instruments(self, MockViewInstrumentMatch: Mock):
+    def test_collect_calls_async_instruments(
+        self, MockViewInstrumentMatch: Mock
+    ):
         """Its collect() method should invoke async instruments"""
         mock_view_instrument_matches = [MagicMock() for _ in range(5)]
         MockViewInstrumentMatch.side_effect = mock_view_instrument_matches
 
         # mock async instruments with callbacks which return a single measurement
         async_instrument_mocks = [
-            MagicMock(**{"callback.return_value": (mock_instrument(),)}) for _ in range(5)
+            MagicMock(**{"callback.return_value": (mock_instrument(),)})
+            for _ in range(5)
         ]
         sdk_config_mock = Mock(spec=SdkConfiguration)
         sdk_config_mock.async_instruments = async_instrument_mocks

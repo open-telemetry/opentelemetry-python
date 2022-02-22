@@ -22,7 +22,6 @@ from unittest.mock import Mock
 
 from opentelemetry.sdk._metrics.aggregation import (
     AggregationTemporality,
-    SumAggregation,
     ExplicitBucketHistogramAggregation,
     LastValueAggregation,
     SumAggregation,
