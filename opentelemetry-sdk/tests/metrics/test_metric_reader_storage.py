@@ -120,34 +120,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         view_instrument_match3.collect.assert_called_once()
         self.assertEqual(result, all_metrics)
 
-    def test_collect_calls_async_instruments(
-        self, MockViewInstrumentMatch: Mock
-    ):
-        """Its collect() method should invoke async instruments"""
-        mock_view_instrument_matches = [MagicMock() for _ in range(5)]
-        MockViewInstrumentMatch.side_effect = mock_view_instrument_matches
-
-        # mock async instruments with callbacks which return a single measurement
-        async_instrument_mocks = [
-            MagicMock(**{"callback.return_value": (mock_instrument(),)})
-            for _ in range(5)
-        ]
-        sdk_config_mock = Mock(spec=SdkConfiguration)
-        sdk_config_mock.async_instruments = async_instrument_mocks
-        sdk_config_mock.views = []
-        sdk_config_mock.resource = Mock()
-
-        storage = MetricReaderStorage(sdk_config_mock)
-        storage.collect(AggregationTemporality.CUMULATIVE)
-
-        # it should call async instruments
-        for i_mock in async_instrument_mocks:
-            i_mock.callback.assert_called_once()
-
-        # and their measurements should be passed on to the auto-created view storages
-        for storage in mock_view_instrument_matches:
-            storage.consume_measurement.assert_called_once()
-
     def test_race_concurrent_measurements(self, MockViewInstrumentMatch: Mock):
         mock_view_instrument_match_ctor = MockFunc()
         MockViewInstrumentMatch.side_effect = mock_view_instrument_match_ctor
