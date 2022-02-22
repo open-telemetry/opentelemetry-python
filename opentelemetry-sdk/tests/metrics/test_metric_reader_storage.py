@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest.mock import MagicMock, Mock, patch
+from unittest.mock import Mock, patch
 
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.metric_reader_storage import (
