@@ -102,7 +102,6 @@ class TestSynchronousMeasurementConsumer(TestCase):
             i_mock.callback.assert_called_once()
 
         # it should pass measurements to reader storage
-        print(reader_storage_mock)
         self.assertEqual(
             len(reader_storage_mock.consume_measurement.mock_calls), 5
         )
