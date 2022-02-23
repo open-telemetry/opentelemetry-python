@@ -64,7 +64,7 @@ class Meter(APIMeter):
         self._instrumentation_info = instrumentation_info
         self._measurement_consumer = measurement_consumer
 
-    def create_counter(self, name, unit=None, description=None) -> APICounter:
+    def create_counter(self, name, unit="", description="") -> APICounter:
         super().create_counter(name, unit=unit, description=description)
         return Counter(
             name,
@@ -75,7 +75,7 @@ class Meter(APIMeter):
         )
 
     def create_up_down_counter(
-        self, name, unit=None, description=None
+        self, name, unit="", description=""
     ) -> APIUpDownCounter:
         super().create_up_down_counter(
             name, unit=unit, description=description
@@ -89,7 +89,7 @@ class Meter(APIMeter):
         )
 
     def create_observable_counter(
-        self, name, callback, unit=None, description=None
+        self, name, callback, unit="", description=""
     ) -> APIObservableCounter:
         super().create_observable_counter(
             name, callback, unit=unit, description=description
@@ -108,9 +108,7 @@ class Meter(APIMeter):
 
         return instrument
 
-    def create_histogram(
-        self, name, unit=None, description=None
-    ) -> APIHistogram:
+    def create_histogram(self, name, unit="", description="") -> APIHistogram:
         super().create_histogram(name, unit=unit, description=description)
         return Histogram(
             name,
@@ -121,7 +119,7 @@ class Meter(APIMeter):
         )
 
     def create_observable_gauge(
-        self, name, callback, unit=None, description=None
+        self, name, callback, unit="", description=""
     ) -> APIObservableGauge:
         super().create_observable_gauge(
             name, callback, unit=unit, description=description
@@ -141,7 +139,7 @@ class Meter(APIMeter):
         return instrument
 
     def create_observable_up_down_counter(
-        self, name, callback, unit=None, description=None
+        self, name, callback, unit="", description=""
     ) -> APIObservableUpDownCounter:
         super().create_observable_up_down_counter(
             name, callback, unit=unit, description=description

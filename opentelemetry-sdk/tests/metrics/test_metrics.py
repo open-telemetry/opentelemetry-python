@@ -314,14 +314,21 @@ class TestMeter(TestCase):
         for instrument_name in [
             "counter",
             "up_down_counter",
-            "observable_counter",
             "histogram",
+        ]:
+            with self.assertLogs(level=WARNING):
+                getattr(self.meter, f"create_{instrument_name}")(
+                    instrument_name
+                )
+
+        for instrument_name in [
+            "observable_counter",
             "observable_gauge",
             "observable_up_down_counter",
         ]:
-            with self.assertRaises(Exception):
+            with self.assertLogs(level=WARNING):
                 getattr(self.meter, f"create_{instrument_name}")(
-                    instrument_name
+                    instrument_name, Mock()
                 )
 
     def test_create_counter(self):
