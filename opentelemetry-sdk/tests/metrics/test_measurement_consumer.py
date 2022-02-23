@@ -35,7 +35,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
         """It should create one MetricReaderStorage per metric reader passed in the SdkConfiguration"""
         reader_mocks = [Mock() for _ in range(5)]
         SynchronousMeasurementConsumer(
-            SdkConfiguration(resource=Mock(), metric_readers=reader_mocks)
+            SdkConfiguration(
+                resource=Mock(), metric_readers=reader_mocks, views=()
+            )
         )
         self.assertEqual(len(MockMetricReaderStorage.mock_calls), 5)
 
@@ -47,7 +49,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
         MockMetricReaderStorage.side_effect = reader_storage_mocks
 
         consumer = SynchronousMeasurementConsumer(
-            SdkConfiguration(resource=Mock(), metric_readers=reader_mocks)
+            SdkConfiguration(
+                resource=Mock(), metric_readers=reader_mocks, views=()
+            )
         )
         measurement_mock = Mock()
         consumer.consume_measurement(measurement_mock)
@@ -64,7 +68,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
         MockMetricReaderStorage.side_effect = reader_storage_mocks
 
         consumer = SynchronousMeasurementConsumer(
-            SdkConfiguration(resource=Mock(), metric_readers=reader_mocks)
+            SdkConfiguration(
+                resource=Mock(), metric_readers=reader_mocks, views=()
+            )
         )
         for r_mock, rs_mock in zip(reader_mocks, reader_storage_mocks):
             rs_mock.collect.assert_not_called()
@@ -73,14 +79,20 @@ class TestSynchronousMeasurementConsumer(TestCase):
                 AggregationTemporality.CUMULATIVE
             )
 
-    def test_collect_calls_async_instruments(self, _):
-        """Its collect() method should invoke async instruments"""
+    def test_collect_calls_async_instruments(self, MockMetricReaderStorage):
+        """Its collect() method should invoke async instruments and pass measurements to the
+        corresponding metric reader storage"""
         reader_mock = Mock()
+        reader_storage_mock = Mock()
+        MockMetricReaderStorage.return_value = reader_storage_mock
         consumer = SynchronousMeasurementConsumer(
-            SdkConfiguration(resource=Mock(), metric_readers=[reader_mock])
+            SdkConfiguration(
+                resource=Mock(), metric_readers=[reader_mock], views=()
+            )
         )
         async_instrument_mocks = [MagicMock() for _ in range(5)]
         for i_mock in async_instrument_mocks:
+            i_mock.callback.return_value = [Mock()]
             consumer.register_asynchronous_instrument(i_mock)
 
         consumer.collect(reader_mock, AggregationTemporality.CUMULATIVE)
@@ -88,3 +100,8 @@ class TestSynchronousMeasurementConsumer(TestCase):
         # it should call async instruments
         for i_mock in async_instrument_mocks:
             i_mock.callback.assert_called_once()
+
+        # it should pass measurements to reader storage
+        self.assertEqual(
+            len(reader_storage_mock.consume_measurement.mock_calls), 5
+        )

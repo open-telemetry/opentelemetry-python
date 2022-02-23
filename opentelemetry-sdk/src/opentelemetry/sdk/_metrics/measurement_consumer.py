@@ -70,7 +70,8 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         self, metric_reader: MetricReader, temporality: AggregationTemporality
     ) -> Iterable[Metric]:
         with self._lock:
+            metric_reader_storage = self._reader_storages[metric_reader]
             for async_instrument in self._async_instruments:
                 for measurement in async_instrument.callback():
-                    self.consume_measurement(measurement)
+                    metric_reader_storage.consume_measurement(measurement)
         return self._reader_storages[metric_reader].collect(temporality)
