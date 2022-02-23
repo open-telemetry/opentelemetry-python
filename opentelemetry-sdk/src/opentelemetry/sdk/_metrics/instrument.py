@@ -95,7 +95,7 @@ class Counter(_Synchronous, APICounter):
             )
             return
         self._measurement_consumer.consume_measurement(
-            Measurement(amount, attributes)
+            Measurement(amount, self, attributes)
         )
 
 
@@ -104,7 +104,7 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
         self._measurement_consumer.consume_measurement(
-            Measurement(amount, attributes)
+            Measurement(amount, self, attributes)
         )
 
 
@@ -127,7 +127,7 @@ class Histogram(_Synchronous, APIHistogram):
             )
             return
         self._measurement_consumer.consume_measurement(
-            Measurement(amount, attributes)
+            Measurement(amount, self, attributes)
         )
 
 

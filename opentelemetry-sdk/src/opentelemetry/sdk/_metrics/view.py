@@ -12,15 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import dataclass
-from typing import Union
 
-from opentelemetry._metrics.instrument import Instrument
-from opentelemetry.util.types import Attributes
-
-
-@dataclass(frozen=True)
-class Measurement:
-    value: Union[int, float]
-    instrument: Instrument
-    attributes: Attributes = None
+# TODO: #2247
+# pylint: disable=no-self-use
+class View:
+    def match(self) -> bool:
+        return False
