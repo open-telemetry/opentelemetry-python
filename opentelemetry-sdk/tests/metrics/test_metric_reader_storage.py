@@ -48,7 +48,10 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         view2 = mock_view_matching(instrument1, instrument2)
         storage = MetricReaderStorage(
             SdkConfiguration(
-                resource=Mock(), metric_readers=(), views=(view1, view2)
+                resource=Mock(),
+                metric_readers=(),
+                views=(view1, view2),
+                enable_default_view=True,
             )
         )
 
@@ -86,7 +89,10 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         view2 = mock_view_matching(instrument1, instrument2)
         storage = MetricReaderStorage(
             SdkConfiguration(
-                resource=Mock(), metric_readers=(), views=(view1, view2)
+                resource=Mock(),
+                metric_readers=(),
+                views=(view1, view2),
+                enable_default_view=True,
             )
         )
 
@@ -128,7 +134,10 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         view1 = mock_view_matching(instrument1)
         storage = MetricReaderStorage(
             SdkConfiguration(
-                resource=Mock(), metric_readers=(), views=(view1,)
+                resource=Mock(),
+                metric_readers=(),
+                views=(view1,),
+                enable_default_view=True,
             )
         )
 
