@@ -16,28 +16,37 @@ import unittest
 from unittest import mock
 
 from prometheus_client import generate_latest
-from prometheus_client.core import CounterMetricFamily
+from prometheus_client.core import CounterMetricFamily, GaugeMetricFamily
 
+from opentelemetry._metrics import get_meter_provider, set_meter_provider
 from opentelemetry.exporter.prometheus import (
     CustomCollector,
-    PrometheusMetricsExporter,
+    PrometheusMetricExporter,
 )
-from opentelemetry.metrics import get_meter_provider, set_meter_provider
-from opentelemetry.sdk import metrics
-from opentelemetry.sdk.metrics.export import ExportRecord, MetricsExportResult
-from opentelemetry.sdk.metrics.export.aggregate import (
-    MinMaxSumCountAggregator,
-    SumAggregator,
+from opentelemetry.sdk._metrics import MeterProvider
+from opentelemetry.sdk._metrics.export import MetricExportResult
+from opentelemetry.sdk._metrics.point import (
+    AggregationTemporality,
+    Histogram,
+    Metric,
 )
 from opentelemetry.sdk.util import get_dict_as_key
+from opentelemetry.test.metrictestutil import (
+    _generate_gauge,
+    _generate_metric,
+    _generate_sum,
+    _generate_unsupported_metric,
+)
 
 
 class TestPrometheusMetricExporter(unittest.TestCase):
     def setUp(self):
-        set_meter_provider(metrics.MeterProvider())
+        set_meter_provider(MeterProvider())
         self._meter = get_meter_provider().get_meter(__name__)
         self._test_metric = self._meter.create_counter(
-            "testname", "testdesc", "unit", int,
+            "testname",
+            description="testdesc",
+            unit="unit",
         )
         labels = {"environment": "staging"}
         self._labels_key = get_dict_as_key(labels)
@@ -52,7 +61,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
     def test_constructor(self):
         """Test the constructor."""
         with self._registry_register_patch:
-            exporter = PrometheusMetricsExporter("testprefix")
+            exporter = PrometheusMetricExporter("testprefix")
             self.assertEqual(exporter._collector._prefix, "testprefix")
             self.assertTrue(self._mock_registry_register.called)
 
@@ -60,62 +69,55 @@ class TestPrometheusMetricExporter(unittest.TestCase):
         with mock.patch(
             "prometheus_client.core.REGISTRY.unregister"
         ) as registry_unregister_patch:
-            exporter = PrometheusMetricsExporter()
+            exporter = PrometheusMetricExporter()
             exporter.shutdown()
             self.assertTrue(registry_unregister_patch.called)
 
     def test_export(self):
         with self._registry_register_patch:
-            record = ExportRecord(
-                self._test_metric,
-                self._labels_key,
-                SumAggregator(),
-                get_meter_provider().resource,
-            )
-            exporter = PrometheusMetricsExporter()
+            record = _generate_sum("sum_int", 33)
+            exporter = PrometheusMetricExporter()
             result = exporter.export([record])
             # pylint: disable=protected-access
             self.assertEqual(len(exporter._collector._metrics_to_export), 1)
-            self.assertIs(result, MetricsExportResult.SUCCESS)
+            self.assertIs(result, MetricExportResult.SUCCESS)
 
-    def test_min_max_sum_aggregator_to_prometheus(self):
-        meter = get_meter_provider().get_meter(__name__)
-        metric = meter.create_valuerecorder(
-            "test@name", "testdesc", "unit", int, []
+    # # TODO: Add unit test for histogram
+    def test_histogram_to_prometheus(self):
+        record = _generate_metric(
+            "test@name",
+            Histogram(
+                time_unix_nano=1641946016139533244,
+                start_time_unix_nano=1641946016139533244,
+                bucket_counts=[1, 1],
+                sum=579.0,
+                explicit_bounds=[123.0, 456.0],
+                aggregation_temporality=AggregationTemporality.DELTA,
+            ),
         )
-        labels = {}
-        key_labels = get_dict_as_key(labels)
-        aggregator = MinMaxSumCountAggregator()
-        aggregator.update(123)
-        aggregator.update(456)
-        aggregator.take_checkpoint()
-        record = ExportRecord(
-            metric, key_labels, aggregator, get_meter_provider().resource
-        )
-        collector = CustomCollector("testprefix")
-        collector.add_metrics_data([record])
-        result_bytes = generate_latest(collector)
-        result = result_bytes.decode("utf-8")
-        self.assertIn("testprefix_test_name_count 2.0", result)
-        self.assertIn("testprefix_test_name_sum 579.0", result)
 
-    def test_counter_to_prometheus(self):
-        meter = get_meter_provider().get_meter(__name__)
-        metric = meter.create_counter("test@name", "testdesc", "unit", int,)
+    #     collector = CustomCollector("testprefix")
+    #     collector.add_metrics_data([record])
+    #     result_bytes = generate_latest(collector)
+    #     result = result_bytes.decode("utf-8")
+    #     self.assertIn("testprefix_test_name_count 2.0", result)
+    #     self.assertIn("testprefix_test_name_sum 579.0", result)
+
+    def test_sum_to_prometheus(self):
         labels = {"environment@": "staging", "os": "Windows"}
-        key_labels = get_dict_as_key(labels)
-        aggregator = SumAggregator()
-        aggregator.update(123)
-        aggregator.take_checkpoint()
-        record = ExportRecord(
-            metric, key_labels, aggregator, get_meter_provider().resource
+        record = _generate_sum(
+            "test@sum",
+            123,
+            attributes=labels,
+            description="testdesc",
+            unit="testunit",
         )
         collector = CustomCollector("testprefix")
         collector.add_metrics_data([record])
 
         for prometheus_metric in collector.collect():
             self.assertEqual(type(prometheus_metric), CounterMetricFamily)
-            self.assertEqual(prometheus_metric.name, "testprefix_test_name")
+            self.assertEqual(prometheus_metric.name, "testprefix_test_sum")
             self.assertEqual(prometheus_metric.documentation, "testdesc")
             self.assertTrue(len(prometheus_metric.samples) == 1)
             self.assertEqual(prometheus_metric.samples[0].value, 123)
@@ -127,16 +129,37 @@ class TestPrometheusMetricExporter(unittest.TestCase):
                 prometheus_metric.samples[0].labels["os"], "Windows"
             )
 
-    # TODO: Add unit test once GaugeAggregator is available
-    # TODO: Add unit test once Measure Aggregators are available
+    def test_gauge_to_prometheus(self):
+        labels = {"environment@": "dev", "os": "Unix"}
+        record = _generate_gauge(
+            "test@gauge",
+            123,
+            attributes=labels,
+            description="testdesc",
+            unit="testunit",
+        )
+        collector = CustomCollector("testprefix")
+        collector.add_metrics_data([record])
+
+        for prometheus_metric in collector.collect():
+            self.assertEqual(type(prometheus_metric), GaugeMetricFamily)
+            self.assertEqual(prometheus_metric.name, "testprefix_test_gauge")
+            self.assertEqual(prometheus_metric.documentation, "testdesc")
+            self.assertTrue(len(prometheus_metric.samples) == 1)
+            self.assertEqual(prometheus_metric.samples[0].value, 123)
+            self.assertTrue(len(prometheus_metric.samples[0].labels) == 2)
+            self.assertEqual(
+                prometheus_metric.samples[0].labels["environment_"], "dev"
+            )
+            self.assertEqual(prometheus_metric.samples[0].labels["os"], "Unix")
 
     def test_invalid_metric(self):
-        meter = get_meter_provider().get_meter(__name__)
-        metric = StubMetric("tesname", "testdesc", "unit", int, meter)
         labels = {"environment": "staging"}
-        key_labels = get_dict_as_key(labels)
-        record = ExportRecord(
-            metric, key_labels, None, get_meter_provider().resource
+        record = _generate_unsupported_metric(
+            "tesname",
+            attributes=labels,
+            description="testdesc",
+            unit="testunit",
         )
         collector = CustomCollector("testprefix")
         collector.add_metrics_data([record])
@@ -152,18 +175,3 @@ class TestPrometheusMetricExporter(unittest.TestCase):
         self.assertEqual(collector._sanitize(",./?;:[]{}"), "__________")
         self.assertEqual(collector._sanitize("TestString"), "TestString")
         self.assertEqual(collector._sanitize("aAbBcC_12_oi"), "aAbBcC_12_oi")
-
-
-class StubMetric(metrics.Metric):
-    def __init__(
-        self,
-        name: str,
-        description: str,
-        unit: str,
-        value_type,
-        meter,
-        enabled: bool = True,
-    ):
-        super().__init__(
-            name, description, unit, value_type, meter, enabled=enabled,
-        )
