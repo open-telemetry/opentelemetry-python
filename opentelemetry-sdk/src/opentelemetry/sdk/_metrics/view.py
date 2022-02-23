@@ -34,7 +34,7 @@ class View:
         name: Optional[str] = None,
         description: Optional[str] = None,
         attribute_keys: Set[str] = None,
-        aggregation: Optional[Type[Aggregation]] = None,
+        aggregation: Optional[Aggregation] = None,
     ):
         """
         An instance of `View` is an object that can perform two actions:
