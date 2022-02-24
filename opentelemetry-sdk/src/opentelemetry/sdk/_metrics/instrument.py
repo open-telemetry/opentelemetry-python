@@ -15,8 +15,8 @@
 # pylint: disable=too-many-ancestors
 
 import logging
-from typing import Dict, Generator, Iterable, Union
 from abc import ABC, abstractmethod
+from typing import Dict, Generator, Iterable, Union
 
 from opentelemetry._metrics.instrument import CallbackT
 from opentelemetry._metrics.instrument import Counter as APICounter
@@ -31,22 +31,21 @@ from opentelemetry._metrics.instrument import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
 from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
-from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.point import AggregationTemporality
 from opentelemetry.sdk._metrics.aggregation import (
     Aggregation,
-    SumAggregation,
+    ExplicitBucketHistogramAggregation,
     LastValueAggregation,
-    ExplicitBucketHistogramAggregation
+    SumAggregation,
 )
+from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.measurement_consumer import MeasurementConsumer
+from opentelemetry.sdk._metrics.point import AggregationTemporality
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
 _logger = logging.getLogger(__name__)
 
 
 class _Instrument(ABC):
-
     @abstractmethod
     def _create_aggregation(self) -> Aggregation:
         pass
@@ -104,7 +103,7 @@ class Counter(_Synchronous, APICounter):
     def _create_aggregation(self) -> Aggregation:
         return SumAggregation(
             instrument_is_monotonic=True,
-            instrument_temporality=AggregationTemporality.DELTA
+            instrument_temporality=AggregationTemporality.DELTA,
         )
 
     def add(
@@ -124,7 +123,7 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
     def _create_aggregation(self) -> Aggregation:
         return SumAggregation(
             instrument_is_monotonic=False,
-            instrument_temporality=AggregationTemporality.DELTA
+            instrument_temporality=AggregationTemporality.DELTA,
         )
 
     def add(
@@ -139,7 +138,7 @@ class ObservableCounter(_Asynchronous, APIObservableCounter):
     def _create_aggregation(self) -> Aggregation:
         return SumAggregation(
             instrument_is_monotonic=True,
-            instrument_temporality=AggregationTemporality.CUMULATIVE
+            instrument_temporality=AggregationTemporality.CUMULATIVE,
         )
 
 
@@ -147,7 +146,7 @@ class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
     def _create_aggregation(self) -> Aggregation:
         return SumAggregation(
             instrument_is_monotonic=False,
-            instrument_temporality=AggregationTemporality.CUMULATIVE
+            instrument_temporality=AggregationTemporality.CUMULATIVE,
         )
 
 
