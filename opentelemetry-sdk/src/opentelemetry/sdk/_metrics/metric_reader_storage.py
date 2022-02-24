@@ -15,7 +15,7 @@
 from threading import RLock
 from typing import Dict, Iterable, List
 
-from opentelemetry._metrics.instrument import Counter, Histogram, Instrument
+from opentelemetry._metrics.instrument import Instrument
 from opentelemetry.sdk._metrics._view_instrument_match import (
     _ViewInstrumentMatch,
 )
@@ -58,17 +58,19 @@ class MetricReaderStorage:
             matches = []
             for view in self._sdk_config.views:
                 if view.match(instrument):
-                    # Note: if a view matches multiple instruments, this will create a separate
-                    # _ViewInstrumentMatch per instrument. If the user's View configuration includes a
-                    # name, this will cause multiple conflicting output streams.
                     matches.append(
                         _ViewInstrumentMatch(
                             name=view.name or instrument.name,
                             resource=self._sdk_config.resource,
                             instrumentation_info=None,
-                            aggregation=view.aggregation,
+                            aggregation=(
+                                view.aggregation
+                                or instrument._get_aggregation()
+                            ),
                             unit=instrument.unit,
-                            description=view.description,
+                            description=(
+                                view.description or instrument.description
+                            ),
                         )
                     )
 
@@ -85,7 +87,7 @@ class MetricReaderStorage:
                     _ViewInstrumentMatch(
                         resource=self._sdk_config.resource,
                         instrumentation_info=None,
-                        aggregation=agg,
+                        aggregation=instrument._get_aggregation(),
                         unit=instrument.unit,
                         description=instrument.description,
                         name=instrument.name,
