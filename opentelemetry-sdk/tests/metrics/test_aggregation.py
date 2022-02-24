@@ -23,8 +23,11 @@ from unittest.mock import Mock
 from opentelemetry.sdk._metrics.aggregation import (
     AggregationTemporality,
     ExplicitBucketHistogramAggregation,
+    ExplicitBucketHistogramAggregationFactory,
     LastValueAggregation,
+    LastValueAggregationFactory,
     SumAggregation,
+    SumAggregationFactory,
     _convert_aggregation_temporality,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
@@ -749,3 +752,38 @@ class TestHistogramConvertAggregationTemporality(TestCase):
                 aggregation_temporality=AggregationTemporality.DELTA,
             ),
         )
+
+# ExplicitBucketHistogramAggregation,
+# LastValueAggregation,
+# SumAggregation,
+class TestAggregationFactory(TestCase):
+    def test_sum_factory(self):
+        factory = SumAggregationFactory(True, AggregationTemporality.DELTA)
+        aggregation = factory.create_aggregation()
+        self.assertIsInstance(aggregation, SumAggregation)
+        self.assertTrue(aggregation._instrument_is_monotonic)
+        self.assertEqual(aggregation._instrument_temporality, AggregationTemporality.DELTA)
+        aggregation2 = factory.create_aggregation()
+        self.assertNotEqual(aggregation, aggregation2)
+
+    def test_explicit_bucket_histogram_factory(self):
+        factory = ExplicitBucketHistogramAggregationFactory(
+            boundaries = (
+                0.0,
+                5.0,
+            ),
+            record_min_max = False,
+        )
+        aggregation = factory.create_aggregation()
+        self.assertIsInstance(factory.create_aggregation(), ExplicitBucketHistogramAggregation)
+        self.assertFalse(aggregation._record_min_max)
+        self.assertEqual(aggregation._boundaries, (0.0, 5.0))
+        aggregation2 = factory.create_aggregation()
+        self.assertNotEqual(aggregation, aggregation2)        
+    
+    def test_last_value_factory(self):
+        factory = LastValueAggregationFactory()
+        aggregation = factory.create_aggregation()
+        self.assertIsInstance(aggregation, LastValueAggregation)
+        aggregation2 = factory.create_aggregation()
+        self.assertNotEqual(aggregation, aggregation2)

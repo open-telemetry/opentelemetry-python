@@ -311,3 +311,51 @@ def _convert_aggregation_temporality(
             aggregation_temporality=aggregation_temporality,
         )
     return None
+
+class _AggregationFactory(ABC):
+    @abstractmethod
+    def create_aggregation(self) -> Aggregation:
+        """Creates an aggregation"""
+
+class ExplicitBucketHistogramAggregationFactory(_AggregationFactory):
+    def __init__(self, 
+        boundaries: Sequence[float] = (
+            0.0,
+            5.0,
+            10.0,
+            25.0,
+            50.0,
+            75.0,
+            100.0,
+            250.0,
+            500.0,
+            1000.0,
+        ),
+        record_min_max: bool = True,
+    ) -> None:
+        self._boundaries = boundaries
+        self._record_min_max = record_min_max
+
+    def create_aggregation(self) -> Aggregation:
+        return ExplicitBucketHistogramAggregation(
+            boundaries=self._boundaries,
+            record_min_max=self._record_min_max,
+        )
+
+class SumAggregationFactory(_AggregationFactory):
+    def __init__(self, 
+        instrument_is_monotonic: bool,
+        instrument_temporality: AggregationTemporality,
+    ) -> None:
+        self._instrument_is_monotonic = instrument_is_monotonic
+        self._instrument_temporality = instrument_temporality
+
+    def create_aggregation(self) -> Aggregation:
+        return SumAggregation(
+            self._instrument_is_monotonic,
+            self._instrument_temporality,
+        )
+
+class LastValueAggregationFactory(_AggregationFactory):
+    def create_aggregation(self) -> Aggregation:
+        return LastValueAggregation()
