@@ -187,19 +187,6 @@ class MeterProvider(APIMeterProvider):
 
         self._views = views
 
-        previous_view_names = set()
-        checked_views = []
-
-        for view in self._views:
-            if view._name is not None and view._name in previous_view_names:
-                _logger.warning("View with conflicting name has been removed")
-                continue
-
-            previous_view_names.add(view._name)
-            checked_views.append(view)
-
-        self._views = checked_views
-
     def force_flush(self) -> bool:
 
         # FIXME implement a timeout
