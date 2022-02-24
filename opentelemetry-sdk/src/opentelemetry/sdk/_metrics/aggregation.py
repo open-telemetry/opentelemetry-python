@@ -354,9 +354,6 @@ class ExplicitBucketHistogramAggregation(_AggregationFactory):
 
 class SumAggregation(_AggregationFactory):
     def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
-        monotonic = False
-        if isinstance(instrument, _Monotonic):
-            monotonic = True
 
         temporality = AggregationTemporality.UNSPECIFIED
         if isinstance(instrument, Synchronous):
@@ -365,7 +362,7 @@ class SumAggregation(_AggregationFactory):
             temporality = AggregationTemporality.CUMULATIVE
 
         return _SumAggregation(
-            monotonic,
+            isinstance(instrument, _Monotonic),
             temporality,
         )
 
