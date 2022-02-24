@@ -95,7 +95,7 @@ class View:
         ):
             raise Exception(
                 "Some instrument selection "
-                "criteria must be provided for View {name}"
+                f"criteria must be provided for View {name}"
             )
 
         self._name = name
