@@ -37,7 +37,8 @@ class View:
         aggregation: Optional[Aggregation] = None,
     ):
         """
-        An instance of `View` is an object that can perform two actions:
+        A `View` configuration parameters can be used for the following
+        purposes:
 
         1. Match instruments: When an instrument matches a view, measurements
            received by that instrument will be processed.
