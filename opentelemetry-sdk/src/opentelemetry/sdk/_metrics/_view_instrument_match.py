@@ -38,7 +38,7 @@ class _ViewInstrumentMatch:
         aggregation: Aggregation,
         instrumentation_info: InstrumentationInfo,
         resource: Resource,
-        attribute_keys: Set[str] = None,
+        attribute_keys: Set[str],
     ):
         self._name = name
         self._unit = unit

@@ -57,19 +57,22 @@ class MetricReaderStorage:
             # not present, hold the lock and add a new mapping
             matches = []
             for view in self._sdk_config.views:
-                if view.match(instrument):
+                if view._match(instrument):
                     matches.append(
                         _ViewInstrumentMatch(
                             name=view._name or instrument.name,
-                            resource=self._sdk_config.resource,
-                            instrumentation_info=None,
-                            aggregation=(
-                                view.aggregation or instrument.aggregation
-                            ),
                             unit=instrument.unit,
                             description=(
                                 view._description or instrument.description
                             ),
+                            aggregation=(
+                                view.aggregation or instrument.aggregation
+                            ),
+                            instrumentation_info=(
+                                instrument.instrumentation_info
+                            ),
+                            resource=self._sdk_config.resource,
+                            attribute_keys=view._attribute_keys,
                         )
                     )
 
@@ -84,12 +87,13 @@ class MetricReaderStorage:
                     agg = _LastValueAggregation()
                 matches.append(
                     _ViewInstrumentMatch(
-                        resource=self._sdk_config.resource,
-                        instrumentation_info=None,
-                        aggregation=instrument.aggregation,
+                        name=instrument.name,
                         unit=instrument.unit,
                         description=instrument.description,
-                        name=instrument.name,
+                        aggregation=instrument.aggregation,
+                        instrumentation_info=instrument.instrumentation_info,
+                        resource=self._sdk_config.resource,
+                        attribute_keys=set()
                     )
                 )
             self._view_instrument_match[instrument] = matches
