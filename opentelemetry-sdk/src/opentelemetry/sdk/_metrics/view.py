@@ -53,13 +53,16 @@ class View:
                 class the instrument must be to match the view.
 
             instrument_name: This is an instrument matching attribute: the name
-                the instrument must have to match the view.
+                the instrument must have to match the view. Wild card
+                characters are supported.
 
             meter_name: This is an instrument matching attribute: the name
-                the instrument meter must have to match the view.
+                the instrument meter must have to match the view. Wild card
+                characters are supported.
 
             meter_version : This is an instrument matching attribute: the
                 version the instrument meter must have to match the view.
+                Wild card characters are supported.
 
             meter_schema URL : This is an instrument matching attribute: the
                 schema URL the instrument meter must have to match the view.
@@ -139,9 +142,9 @@ class View:
                 return False
 
         if self._meter_schema_url is not None:
-            if not fnmatch(
-                instrument.instrumentation_info.schema_url,
-                self._meter_schema_url,
+            if (
+                instrument.instrumentation_info.schema_url
+                != self._meter_schema_url
             ):
                 return False
 
