@@ -325,7 +325,7 @@ class _AggregationFactory(ABC):
         """Creates an aggregation"""
 
 
-class ExplicitBucketHistogramAggregationFactory(_AggregationFactory):
+class ExplicitBucketHistogramAggregation(_AggregationFactory):
     def __init__(
         self,
         boundaries: Sequence[float] = (
@@ -352,7 +352,7 @@ class ExplicitBucketHistogramAggregationFactory(_AggregationFactory):
         )
 
 
-class SumAggregationFactory(_AggregationFactory):
+class SumAggregation(_AggregationFactory):
     def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
         monotonic = False
         if isinstance(instrument, _Monotonic):
@@ -370,6 +370,6 @@ class SumAggregationFactory(_AggregationFactory):
         )
 
 
-class LastValueAggregationFactory(_AggregationFactory):
+class LastValueAggregation(_AggregationFactory):
     def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
         return _LastValueAggregation()
