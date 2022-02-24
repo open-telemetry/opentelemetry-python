@@ -20,6 +20,12 @@ from math import inf
 from threading import Lock
 from typing import Generic, List, Optional, Sequence, TypeVar
 
+from opentelemetry._metrics.instrument import (
+    Asynchronous,
+    Instrument,
+    Synchronous,
+    _Monotonic,
+)
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import (
     AggregationTemporality,
@@ -35,7 +41,7 @@ _PointVarT = TypeVar("_PointVarT", bound=PointT)
 _logger = getLogger(__name__)
 
 
-class Aggregation(ABC, Generic[_PointVarT]):
+class _Aggregation(ABC, Generic[_PointVarT]):
     def __init__(self):
         self._lock = Lock()
 
@@ -48,7 +54,7 @@ class Aggregation(ABC, Generic[_PointVarT]):
         pass
 
 
-class SumAggregation(Aggregation[Sum]):
+class _SumAggregation(_Aggregation[Sum]):
     def __init__(
         self,
         instrument_is_monotonic: bool,
@@ -107,7 +113,7 @@ class SumAggregation(Aggregation[Sum]):
         )
 
 
-class LastValueAggregation(Aggregation[Gauge]):
+class _LastValueAggregation(_Aggregation[Gauge]):
     def __init__(self):
         super().__init__()
         self._value = None
@@ -129,7 +135,7 @@ class LastValueAggregation(Aggregation[Gauge]):
         )
 
 
-class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
+class _ExplicitBucketHistogramAggregation(_Aggregation[Histogram]):
     def __init__(
         self,
         boundaries: Sequence[float] = (
@@ -311,3 +317,56 @@ def _convert_aggregation_temporality(
             aggregation_temporality=aggregation_temporality,
         )
     return None
+
+
+class _AggregationFactory(ABC):
+    @abstractmethod
+    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
+        """Creates an aggregation"""
+
+
+class ExplicitBucketHistogramAggregation(_AggregationFactory):
+    def __init__(
+        self,
+        boundaries: Sequence[float] = (
+            0.0,
+            5.0,
+            10.0,
+            25.0,
+            50.0,
+            75.0,
+            100.0,
+            250.0,
+            500.0,
+            1000.0,
+        ),
+        record_min_max: bool = True,
+    ) -> None:
+        self._boundaries = boundaries
+        self._record_min_max = record_min_max
+
+    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
+        return _ExplicitBucketHistogramAggregation(
+            boundaries=self._boundaries,
+            record_min_max=self._record_min_max,
+        )
+
+
+class SumAggregation(_AggregationFactory):
+    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
+
+        temporality = AggregationTemporality.UNSPECIFIED
+        if isinstance(instrument, Synchronous):
+            temporality = AggregationTemporality.DELTA
+        elif isinstance(instrument, Asynchronous):
+            temporality = AggregationTemporality.CUMULATIVE
+
+        return _SumAggregation(
+            isinstance(instrument, _Monotonic),
+            temporality,
+        )
+
+
+class LastValueAggregation(_AggregationFactory):
+    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
+        return _LastValueAggregation()
