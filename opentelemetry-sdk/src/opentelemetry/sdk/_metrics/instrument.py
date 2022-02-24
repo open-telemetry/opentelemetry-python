@@ -46,8 +46,9 @@ _logger = logging.getLogger(__name__)
 
 
 class _Instrument(ABC):
+    @property
     @abstractmethod
-    def _create_aggregation(self) -> Aggregation:
+    def aggregation(self) -> Aggregation:
         pass
 
 
@@ -100,7 +101,8 @@ class _Asynchronous(_Instrument):
 
 
 class Counter(_Synchronous, APICounter):
-    def _create_aggregation(self) -> Aggregation:
+    @property
+    def aggregation(self) -> Aggregation:
         return SumAggregation(
             instrument_is_monotonic=True,
             instrument_temporality=AggregationTemporality.DELTA,
@@ -120,7 +122,8 @@ class Counter(_Synchronous, APICounter):
 
 
 class UpDownCounter(_Synchronous, APIUpDownCounter):
-    def _create_aggregation(self) -> Aggregation:
+    @property
+    def aggregation(self) -> Aggregation:
         return SumAggregation(
             instrument_is_monotonic=False,
             instrument_temporality=AggregationTemporality.DELTA,
@@ -135,7 +138,8 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 
 
 class ObservableCounter(_Asynchronous, APIObservableCounter):
-    def _create_aggregation(self) -> Aggregation:
+    @property
+    def aggregation(self) -> Aggregation:
         return SumAggregation(
             instrument_is_monotonic=True,
             instrument_temporality=AggregationTemporality.CUMULATIVE,
@@ -143,7 +147,8 @@ class ObservableCounter(_Asynchronous, APIObservableCounter):
 
 
 class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
-    def _create_aggregation(self) -> Aggregation:
+    @property
+    def aggregation(self) -> Aggregation:
         return SumAggregation(
             instrument_is_monotonic=False,
             instrument_temporality=AggregationTemporality.CUMULATIVE,
@@ -151,7 +156,8 @@ class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
 
 
 class Histogram(_Synchronous, APIHistogram):
-    def _create_aggregation(self) -> Aggregation:
+    @property
+    def aggregation(self) -> Aggregation:
         return ExplicitBucketHistogramAggregation()
 
     def record(
@@ -169,5 +175,6 @@ class Histogram(_Synchronous, APIHistogram):
 
 
 class ObservableGauge(_Asynchronous, APIObservableGauge):
-    def _create_aggregation(self) -> Aggregation:
+    @property
+    def aggregation(self) -> Aggregation:
         return LastValueAggregation()
