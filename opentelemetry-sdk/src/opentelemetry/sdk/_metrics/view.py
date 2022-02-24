@@ -15,7 +15,7 @@
 
 from fnmatch import fnmatch
 from logging import getLogger
-from typing import Optional, Set, Type
+from typing import Optional, Set, Type, final
 
 from opentelemetry._metrics.instrument import Instrument
 from opentelemetry.sdk._metrics.aggregation import Aggregation
@@ -81,6 +81,8 @@ class View:
                 metric stream has an aggregation instance, this is the class of
                 aggregation this instance will be. If `None` the default
                 aggregation class of the instrument will be used.
+
+        This class is not intended to be subclassed by the user.
         """
 
         if (
@@ -112,6 +114,7 @@ class View:
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
+    @final
     def _match(self, instrument: Instrument) -> bool:
 
         if self._instrument_type is not None:
