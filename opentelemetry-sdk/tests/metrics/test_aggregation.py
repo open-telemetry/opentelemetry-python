@@ -753,6 +753,7 @@ class TestHistogramConvertAggregationTemporality(TestCase):
             ),
         )
 
+
 # ExplicitBucketHistogramAggregation,
 # LastValueAggregation,
 # SumAggregation,
@@ -762,25 +763,29 @@ class TestAggregationFactory(TestCase):
         aggregation = factory.create_aggregation()
         self.assertIsInstance(aggregation, SumAggregation)
         self.assertTrue(aggregation._instrument_is_monotonic)
-        self.assertEqual(aggregation._instrument_temporality, AggregationTemporality.DELTA)
+        self.assertEqual(
+            aggregation._instrument_temporality, AggregationTemporality.DELTA
+        )
         aggregation2 = factory.create_aggregation()
         self.assertNotEqual(aggregation, aggregation2)
 
     def test_explicit_bucket_histogram_factory(self):
         factory = ExplicitBucketHistogramAggregationFactory(
-            boundaries = (
+            boundaries=(
                 0.0,
                 5.0,
             ),
-            record_min_max = False,
+            record_min_max=False,
         )
         aggregation = factory.create_aggregation()
-        self.assertIsInstance(factory.create_aggregation(), ExplicitBucketHistogramAggregation)
+        self.assertIsInstance(
+            factory.create_aggregation(), ExplicitBucketHistogramAggregation
+        )
         self.assertFalse(aggregation._record_min_max)
         self.assertEqual(aggregation._boundaries, (0.0, 5.0))
         aggregation2 = factory.create_aggregation()
-        self.assertNotEqual(aggregation, aggregation2)        
-    
+        self.assertNotEqual(aggregation, aggregation2)
+
     def test_last_value_factory(self):
         factory = LastValueAggregationFactory()
         aggregation = factory.create_aggregation()
