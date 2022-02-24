@@ -78,9 +78,10 @@ class View:
                 used to identify the metric stream.
 
             aggregation: This is a metric stream customizing attribute: every
-                metric stream has an aggregation instance, this is the class of
-                aggregation this instance will be. If `None` the default
-                aggregation class of the instrument will be used.
+                metric stream has an aggregation instance, this is the
+                aggregation to use when data is aggregated for the
+                corresponding metrics stream. If `None` the default aggregation
+                of the instrument will be used.
 
         This class is not intended to be subclassed by the user.
         """
