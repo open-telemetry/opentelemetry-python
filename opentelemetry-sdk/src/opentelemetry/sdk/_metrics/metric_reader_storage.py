@@ -60,7 +60,7 @@ class MetricReaderStorage:
                 if view.match(instrument):
                     matches.append(
                         _ViewInstrumentMatch(
-                            name=view.name or instrument.name,
+                            name=view._name or instrument.name,
                             resource=self._sdk_config.resource,
                             instrumentation_info=None,
                             aggregation=(
