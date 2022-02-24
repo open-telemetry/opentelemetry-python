@@ -68,7 +68,7 @@ class MetricReaderStorage:
                             ),
                             unit=instrument.unit,
                             description=(
-                                view.description or instrument.description
+                                view._description or instrument.description
                             ),
                         )
                     )
