@@ -81,8 +81,8 @@ class TestView(TestCase):
                 Mock(**{"instrumentation_info.schema_url": "meter_schema_url"})
             )
         )
-        self.assertTrue(
-            View(meter_schema_url="meter_schema_url*")._match(
+        self.assertFalse(
+            View(meter_schema_url="meter_schema_url")._match(
                 Mock(
                     **{
                         "instrumentation_info.schema_url": "meter_schema_urlabc"
@@ -91,10 +91,8 @@ class TestView(TestCase):
             )
         )
         self.assertTrue(
-            View(meter_schema_url="meter_schema_url?")._match(
-                Mock(
-                    **{"instrumentation_info.schema_url": "meter_schema_urla"}
-                )
+            View(meter_schema_url="meter_schema_url")._match(
+                Mock(**{"instrumentation_info.schema_url": "meter_schema_url"})
             )
         )
 

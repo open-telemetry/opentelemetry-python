@@ -29,7 +29,6 @@ from opentelemetry.sdk._metrics.instrument import (
 )
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.point import AggregationTemporality
-from opentelemetry.sdk._metrics.view import View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
 
@@ -161,30 +160,6 @@ class TestMeterProvider(ConcurrencyTestBase):
         self.assertTrue(meter_provider.shutdown())
         mock_metric_reader_0.shutdown.assert_called_once()
         mock_metric_reader_1.shutdown.assert_called_once()
-
-    def test_register_view(self):
-        """ "
-        `MeterProvider` provides a way to register `View`s.
-        """
-
-        view_0 = View(instrument_name="instrument_name")
-        view_1 = View(instrument_name="instrument_name")
-
-        meter_provider = MeterProvider(views=[view_0, view_1])
-
-        self.assertIs(meter_provider._views[0], view_0)
-        self.assertIs(meter_provider._views[1], view_1)
-
-        try:
-            MeterProvider(
-                views=(
-                    View(instrument_name="a"),
-                    View(instrument_name="b"),
-                    View(instrument_name="c"),
-                )
-            )
-        except Exception as error:
-            self.fail(f"Unexpected exception {error} raised")
 
     def test_shutdown_subsequent_calls(self):
         """
