@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2461](https://github.com/open-telemetry/opentelemetry-python/pull/2461))
 - `opentelemetry-exporter-otlp-proto-http` Add support for OTLP/HTTP log exporter
   ([#2462](https://github.com/open-telemetry/opentelemetry-python/pull/2462))
+- fix exception handling in get_aggregated_resources
+  ([#2464](https://github.com/open-telemetry/opentelemetry-python/pull/2464))
 
 ## [1.9.1-0.28b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.9.1-0.28b1) - 2022-01-29
 

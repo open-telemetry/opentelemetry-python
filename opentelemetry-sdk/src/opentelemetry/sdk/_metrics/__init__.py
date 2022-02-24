@@ -159,7 +159,7 @@ class MeterProvider(APIMeterProvider):
         self._meter_lock = Lock()
         self._atexit_handler = None
         self._sdk_config = SdkConfiguration(
-            resource=resource, metric_readers=metric_readers
+            resource=resource, metric_readers=metric_readers, views=()
         )
         self._measurement_consumer = SynchronousMeasurementConsumer(
             sdk_config=self._sdk_config
