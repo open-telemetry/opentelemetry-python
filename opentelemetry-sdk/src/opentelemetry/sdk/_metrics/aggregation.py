@@ -20,6 +20,12 @@ from math import inf
 from threading import Lock
 from typing import Generic, List, Optional, Sequence, TypeVar
 
+from opentelemetry._metrics.instrument import (
+    Asynchronous,
+    Instrument,
+    Synchronous,
+    _Monotonic,
+)
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import (
     AggregationTemporality,
@@ -315,7 +321,7 @@ def _convert_aggregation_temporality(
 
 class _AggregationFactory(ABC):
     @abstractmethod
-    def _create_aggregation(self) -> _Aggregation:
+    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
         """Creates an aggregation"""
 
 
@@ -339,7 +345,7 @@ class ExplicitBucketHistogramAggregationFactory(_AggregationFactory):
         self._boundaries = boundaries
         self._record_min_max = record_min_max
 
-    def _create_aggregation(self) -> _Aggregation:
+    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
         return _ExplicitBucketHistogramAggregation(
             boundaries=self._boundaries,
             record_min_max=self._record_min_max,
@@ -347,21 +353,23 @@ class ExplicitBucketHistogramAggregationFactory(_AggregationFactory):
 
 
 class SumAggregationFactory(_AggregationFactory):
-    def __init__(
-        self,
-        instrument_is_monotonic: bool,
-        instrument_temporality: AggregationTemporality,
-    ) -> None:
-        self._instrument_is_monotonic = instrument_is_monotonic
-        self._instrument_temporality = instrument_temporality
+    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
+        monotonic = False
+        if isinstance(instrument, _Monotonic):
+            monotonic = True
 
-    def _create_aggregation(self) -> _Aggregation:
+        temporality = AggregationTemporality.UNSPECIFIED
+        if isinstance(instrument, Synchronous):
+            temporality = AggregationTemporality.DELTA
+        elif isinstance(instrument, Asynchronous):
+            temporality = AggregationTemporality.CUMULATIVE
+
         return _SumAggregation(
-            self._instrument_is_monotonic,
-            self._instrument_temporality,
+            monotonic,
+            temporality,
         )
 
 
 class LastValueAggregationFactory(_AggregationFactory):
-    def _create_aggregation(self) -> _Aggregation:
+    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
         return _LastValueAggregation()

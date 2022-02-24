@@ -20,6 +20,7 @@ from typing import Union
 from unittest import TestCase
 from unittest.mock import Mock
 
+from opentelemetry.sdk._metrics import instrument
 from opentelemetry.sdk._metrics.aggregation import (
     AggregationTemporality,
     ExplicitBucketHistogramAggregationFactory,
@@ -753,19 +754,40 @@ class TestHistogramConvertAggregationTemporality(TestCase):
             ),
         )
 
+
 class TestAggregationFactory(TestCase):
     def test_sum_factory(self):
-        factory = SumAggregationFactory(True, AggregationTemporality.DELTA)
-        aggregation = factory._create_aggregation()
+        counter = instrument.Counter("name", Mock(), Mock())
+        factory = SumAggregationFactory()
+        aggregation = factory._create_aggregation(counter)
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertTrue(aggregation._instrument_is_monotonic)
         self.assertEqual(
             aggregation._instrument_temporality, AggregationTemporality.DELTA
         )
-        aggregation2 = factory._create_aggregation()
+        aggregation2 = factory._create_aggregation(counter)
         self.assertNotEqual(aggregation, aggregation2)
 
+        counter = instrument.UpDownCounter("name", Mock(), Mock())
+        factory = SumAggregationFactory()
+        aggregation = factory._create_aggregation(counter)
+        self.assertIsInstance(aggregation, _SumAggregation)
+        self.assertFalse(aggregation._instrument_is_monotonic)
+        self.assertEqual(
+            aggregation._instrument_temporality, AggregationTemporality.DELTA
+        )
+
+        counter = instrument.ObservableCounter("name", Mock(), Mock(), None)
+        factory = SumAggregationFactory()
+        aggregation = factory._create_aggregation(counter)
+        self.assertIsInstance(aggregation, _SumAggregation)
+        self.assertTrue(aggregation._instrument_is_monotonic)
+        self.assertEqual(
+            aggregation._instrument_temporality, AggregationTemporality.CUMULATIVE
+        )
+
     def test_explicit_bucket_histogram_factory(self):
+        histo = instrument.Histogram("name", Mock(), Mock())
         factory = ExplicitBucketHistogramAggregationFactory(
             boundaries=(
                 0.0,
@@ -773,18 +795,17 @@ class TestAggregationFactory(TestCase):
             ),
             record_min_max=False,
         )
-        aggregation = factory._create_aggregation()
-        self.assertIsInstance(
-            factory._create_aggregation(), _ExplicitBucketHistogramAggregation
-        )
+        aggregation = factory._create_aggregation(histo)
+        self.assertIsInstance(aggregation, _ExplicitBucketHistogramAggregation)
         self.assertFalse(aggregation._record_min_max)
         self.assertEqual(aggregation._boundaries, (0.0, 5.0))
-        aggregation2 = factory._create_aggregation()
+        aggregation2 = factory._create_aggregation(histo)
         self.assertNotEqual(aggregation, aggregation2)
 
     def test_last_value_factory(self):
+        counter = instrument.Counter("name", Mock(), Mock())
         factory = LastValueAggregationFactory()
-        aggregation = factory._create_aggregation()
+        aggregation = factory._create_aggregation(counter)
         self.assertIsInstance(aggregation, _LastValueAggregation)
-        aggregation2 = factory._create_aggregation()
+        aggregation2 = factory._create_aggregation(counter)
         self.assertNotEqual(aggregation, aggregation2)
