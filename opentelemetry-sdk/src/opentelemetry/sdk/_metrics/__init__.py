@@ -185,8 +185,6 @@ class MeterProvider(APIMeterProvider):
         self._shutdown_once = Once()
         self._shutdown = False
 
-        self._views = views
-
     def force_flush(self) -> bool:
 
         # FIXME implement a timeout
