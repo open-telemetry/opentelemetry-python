@@ -22,13 +22,13 @@ from unittest.mock import Mock
 
 from opentelemetry.sdk._metrics.aggregation import (
     AggregationTemporality,
-    ExplicitBucketHistogramAggregation,
     ExplicitBucketHistogramAggregationFactory,
-    LastValueAggregation,
     LastValueAggregationFactory,
-    SumAggregation,
     SumAggregationFactory,
     _convert_aggregation_temporality,
+    _ExplicitBucketHistogramAggregation,
+    _LastValueAggregation,
+    _SumAggregation,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import Gauge, Histogram, Sum
@@ -47,7 +47,7 @@ class TestSynchronousSumAggregation(TestCase):
         `SynchronousSumAggregation` aggregates data for sum metric points
         """
 
-        synchronous_sum_aggregation = SumAggregation(
+        synchronous_sum_aggregation = _SumAggregation(
             True, AggregationTemporality.DELTA
         )
 
@@ -57,7 +57,7 @@ class TestSynchronousSumAggregation(TestCase):
 
         self.assertEqual(synchronous_sum_aggregation._value, 6)
 
-        synchronous_sum_aggregation = SumAggregation(
+        synchronous_sum_aggregation = _SumAggregation(
             True, AggregationTemporality.DELTA
         )
 
@@ -72,7 +72,7 @@ class TestSynchronousSumAggregation(TestCase):
         `SynchronousSumAggregation` aggregates data for sum metric points
         """
 
-        synchronous_sum_aggregation = SumAggregation(
+        synchronous_sum_aggregation = _SumAggregation(
             True, AggregationTemporality.CUMULATIVE
         )
 
@@ -82,7 +82,7 @@ class TestSynchronousSumAggregation(TestCase):
 
         self.assertEqual(synchronous_sum_aggregation._value, 6)
 
-        synchronous_sum_aggregation = SumAggregation(
+        synchronous_sum_aggregation = _SumAggregation(
             True, AggregationTemporality.CUMULATIVE
         )
 
@@ -97,7 +97,7 @@ class TestSynchronousSumAggregation(TestCase):
         `SynchronousSumAggregation` collects sum metric points
         """
 
-        synchronous_sum_aggregation = SumAggregation(
+        synchronous_sum_aggregation = _SumAggregation(
             True, AggregationTemporality.DELTA
         )
 
@@ -122,7 +122,7 @@ class TestSynchronousSumAggregation(TestCase):
         `SynchronousSumAggregation` collects sum metric points
         """
 
-        sum_aggregation = SumAggregation(
+        sum_aggregation = _SumAggregation(
             True, AggregationTemporality.CUMULATIVE
         )
 
@@ -143,7 +143,7 @@ class TestSynchronousSumAggregation(TestCase):
         )
 
         self.assertIsNone(
-            SumAggregation(True, AggregationTemporality.CUMULATIVE).collect()
+            _SumAggregation(True, AggregationTemporality.CUMULATIVE).collect()
         )
 
 
@@ -154,7 +154,7 @@ class TestLastValueAggregation(TestCase):
         temporality
         """
 
-        last_value_aggregation = LastValueAggregation()
+        last_value_aggregation = _LastValueAggregation()
 
         last_value_aggregation.aggregate(measurement(1))
         self.assertEqual(last_value_aggregation._value, 1)
@@ -170,7 +170,7 @@ class TestLastValueAggregation(TestCase):
         `LastValueAggregation` collects sum metric points
         """
 
-        last_value_aggregation = LastValueAggregation()
+        last_value_aggregation = _LastValueAggregation()
 
         self.assertIsNone(last_value_aggregation.collect())
 
@@ -201,7 +201,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         """
 
         explicit_bucket_histogram_aggregation = (
-            ExplicitBucketHistogramAggregation(boundaries=[0, 2, 4])
+            _ExplicitBucketHistogramAggregation(boundaries=[0, 2, 4])
         )
 
         explicit_bucket_histogram_aggregation.aggregate(measurement(-1))
@@ -242,7 +242,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         """
 
         explicit_bucket_histogram_aggregation = (
-            ExplicitBucketHistogramAggregation()
+            _ExplicitBucketHistogramAggregation()
         )
 
         explicit_bucket_histogram_aggregation.aggregate(measurement(-1))
@@ -255,7 +255,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         self.assertEqual(explicit_bucket_histogram_aggregation._max, 9999)
 
         explicit_bucket_histogram_aggregation = (
-            ExplicitBucketHistogramAggregation(record_min_max=False)
+            _ExplicitBucketHistogramAggregation(record_min_max=False)
         )
 
         explicit_bucket_histogram_aggregation.aggregate(measurement(-1))
@@ -269,11 +269,11 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
     def test_collect(self):
         """
-        `ExplicitBucketHistogramAggregation` collects sum metric points
+        `_ExplicitBucketHistogramAggregation` collects sum metric points
         """
 
         explicit_bucket_histogram_aggregation = (
-            ExplicitBucketHistogramAggregation(boundaries=[0, 1, 2])
+            _ExplicitBucketHistogramAggregation(boundaries=[0, 1, 2])
         )
 
         explicit_bucket_histogram_aggregation.aggregate(measurement(1))
@@ -753,20 +753,16 @@ class TestHistogramConvertAggregationTemporality(TestCase):
             ),
         )
 
-
-# ExplicitBucketHistogramAggregation,
-# LastValueAggregation,
-# SumAggregation,
 class TestAggregationFactory(TestCase):
     def test_sum_factory(self):
         factory = SumAggregationFactory(True, AggregationTemporality.DELTA)
-        aggregation = factory.create_aggregation()
-        self.assertIsInstance(aggregation, SumAggregation)
+        aggregation = factory._create_aggregation()
+        self.assertIsInstance(aggregation, _SumAggregation)
         self.assertTrue(aggregation._instrument_is_monotonic)
         self.assertEqual(
             aggregation._instrument_temporality, AggregationTemporality.DELTA
         )
-        aggregation2 = factory.create_aggregation()
+        aggregation2 = factory._create_aggregation()
         self.assertNotEqual(aggregation, aggregation2)
 
     def test_explicit_bucket_histogram_factory(self):
@@ -777,18 +773,18 @@ class TestAggregationFactory(TestCase):
             ),
             record_min_max=False,
         )
-        aggregation = factory.create_aggregation()
+        aggregation = factory._create_aggregation()
         self.assertIsInstance(
-            factory.create_aggregation(), ExplicitBucketHistogramAggregation
+            factory._create_aggregation(), _ExplicitBucketHistogramAggregation
         )
         self.assertFalse(aggregation._record_min_max)
         self.assertEqual(aggregation._boundaries, (0.0, 5.0))
-        aggregation2 = factory.create_aggregation()
+        aggregation2 = factory._create_aggregation()
         self.assertNotEqual(aggregation, aggregation2)
 
     def test_last_value_factory(self):
         factory = LastValueAggregationFactory()
-        aggregation = factory.create_aggregation()
-        self.assertIsInstance(aggregation, LastValueAggregation)
-        aggregation2 = factory.create_aggregation()
+        aggregation = factory._create_aggregation()
+        self.assertIsInstance(aggregation, _LastValueAggregation)
+        aggregation2 = factory._create_aggregation()
         self.assertNotEqual(aggregation, aggregation2)

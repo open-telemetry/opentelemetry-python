@@ -35,7 +35,7 @@ _PointVarT = TypeVar("_PointVarT", bound=PointT)
 _logger = getLogger(__name__)
 
 
-class Aggregation(ABC, Generic[_PointVarT]):
+class _Aggregation(ABC, Generic[_PointVarT]):
     def __init__(self):
         self._lock = Lock()
 
@@ -48,7 +48,7 @@ class Aggregation(ABC, Generic[_PointVarT]):
         pass
 
 
-class SumAggregation(Aggregation[Sum]):
+class _SumAggregation(_Aggregation[Sum]):
     def __init__(
         self,
         instrument_is_monotonic: bool,
@@ -107,7 +107,7 @@ class SumAggregation(Aggregation[Sum]):
         )
 
 
-class LastValueAggregation(Aggregation[Gauge]):
+class _LastValueAggregation(_Aggregation[Gauge]):
     def __init__(self):
         super().__init__()
         self._value = None
@@ -129,7 +129,7 @@ class LastValueAggregation(Aggregation[Gauge]):
         )
 
 
-class ExplicitBucketHistogramAggregation(Aggregation[Histogram]):
+class _ExplicitBucketHistogramAggregation(_Aggregation[Histogram]):
     def __init__(
         self,
         boundaries: Sequence[float] = (
@@ -315,7 +315,7 @@ def _convert_aggregation_temporality(
 
 class _AggregationFactory(ABC):
     @abstractmethod
-    def create_aggregation(self) -> Aggregation:
+    def _create_aggregation(self) -> _Aggregation:
         """Creates an aggregation"""
 
 
@@ -339,8 +339,8 @@ class ExplicitBucketHistogramAggregationFactory(_AggregationFactory):
         self._boundaries = boundaries
         self._record_min_max = record_min_max
 
-    def create_aggregation(self) -> Aggregation:
-        return ExplicitBucketHistogramAggregation(
+    def _create_aggregation(self) -> _Aggregation:
+        return _ExplicitBucketHistogramAggregation(
             boundaries=self._boundaries,
             record_min_max=self._record_min_max,
         )
@@ -355,13 +355,13 @@ class SumAggregationFactory(_AggregationFactory):
         self._instrument_is_monotonic = instrument_is_monotonic
         self._instrument_temporality = instrument_temporality
 
-    def create_aggregation(self) -> Aggregation:
-        return SumAggregation(
+    def _create_aggregation(self) -> _Aggregation:
+        return _SumAggregation(
             self._instrument_is_monotonic,
             self._instrument_temporality,
         )
 
 
 class LastValueAggregationFactory(_AggregationFactory):
-    def create_aggregation(self) -> Aggregation:
-        return LastValueAggregation()
+    def _create_aggregation(self) -> _Aggregation:
+        return _LastValueAggregation()
