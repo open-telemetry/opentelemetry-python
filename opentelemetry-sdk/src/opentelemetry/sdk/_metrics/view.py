@@ -81,9 +81,8 @@ class View:
                 measurement attributes that are in `attribute_keys` will be
                 used to identify the metric stream.
 
-            aggregation: This is a metric stream customizing attribute: every
-                metric stream has an aggregation instance, this is the
-                aggregation to use when data is aggregated for the
+            aggregation: This is a metric stream customizing attribute: the
+                aggregatation instance to use when data is aggregated for the
                 corresponding metrics stream. If `None` the default aggregation
                 of the instrument will be used.
 
