@@ -18,7 +18,8 @@ This library allows export of metrics data to `Prometheus <https://prometheus.io
 Usage
 -----
 
-The **OpenTelemetry Prometheus Exporter** allows export of `OpenTelemetry`_ metrics to `Prometheus`_.
+The **OpenTelemetry Prometheus Exporter** allows export of `OpenTelemetry`_
+metrics to `Prometheus`_.
 
 
 .. _Prometheus: https://prometheus.io/
@@ -78,6 +79,20 @@ from opentelemetry.sdk._metrics.point import Gauge, Histogram, Metric, Sum
 logger = logging.getLogger(__name__)
 
 
+
+def _convert_buckets(metric: Metric) -> Sequence[Tuple[str, int]]:
+    buckets = []
+    total_count = 0
+    for index, value in enumerate(metric.point.bucket_counts):
+        total_count += value
+        buckets.append(
+            (
+                f"{metric.point.explicit_bounds[index]}",
+                total_count,
+            )
+        )
+    return buckets
+
 class PrometheusMetricExporter(MetricExporter):
     """Prometheus metric exporter for OpenTelemetry.
 
@@ -90,8 +105,8 @@ class PrometheusMetricExporter(MetricExporter):
         self._collector = CustomCollector(prefix)
         core.REGISTRY.register(self._collector)
 
-    def export(self, export_records: Sequence[Metric]) -> MetricExportResult:
-        self._collector.add_metrics_data(export_records)
+    def export(self, metrics: Sequence[Metric]) -> MetricExportResult:
+        self._collector.add_metrics_data(metrics)
         return MetricExportResult.SUCCESS
 
     def shutdown(self) -> None:
@@ -111,6 +126,7 @@ class CustomCollector:
         )
 
     def add_metrics_data(self, export_records: Sequence[Metric]) -> None:
+        """Add metrics to Prometheus data"""
         self._metrics_to_export.append(export_records)
 
     def collect(self) -> None:
@@ -127,19 +143,6 @@ class CustomCollector:
                 )
                 if prometheus_metric is not None:
                     yield prometheus_metric
-
-    def _convert_buckets(self, metric: Metric) -> Sequence[Tuple[str, int]]:
-        buckets = []
-        total_count = 0
-        for i in range(0, len(metric.point.bucket_counts)):
-            total_count += metric.point.bucket_counts[i]
-            buckets.append(
-                (
-                    f"{metric.point.explicit_bounds[i]}",
-                    total_count,
-                )
-            )
-        return buckets
 
     def _translate_to_prometheus(
         self, metric: Metric
@@ -185,12 +188,10 @@ class CustomCollector:
                 labels=label_keys,
                 unit=metric.unit,
             )
-            buckets = self._convert_buckets(metric)
+            buckets = _convert_buckets(metric)
             prometheus_metric.add_metric(
                 labels=label_values, buckets=buckets, sum_value=value
             )
-        # TODO: add support for Summary once implemented
-        # elif isinstance(export_record.point, Summary):
         else:
             logger.warning("Unsupported metric type. %s", type(metric.point))
         return prometheus_metric
