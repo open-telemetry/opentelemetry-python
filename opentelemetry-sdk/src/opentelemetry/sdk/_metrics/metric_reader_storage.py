@@ -21,9 +21,9 @@ from opentelemetry.sdk._metrics._view_instrument_match import (
 )
 from opentelemetry.sdk._metrics.aggregation import (
     AggregationTemporality,
-    ExplicitBucketHistogramAggregation,
-    LastValueAggregation,
-    SumAggregation,
+    _ExplicitBucketHistogramAggregation,
+    _LastValueAggregation,
+    _SumAggregation,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import Metric
@@ -76,11 +76,11 @@ class MetricReaderStorage:
             if not matches:
                 # TODO: the logic to select aggregation could be moved
                 if isinstance(instrument, Counter):
-                    agg = SumAggregation(True, AggregationTemporality.DELTA)
+                    agg = _SumAggregation(True, AggregationTemporality.DELTA)
                 elif isinstance(instrument, Histogram):
-                    agg = ExplicitBucketHistogramAggregation()
+                    agg = _ExplicitBucketHistogramAggregation()
                 else:
-                    agg = LastValueAggregation()
+                    agg = _LastValueAggregation()
                 matches.append(
                     _ViewInstrumentMatch(
                         resource=self._sdk_config.resource,
