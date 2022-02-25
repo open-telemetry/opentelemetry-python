@@ -85,8 +85,9 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
 
         instrument1 = Mock(name="instrument1")
         instrument2 = Mock(name="instrument2")
-        view1 = mock_view_matching(instrument1)
-        view2 = mock_view_matching(instrument1, instrument2)
+        view1 = mock_view_matching("view1", instrument1)
+        view2 = mock_view_matching("view2", instrument1, instrument2)
+
         storage = MetricReaderStorage(
             SdkConfiguration(
                 resource=Mock(),

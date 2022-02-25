@@ -19,9 +19,7 @@ from opentelemetry._metrics.instrument import Instrument
 from opentelemetry.sdk._metrics._view_instrument_match import (
     _ViewInstrumentMatch,
 )
-from opentelemetry.sdk._metrics.aggregation import (
-    AggregationTemporality,
-)
+from opentelemetry.sdk._metrics.aggregation import AggregationTemporality
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import Metric
 from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
@@ -82,7 +80,7 @@ class MetricReaderStorage:
                         aggregation=instrument._aggregation,
                         instrumentation_info=instrument.instrumentation_info,
                         resource=self._sdk_config.resource,
-                        attribute_keys=set()
+                        attribute_keys=set(),
                     )
                 )
             self._view_instrument_match[instrument] = view_instrument_matches
@@ -105,7 +103,9 @@ class MetricReaderStorage:
         # that end times can be slightly skewed among the metric streams produced by the SDK,
         # but we still align the output timestamps for a single instrument.
         with self._lock:
-            for view_instrument_matches in self._view_instrument_match.values():
+            for (
+                view_instrument_matches
+            ) in self._view_instrument_match.values():
                 for view_instrument_match in view_instrument_matches:
                     metrics.extend(view_instrument_match.collect(temporality))
 
