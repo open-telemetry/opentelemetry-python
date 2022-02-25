@@ -18,7 +18,7 @@ from logging import getLogger
 from typing import Optional, Set, Type, final
 
 from opentelemetry._metrics.instrument import Instrument
-from opentelemetry.sdk._metrics.aggregation import Aggregation
+from opentelemetry.sdk._metrics.aggregation import _Aggregation
 
 _logger = getLogger(__name__)
 
@@ -34,7 +34,7 @@ class View:
         name: Optional[str] = None,
         description: Optional[str] = None,
         attribute_keys: Set[str] = None,
-        aggregation: Optional[Aggregation] = None,
+        aggregation: Optional[_Aggregation] = None,
     ):
         """
         A `View` configuration parameters can be used for the following

@@ -32,10 +32,10 @@ from opentelemetry._metrics.instrument import (
 )
 from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
 from opentelemetry.sdk._metrics.aggregation import (
-    Aggregation,
-    ExplicitBucketHistogramAggregation,
-    LastValueAggregation,
-    SumAggregation,
+    _Aggregation,
+    _ExplicitBucketHistogramAggregation,
+    _LastValueAggregation,
+    _SumAggregation,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.measurement_consumer import MeasurementConsumer
@@ -48,7 +48,7 @@ _logger = logging.getLogger(__name__)
 class _Instrument(ABC):
     @property
     @abstractmethod
-    def _aggregation(self) -> Aggregation:
+    def _aggregation(self) -> _Aggregation:
         pass
 
 
@@ -102,8 +102,8 @@ class _Asynchronous(_Instrument):
 
 class Counter(_Synchronous, APICounter):
     @property
-    def _aggregation(self) -> Aggregation:
-        return SumAggregation(
+    def _aggregation(self) -> _Aggregation:
+        return _SumAggregation(
             instrument_is_monotonic=True,
             instrument_temporality=AggregationTemporality.DELTA,
         )
@@ -123,8 +123,8 @@ class Counter(_Synchronous, APICounter):
 
 class UpDownCounter(_Synchronous, APIUpDownCounter):
     @property
-    def _aggregation(self) -> Aggregation:
-        return SumAggregation(
+    def _aggregation(self) -> _Aggregation:
+        return _SumAggregation(
             instrument_is_monotonic=False,
             instrument_temporality=AggregationTemporality.DELTA,
         )
@@ -139,8 +139,8 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 
 class ObservableCounter(_Asynchronous, APIObservableCounter):
     @property
-    def _aggregation(self) -> Aggregation:
-        return SumAggregation(
+    def _aggregation(self) -> _Aggregation:
+        return _SumAggregation(
             instrument_is_monotonic=True,
             instrument_temporality=AggregationTemporality.CUMULATIVE,
         )
@@ -148,8 +148,8 @@ class ObservableCounter(_Asynchronous, APIObservableCounter):
 
 class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
     @property
-    def _aggregation(self) -> Aggregation:
-        return SumAggregation(
+    def _aggregation(self) -> _Aggregation:
+        return _SumAggregation(
             instrument_is_monotonic=False,
             instrument_temporality=AggregationTemporality.CUMULATIVE,
         )
@@ -157,8 +157,8 @@ class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
 
 class Histogram(_Synchronous, APIHistogram):
     @property
-    def _aggregation(self) -> Aggregation:
-        return ExplicitBucketHistogramAggregation()
+    def _aggregation(self) -> _Aggregation:
+        return _ExplicitBucketHistogramAggregation()
 
     def record(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
@@ -176,5 +176,5 @@ class Histogram(_Synchronous, APIHistogram):
 
 class ObservableGauge(_Asynchronous, APIObservableGauge):
     @property
-    def _aggregation(self) -> Aggregation:
-        return LastValueAggregation()
+    def _aggregation(self) -> _Aggregation:
+        return _LastValueAggregation()
