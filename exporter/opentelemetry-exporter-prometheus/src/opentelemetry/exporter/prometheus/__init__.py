@@ -79,7 +79,6 @@ from opentelemetry.sdk._metrics.point import Gauge, Histogram, Metric, Sum
 logger = logging.getLogger(__name__)
 
 
-
 def _convert_buckets(metric: Metric) -> Sequence[Tuple[str, int]]:
     buckets = []
     total_count = 0
@@ -92,6 +91,7 @@ def _convert_buckets(metric: Metric) -> Sequence[Tuple[str, int]]:
             )
         )
     return buckets
+
 
 class PrometheusMetricExporter(MetricExporter):
     """Prometheus metric exporter for OpenTelemetry.
