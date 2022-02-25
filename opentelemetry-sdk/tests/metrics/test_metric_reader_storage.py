@@ -23,9 +23,9 @@ from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
 
 
-def mock_view_matching(*instruments) -> Mock:
-    mock = Mock()
-    mock.match.side_effect = lambda instrument: instrument in instruments
+def mock_view_matching(name, *instruments) -> Mock:
+    mock = Mock(name=name)
+    mock._match.side_effect = lambda instrument: instrument in instruments
     return mock
 
 
@@ -44,8 +44,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         instrument1 = Mock(name="instrument1")
         instrument2 = Mock(name="instrument2")
 
-        view1 = mock_view_matching(instrument1)
-        view2 = mock_view_matching(instrument1, instrument2)
+        view1 = mock_view_matching("view_1", instrument1)
+        view2 = mock_view_matching("view_2", instrument1, instrument2)
         storage = MetricReaderStorage(
             SdkConfiguration(
                 resource=Mock(),

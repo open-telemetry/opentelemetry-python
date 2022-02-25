@@ -53,7 +53,7 @@ class _ViewInstrumentMatch:
 
     def consume_measurement(self, measurement: Measurement) -> None:
 
-        if self._attribute_keys is not None:
+        if self._attribute_keys:
 
             attributes = {}
 

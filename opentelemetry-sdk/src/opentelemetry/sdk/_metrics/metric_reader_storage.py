@@ -46,6 +46,7 @@ class MetricReaderStorage:
     ) -> List["_ViewInstrumentMatch"]:
         # Optimistically get the relevant views for the given instrument. Once set for a given
         # instrument, the mapping will never change
+
         if instrument in self._view_instrument_match:
             return self._view_instrument_match[instrument]
 
@@ -55,19 +56,17 @@ class MetricReaderStorage:
                 return self._view_instrument_match[instrument]
 
             # not present, hold the lock and add a new mapping
-            matches = []
+            view_instrument_matches = []
             for view in self._sdk_config.views:
                 if view._match(instrument):
-                    matches.append(
+                    view_instrument_matches.append(
                         _ViewInstrumentMatch(
                             name=view._name or instrument.name,
                             unit=instrument.unit,
                             description=(
                                 view._description or instrument.description
                             ),
-                            aggregation=(
-                                view.aggregation or instrument.aggregation
-                            ),
+                            aggregation=instrument._aggregation,
                             instrumentation_info=(
                                 instrument.instrumentation_info
                             ),
@@ -77,7 +76,7 @@ class MetricReaderStorage:
                     )
 
             # if no view targeted the instrument, use the default
-            if not matches:
+            if not view_instrument_matches:
                 # TODO: the logic to select aggregation could be moved
                 if isinstance(instrument, Counter):
                     agg = _SumAggregation(True, AggregationTemporality.DELTA)
@@ -85,25 +84,25 @@ class MetricReaderStorage:
                     agg = _ExplicitBucketHistogramAggregation()
                 else:
                     agg = _LastValueAggregation()
-                matches.append(
+                view_instrument_matches.append(
                     _ViewInstrumentMatch(
                         name=instrument.name,
                         unit=instrument.unit,
                         description=instrument.description,
-                        aggregation=instrument.aggregation,
+                        aggregation=instrument._aggregation,
                         instrumentation_info=instrument.instrumentation_info,
                         resource=self._sdk_config.resource,
                         attribute_keys=set()
                     )
                 )
-            self._view_instrument_match[instrument] = matches
-            return matches
+            self._view_instrument_match[instrument] = view_instrument_matches
+            return view_instrument_matches
 
     def consume_measurement(self, measurement: Measurement) -> None:
-        for matches in self._get_or_init_view_instrument_match(
+        for view_instrument_match in self._get_or_init_view_instrument_match(
             measurement.instrument
         ):
-            matches.consume_measurement(measurement)
+            view_instrument_match.consume_measurement(measurement)
 
     def collect(self, temporality: AggregationTemporality) -> Iterable[Metric]:
         # use a list instead of yielding to prevent a slow reader from holding SDK locks
@@ -116,9 +115,9 @@ class MetricReaderStorage:
         # that end times can be slightly skewed among the metric streams produced by the SDK,
         # but we still align the output timestamps for a single instrument.
         with self._lock:
-            for matches in self._view_instrument_match.values():
-                for match in matches:
-                    metrics.extend(match.collect(temporality))
+            for view_instrument_matches in self._view_instrument_match.values():
+                for view_instrument_match in view_instrument_matches:
+                    metrics.extend(view_instrument_match.collect(temporality))
 
         return metrics
 

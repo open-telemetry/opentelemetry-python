@@ -79,6 +79,7 @@ class Test_ViewInstrumentMatch(TestCase):
             self.mock_aggregation_instance,
             self.mock_instrumentation_info,
             self.mock_resource,
+            set()
         )
 
         view_instrument_match.consume_measurement(
@@ -104,6 +105,7 @@ class Test_ViewInstrumentMatch(TestCase):
             self.mock_aggregation_instance,
             self.mock_instrumentation_info,
             self.mock_resource,
+            set(),
         )
         view_instrument_match.consume_measurement(
             Measurement(value=0, instrument=instrument1, attributes=None)
