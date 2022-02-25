@@ -53,6 +53,7 @@ class MetricReaderStorage:
             # not present, hold the lock and add a new mapping
             view_instrument_matches = []
             for view in self._sdk_config.views:
+                # pylint: disable=protected-access
                 if view._match(instrument):
                     view_instrument_matches.append(
                         _ViewInstrumentMatch(
@@ -77,6 +78,7 @@ class MetricReaderStorage:
                         name=instrument.name,
                         unit=instrument.unit,
                         description=instrument.description,
+                        # pylint: disable=protected-access
                         aggregation=instrument._aggregation,
                         instrumentation_info=instrument.instrumentation_info,
                         resource=self._sdk_config.resource,

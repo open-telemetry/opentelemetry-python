@@ -15,7 +15,10 @@
 
 from fnmatch import fnmatch
 from logging import getLogger
-from typing import Optional, Set, Type, final
+from typing import Optional, Set, Type
+
+# FIXME import from typing when support for 3.6 is removed
+from typing_extensions import final
 
 from opentelemetry._metrics.instrument import Instrument
 from opentelemetry.sdk._metrics.aggregation import _Aggregation
