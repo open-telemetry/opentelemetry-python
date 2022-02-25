@@ -105,6 +105,17 @@ class View:
                 f"criteria must be provided for View {name}"
             )
 
+        if (
+            name is not None
+            and instrument_name is not None
+            and ("*" in instrument_name or "?" in instrument_name)
+        ):
+
+            raise Exception(
+                "View {name} declared with wildcard "
+                "characters in instrument_name"
+            )
+
         # _name, _description, _aggregation and _attribute_keys will be
         # accessed when instantiating a _ViewInstrumentMatch.
         self._name = name
@@ -121,9 +132,6 @@ class View:
             self._attribute_keys = set()
 
         self._aggregation = aggregation
-
-        if self._name is not None:
-            self._previously_matched_instrumentation_infos = set()
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
@@ -155,16 +163,6 @@ class View:
                 instrument.instrumentation_info.schema_url
                 != self._meter_schema_url
             ):
-                return False
-
-        if self._name is not None:
-            if instrument.instrumentation_info not in (
-                self._previously_matched_instrumentation_infos
-            ):
-                self._previously_matched_instrumentation_infos.add(
-                    instrument.instrumentation_info
-                )
-            else:
                 return False
 
         return True

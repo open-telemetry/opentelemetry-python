@@ -16,7 +16,6 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 from opentelemetry.sdk._metrics.view import View
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
 
 class TestView(TestCase):
@@ -129,36 +128,5 @@ class TestView(TestCase):
 
     def test_view_name(self):
 
-        view = View(name="name", instrument_name="instrument_name*")
-
-        instrumentation_info_0 = InstrumentationInfo(
-            "name_0", "version_0", "schema_url_0"
-        )
-        instrumentation_info_1 = InstrumentationInfo(
-            "name_1", "version_1", "schema_url_1"
-        )
-
-        instrument_0 = Mock()
-        instrument_0.configure_mock(
-            **{
-                "name": "instrument_name_0",
-                "instrumentation_info": instrumentation_info_0,
-            }
-        )
-        instrument_1 = Mock()
-        instrument_1.configure_mock(
-            **{
-                "name": "instrument_name_1",
-                "instrumentation_info": instrumentation_info_0,
-            }
-        )
-        instrument_2 = Mock()
-        instrument_2.configure_mock(
-            **{
-                "name": "instrument_name_2",
-                "instrumentation_info": instrumentation_info_1,
-            }
-        )
-        self.assertTrue(view._match(instrument_0))
-        self.assertFalse(view._match(instrument_1))
-        self.assertTrue(view._match(instrument_2))
+        with self.assertRaises(Exception):
+            View(name="name", instrument_name="instrument_name*")
