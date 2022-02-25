@@ -105,6 +105,8 @@ class View:
                 f"criteria must be provided for View {name}"
             )
 
+        # _name, _description, _aggregation and _attribute_keys will be
+        # accessed when instantiating a _ViewInstrumentMatch.
         self._name = name
         self._instrument_type = instrument_type
         self._instrument_name = instrument_name
