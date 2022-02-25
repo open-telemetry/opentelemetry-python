@@ -65,26 +65,15 @@ API
 import collections
 import logging
 import re
-from typing import Iterable, Optional, Sequence, Union
+from typing import Optional, Sequence, Tuple
 
-from prometheus_client.core import (
-    REGISTRY,
-    CounterMetricFamily,
-    GaugeMetricFamily,
-    HistogramMetricFamily,
-)
+from prometheus_client import core
 
 from opentelemetry.sdk._metrics.export import (
     MetricExporter,
     MetricExportResult,
 )
-from opentelemetry.sdk._metrics.point import (
-    AggregationTemporality,
-    Gauge,
-    Histogram,
-    Metric,
-    Sum,
-)
+from opentelemetry.sdk._metrics.point import Gauge, Histogram, Metric, Sum
 
 logger = logging.getLogger(__name__)
 
@@ -99,14 +88,14 @@ class PrometheusMetricExporter(MetricExporter):
 
     def __init__(self, prefix: str = ""):
         self._collector = CustomCollector(prefix)
-        REGISTRY.register(self._collector)
+        core.REGISTRY.register(self._collector)
 
     def export(self, export_records: Sequence[Metric]) -> MetricExportResult:
         self._collector.add_metrics_data(export_records)
         return MetricExportResult.SUCCESS
 
     def shutdown(self) -> None:
-        REGISTRY.unregister(self._collector)
+        core.REGISTRY.unregister(self._collector)
 
 
 class CustomCollector:
@@ -124,7 +113,7 @@ class CustomCollector:
     def add_metrics_data(self, export_records: Sequence[Metric]) -> None:
         self._metrics_to_export.append(export_records)
 
-    def collect(self):
+    def collect(self) -> None:
         """Collect fetches the metrics from OpenTelemetry
         and delivers them as Prometheus Metrics.
         Collect is invoked every time a prometheus.Gatherer is run
@@ -139,49 +128,71 @@ class CustomCollector:
                 if prometheus_metric is not None:
                     yield prometheus_metric
 
-    def _translate_to_prometheus(self, export_record: Metric):
+    def _convert_buckets(self, metric: Metric) -> Sequence[Tuple[str, int]]:
+        buckets = []
+        total_count = 0
+        for i in range(0, len(metric.point.bucket_counts)):
+            total_count += metric.point.bucket_counts[i]
+            buckets.append(
+                (
+                    f"{metric.point.explicit_bounds[i]}",
+                    total_count,
+                )
+            )
+        return buckets
+
+    def _translate_to_prometheus(
+        self, metric: Metric
+    ) -> Optional[core.Metric]:
         prometheus_metric = None
         label_values = []
         label_keys = []
-        for key, value in export_record.attributes.items():
+        for key, value in metric.attributes.items():
             label_keys.append(self._sanitize(key))
             label_values.append(str(value))
 
         metric_name = ""
         if self._prefix != "":
             metric_name = self._prefix + "_"
-        metric_name += self._sanitize(export_record.name)
+        metric_name += self._sanitize(metric.name)
 
-        description = export_record.description or ""
-        if isinstance(export_record.point, Sum):
-            prometheus_metric = CounterMetricFamily(
-                name=metric_name, documentation=description, labels=label_keys
+        description = metric.description or ""
+        if isinstance(metric.point, Sum):
+            prometheus_metric = core.CounterMetricFamily(
+                name=metric_name,
+                documentation=description,
+                labels=label_keys,
+                unit=metric.unit,
             )
             prometheus_metric.add_metric(
-                labels=label_values, value=export_record.point.value
+                labels=label_values, value=metric.point.value
             )
-        elif isinstance(export_record.point, Gauge):
-            prometheus_metric = GaugeMetricFamily(
-                name=metric_name, documentation=description, labels=label_keys
+        elif isinstance(metric.point, Gauge):
+            prometheus_metric = core.GaugeMetricFamily(
+                name=metric_name,
+                documentation=description,
+                labels=label_keys,
+                unit=metric.unit,
             )
             prometheus_metric.add_metric(
-                labels=label_values, value=export_record.point.value
+                labels=label_values, value=metric.point.value
             )
-        # TODO: Add support for histograms when supported in OT
-        # elif isinstance(export_record.point, Histogram):
-        #     value = export_record.point.sum
-        #     prometheus_metric = HistogramMetricFamily(
-        #         name=metric_name,
-        #         documentation=description,
-        #         labels=label_keys,
-        #     )
-        #     prometheus_metric.add_metric(labels=label_values, buckets=export_record.point.explicit_bounds, sum_value=value)
+        elif isinstance(metric.point, Histogram):
+            value = metric.point.sum
+            prometheus_metric = core.HistogramMetricFamily(
+                name=metric_name,
+                documentation=description,
+                labels=label_keys,
+                unit=metric.unit,
+            )
+            buckets = self._convert_buckets(metric)
+            prometheus_metric.add_metric(
+                labels=label_values, buckets=buckets, sum_value=value
+            )
         # TODO: add support for Summary once implemented
         # elif isinstance(export_record.point, Summary):
         else:
-            logger.warning(
-                "Unsupported metric type. %s", type(export_record.point)
-            )
+            logger.warning("Unsupported metric type. %s", type(metric.point))
         return prometheus_metric
 
     def _sanitize(self, key: str) -> str:
