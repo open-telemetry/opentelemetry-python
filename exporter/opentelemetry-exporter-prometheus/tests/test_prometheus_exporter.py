@@ -18,15 +18,12 @@ from unittest import mock
 from prometheus_client import generate_latest
 from prometheus_client.core import CounterMetricFamily, GaugeMetricFamily
 
-from opentelemetry._metrics import get_meter_provider, set_meter_provider
 from opentelemetry.exporter.prometheus import (
     CustomCollector,
     PrometheusMetricExporter,
 )
-from opentelemetry.sdk._metrics import MeterProvider
 from opentelemetry.sdk._metrics.export import MetricExportResult
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Histogram
-from opentelemetry.sdk.util import get_dict_as_key
 from opentelemetry.test.metrictestutil import (
     _generate_gauge,
     _generate_metric,
