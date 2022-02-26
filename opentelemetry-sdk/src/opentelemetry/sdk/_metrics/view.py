@@ -21,7 +21,7 @@ from typing import Optional, Set, Type
 from typing_extensions import final
 
 from opentelemetry._metrics.instrument import Instrument
-from opentelemetry.sdk._metrics.aggregation import _Aggregation
+from opentelemetry.sdk._metrics.aggregation import _AggregationFactory
 
 _logger = getLogger(__name__)
 
@@ -37,7 +37,7 @@ class View:
         name: Optional[str] = None,
         description: Optional[str] = None,
         attribute_keys: Set[str] = None,
-        aggregation: Optional[_Aggregation] = None,
+        aggregation: Optional[_AggregationFactory] = None,
     ):
         """
         A `View` configuration parameters can be used for the following

@@ -14,12 +14,15 @@
 
 from unittest.mock import Mock, patch
 
+from opentelemetry.sdk._metrics.aggregation import SumAggregation
+from opentelemetry.sdk._metrics.instrument import Counter
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.metric_reader_storage import (
     MetricReaderStorage,
 )
 from opentelemetry.sdk._metrics.point import AggregationTemporality
 from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
+from opentelemetry.sdk._metrics.view import View
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
 
 
@@ -35,8 +38,10 @@ def mock_instrument() -> Mock:
     return instr
 
 
-@patch("opentelemetry.sdk._metrics.metric_reader_storage._ViewInstrumentMatch")
 class TestMetricReaderStorage(ConcurrencyTestBase):
+    @patch(
+        "opentelemetry.sdk._metrics.metric_reader_storage._ViewInstrumentMatch"
+    )
     def test_creates_view_instrument_matches(
         self, MockViewInstrumentMatch: Mock
     ):
@@ -71,6 +76,9 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         storage.consume_measurement(Measurement(1, instrument2))
         self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
 
+    @patch(
+        "opentelemetry.sdk._metrics.metric_reader_storage._ViewInstrumentMatch"
+    )
     def test_forwards_calls_to_view_instrument_match(
         self, MockViewInstrumentMatch: Mock
     ):
@@ -127,6 +135,9 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         view_instrument_match3.collect.assert_called_once()
         self.assertEqual(result, all_metrics)
 
+    @patch(
+        "opentelemetry.sdk._metrics.metric_reader_storage._ViewInstrumentMatch"
+    )
     def test_race_concurrent_measurements(self, MockViewInstrumentMatch: Mock):
         mock_view_instrument_match_ctor = MockFunc()
         MockViewInstrumentMatch.side_effect = mock_view_instrument_match_ctor
@@ -150,3 +161,35 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
 
         # _ViewInstrumentMatch constructor should have only been called once
         self.assertEqual(mock_view_instrument_match_ctor.call_count, 1)
+
+    def test_aggregations(self):
+
+        view = View(instrument_name="counter*", aggregation=SumAggregation())
+
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(view,),
+                enable_default_view=True,
+            )
+        )
+
+        counter_0 = Counter("counter_0", Mock(), Mock())
+        counter_1 = Counter("counter_1", Mock(), Mock())
+
+        metric_reader_storage.consume_measurement(Measurement(1, counter_0))
+        metric_reader_storage.consume_measurement(Measurement(2, counter_1))
+
+        self.assertEqual(
+            1,
+            metric_reader_storage._view_instrument_match[counter_0][
+                0
+            ]._aggregation._value,
+        )
+        self.assertEqual(
+            2,
+            metric_reader_storage._view_instrument_match[counter_1][
+                0
+            ]._aggregation._value,
+        )

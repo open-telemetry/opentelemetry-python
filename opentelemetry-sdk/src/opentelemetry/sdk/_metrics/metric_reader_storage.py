@@ -55,6 +55,14 @@ class MetricReaderStorage:
             for view in self._sdk_config.views:
                 # pylint: disable=protected-access
                 if view._match(instrument):
+
+                    if view._aggregation is not None:
+                        aggregation = view._aggregation._create_aggregation(
+                            instrument
+                        )
+                    else:
+                        aggregation = instrument._aggregation
+
                     view_instrument_matches.append(
                         _ViewInstrumentMatch(
                             name=view._name or instrument.name,
@@ -62,7 +70,7 @@ class MetricReaderStorage:
                             description=(
                                 view._description or instrument.description
                             ),
-                            aggregation=instrument._aggregation,
+                            aggregation=aggregation,
                             instrumentation_info=(
                                 instrument.instrumentation_info
                             ),
