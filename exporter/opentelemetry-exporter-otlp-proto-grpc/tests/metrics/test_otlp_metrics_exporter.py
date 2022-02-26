@@ -12,7 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from unittest import TestCase
 from unittest.mock import patch
@@ -21,7 +20,6 @@ from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import StatusCode, server
 
-from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.exporter.otlp.proto.grpc._metric_exporter import (
     OTLPMetricExporter,
 )
@@ -43,18 +41,15 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
 from opentelemetry.sdk._metrics.export import MetricExportResult
-from opentelemetry.sdk._metrics.point import (
-    AggregationTemporality,
-    Gauge,
-    Histogram,
-    Metric,
-    Sum,
-)
+from opentelemetry.sdk._metrics.point import AggregationTemporality, Histogram
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
 )
-from opentelemetry.sdk.resources import Resource as SDKResource
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.test.metrictestutil import (
+    _generate_gauge,
+    _generate_metric,
+    _generate_sum,
+)
 
 
 class MetricsServiceServicerUNAVAILABLEDelay(MetricsServiceServicer):
@@ -101,43 +96,6 @@ class MetricsServiceServicerALREADY_EXISTS(MetricsServiceServicer):
         context.set_code(StatusCode.ALREADY_EXISTS)
 
         return ExportMetricsServiceResponse()
-
-
-def _generate_metric(name, point) -> Metric:
-    return Metric(
-        resource=SDKResource(OrderedDict([("a", 1), ("b", False)])),
-        instrumentation_info=InstrumentationInfo(
-            "first_name", "first_version"
-        ),
-        attributes=BoundedAttributes(attributes={"a": 1, "b": True}),
-        description="foo",
-        name=name,
-        unit="s",
-        point=point,
-    )
-
-
-def _generate_sum(name, val) -> Sum:
-    return _generate_metric(
-        name,
-        Sum(
-            aggregation_temporality=AggregationTemporality.CUMULATIVE,
-            is_monotonic=True,
-            start_time_unix_nano=1641946015139533244,
-            time_unix_nano=1641946016139533244,
-            value=val,
-        ),
-    )
-
-
-def _generate_gauge(name, val) -> Gauge:
-    return _generate_metric(
-        name,
-        Gauge(
-            time_unix_nano=1641946016139533244,
-            value=val,
-        ),
-    )
 
 
 class TestOTLPMetricExporter(TestCase):
