@@ -75,7 +75,7 @@ class MetricReaderStorage:
             # if no view targeted the instrument, use the default
             if not matches:
                 # TODO: the logic to select aggregation could be moved
-                if isinstance(instrument, Counter):
+                if isinstance(instrument, Counter) or isinstance(instrument, UpDownCounter):
                     agg = _SumAggregation(True, AggregationTemporality.DELTA)
                 elif isinstance(instrument, Histogram):
                     agg = _ExplicitBucketHistogramAggregation()
