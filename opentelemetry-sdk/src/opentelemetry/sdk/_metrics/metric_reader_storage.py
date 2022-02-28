@@ -61,7 +61,7 @@ class MetricReaderStorage:
                             instrument
                         )
                     else:
-                        aggregation = instrument._aggregation
+                        aggregation = instrument._default_aggregation
 
                     view_instrument_matches.append(
                         _ViewInstrumentMatch(
@@ -87,7 +87,7 @@ class MetricReaderStorage:
                         unit=instrument.unit,
                         description=instrument.description,
                         # pylint: disable=protected-access
-                        aggregation=instrument._aggregation,
+                        aggregation=instrument._default_aggregation,
                         instrumentation_info=instrument.instrumentation_info,
                         resource=self._sdk_config.resource,
                         attribute_keys=set(),
