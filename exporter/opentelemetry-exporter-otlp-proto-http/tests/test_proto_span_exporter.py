@@ -19,6 +19,7 @@ from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
+    DEFAULT_TRACES_EXPORT_PATH,
     DEFAULT_TIMEOUT,
     OTLPSpanExporter,
 )
@@ -40,6 +41,7 @@ OS_ENV_CERTIFICATE = "os/env/base.crt"
 OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2"
 OS_ENV_TIMEOUT = "30"
 
+DEFAULT_TRACES_EXPORT_PATH = "v1/traces"
 
 # pylint: disable=protected-access
 class TestOTLPSpanExporter(unittest.TestCase):
@@ -47,7 +49,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
         exporter = OTLPSpanExporter()
 
-        self.assertEqual(exporter._endpoint, DEFAULT_ENDPOINT)
+        self.assertEqual(exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_TRACES_EXPORT_PATH)
         self.assertEqual(exporter._certificate_file, True)
         self.assertEqual(exporter._timeout, DEFAULT_TIMEOUT)
         self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
@@ -117,7 +119,6 @@ class TestOTLPSpanExporter(unittest.TestCase):
         {
             OTEL_EXPORTER_OTLP_CERTIFICATE: OS_ENV_CERTIFICATE,
             OTEL_EXPORTER_OTLP_COMPRESSION: Compression.Gzip.value,
-            OTEL_EXPORTER_OTLP_ENDPOINT: OS_ENV_ENDPOINT,
             OTEL_EXPORTER_OTLP_HEADERS: OS_ENV_HEADERS,
             OTEL_EXPORTER_OTLP_TIMEOUT: OS_ENV_TIMEOUT,
         },
@@ -126,13 +127,36 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
         exporter = OTLPSpanExporter()
 
-        self.assertEqual(exporter._endpoint, OS_ENV_ENDPOINT)
         self.assertEqual(exporter._certificate_file, OS_ENV_CERTIFICATE)
         self.assertEqual(exporter._timeout, int(OS_ENV_TIMEOUT))
         self.assertIs(exporter._compression, Compression.Gzip)
         self.assertEqual(
             exporter._headers, {"envheader1": "val1", "envheader2": "val2"}
         )
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_ENDPOINT: OS_ENV_ENDPOINT
+        },
+    )
+    def test_exporter_env_endpoint_without_slash(self):
+
+        exporter = OTLPSpanExporter()
+
+        self.assertEqual(exporter._endpoint, OS_ENV_ENDPOINT + f"/{DEFAULT_TRACES_EXPORT_PATH}")
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_ENDPOINT: OS_ENV_ENDPOINT + "/"
+        },
+    )
+    def test_exporter_env_endpoint_with_slash(self):
+
+        exporter = OTLPSpanExporter()
+
+        self.assertEqual(exporter._endpoint, OS_ENV_ENDPOINT + f"/{DEFAULT_TRACES_EXPORT_PATH}")
 
     @patch.dict(
         "os.environ",
