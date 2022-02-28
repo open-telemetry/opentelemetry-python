@@ -206,7 +206,7 @@ class TracerProvider(ABC):
                 ``__name__`` should not be used as this can result in
                 different tracer names if the tracers are in different files.
                 It is better to use a fixed string that can be imported where
-                it is needed and used there as the name of the tracer.
+                needed and used consistently as the name of the tracer.
 
                 This should *not* be the name of the module that is
                 instrumented but the name of the module doing the instrumentation.
