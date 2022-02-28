@@ -15,12 +15,12 @@ import os
 
 import setuptools
 
-BASE_DIR = os.path.dirname(__file__)
-VERSION_FILENAME = os.path.join(
-    BASE_DIR, "src", "opentelemetry", "exporter", "prometheus", "version.py"
+_BASE_DIR = os.path.dirname(__file__)
+_VERSION_FILENAME = os.path.join(
+    _BASE_DIR, "src", "opentelemetry", "exporter", "prometheus", "version.py"
 )
-PACKAGE_INFO = {}
-with open(VERSION_FILENAME, encoding="utf-8") as f:
-    exec(f.read(), PACKAGE_INFO)
+_PACKAGE_INFO = {}
+with open(_VERSION_FILENAME, encoding="utf-8") as f:
+    exec(f.read(), _PACKAGE_INFO)
 
-setuptools.setup(version=PACKAGE_INFO["__version__"])
+setuptools.setup(version=_PACKAGE_INFO["__version__"])
