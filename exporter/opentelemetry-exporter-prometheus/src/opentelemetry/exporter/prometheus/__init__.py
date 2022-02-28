@@ -102,8 +102,8 @@ class PrometheusMetricExporter(PullMetricExporter):
             the metric belongs to.
     """
 
-    def __init__(self, prefix: str = ""):
-        self._collect = None
+    def __init__(self, prefix: str = "") -> None:
+        super().__init__()
         self._collector = _CustomCollector(self.collect, prefix)
         core.REGISTRY.register(self._collector)
 

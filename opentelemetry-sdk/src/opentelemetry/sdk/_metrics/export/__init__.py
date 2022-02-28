@@ -181,6 +181,21 @@ class PeriodicExportingMetricReader(MetricReader):
 
 
 class PullMetricExporter(MetricExporter):
+    def __init__(self) -> None:
+        self._collect: Callable[
+            ["PullMetricExporter"],
+        ] = None
+
+    @final
+    def _set_collect_callback(
+        self,
+        func: Callable[
+            ["PullMetricExporter"],
+        ],
+    ) -> None:
+        """This function is internal to the SDK. It should not be called or overriden by users"""
+        self._collect = func
+
     @final
     def collect(self) -> None:
         if self._collect:
@@ -194,7 +209,7 @@ class PullMetricExporterReader(MetricReader):
     ):
         super().__init__(preferred_temporality=exporter.preferred_temporality)
         self._exporter = exporter
-        self._exporter._collect = self.collect
+        self._exporter._set_collect_callback(self.collect)
 
     def _receive_metrics(self, metrics: Iterable[Metric]) -> None:
         if metrics is None:
