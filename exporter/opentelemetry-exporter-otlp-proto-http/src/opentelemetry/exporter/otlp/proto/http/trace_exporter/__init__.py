@@ -66,7 +66,9 @@ class OTLPSpanExporter(SpanExporter):
     ):
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
-            _append_trace_path(environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)),
+            _append_trace_path(
+                environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
+            ),
         )
         self._certificate_file = certificate_file or environ.get(
             OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
@@ -173,6 +175,7 @@ def _compression_from_env() -> Compression:
         .strip()
     )
     return Compression(compression)
+
 
 def _append_trace_path(endpoint: str) -> str:
     if endpoint.endswith("/"):

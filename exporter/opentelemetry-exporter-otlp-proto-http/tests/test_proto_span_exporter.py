@@ -49,7 +49,9 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
         exporter = OTLPSpanExporter()
 
-        self.assertEqual(exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_TRACES_EXPORT_PATH)
+        self.assertEqual(
+            exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_TRACES_EXPORT_PATH
+        )
         self.assertEqual(exporter._certificate_file, True)
         self.assertEqual(exporter._timeout, DEFAULT_TIMEOUT)
         self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
@@ -137,27 +139,29 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
     @patch.dict(
         "os.environ",
-        {
-            OTEL_EXPORTER_OTLP_ENDPOINT: OS_ENV_ENDPOINT
-        },
+        {OTEL_EXPORTER_OTLP_ENDPOINT: OS_ENV_ENDPOINT},
     )
     def test_exporter_env_endpoint_without_slash(self):
 
         exporter = OTLPSpanExporter()
 
-        self.assertEqual(exporter._endpoint, OS_ENV_ENDPOINT + f"/{DEFAULT_TRACES_EXPORT_PATH}")
+        self.assertEqual(
+            exporter._endpoint, 
+            OS_ENV_ENDPOINT + f"/{DEFAULT_TRACES_EXPORT_PATH}",
+        )
 
     @patch.dict(
         "os.environ",
-        {
-            OTEL_EXPORTER_OTLP_ENDPOINT: OS_ENV_ENDPOINT + "/"
-        },
+        {OTEL_EXPORTER_OTLP_ENDPOINT: OS_ENV_ENDPOINT + "/"},
     )
     def test_exporter_env_endpoint_with_slash(self):
 
         exporter = OTLPSpanExporter()
 
-        self.assertEqual(exporter._endpoint, OS_ENV_ENDPOINT + f"/{DEFAULT_TRACES_EXPORT_PATH}")
+        self.assertEqual(
+            exporter._endpoint, 
+            OS_ENV_ENDPOINT + f"/{DEFAULT_TRACES_EXPORT_PATH}"
+        )
 
     @patch.dict(
         "os.environ",
