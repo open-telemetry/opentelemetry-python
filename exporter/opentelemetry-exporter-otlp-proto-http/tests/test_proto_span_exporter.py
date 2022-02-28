@@ -146,7 +146,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         exporter = OTLPSpanExporter()
 
         self.assertEqual(
-            exporter._endpoint, 
+            exporter._endpoint,
             OS_ENV_ENDPOINT + f"/{DEFAULT_TRACES_EXPORT_PATH}",
         )
 
@@ -159,8 +159,8 @@ class TestOTLPSpanExporter(unittest.TestCase):
         exporter = OTLPSpanExporter()
 
         self.assertEqual(
-            exporter._endpoint, 
-            OS_ENV_ENDPOINT + f"/{DEFAULT_TRACES_EXPORT_PATH}"
+            exporter._endpoint,
+            OS_ENV_ENDPOINT + f"/{DEFAULT_TRACES_EXPORT_PATH}",
         )
 
     @patch.dict(
