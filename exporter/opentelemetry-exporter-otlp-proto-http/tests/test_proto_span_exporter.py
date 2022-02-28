@@ -92,6 +92,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             OTEL_EXPORTER_OTLP_CERTIFICATE: OS_ENV_CERTIFICATE,
             OTEL_EXPORTER_OTLP_COMPRESSION: Compression.Gzip.value,
             OTEL_EXPORTER_OTLP_ENDPOINT: OS_ENV_ENDPOINT,
+            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "https://traces.endpoint.env",
             OTEL_EXPORTER_OTLP_HEADERS: OS_ENV_HEADERS,
             OTEL_EXPORTER_OTLP_TIMEOUT: OS_ENV_TIMEOUT,
         },
