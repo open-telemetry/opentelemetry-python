@@ -203,7 +203,7 @@ class TracerProvider(ABC):
 
         Args:
             instrumenting_module_name: The name of the instrumenting module.
-                ``__name__`` should not be used as this can result in
+                ``__name__`` may not be used as this can result in
                 different tracer names if the tracers are in different files.
                 It is better to use a fixed string that can be imported where
                 needed and used consistently as the name of the tracer.
