@@ -41,7 +41,6 @@ OS_ENV_CERTIFICATE = "os/env/base.crt"
 OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2"
 OS_ENV_TIMEOUT = "30"
 
-DEFAULT_TRACES_EXPORT_PATH = "v1/traces"
 
 # pylint: disable=protected-access
 class TestOTLPSpanExporter(unittest.TestCase):
