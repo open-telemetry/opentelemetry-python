@@ -193,3 +193,62 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 0
             ]._aggregation._value,
         )
+
+    @patch(
+        "opentelemetry.sdk._metrics.metric_reader_storage._ViewInstrumentMatch"
+    )
+    def test_default_view_enabled(self, MockViewInstrumentMatch: Mock):
+        """Instruments should be matched with default views when enabled"""
+        instrument1 = Mock(name="instrument1")
+        instrument2 = Mock(name="instrument2")
+
+        storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(),
+                enable_default_view=True,
+            )
+        )
+
+        storage.consume_measurement(Measurement(1, instrument1))
+        self.assertEqual(
+            len(MockViewInstrumentMatch.call_args_list),
+            1,
+            MockViewInstrumentMatch.mock_calls,
+        )
+        storage.consume_measurement(Measurement(1, instrument1))
+        self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
+
+        MockViewInstrumentMatch.call_args_list.clear()
+        storage.consume_measurement(Measurement(1, instrument2))
+        self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
+
+    @patch(
+        "opentelemetry.sdk._metrics.metric_reader_storage._ViewInstrumentMatch"
+    )
+    def test_default_view_disabled(self, MockViewInstrumentMatch: Mock):
+        """Instruments should not be matched with default views when disabled"""
+        instrument1 = Mock(name="instrument1")
+        instrument2 = Mock(name="instrument2")
+        storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(),
+                enable_default_view=False,
+            )
+        )
+
+        storage.consume_measurement(Measurement(1, instrument1))
+        self.assertEqual(
+            len(MockViewInstrumentMatch.call_args_list),
+            0,
+            MockViewInstrumentMatch.mock_calls,
+        )
+        storage.consume_measurement(Measurement(1, instrument1))
+        self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 0)
+
+        MockViewInstrumentMatch.call_args_list.clear()
+        storage.consume_measurement(Measurement(1, instrument2))
+        self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 0)
