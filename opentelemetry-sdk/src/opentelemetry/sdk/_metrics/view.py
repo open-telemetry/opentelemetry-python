@@ -58,7 +58,9 @@ class View:
 
             instrument_name: This is an instrument matching attribute: the name
                 the instrument must have to match the view. Wild card
-                characters are supported.
+                characters are supported. Wild card characters should not be
+                used with this attribute if the view has also a
+                ``name`` defined.
 
             meter_name: This is an instrument matching attribute: the name
                 the instrument meter must have to match the view. Wild card
@@ -112,7 +114,7 @@ class View:
         ):
 
             raise Exception(
-                "View {name} declared with wildcard "
+                f"View {name} declared with wildcard "
                 "characters in instrument_name"
             )
 
