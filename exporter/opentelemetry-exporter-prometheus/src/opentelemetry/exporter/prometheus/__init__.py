@@ -27,28 +27,29 @@ metrics to `Prometheus`_.
 
 .. code:: python
 
-    from opentelemetry import metrics
-    from opentelemetry.exporter.prometheus import PrometheusMetricExporter
-    from opentelemetry.sdk.metrics import Meter
     from prometheus_client import start_http_server
+
+    from opentelemetry._metrics import get_meter_provider, set_meter_provider
+    from opentelemetry.exporter.prometheus import PrometheusMetricExporter
+    from opentelemetry.sdk._metrics import MeterProvider
+    from opentelemetry.sdk._metrics.export import PullMetricExporterReader
 
     # Start Prometheus client
     start_http_server(port=8000, addr="localhost")
 
-    # Meter is responsible for creating and recording metrics
-    metrics.set_meter_provider(MeterProvider())
-    meter = metrics.get_meter(__name__)
     # exporter to export metrics to Prometheus
     prefix = "MyAppPrefix"
     exporter = PrometheusMetricExporter(prefix)
-    # Starts the collect/export pipeline for metrics
-    metrics.get_meter_provider().start_pipeline(meter, exporter, 5)
+    reader = PullMetricExporterReader(exporter)
+
+    # Meter is responsible for creating and recording metrics
+    set_meter_provider(MeterProvider(metric_readers=[reader]))
+    meter = get_meter_provider().get_meter(__name__)
 
     counter = meter.create_counter(
         "requests",
-        "number of requests",
         "requests",
-        int,
+        "number of requests",
     )
 
     # Labels are used to identify key-values that are associated with a specific
@@ -71,12 +72,12 @@ from typing import Optional, Sequence, Tuple
 from prometheus_client import core
 
 from opentelemetry.sdk._metrics.export import (
-    MetricExporter,
     MetricExportResult,
+    PullMetricExporter,
 )
 from opentelemetry.sdk._metrics.point import Gauge, Histogram, Metric, Sum
 
-logger = logging.getLogger(__name__)
+_logger = logging.getLogger(__name__)
 
 
 def _convert_buckets(metric: Metric) -> Sequence[Tuple[str, int]]:
@@ -93,7 +94,7 @@ def _convert_buckets(metric: Metric) -> Sequence[Tuple[str, int]]:
     return buckets
 
 
-class PrometheusMetricExporter(MetricExporter):
+class PrometheusMetricExporter(PullMetricExporter):
     """Prometheus metric exporter for OpenTelemetry.
 
     Args:
@@ -102,7 +103,8 @@ class PrometheusMetricExporter(MetricExporter):
     """
 
     def __init__(self, prefix: str = ""):
-        self._collector = _CustomCollector(prefix)
+        self._collect = None
+        self._collector = _CustomCollector(self.collect, prefix)
         core.REGISTRY.register(self._collector)
 
     def export(self, metrics: Sequence[Metric]) -> MetricExportResult:
@@ -118,8 +120,9 @@ class _CustomCollector:
     https://github.com/prometheus/client_python#custom-collectors
     """
 
-    def __init__(self, prefix: str = ""):
+    def __init__(self, callback, prefix: str = ""):
         self._prefix = prefix
+        self._callback = callback
         self._metrics_to_export = collections.deque()
         self._non_letters_nor_digits_re = re.compile(
             r"[^\w]", re.UNICODE | re.IGNORECASE
@@ -135,6 +138,8 @@ class _CustomCollector:
         Collect is invoked every time a prometheus.Gatherer is run
         for example when the HTTP endpoint is invoked by Prometheus.
         """
+        if self._callback:
+            self._callback()
 
         while self._metrics_to_export:
             for export_record in self._metrics_to_export.popleft():
@@ -193,7 +198,7 @@ class _CustomCollector:
                 labels=label_values, buckets=buckets, sum_value=value
             )
         else:
-            logger.warning("Unsupported metric type. %s", type(metric.point))
+            _logger.warning("Unsupported metric type. %s", type(metric.point))
         return prometheus_metric
 
     def _sanitize(self, key: str) -> str:

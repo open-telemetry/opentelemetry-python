@@ -21,6 +21,8 @@ from sys import stdout
 from threading import Event, Thread
 from typing import IO, Callable, Iterable, Optional, Sequence
 
+from typing_extensions import final
+
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
     attach,
@@ -174,5 +176,36 @@ class PeriodicExportingMetricReader(MetricReader):
 
         self._shutdown_event.set()
         self._daemon_thread.join()
+        self._exporter.shutdown()
+        return True
+
+
+class PullMetricExporter(MetricExporter):
+    @final
+    def collect(self) -> None:
+        if self._collect:
+            self._collect()
+
+
+class PullMetricExporterReader(MetricReader):
+    def __init__(
+        self,
+        exporter: PullMetricExporter,
+    ):
+        super().__init__(preferred_temporality=exporter.preferred_temporality)
+        self._exporter = exporter
+        self._exporter._collect = self.collect
+
+    def _receive_metrics(self, metrics: Iterable[Metric]) -> None:
+        if metrics is None:
+            return
+        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
+        try:
+            self._exporter.export(metrics)
+        except Exception as e:  # pylint: disable=broad-except,invalid-name
+            _logger.exception("Exception while exporting metrics %s", str(e))
+        detach(token)
+
+    def shutdown(self) -> bool:
         self._exporter.shutdown()
         return True
