@@ -19,7 +19,7 @@ from prometheus_client import generate_latest
 from prometheus_client.core import CounterMetricFamily, GaugeMetricFamily
 
 from opentelemetry.exporter.prometheus import (
-    CustomCollector,
+    _CustomCollector,
     PrometheusMetricExporter,
 )
 from opentelemetry.sdk._metrics.export import MetricExportResult
@@ -79,7 +79,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             attributes={"histo": 1},
         )
 
-        collector = CustomCollector("testprefix")
+        collector = _CustomCollector("testprefix")
         collector.add_metrics_data([record])
         result_bytes = generate_latest(collector)
         result = result_bytes.decode("utf-8")
@@ -95,7 +95,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             description="testdesc",
             unit="testunit",
         )
-        collector = CustomCollector("testprefix")
+        collector = _CustomCollector("testprefix")
         collector.add_metrics_data([record])
 
         for prometheus_metric in collector.collect():
@@ -123,7 +123,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             description="testdesc",
             unit="testunit",
         )
-        collector = CustomCollector("testprefix")
+        collector = _CustomCollector("testprefix")
         collector.add_metrics_data([record])
 
         for prometheus_metric in collector.collect():
@@ -148,13 +148,13 @@ class TestPrometheusMetricExporter(unittest.TestCase):
             description="testdesc",
             unit="testunit",
         )
-        collector = CustomCollector("testprefix")
+        collector = _CustomCollector("testprefix")
         collector.add_metrics_data([record])
         collector.collect()
         self.assertLogs("opentelemetry.exporter.prometheus", level="WARNING")
 
     def test_sanitize(self):
-        collector = CustomCollector("testprefix")
+        collector = _CustomCollector("testprefix")
         self.assertEqual(
             collector._sanitize("1!2@3#4$5%6^7&8*9(0)_-"),
             "1_2_3_4_5_6_7_8_9_0___",

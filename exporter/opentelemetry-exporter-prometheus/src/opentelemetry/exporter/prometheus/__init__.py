@@ -102,7 +102,7 @@ class PrometheusMetricExporter(MetricExporter):
     """
 
     def __init__(self, prefix: str = ""):
-        self._collector = CustomCollector(prefix)
+        self._collector = _CustomCollector(prefix)
         core.REGISTRY.register(self._collector)
 
     def export(self, metrics: Sequence[Metric]) -> MetricExportResult:
@@ -113,8 +113,8 @@ class PrometheusMetricExporter(MetricExporter):
         core.REGISTRY.unregister(self._collector)
 
 
-class CustomCollector:
-    """CustomCollector represents the Prometheus Collector object
+class _CustomCollector:
+    """_CustomCollector represents the Prometheus Collector object
     https://github.com/prometheus/client_python#custom-collectors
     """
 
