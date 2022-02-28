@@ -44,32 +44,12 @@ class TestView(TestCase):
                 Mock(**{"instrumentation_info.name": "meter_name"})
             )
         )
-        self.assertTrue(
-            View(meter_name="meter_name*")._match(
-                Mock(**{"instrumentation_info.name": "meter_nameabc"})
-            )
-        )
-        self.assertTrue(
-            View(meter_name="meter_name?")._match(
-                Mock(**{"instrumentation_info.name": "meter_namea"})
-            )
-        )
 
     def test_meter_version(self):
 
         self.assertTrue(
             View(meter_version="meter_version")._match(
                 Mock(**{"instrumentation_info.version": "meter_version"})
-            )
-        )
-        self.assertTrue(
-            View(meter_version="meter_version*")._match(
-                Mock(**{"instrumentation_info.version": "meter_versionabc"})
-            )
-        )
-        self.assertTrue(
-            View(meter_version="meter_version?")._match(
-                Mock(**{"instrumentation_info.version": "meter_versiona"})
             )
         )
 
