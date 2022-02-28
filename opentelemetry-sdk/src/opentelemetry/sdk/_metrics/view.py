@@ -63,12 +63,10 @@ class View:
                 ``name`` defined.
 
             meter_name: This is an instrument matching attribute: the name
-                the instrument meter must have to match the view. Wild card
-                characters are supported.
+                the instrument meter must have to match the view.
 
             meter_version : This is an instrument matching attribute: the
                 version the instrument meter must have to match the view.
-                Wild card characters are supported.
 
             meter_schema URL : This is an instrument matching attribute: the
                 schema URL the instrument meter must have to match the view.
