@@ -183,14 +183,14 @@ class PeriodicExportingMetricReader(MetricReader):
 class PullMetricExporter(MetricExporter):
     def __init__(self) -> None:
         self._collect: Callable[
-            ["PullMetricExporter"],
+            ["PullMetricExporter"], None,
         ] = None
 
     @final
     def _set_collect_callback(
         self,
         func: Callable[
-            ["PullMetricExporter"],
+            ["PullMetricExporter"], None,
         ],
     ) -> None:
         """This function is internal to the SDK. It should not be called or overriden by users"""
