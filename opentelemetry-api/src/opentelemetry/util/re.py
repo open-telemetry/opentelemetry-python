@@ -14,7 +14,7 @@
 
 import logging
 from re import compile, split
-from typing import Mapping
+from typing import Dict, List, Mapping
 from urllib.parse import unquote
 
 _logger = logging.getLogger(__name__)
@@ -42,8 +42,9 @@ def parse_headers(s: str) -> Mapping[str, str]:
     HTTP header format https://www.w3.org/TR/baggage/#baggage-http-header-format, except that
     additional semi-colon delimited metadata is not supported.
     """
-    headers = {}
-    for header in split(_DELIMITER_PATTERN, s):
+    headers: Dict[str, str] = {}
+    headers_list: List[str] = split(_DELIMITER_PATTERN, s)
+    for header in headers_list:
         if not header:  # empty string
             continue
         match = _HEADER_PATTERN.fullmatch(header.strip())
