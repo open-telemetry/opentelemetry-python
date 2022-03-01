@@ -19,8 +19,8 @@ from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
-    DEFAULT_TRACES_EXPORT_PATH,
     DEFAULT_TIMEOUT,
+    DEFAULT_TRACES_EXPORT_PATH,
     OTLPSpanExporter,
 )
 from opentelemetry.sdk.environment_variables import (
