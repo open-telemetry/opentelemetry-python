@@ -326,7 +326,7 @@ class Tracer(ABC):
             The newly-created span.
         """
 
-    @contextmanager  # type: ignore
+    @contextmanager
     @abstractmethod
     def start_as_current_span(
         self,
@@ -449,7 +449,7 @@ class NoOpTracer(Tracer):
         # pylint: disable=unused-argument,no-self-use
         return INVALID_SPAN
 
-    @contextmanager  # type: ignore
+    @contextmanager
     def start_as_current_span(
         self,
         name: str,
@@ -535,7 +535,7 @@ def get_tracer_provider() -> TracerProvider:
     return cast("TracerProvider", _TRACER_PROVIDER)
 
 
-@contextmanager  # type: ignore
+@contextmanager
 def use_span(
     span: Span,
     end_on_exit: bool = False,
