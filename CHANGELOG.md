@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2461](https://github.com/open-telemetry/opentelemetry-python/pull/2461))
 - fix exception handling in get_aggregated_resources
   ([#2464](https://github.com/open-telemetry/opentelemetry-python/pull/2464))
+- Fix `OTEL_EXPORTER_OTLP_ENDPOINT` usage in OTLP HTTP exporter 
+  ([#2443](https://github.com/open-telemetry/opentelemetry-python/issues/2443))
 
 ## [1.9.1-0.28b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.9.1-0.28b1) - 2022-01-29
 
