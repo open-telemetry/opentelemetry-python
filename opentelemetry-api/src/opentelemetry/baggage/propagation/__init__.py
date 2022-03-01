@@ -14,7 +14,7 @@
 #
 from logging import getLogger
 from re import split
-from typing import Iterable, Mapping, Optional, Set
+from typing import Iterable, List, Mapping, Optional, Set
 from urllib.parse import quote_plus, unquote_plus
 
 from opentelemetry.baggage import _is_valid_pair, get_all, set_baggage
@@ -63,7 +63,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
             )
             return context
 
-        baggage_entries = split(_DELIMITER_PATTERN, header)
+        baggage_entries: List[str] = split(_DELIMITER_PATTERN, header)
         total_baggage_entries = self._MAX_PAIRS
 
         if len(baggage_entries) > self._MAX_PAIRS:
