@@ -37,7 +37,7 @@ metrics to `Prometheus`_.
     # Start Prometheus client
     start_http_server(port=8000, addr="localhost")
 
-    # exporter to export metrics to Prometheus
+    # Exporter to export metrics to Prometheus
     prefix = "MyAppPrefix"
     exporter = PrometheusMetricExporter(prefix)
     reader = PullMetricExporterReader(exporter)
@@ -117,6 +117,8 @@ class PrometheusMetricExporter(PullMetricExporter):
 
 class _CustomCollector:
     """_CustomCollector represents the Prometheus Collector object
+    
+    See more:
     https://github.com/prometheus/client_python#custom-collectors
     """
 
@@ -135,10 +137,10 @@ class _CustomCollector:
     def collect(self) -> None:
         """Collect fetches the metrics from OpenTelemetry
         and delivers them as Prometheus Metrics.
-        Collect is invoked every time a prometheus.Gatherer is run
+        Collect is invoked every time a ``prometheus.Gatherer`` is run
         for example when the HTTP endpoint is invoked by Prometheus.
         """
-        if self._callback:
+        if self._callback is not None:
             self._callback()
 
         while self._metrics_to_export:

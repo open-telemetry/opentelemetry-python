@@ -198,7 +198,7 @@ class PullMetricExporter(MetricExporter):
 
     @final
     def collect(self) -> None:
-        if self._collect:
+        if self._collect is not None:
             self._collect()
 
 
