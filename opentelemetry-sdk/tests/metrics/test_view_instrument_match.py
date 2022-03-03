@@ -27,9 +27,6 @@ class Test_ViewInstrumentMatch(TestCase):
     def setUpClass(cls):
 
         cls.mock_aggregation_instance = Mock()
-        cls.mock_aggregation_class = Mock(
-            return_value=cls.mock_aggregation_instance
-        )
         cls.mock_resource = Mock()
         cls.mock_instrumentation_info = Mock()
 
@@ -39,7 +36,7 @@ class Test_ViewInstrumentMatch(TestCase):
             "name",
             "unit",
             "description",
-            self.mock_aggregation_class,
+            self.mock_aggregation_instance,
             self.mock_instrumentation_info,
             self.mock_resource,
             {"a", "c"},
@@ -79,9 +76,10 @@ class Test_ViewInstrumentMatch(TestCase):
             "name",
             "unit",
             "description",
-            self.mock_aggregation_class,
+            self.mock_aggregation_instance,
             self.mock_instrumentation_info,
             self.mock_resource,
+            set(),
         )
 
         view_instrument_match.consume_measurement(
@@ -104,9 +102,10 @@ class Test_ViewInstrumentMatch(TestCase):
             "name",
             "unit",
             "description",
-            self.mock_aggregation_class,
+            self.mock_aggregation_instance,
             self.mock_instrumentation_info,
             self.mock_resource,
+            set(),
         )
         view_instrument_match.consume_measurement(
             Measurement(value=0, instrument=instrument1, attributes=None)
@@ -122,7 +121,7 @@ class Test_ViewInstrumentMatch(TestCase):
             "name",
             "unit",
             "description",
-            self.mock_aggregation_class,
+            self.mock_aggregation_instance,
             self.mock_instrumentation_info,
             self.mock_resource,
             {"a", "c"},
