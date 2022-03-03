@@ -36,7 +36,7 @@ class View:
         meter_schema_url: Optional[str] = None,
         name: Optional[str] = None,
         description: Optional[str] = None,
-        attribute_keys: Set[str] = None,
+        attribute_keys: Optional[Set[str]] = None,
         aggregation: Optional[_AggregationFactory] = None,
     ):
         """
