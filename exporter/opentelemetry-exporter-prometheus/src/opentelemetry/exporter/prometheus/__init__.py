@@ -30,9 +30,8 @@ metrics to `Prometheus`_.
     from prometheus_client import start_http_server
 
     from opentelemetry._metrics import get_meter_provider, set_meter_provider
-    from opentelemetry.exporter.prometheus import PrometheusMetricExporter
+    from opentelemetry.exporter.prometheus import PrometheusMetricReader
     from opentelemetry.sdk._metrics import MeterProvider
-    from opentelemetry.sdk._metrics.export import PullingMetricReader
 
     # Start Prometheus client
     start_http_server(port=8000, addr="localhost")

@@ -19,7 +19,7 @@ from prometheus_client import generate_latest
 from prometheus_client.core import CounterMetricFamily, GaugeMetricFamily
 
 from opentelemetry.exporter.prometheus import (
-    PrometheusMetricExporter,
+    PrometheusMetricReader,
     _CustomCollector,
 )
 from opentelemetry.sdk._metrics.export import MetricExportResult
@@ -32,7 +32,7 @@ from opentelemetry.test.metrictestutil import (
 )
 
 
-class TestPrometheusMetricExporter(unittest.TestCase):
+class TestPrometheusMetricReader(unittest.TestCase):
     def setUp(self):
         self._mock_registry_register = mock.Mock()
         self._registry_register_patch = mock.patch(
@@ -44,7 +44,7 @@ class TestPrometheusMetricExporter(unittest.TestCase):
     def test_constructor(self):
         """Test the constructor."""
         with self._registry_register_patch:
-            exporter = PrometheusMetricExporter("testprefix")
+            exporter = PrometheusMetricReader("testprefix")
             self.assertEqual(exporter._collector._prefix, "testprefix")
             self.assertTrue(self._mock_registry_register.called)
 
@@ -52,18 +52,9 @@ class TestPrometheusMetricExporter(unittest.TestCase):
         with mock.patch(
             "prometheus_client.core.REGISTRY.unregister"
         ) as registry_unregister_patch:
-            exporter = PrometheusMetricExporter()
+            exporter = PrometheusMetricReader()
             exporter.shutdown()
             self.assertTrue(registry_unregister_patch.called)
-
-    def test_export(self):
-        with self._registry_register_patch:
-            record = _generate_sum("sum_int", 33)
-            exporter = PrometheusMetricExporter()
-            result = exporter.export([record])
-            # pylint: disable=protected-access
-            self.assertEqual(len(exporter._collector._metrics_to_export), 1)
-            self.assertIs(result, MetricExportResult.SUCCESS)
 
     def test_histogram_to_prometheus(self):
         record = _generate_metric(
