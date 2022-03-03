@@ -69,7 +69,7 @@ class TestPrometheusMetricReader(unittest.TestCase):
             attributes={"histo": 1},
         )
 
-        collector = _CustomCollector(mock.Mock(), "testprefix")
+        collector = _CustomCollector("testprefix")
         collector.add_metrics_data([record])
         result_bytes = generate_latest(collector)
         result = result_bytes.decode("utf-8")
@@ -85,7 +85,7 @@ class TestPrometheusMetricReader(unittest.TestCase):
             description="testdesc",
             unit="testunit",
         )
-        collector = _CustomCollector(mock.Mock(), "testprefix")
+        collector = _CustomCollector("testprefix")
         collector.add_metrics_data([record])
 
         for prometheus_metric in collector.collect():
@@ -113,7 +113,7 @@ class TestPrometheusMetricReader(unittest.TestCase):
             description="testdesc",
             unit="testunit",
         )
-        collector = _CustomCollector(mock.Mock(), "testprefix")
+        collector = _CustomCollector("testprefix")
         collector.add_metrics_data([record])
 
         for prometheus_metric in collector.collect():
@@ -138,13 +138,13 @@ class TestPrometheusMetricReader(unittest.TestCase):
             description="testdesc",
             unit="testunit",
         )
-        collector = _CustomCollector(mock.Mock(), "testprefix")
+        collector = _CustomCollector("testprefix")
         collector.add_metrics_data([record])
         collector.collect()
         self.assertLogs("opentelemetry.exporter.prometheus", level="WARNING")
 
     def test_sanitize(self):
-        collector = _CustomCollector(mock.Mock(), "testprefix")
+        collector = _CustomCollector("testprefix")
         self.assertEqual(
             collector._sanitize("1!2@3#4$5%6^7&8*9(0)_-"),
             "1_2_3_4_5_6_7_8_9_0___",
