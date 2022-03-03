@@ -39,8 +39,7 @@ metrics to `Prometheus`_.
 
     # Exporter to export metrics to Prometheus
     prefix = "MyAppPrefix"
-    exporter = PrometheusMetricExporter(prefix)
-    reader = PullingMetricReader(exporter)
+    reader = PrometheusMetricReader(prefix)
 
     # Meter is responsible for creating and recording metrics
     set_meter_provider(MeterProvider(metric_readers=[reader]))
@@ -67,14 +66,17 @@ API
 import collections
 import logging
 import re
-from typing import Optional, Sequence, Tuple
+from typing import Iterable, Optional, Sequence, Tuple
 
 from prometheus_client import core
 
-from opentelemetry.sdk._metrics.export import (
-    MetricExportResult,
-    PullMetricExporter,
+from opentelemetry.context import (
+    _SUPPRESS_INSTRUMENTATION_KEY,
+    attach,
+    detach,
+    set_value,
 )
+from opentelemetry.sdk._metrics.export import MetricReader
 from opentelemetry.sdk._metrics.point import Gauge, Histogram, Metric, Sum
 
 _logger = logging.getLogger(__name__)
@@ -94,7 +96,7 @@ def _convert_buckets(metric: Metric) -> Sequence[Tuple[str, int]]:
     return buckets
 
 
-class PrometheusMetricExporter(PullMetricExporter):
+class PrometheusMetricReader(MetricReader):
     """Prometheus metric exporter for OpenTelemetry.
 
     Args:
@@ -107,17 +109,24 @@ class PrometheusMetricExporter(PullMetricExporter):
         self._collector = _CustomCollector(self.collect, prefix)
         core.REGISTRY.register(self._collector)
 
-    def export(self, metrics: Sequence[Metric]) -> MetricExportResult:
-        self._collector.add_metrics_data(metrics)
-        return MetricExportResult.SUCCESS
+    def _receive_metrics(self, metrics: Iterable[Metric]) -> None:
+        if metrics is None:
+            return
+        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
+        try:
+            self._collector.add_metrics_data(metrics)
+        except Exception as e:  # pylint: disable=broad-except,invalid-name
+            _logger.exception("Exception while exporting metrics %s", str(e))
+        detach(token)
 
-    def shutdown(self) -> None:
+    def shutdown(self) -> bool:
         core.REGISTRY.unregister(self._collector)
+        return True
 
 
 class _CustomCollector:
     """_CustomCollector represents the Prometheus Collector object
-    
+
     See more:
     https://github.com/prometheus/client_python#custom-collectors
     """
