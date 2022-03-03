@@ -69,12 +69,6 @@ from typing import Iterable, Optional, Sequence, Tuple
 
 from prometheus_client import core
 
-from opentelemetry.context import (
-    _SUPPRESS_INSTRUMENTATION_KEY,
-    attach,
-    detach,
-    set_value,
-)
 from opentelemetry.sdk._metrics.export import MetricReader
 from opentelemetry.sdk._metrics.point import Gauge, Histogram, Metric, Sum
 
@@ -111,12 +105,7 @@ class PrometheusMetricReader(MetricReader):
     def _receive_metrics(self, metrics: Iterable[Metric]) -> None:
         if metrics is None:
             return
-        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
-        try:
-            self._collector.add_metrics_data(metrics)
-        except Exception as e:  # pylint: disable=broad-except,invalid-name
-            _logger.exception("Exception while exporting metrics %s", str(e))
-        detach(token)
+        self._collector.add_metrics_data(metrics)
 
     def shutdown(self) -> bool:
         core.REGISTRY.unregister(self._collector)
