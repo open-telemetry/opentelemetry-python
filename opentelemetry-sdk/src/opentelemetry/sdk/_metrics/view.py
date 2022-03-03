@@ -13,8 +13,152 @@
 # limitations under the License.
 
 
-# TODO: #2247
-# pylint: disable=no-self-use
+from fnmatch import fnmatch
+from logging import getLogger
+from typing import Optional, Set, Type
+
+# FIXME import from typing when support for 3.6 is removed
+from typing_extensions import final
+
+from opentelemetry._metrics.instrument import Instrument
+from opentelemetry.sdk._metrics.aggregation import _AggregationFactory
+
+_logger = getLogger(__name__)
+
+
 class View:
-    def match(self) -> bool:
-        return False
+    def __init__(
+        self,
+        instrument_type: Optional[Type[Instrument]] = None,
+        instrument_name: Optional[str] = None,
+        meter_name: Optional[str] = None,
+        meter_version: Optional[str] = None,
+        meter_schema_url: Optional[str] = None,
+        name: Optional[str] = None,
+        description: Optional[str] = None,
+        attribute_keys: Optional[Set[str]] = None,
+        aggregation: Optional[_AggregationFactory] = None,
+    ):
+        """
+        A `View` configuration parameters can be used for the following
+        purposes:
+
+        1. Match instruments: When an instrument matches a view, measurements
+           received by that instrument will be processed.
+        2. Customize metric streams: A metric stream is identified by a match
+           between a view and an instrument and a set of attributes. The metric
+           stream can be customized by certain attributes of the corresponding
+           view.
+
+        The attributes documented next serve one of the previous two purposes.
+
+        Args:
+            instrument_type: This is an instrument matching attribute: the
+                class the instrument must be to match the view.
+
+            instrument_name: This is an instrument matching attribute: the name
+                the instrument must have to match the view. Wild card
+                characters are supported. Wild card characters should not be
+                used with this attribute if the view has also a
+                ``name`` defined.
+
+            meter_name: This is an instrument matching attribute: the name
+                the instrument meter must have to match the view.
+
+            meter_version : This is an instrument matching attribute: the
+                version the instrument meter must have to match the view.
+
+            meter_schema URL : This is an instrument matching attribute: the
+                schema URL the instrument meter must have to match the view.
+
+            name: This is a metric stream customizing attribute: the name of
+                the metric stream. If `None`, the name of the instrument will
+                be used.
+
+            description: This is a metric stream customizing attribute: the
+                description of the metric stream. If `None`, the description of
+                the instrument will be used.
+
+            attribute_keys: This is a metric stream customizing attribute: this
+                is a set of attribute keys. If not `None` then only the
+                measurement attributes that are in `attribute_keys` will be
+                used to identify the metric stream.
+
+            aggregation: This is a metric stream customizing attribute: the
+                aggregatation instance to use when data is aggregated for the
+                corresponding metrics stream. If `None` the default aggregation
+                of the instrument will be used.
+
+        This class is not intended to be subclassed by the user.
+        """
+
+        if (
+            instrument_type
+            is instrument_name
+            is meter_name
+            is meter_version
+            is meter_schema_url
+            is None
+        ):
+            raise Exception(
+                "Some instrument selection "
+                f"criteria must be provided for View {name}"
+            )
+
+        if (
+            name is not None
+            and instrument_name is not None
+            and ("*" in instrument_name or "?" in instrument_name)
+        ):
+
+            raise Exception(
+                f"View {name} declared with wildcard "
+                "characters in instrument_name"
+            )
+
+        # _name, _description, _aggregation and _attribute_keys will be
+        # accessed when instantiating a _ViewInstrumentMatch.
+        self._name = name
+        self._instrument_type = instrument_type
+        self._instrument_name = instrument_name
+        self._meter_name = meter_name
+        self._meter_version = meter_version
+        self._meter_schema_url = meter_schema_url
+
+        self._description = description
+        self._attribute_keys = attribute_keys
+
+        if self._attribute_keys is None:
+            self._attribute_keys = set()
+
+        self._aggregation = aggregation
+
+    # pylint: disable=too-many-return-statements
+    # pylint: disable=too-many-branches
+    @final
+    def _match(self, instrument: Instrument) -> bool:
+
+        if self._instrument_type is not None:
+            if not isinstance(instrument, self._instrument_type):
+                return False
+
+        if self._instrument_name is not None:
+            if not fnmatch(instrument.name, self._instrument_name):
+                return False
+
+        if self._meter_name is not None:
+            if instrument.instrumentation_info.name != self._meter_name:
+                return False
+
+        if self._meter_version is not None:
+            if instrument.instrumentation_info.version != self._meter_version:
+                return False
+
+        if self._meter_schema_url is not None:
+            if (
+                instrument.instrumentation_info.schema_url
+                != self._meter_schema_url
+            ):
+                return False
+
+        return True

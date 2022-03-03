@@ -46,6 +46,7 @@ from opentelemetry.sdk._metrics.measurement_consumer import (
 )
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
+from opentelemetry.sdk._metrics.view import View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.util._once import Once
@@ -154,12 +155,17 @@ class MeterProvider(APIMeterProvider):
         metric_readers: Sequence[MetricReader] = (),
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
+        views: Sequence[View] = (),
+        enable_default_view: bool = True,
     ):
         self._lock = Lock()
         self._meter_lock = Lock()
         self._atexit_handler = None
         self._sdk_config = SdkConfiguration(
-            resource=resource, metric_readers=metric_readers, views=()
+            resource=resource,
+            metric_readers=metric_readers,
+            views=views,
+            enable_default_view=enable_default_view,
         )
         self._measurement_consumer = SynchronousMeasurementConsumer(
             sdk_config=self._sdk_config
