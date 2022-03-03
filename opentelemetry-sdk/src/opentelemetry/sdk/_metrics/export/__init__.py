@@ -202,7 +202,7 @@ class PullMetricExporter(MetricExporter):
             self._collect()
 
 
-class PullMetricExporterReader(MetricReader):
+class PullingMetricReader(MetricReader):
     def __init__(
         self,
         exporter: PullMetricExporter,

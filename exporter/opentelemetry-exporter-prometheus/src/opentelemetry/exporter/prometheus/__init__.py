@@ -32,7 +32,7 @@ metrics to `Prometheus`_.
     from opentelemetry._metrics import get_meter_provider, set_meter_provider
     from opentelemetry.exporter.prometheus import PrometheusMetricExporter
     from opentelemetry.sdk._metrics import MeterProvider
-    from opentelemetry.sdk._metrics.export import PullMetricExporterReader
+    from opentelemetry.sdk._metrics.export import PullingMetricReader
 
     # Start Prometheus client
     start_http_server(port=8000, addr="localhost")
@@ -40,11 +40,11 @@ metrics to `Prometheus`_.
     # Exporter to export metrics to Prometheus
     prefix = "MyAppPrefix"
     exporter = PrometheusMetricExporter(prefix)
-    reader = PullMetricExporterReader(exporter)
+    reader = PullingMetricReader(exporter)
 
     # Meter is responsible for creating and recording metrics
     set_meter_provider(MeterProvider(metric_readers=[reader]))
-    meter = get_meter_provider().get_meter(__name__)
+    meter = get_meter_provider().get_meter("myapp", "0.1.2")
 
     counter = meter.create_counter(
         "requests",
@@ -126,7 +126,7 @@ class _CustomCollector:
         self._prefix = prefix
         self._callback = callback
         self._metrics_to_export = collections.deque()
-        self._non_letters_nor_digits_re = re.compile(
+        self._non_letters_digits_underscore_re = re.compile(
             r"[^\w]", re.UNICODE | re.IGNORECASE
         )
 
@@ -207,4 +207,4 @@ class _CustomCollector:
         """sanitize the given metric name or label according to Prometheus rule.
         Replace all characters other than [A-Za-z0-9_] with '_'.
         """
-        return self._non_letters_nor_digits_re.sub("_", key)
+        return self._non_letters_digits_underscore_re.sub("_", key)
