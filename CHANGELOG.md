@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   moving](https://github.com/open-telemetry/opentelemetry-python/issues/2172) to
   [opentelemetry.io](https://opentelemetry.io). For details, including a list of
   pages that have moved, see
-  [#2453](https://github.com/open-telemetry/opentelemetry-python/pull/2453).
+  [#2453](https://github.com/open-telemetry/opentelemetry-python/pull/2453), and
+  [#2498](https://github.com/open-telemetry/opentelemetry-python/pull/2498).
 - `opentelemetry-exporter-otlp-grpc` update SDK dependency to ~1.9.
   ([#2442](https://github.com/open-telemetry/opentelemetry-python/pull/2442))
 - bugfix(auto-instrumentation): attach OTLPHandler to root logger
@@ -20,7 +21,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2461](https://github.com/open-telemetry/opentelemetry-python/pull/2461))
 - fix exception handling in get_aggregated_resources
   ([#2464](https://github.com/open-telemetry/opentelemetry-python/pull/2464))
-- Fix `OTEL_EXPORTER_OTLP_ENDPOINT` usage in OTLP HTTP trace exporter 
+- Fix `OTEL_EXPORTER_OTLP_ENDPOINT` usage in OTLP HTTP trace exporter
   ([#2493](https://github.com/open-telemetry/opentelemetry-python/pull/2493))
 
 ## [1.9.1-0.28b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.9.1-0.28b1) - 2022-01-29
