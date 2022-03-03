@@ -99,8 +99,9 @@ class PrometheusMetricReader(MetricReader):
 
     def __init__(self, prefix: str = "") -> None:
         super().__init__()
-        self._collector = _CustomCollector(self.collect, prefix)
+        self._collector = _CustomCollector(prefix)
         core.REGISTRY.register(self._collector)
+        self._collector._callback = self.collect
 
     def _receive_metrics(self, metrics: Iterable[Metric]) -> None:
         if metrics is None:
@@ -119,9 +120,9 @@ class _CustomCollector:
     https://github.com/prometheus/client_python#custom-collectors
     """
 
-    def __init__(self, callback, prefix: str = ""):
+    def __init__(self, prefix: str = ""):
         self._prefix = prefix
-        self._callback = callback
+        self._callback = None
         self._metrics_to_export = collections.deque()
         self._non_letters_digits_underscore_re = re.compile(
             r"[^\w]", re.UNICODE | re.IGNORECASE
