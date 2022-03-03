@@ -21,8 +21,6 @@ from sys import stdout
 from threading import Event, Thread
 from typing import IO, Callable, Iterable, Optional, Sequence
 
-from typing_extensions import final
-
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
     attach,
