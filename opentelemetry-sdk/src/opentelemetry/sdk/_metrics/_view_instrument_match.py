@@ -18,6 +18,7 @@ from threading import Lock
 from typing import Iterable, Set
 
 from opentelemetry.sdk._metrics.aggregation import (
+    _Aggregation,
     _convert_aggregation_temporality,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
@@ -34,10 +35,10 @@ class _ViewInstrumentMatch:
         name: str,
         unit: str,
         description: str,
-        aggregation: type,
+        aggregation: _Aggregation,
         instrumentation_info: InstrumentationInfo,
         resource: Resource,
-        attribute_keys: Set[str] = None,
+        attribute_keys: Set[str],
     ):
         self._name = name
         self._unit = unit
@@ -52,7 +53,7 @@ class _ViewInstrumentMatch:
 
     def consume_measurement(self, measurement: Measurement) -> None:
 
-        if self._attribute_keys is not None:
+        if self._attribute_keys:
 
             attributes = {}
 
@@ -68,7 +69,7 @@ class _ViewInstrumentMatch:
 
         if attributes not in self._attributes_aggregation.keys():
             with self._lock:
-                self._attributes_aggregation[attributes] = self._aggregation()
+                self._attributes_aggregation[attributes] = self._aggregation
 
         self._attributes_aggregation[attributes].aggregate(measurement)
 
