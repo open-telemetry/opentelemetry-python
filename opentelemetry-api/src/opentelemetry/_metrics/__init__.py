@@ -119,7 +119,7 @@ class Meter(ABC):
         self._version = version
         self._schema_url = schema_url
         self._instrument_ids: Set[str] = set()
-        self._instrument_names_lock = Lock()
+        self._instrument_ids_lock = Lock()
 
     @property
     def name(self):
@@ -133,17 +133,20 @@ class Meter(ABC):
     def schema_url(self):
         return self._schema_url
 
-    def _check_instrument_name(self, name, type_, unit, description):
+    def _check_instrument_id(self, name, type_, unit, description):
 
         instrument_id = "".join(
             [name.strip().lower(), str(type_), unit, description]
         )
 
         if instrument_id in self._instrument_ids:
-            _logger.warning("Instrument name %s has been used already", name)
+            _logger.warning(
+                "Instrument id %s has been used already", instrument_id
+            )
         else:
 
-            self._instrument_ids.add(instrument_id)
+            with self._instrument_ids_lock:
+                self._instrument_ids.add(instrument_id)
 
     @abstractmethod
     def create_counter(self, name, unit="", description="") -> Counter:
@@ -155,7 +158,7 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        self._check_instrument_name(name, Counter, unit, description)
+        self._check_instrument_id(name, Counter, unit, description)
 
     @abstractmethod
     def create_up_down_counter(
@@ -169,7 +172,7 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        self._check_instrument_name(name, UpDownCounter, unit, description)
+        self._check_instrument_id(name, UpDownCounter, unit, description)
 
     @abstractmethod
     def create_observable_counter(
@@ -253,7 +256,7 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        self._check_instrument_name(name, ObservableCounter, unit, description)
+        self._check_instrument_id(name, ObservableCounter, unit, description)
 
     @abstractmethod
     def create_histogram(self, name, unit="", description="") -> Histogram:
@@ -265,7 +268,7 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        self._check_instrument_name(name, Histogram, unit, description)
+        self._check_instrument_id(name, Histogram, unit, description)
 
     @abstractmethod
     def create_observable_gauge(
@@ -283,7 +286,7 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        self._check_instrument_name(name, ObservableGauge, unit, description)
+        self._check_instrument_id(name, ObservableGauge, unit, description)
 
     @abstractmethod
     def create_observable_up_down_counter(
@@ -300,7 +303,7 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        self._check_instrument_name(
+        self._check_instrument_id(
             name, ObservableUpDownCounter, unit, description
         )
 
