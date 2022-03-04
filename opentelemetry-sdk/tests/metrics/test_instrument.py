@@ -14,8 +14,8 @@
 
 from unittest import TestCase
 from unittest.mock import Mock
-from opentelemetry._metrics.measurement import Measurement as APIMeasurement
 
+from opentelemetry._metrics.measurement import Measurement as APIMeasurement
 from opentelemetry.sdk._metrics.instrument import (
     Counter,
     Histogram,
@@ -25,8 +25,6 @@ from opentelemetry.sdk._metrics.instrument import (
     UpDownCounter,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
-
-TEST_ATTRIBUTES = {"foo": "bar"}
 
 
 class TestCounter(TestCase):
@@ -55,6 +53,9 @@ class TestUpDownCounter(TestCase):
         counter = UpDownCounter("name", Mock(), mc)
         counter.add(-1.0)
         mc.consume_measurement.assert_called_once()
+
+
+TEST_ATTRIBUTES = {"foo": "bar"}
 
 
 def callable_callback():

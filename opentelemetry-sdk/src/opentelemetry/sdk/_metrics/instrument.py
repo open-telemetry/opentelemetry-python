@@ -24,7 +24,6 @@ from opentelemetry._metrics.instrument import Histogram as APIHistogram
 from opentelemetry._metrics.instrument import (
     ObservableCounter as APIObservableCounter,
 )
-from opentelemetry._metrics.measurement import Measurement as APIMeasurement
 from opentelemetry._metrics.instrument import (
     ObservableGauge as APIObservableGauge,
 )
@@ -32,6 +31,7 @@ from opentelemetry._metrics.instrument import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
 from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
+from opentelemetry._metrics.measurement import Measurement as APIMeasurement
 from opentelemetry.sdk._metrics.aggregation import (
     _Aggregation,
     _ExplicitBucketHistogramAggregation,
