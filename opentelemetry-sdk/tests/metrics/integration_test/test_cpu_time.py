@@ -16,11 +16,11 @@
 import io
 from typing import Generator, Iterable, List
 from unittest import TestCase
-from opentelemetry._metrics.instrument import Instrument
 
+from opentelemetry._metrics.instrument import Instrument
 from opentelemetry._metrics.measurement import Measurement as APIMeasurement
-from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics import MeterProvider
+from opentelemetry.sdk._metrics.measurement import Measurement
 
 # FIXME Test that the instrument methods can be called concurrently safely.
 
