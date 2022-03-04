@@ -13,14 +13,16 @@
 # limitations under the License.
 
 from dataclasses import dataclass
-from typing import Union
+from typing import TYPE_CHECKING, Union
 
-from opentelemetry._metrics.instrument import Instrument
 from opentelemetry.util.types import Attributes
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk._metrics.instrument import _Instrument
 
 
 @dataclass(frozen=True)
 class Measurement:
     value: Union[int, float]
-    instrument: Instrument
+    instrument: "_Instrument"
     attributes: Attributes = None
