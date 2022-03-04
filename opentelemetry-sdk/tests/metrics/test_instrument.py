@@ -14,6 +14,7 @@
 
 from unittest import TestCase
 from unittest.mock import Mock
+from opentelemetry._metrics.measurement import Measurement as APIMeasurement
 
 from opentelemetry.sdk._metrics.instrument import (
     Counter,
@@ -23,6 +24,9 @@ from opentelemetry.sdk._metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk._metrics.measurement import Measurement
+
+TEST_ATTRIBUTES = {"foo": "bar"}
 
 
 class TestCounter(TestCase):
@@ -53,66 +57,170 @@ class TestUpDownCounter(TestCase):
         mc.consume_measurement.assert_called_once()
 
 
+def callable_callback():
+    return [
+        APIMeasurement(1, attributes=TEST_ATTRIBUTES),
+        APIMeasurement(2, attributes=TEST_ATTRIBUTES),
+        APIMeasurement(3, attributes=TEST_ATTRIBUTES),
+    ]
+
+
+def generator_callback():
+    yield [
+        APIMeasurement(1, attributes=TEST_ATTRIBUTES),
+        APIMeasurement(2, attributes=TEST_ATTRIBUTES),
+        APIMeasurement(3, attributes=TEST_ATTRIBUTES),
+    ]
+
+
 class TestObservableGauge(TestCase):
     def test_callable_callback(self):
-        def callback():
-            return [1, 2, 3]
+        observable_gauge = ObservableGauge(
+            "name", Mock(), Mock(), callable_callback
+        )
 
-        observable_gauge = ObservableGauge("name", Mock(), Mock(), callback)
-
-        self.assertEqual(observable_gauge.callback(), [1, 2, 3])
+        self.assertEqual(
+            list(observable_gauge.callback()),
+            [
+                Measurement(
+                    1, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+                Measurement(
+                    2, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+                Measurement(
+                    3, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+            ],
+        )
 
     def test_generator_callback(self):
-        def callback():
-            yield [1, 2, 3]
+        observable_gauge = ObservableGauge(
+            "name", Mock(), Mock(), generator_callback()
+        )
 
-        observable_gauge = ObservableGauge("name", Mock(), Mock(), callback())
-
-        self.assertEqual(observable_gauge.callback(), [1, 2, 3])
+        self.assertEqual(
+            list(observable_gauge.callback()),
+            [
+                Measurement(
+                    1, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+                Measurement(
+                    2, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+                Measurement(
+                    3, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+            ],
+        )
 
 
 class TestObservableCounter(TestCase):
     def test_callable_callback(self):
-        def callback():
-            return [1, 2, 3]
-
         observable_counter = ObservableCounter(
-            "name", Mock(), Mock(), callback
+            "name", Mock(), Mock(), callable_callback
         )
 
-        self.assertEqual(observable_counter.callback(), [1, 2, 3])
+        self.assertEqual(
+            list(observable_counter.callback()),
+            [
+                Measurement(
+                    1,
+                    instrument=observable_counter,
+                    attributes=TEST_ATTRIBUTES,
+                ),
+                Measurement(
+                    2,
+                    instrument=observable_counter,
+                    attributes=TEST_ATTRIBUTES,
+                ),
+                Measurement(
+                    3,
+                    instrument=observable_counter,
+                    attributes=TEST_ATTRIBUTES,
+                ),
+            ],
+        )
 
     def test_generator_callback(self):
-        def callback():
-            yield [1, 2, 3]
-
         observable_counter = ObservableCounter(
-            "name", Mock(), Mock(), callback()
+            "name", Mock(), Mock(), generator_callback()
         )
 
-        self.assertEqual(observable_counter.callback(), [1, 2, 3])
+        self.assertEqual(
+            list(observable_counter.callback()),
+            [
+                Measurement(
+                    1,
+                    instrument=observable_counter,
+                    attributes=TEST_ATTRIBUTES,
+                ),
+                Measurement(
+                    2,
+                    instrument=observable_counter,
+                    attributes=TEST_ATTRIBUTES,
+                ),
+                Measurement(
+                    3,
+                    instrument=observable_counter,
+                    attributes=TEST_ATTRIBUTES,
+                ),
+            ],
+        )
 
 
 class TestObservableUpDownCounter(TestCase):
     def test_callable_callback(self):
-        def callback():
-            return [1, 2, 3]
-
         observable_up_down_counter = ObservableUpDownCounter(
-            "name", Mock(), Mock(), callback
+            "name", Mock(), Mock(), callable_callback
         )
 
-        self.assertEqual(observable_up_down_counter.callback(), [1, 2, 3])
+        self.assertEqual(
+            list(observable_up_down_counter.callback()),
+            [
+                Measurement(
+                    1,
+                    instrument=observable_up_down_counter,
+                    attributes=TEST_ATTRIBUTES,
+                ),
+                Measurement(
+                    2,
+                    instrument=observable_up_down_counter,
+                    attributes=TEST_ATTRIBUTES,
+                ),
+                Measurement(
+                    3,
+                    instrument=observable_up_down_counter,
+                    attributes=TEST_ATTRIBUTES,
+                ),
+            ],
+        )
 
     def test_generator_callback(self):
-        def callback():
-            yield [1, 2, 3]
-
         observable_up_down_counter = ObservableUpDownCounter(
-            "name", Mock(), Mock(), callback()
+            "name", Mock(), Mock(), generator_callback()
         )
 
-        self.assertEqual(observable_up_down_counter.callback(), [1, 2, 3])
+        self.assertEqual(
+            list(observable_up_down_counter.callback()),
+            [
+                Measurement(
+                    1,
+                    instrument=observable_up_down_counter,
+                    attributes=TEST_ATTRIBUTES,
+                ),
+                Measurement(
+                    2,
+                    instrument=observable_up_down_counter,
+                    attributes=TEST_ATTRIBUTES,
+                ),
+                Measurement(
+                    3,
+                    instrument=observable_up_down_counter,
+                    attributes=TEST_ATTRIBUTES,
+                ),
+            ],
+        )
 
 
 class TestHistogram(TestCase):
