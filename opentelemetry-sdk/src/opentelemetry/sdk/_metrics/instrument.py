@@ -16,7 +16,7 @@
 
 import logging
 from abc import ABC, abstractmethod
-from typing import Dict, Generator, Iterable, Union
+from typing import Callable, Dict, Generator, Iterable, Union
 
 from opentelemetry._metrics.instrument import CallbackT
 from opentelemetry._metrics.instrument import Counter as APICounter
@@ -31,6 +31,7 @@ from opentelemetry._metrics.instrument import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
 from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
+from opentelemetry._metrics.measurement import Measurement as APIMeasurement
 from opentelemetry.sdk._metrics.aggregation import (
     _Aggregation,
     _ExplicitBucketHistogramAggregation,
@@ -86,7 +87,7 @@ class _Asynchronous(_Instrument):
         self._measurement_consumer = measurement_consumer
         super().__init__(name, callback, unit=unit, description=description)
 
-        self._callback = callback
+        self._callback: Callable[[], Iterable[APIMeasurement]]
 
         if isinstance(callback, Generator):
 
@@ -94,10 +95,16 @@ class _Asynchronous(_Instrument):
                 return next(callback)
 
             self._callback = inner
+        else:
+            self._callback = callback
 
-    @property
-    def callback(self) -> CallbackT:
-        return self._callback
+    def callback(self) -> Iterable[Measurement]:
+        for api_measurement in self._callback():
+            yield Measurement(
+                api_measurement.value,
+                instrument=self,
+                attributes=api_measurement.attributes,
+            )
 
 
 class Counter(_Synchronous, APICounter):
