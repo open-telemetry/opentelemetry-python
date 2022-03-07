@@ -137,8 +137,8 @@ class Meter(ABC):
         self, name: str, type_: type, unit: str, description: str
     ) -> None:
 
-        instrument_id = "".join(
-            [name.strip().lower(), str(type_), unit, description]
+        instrument_id = ",".join(
+            [name.strip().lower(), type_.__name__, unit, description]
         )
 
         if instrument_id in self._instrument_ids:
