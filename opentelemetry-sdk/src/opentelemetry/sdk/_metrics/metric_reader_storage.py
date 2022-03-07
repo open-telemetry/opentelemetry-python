@@ -25,6 +25,8 @@ from opentelemetry.sdk._metrics.point import Metric
 from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
 from opentelemetry.sdk._metrics.view import View
 
+_DEFAULT_VIEW = View(instrument_name="")
+
 
 class MetricReaderStorage:
     """The SDK's storage for a given reader"""
@@ -55,27 +57,11 @@ class MetricReaderStorage:
             for view in self._sdk_config.views:
                 # pylint: disable=protected-access
                 if view._match(instrument):
-
-                    if view._aggregation is not None:
-                        aggregation = view._aggregation._create_aggregation(
-                            instrument
-                        )
-                    else:
-                        aggregation = instrument._default_aggregation
-
                     view_instrument_matches.append(
                         _ViewInstrumentMatch(
-                            name=view._name or instrument.name,
-                            unit=instrument.unit,
-                            description=(
-                                view._description or instrument.description
-                            ),
-                            aggregation=aggregation,
-                            instrumentation_info=(
-                                instrument.instrumentation_info
-                            ),
-                            resource=self._sdk_config.resource,
-                            attribute_keys=view._attribute_keys,
+                            view=view,
+                            instrument=instrument,
+                            sdk_config=self._sdk_config,
                         )
                     )
 
@@ -86,14 +72,9 @@ class MetricReaderStorage:
             ):
                 view_instrument_matches.append(
                     _ViewInstrumentMatch(
-                        name=instrument.name,
-                        unit=instrument.unit,
-                        description=instrument.description,
-                        # pylint: disable=protected-access
-                        aggregation=instrument._default_aggregation,
-                        instrumentation_info=instrument.instrumentation_info,
-                        resource=self._sdk_config.resource,
-                        attribute_keys=set(),
+                        view=_DEFAULT_VIEW,
+                        instrument=instrument,
+                        sdk_config=self._sdk_config,
                     )
                 )
             self._view_instrument_match[instrument] = view_instrument_matches
