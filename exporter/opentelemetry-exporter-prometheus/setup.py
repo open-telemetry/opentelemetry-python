@@ -11,18 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Union
+import setuptools
 
-from opentelemetry.util.types import Attributes
+_BASE_DIR = os.path.dirname(__file__)
+_VERSION_FILENAME = os.path.join(
+    _BASE_DIR, "src", "opentelemetry", "exporter", "prometheus", "version.py"
+)
+_PACKAGE_INFO = {}
+with open(_VERSION_FILENAME, encoding="utf-8") as f:
+    exec(f.read(), _PACKAGE_INFO)
 
-if TYPE_CHECKING:
-    from opentelemetry.sdk._metrics.instrument import _Instrument
-
-
-@dataclass(frozen=True)
-class Measurement:
-    value: Union[int, float]
-    instrument: "_Instrument"
-    attributes: Attributes = None
+setuptools.setup(version=_PACKAGE_INFO["__version__"])

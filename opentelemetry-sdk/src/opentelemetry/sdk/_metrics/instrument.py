@@ -15,7 +15,8 @@
 # pylint: disable=too-many-ancestors
 
 import logging
-from typing import Dict, Generator, Iterable, Union
+from abc import ABC, abstractmethod
+from typing import Callable, Dict, Generator, Iterable, Union
 
 from opentelemetry._metrics.instrument import CallbackT
 from opentelemetry._metrics.instrument import Counter as APICounter
@@ -30,14 +31,29 @@ from opentelemetry._metrics.instrument import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
 from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
+from opentelemetry._metrics.measurement import Measurement as APIMeasurement
+from opentelemetry.sdk._metrics.aggregation import (
+    _Aggregation,
+    _ExplicitBucketHistogramAggregation,
+    _LastValueAggregation,
+    _SumAggregation,
+)
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.measurement_consumer import MeasurementConsumer
+from opentelemetry.sdk._metrics.point import AggregationTemporality
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
 _logger = logging.getLogger(__name__)
 
 
-class _Synchronous:
+class _Instrument(ABC):
+    @property
+    @abstractmethod
+    def _default_aggregation(self) -> _Aggregation:
+        pass
+
+
+class _Synchronous(_Instrument):
     def __init__(
         self,
         name: str,
@@ -49,12 +65,12 @@ class _Synchronous:
         self.name = name
         self.unit = unit
         self.description = description
-        self._instrumentation_info = instrumentation_info
+        self.instrumentation_info = instrumentation_info
         self._measurement_consumer = measurement_consumer
         super().__init__(name, unit=unit, description=description)
 
 
-class _Asynchronous:
+class _Asynchronous(_Instrument):
     def __init__(
         self,
         name: str,
@@ -67,11 +83,11 @@ class _Asynchronous:
         self.name = name
         self.unit = unit
         self.description = description
-        self._instrumentation_info = instrumentation_info
+        self.instrumentation_info = instrumentation_info
         self._measurement_consumer = measurement_consumer
         super().__init__(name, callback, unit=unit, description=description)
 
-        self._callback = callback
+        self._callback: Callable[[], Iterable[APIMeasurement]]
 
         if isinstance(callback, Generator):
 
@@ -79,13 +95,26 @@ class _Asynchronous:
                 return next(callback)
 
             self._callback = inner
+        else:
+            self._callback = callback
 
-    @property
-    def callback(self) -> CallbackT:
-        return self._callback
+    def callback(self) -> Iterable[Measurement]:
+        for api_measurement in self._callback():
+            yield Measurement(
+                api_measurement.value,
+                instrument=self,
+                attributes=api_measurement.attributes,
+            )
 
 
 class Counter(_Synchronous, APICounter):
+    @property
+    def _default_aggregation(self) -> _Aggregation:
+        return _SumAggregation(
+            instrument_is_monotonic=True,
+            instrument_temporality=AggregationTemporality.DELTA,
+        )
+
     def add(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
@@ -100,6 +129,13 @@ class Counter(_Synchronous, APICounter):
 
 
 class UpDownCounter(_Synchronous, APIUpDownCounter):
+    @property
+    def _default_aggregation(self) -> _Aggregation:
+        return _SumAggregation(
+            instrument_is_monotonic=False,
+            instrument_temporality=AggregationTemporality.DELTA,
+        )
+
     def add(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
@@ -109,14 +145,28 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 
 
 class ObservableCounter(_Asynchronous, APIObservableCounter):
-    pass
+    @property
+    def _default_aggregation(self) -> _Aggregation:
+        return _SumAggregation(
+            instrument_is_monotonic=True,
+            instrument_temporality=AggregationTemporality.CUMULATIVE,
+        )
 
 
 class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
-    pass
+    @property
+    def _default_aggregation(self) -> _Aggregation:
+        return _SumAggregation(
+            instrument_is_monotonic=False,
+            instrument_temporality=AggregationTemporality.CUMULATIVE,
+        )
 
 
 class Histogram(_Synchronous, APIHistogram):
+    @property
+    def _default_aggregation(self) -> _Aggregation:
+        return _ExplicitBucketHistogramAggregation()
+
     def record(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
@@ -132,4 +182,6 @@ class Histogram(_Synchronous, APIHistogram):
 
 
 class ObservableGauge(_Asynchronous, APIObservableGauge):
-    pass
+    @property
+    def _default_aggregation(self) -> _Aggregation:
+        return _LastValueAggregation()

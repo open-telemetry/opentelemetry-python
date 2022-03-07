@@ -12,17 +12,4 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Union
-
-from opentelemetry.util.types import Attributes
-
-if TYPE_CHECKING:
-    from opentelemetry.sdk._metrics.instrument import _Instrument
-
-
-@dataclass(frozen=True)
-class Measurement:
-    value: Union[int, float]
-    instrument: "_Instrument"
-    attributes: Attributes = None
+__version__ = "0.28b1"
