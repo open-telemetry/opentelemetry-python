@@ -27,7 +27,7 @@ reader = PeriodicExportingMetricReader(exporter)
 provider = MeterProvider(metric_readers=[reader])
 set_meter_provider(provider)
 
-meter = get_meter_provider().get_meter("getting-started")
+meter = get_meter_provider().get_meter("getting-started", "0.1.2")
 counter = meter.create_counter("first_counter")
 counter.add(1)
 # TODO: fill in details for additional metrics
