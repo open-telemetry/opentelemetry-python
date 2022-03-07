@@ -133,7 +133,9 @@ class Meter(ABC):
     def schema_url(self):
         return self._schema_url
 
-    def _check_instrument_id(self, name, type_, unit, description):
+    def _check_instrument_id(
+        self, name: str, type_: type, unit: str, description: str
+    ) -> None:
 
         instrument_id = "".join(
             [name.strip().lower(), str(type_), unit, description]
