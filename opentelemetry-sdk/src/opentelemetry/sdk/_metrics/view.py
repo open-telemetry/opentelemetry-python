@@ -127,10 +127,6 @@ class View:
 
         self._description = description
         self._attribute_keys = attribute_keys
-
-        if self._attribute_keys is None:
-            self._attribute_keys = set()
-
         self._aggregation = aggregation
 
     # pylint: disable=too-many-return-statements
