@@ -1,10 +1,12 @@
+from typing import Iterable
+
 from opentelemetry._metrics import get_meter_provider, set_meter_provider
+from opentelemetry._metrics.measurement import Measurement
 from opentelemetry.exporter.otlp.proto.grpc._metric_exporter import (
     OTLPMetricExporter,
 )
 from opentelemetry.sdk._metrics import MeterProvider
 from opentelemetry.sdk._metrics.export import PeriodicExportingMetricReader
-from opentelemetry.sdk._metrics.measurement import Measurement
 
 exporter = OTLPMetricExporter(insecure=True)
 reader = PeriodicExportingMetricReader(exporter)
@@ -12,15 +14,15 @@ provider = MeterProvider(metric_readers=[reader])
 set_meter_provider(provider)
 
 
-def observable_counter_func() -> Measurement:
+def observable_counter_func() -> Iterable[Measurement]:
     yield Measurement(1, {})
 
 
-def observable_up_down_counter_func() -> Measurement:
+def observable_up_down_counter_func() -> Iterable[Measurement]:
     yield Measurement(-10, {})
 
 
-def observable_gauge_func() -> Measurement:
+def observable_gauge_func() -> Iterable[Measurement]:
     yield Measurement(9, {})
 
 

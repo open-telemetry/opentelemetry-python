@@ -15,13 +15,15 @@
 # metrics.py
 # This is still work in progress as the metrics SDK is being implemented
 
+from typing import Iterable
+
 from opentelemetry._metrics import get_meter_provider, set_meter_provider
+from opentelemetry._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics import MeterProvider
 from opentelemetry.sdk._metrics.export import (
     ConsoleMetricExporter,
     PeriodicExportingMetricReader,
 )
-from opentelemetry.sdk._metrics.measurement import Measurement
 
 exporter = ConsoleMetricExporter()
 reader = PeriodicExportingMetricReader(exporter)
@@ -29,15 +31,15 @@ provider = MeterProvider(metric_readers=[reader])
 set_meter_provider(provider)
 
 
-def observable_counter_func() -> Measurement:
+def observable_counter_func() -> Iterable[Measurement]:
     yield Measurement(1, {})
 
 
-def observable_up_down_counter_func() -> Measurement:
+def observable_up_down_counter_func() -> Iterable[Measurement]:
     yield Measurement(-10, {})
 
 
-def observable_gauge_func() -> Measurement:
+def observable_gauge_func() -> Iterable[Measurement]:
     yield Measurement(9, {})
 
 
