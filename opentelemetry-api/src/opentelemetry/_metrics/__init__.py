@@ -146,7 +146,12 @@ class Meter(ABC):
         else:
 
             with self._instrument_ids_lock:
-                self._instrument_ids.add(instrument_id)
+                if instrument_id in self._instrument_ids:
+                    _logger.warning(
+                        "Instrument id %s has been used already", instrument_id
+                    )
+                else:
+                    self._instrument_ids.add(instrument_id)
 
     @abstractmethod
     def create_counter(self, name, unit="", description="") -> Counter:
