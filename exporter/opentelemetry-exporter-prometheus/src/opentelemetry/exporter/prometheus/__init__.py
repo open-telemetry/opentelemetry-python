@@ -65,6 +65,7 @@ API
 import collections
 import logging
 import re
+from itertools import chain
 from typing import Iterable, Optional, Sequence, Tuple
 
 from prometheus_client import core
@@ -78,14 +79,13 @@ _logger = logging.getLogger(__name__)
 def _convert_buckets(metric: Metric) -> Sequence[Tuple[str, int]]:
     buckets = []
     total_count = 0
-    for index, value in enumerate(metric.point.bucket_counts):
-        total_count += value
-        buckets.append(
-            (
-                f"{metric.point.explicit_bounds[index]}",
-                total_count,
-            )
-        )
+    for upper_bound, count in zip(
+        chain(metric.point.explicit_bounds, ["+Inf"]),
+        metric.point.bucket_counts,
+    ):
+        total_count += count
+        buckets.append((f"{upper_bound}", total_count))
+
     return buckets
 
 

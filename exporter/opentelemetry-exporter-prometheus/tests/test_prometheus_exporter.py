@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import unittest
+from textwrap import dedent
 from unittest import mock
 
 from prometheus_client import generate_latest
@@ -61,10 +62,10 @@ class TestPrometheusMetricReader(unittest.TestCase):
             Histogram(
                 time_unix_nano=1641946016139533244,
                 start_time_unix_nano=1641946016139533244,
-                bucket_counts=[1, 1],
+                bucket_counts=[1, 3, 2],
                 sum=579.0,
                 explicit_bounds=[123.0, 456.0],
-                aggregation_temporality=AggregationTemporality.DELTA,
+                aggregation_temporality=AggregationTemporality.CUMULATIVE,
             ),
             attributes={"histo": 1},
         )
@@ -73,8 +74,20 @@ class TestPrometheusMetricReader(unittest.TestCase):
         collector.add_metrics_data([record])
         result_bytes = generate_latest(collector)
         result = result_bytes.decode("utf-8")
-        self.assertIn('testprefix_test_name_s_sum{histo="1"} 579.0', result)
-        self.assertIn('testprefix_test_name_s_count{histo="1"} 2.0', result)
+        self.assertEqual(
+            result,
+            dedent(
+                """\
+                # HELP testprefix_test_name_s foo
+                # TYPE testprefix_test_name_s histogram
+                testprefix_test_name_s_bucket{histo="1",le="123.0"} 1.0
+                testprefix_test_name_s_bucket{histo="1",le="456.0"} 4.0
+                testprefix_test_name_s_bucket{histo="1",le="+Inf"} 6.0
+                testprefix_test_name_s_count{histo="1"} 6.0
+                testprefix_test_name_s_sum{histo="1"} 579.0
+                """
+            ),
+        )
 
     def test_sum_to_prometheus(self):
         labels = {"environment@": "staging", "os": "Windows"}
