@@ -1,9 +1,7 @@
 Datadog Span Exporter
 =====================
 
-Deprecated
-------------
-This exporter has been deprecated. To export your OTLP traces from OpenTelemetry SDK directly to Datadog Agent, please refer to `OTLP Ingest in Datadog Agent <https://docs.datadoghq.com/tracing/setup_overview/open_standards/#otlp-ingest-in-datadog-agent>`_ .
+.. warning:: This exporter has been deprecated. To export your OTLP traces from OpenTelemetry SDK directly to Datadog Agent, please refer to `OTLP Ingest in Datadog Agent <https://docs.datadoghq.com/tracing/setup_overview/open_standards/#otlp-ingest-in-datadog-agent>`_ .
 
 
 These examples show how to use OpenTelemetry to send tracing data to Datadog.
