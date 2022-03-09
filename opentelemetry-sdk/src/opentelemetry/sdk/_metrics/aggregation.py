@@ -101,15 +101,18 @@ class _SumAggregation(_Aggregation[Sum]):
                 value=value,
             )
 
-        if self._value is None:
-            return None
+        with self._lock:
+            if self._value is None:
+                return None
+            value = self._value
+            self._value = None
 
         return Sum(
             aggregation_temporality=AggregationTemporality.CUMULATIVE,
             is_monotonic=self._instrument_is_monotonic,
             start_time_unix_nano=self._start_time_unix_nano,
             time_unix_nano=now,
-            value=self._value,
+            value=value,
         )
 
 
@@ -126,12 +129,15 @@ class _LastValueAggregation(_Aggregation[Gauge]):
         """
         Atomically return a point for the current value of the metric.
         """
-        if self._value is None:
-            return None
+        with self._lock:
+            if self._value is None:
+                return None
+            value = self._value
+            self._value = None
 
         return Gauge(
             time_unix_nano=_time_ns(),
-            value=self._value,
+            value=value,
         )
 
 
