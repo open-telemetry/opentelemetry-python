@@ -1,5 +1,5 @@
 Datadog Span Exporter
-================
+=====================
 
 Deprecated
 ------------
