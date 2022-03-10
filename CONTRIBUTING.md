@@ -74,10 +74,8 @@ You can run `tox` with the following arguments:
 `black` and `isort` are executed when `tox -e lint` is run. The reported errors can be tedious to fix manually.
 An easier way to do so is:
 
-1. Run `source .tox/lint/bin/activate`
-2. Run `black .`
-3. Run `isort .`
-4. Run `deactivate`
+1. Run `.tox/lint/bin/black .`
+2. Run `.tox/lint/bin/isort .`
 
 We try to keep the amount of _public symbols_ in our code minimal. A public symbol is any Python identifier that does not start with an underscore.
 Every public symbol is something that has to be kept in order to maintain backwards compatibility, so we try to have as few as possible.
