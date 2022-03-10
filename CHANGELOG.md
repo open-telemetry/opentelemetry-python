@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2493](https://github.com/open-telemetry/opentelemetry-python/pull/2493))
 - [exporter/opentelemetry-exporter-prometheus] restore package using the new metrics API
   ([#2321](https://github.com/open-telemetry/opentelemetry-python/pull/2321))
+- `opentelemetry-datadog-exporter` deprecate package.
+  ([#2571](https://github.com/open-telemetry/opentelemetry-python/pull/2517))
 
 ## [1.9.1-0.28b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.9.1-0.28b1) - 2022-01-29
 
