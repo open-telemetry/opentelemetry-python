@@ -105,6 +105,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.6.2-0.25b2](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.2-0.25b2) - 2021-10-19
 
+- Fix parental trace relationship for opentracing `follows_from` reference
+  ([#2180](https://github.com/open-telemetry/opentelemetry-python/pull/2180))
+
 ## [1.6.1-0.25b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.1-0.25b1) - 2021-10-18
 
 - Fix ReadableSpan property types attempting to create a mapping from a list
@@ -113,9 +116,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2201](https://github.com/open-telemetry/opentelemetry-python/pull/2201))
 - Propagation: only warn about oversized baggage headers when headers exist
   ([#2212](https://github.com/open-telemetry/opentelemetry-python/pull/2212))
-
-- Fix parental trace relationship for opentracing `follows_from` reference
-  ([#2180](https://github.com/open-telemetry/opentelemetry-python/pull/2180))
 
 ## [1.6.0-0.25b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.0-0.25b0) - 2021-10-13
 
