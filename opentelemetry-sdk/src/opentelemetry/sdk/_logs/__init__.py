@@ -303,7 +303,7 @@ _RESERVED_ATTRS = frozenset(
 )
 
 
-class OTLPHandler(logging.Handler):
+class OTelHandler(logging.Handler):
     """A handler class which writes logging records, in OTLP format, to
     a network destination or file.
     """

@@ -30,7 +30,7 @@ from opentelemetry.sdk._configuration import (
     _init_logging,
     _init_tracing,
 )
-from opentelemetry.sdk._logs import OTLPHandler
+from opentelemetry.sdk._logs import OTelHandler
 from opentelemetry.sdk._logs.export import ConsoleLogExporter
 from opentelemetry.sdk._metrics.export import ConsoleMetricExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
@@ -242,7 +242,7 @@ class TestLoggingInit(TestCase):
         root_logger.handlers = [
             handler
             for handler in root_logger.handlers
-            if not isinstance(handler, OTLPHandler)
+            if not isinstance(handler, OTelHandler)
         ]
 
     def test_logging_init_empty(self):

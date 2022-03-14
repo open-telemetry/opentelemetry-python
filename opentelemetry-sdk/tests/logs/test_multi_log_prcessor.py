@@ -26,7 +26,7 @@ from opentelemetry.sdk._logs import (
     LogEmitterProvider,
     LogProcessor,
     LogRecord,
-    OTLPHandler,
+    OTelHandler,
     SynchronousMultiLogProcessor,
 )
 from opentelemetry.sdk._logs.severity import SeverityNumber
@@ -58,7 +58,7 @@ class TestLogProcessor(unittest.TestCase):
     def test_log_processor(self):
         provider = LogEmitterProvider()
         log_emitter = provider.get_log_emitter(__name__)
-        handler = OTLPHandler(log_emitter=log_emitter)
+        handler = OTelHandler(log_emitter=log_emitter)
 
         logs_list_1 = []
         processor1 = AnotherLogProcessor(Mock(), logs_list_1)
