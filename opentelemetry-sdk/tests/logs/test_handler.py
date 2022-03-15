@@ -17,19 +17,19 @@ import unittest
 from unittest.mock import Mock
 
 from opentelemetry.sdk import trace
-from opentelemetry.sdk._logs import LogEmitter, OTLPHandler
+from opentelemetry.sdk._logs import LogEmitter, LoggingHandler
 from opentelemetry.sdk._logs.severity import SeverityNumber
 from opentelemetry.trace import INVALID_SPAN_CONTEXT
 
 
 def get_logger(level=logging.NOTSET, log_emitter=None):
     logger = logging.getLogger(__name__)
-    handler = OTLPHandler(level=level, log_emitter=log_emitter)
+    handler = LoggingHandler(level=level, log_emitter=log_emitter)
     logger.addHandler(handler)
     return logger
 
 
-class TestOTLPHandler(unittest.TestCase):
+class TestLoggingHandler(unittest.TestCase):
     def test_handler_default_log_level(self):
         emitter_mock = Mock(spec=LogEmitter)
         logger = get_logger(log_emitter=emitter_mock)
