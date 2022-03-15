@@ -84,7 +84,7 @@ class TestOTLPHandler(unittest.TestCase):
         emitter_mock = Mock(spec=LogEmitter)
         logger = get_logger(log_emitter=emitter_mock)
         try:
-            div = 1/0
+            div = 1 / 0
         except:
             logger.exception("Zero Division Error")
         args, _ = emitter_mock.emit.call_args_list[0]
@@ -92,10 +92,18 @@ class TestOTLPHandler(unittest.TestCase):
 
         self.assertIsNotNone(log_record)
         self.assertEqual(log_record.body, "Zero Division Error")
-        self.assertEqual(log_record.attributes[SpanAttributes.EXCEPTION_TYPE], ZeroDivisionError.__name__)
-        self.assertEqual(log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE], "division by zero")
+        self.assertEqual(
+            log_record.attributes[SpanAttributes.EXCEPTION_TYPE],
+            ZeroDivisionError.__name__,
+        )
+        self.assertEqual(
+            log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE],
+            "division by zero",
+        )
         print(log_record.attributes[SpanAttributes.EXCEPTION_STACKTRACE])
-        stack_trace = json.loads(log_record.attributes[SpanAttributes.EXCEPTION_STACKTRACE])
+        stack_trace = json.loads(
+            log_record.attributes[SpanAttributes.EXCEPTION_STACKTRACE]
+        )
         self.assertEqual(len(stack_trace), 1)
         self.assertEqual(stack_trace[0]["method"], "test_log_record_exception")
         self.assertEqual(stack_trace[0]["fileName"], __file__)
