@@ -29,12 +29,12 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import (
     format_span_id,
     format_trace_id,
     get_current_span,
 )
-from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._providers import _load_provider
 from opentelemetry.util._time import _time_ns
