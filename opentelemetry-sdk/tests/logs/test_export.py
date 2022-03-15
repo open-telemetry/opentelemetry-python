@@ -26,8 +26,8 @@ from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
     LogData,
     LogEmitterProvider,
-    LogRecord,
     LoggingHandler,
+    LogRecord,
 )
 from opentelemetry.sdk._logs.export import (
     BatchLogProcessor,

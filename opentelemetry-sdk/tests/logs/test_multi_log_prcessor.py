@@ -24,9 +24,9 @@ from unittest.mock import Mock
 from opentelemetry.sdk._logs import (
     ConcurrentMultiLogProcessor,
     LogEmitterProvider,
+    LoggingHandler,
     LogProcessor,
     LogRecord,
-    LoggingHandler,
     SynchronousMultiLogProcessor,
 )
 from opentelemetry.sdk._logs.severity import SeverityNumber
