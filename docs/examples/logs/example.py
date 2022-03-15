@@ -6,7 +6,7 @@ from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
 )
 from opentelemetry.sdk._logs import (
     LogEmitterProvider,
-    OTLPHandler,
+    LoggingHandler,
     set_log_emitter_provider,
 )
 from opentelemetry.sdk._logs.export import BatchLogProcessor
@@ -35,7 +35,7 @@ set_log_emitter_provider(log_emitter_provider)
 exporter = OTLPLogExporter(insecure=True)
 log_emitter_provider.add_log_processor(BatchLogProcessor(exporter))
 log_emitter = log_emitter_provider.get_log_emitter(__name__, "0.1")
-handler = OTLPHandler(level=logging.NOTSET, log_emitter=log_emitter)
+handler = LoggingHandler(level=logging.NOTSET, log_emitter=log_emitter)
 
 # Attach OTLP handler to root logger
 logging.getLogger().addHandler(handler)
