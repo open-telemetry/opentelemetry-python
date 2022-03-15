@@ -32,7 +32,7 @@ from opentelemetry.environment_variables import (
 )
 from opentelemetry.sdk._logs import (
     LogEmitterProvider,
-    OTelHandler,
+    LoggingHandler,
     set_log_emitter_provider,
 )
 from opentelemetry.sdk._logs.export import BatchLogProcessor, LogExporter
@@ -114,7 +114,7 @@ def _init_logging(
         )
 
     log_emitter = provider.get_log_emitter(__name__)
-    handler = OTelHandler(level=logging.NOTSET, log_emitter=log_emitter)
+    handler = LoggingHandler(level=logging.NOTSET, log_emitter=log_emitter)
 
     logging.getLogger().addHandler(handler)
 

@@ -303,9 +303,10 @@ _RESERVED_ATTRS = frozenset(
 )
 
 
-class OTelHandler(logging.Handler):
+class LoggingHandler(logging.Handler):
     """A handler class which writes logging records, in OTLP format, to
-    a network destination or file.
+    a network destination or file. Supports signals from the `logging` module.
+    https://docs.python.org/3/library/logging.html
     """
 
     def __init__(
