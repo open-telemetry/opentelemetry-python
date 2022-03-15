@@ -19,6 +19,7 @@ import json
 import logging
 import os
 import threading
+import traceback
 from typing import Any, Callable, Optional, Tuple, Union, cast
 
 from opentelemetry.sdk._logs.severity import SeverityNumber, std_to_otlp
@@ -33,6 +34,7 @@ from opentelemetry.trace import (
     format_trace_id,
     get_current_span,
 )
+from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._providers import _load_provider
 from opentelemetry.util._time import _time_ns
@@ -318,9 +320,29 @@ class OTLPHandler(logging.Handler):
 
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> Attributes:
-        return {
+        attributes = {
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }
+        if record.exc_info:
+            exctype, value, tb = record.exc_info
+            if exctype is not None:
+                exc_type = exctype.__name__
+            if value is not None:
+                message = value.args[0]
+            callstack = []
+            if tb is not None:
+                for fileName, line, method, text in traceback.extract_tb(tb):
+                    callstack.append({
+                        'method': method,
+                        'fileName': fileName,
+                        'line': line,
+                        'text': text,
+                    })
+                callstack.reverse()
+            attributes[SpanAttributes.EXCEPTION_TYPE] = exc_type
+            attributes[SpanAttributes.EXCEPTION_MESSAGE] = message
+            attributes[SpanAttributes.EXCEPTION_STACKTRACE] = json.dumps(callstack)
+        return attributes
 
     def _translate(self, record: logging.LogRecord) -> LogRecord:
         timestamp = int(record.created * 1e9)

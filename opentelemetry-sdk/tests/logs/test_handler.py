@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import json
 import logging
 import unittest
 from unittest.mock import Mock
@@ -19,6 +20,7 @@ from unittest.mock import Mock
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import LogEmitter, OTLPHandler
 from opentelemetry.sdk._logs.severity import SeverityNumber
+from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import INVALID_SPAN_CONTEXT
 
 
@@ -76,6 +78,29 @@ class TestOTLPHandler(unittest.TestCase):
 
         self.assertIsNotNone(log_record)
         self.assertEqual(log_record.attributes, {"http.status_code": 200})
+
+    def test_log_record_exception(self):
+        """Exception information will be included in attributes"""
+        emitter_mock = Mock(spec=LogEmitter)
+        logger = get_logger(log_emitter=emitter_mock)
+        try:
+            div = 1/0
+        except:
+            logger.exception("Zero Division Error")
+        args, _ = emitter_mock.emit.call_args_list[0]
+        log_record = args[0]
+
+        self.assertIsNotNone(log_record)
+        self.assertEqual(log_record.body, "Zero Division Error")
+        self.assertEqual(log_record.attributes[SpanAttributes.EXCEPTION_TYPE], ZeroDivisionError.__name__)
+        self.assertEqual(log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE], "division by zero")
+        print(log_record.attributes[SpanAttributes.EXCEPTION_STACKTRACE])
+        stack_trace = json.loads(log_record.attributes[SpanAttributes.EXCEPTION_STACKTRACE])
+        self.assertEqual(len(stack_trace), 1)
+        self.assertEqual(stack_trace[0]["method"], "test_log_record_exception")
+        self.assertEqual(stack_trace[0]["fileName"], __file__)
+        # self.assertEqual(stack_trace[0]["line"], 87)
+        self.assertEqual(stack_trace[0]["text"], "div = 1/0")
 
     def test_log_record_trace_correlation(self):
         emitter_mock = Mock(spec=LogEmitter)
