@@ -85,7 +85,8 @@ class TestLoggingHandler(unittest.TestCase):
         logger = get_logger(log_emitter=emitter_mock)
         try:
             div = 1 / 0
-        except:
+            print(div)
+        except ZeroDivisionError:
             logger.exception("Zero Division Error")
         args, _ = emitter_mock.emit.call_args_list[0]
         log_record = args[0]
