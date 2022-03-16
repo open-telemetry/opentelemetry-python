@@ -332,11 +332,11 @@ class LoggingHandler(logging.Handler):
                 message = value.args[0]
             callstack = []
             if tb is not None:
-                for fileName, line, method, text in traceback.extract_tb(tb):
+                for file_name, line, method, text in traceback.extract_tb(tb):
                     callstack.append(
                         {
                             "method": method,
-                            "fileName": fileName,
+                            "fileName": file_name,
                             "line": line,
                             "text": text,
                         }
