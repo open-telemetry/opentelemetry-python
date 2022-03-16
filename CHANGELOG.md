@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2525](https://github.com/open-telemetry/opentelemetry-python/pull/2525))
 - Change OTLPHandler to LoggingHandler
   ([#2528](https://github.com/open-telemetry/opentelemetry-python/pull/2528))
+- Fix delta histogram sum not being reset on collection
+  ([#2533](https://github.com/open-telemetry/opentelemetry-python/pull/2533)) 
 
 ## [1.10.0-0.29b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.10.0-0.29b0) - 2022-03-10
 
