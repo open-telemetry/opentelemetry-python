@@ -98,7 +98,9 @@ class TestLoggingHandler(unittest.TestCase):
             log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE],
             "division by zero",
         )
-        stack_trace = log_record.attributes[SpanAttributes.EXCEPTION_STACKTRACE]
+        stack_trace = log_record.attributes[
+            SpanAttributes.EXCEPTION_STACKTRACE
+        ]
         self.assertIsInstance(stack_trace, str)
         self.assertTrue("Traceback" in stack_trace)
         self.assertTrue("div = 1 / 0" in stack_trace)

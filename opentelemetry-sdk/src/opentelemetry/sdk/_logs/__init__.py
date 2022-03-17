@@ -331,7 +331,9 @@ class LoggingHandler(logging.Handler):
             if value is not None:
                 message = value.args[0]
             if tb is not None:
-                stack_trace = "".join(traceback.format_exception(*record.exc_info))
+                stack_trace = "".join(
+                    traceback.format_exception(*record.exc_info)
+                )
             attributes[SpanAttributes.EXCEPTION_TYPE] = exc_type
             attributes[SpanAttributes.EXCEPTION_MESSAGE] = message
             attributes[SpanAttributes.EXCEPTION_STACKTRACE] = stack_trace
