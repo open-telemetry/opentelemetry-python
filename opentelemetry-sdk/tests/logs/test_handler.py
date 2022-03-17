@@ -11,8 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-import json
 import logging
 import unittest
 from unittest.mock import Mock
@@ -100,13 +98,13 @@ class TestLoggingHandler(unittest.TestCase):
             log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE],
             "division by zero",
         )
-        stack_trace = json.loads(
-            log_record.attributes[SpanAttributes.EXCEPTION_STACKTRACE]
-        )
-        self.assertEqual(len(stack_trace), 1)
-        self.assertEqual(stack_trace[0]["method"], "test_log_record_exception")
-        self.assertEqual(stack_trace[0]["fileName"], __file__)
-        self.assertEqual(stack_trace[0]["text"], "div = 1 / 0")
+        stack_trace = log_record.attributes[SpanAttributes.EXCEPTION_STACKTRACE]
+        self.assertIsInstance(stack_trace, str)
+        self.assertTrue("Traceback" in stack_trace)
+        self.assertTrue("div = 1 / 0" in stack_trace)
+        self.assertTrue("ZeroDivisionError" in stack_trace)
+        self.assertTrue("division by zero" in stack_trace)
+        self.assertTrue(__file__ in stack_trace)
 
     def test_log_record_trace_correlation(self):
         emitter_mock = Mock(spec=LogEmitter)

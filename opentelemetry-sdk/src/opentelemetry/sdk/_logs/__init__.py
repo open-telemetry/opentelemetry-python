@@ -330,23 +330,11 @@ class LoggingHandler(logging.Handler):
                 exc_type = exctype.__name__
             if value is not None:
                 message = value.args[0]
-            callstack = []
             if tb is not None:
-                for file_name, line, method, text in traceback.extract_tb(tb):
-                    callstack.append(
-                        {
-                            "method": method,
-                            "fileName": file_name,
-                            "line": line,
-                            "text": text,
-                        }
-                    )
-                callstack.reverse()
+                stack_trace = "".join(traceback.format_exception(*record.exc_info))
             attributes[SpanAttributes.EXCEPTION_TYPE] = exc_type
             attributes[SpanAttributes.EXCEPTION_MESSAGE] = message
-            attributes[SpanAttributes.EXCEPTION_STACKTRACE] = json.dumps(
-                callstack
-            )
+            attributes[SpanAttributes.EXCEPTION_STACKTRACE] = stack_trace
         return attributes
 
     def _translate(self, record: logging.LogRecord) -> LogRecord:
