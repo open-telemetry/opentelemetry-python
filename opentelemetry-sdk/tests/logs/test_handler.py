@@ -82,6 +82,7 @@ class TestLoggingHandler(unittest.TestCase):
         emitter_mock = Mock(spec=LogEmitter)
         logger = get_logger(log_emitter=emitter_mock)
         try:
+            # pylint:disable=unused-variable
             div = 1 / 0  # noqa: F841
         except ZeroDivisionError:
             logger.exception("Zero Division Error")
