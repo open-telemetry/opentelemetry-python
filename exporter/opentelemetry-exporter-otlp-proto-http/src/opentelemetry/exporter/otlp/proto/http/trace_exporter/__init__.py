@@ -47,7 +47,8 @@ _logger = logging.getLogger(__name__)
 
 
 DEFAULT_COMPRESSION = Compression.NoCompression
-DEFAULT_ENDPOINT = "http://localhost:4318/v1/traces"
+DEFAULT_ENDPOINT = "http://localhost:4318/"
+DEFAULT_TRACES_EXPORT_PATH = "v1/traces"
 DEFAULT_TIMEOUT = 10  # in seconds
 
 
@@ -65,7 +66,9 @@ class OTLPSpanExporter(SpanExporter):
     ):
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
-            environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT),
+            _append_trace_path(
+                environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
+            ),
         )
         self._certificate_file = certificate_file or environ.get(
             OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
@@ -172,3 +175,9 @@ def _compression_from_env() -> Compression:
         .strip()
     )
     return Compression(compression)
+
+
+def _append_trace_path(endpoint: str) -> str:
+    if endpoint.endswith("/"):
+        return endpoint + DEFAULT_TRACES_EXPORT_PATH
+    return endpoint + f"/{DEFAULT_TRACES_EXPORT_PATH}"

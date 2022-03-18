@@ -1,3 +1,4 @@
+## OpenTelemetry Python
 ---
 <p align="center">
   <strong>
@@ -35,8 +36,6 @@
 </p>
 
 ---
-
-## OpenTelemetry Python
 
 This page describes the Python [OpenTelemetry](https://opentelemetry.io/) implementation. OpenTelemetry is an observability framework for cloud-native software.
 
@@ -111,6 +110,14 @@ pip install scalene
 scalene opentelemetry-<PACKAGE>/tests/performance/resource-usage/<PATH_TO_TEST>/profile_resource_usage_<NAME_OF_TEST>.py
 ```
 
+## Python Version Support Addition and Removal
+
+This project supports the latest Python versions. As new Python versions are released, support for them is added and
+as old Python versions reach their end of life, support for them is removed.
+
+We add support for new Python versions no later than 3 months after they become stable.
+
+We remove support for old Python versions 6 months after they reach their [end of life](https://devguide.python.org/devcycle/#end-of-life-branches).
 
 ## Documentation
 
@@ -131,6 +138,7 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 - [Aaron Abbott](https://github.com/aabmass), Google
 - [Alex Boten](https://github.com/codeboten), Lightstep
 - [Srikanth Chekuri](https://github.com/lonewolf3739)
+- [Owais Lone](https://github.com/owais), Splunk
 - [Nathaniel Ruiz Nowell](https://github.com/NathanielRN), AWS
 
 *For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver).*
@@ -139,7 +147,6 @@ Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-t
 
 - [Diego Hurtado](https://github.com/ocelotl), Lightstep
 - [Leighton Chen](https://github.com/lzchen), Microsoft
-- [Owais Lone](https://github.com/owais), Splunk
 
 *For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer).*
 

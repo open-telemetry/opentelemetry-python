@@ -352,9 +352,10 @@ class TraceState(typing.Mapping[str, str]):
             If the number of keys is beyond the maximum, all values
             will be discarded and an empty tracestate will be returned.
         """
-        pairs = OrderedDict()
+        pairs = OrderedDict()  # type: OrderedDict[str, str]
         for header in header_list:
-            for member in re.split(_delimiter_pattern, header):
+            members: typing.List[str] = re.split(_delimiter_pattern, header)
+            for member in members:
                 # empty members are valid, but no need to process further.
                 if not member:
                     continue
@@ -365,7 +366,8 @@ class TraceState(typing.Mapping[str, str]):
                         member,
                     )
                     return cls()
-                key, _eq, value = match.groups()
+                groups: typing.Tuple[str, ...] = match.groups()
+                key, _eq, value = groups
                 # duplicate keys are not legal in header
                 if key in pairs:
                     return cls()
@@ -387,8 +389,8 @@ class TraceState(typing.Mapping[str, str]):
 
 
 DEFAULT_TRACE_STATE = TraceState.get_default()
-_TRACE_ID_MAX_VALUE = 2 ** 128 - 1
-_SPAN_ID_MAX_VALUE = 2 ** 64 - 1
+_TRACE_ID_MAX_VALUE = 2**128 - 1
+_SPAN_ID_MAX_VALUE = 2**64 - 1
 
 
 class SpanContext(

@@ -36,7 +36,7 @@ VERSION_KEY = "otel.library.version"
 
 def _nsec_to_usec_round(nsec: int) -> int:
     """Round nanoseconds to microseconds"""
-    return (nsec + 500) // 10 ** 3
+    return (nsec + 500) // 10**3
 
 
 def _convert_int_to_i64(val):

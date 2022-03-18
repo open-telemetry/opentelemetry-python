@@ -82,6 +82,8 @@ from enum import Enum
 from logging import getLogger
 from typing import Iterator, Optional, Sequence, cast
 
+from deprecated import deprecated
+
 from opentelemetry import context as context_api
 from opentelemetry.attributes import BoundedAttributes  # type: ignore
 from opentelemetry.context.context import Context
@@ -200,8 +202,11 @@ class TracerProvider(ABC):
         vs.  a functional tracer).
 
         Args:
-            instrumenting_module_name: The name of the instrumenting module
-                (usually just ``__name__``).
+            instrumenting_module_name: The name of the instrumenting module.
+                ``__name__`` may not be used as this can result in
+                different tracer names if the tracers are in different files.
+                It is better to use a fixed string that can be imported where
+                needed and used consistently as the name of the tracer.
 
                 This should *not* be the name of the module that is
                 instrumented but the name of the module doing the instrumentation.
@@ -216,7 +221,7 @@ class TracerProvider(ABC):
         """
 
 
-class _DefaultTracerProvider(TracerProvider):
+class NoOpTracerProvider(TracerProvider):
     """The default TracerProvider, used when no implementation is available.
 
     All operations are no-op.
@@ -229,7 +234,15 @@ class _DefaultTracerProvider(TracerProvider):
         schema_url: typing.Optional[str] = None,
     ) -> "Tracer":
         # pylint:disable=no-self-use,unused-argument
-        return _DefaultTracer()
+        return NoOpTracer()
+
+
+@deprecated(version="1.9.0", reason="You should use NoOpTracerProvider")  # type: ignore
+class _DefaultTracerProvider(NoOpTracerProvider):
+    """The default TracerProvider, used when no implementation is available.
+
+    All operations are no-op.
+    """
 
 
 class ProxyTracerProvider(TracerProvider):
@@ -313,7 +326,7 @@ class Tracer(ABC):
             The newly-created span.
         """
 
-    @contextmanager  # type: ignore
+    @contextmanager
     @abstractmethod
     def start_as_current_span(
         self,
@@ -393,7 +406,7 @@ class ProxyTracer(Tracer):
         self._instrumenting_library_version = instrumenting_library_version
         self._schema_url = schema_url
         self._real_tracer: Optional[Tracer] = None
-        self._noop_tracer = _DefaultTracer()
+        self._noop_tracer = NoOpTracer()
 
     @property
     def _tracer(self) -> Tracer:
@@ -416,7 +429,7 @@ class ProxyTracer(Tracer):
         return self._tracer.start_as_current_span(*args, **kwargs)  # type: ignore
 
 
-class _DefaultTracer(Tracer):
+class NoOpTracer(Tracer):
     """The default Tracer, used when no Tracer implementation is available.
 
     All operations are no-op.
@@ -436,7 +449,7 @@ class _DefaultTracer(Tracer):
         # pylint: disable=unused-argument,no-self-use
         return INVALID_SPAN
 
-    @contextmanager  # type: ignore
+    @contextmanager
     def start_as_current_span(
         self,
         name: str,
@@ -451,6 +464,14 @@ class _DefaultTracer(Tracer):
     ) -> Iterator["Span"]:
         # pylint: disable=unused-argument,no-self-use
         yield INVALID_SPAN
+
+
+@deprecated(version="1.9.0", reason="You should use NoOpTracer")  # type: ignore
+class _DefaultTracer(NoOpTracer):
+    """The default Tracer, used when no Tracer implementation is available.
+
+    All operations are no-op.
+    """
 
 
 _TRACER_PROVIDER_SET_ONCE = Once()
@@ -514,7 +535,7 @@ def get_tracer_provider() -> TracerProvider:
     return cast("TracerProvider", _TRACER_PROVIDER)
 
 
-@contextmanager  # type: ignore
+@contextmanager
 def use_span(
     span: Span,
     end_on_exit: bool = False,

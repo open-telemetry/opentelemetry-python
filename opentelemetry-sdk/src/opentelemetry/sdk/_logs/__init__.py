@@ -87,8 +87,12 @@ class LogRecord:
                 "severity_text": self.severity_text,
                 "attributes": self.attributes,
                 "timestamp": ns_to_iso_str(self.timestamp),
-                "trace_id": f"0x{format_trace_id(self.trace_id)}",
-                "span_id": f"0x{format_span_id(self.span_id)}",
+                "trace_id": f"0x{format_trace_id(self.trace_id)}"
+                if self.trace_id is not None
+                else "",
+                "span_id": f"0x{format_span_id(self.span_id)}"
+                if self.span_id is not None
+                else "",
                 "trace_flags": self.trace_flags,
                 "resource": repr(self.resource.attributes)
                 if self.resource
@@ -299,9 +303,10 @@ _RESERVED_ATTRS = frozenset(
 )
 
 
-class OTLPHandler(logging.Handler):
+class LoggingHandler(logging.Handler):
     """A handler class which writes logging records, in OTLP format, to
-    a network destination or file.
+    a network destination or file. Supports signals from the `logging` module.
+    https://docs.python.org/3/library/logging.html
     """
 
     def __init__(

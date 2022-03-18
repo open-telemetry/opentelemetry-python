@@ -69,7 +69,7 @@ class MeterProvider(ABC):
         pass
 
 
-class _DefaultMeterProvider(MeterProvider):
+class NoOpMeterProvider(MeterProvider):
     def get_meter(
         self,
         name,
@@ -77,7 +77,7 @@ class _DefaultMeterProvider(MeterProvider):
         schema_url=None,
     ) -> "Meter":
         super().get_meter(name, version=version, schema_url=schema_url)
-        return _DefaultMeter(name, version=version, schema_url=schema_url)
+        return NoOpMeter(name, version=version, schema_url=schema_url)
 
 
 class _ProxyMeterProvider(MeterProvider):
@@ -346,7 +346,7 @@ class _ProxyMeter(Meter):
             return proxy
 
 
-class _DefaultMeter(Meter):
+class NoOpMeter(Meter):
     def create_counter(self, name, unit="", description="") -> Counter:
         super().create_counter(name, unit=unit, description=description)
         return DefaultCounter(name, unit=unit, description=description)

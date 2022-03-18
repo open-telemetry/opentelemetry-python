@@ -630,7 +630,7 @@ def update_dependencies(targets, version, packages):
         update_files(
             targets,
             "setup.cfg",
-            fr"({basename(pkg)}.*)==(.*)",
+            rf"({basename(pkg)}.*)==(.*)",
             r"\1== " + version,
         )
 

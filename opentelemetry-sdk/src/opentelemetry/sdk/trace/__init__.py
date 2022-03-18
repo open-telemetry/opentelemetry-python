@@ -112,7 +112,7 @@ class SpanProcessor:
         """
 
     def shutdown(self) -> None:
-        """Called when a :class:`opentelemetry.sdk.trace.Tracer` is shutdown."""
+        """Called when a :class:`opentelemetry.sdk.trace.TracerProvider` is shutdown."""
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Export all ended spans to the configured Exporter that have not yet
@@ -594,23 +594,31 @@ class SpanLimits:
             max_attributes, OTEL_ATTRIBUTE_COUNT_LIMIT
         )
         self.max_attributes = (
-            global_max_attributes or _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT
+            global_max_attributes
+            if global_max_attributes is not None
+            else _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT
         )
 
         self.max_span_attributes = self._from_env_if_absent(
             max_span_attributes,
             OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
-            global_max_attributes or _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+            global_max_attributes
+            if global_max_attributes is not None
+            else _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
         )
         self.max_event_attributes = self._from_env_if_absent(
             max_event_attributes,
             OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
-            global_max_attributes or _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
+            global_max_attributes
+            if global_max_attributes is not None
+            else _DEFAULT_OTEL_EVENT_ATTRIBUTE_COUNT_LIMIT,
         )
         self.max_link_attributes = self._from_env_if_absent(
             max_link_attributes,
             OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
-            global_max_attributes or _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
+            global_max_attributes
+            if global_max_attributes is not None
+            else _DEFAULT_OTEL_LINK_ATTRIBUTE_COUNT_LIMIT,
         )
 
         # attribute length
@@ -1132,7 +1140,7 @@ class TracerProvider(trace_api.TracerProvider):
         self._active_span_processor.add_span_processor(span_processor)
 
     def shutdown(self):
-        """Shut down the span processors added to the tracer."""
+        """Shut down the span processors added to the tracer provider."""
         self._active_span_processor.shutdown()
         if self._atexit_handler is not None:
             atexit.unregister(self._atexit_handler)

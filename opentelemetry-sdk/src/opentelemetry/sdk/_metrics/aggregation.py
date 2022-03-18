@@ -13,125 +13,366 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from collections import OrderedDict
+from bisect import bisect_left
+from dataclasses import replace
 from logging import getLogger
 from math import inf
+from threading import Lock
+from typing import Generic, List, Optional, Sequence, TypeVar
 
-from opentelemetry._metrics.instrument import _Monotonic
+from opentelemetry._metrics.instrument import (
+    Asynchronous,
+    Instrument,
+    Synchronous,
+    _Monotonic,
+)
+from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry.sdk._metrics.point import (
+    AggregationTemporality,
+    Gauge,
+    Histogram,
+    PointT,
+    Sum,
+)
 from opentelemetry.util._time import _time_ns
+
+_PointVarT = TypeVar("_PointVarT", bound=PointT)
 
 _logger = getLogger(__name__)
 
 
-class Aggregation(ABC):
-    @property
-    def value(self):
-        return self._value  # pylint: disable=no-member
+class _Aggregation(ABC, Generic[_PointVarT]):
+    def __init__(self):
+        self._lock = Lock()
 
     @abstractmethod
-    def aggregate(self, value):
+    def aggregate(self, measurement: Measurement) -> None:
         pass
 
     @abstractmethod
-    def make_point_and_reset(self):
-        """
-        Atomically return a point for the current value of the metric and reset the internal state.
-        """
-
-
-class SumAggregation(Aggregation):
-    """
-    This aggregation collects data for the SDK sum metric point.
-    """
-
-    def __init__(self, instrument):
-        self._value = 0
-
-    def aggregate(self, value):
-        self._value = self._value + value
-
-    def make_point_and_reset(self):
+    def collect(self) -> Optional[_PointVarT]:
         pass
 
 
-class LastValueAggregation(Aggregation):
-
-    """
-    This aggregation collects data for the SDK sum metric point.
-    """
-
-    def __init__(self, instrument):
-        self._value = None
-        self._timestamp = _time_ns()
-
-    def aggregate(self, value):
-        self._value = value
-        self._timestamp = _time_ns()
-
-    def make_point_and_reset(self):
-        pass
-
-
-class ExplicitBucketHistogramAggregation(Aggregation):
-
-    """
-    This aggregation collects data for the SDK sum metric point.
-    """
-
+class _SumAggregation(_Aggregation[Sum]):
     def __init__(
         self,
-        instrument,
-        *args,
-        boundaries=(0, 5, 10, 25, 50, 75, 100, 250, 500, 1000),
-        record_min_max=True,
+        instrument_is_monotonic: bool,
+        instrument_temporality: AggregationTemporality,
     ):
         super().__init__()
-        self._value = OrderedDict([(key, 0) for key in (*boundaries, inf)])
+
+        self._start_time_unix_nano = _time_ns()
+        self._instrument_temporality = instrument_temporality
+        self._instrument_is_monotonic = instrument_is_monotonic
+
+        if self._instrument_temporality is AggregationTemporality.DELTA:
+            self._value = 0
+        else:
+            self._value = None
+
+    def aggregate(self, measurement: Measurement) -> None:
+        with self._lock:
+            if self._value is None:
+                self._value = 0
+            self._value = self._value + measurement.value
+
+    def collect(self) -> Optional[Sum]:
+        """
+        Atomically return a point for the current value of the metric and
+        reset the aggregation value.
+        """
+        now = _time_ns()
+
+        if self._instrument_temporality is AggregationTemporality.DELTA:
+
+            with self._lock:
+                value = self._value
+                start_time_unix_nano = self._start_time_unix_nano
+
+                self._value = 0
+                self._start_time_unix_nano = now + 1
+
+            return Sum(
+                aggregation_temporality=AggregationTemporality.DELTA,
+                is_monotonic=self._instrument_is_monotonic,
+                start_time_unix_nano=start_time_unix_nano,
+                time_unix_nano=now,
+                value=value,
+            )
+
+        with self._lock:
+            if self._value is None:
+                return None
+            value = self._value
+            self._value = None
+
+        return Sum(
+            aggregation_temporality=AggregationTemporality.CUMULATIVE,
+            is_monotonic=self._instrument_is_monotonic,
+            start_time_unix_nano=self._start_time_unix_nano,
+            time_unix_nano=now,
+            value=value,
+        )
+
+
+class _LastValueAggregation(_Aggregation[Gauge]):
+    def __init__(self):
+        super().__init__()
+        self._value = None
+
+    def aggregate(self, measurement: Measurement):
+        with self._lock:
+            self._value = measurement.value
+
+    def collect(self) -> Optional[Gauge]:
+        """
+        Atomically return a point for the current value of the metric.
+        """
+        with self._lock:
+            if self._value is None:
+                return None
+            value = self._value
+            self._value = None
+
+        return Gauge(
+            time_unix_nano=_time_ns(),
+            value=value,
+        )
+
+
+class _ExplicitBucketHistogramAggregation(_Aggregation[Histogram]):
+    def __init__(
+        self,
+        boundaries: Sequence[float] = (
+            0.0,
+            5.0,
+            10.0,
+            25.0,
+            50.0,
+            75.0,
+            100.0,
+            250.0,
+            500.0,
+            1000.0,
+        ),
+        record_min_max: bool = True,
+    ):
+        super().__init__()
+        self._boundaries = tuple(boundaries)
+        self._bucket_counts = self._get_empty_bucket_counts()
         self._min = inf
         self._max = -inf
         self._sum = 0
-        self._instrument = instrument
         self._record_min_max = record_min_max
+        self._start_time_unix_nano = _time_ns()
 
-    @property
-    def min(self):
-        if not self._record_min_max:
-            _logger.warning("Min is not being recorded")
+    def _get_empty_bucket_counts(self) -> List[int]:
+        return [0] * (len(self._boundaries) + 1)
 
-        return self._min
+    def aggregate(self, measurement: Measurement) -> None:
 
-    @property
-    def max(self):
-        if not self._record_min_max:
-            _logger.warning("Max is not being recorded")
+        value = measurement.value
 
-        return self._max
-
-    @property
-    def sum(self):
-        if isinstance(self._instrument, _Monotonic):
-            return self._sum
-
-        _logger.warning(
-            "Sum is not filled out when the associated "
-            "instrument is not monotonic"
-        )
-        return None
-
-    def aggregate(self, value):
         if self._record_min_max:
             self._min = min(self._min, value)
             self._max = max(self._max, value)
 
-        if isinstance(self._instrument, _Monotonic):
-            self._sum += value
+        self._sum += value
 
-        for key in self._value.keys():
+        self._bucket_counts[bisect_left(self._boundaries, value)] += 1
 
-            if value < key:
-                self._value[key] = self._value[key] + value
+    def collect(self) -> Histogram:
+        """
+        Atomically return a point for the current value of the metric.
+        """
+        now = _time_ns()
 
-                break
+        with self._lock:
+            value = self._bucket_counts
+            start_time_unix_nano = self._start_time_unix_nano
 
-    def make_point_and_reset(self):
-        pass
+            self._bucket_counts = self._get_empty_bucket_counts()
+            self._start_time_unix_nano = now + 1
+
+        return Histogram(
+            start_time_unix_nano=start_time_unix_nano,
+            time_unix_nano=now,
+            bucket_counts=tuple(value),
+            explicit_bounds=self._boundaries,
+            aggregation_temporality=AggregationTemporality.DELTA,
+            sum=self._sum,
+        )
+
+
+# pylint: disable=too-many-return-statements,too-many-branches
+def _convert_aggregation_temporality(
+    previous_point: Optional[_PointVarT],
+    current_point: _PointVarT,
+    aggregation_temporality: AggregationTemporality,
+) -> _PointVarT:
+    """Converts `current_point` to the requested `aggregation_temporality`
+    given the `previous_point`.
+
+    `previous_point` must have `CUMULATIVE` temporality. `current_point` may
+    have `DELTA` or `CUMULATIVE` temporality.
+
+    The output point will have temporality `aggregation_temporality`. Since
+    `GAUGE` points have no temporality, they are returned unchanged.
+    """
+
+    current_point_type = type(current_point)
+
+    if current_point_type is Gauge:
+        return current_point
+
+    if previous_point is not None and type(previous_point) is not type(
+        current_point
+    ):
+        _logger.warning(
+            "convert_aggregation_temporality called with mismatched "
+            "point types: %s and %s",
+            type(previous_point),
+            current_point_type,
+        )
+
+        return current_point
+
+    if current_point_type is Sum:
+        if previous_point is None:
+            # Output CUMULATIVE for a synchronous instrument
+            # There is no previous value, return the delta point as a
+            # cumulative
+            return replace(
+                current_point, aggregation_temporality=aggregation_temporality
+            )
+        if previous_point.aggregation_temporality is not (
+            AggregationTemporality.CUMULATIVE
+        ):
+            raise Exception(
+                "previous_point aggregation temporality must be CUMULATIVE"
+            )
+
+        if current_point.aggregation_temporality is aggregation_temporality:
+            # Output DELTA for a synchronous instrument
+            # Output CUMULATIVE for an asynchronous instrument
+            return current_point
+
+        if aggregation_temporality is AggregationTemporality.DELTA:
+            # Output temporality DELTA for an asynchronous instrument
+            value = current_point.value - previous_point.value
+            output_start_time_unix_nano = previous_point.time_unix_nano
+
+        else:
+            # Output CUMULATIVE for a synchronous instrument
+            value = current_point.value + previous_point.value
+            output_start_time_unix_nano = previous_point.start_time_unix_nano
+
+        is_monotonic = (
+            previous_point.is_monotonic and current_point.is_monotonic
+        )
+
+        return Sum(
+            start_time_unix_nano=output_start_time_unix_nano,
+            time_unix_nano=current_point.time_unix_nano,
+            value=value,
+            aggregation_temporality=aggregation_temporality,
+            is_monotonic=is_monotonic,
+        )
+
+    if current_point_type is Histogram:
+        if previous_point is None:
+            return replace(
+                current_point, aggregation_temporality=aggregation_temporality
+            )
+        if previous_point.aggregation_temporality is not (
+            AggregationTemporality.CUMULATIVE
+        ):
+            raise Exception(
+                "previous_point aggregation temporality must be CUMULATIVE"
+            )
+
+        if current_point.aggregation_temporality is aggregation_temporality:
+            return current_point
+
+        if aggregation_temporality is AggregationTemporality.CUMULATIVE:
+            start_time_unix_nano = previous_point.start_time_unix_nano
+            sum_ = current_point.sum + previous_point.sum
+            bucket_counts = [
+                curr_count + prev_count
+                for curr_count, prev_count in zip(
+                    current_point.bucket_counts, previous_point.bucket_counts
+                )
+            ]
+        else:
+            start_time_unix_nano = previous_point.time_unix_nano
+            sum_ = current_point.sum - previous_point.sum
+            bucket_counts = [
+                curr_count - prev_count
+                for curr_count, prev_count in zip(
+                    current_point.bucket_counts, previous_point.bucket_counts
+                )
+            ]
+
+        return Histogram(
+            start_time_unix_nano=start_time_unix_nano,
+            time_unix_nano=current_point.time_unix_nano,
+            bucket_counts=bucket_counts,
+            explicit_bounds=current_point.explicit_bounds,
+            sum=sum_,
+            aggregation_temporality=aggregation_temporality,
+        )
+    return None
+
+
+class _AggregationFactory(ABC):
+    @abstractmethod
+    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
+        """Creates an aggregation"""
+
+
+class ExplicitBucketHistogramAggregation(_AggregationFactory):
+    def __init__(
+        self,
+        boundaries: Sequence[float] = (
+            0.0,
+            5.0,
+            10.0,
+            25.0,
+            50.0,
+            75.0,
+            100.0,
+            250.0,
+            500.0,
+            1000.0,
+        ),
+        record_min_max: bool = True,
+    ) -> None:
+        self._boundaries = boundaries
+        self._record_min_max = record_min_max
+
+    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
+        return _ExplicitBucketHistogramAggregation(
+            boundaries=self._boundaries,
+            record_min_max=self._record_min_max,
+        )
+
+
+class SumAggregation(_AggregationFactory):
+    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
+
+        temporality = AggregationTemporality.UNSPECIFIED
+        if isinstance(instrument, Synchronous):
+            temporality = AggregationTemporality.DELTA
+        elif isinstance(instrument, Asynchronous):
+            temporality = AggregationTemporality.CUMULATIVE
+
+        return _SumAggregation(
+            isinstance(instrument, _Monotonic),
+            temporality,
+        )
+
+
+class LastValueAggregation(_AggregationFactory):
+    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
+        return _LastValueAggregation()

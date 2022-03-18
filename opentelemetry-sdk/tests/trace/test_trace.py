@@ -1594,6 +1594,53 @@ class TestSpanLimits(unittest.TestCase):
             )
         )
 
+    def test_span_zero_global_limit(self):
+        self._test_span_limits(
+            new_tracer(
+                span_limits=trace.SpanLimits(
+                    max_attributes=0,
+                    max_events=0,
+                    max_links=0,
+                )
+            ),
+            0,
+            0,
+            0,
+            0,
+            0,
+        )
+
+    def test_span_zero_global_nonzero_model(self):
+        self._test_span_limits(
+            new_tracer(
+                span_limits=trace.SpanLimits(
+                    max_attributes=0,
+                    max_events=0,
+                    max_links=0,
+                    max_span_attributes=15,
+                    max_span_attribute_length=25,
+                )
+            ),
+            15,
+            0,
+            0,
+            0,
+            25,
+        )
+
+    def test_span_zero_global_unset_model(self):
+        self._test_span_no_limits(
+            new_tracer(
+                span_limits=trace.SpanLimits(
+                    max_attributes=0,
+                    max_span_attributes=trace.SpanLimits.UNSET,
+                    max_links=trace.SpanLimits.UNSET,
+                    max_events=trace.SpanLimits.UNSET,
+                    max_attribute_length=trace.SpanLimits.UNSET,
+                )
+            )
+        )
+
     def test_dropped_attributes(self):
         span = get_span_with_dropped_attributes_events_links()
         self.assertEqual(1, span.dropped_links)

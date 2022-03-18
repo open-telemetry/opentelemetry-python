@@ -255,7 +255,7 @@ class TestSampler(unittest.TestCase):
         # Sample one of every 2^64 (= 5e-20) traces. This is the lowest
         # possible meaningful sampling rate, only traces with trace ID 0x0
         # should get sampled.
-        almost_always_off = sampling.TraceIdRatioBased(2 ** -64)
+        almost_always_off = sampling.TraceIdRatioBased(2**-64)
         self.assertTrue(
             almost_always_off.should_sample(
                 None, 0x0, "span name"
@@ -267,7 +267,7 @@ class TestSampler(unittest.TestCase):
             ).decision.is_sampled()
         )
         self.assertEqual(
-            sampling.TraceIdRatioBased.get_bound_for_rate(2 ** -64), 0x1
+            sampling.TraceIdRatioBased.get_bound_for_rate(2**-64), 0x1
         )
 
         # Sample every trace with trace ID less than 0xffffffffffffffff. In
@@ -278,7 +278,7 @@ class TestSampler(unittest.TestCase):
         #
         #     1 - sys.float_info.epsilon
 
-        almost_always_on = sampling.TraceIdRatioBased(1 - 2 ** -64)
+        almost_always_on = sampling.TraceIdRatioBased(1 - 2**-64)
         self.assertTrue(
             almost_always_on.should_sample(
                 None, 0xFFFFFFFFFFFFFFFE, "span name"
