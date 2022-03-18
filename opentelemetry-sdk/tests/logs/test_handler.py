@@ -82,8 +82,7 @@ class TestLoggingHandler(unittest.TestCase):
         emitter_mock = Mock(spec=LogEmitter)
         logger = get_logger(log_emitter=emitter_mock)
         try:
-            # pylint:disable=unused-variable
-            div = 1 / 0  # noqa: F841
+            raise ZeroDivisionError("division by zero")
         except ZeroDivisionError:
             logger.exception("Zero Division Error")
         args, _ = emitter_mock.emit.call_args_list[0]
@@ -104,7 +103,6 @@ class TestLoggingHandler(unittest.TestCase):
         ]
         self.assertIsInstance(stack_trace, str)
         self.assertTrue("Traceback" in stack_trace)
-        self.assertTrue("div = 1 / 0" in stack_trace)
         self.assertTrue("ZeroDivisionError" in stack_trace)
         self.assertTrue("division by zero" in stack_trace)
         self.assertTrue(__file__ in stack_trace)

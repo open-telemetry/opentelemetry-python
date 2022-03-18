@@ -324,11 +324,14 @@ class LoggingHandler(logging.Handler):
         attributes = {
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }
-        if record.exc_info:
+        if record.exc_info is not None:
+            exc_type = ""
+            message = ""
+            stack_trace = ""
             exctype, value, tb = record.exc_info
             if exctype is not None:
                 exc_type = exctype.__name__
-            if value is not None:
+            if value is not None and value.args:
                 message = value.args[0]
             if tb is not None:
                 # https://github.com/open-telemetry/opentelemetry-specification/blob/9fa7c656b26647b27e485a6af7e38dc716eba98a/specification/trace/semantic_conventions/exceptions.md#stacktrace-representation
