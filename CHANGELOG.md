@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2525](https://github.com/open-telemetry/opentelemetry-python/pull/2525))
 - Change OTLPHandler to LoggingHandler
   ([#2528](https://github.com/open-telemetry/opentelemetry-python/pull/2528))
+- Add InMemoryMetricReader to metrics SDK
+  ([#2540](https://github.com/open-telemetry/opentelemetry-python/pull/2540))
 
 ## [1.10.0-0.29b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.10.0-0.29b0) - 2022-03-10
 
