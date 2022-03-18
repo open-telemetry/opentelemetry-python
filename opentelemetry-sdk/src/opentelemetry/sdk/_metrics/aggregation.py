@@ -189,6 +189,8 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[Histogram]):
         now = _time_ns()
 
         with self._lock:
+            sum_ = self._sum
+            self._sum = 0
             value = self._bucket_counts
             start_time_unix_nano = self._start_time_unix_nano
 
@@ -201,7 +203,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[Histogram]):
             bucket_counts=tuple(value),
             explicit_bounds=self._boundaries,
             aggregation_temporality=AggregationTemporality.DELTA,
-            sum=self._sum,
+            sum=sum_,
         )
 
 

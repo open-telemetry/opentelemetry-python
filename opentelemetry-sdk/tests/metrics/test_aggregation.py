@@ -299,6 +299,29 @@ class TestExplicitBucketHistogramAggregation(TestCase):
             second_histogram.time_unix_nano, first_histogram.time_unix_nano
         )
 
+    def test_reset_after_collect(self):
+
+        explicit_bucket_histogram_aggregation = (
+            _ExplicitBucketHistogramAggregation(boundaries=[0, 1, 2])
+        )
+
+        explicit_bucket_histogram_aggregation.aggregate(measurement(1))
+        self.assertEqual(
+            explicit_bucket_histogram_aggregation.collect().sum, 1
+        )
+
+        explicit_bucket_histogram_aggregation.aggregate(measurement(1))
+        explicit_bucket_histogram_aggregation.aggregate(measurement(1))
+        explicit_bucket_histogram_aggregation.aggregate(measurement(1))
+        self.assertEqual(
+            explicit_bucket_histogram_aggregation.collect().sum, 3
+        )
+
+        explicit_bucket_histogram_aggregation.aggregate(measurement(1))
+        self.assertEqual(
+            explicit_bucket_histogram_aggregation.collect().sum, 1
+        )
+
 
 class TestConvertAggregationTemporality(TestCase):
     """
