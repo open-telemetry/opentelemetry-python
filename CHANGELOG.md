@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix incorrect installation of some exporter “convenience” packages into
   “site-packages/src”
   ([#2525](https://github.com/open-telemetry/opentelemetry-python/pull/2525))
+- Capture exception information as part of log attributes
+  ([#2531](https://github.com/open-telemetry/opentelemetry-python/pull/2531))
 - Change OTLPHandler to LoggingHandler
   ([#2528](https://github.com/open-telemetry/opentelemetry-python/pull/2528))
 - Fix delta histogram sum not being reset on collection
