@@ -286,6 +286,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         first_histogram = explicit_bucket_histogram_aggregation.collect()
 
         self.assertEqual(first_histogram.bucket_counts, (0, 1, 0, 0))
+        self.assertEqual(first_histogram.sum, 1)
 
         # CI fails the last assertion without this
         sleep(0.1)
@@ -294,6 +295,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         second_histogram = explicit_bucket_histogram_aggregation.collect()
 
         self.assertEqual(second_histogram.bucket_counts, (0, 1, 0, 0))
+        self.assertEqual(second_histogram.sum, 1)
 
         self.assertGreater(
             second_histogram.time_unix_nano, first_histogram.time_unix_nano

@@ -11,7 +11,6 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import logging
 import unittest
 from unittest.mock import Mock
@@ -19,6 +18,7 @@ from unittest.mock import Mock
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import LogEmitter, LoggingHandler
 from opentelemetry.sdk._logs.severity import SeverityNumber
+from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import INVALID_SPAN_CONTEXT
 
 
@@ -76,6 +76,36 @@ class TestLoggingHandler(unittest.TestCase):
 
         self.assertIsNotNone(log_record)
         self.assertEqual(log_record.attributes, {"http.status_code": 200})
+
+    def test_log_record_exception(self):
+        """Exception information will be included in attributes"""
+        emitter_mock = Mock(spec=LogEmitter)
+        logger = get_logger(log_emitter=emitter_mock)
+        try:
+            raise ZeroDivisionError("division by zero")
+        except ZeroDivisionError:
+            logger.exception("Zero Division Error")
+        args, _ = emitter_mock.emit.call_args_list[0]
+        log_record = args[0]
+
+        self.assertIsNotNone(log_record)
+        self.assertEqual(log_record.body, "Zero Division Error")
+        self.assertEqual(
+            log_record.attributes[SpanAttributes.EXCEPTION_TYPE],
+            ZeroDivisionError.__name__,
+        )
+        self.assertEqual(
+            log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE],
+            "division by zero",
+        )
+        stack_trace = log_record.attributes[
+            SpanAttributes.EXCEPTION_STACKTRACE
+        ]
+        self.assertIsInstance(stack_trace, str)
+        self.assertTrue("Traceback" in stack_trace)
+        self.assertTrue("ZeroDivisionError" in stack_trace)
+        self.assertTrue("division by zero" in stack_trace)
+        self.assertTrue(__file__ in stack_trace)
 
     def test_log_record_trace_correlation(self):
         emitter_mock = Mock(spec=LogEmitter)
