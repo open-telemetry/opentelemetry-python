@@ -133,19 +133,20 @@ class TestSynchronousSumAggregation(TestCase):
         self.assertEqual(first_sum.value, 1)
         self.assertTrue(first_sum.is_monotonic)
 
+        # should have been reset after first collect
         sum_aggregation.aggregate(measurement(1))
         second_sum = sum_aggregation.collect()
 
-        self.assertEqual(second_sum.value, 2)
+        self.assertEqual(second_sum.value, 1)
         self.assertTrue(second_sum.is_monotonic)
 
         self.assertEqual(
             second_sum.start_time_unix_nano, first_sum.start_time_unix_nano
         )
 
-        self.assertIsNone(
-            _SumAggregation(True, AggregationTemporality.CUMULATIVE).collect()
-        )
+        # if no point seen for a whole interval, should return None
+        third_sum = sum_aggregation.collect()
+        self.assertIsNone(third_sum)
 
 
 class TestLastValueAggregation(TestCase):
@@ -193,6 +194,10 @@ class TestLastValueAggregation(TestCase):
         self.assertGreater(
             second_gauge.time_unix_nano, first_gauge.time_unix_nano
         )
+
+        # if no observation seen for the interval, it should return None
+        third_gauge = last_value_aggregation.collect()
+        self.assertIsNone(third_gauge)
 
 
 class TestExplicitBucketHistogramAggregation(TestCase):
@@ -281,6 +286,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         first_histogram = explicit_bucket_histogram_aggregation.collect()
 
         self.assertEqual(first_histogram.bucket_counts, (0, 1, 0, 0))
+        self.assertEqual(first_histogram.sum, 1)
 
         # CI fails the last assertion without this
         sleep(0.1)
@@ -289,6 +295,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         second_histogram = explicit_bucket_histogram_aggregation.collect()
 
         self.assertEqual(second_histogram.bucket_counts, (0, 1, 0, 0))
+        self.assertEqual(second_histogram.sum, 1)
 
         self.assertGreater(
             second_histogram.time_unix_nano, first_histogram.time_unix_nano

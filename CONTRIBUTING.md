@@ -53,10 +53,15 @@ as well as the project's packages themselves (in `--editable` mode).
 You can then run `scripts/eachdist.py test` to test everything or
 `scripts/eachdist.py lint` to lint everything (fixing anything that is auto-fixable).
 
-Additionally, this project uses [`tox`](https://tox.readthedocs.io) to automate some aspects
-of development, including testing against multiple Python versions.
+Additionally, this project uses [tox](https://tox.readthedocs.io) to automate
+some aspects of development, including testing against multiple Python versions.
+To install `tox`, run:
 
-You can run:
+```console
+$ pip install tox
+```
+
+You can run `tox` with the following arguments:
 
 - `tox` to run all existing tox commands, including unit tests for all packages
   under multiple Python versions
@@ -65,6 +70,12 @@ You can run:
 - `tox -e py37-opentelemetry-api` to e.g. run the API unit tests under a specific
   Python version
 - `tox -e lint` to run lint checks on all code
+
+`black` and `isort` are executed when `tox -e lint` is run. The reported errors can be tedious to fix manually.
+An easier way to do so is:
+
+1. Run `.tox/lint/bin/black .`
+2. Run `.tox/lint/bin/isort .`
 
 We try to keep the amount of _public symbols_ in our code minimal. A public symbol is any Python identifier that does not start with an underscore.
 Every public symbol is something that has to be kept in order to maintain backwards compatibility, so we try to have as few as possible.
@@ -88,7 +99,7 @@ with a specific git commit hash by setting an environment variable before runnin
 CONTRIB_REPO_SHA=dde62cebffe519c35875af6d06fae053b3be65ec tox
 ```
 
-The continuation integration overrides that environment variable with as per the configuration 
+The continuation integration overrides that environment variable with as per the configuration
 [here](https://github.com/open-telemetry/opentelemetry-python/blob/9020b0baaeb41b7137badca988bb5c2d562cddee/.github/workflows/test.yml#L13).
 
 ### Benchmarks
@@ -125,13 +136,13 @@ pull requests (PRs).
 
 To create a new PR, fork the project in GitHub and clone the upstream repo:
 
-```sh
+```console
 $ git clone https://github.com/open-telemetry/opentelemetry-python.git
 ```
 
 Add your fork as an origin:
 
-```sh
+```console
 $ git remote add fork https://github.com/YOUR_GITHUB_USERNAME/opentelemetry-python.git
 ```
 
@@ -154,7 +165,7 @@ $ git push fork feature
 
 Open a pull request against the main `opentelemetry-python` repo.
 
-Pull requests are also tested for their compatibility with packages distributed 
+Pull requests are also tested for their compatibility with packages distributed
 by OpenTelemetry in the [OpenTelemetry Python Contrib Repository](https://github.com/open-telemetry/opentelemetry-python.git).
 
 If a pull request (PR) introduces a change that would break the compatibility of
@@ -196,7 +207,7 @@ Any Approver / Maintainer can merge the PR once it is **ready to merge**.
 
 ## Design Choices
 
-As with other OpenTelemetry clients, opentelemetry-python follows the 
+As with other OpenTelemetry clients, opentelemetry-python follows the
 [opentelemetry-specification](https://github.com/open-telemetry/opentelemetry-specification).
 
 It's especially valuable to read through the [library guidelines](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/library-guidelines.md).
@@ -209,7 +220,7 @@ use cases are clear, but the method to satisfy those uses cases are not.
 As such, contributions should provide functionality and behavior that
 conforms to the specification, but the interface and structure is flexible.
 
-It is preferable to have contributions follow the idioms of the language 
+It is preferable to have contributions follow the idioms of the language
 rather than conform to specific API names or argument patterns in the spec.
 
 For a deeper discussion, see: https://github.com/open-telemetry/opentelemetry-specification/issues/165

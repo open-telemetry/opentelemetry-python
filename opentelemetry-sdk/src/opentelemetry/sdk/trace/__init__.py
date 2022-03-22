@@ -112,7 +112,7 @@ class SpanProcessor:
         """
 
     def shutdown(self) -> None:
-        """Called when a :class:`opentelemetry.sdk.trace.Tracer` is shutdown."""
+        """Called when a :class:`opentelemetry.sdk.trace.TracerProvider` is shutdown."""
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         """Export all ended spans to the configured Exporter that have not yet
@@ -1140,7 +1140,7 @@ class TracerProvider(trace_api.TracerProvider):
         self._active_span_processor.add_span_processor(span_processor)
 
     def shutdown(self):
-        """Shut down the span processors added to the tracer."""
+        """Shut down the span processors added to the tracer provider."""
         self._active_span_processor.shutdown()
         if self._atexit_handler is not None:
             atexit.unregister(self._atexit_handler)

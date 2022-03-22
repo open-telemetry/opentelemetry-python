@@ -1,4 +1,3 @@
-# Copyright 2019, OpenCensus Authors
 # Copyright The OpenTelemetry Authors
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,5 +11,16 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import os
 
-__version__ = "1.10.0"
+import setuptools
+
+_BASE_DIR = os.path.dirname(__file__)
+_VERSION_FILENAME = os.path.join(
+    _BASE_DIR, "src", "opentelemetry", "exporter", "prometheus", "version.py"
+)
+_PACKAGE_INFO = {}
+with open(_VERSION_FILENAME, encoding="utf-8") as f:
+    exec(f.read(), _PACKAGE_INFO)
+
+setuptools.setup(version=_PACKAGE_INFO["__version__"])

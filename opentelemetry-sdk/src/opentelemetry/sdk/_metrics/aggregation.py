@@ -101,15 +101,18 @@ class _SumAggregation(_Aggregation[Sum]):
                 value=value,
             )
 
-        if self._value is None:
-            return None
+        with self._lock:
+            if self._value is None:
+                return None
+            value = self._value
+            self._value = None
 
         return Sum(
             aggregation_temporality=AggregationTemporality.CUMULATIVE,
             is_monotonic=self._instrument_is_monotonic,
             start_time_unix_nano=self._start_time_unix_nano,
             time_unix_nano=now,
-            value=self._value,
+            value=value,
         )
 
 
@@ -126,12 +129,15 @@ class _LastValueAggregation(_Aggregation[Gauge]):
         """
         Atomically return a point for the current value of the metric.
         """
-        if self._value is None:
-            return None
+        with self._lock:
+            if self._value is None:
+                return None
+            value = self._value
+            self._value = None
 
         return Gauge(
             time_unix_nano=_time_ns(),
-            value=self._value,
+            value=value,
         )
 
 
@@ -185,9 +191,11 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[Histogram]):
         with self._lock:
             value = self._bucket_counts
             start_time_unix_nano = self._start_time_unix_nano
+            histogram_sum = self._sum
 
             self._bucket_counts = self._get_empty_bucket_counts()
             self._start_time_unix_nano = now + 1
+            self._sum = 0
 
         return Histogram(
             start_time_unix_nano=start_time_unix_nano,
@@ -195,7 +203,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[Histogram]):
             bucket_counts=tuple(value),
             explicit_bounds=self._boundaries,
             aggregation_temporality=AggregationTemporality.DELTA,
-            sum=self._sum,
+            sum=histogram_sum,
         )
 
 

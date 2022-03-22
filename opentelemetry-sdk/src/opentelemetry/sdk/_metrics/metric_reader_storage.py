@@ -15,20 +15,17 @@
 from threading import RLock
 from typing import Dict, Iterable, List
 
-from opentelemetry._metrics.instrument import Counter, Histogram, Instrument
+from opentelemetry._metrics.instrument import Instrument
 from opentelemetry.sdk._metrics._view_instrument_match import (
     _ViewInstrumentMatch,
 )
-from opentelemetry.sdk._metrics.aggregation import (
-    AggregationTemporality,
-    _ExplicitBucketHistogramAggregation,
-    _LastValueAggregation,
-    _SumAggregation,
-)
+from opentelemetry.sdk._metrics.aggregation import AggregationTemporality
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import Metric
 from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
 from opentelemetry.sdk._metrics.view import View
+
+_DEFAULT_VIEW = View(instrument_name="")
 
 
 class MetricReaderStorage:
@@ -46,6 +43,7 @@ class MetricReaderStorage:
     ) -> List["_ViewInstrumentMatch"]:
         # Optimistically get the relevant views for the given instrument. Once set for a given
         # instrument, the mapping will never change
+
         if instrument in self._view_instrument_match:
             return self._view_instrument_match[instrument]
 
@@ -55,50 +53,38 @@ class MetricReaderStorage:
                 return self._view_instrument_match[instrument]
 
             # not present, hold the lock and add a new mapping
-            matches = []
+            view_instrument_matches = []
             for view in self._sdk_config.views:
-                if view.match(instrument):
-                    # Note: if a view matches multiple instruments, this will create a separate
-                    # _ViewInstrumentMatch per instrument. If the user's View configuration includes a
-                    # name, this will cause multiple conflicting output streams.
-                    matches.append(
+                # pylint: disable=protected-access
+                if view._match(instrument):
+                    view_instrument_matches.append(
                         _ViewInstrumentMatch(
-                            name=view.name or instrument.name,
-                            resource=self._sdk_config.resource,
-                            instrumentation_info=None,
-                            aggregation=view.aggregation,
-                            unit=instrument.unit,
-                            description=view.description,
+                            view=view,
+                            instrument=instrument,
+                            sdk_config=self._sdk_config,
                         )
                     )
 
             # if no view targeted the instrument, use the default
-            if not matches:
-                # TODO: the logic to select aggregation could be moved
-                if isinstance(instrument, Counter):
-                    agg = _SumAggregation(True, AggregationTemporality.DELTA)
-                elif isinstance(instrument, Histogram):
-                    agg = _ExplicitBucketHistogramAggregation()
-                else:
-                    agg = _LastValueAggregation()
-                matches.append(
+            if (
+                not view_instrument_matches
+                and self._sdk_config.enable_default_view
+            ):
+                view_instrument_matches.append(
                     _ViewInstrumentMatch(
-                        resource=self._sdk_config.resource,
-                        instrumentation_info=None,
-                        aggregation=agg,
-                        unit=instrument.unit,
-                        description=instrument.description,
-                        name=instrument.name,
+                        view=_DEFAULT_VIEW,
+                        instrument=instrument,
+                        sdk_config=self._sdk_config,
                     )
                 )
-            self._view_instrument_match[instrument] = matches
-            return matches
+            self._view_instrument_match[instrument] = view_instrument_matches
+            return view_instrument_matches
 
     def consume_measurement(self, measurement: Measurement) -> None:
-        for matches in self._get_or_init_view_instrument_match(
+        for view_instrument_match in self._get_or_init_view_instrument_match(
             measurement.instrument
         ):
-            matches.consume_measurement(measurement)
+            view_instrument_match.consume_measurement(measurement)
 
     def collect(self, temporality: AggregationTemporality) -> Iterable[Metric]:
         # use a list instead of yielding to prevent a slow reader from holding SDK locks
@@ -111,9 +97,11 @@ class MetricReaderStorage:
         # that end times can be slightly skewed among the metric streams produced by the SDK,
         # but we still align the output timestamps for a single instrument.
         with self._lock:
-            for matches in self._view_instrument_match.values():
-                for match in matches:
-                    metrics.extend(match.collect(temporality))
+            for (
+                view_instrument_matches
+            ) in self._view_instrument_match.values():
+                for view_instrument_match in view_instrument_matches:
+                    metrics.extend(view_instrument_match.collect(temporality))
 
         return metrics
 

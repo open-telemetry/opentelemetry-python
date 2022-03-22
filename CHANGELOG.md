@@ -5,13 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.9.1-0.28b1...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.10.0-0.29b0...HEAD)
+
+- Fix incorrect installation of some exporter “convenience” packages into
+  “site-packages/src”
+  ([#2525](https://github.com/open-telemetry/opentelemetry-python/pull/2525))
+- Capture exception information as part of log attributes
+  ([#2531](https://github.com/open-telemetry/opentelemetry-python/pull/2531))
+- Change OTLPHandler to LoggingHandler
+  ([#2528](https://github.com/open-telemetry/opentelemetry-python/pull/2528))
+- Fix delta histogram sum not being reset on collection
+  ([#2533](https://github.com/open-telemetry/opentelemetry-python/pull/2533))
+
+## [1.10.0-0.29b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.10.0-0.29b0) - 2022-03-10
 
 - Docs rework: [non-API docs are
   moving](https://github.com/open-telemetry/opentelemetry-python/issues/2172) to
   [opentelemetry.io](https://opentelemetry.io). For details, including a list of
   pages that have moved, see
-  [#2453](https://github.com/open-telemetry/opentelemetry-python/pull/2453).
+  [#2453](https://github.com/open-telemetry/opentelemetry-python/pull/2453), and
+  [#2498](https://github.com/open-telemetry/opentelemetry-python/pull/2498).
 - `opentelemetry-exporter-otlp-grpc` update SDK dependency to ~1.9.
   ([#2442](https://github.com/open-telemetry/opentelemetry-python/pull/2442))
 - bugfix(auto-instrumentation): attach OTLPHandler to root logger
@@ -20,6 +33,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2461](https://github.com/open-telemetry/opentelemetry-python/pull/2461))
 - fix exception handling in get_aggregated_resources
   ([#2464](https://github.com/open-telemetry/opentelemetry-python/pull/2464))
+- Fix `OTEL_EXPORTER_OTLP_ENDPOINT` usage in OTLP HTTP trace exporter
+  ([#2493](https://github.com/open-telemetry/opentelemetry-python/pull/2493))
+- [exporter/opentelemetry-exporter-prometheus] restore package using the new metrics API
+  ([#2321](https://github.com/open-telemetry/opentelemetry-python/pull/2321))
 
 ## [1.9.1-0.28b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.9.1-0.28b1) - 2022-01-29
 
@@ -92,6 +109,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.6.2-0.25b2](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.2-0.25b2) - 2021-10-19
 
+- Fix parental trace relationship for opentracing `follows_from` reference
+  ([#2180](https://github.com/open-telemetry/opentelemetry-python/pull/2180))
+
 ## [1.6.1-0.25b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.1-0.25b1) - 2021-10-18
 
 - Fix ReadableSpan property types attempting to create a mapping from a list
@@ -100,9 +120,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2201](https://github.com/open-telemetry/opentelemetry-python/pull/2201))
 - Propagation: only warn about oversized baggage headers when headers exist
   ([#2212](https://github.com/open-telemetry/opentelemetry-python/pull/2212))
-
-- Fix parental trace relationship for opentracing `follows_from` reference
-  ([#2180](https://github.com/open-telemetry/opentelemetry-python/pull/2180))
 
 ## [1.6.0-0.25b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.6.0-0.25b0) - 2021-10-13
 
