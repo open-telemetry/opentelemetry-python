@@ -23,6 +23,7 @@ from unittest.mock import Mock
 from opentelemetry.sdk._metrics import instrument
 from opentelemetry.sdk._metrics.aggregation import (
     AggregationTemporality,
+    DefaultAggregation,
     ExplicitBucketHistogramAggregation,
     LastValueAggregation,
     SumAggregation,
@@ -30,6 +31,13 @@ from opentelemetry.sdk._metrics.aggregation import (
     _ExplicitBucketHistogramAggregation,
     _LastValueAggregation,
     _SumAggregation,
+)
+from opentelemetry.sdk._metrics.instrument import (
+    Counter,
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import Gauge, Histogram, Sum
@@ -817,3 +825,81 @@ class TestAggregationFactory(TestCase):
         self.assertIsInstance(aggregation, _LastValueAggregation)
         aggregation2 = factory._create_aggregation(counter)
         self.assertNotEqual(aggregation, aggregation2)
+
+
+class TestDefaultAggregation(TestCase):
+    @classmethod
+    def setUpClass(cls):
+        cls.default_aggregation = DefaultAggregation()
+
+    def test_counter(self):
+
+        aggregation = self.default_aggregation._create_aggregation(
+            Counter(Mock(), Mock(), Mock())
+        )
+        self.assertIsInstance(aggregation, _SumAggregation)
+        self.assertTrue(aggregation._instrument_is_monotonic)
+        self.assertEqual(
+            aggregation._instrument_temporality, AggregationTemporality.DELTA
+        )
+
+    def test_up_down_counter(self):
+
+        aggregation = self.default_aggregation._create_aggregation(
+            UpDownCounter(Mock(), Mock(), Mock())
+        )
+        self.assertIsInstance(aggregation, _SumAggregation)
+        self.assertFalse(aggregation._instrument_is_monotonic)
+        self.assertEqual(
+            aggregation._instrument_temporality, AggregationTemporality.DELTA
+        )
+
+    def test_observable_counter(self):
+
+        aggregation = self.default_aggregation._create_aggregation(
+            ObservableCounter(Mock(), Mock(), Mock(), Mock())
+        )
+        self.assertIsInstance(aggregation, _SumAggregation)
+        self.assertTrue(aggregation._instrument_is_monotonic)
+        self.assertEqual(
+            aggregation._instrument_temporality,
+            AggregationTemporality.CUMULATIVE,
+        )
+
+    def test_observable_up_down_counter(self):
+
+        aggregation = self.default_aggregation._create_aggregation(
+            ObservableUpDownCounter(Mock(), Mock(), Mock(), Mock())
+        )
+        self.assertIsInstance(aggregation, _SumAggregation)
+        self.assertFalse(aggregation._instrument_is_monotonic)
+        self.assertEqual(
+            aggregation._instrument_temporality,
+            AggregationTemporality.CUMULATIVE,
+        )
+
+    def test_histogram(self):
+
+        aggregation = self.default_aggregation._create_aggregation(
+            Histogram(
+                Mock(),
+                Mock(),
+                Mock(),
+                Mock(),
+                Mock(),
+                Mock(),
+            )
+        )
+        self.assertIsInstance(aggregation, _ExplicitBucketHistogramAggregation)
+
+    def test_observable_gauge(self):
+
+        aggregation = self.default_aggregation._create_aggregation(
+            ObservableGauge(
+                Mock(),
+                Mock(),
+                Mock(),
+                Mock(),
+            )
+        )
+        self.assertIsInstance(aggregation, _LastValueAggregation)

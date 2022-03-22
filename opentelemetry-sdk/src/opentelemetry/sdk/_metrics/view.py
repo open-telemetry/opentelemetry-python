@@ -21,7 +21,10 @@ from typing import Optional, Set, Type
 from typing_extensions import final
 
 from opentelemetry._metrics.instrument import Instrument
-from opentelemetry.sdk._metrics.aggregation import _AggregationFactory
+from opentelemetry.sdk._metrics.aggregation import (
+    DefaultAggregation,
+    _AggregationFactory,
+)
 
 _logger = getLogger(__name__)
 
@@ -69,8 +72,9 @@ class View:
             are in ``attribute_keys`` will be used to identify the metric stream.
 
         aggregation: This is a metric stream customizing attribute: the
-            aggregatation instance to use when data is aggregated for the corresponding metrics
-            stream. If `None` the default aggregation of the instrument will be used.
+            aggregation instance to use when data is aggregated for the
+            corresponding metrics stream. If `None` an instance of
+            `DefaultAggregation` will be used.
 
     This class is not intended to be subclassed by the user.
     """
@@ -122,7 +126,7 @@ class View:
 
         self._description = description
         self._attribute_keys = attribute_keys
-        self._aggregation = aggregation
+        self._aggregation = aggregation or DefaultAggregation()
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches

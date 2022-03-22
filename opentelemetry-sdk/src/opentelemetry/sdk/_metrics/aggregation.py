@@ -27,8 +27,13 @@ from typing import Generic, List, Optional, Sequence, TypeVar
 
 from opentelemetry._metrics.instrument import (
     Asynchronous,
+    Counter,
     Instrument,
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
     Synchronous,
+    UpDownCounter,
     _Monotonic,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
@@ -65,6 +70,62 @@ class _DropAggregation(_Aggregation):
 
     def collect(self) -> Optional[_PointVarT]:
         pass
+
+
+class _AggregationFactory(ABC):
+    @abstractmethod
+    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
+        """Creates an aggregation"""
+
+
+class DefaultAggregation(_AggregationFactory):
+    """
+    The default aggregation to be used in a `View`.
+
+    This aggregation will create an actual aggregation depending on the
+    instrument type, as specified next:
+
+    `Counter`                   →   `SumAggregation`
+    `UpDownCounter`             →   `SumAggregation`
+    `ObservableCounter`         →   `SumAggregation`
+    `ObservableUpDownCounter`   →   `SumAggregation`
+    `Histogram`                 →   `ExplicitBucketHistogramAggregation`
+    `ObservableGauge`           →   `LastValueAggregation`
+    """
+
+    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
+
+        # pylint: disable=too-many-return-statements
+        if isinstance(instrument, Counter):
+            return _SumAggregation(
+                instrument_is_monotonic=True,
+                instrument_temporality=AggregationTemporality.DELTA,
+            )
+        if isinstance(instrument, UpDownCounter):
+            return _SumAggregation(
+                instrument_is_monotonic=False,
+                instrument_temporality=AggregationTemporality.DELTA,
+            )
+
+        if isinstance(instrument, ObservableCounter):
+            return _SumAggregation(
+                instrument_is_monotonic=True,
+                instrument_temporality=AggregationTemporality.CUMULATIVE,
+            )
+
+        if isinstance(instrument, ObservableUpDownCounter):
+            return _SumAggregation(
+                instrument_is_monotonic=False,
+                instrument_temporality=AggregationTemporality.CUMULATIVE,
+            )
+
+        if isinstance(instrument, Histogram):
+            return _ExplicitBucketHistogramAggregation()
+
+        if isinstance(instrument, ObservableGauge):
+            return _LastValueAggregation()
+
+        return None
 
 
 class _SumAggregation(_Aggregation[Sum]):
@@ -338,12 +399,6 @@ def _convert_aggregation_temporality(
             aggregation_temporality=aggregation_temporality,
         )
     return None
-
-
-class _AggregationFactory(ABC):
-    @abstractmethod
-    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
-        """Creates an aggregation"""
 
 
 class ExplicitBucketHistogramAggregation(_AggregationFactory):
