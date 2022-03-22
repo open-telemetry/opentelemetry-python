@@ -18,8 +18,8 @@ from abc import ABC, abstractmethod
 from enum import Enum
 from os import environ, linesep
 from sys import stdout
-from threading import Event, Thread
-from typing import IO, Callable, Iterable, Optional, Sequence
+from threading import Event, RLock, Thread
+from typing import IO, Callable, Iterable, List, Optional, Sequence
 
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
@@ -94,6 +94,36 @@ class ConsoleMetricExporter(MetricExporter):
 
     def shutdown(self) -> None:
         pass
+
+
+class InMemoryMetricReader(MetricReader):
+    """Implementation of :class:`MetricReader` that returns its metrics from :func:`metrics`.
+
+    This is useful for e.g. unit tests.
+    """
+
+    def __init__(
+        self,
+        preferred_temporality: AggregationTemporality = AggregationTemporality.CUMULATIVE,
+    ) -> None:
+        super().__init__(preferred_temporality=preferred_temporality)
+        self._lock = RLock()
+        self._metrics: List[Metric] = []
+
+    def get_metrics(self) -> List[Metric]:
+        """Reads and returns current metrics from the SDK"""
+        with self._lock:
+            self.collect()
+            metrics = self._metrics
+            self._metrics = []
+        return metrics
+
+    def _receive_metrics(self, metrics: Iterable[Metric]):
+        with self._lock:
+            self._metrics = list(metrics)
+
+    def shutdown(self) -> bool:
+        return True
 
 
 class PeriodicExportingMetricReader(MetricReader):
