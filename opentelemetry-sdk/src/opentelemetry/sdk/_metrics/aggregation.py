@@ -389,7 +389,7 @@ class LastValueAggregation(_AggregationFactory):
 
 
 class DropAggregation(_AggregationFactory):
-    """Using this aggregation will make all measurements to be ignored."""
+    """Using this aggregation will make all measurements be ignored."""
 
     def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
         return _DropAggregation()
