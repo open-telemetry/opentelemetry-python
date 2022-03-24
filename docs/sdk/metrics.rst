@@ -11,6 +11,11 @@ opentelemetry.sdk._metrics package
 Submodules
 ----------
 
+.. toctree::
+
+   metrics.view
+   metrics.aggregation
+
 .. automodule:: opentelemetry.sdk._metrics
     :members:
     :undoc-members:

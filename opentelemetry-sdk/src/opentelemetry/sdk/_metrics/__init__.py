@@ -148,7 +148,29 @@ class Meter(APIMeter):
 
 
 class MeterProvider(APIMeterProvider):
-    """See `opentelemetry._metrics.MeterProvider`."""
+    r"""See `opentelemetry._metrics.MeterProvider`.
+
+    Args:
+        shutdown_on_exit: If true, registers an `atexit` handler to call
+            `MeterProvider.shutdown`
+        views: The views to configure the metric output the SDK
+
+    By default, instruments which do not match any `View` (or if no `View`\ s are provided)
+    will report metrics with the default aggregation for the instrument's kind. To disable
+    instruments by default, configure a match-all `View` with `DropAggregation` and then create
+    `View`\ s to re-enable individual instruments:
+
+    .. code-block:: python
+        :caption: Disable default views
+
+        MeterProvider(
+            views=[
+                View(instrument_name="*", aggregation=DropAggregation()),
+                View(instrument_name="mycounter"),
+            ],
+            # ...
+        )
+    """
 
     def __init__(
         self,
@@ -156,7 +178,6 @@ class MeterProvider(APIMeterProvider):
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
         views: Sequence[View] = (),
-        enable_default_view: bool = True,
     ):
         self._lock = Lock()
         self._meter_lock = Lock()
@@ -165,7 +186,6 @@ class MeterProvider(APIMeterProvider):
             resource=resource,
             metric_readers=metric_readers,
             views=views,
-            enable_default_view=enable_default_view,
         )
         self._measurement_consumer = SynchronousMeasurementConsumer(
             sdk_config=self._sdk_config
