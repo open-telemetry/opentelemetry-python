@@ -177,6 +177,8 @@ class MeterProvider(APIMeterProvider):
         )
     """
 
+    _all_metric_readers = set()
+
     def __init__(
         self,
         metric_readers: Sequence[MetricReader] = (),
@@ -203,6 +205,15 @@ class MeterProvider(APIMeterProvider):
         self._metric_readers = metric_readers
 
         for metric_reader in self._sdk_config.metric_readers:
+
+            if metric_reader in self._all_metric_readers:
+                raise Exception(
+                    f"MetricReader {metric_reader} has been registered already"
+                    " in other MeterProvider instance"
+                )
+
+            self._all_metric_readers.add(metric_reader)
+
             metric_reader._set_collect_callback(
                 self._measurement_consumer.collect
             )
