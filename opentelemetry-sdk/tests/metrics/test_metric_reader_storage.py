@@ -14,12 +14,15 @@
 
 from unittest.mock import Mock, patch
 
+from opentelemetry.sdk._metrics.aggregation import DropAggregation
+from opentelemetry.sdk._metrics.instrument import Counter
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.metric_reader_storage import (
     MetricReaderStorage,
 )
 from opentelemetry.sdk._metrics.point import AggregationTemporality
 from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
+from opentelemetry.sdk._metrics.view import View
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
 
 
@@ -217,3 +220,24 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         MockViewInstrumentMatch.call_args_list.clear()
         storage.consume_measurement(Measurement(1, instrument2))
         self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 0)
+
+    def test_drop_aggregation(self):
+
+        counter = Counter("name", Mock(), Mock())
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(
+                    View(
+                        instrument_name="name", aggregation=DropAggregation()
+                    ),
+                ),
+                enable_default_view=False,
+            )
+        )
+        metric_reader_storage.consume_measurement(Measurement(1, counter))
+
+        self.assertEqual(
+            [], metric_reader_storage.collect(AggregationTemporality.DELTA)
+        )

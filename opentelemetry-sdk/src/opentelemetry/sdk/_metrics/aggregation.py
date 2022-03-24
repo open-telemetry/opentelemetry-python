@@ -54,6 +54,14 @@ class _Aggregation(ABC, Generic[_PointVarT]):
         pass
 
 
+class _DropAggregation(_Aggregation):
+    def aggregate(self, measurement: Measurement) -> None:
+        pass
+
+    def collect(self) -> Optional[_PointVarT]:
+        pass
+
+
 class _SumAggregation(_Aggregation[Sum]):
     def __init__(
         self,
@@ -378,3 +386,10 @@ class SumAggregation(_AggregationFactory):
 class LastValueAggregation(_AggregationFactory):
     def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
         return _LastValueAggregation()
+
+
+class DropAggregation(_AggregationFactory):
+    """Using this aggregation will make all measurements be ignored."""
+
+    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
+        return _DropAggregation()
