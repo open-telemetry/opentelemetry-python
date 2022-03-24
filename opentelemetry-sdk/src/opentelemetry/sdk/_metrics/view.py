@@ -27,6 +27,56 @@ _logger = getLogger(__name__)
 
 
 class View:
+    """
+    A `View` configuration parameters can be used for the following
+    purposes:
+
+    1. Match instruments: When an instrument matches a view, measurements
+       received by that instrument will be processed.
+    2. Customize metric streams: A metric stream is identified by a match
+       between a view and an instrument and a set of attributes. The metric
+       stream can be customized by certain attributes of the corresponding view.
+
+    The attributes documented next serve one of the previous two purposes.
+
+    Args:
+        instrument_type: This is an instrument matching attribute: the class the
+            instrument must be to match the view.
+
+        instrument_name: This is an instrument matching attribute: the name the
+            instrument must have to match the view. Wild card characters are
+            supported. Wild card characters should not be used with this
+            attribute if the view has also a ``name`` defined.
+
+        meter_name: This is an instrument matching attribute: the name the
+            instrument meter must have to match the view.
+
+        meter_version : This is an instrument matching attribute: the version
+            the instrument meter must have to match the view.
+
+        meter_schema URL : This is an instrument matching attribute: the schema
+            URL the instrument meter must have to match the view.
+
+        name: This is a metric stream customizing attribute: the name of the
+            metric stream. If `None`, the name of the instrument will be used.
+
+        description: This is a metric stream customizing attribute: the
+            description of the metric stream. If `None`, the description of the
+            instrument will be used.
+
+        attribute_keys: This is a metric stream customizing attribute: this is
+            a set of attribute keys. If not `None` then only the measurement
+            attributes that are in `attribute_keys` will be used to identify the
+            metric stream.
+
+        aggregation: This is a metric stream customizing attribute: the
+            aggregatation instance to use when data is aggregated for the
+            corresponding metrics stream. If `None` the default aggregation of
+            the instrument will be used.
+
+    This class is not intended to be subclassed by the user.
+    """
+
     def __init__(
         self,
         instrument_type: Optional[Type[Instrument]] = None,
@@ -39,59 +89,6 @@ class View:
         attribute_keys: Optional[Set[str]] = None,
         aggregation: Optional[_AggregationFactory] = None,
     ):
-        """
-        A `View` configuration parameters can be used for the following
-        purposes:
-
-        1. Match instruments: When an instrument matches a view, measurements
-           received by that instrument will be processed.
-        2. Customize metric streams: A metric stream is identified by a match
-           between a view and an instrument and a set of attributes. The metric
-           stream can be customized by certain attributes of the corresponding
-           view.
-
-        The attributes documented next serve one of the previous two purposes.
-
-        Args:
-            instrument_type: This is an instrument matching attribute: the
-                class the instrument must be to match the view.
-
-            instrument_name: This is an instrument matching attribute: the name
-                the instrument must have to match the view. Wild card
-                characters are supported. Wild card characters should not be
-                used with this attribute if the view has also a
-                ``name`` defined.
-
-            meter_name: This is an instrument matching attribute: the name
-                the instrument meter must have to match the view.
-
-            meter_version : This is an instrument matching attribute: the
-                version the instrument meter must have to match the view.
-
-            meter_schema URL : This is an instrument matching attribute: the
-                schema URL the instrument meter must have to match the view.
-
-            name: This is a metric stream customizing attribute: the name of
-                the metric stream. If `None`, the name of the instrument will
-                be used.
-
-            description: This is a metric stream customizing attribute: the
-                description of the metric stream. If `None`, the description of
-                the instrument will be used.
-
-            attribute_keys: This is a metric stream customizing attribute: this
-                is a set of attribute keys. If not `None` then only the
-                measurement attributes that are in `attribute_keys` will be
-                used to identify the metric stream.
-
-            aggregation: This is a metric stream customizing attribute: the
-                aggregatation instance to use when data is aggregated for the
-                corresponding metrics stream. If `None` the default aggregation
-                of the instrument will be used.
-
-        This class is not intended to be subclassed by the user.
-        """
-
         if (
             instrument_type
             is instrument_name
