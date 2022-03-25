@@ -151,6 +151,11 @@ class MeterProvider(APIMeterProvider):
     r"""See `opentelemetry._metrics.MeterProvider`.
 
     Args:
+        metric_readers: Register metric readers to collect metrics from the SDK on demand. Each
+            `MetricReader` is completely independent and will collect separate streams of
+            metrics. TODO: reference ``PeriodicExportingMetricReader`` usage with push
+            exporters here.
+        resource: The resource representing what the metrics emitted from the SDK pertain to.
         shutdown_on_exit: If true, registers an `atexit` handler to call
             `MeterProvider.shutdown`
         views: The views to configure the metric output the SDK
