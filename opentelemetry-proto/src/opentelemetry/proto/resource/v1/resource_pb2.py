@@ -18,9 +18,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='opentelemetry/proto/resource/v1/resource.proto',
   package='opentelemetry.proto.resource.v1',
   syntax='proto3',
-  serialized_options=b'\n\"io.opentelemetry.proto.resource.v1B\rResourceProtoP\001Z@github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1',
+  serialized_options=b'\n\"io.opentelemetry.proto.resource.v1B\rResourceProtoP\001Z*go.opentelemetry.io/proto/otlp/resource/v1',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n.opentelemetry/proto/resource/v1/resource.proto\x12\x1fopentelemetry.proto.resource.v1\x1a*opentelemetry/proto/common/v1/common.proto\"i\n\x08Resource\x12;\n\nattributes\x18\x01 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\x02 \x01(\rBw\n\"io.opentelemetry.proto.resource.v1B\rResourceProtoP\x01Z@github.com/open-telemetry/opentelemetry-proto/gen/go/resource/v1b\x06proto3'
+  serialized_pb=b'\n.opentelemetry/proto/resource/v1/resource.proto\x12\x1fopentelemetry.proto.resource.v1\x1a*opentelemetry/proto/common/v1/common.proto\"i\n\x08Resource\x12;\n\nattributes\x18\x01 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\x02 \x01(\rBa\n\"io.opentelemetry.proto.resource.v1B\rResourceProtoP\x01Z*go.opentelemetry.io/proto/otlp/resource/v1b\x06proto3'
   ,
   dependencies=[opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2.DESCRIPTOR,])
 
