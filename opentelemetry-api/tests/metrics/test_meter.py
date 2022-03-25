@@ -66,6 +66,7 @@ class TestMeter(TestCase):
     def test_repeated_instrument_names(self):
         class TestMeter(Meter):
             def create_counter(self, name, unit="", description="") -> Counter:
+                self._check_instrument_id(name, Counter, unit, description)
                 super().create_counter(
                     name, unit=unit, description=description
                 )
@@ -73,6 +74,9 @@ class TestMeter(TestCase):
             def create_up_down_counter(
                 self, name, unit="", description=""
             ) -> UpDownCounter:
+                self._check_instrument_id(
+                    name, UpDownCounter, unit, description
+                )
                 super().create_up_down_counter(
                     name, unit=unit, description=description
                 )
@@ -80,6 +84,9 @@ class TestMeter(TestCase):
             def create_observable_counter(
                 self, name, callback, unit="", description=""
             ) -> ObservableCounter:
+                self._check_instrument_id(
+                    name, ObservableCounter, unit, description
+                )
                 super().create_observable_up_down_counter(
                     name, callback, unit=unit, description=description
                 )
@@ -87,6 +94,7 @@ class TestMeter(TestCase):
             def create_histogram(
                 self, name, unit="", description=""
             ) -> Histogram:
+                self._check_instrument_id(name, Histogram, unit, description)
                 super().create_histogram(
                     name, unit=unit, description=description
                 )
@@ -94,6 +102,9 @@ class TestMeter(TestCase):
             def create_observable_gauge(
                 self, name, callback, unit="", description=""
             ) -> ObservableGauge:
+                self._check_instrument_id(
+                    name, ObservableGauge, unit, description
+                )
                 super().create_observable_gauge(
                     name, callback, unit=unit, description=description
                 )
@@ -101,6 +112,9 @@ class TestMeter(TestCase):
             def create_observable_up_down_counter(
                 self, name, callback, unit="", description=""
             ) -> ObservableUpDownCounter:
+                self._check_instrument_id(
+                    name, ObservableUpDownCounter, unit, description
+                )
                 super().create_observable_up_down_counter(
                     name, callback, unit=unit, description=description
                 )
