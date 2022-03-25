@@ -165,7 +165,6 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        self._check_instrument_id(name, Counter, unit, description)
 
     @abstractmethod
     def create_up_down_counter(
@@ -179,7 +178,6 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        self._check_instrument_id(name, UpDownCounter, unit, description)
 
     @abstractmethod
     def create_observable_counter(
@@ -263,7 +261,6 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        self._check_instrument_id(name, ObservableCounter, unit, description)
 
     @abstractmethod
     def create_histogram(self, name, unit="", description="") -> Histogram:
@@ -275,7 +272,6 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        self._check_instrument_id(name, Histogram, unit, description)
 
     @abstractmethod
     def create_observable_gauge(
@@ -293,7 +289,6 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        self._check_instrument_id(name, ObservableGauge, unit, description)
 
     @abstractmethod
     def create_observable_up_down_counter(
@@ -310,9 +305,6 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        self._check_instrument_id(
-            name, ObservableUpDownCounter, unit, description
-        )
 
 
 class _ProxyMeter(Meter):

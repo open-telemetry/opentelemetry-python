@@ -65,7 +65,7 @@ class Meter(APIMeter):
         self._measurement_consumer = measurement_consumer
 
     def create_counter(self, name, unit="", description="") -> APICounter:
-        super().create_counter(name, unit=unit, description=description)
+        self._check_instrument_id(name, Counter, unit, description)
         return Counter(
             name,
             self._instrumentation_info,
@@ -77,9 +77,7 @@ class Meter(APIMeter):
     def create_up_down_counter(
         self, name, unit="", description=""
     ) -> APIUpDownCounter:
-        super().create_up_down_counter(
-            name, unit=unit, description=description
-        )
+        self._check_instrument_id(name, UpDownCounter, unit, description)
         return UpDownCounter(
             name,
             self._instrumentation_info,
@@ -91,10 +89,7 @@ class Meter(APIMeter):
     def create_observable_counter(
         self, name, callback, unit="", description=""
     ) -> APIObservableCounter:
-        super().create_observable_counter(
-            name, callback, unit=unit, description=description
-        )
-
+        self._check_instrument_id(name, ObservableCounter, unit, description)
         instrument = ObservableCounter(
             name,
             self._instrumentation_info,
@@ -109,7 +104,7 @@ class Meter(APIMeter):
         return instrument
 
     def create_histogram(self, name, unit="", description="") -> APIHistogram:
-        super().create_histogram(name, unit=unit, description=description)
+        self._check_instrument_id(name, Histogram, unit, description)
         return Histogram(
             name,
             self._instrumentation_info,
@@ -121,9 +116,7 @@ class Meter(APIMeter):
     def create_observable_gauge(
         self, name, callback, unit="", description=""
     ) -> APIObservableGauge:
-        super().create_observable_gauge(
-            name, callback, unit=unit, description=description
-        )
+        self._check_instrument_id(name, ObservableGauge, unit, description)
 
         instrument = ObservableGauge(
             name,
@@ -141,8 +134,8 @@ class Meter(APIMeter):
     def create_observable_up_down_counter(
         self, name, callback, unit="", description=""
     ) -> APIObservableUpDownCounter:
-        super().create_observable_up_down_counter(
-            name, callback, unit=unit, description=description
+        self._check_instrument_id(
+            name, ObservableUpDownCounter, unit, description
         )
 
         instrument = ObservableUpDownCounter(
