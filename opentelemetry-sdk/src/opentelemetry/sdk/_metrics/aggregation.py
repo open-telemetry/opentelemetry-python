@@ -125,7 +125,8 @@ class DefaultAggregation(_AggregationFactory):
         if isinstance(instrument, ObservableGauge):
             return _LastValueAggregation()
 
-        return None
+        else:
+            raise Exception("Invalid aggregation type found")
 
 
 class _SumAggregation(_Aggregation[Sum]):
