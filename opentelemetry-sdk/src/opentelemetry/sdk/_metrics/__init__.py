@@ -202,7 +202,6 @@ class MeterProvider(APIMeterProvider):
             self._atexit_handler = register(self.shutdown)
 
         self._meters = {}
-        self._metric_readers = metric_readers
 
         for metric_reader in self._sdk_config.metric_readers:
 
