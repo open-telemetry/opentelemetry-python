@@ -59,7 +59,6 @@ class LogRecord:
         trace_flags: Optional[TraceFlags] = None,
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
-        name: Optional[str] = None,
         body: Optional[Any] = None,
         resource: Optional[Resource] = None,
         attributes: Optional[Attributes] = None,
@@ -70,7 +69,6 @@ class LogRecord:
         self.trace_flags = trace_flags
         self.severity_text = severity_text
         self.severity_number = severity_number
-        self.name = name
         self.body = body
         self.resource = resource
         self.attributes = attributes
@@ -84,7 +82,6 @@ class LogRecord:
         return json.dumps(
             {
                 "body": self.body,
-                "name": self.name,
                 "severity_number": repr(self.severity_number),
                 "severity_text": self.severity_text,
                 "attributes": self.attributes,
