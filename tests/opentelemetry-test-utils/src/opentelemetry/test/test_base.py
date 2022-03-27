@@ -88,7 +88,7 @@ class TestBase(unittest.TestCase):
         tracer_provider = trace_api.NoOpTracerProvider(**kwargs)
         memory_exporter = InMemorySpanExporter()
         span_processor = export.SimpleSpanProcessor(memory_exporter)
-        tracer_provider.add_span_processor(span_processor)
+        # tracer_provider.add_span_processor(span_processor)
 
         return tracer_provider, memory_exporter
 

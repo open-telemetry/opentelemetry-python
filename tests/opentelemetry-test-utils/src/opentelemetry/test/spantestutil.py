@@ -41,7 +41,7 @@ class SpanTestBase(unittest.TestCase):
         tracer_provider = trace_api.get_tracer_provider()
         _MEMORY_EXPORTER = InMemorySpanExporter()
         span_processor = export.SimpleSpanProcessor(_MEMORY_EXPORTER)
-        tracer_provider.add_span_processor(span_processor)
+        # tracer_provider.add_span_processor(span_processor)
 
     @classmethod
     def tearDownClass(cls):
