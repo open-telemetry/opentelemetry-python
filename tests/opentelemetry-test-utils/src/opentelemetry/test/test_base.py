@@ -85,7 +85,7 @@ class TestBase(unittest.TestCase):
             A list with the tracer provider in the first element and the
             in-memory span exporter in the second.
         """
-        tracer_provider = TracerProvider(**kwargs)
+        tracer_provider = trace_api.NoOpTracerProvider(**kwargs)
         memory_exporter = InMemorySpanExporter()
         span_processor = export.SimpleSpanProcessor(memory_exporter)
         tracer_provider.add_span_processor(span_processor)

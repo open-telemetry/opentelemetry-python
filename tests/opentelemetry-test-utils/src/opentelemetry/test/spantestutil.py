@@ -37,7 +37,7 @@ class SpanTestBase(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         global _MEMORY_EXPORTER  # pylint:disable=global-statement
-        trace_api.set_tracer_provider(TracerProvider())
+        trace_api.set_tracer_provider(trace_api.NoOpTracerProvider())
         tracer_provider = trace_api.get_tracer_provider()
         _MEMORY_EXPORTER = InMemorySpanExporter()
         span_processor = export.SimpleSpanProcessor(_MEMORY_EXPORTER)
