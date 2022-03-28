@@ -119,7 +119,6 @@ class TestOTLPLogExporter(TestCase):
                 trace_flags=TraceFlags(0x01),
                 severity_text="WARNING",
                 severity_number=SDKSeverityNumber.WARN,
-                name="name",
                 body="Zhengzhou, We have a heaviest rains in 1000 years",
                 resource=SDKResource({"key": "value"}),
                 attributes={"a": 1, "b": "c"},
@@ -136,7 +135,6 @@ class TestOTLPLogExporter(TestCase):
                 trace_flags=TraceFlags(0x01),
                 severity_text="INFO",
                 severity_number=SDKSeverityNumber.INFO2,
-                name="info name",
                 body="Sydney, Opera House is closed",
                 resource=SDKResource({"key": "value"}),
                 attributes={"custom_attr": [1, 2, 3]},
@@ -153,7 +151,6 @@ class TestOTLPLogExporter(TestCase):
                 trace_flags=TraceFlags(0x01),
                 severity_text="ERROR",
                 severity_number=SDKSeverityNumber.WARN,
-                name="error name",
                 body="Mumbai, Boil water before drinking",
                 resource=SDKResource({"service": "myapp"}),
             ),
@@ -315,7 +312,6 @@ class TestOTLPLogExporter(TestCase):
                             log_records=[
                                 PB2LogRecord(
                                     # pylint: disable=no-member
-                                    name="name",
                                     time_unix_nano=self.log_data_1.log_record.timestamp,
                                     severity_number=self.log_data_1.log_record.severity_number.value,
                                     severity_text="WARNING",
@@ -375,7 +371,6 @@ class TestOTLPLogExporter(TestCase):
                             log_records=[
                                 PB2LogRecord(
                                     # pylint: disable=no-member
-                                    name="name",
                                     time_unix_nano=self.log_data_1.log_record.timestamp,
                                     severity_number=self.log_data_1.log_record.severity_number.value,
                                     severity_text="WARNING",
@@ -413,7 +408,6 @@ class TestOTLPLogExporter(TestCase):
                             log_records=[
                                 PB2LogRecord(
                                     # pylint: disable=no-member
-                                    name="info name",
                                     time_unix_nano=self.log_data_2.log_record.timestamp,
                                     severity_number=self.log_data_2.log_record.severity_number.value,
                                     severity_text="INFO",
@@ -459,7 +453,6 @@ class TestOTLPLogExporter(TestCase):
                             log_records=[
                                 PB2LogRecord(
                                     # pylint: disable=no-member
-                                    name="error name",
                                     time_unix_nano=self.log_data_3.log_record.timestamp,
                                     severity_number=self.log_data_3.log_record.severity_number.value,
                                     severity_text="ERROR",

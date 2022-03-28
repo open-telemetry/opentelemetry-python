@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2533](https://github.com/open-telemetry/opentelemetry-python/pull/2533))
 - Add InMemoryMetricReader to metrics SDK
   ([#2540](https://github.com/open-telemetry/opentelemetry-python/pull/2540))
+- Drop the usage of name field from log model in OTLP
+  ([#2565](https://github.com/open-telemetry/opentelemetry-python/pull/2565))
 - Remove `enable_default_view` option from sdk MeterProvider
   ([#2547](https://github.com/open-telemetry/opentelemetry-python/pull/2547))
 
