@@ -101,8 +101,3 @@ class MetricReaderStorage:
                     metrics.extend(view_instrument_match.collect(temporality))
 
         return metrics
-
-
-def default_view(instrument: Instrument) -> View:
-    # TODO: #2247
-    return View()
