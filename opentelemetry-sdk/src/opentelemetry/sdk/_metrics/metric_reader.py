@@ -24,6 +24,11 @@ _logger = logging.getLogger(__name__)
 
 
 class MetricReader(ABC):
+    """
+    .. document protected _receive_metrics which is a intended to be overriden by subclass
+    .. automethod:: _receive_metrics
+    """
+
     def __init__(
         self,
         preferred_temporality: AggregationTemporality = AggregationTemporality.CUMULATIVE,
@@ -66,5 +71,8 @@ class MetricReader(ABC):
         only be shutdown once, any subsequent calls are ignored and return
         failure status.
 
-        When a `MetricReader` is registered on a `MeterProvider`, `MeterProvider.shutdown` will invoke this automatically.
+        When a `MetricReader` is registered on a
+        :class:`~opentelemetry.sdk._metrics.MeterProvider`,
+        :meth:`~opentelemetry.sdk._metrics.MeterProvider.shutdown` will invoke this
+        automatically.
         """

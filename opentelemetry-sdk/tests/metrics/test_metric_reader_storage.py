@@ -56,7 +56,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 resource=Mock(),
                 metric_readers=(),
                 views=(view1, view2),
-                enable_default_view=True,
             )
         )
 
@@ -101,7 +100,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 resource=Mock(),
                 metric_readers=(),
                 views=(view1, view2),
-                enable_default_view=True,
             )
         )
 
@@ -149,7 +147,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 resource=Mock(),
                 metric_readers=(),
                 views=(view1,),
-                enable_default_view=True,
             )
         )
 
@@ -175,7 +172,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 resource=Mock(),
                 metric_readers=(),
                 views=(),
-                enable_default_view=True,
             )
         )
 
@@ -192,35 +188,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         storage.consume_measurement(Measurement(1, instrument2))
         self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
 
-    @patch(
-        "opentelemetry.sdk._metrics.metric_reader_storage._ViewInstrumentMatch"
-    )
-    def test_default_view_disabled(self, MockViewInstrumentMatch: Mock):
-        """Instruments should not be matched with default views when disabled"""
-        instrument1 = Mock(name="instrument1")
-        instrument2 = Mock(name="instrument2")
-        storage = MetricReaderStorage(
-            SdkConfiguration(
-                resource=Mock(),
-                metric_readers=(),
-                views=(),
-                enable_default_view=False,
-            )
-        )
-
-        storage.consume_measurement(Measurement(1, instrument1))
-        self.assertEqual(
-            len(MockViewInstrumentMatch.call_args_list),
-            0,
-            MockViewInstrumentMatch.mock_calls,
-        )
-        storage.consume_measurement(Measurement(1, instrument1))
-        self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 0)
-
-        MockViewInstrumentMatch.call_args_list.clear()
-        storage.consume_measurement(Measurement(1, instrument2))
-        self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 0)
-
     def test_drop_aggregation(self):
 
         counter = Counter("name", Mock(), Mock())
@@ -233,7 +200,6 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                         instrument_name="name", aggregation=DropAggregation()
                     ),
                 ),
-                enable_default_view=False,
             )
         )
         metric_reader_storage.consume_measurement(Measurement(1, counter))
