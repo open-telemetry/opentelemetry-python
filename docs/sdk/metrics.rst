@@ -6,7 +6,7 @@ opentelemetry.sdk._metrics package
    :mod:`opentelemetry.sdk._metrics` are subject to change in minor/patch releases and there are no
    backward compatability guarantees at this time.
 
-   Once logs become stable, this package will be be renamed to ``opentelemetry.sdk.metrics``.
+   Once metrics become stable, this package will be be renamed to ``opentelemetry.sdk.metrics``.
 
 Submodules
 ----------
