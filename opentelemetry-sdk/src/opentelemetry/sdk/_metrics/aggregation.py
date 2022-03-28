@@ -28,6 +28,7 @@ from typing import Generic, List, Optional, Sequence, TypeVar
 from opentelemetry._metrics.instrument import (
     Asynchronous,
     Counter,
+    Histogram,
     Instrument,
     ObservableCounter,
     ObservableGauge,
@@ -37,13 +38,9 @@ from opentelemetry._metrics.instrument import (
     _Monotonic,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.point import (
-    AggregationTemporality,
-    Gauge,
-    Histogram,
-    PointT,
-    Sum,
-)
+from opentelemetry.sdk._metrics.point import AggregationTemporality, Gauge
+from opentelemetry.sdk._metrics.point import Histogram as HistogramPoint
+from opentelemetry.sdk._metrics.point import PointT, Sum
 from opentelemetry.util._time import _time_ns
 
 _PointVarT = TypeVar("_PointVarT", bound=PointT)
@@ -129,7 +126,7 @@ class DefaultAggregation(_AggregationFactory):
         if isinstance(instrument, ObservableGauge):
             return _LastValueAggregation()
 
-        raise Exception("Invalid instrument type found")
+        raise Exception(f"Invalid instrument type {type(instrument)} found")
 
 
 class _SumAggregation(_Aggregation[Sum]):
@@ -219,7 +216,7 @@ class _LastValueAggregation(_Aggregation[Gauge]):
         )
 
 
-class _ExplicitBucketHistogramAggregation(_Aggregation[Histogram]):
+class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     def __init__(
         self,
         boundaries: Sequence[float] = (
@@ -260,7 +257,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[Histogram]):
 
         self._bucket_counts[bisect_left(self._boundaries, value)] += 1
 
-    def collect(self) -> Histogram:
+    def collect(self) -> HistogramPoint:
         """
         Atomically return a point for the current value of the metric.
         """
@@ -275,7 +272,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[Histogram]):
             self._start_time_unix_nano = now + 1
             self._sum = 0
 
-        return Histogram(
+        return HistogramPoint(
             start_time_unix_nano=start_time_unix_nano,
             time_unix_nano=now,
             bucket_counts=tuple(value),
@@ -360,7 +357,7 @@ def _convert_aggregation_temporality(
             is_monotonic=is_monotonic,
         )
 
-    if current_point_type is Histogram:
+    if current_point_type is HistogramPoint:
         if previous_point is None:
             return replace(
                 current_point, aggregation_temporality=aggregation_temporality
@@ -394,7 +391,7 @@ def _convert_aggregation_temporality(
                 )
             ]
 
-        return Histogram(
+        return HistogramPoint(
             start_time_unix_nano=start_time_unix_nano,
             time_unix_nano=current_point.time_unix_nano,
             bucket_counts=bucket_counts,

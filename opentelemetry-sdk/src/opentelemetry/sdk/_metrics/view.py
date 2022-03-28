@@ -79,6 +79,8 @@ class View:
     This class is not intended to be subclassed by the user.
     """
 
+    _default_aggregation = DefaultAggregation()
+
     def __init__(
         self,
         instrument_type: Optional[Type[Instrument]] = None,
@@ -126,7 +128,7 @@ class View:
 
         self._description = description
         self._attribute_keys = attribute_keys
-        self._aggregation = aggregation or DefaultAggregation()
+        self._aggregation = aggregation or self._default_aggregation
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
