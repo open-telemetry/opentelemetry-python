@@ -15,10 +15,12 @@
 
 from logging import getLogger
 from threading import Lock
-from typing import TYPE_CHECKING, Iterable
+from typing import TYPE_CHECKING, Dict, Iterable
 
 from opentelemetry.sdk._metrics.aggregation import (
+    _Aggregation,
     _convert_aggregation_temporality,
+    _PointVarT,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
@@ -41,8 +43,8 @@ class _ViewInstrumentMatch:
         self._view = view
         self._instrument = instrument
         self._sdk_config = sdk_config
-        self._attributes_aggregation = {}
-        self._attributes_previous_point = {}
+        self._attributes_aggregation: Dict[frozenset, _Aggregation] = {}
+        self._attributes_previous_point: Dict[frozenset, _PointVarT] = {}
         self._lock = Lock()
 
     # pylint: disable=protected-access

@@ -12,6 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+"""
+.. Explicitly document private _AggregationFactory
+.. autoclass:: _AggregationFactory
+"""
+
 from abc import ABC, abstractmethod
 from bisect import bisect_left
 from dataclasses import replace
