@@ -85,12 +85,16 @@ class DefaultAggregation(_AggregationFactory):
     This aggregation will create an actual aggregation depending on the
     instrument type, as specified next:
 
-    `Counter`                   →   `SumAggregation`
-    `UpDownCounter`             →   `SumAggregation`
-    `ObservableCounter`         →   `SumAggregation`
-    `ObservableUpDownCounter`   →   `SumAggregation`
-    `Histogram`                 →   `ExplicitBucketHistogramAggregation`
-    `ObservableGauge`           →   `LastValueAggregation`
+    ========================= ====================================
+    Instrument                Aggregation
+    ========================= ====================================
+    `Counter`                 `SumAggregation`
+    `UpDownCounter`           `SumAggregation`
+    `ObservableCounter`       `SumAggregation`
+    `ObservableUpDownCounter` `SumAggregation`
+    `Histogram`               `ExplicitBucketHistogramAggregation`
+    `ObservableGauge`         `LastValueAggregation`
+    ========================= ====================================
     """
 
     def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
@@ -125,7 +129,7 @@ class DefaultAggregation(_AggregationFactory):
         if isinstance(instrument, ObservableGauge):
             return _LastValueAggregation()
 
-        raise Exception("Invalid aggregation type found")
+        raise Exception("Invalid instrument type found")
 
 
 class _SumAggregation(_Aggregation[Sum]):
