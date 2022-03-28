@@ -73,7 +73,7 @@ def opentracing_to_opentelemetry_kind_tag(opentracing_tags):
     }
     if opentracing_tags is not None and SPAN_KIND in opentracing_tags:
         opentracing_kind = opentracing_tags.get(SPAN_KIND)
-        if opentracing_kind in kinds.keys():
+        if opentracing_kind in kinds:
             opentelemetry_kind = kinds[opentracing_kind]
             return opentelemetry_kind
     return None
