@@ -12,6 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from opentelemetry.trace import SpanKind
+from opentracing.tags import SPAN_KIND_CONSUMER, SPAN_KIND_PRODUCER, SPAN_KIND_RPC_CLIENT, \
+    SPAN_KIND_RPC_SERVER, SPAN_KIND
+
 # A default event name to be used for logging events when a better event name
 # can't be derived from the event's key-value pairs.
 DEFAULT_EVENT_NAME = "log"
@@ -52,3 +56,18 @@ def event_name_from_kv(key_values):
         return DEFAULT_EVENT_NAME
 
     return key_values["event"]
+
+
+def opentracing_to_opentelemetry_kind_tag(opentracing_tags):
+    kinds = {
+        SPAN_KIND_CONSUMER: SpanKind.CONSUMER,
+        SPAN_KIND_PRODUCER: SpanKind.PRODUCER,
+        SPAN_KIND_RPC_CLIENT: SpanKind.CLIENT,
+        SPAN_KIND_RPC_SERVER: SpanKind.SERVER,
+    }
+    if opentracing_tags is not None and SPAN_KIND in opentracing_tags:
+        opentracing_kind = opentracing_tags.get(SPAN_KIND)
+        if opentracing_kind in kinds.keys():
+            opentelemetry_kind = kinds[opentracing_kind]
+            return opentelemetry_kind
+    return None
