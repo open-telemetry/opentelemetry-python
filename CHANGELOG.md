@@ -20,6 +20,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2540](https://github.com/open-telemetry/opentelemetry-python/pull/2540))
 - Drop the usage of name field from log model in OTLP
   ([#2565](https://github.com/open-telemetry/opentelemetry-python/pull/2565))
+- In `opentelementry-opentracing-shim`, handles Kind argument from Opentracing
+  `span.kind` tag
+  ([#2570](https://github.com/open-telemetry/opentelemetry-python/pull/2570))
 
 ## [1.10.0-0.29b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.10.0-0.29b0) - 2022-03-10
 

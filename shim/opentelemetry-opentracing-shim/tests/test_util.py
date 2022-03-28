@@ -18,8 +18,9 @@ from unittest import TestCase
 from opentelemetry.shim.opentracing_shim.util import (
     DEFAULT_EVENT_NAME,
     event_name_from_kv,
+    opentracing_to_opentelemetry_kind_tag,
     time_seconds_from_ns,
-    time_seconds_to_ns, opentracing_to_opentelemetry_kind_tag,
+    time_seconds_to_ns,
 )
 from opentelemetry.trace import SpanKind
 from opentelemetry.util._time import _time_ns
@@ -78,11 +79,13 @@ class TestUtil(TestCase):
             "client": SpanKind.CLIENT,
             "server": SpanKind.SERVER,
             "unknown": None,
-            None: None
+            None: None,
         }
         for opentracing_kind_value, output in expected.items():
             tags = {"foo": "bar"}
             if opentracing_kind_value is not None:
                 tags["span.kind"] = opentracing_kind_value
             with self.subTest(tags=tags, output=output):
-                self.assertEqual(opentracing_to_opentelemetry_kind_tag(tags), output)
+                self.assertEqual(
+                    opentracing_to_opentelemetry_kind_tag(tags), output
+                )

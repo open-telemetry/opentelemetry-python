@@ -12,9 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from opentracing.tags import (
+    SPAN_KIND,
+    SPAN_KIND_CONSUMER,
+    SPAN_KIND_PRODUCER,
+    SPAN_KIND_RPC_CLIENT,
+    SPAN_KIND_RPC_SERVER,
+)
+
 from opentelemetry.trace import SpanKind
-from opentracing.tags import SPAN_KIND_CONSUMER, SPAN_KIND_PRODUCER, SPAN_KIND_RPC_CLIENT, \
-    SPAN_KIND_RPC_SERVER, SPAN_KIND
 
 # A default event name to be used for logging events when a better event name
 # can't be derived from the event's key-value pairs.

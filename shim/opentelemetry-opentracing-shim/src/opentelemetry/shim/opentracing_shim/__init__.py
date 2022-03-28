@@ -90,6 +90,17 @@ from types import TracebackType
 from typing import Optional, Type, TypeVar, Union
 
 from deprecated import deprecated
+from opentracing import (
+    Format,
+    Scope,
+    ScopeManager,
+    Span,
+    SpanContext,
+    Tracer,
+    UnsupportedFormatException,
+)
+from opentracing.tags import SPAN_KIND
+
 from opentelemetry.baggage import get_baggage, set_baggage
 from opentelemetry.context import (
     Context,
@@ -112,24 +123,15 @@ from opentelemetry.trace import (
     use_span,
 )
 from opentelemetry.util.types import Attributes
-from opentracing import (
-    Format,
-    Scope,
-    ScopeManager,
-    Span,
-    SpanContext,
-    Tracer,
-    UnsupportedFormatException,
-)
-from opentracing.tags import SPAN_KIND
 
 ValueT = TypeVar("ValueT", int, float, bool, str)
 logger = logging.getLogger(__name__)
 _SHIM_KEY = create_key("scope_shim")
 
 
-def create_tracer(otel_tracer_provider: TracerProvider,
-                  interpret_span_kind_tag=False) -> "TracerShim":
+def create_tracer(
+    otel_tracer_provider: TracerProvider, interpret_span_kind_tag=False
+) -> "TracerShim":
     """Creates a :class:`TracerShim` object from the provided OpenTelemetry
     :class:`opentelemetry.trace.TracerProvider`.
 
@@ -151,8 +153,10 @@ def create_tracer(otel_tracer_provider: TracerProvider,
         The created :class:`TracerShim`.
     """
 
-    return TracerShim(otel_tracer_provider.get_tracer(__name__, __version__),
-                      interpret_span_kind_tag=interpret_span_kind_tag)
+    return TracerShim(
+        otel_tracer_provider.get_tracer(__name__, __version__),
+        interpret_span_kind_tag=interpret_span_kind_tag,
+    )
 
 
 class SpanContextShim(SpanContext):
@@ -261,7 +265,7 @@ class SpanShim(Span):
         return self
 
     def log_kv(
-            self, key_values: Attributes, timestamp: float = None
+        self, key_values: Attributes, timestamp: float = None
     ) -> "SpanShim":
         """Logs an event for the wrapped OpenTelemetry span.
 
@@ -361,7 +365,7 @@ class ScopeShim(Scope):
     """
 
     def __init__(
-            self, manager: "ScopeManagerShim", span: SpanShim, span_cm=None
+        self, manager: "ScopeManagerShim", span: SpanShim, span_cm=None
     ):
         super().__init__(manager, span)
         self._span_cm = span_cm
@@ -428,10 +432,10 @@ class ScopeShim(Scope):
         self._end_span_scope(exc_type, exc_val, exc_tb)
 
     def _end_span_scope(
-            self,
-            exc_type: Optional[Type[BaseException]],
-            exc_val: Optional[BaseException],
-            exc_tb: Optional[TracebackType],
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
     ) -> None:
         detach(self._token)
         if self._span_cm is not None:
@@ -566,14 +570,14 @@ class TracerShim(Tracer):
         return self._otel_tracer
 
     def start_active_span(
-            self,
-            operation_name: str,
-            child_of: Union[SpanShim, SpanContextShim] = None,
-            references: list = None,
-            tags: Attributes = None,
-            start_time: float = None,
-            ignore_active_span: bool = False,
-            finish_on_close: bool = True,
+        self,
+        operation_name: str,
+        child_of: Union[SpanShim, SpanContextShim] = None,
+        references: list = None,
+        tags: Attributes = None,
+        start_time: float = None,
+        ignore_active_span: bool = False,
+        finish_on_close: bool = True,
     ) -> "ScopeShim":
         """Starts and activates a span. In terms of functionality, this method
         behaves exactly like the same method on a "regular" OpenTracing tracer.
@@ -604,8 +608,8 @@ class TracerShim(Tracer):
         current_span = get_current_span()
 
         if (
-                child_of is None
-                and current_span.get_span_context() is not INVALID_SPAN_CONTEXT
+            child_of is None
+            and current_span.get_span_context() is not INVALID_SPAN_CONTEXT
         ):
             child_of = SpanShim(None, None, current_span)
 
@@ -620,13 +624,13 @@ class TracerShim(Tracer):
         return self._scope_manager.activate(span, finish_on_close)
 
     def start_span(
-            self,
-            operation_name: str = None,
-            child_of: Union[SpanShim, SpanContextShim] = None,
-            references: list = None,
-            tags: Attributes = None,
-            start_time: float = None,
-            ignore_active_span: bool = False,
+        self,
+        operation_name: str = None,
+        child_of: Union[SpanShim, SpanContextShim] = None,
+        references: list = None,
+        tags: Attributes = None,
+        start_time: float = None,
+        ignore_active_span: bool = False,
     ) -> SpanShim:
         """Implements the ``start_span()`` method from the base class.
 
@@ -685,7 +689,7 @@ class TracerShim(Tracer):
             "context": parent_span_context,
             "links": valid_links,
             "attributes": tags,
-            "start_time": start_time_ns
+            "start_time": start_time_ns,
         }
         if self.interpret_span_kind_tag:
             kind = util.opentracing_to_opentelemetry_kind_tag(tags)
@@ -693,10 +697,7 @@ class TracerShim(Tracer):
                 del tags[SPAN_KIND]
                 kwargs["kind"] = kind
 
-        span = self._otel_tracer.start_span(
-            operation_name,
-            **kwargs
-        )
+        span = self._otel_tracer.start_span(operation_name, **kwargs)
 
         context = SpanContextShim(span.get_span_context())
         return SpanShim(self, context, span)
