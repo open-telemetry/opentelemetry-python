@@ -130,7 +130,7 @@ _SHIM_KEY = create_key("scope_shim")
 
 
 def create_tracer(
-    otel_tracer_provider: TracerProvider, interpret_span_kind_tag=False
+    otel_tracer_provider: TracerProvider, interpret_span_kind_tag: bool = False
 ) -> "TracerShim":
     """Creates a :class:`TracerShim` object from the provided OpenTelemetry
     :class:`opentelemetry.trace.TracerProvider`.
@@ -550,7 +550,9 @@ class TracerShim(Tracer):
             Kind argument based on Opentracing "span.kind" tag
     """
 
-    def __init__(self, tracer: OtelTracer, interpret_span_kind_tag=False):
+    def __init__(
+        self, tracer: OtelTracer, interpret_span_kind_tag: bool = False
+    ):
         super().__init__(scope_manager=ScopeManagerShim(self))
         self._otel_tracer = tracer
         self._supported_formats = (
@@ -694,7 +696,9 @@ class TracerShim(Tracer):
         if self.interpret_span_kind_tag:
             if util.opentracing_to_opentelemetry_kind_tag(tags) is not None:
                 del tags[SPAN_KIND]
-                kwargs["kind"] = util.opentracing_to_opentelemetry_kind_tag(tags)
+                kwargs["kind"] = util.opentracing_to_opentelemetry_kind_tag(
+                    tags
+                )
 
         span = self._otel_tracer.start_span(operation_name, **kwargs)
 
