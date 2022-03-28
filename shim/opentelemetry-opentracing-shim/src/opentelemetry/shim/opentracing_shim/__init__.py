@@ -142,7 +142,7 @@ def create_tracer(
         otel_tracer_provider: A tracer from this provider  will be used to
             perform the actual tracing when user code is instrumented using the
             OpenTracing API.
-        interpret_span_kind_tag (default : False) : if True, set Opentelemetry
+        interpret_span_kind_tag (default : False): if True, set Opentelemetry
             Kind argument based on Opentracing "span.kind" tag . If false, all
             spans from Opentracing will have a attribute "span.kind" = INTERNAL
             In Opentelemetry, Kind is now a mandatory attribute while being
@@ -692,10 +692,9 @@ class TracerShim(Tracer):
             "start_time": start_time_ns,
         }
         if self.interpret_span_kind_tag:
-            kind = util.opentracing_to_opentelemetry_kind_tag(tags)
-            if kind is not None:
+            if util.opentracing_to_opentelemetry_kind_tag(tags) is not None:
                 del tags[SPAN_KIND]
-                kwargs["kind"] = kind
+                kwargs["kind"] = util.opentracing_to_opentelemetry_kind_tag(tags)
 
         span = self._otel_tracer.start_span(operation_name, **kwargs)
 
