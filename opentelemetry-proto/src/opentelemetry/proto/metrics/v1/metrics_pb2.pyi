@@ -226,9 +226,10 @@ class MetricsData(google.protobuf.message.Message):
 global___MetricsData = MetricsData
 
 class ResourceMetrics(google.protobuf.message.Message):
-    """A collection of InstrumentationLibraryMetrics from a Resource."""
+    """A collection of ScopeMetrics from a Resource."""
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     RESOURCE_FIELD_NUMBER: builtins.int
+    SCOPE_METRICS_FIELD_NUMBER: builtins.int
     INSTRUMENTATION_LIBRARY_METRICS_FIELD_NUMBER: builtins.int
     SCHEMA_URL_FIELD_NUMBER: builtins.int
     @property
@@ -238,27 +239,92 @@ class ResourceMetrics(google.protobuf.message.Message):
         """
         pass
     @property
-    def instrumentation_library_metrics(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___InstrumentationLibraryMetrics]:
+    def scope_metrics(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ScopeMetrics]:
         """A list of metrics that originate from a resource."""
+        pass
+    @property
+    def instrumentation_library_metrics(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___InstrumentationLibraryMetrics]:
+        """A list of InstrumentationLibraryMetrics that originate from a resource.
+        This field is deprecated and will be removed after grace period expires on June 15, 2022.
+
+        During the grace period the following rules SHOULD be followed:
+
+        For Binary Protobufs
+        ====================
+        Binary Protobuf senders SHOULD NOT set instrumentation_library_metrics. Instead
+        scope_metrics SHOULD be set.
+
+        Binary Protobuf receivers SHOULD check if instrumentation_library_metrics is set
+        and scope_metrics is not set then the value in instrumentation_library_metrics
+        SHOULD be used instead by converting InstrumentationLibraryMetrics into ScopeMetrics.
+        If scope_metrics is set then instrumentation_library_metrics SHOULD be ignored.
+
+        For JSON
+        ========
+        JSON senders that set instrumentation_library_metrics field MAY also set
+        scope_metrics to carry the same metrics, essentially double-publishing the same data.
+        Such double-publishing MAY be controlled by a user-settable option.
+        If double-publishing is not used then the senders SHOULD set scope_metrics and
+        SHOULD NOT set instrumentation_library_metrics.
+
+        JSON receivers SHOULD check if instrumentation_library_metrics is set and
+        scope_metrics is not set then the value in instrumentation_library_metrics
+        SHOULD be used instead by converting InstrumentationLibraryMetrics into ScopeMetrics.
+        If scope_metrics is set then instrumentation_library_metrics field SHOULD be ignored.
+        """
         pass
     schema_url: typing.Text = ...
     """This schema_url applies to the data in the "resource" field. It does not apply
-    to the data in the "instrumentation_library_metrics" field which have their own
-    schema_url field.
+    to the data in the "scope_metrics" field which have their own schema_url field.
     """
 
     def __init__(self,
         *,
         resource : typing.Optional[opentelemetry.proto.resource.v1.resource_pb2.Resource] = ...,
+        scope_metrics : typing.Optional[typing.Iterable[global___ScopeMetrics]] = ...,
         instrumentation_library_metrics : typing.Optional[typing.Iterable[global___InstrumentationLibraryMetrics]] = ...,
         schema_url : typing.Text = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["resource",b"resource"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["instrumentation_library_metrics",b"instrumentation_library_metrics","resource",b"resource","schema_url",b"schema_url"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["instrumentation_library_metrics",b"instrumentation_library_metrics","resource",b"resource","schema_url",b"schema_url","scope_metrics",b"scope_metrics"]) -> None: ...
 global___ResourceMetrics = ResourceMetrics
 
+class ScopeMetrics(google.protobuf.message.Message):
+    """A collection of Metrics produced by an Scope."""
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    SCOPE_FIELD_NUMBER: builtins.int
+    METRICS_FIELD_NUMBER: builtins.int
+    SCHEMA_URL_FIELD_NUMBER: builtins.int
+    @property
+    def scope(self) -> opentelemetry.proto.common.v1.common_pb2.InstrumentationScope:
+        """The instrumentation scope information for the metrics in this message.
+        Semantically when InstrumentationScope isn't set, it is equivalent with
+        an empty instrumentation scope name (unknown).
+        """
+        pass
+    @property
+    def metrics(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Metric]:
+        """A list of metrics that originate from an instrumentation library."""
+        pass
+    schema_url: typing.Text = ...
+    """This schema_url applies to all metrics in the "metrics" field."""
+
+    def __init__(self,
+        *,
+        scope : typing.Optional[opentelemetry.proto.common.v1.common_pb2.InstrumentationScope] = ...,
+        metrics : typing.Optional[typing.Iterable[global___Metric]] = ...,
+        schema_url : typing.Text = ...,
+        ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["scope",b"scope"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["metrics",b"metrics","schema_url",b"schema_url","scope",b"scope"]) -> None: ...
+global___ScopeMetrics = ScopeMetrics
+
 class InstrumentationLibraryMetrics(google.protobuf.message.Message):
-    """A collection of Metrics produced by an InstrumentationLibrary."""
+    """A collection of Metrics produced by an InstrumentationLibrary.
+    InstrumentationLibraryMetrics is wire-compatible with ScopeMetrics for binary
+    Protobuf format.
+    This message is deprecated and will be removed on June 15, 2022.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     INSTRUMENTATION_LIBRARY_FIELD_NUMBER: builtins.int
     METRICS_FIELD_NUMBER: builtins.int
@@ -548,6 +614,8 @@ class NumberDataPoint(google.protobuf.message.Message):
     def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
         """The set of key/value pairs that uniquely identify the timeseries from
         where this point belongs. The list may be empty (may contain 0 elements).
+        Attribute keys MUST be unique (it is not allowed to have more than one
+        attribute with the same key).
         """
         pass
     start_time_unix_nano: builtins.int = ...
@@ -619,6 +687,8 @@ class HistogramDataPoint(google.protobuf.message.Message):
     def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
         """The set of key/value pairs that uniquely identify the timeseries from
         where this point belongs. The list may be empty (may contain 0 elements).
+        Attribute keys MUST be unique (it is not allowed to have more than one
+        attribute with the same key).
         """
         pass
     start_time_unix_nano: builtins.int = ...
@@ -704,7 +774,9 @@ class HistogramDataPoint(google.protobuf.message.Message):
         exemplars : typing.Optional[typing.Iterable[global___Exemplar]] = ...,
         flags : builtins.int = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","bucket_counts",b"bucket_counts","count",b"count","exemplars",b"exemplars","explicit_bounds",b"explicit_bounds","flags",b"flags","start_time_unix_nano",b"start_time_unix_nano","sum",b"sum","time_unix_nano",b"time_unix_nano"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_sum",b"_sum","sum",b"sum"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_sum",b"_sum","attributes",b"attributes","bucket_counts",b"bucket_counts","count",b"count","exemplars",b"exemplars","explicit_bounds",b"explicit_bounds","flags",b"flags","start_time_unix_nano",b"start_time_unix_nano","sum",b"sum","time_unix_nano",b"time_unix_nano"]) -> None: ...
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_sum",b"_sum"]) -> typing.Optional[typing_extensions.Literal["sum"]]: ...
 global___HistogramDataPoint = HistogramDataPoint
 
 class ExponentialHistogramDataPoint(google.protobuf.message.Message):
@@ -762,6 +834,8 @@ class ExponentialHistogramDataPoint(google.protobuf.message.Message):
     def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
         """The set of key/value pairs that uniquely identify the timeseries from
         where this point belongs. The list may be empty (may contain 0 elements).
+        Attribute keys MUST be unique (it is not allowed to have more than one
+        attribute with the same key).
         """
         pass
     start_time_unix_nano: builtins.int = ...
@@ -909,6 +983,8 @@ class SummaryDataPoint(google.protobuf.message.Message):
     def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
         """The set of key/value pairs that uniquely identify the timeseries from
         where this point belongs. The list may be empty (may contain 0 elements).
+        Attribute keys MUST be unique (it is not allowed to have more than one
+        attribute with the same key).
         """
         pass
     start_time_unix_nano: builtins.int = ...
