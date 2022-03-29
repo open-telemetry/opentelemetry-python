@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.10.0-0.29b0...HEAD)
 
+- Add default aggregation
+  ([#2543](https://github.com/open-telemetry/opentelemetry-python/pull/2543))
 - Fix incorrect installation of some exporter “convenience” packages into
   “site-packages/src”
   ([#2525](https://github.com/open-telemetry/opentelemetry-python/pull/2525))
@@ -20,6 +22,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2540](https://github.com/open-telemetry/opentelemetry-python/pull/2540))
 - Drop the usage of name field from log model in OTLP
   ([#2565](https://github.com/open-telemetry/opentelemetry-python/pull/2565))
+- Update opentelemetry-proto to v0.15.0
+  ([#2566](https://github.com/open-telemetry/opentelemetry-python/pull/2566))
+- Remove `enable_default_view` option from sdk MeterProvider
+  ([#2547](https://github.com/open-telemetry/opentelemetry-python/pull/2547))
 - In `opentelementry-opentracing-shim`, handles Kind argument from Opentracing
   `span.kind` tag
   ([#2570](https://github.com/open-telemetry/opentelemetry-python/pull/2570))

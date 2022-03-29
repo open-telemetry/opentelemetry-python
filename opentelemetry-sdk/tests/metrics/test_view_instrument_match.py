@@ -46,7 +46,6 @@ class Test_ViewInstrumentMatch(TestCase):
             resource=self.mock_resource,
             metric_readers=[],
             views=[],
-            enable_default_view=True,
         )
         view_instrument_match = _ViewInstrumentMatch(
             view=View(
@@ -164,7 +163,6 @@ class Test_ViewInstrumentMatch(TestCase):
             resource=self.mock_resource,
             metric_readers=[],
             views=[],
-            enable_default_view=True,
         )
         view_instrument_match = _ViewInstrumentMatch(
             view=View(

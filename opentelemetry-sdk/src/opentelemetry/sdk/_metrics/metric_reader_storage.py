@@ -66,10 +66,7 @@ class MetricReaderStorage:
                     )
 
             # if no view targeted the instrument, use the default
-            if (
-                not view_instrument_matches
-                and self._sdk_config.enable_default_view
-            ):
+            if not view_instrument_matches:
                 view_instrument_matches.append(
                     _ViewInstrumentMatch(
                         view=_DEFAULT_VIEW,
@@ -104,8 +101,3 @@ class MetricReaderStorage:
                     metrics.extend(view_instrument_match.collect(temporality))
 
         return metrics
-
-
-def default_view(instrument: Instrument) -> View:
-    # TODO: #2247
-    return View()

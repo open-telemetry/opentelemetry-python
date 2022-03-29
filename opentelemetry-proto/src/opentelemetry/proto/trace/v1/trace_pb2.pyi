@@ -45,9 +45,10 @@ class TracesData(google.protobuf.message.Message):
 global___TracesData = TracesData
 
 class ResourceSpans(google.protobuf.message.Message):
-    """A collection of InstrumentationLibrarySpans from a Resource."""
+    """A collection of ScopeSpans from a Resource."""
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     RESOURCE_FIELD_NUMBER: builtins.int
+    SCOPE_SPANS_FIELD_NUMBER: builtins.int
     INSTRUMENTATION_LIBRARY_SPANS_FIELD_NUMBER: builtins.int
     SCHEMA_URL_FIELD_NUMBER: builtins.int
     @property
@@ -57,27 +58,92 @@ class ResourceSpans(google.protobuf.message.Message):
         """
         pass
     @property
+    def scope_spans(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ScopeSpans]:
+        """A list of ScopeSpans that originate from a resource."""
+        pass
+    @property
     def instrumentation_library_spans(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___InstrumentationLibrarySpans]:
-        """A list of InstrumentationLibrarySpans that originate from a resource."""
+        """A list of InstrumentationLibrarySpans that originate from a resource.
+        This field is deprecated and will be removed after grace period expires on June 15, 2022.
+
+        During the grace period the following rules SHOULD be followed:
+
+        For Binary Protobufs
+        ====================
+        Binary Protobuf senders SHOULD NOT set instrumentation_library_spans. Instead
+        scope_spans SHOULD be set.
+
+        Binary Protobuf receivers SHOULD check if instrumentation_library_spans is set
+        and scope_spans is not set then the value in instrumentation_library_spans
+        SHOULD be used instead by converting InstrumentationLibrarySpans into ScopeSpans.
+        If scope_spans is set then instrumentation_library_spans SHOULD be ignored.
+
+        For JSON
+        ========
+        JSON senders that set instrumentation_library_spans field MAY also set
+        scope_spans to carry the same spans, essentially double-publishing the same data.
+        Such double-publishing MAY be controlled by a user-settable option.
+        If double-publishing is not used then the senders SHOULD set scope_spans and
+        SHOULD NOT set instrumentation_library_spans.
+
+        JSON receivers SHOULD check if instrumentation_library_spans is set and
+        scope_spans is not set then the value in instrumentation_library_spans
+        SHOULD be used instead by converting InstrumentationLibrarySpans into ScopeSpans.
+        If scope_spans is set then instrumentation_library_spans field SHOULD be ignored.
+        """
         pass
     schema_url: typing.Text = ...
     """This schema_url applies to the data in the "resource" field. It does not apply
-    to the data in the "instrumentation_library_spans" field which have their own
-    schema_url field.
+    to the data in the "scope_spans" field which have their own schema_url field.
     """
 
     def __init__(self,
         *,
         resource : typing.Optional[opentelemetry.proto.resource.v1.resource_pb2.Resource] = ...,
+        scope_spans : typing.Optional[typing.Iterable[global___ScopeSpans]] = ...,
         instrumentation_library_spans : typing.Optional[typing.Iterable[global___InstrumentationLibrarySpans]] = ...,
         schema_url : typing.Text = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["resource",b"resource"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["instrumentation_library_spans",b"instrumentation_library_spans","resource",b"resource","schema_url",b"schema_url"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["instrumentation_library_spans",b"instrumentation_library_spans","resource",b"resource","schema_url",b"schema_url","scope_spans",b"scope_spans"]) -> None: ...
 global___ResourceSpans = ResourceSpans
 
+class ScopeSpans(google.protobuf.message.Message):
+    """A collection of Spans produced by an InstrumentationScope."""
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    SCOPE_FIELD_NUMBER: builtins.int
+    SPANS_FIELD_NUMBER: builtins.int
+    SCHEMA_URL_FIELD_NUMBER: builtins.int
+    @property
+    def scope(self) -> opentelemetry.proto.common.v1.common_pb2.InstrumentationScope:
+        """The instrumentation scope information for the spans in this message.
+        Semantically when InstrumentationScope isn't set, it is equivalent with
+        an empty instrumentation scope name (unknown).
+        """
+        pass
+    @property
+    def spans(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Span]:
+        """A list of Spans that originate from an instrumentation scope."""
+        pass
+    schema_url: typing.Text = ...
+    """This schema_url applies to all spans and span events in the "spans" field."""
+
+    def __init__(self,
+        *,
+        scope : typing.Optional[opentelemetry.proto.common.v1.common_pb2.InstrumentationScope] = ...,
+        spans : typing.Optional[typing.Iterable[global___Span]] = ...,
+        schema_url : typing.Text = ...,
+        ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["scope",b"scope"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["schema_url",b"schema_url","scope",b"scope","spans",b"spans"]) -> None: ...
+global___ScopeSpans = ScopeSpans
+
 class InstrumentationLibrarySpans(google.protobuf.message.Message):
-    """A collection of Spans produced by an InstrumentationLibrary."""
+    """A collection of Spans produced by an InstrumentationLibrary.
+    InstrumentationLibrarySpans is wire-compatible with ScopeSpans for binary
+    Protobuf format.
+    This message is deprecated and will be removed on June 15, 2022.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     INSTRUMENTATION_LIBRARY_FIELD_NUMBER: builtins.int
     SPANS_FIELD_NUMBER: builtins.int
@@ -210,7 +276,10 @@ class Span(google.protobuf.message.Message):
 
         @property
         def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
-            """attributes is a collection of attribute key/value pairs on the event."""
+            """attributes is a collection of attribute key/value pairs on the event.
+            Attribute keys MUST be unique (it is not allowed to have more than one
+            attribute with the same key).
+            """
             pass
         dropped_attributes_count: builtins.int = ...
         """dropped_attributes_count is the number of dropped attributes. If the value is 0,
@@ -251,7 +320,10 @@ class Span(google.protobuf.message.Message):
 
         @property
         def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
-            """attributes is a collection of attribute key/value pairs on the link."""
+            """attributes is a collection of attribute key/value pairs on the link.
+            Attribute keys MUST be unique (it is not allowed to have more than one
+            attribute with the same key).
+            """
             pass
         dropped_attributes_count: builtins.int = ...
         """dropped_attributes_count is the number of dropped attributes. If the value is 0,
@@ -366,6 +438,8 @@ class Span(google.protobuf.message.Message):
 
         The OpenTelemetry API specification further restricts the allowed value types:
         https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/common/common.md#attributes
+        Attribute keys MUST be unique (it is not allowed to have more than one
+        attribute with the same key).
         """
         pass
     dropped_attributes_count: builtins.int = ...
