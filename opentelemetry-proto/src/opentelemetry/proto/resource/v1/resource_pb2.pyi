@@ -19,7 +19,10 @@ class Resource(google.protobuf.message.Message):
     DROPPED_ATTRIBUTES_COUNT_FIELD_NUMBER: builtins.int
     @property
     def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
-        """Set of labels that describe the resource."""
+        """Set of attributes that describe the resource.
+        Attribute keys MUST be unique (it is not allowed to have more than one
+        attribute with the same key).
+        """
         pass
     dropped_attributes_count: builtins.int = ...
     """dropped_attributes_count is the number of dropped attributes. If the value is 0, then
