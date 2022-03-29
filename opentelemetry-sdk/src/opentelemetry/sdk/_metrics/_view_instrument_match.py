@@ -67,15 +67,11 @@ class _ViewInstrumentMatch:
         if attributes not in self._attributes_aggregation:
             with self._lock:
                 if attributes not in self._attributes_aggregation:
-                    if self._view._aggregation:
-                        aggregation = (
-                            self._view._aggregation._create_aggregation(
-                                self._instrument
-                            )
-                        )
-                    else:
-                        aggregation = self._instrument._default_aggregation
-                    self._attributes_aggregation[attributes] = aggregation
+                    self._attributes_aggregation[
+                        attributes
+                    ] = self._view._aggregation._create_aggregation(
+                        self._instrument
+                    )
 
         self._attributes_aggregation[attributes].aggregate(measurement)
 
