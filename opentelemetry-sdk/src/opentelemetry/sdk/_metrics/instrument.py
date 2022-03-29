@@ -15,7 +15,6 @@
 # pylint: disable=too-many-ancestors
 
 import logging
-from abc import ABC, abstractmethod
 from typing import Callable, Dict, Generator, Iterable, Union
 
 from opentelemetry._metrics.instrument import CallbackT
@@ -32,28 +31,14 @@ from opentelemetry._metrics.instrument import (
 )
 from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
 from opentelemetry._metrics.measurement import Measurement as APIMeasurement
-from opentelemetry.sdk._metrics.aggregation import (
-    _Aggregation,
-    _ExplicitBucketHistogramAggregation,
-    _LastValueAggregation,
-    _SumAggregation,
-)
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.measurement_consumer import MeasurementConsumer
-from opentelemetry.sdk._metrics.point import AggregationTemporality
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 
 _logger = logging.getLogger(__name__)
 
 
-class _Instrument(ABC):
-    @property
-    @abstractmethod
-    def _default_aggregation(self) -> _Aggregation:
-        pass
-
-
-class _Synchronous(_Instrument):
+class _Synchronous:
     def __init__(
         self,
         name: str,
@@ -70,7 +55,7 @@ class _Synchronous(_Instrument):
         super().__init__(name, unit=unit, description=description)
 
 
-class _Asynchronous(_Instrument):
+class _Asynchronous:
     def __init__(
         self,
         name: str,
@@ -108,13 +93,6 @@ class _Asynchronous(_Instrument):
 
 
 class Counter(_Synchronous, APICounter):
-    @property
-    def _default_aggregation(self) -> _Aggregation:
-        return _SumAggregation(
-            instrument_is_monotonic=True,
-            instrument_temporality=AggregationTemporality.DELTA,
-        )
-
     def add(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
@@ -129,13 +107,6 @@ class Counter(_Synchronous, APICounter):
 
 
 class UpDownCounter(_Synchronous, APIUpDownCounter):
-    @property
-    def _default_aggregation(self) -> _Aggregation:
-        return _SumAggregation(
-            instrument_is_monotonic=False,
-            instrument_temporality=AggregationTemporality.DELTA,
-        )
-
     def add(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
@@ -145,28 +116,14 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 
 
 class ObservableCounter(_Asynchronous, APIObservableCounter):
-    @property
-    def _default_aggregation(self) -> _Aggregation:
-        return _SumAggregation(
-            instrument_is_monotonic=True,
-            instrument_temporality=AggregationTemporality.CUMULATIVE,
-        )
+    pass
 
 
 class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
-    @property
-    def _default_aggregation(self) -> _Aggregation:
-        return _SumAggregation(
-            instrument_is_monotonic=False,
-            instrument_temporality=AggregationTemporality.CUMULATIVE,
-        )
+    pass
 
 
 class Histogram(_Synchronous, APIHistogram):
-    @property
-    def _default_aggregation(self) -> _Aggregation:
-        return _ExplicitBucketHistogramAggregation()
-
     def record(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
@@ -182,6 +139,4 @@ class Histogram(_Synchronous, APIHistogram):
 
 
 class ObservableGauge(_Asynchronous, APIObservableGauge):
-    @property
-    def _default_aggregation(self) -> _Aggregation:
-        return _LastValueAggregation()
+    pass

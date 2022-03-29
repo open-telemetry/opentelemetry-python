@@ -21,7 +21,10 @@ from typing import Optional, Set, Type
 from typing_extensions import final
 
 from opentelemetry._metrics.instrument import Instrument
-from opentelemetry.sdk._metrics.aggregation import _AggregationFactory
+from opentelemetry.sdk._metrics.aggregation import (
+    DefaultAggregation,
+    _AggregationFactory,
+)
 
 _logger = getLogger(__name__)
 
@@ -44,38 +47,39 @@ class View:
             instrument must be to match the view.
 
         instrument_name: This is an instrument matching attribute: the name the
-            instrument must have to match the view. Wild card characters are
-            supported. Wild card characters should not be used with this
-            attribute if the view has also a ``name`` defined.
+            instrument must have to match the view. Wild card characters are supported. Wild
+            card characters should not be used with this attribute if the view has also a
+            ``name`` defined.
 
         meter_name: This is an instrument matching attribute: the name the
             instrument meter must have to match the view.
 
-        meter_version : This is an instrument matching attribute: the version
+        meter_version: This is an instrument matching attribute: the version
             the instrument meter must have to match the view.
 
-        meter_schema URL : This is an instrument matching attribute: the schema
+        meter_schema_url: This is an instrument matching attribute: the schema
             URL the instrument meter must have to match the view.
 
         name: This is a metric stream customizing attribute: the name of the
             metric stream. If `None`, the name of the instrument will be used.
 
         description: This is a metric stream customizing attribute: the
-            description of the metric stream. If `None`, the description of the
-            instrument will be used.
+            description of the metric stream. If `None`, the description of the instrument will
+            be used.
 
         attribute_keys: This is a metric stream customizing attribute: this is
-            a set of attribute keys. If not `None` then only the measurement
-            attributes that are in `attribute_keys` will be used to identify the
-            metric stream.
+            a set of attribute keys. If not `None` then only the measurement attributes that
+            are in ``attribute_keys`` will be used to identify the metric stream.
 
         aggregation: This is a metric stream customizing attribute: the
-            aggregatation instance to use when data is aggregated for the
-            corresponding metrics stream. If `None` the default aggregation of
-            the instrument will be used.
+            aggregation instance to use when data is aggregated for the
+            corresponding metrics stream. If `None` an instance of
+            `DefaultAggregation` will be used.
 
     This class is not intended to be subclassed by the user.
     """
+
+    _default_aggregation = DefaultAggregation()
 
     def __init__(
         self,
@@ -124,7 +128,7 @@ class View:
 
         self._description = description
         self._attribute_keys = attribute_keys
-        self._aggregation = aggregation
+        self._aggregation = aggregation or self._default_aggregation
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches
