@@ -64,7 +64,9 @@ def event_name_from_kv(key_values):
     return key_values["event"]
 
 
-def opentracing_to_opentelemetry_kind_tag(opentracing_tags):
+def opentracing_to_opentelemetry_kind_tag(opentracing_tags : dict):
+    """ A helper function to extract opentelmetry Kind from opentracing tag
+    """
     kinds = {
         SPAN_KIND_CONSUMER: SpanKind.CONSUMER,
         SPAN_KIND_PRODUCER: SpanKind.PRODUCER,

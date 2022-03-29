@@ -142,21 +142,14 @@ def create_tracer(
         otel_tracer_provider: A tracer from this provider  will be used to
             perform the actual tracing when user code is instrumented using the
             OpenTracing API.
-        interpret_span_kind_tag (default : False): if True, set Opentelemetry
-            Kind argument based on Opentracing "span.kind" tag . If false, all
-            spans from Opentracing will have a attribute "span.kind" = INTERNAL
-            In Opentelemetry, Kind is now a mandatory attribute while being
-            optional in Opentracing
+
 
 
     Returns:
         The created :class:`TracerShim`.
     """
 
-    return TracerShim(
-        otel_tracer_provider.get_tracer(__name__, __version__),
-        interpret_span_kind_tag=interpret_span_kind_tag,
-    )
+    return TracerShim(otel_tracer_provider.get_tracer(__name__, __version__))
 
 
 class SpanContextShim(SpanContext):
@@ -550,16 +543,13 @@ class TracerShim(Tracer):
             Kind argument based on Opentracing "span.kind" tag
     """
 
-    def __init__(
-        self, tracer: OtelTracer, interpret_span_kind_tag: bool = False
-    ):
+    def __init__(self, tracer: OtelTracer):
         super().__init__(scope_manager=ScopeManagerShim(self))
         self._otel_tracer = tracer
         self._supported_formats = (
             Format.TEXT_MAP,
             Format.HTTP_HEADERS,
         )
-        self.interpret_span_kind_tag = interpret_span_kind_tag
 
     def unwrap(self):
         """Returns the :class:`opentelemetry.trace.Tracer` object that is
@@ -693,12 +683,11 @@ class TracerShim(Tracer):
             "attributes": tags,
             "start_time": start_time_ns,
         }
-        if self.interpret_span_kind_tag:
-            if util.opentracing_to_opentelemetry_kind_tag(tags) is not None:
-                kwargs["kind"] = util.opentracing_to_opentelemetry_kind_tag(
-                    tags
-                )
-                del tags[SPAN_KIND]
+        if util.opentracing_to_opentelemetry_kind_tag(tags) is not None:
+            kwargs["kind"] = util.opentracing_to_opentelemetry_kind_tag(
+                tags
+            )
+            del tags[SPAN_KIND]
 
         span = self._otel_tracer.start_span(operation_name, **kwargs)
 
