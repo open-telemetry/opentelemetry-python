@@ -21,6 +21,7 @@ from opentracing.tags import (
 )
 
 from opentelemetry.trace import SpanKind
+from opentelemetry.util.types import Attributes
 
 # A default event name to be used for logging events when a better event name
 # can't be derived from the event's key-value pairs.
@@ -64,9 +65,8 @@ def event_name_from_kv(key_values):
     return key_values["event"]
 
 
-def opentracing_to_opentelemetry_kind_tag(opentracing_tags : dict):
-    """ A helper function to extract opentelmetry Kind from opentracing tag
-    """
+def opentracing_to_opentelemetry_kind_tag(opentracing_tags: Attributes):
+    """A helper function to extract opentelmetry Kind from opentracing tag"""
     kinds = {
         SPAN_KIND_CONSUMER: SpanKind.CONSUMER,
         SPAN_KIND_PRODUCER: SpanKind.PRODUCER,

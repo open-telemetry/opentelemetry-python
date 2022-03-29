@@ -143,8 +143,6 @@ def create_tracer(
             perform the actual tracing when user code is instrumented using the
             OpenTracing API.
 
-
-
     Returns:
         The created :class:`TracerShim`.
     """
@@ -539,8 +537,6 @@ class TracerShim(Tracer):
     Args:
         tracer: A :class:`opentelemetry.trace.Tracer` to use for tracing. This
             tracer will be invoked by the shim to create actual spans.
-        interpret_span_kind_tag (default : False) : if True, set Opentelemetry
-            Kind argument based on Opentracing "span.kind" tag
     """
 
     def __init__(self, tracer: OtelTracer):
@@ -684,9 +680,7 @@ class TracerShim(Tracer):
             "start_time": start_time_ns,
         }
         if util.opentracing_to_opentelemetry_kind_tag(tags) is not None:
-            kwargs["kind"] = util.opentracing_to_opentelemetry_kind_tag(
-                tags
-            )
+            kwargs["kind"] = util.opentracing_to_opentelemetry_kind_tag(tags)
             del tags[SPAN_KIND]
 
         span = self._otel_tracer.start_span(operation_name, **kwargs)
