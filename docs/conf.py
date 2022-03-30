@@ -147,6 +147,7 @@ autodoc_default_options = {
     "undoc-members": True,
     "show-inheritance": True,
     "member-order": "bysource",
+    "exclude-members": "_ProxyObservableUpDownCounter,_ProxyHistogram,_ProxyObservableGauge,_ProxyInstrument,_ProxyAsynchronousInstrument,_ProxyCounter,_ProxyUpDownCounter,_ProxyObservableCounter,_ProxyObservableGauge,_abc_impl",
 }
 
 # -- Options for HTML output -------------------------------------------------
