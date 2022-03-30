@@ -168,8 +168,6 @@ class ObservableCounter(_Monotonic, Asynchronous):
     increasing value(s) when the instrument is being observed.
     """
 
-    pass
-
 
 class DefaultObservableCounter(ObservableCounter):
     def __init__(self, name, callback, unit="", description=""):
@@ -192,8 +190,6 @@ class ObservableUpDownCounter(_NonMonotonic, Asynchronous):
     the process heap size - it makes sense to report the heap size from multiple processes and sum them
     up, so we get the total heap usage) when the instrument is being observed.
     """
-
-    pass
 
 
 class DefaultObservableUpDownCounter(ObservableUpDownCounter):
@@ -248,8 +244,6 @@ class ObservableGauge(_Grouping, Asynchronous):
     the room temperature - it makes no sense to report the temperature value from multiple rooms
     and sum them up) when the instrument is being observed.
     """
-
-    pass
 
 
 class DefaultObservableGauge(ObservableGauge):

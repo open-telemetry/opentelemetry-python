@@ -144,7 +144,6 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        pass
 
     @abstractmethod
     def create_up_down_counter(
@@ -158,7 +157,6 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        pass
 
     @abstractmethod
     def create_observable_counter(
@@ -253,7 +251,6 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        pass
 
     @abstractmethod
     def create_observable_gauge(
@@ -271,7 +268,6 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        pass
 
     @abstractmethod
     def create_observable_up_down_counter(
@@ -289,7 +285,6 @@ class Meter(ABC):
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
-        pass
 
 
 class _ProxyMeter(Meter):
