@@ -303,8 +303,10 @@ def _convert_aggregation_temporality(
     if current_point_type is Gauge:
         return current_point
 
-    if previous_point is not None and type(previous_point) is not type(
-        current_point
+    if (
+        previous_point is not None
+        and current_point is not None
+        and type(previous_point) is not type(current_point)
     ):
         _logger.warning(
             "convert_aggregation_temporality called with mismatched "
