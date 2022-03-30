@@ -210,7 +210,7 @@ class MeterProvider(APIMeterProvider):
                 if metric_reader in self._all_metric_readers:
                     raise Exception(
                         f"MetricReader {metric_reader} has been registered "
-                        "already  in other MeterProvider instance"
+                        "already in other MeterProvider instance"
                     )
 
                 self._all_metric_readers.add(metric_reader)
