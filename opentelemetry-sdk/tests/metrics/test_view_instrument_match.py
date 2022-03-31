@@ -18,6 +18,10 @@ from unittest.mock import Mock
 from opentelemetry.sdk._metrics._view_instrument_match import (
     _ViewInstrumentMatch,
 )
+from opentelemetry.sdk._metrics.aggregation import (
+    DropAggregation,
+    _DropAggregation,
+)
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
 from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
@@ -42,7 +46,6 @@ class Test_ViewInstrumentMatch(TestCase):
             resource=self.mock_resource,
             metric_readers=[],
             views=[],
-            enable_default_view=True,
         )
         view_instrument_match = _ViewInstrumentMatch(
             view=View(
@@ -129,6 +132,28 @@ class Test_ViewInstrumentMatch(TestCase):
             {frozenset({}): self.mock_created_aggregation},
         )
 
+        # Test that a drop aggregation is handled in the same way as any
+        # other aggregation.
+        drop_aggregation = DropAggregation()
+
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=drop_aggregation,
+                attribute_keys={},
+            ),
+            instrument=instrument1,
+            sdk_config=sdk_config,
+        )
+        view_instrument_match.consume_measurement(
+            Measurement(value=0, instrument=instrument1, attributes=None)
+        )
+        self.assertIsInstance(
+            view_instrument_match._attributes_aggregation[frozenset({})],
+            _DropAggregation,
+        )
+
     def test_collect(self):
         instrument1 = Mock(
             name="instrument1", description="description", unit="unit"
@@ -138,7 +163,6 @@ class Test_ViewInstrumentMatch(TestCase):
             resource=self.mock_resource,
             metric_readers=[],
             views=[],
-            enable_default_view=True,
         )
         view_instrument_match = _ViewInstrumentMatch(
             view=View(

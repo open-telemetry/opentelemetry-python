@@ -148,7 +148,37 @@ class Meter(APIMeter):
 
 
 class MeterProvider(APIMeterProvider):
-    """See `opentelemetry._metrics.MeterProvider`."""
+    r"""See `opentelemetry._metrics.MeterProvider`.
+
+    Args:
+        metric_readers: Register metric readers to collect metrics from the SDK on demand. Each
+            `MetricReader` is completely independent and will collect separate streams of
+            metrics. TODO: reference ``PeriodicExportingMetricReader`` usage with push
+            exporters here.
+        resource: The resource representing what the metrics emitted from the SDK pertain to.
+        shutdown_on_exit: If true, registers an `atexit` handler to call
+            `MeterProvider.shutdown`
+        views: The views to configure the metric output the SDK
+
+    By default, instruments which do not match any `View` (or if no `View`\ s are provided)
+    will report metrics with the default aggregation for the instrument's kind. To disable
+    instruments by default, configure a match-all `View` with `DropAggregation` and then create
+    `View`\ s to re-enable individual instruments:
+
+    .. code-block:: python
+        :caption: Disable default views
+
+        MeterProvider(
+            views=[
+                View(instrument_name="*", aggregation=DropAggregation()),
+                View(instrument_name="mycounter"),
+            ],
+            # ...
+        )
+    """
+
+    _all_metric_readers_lock = Lock()
+    _all_metric_readers = set()
 
     def __init__(
         self,
@@ -156,7 +186,6 @@ class MeterProvider(APIMeterProvider):
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
         views: Sequence[View] = (),
-        enable_default_view: bool = True,
     ):
         self._lock = Lock()
         self._meter_lock = Lock()
@@ -165,7 +194,6 @@ class MeterProvider(APIMeterProvider):
             resource=resource,
             metric_readers=metric_readers,
             views=views,
-            enable_default_view=enable_default_view,
         )
         self._measurement_consumer = SynchronousMeasurementConsumer(
             sdk_config=self._sdk_config
@@ -175,9 +203,18 @@ class MeterProvider(APIMeterProvider):
             self._atexit_handler = register(self.shutdown)
 
         self._meters = {}
-        self._metric_readers = metric_readers
 
         for metric_reader in self._sdk_config.metric_readers:
+
+            with self._all_metric_readers_lock:
+                if metric_reader in self._all_metric_readers:
+                    raise Exception(
+                        f"MetricReader {metric_reader} has been registered "
+                        "already in other MeterProvider instance"
+                    )
+
+                self._all_metric_readers.add(metric_reader)
+
             metric_reader._set_collect_callback(
                 self._measurement_consumer.collect
             )

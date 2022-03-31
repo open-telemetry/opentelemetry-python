@@ -19,6 +19,7 @@ import json
 import logging
 import os
 import threading
+import traceback
 from typing import Any, Callable, Optional, Tuple, Union, cast
 
 from opentelemetry.sdk._logs.severity import SeverityNumber, std_to_otlp
@@ -28,6 +29,7 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import (
     format_span_id,
     format_trace_id,
@@ -57,7 +59,6 @@ class LogRecord:
         trace_flags: Optional[TraceFlags] = None,
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
-        name: Optional[str] = None,
         body: Optional[Any] = None,
         resource: Optional[Resource] = None,
         attributes: Optional[Attributes] = None,
@@ -68,7 +69,6 @@ class LogRecord:
         self.trace_flags = trace_flags
         self.severity_text = severity_text
         self.severity_number = severity_number
-        self.name = name
         self.body = body
         self.resource = resource
         self.attributes = attributes
@@ -82,7 +82,6 @@ class LogRecord:
         return json.dumps(
             {
                 "body": self.body,
-                "name": self.name,
                 "severity_number": repr(self.severity_number),
                 "severity_text": self.severity_text,
                 "attributes": self.attributes,
@@ -319,9 +318,27 @@ class LoggingHandler(logging.Handler):
 
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> Attributes:
-        return {
+        attributes = {
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }
+        if record.exc_info is not None:
+            exc_type = ""
+            message = ""
+            stack_trace = ""
+            exctype, value, tb = record.exc_info
+            if exctype is not None:
+                exc_type = exctype.__name__
+            if value is not None and value.args:
+                message = value.args[0]
+            if tb is not None:
+                # https://github.com/open-telemetry/opentelemetry-specification/blob/9fa7c656b26647b27e485a6af7e38dc716eba98a/specification/trace/semantic_conventions/exceptions.md#stacktrace-representation
+                stack_trace = "".join(
+                    traceback.format_exception(*record.exc_info)
+                )
+            attributes[SpanAttributes.EXCEPTION_TYPE] = exc_type
+            attributes[SpanAttributes.EXCEPTION_MESSAGE] = message
+            attributes[SpanAttributes.EXCEPTION_STACKTRACE] = stack_trace
+        return attributes
 
     def _translate(self, record: logging.LogRecord) -> LogRecord:
         timestamp = int(record.created * 1e9)

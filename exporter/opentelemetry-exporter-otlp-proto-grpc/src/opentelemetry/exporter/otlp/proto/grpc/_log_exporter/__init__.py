@@ -63,9 +63,6 @@ class OTLPLogExporter(
             }
         )
 
-    def _translate_name(self, log_data: LogData) -> None:
-        self._collector_kwargs["name"] = log_data.log_record.name
-
     def _translate_time(self, log_data: LogData) -> None:
         self._collector_kwargs[
             "time_unix_nano"
@@ -140,7 +137,6 @@ class OTLPLogExporter(
 
             self._collector_kwargs = {}
 
-            self._translate_name(log_data)
             self._translate_time(log_data)
             self._translate_span_id(log_data)
             self._translate_trace_id(log_data)

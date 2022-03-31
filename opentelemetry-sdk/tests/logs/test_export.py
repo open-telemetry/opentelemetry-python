@@ -334,7 +334,6 @@ class TestConsoleLogExporter(unittest.TestCase):
                 trace_flags=TraceFlags(0x01),
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
-                name="name",
                 body="Zhengzhou, We have a heaviest rains in 1000 years",
                 resource=SDKResource({"key": "value"}),
                 attributes={"a": 1, "b": "c"},

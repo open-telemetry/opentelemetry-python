@@ -78,6 +78,8 @@ class KeyValueList(google.protobuf.message.Message):
     def values(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___KeyValue]:
         """A collection of key/value pairs of key-value pairs. The list may be empty (may
         contain 0 elements).
+        The keys MUST be unique (it is not allowed to have more than one
+        value with the same key).
         """
         pass
     def __init__(self,
@@ -106,26 +108,12 @@ class KeyValue(google.protobuf.message.Message):
     def ClearField(self, field_name: typing_extensions.Literal["key",b"key","value",b"value"]) -> None: ...
 global___KeyValue = KeyValue
 
-class StringKeyValue(google.protobuf.message.Message):
-    """StringKeyValue is a pair of key/value strings. This is the simpler (and faster) version
-    of KeyValue that only supports string values.
-    """
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    KEY_FIELD_NUMBER: builtins.int
-    VALUE_FIELD_NUMBER: builtins.int
-    key: typing.Text = ...
-    value: typing.Text = ...
-    def __init__(self,
-        *,
-        key : typing.Text = ...,
-        value : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["key",b"key","value",b"value"]) -> None: ...
-global___StringKeyValue = StringKeyValue
-
 class InstrumentationLibrary(google.protobuf.message.Message):
     """InstrumentationLibrary is a message representing the instrumentation library information
     such as the fully qualified name and version.
+    InstrumentationLibrary is wire-compatible with InstrumentationScope for binary
+    Protobuf format.
+    This message is deprecated and will be removed on June 15, 2022.
     """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     NAME_FIELD_NUMBER: builtins.int
@@ -141,3 +129,22 @@ class InstrumentationLibrary(google.protobuf.message.Message):
         ) -> None: ...
     def ClearField(self, field_name: typing_extensions.Literal["name",b"name","version",b"version"]) -> None: ...
 global___InstrumentationLibrary = InstrumentationLibrary
+
+class InstrumentationScope(google.protobuf.message.Message):
+    """InstrumentationScope is a message representing the instrumentation scope information
+    such as the fully qualified name and version.
+    """
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    NAME_FIELD_NUMBER: builtins.int
+    VERSION_FIELD_NUMBER: builtins.int
+    name: typing.Text = ...
+    """An empty instrumentation scope name means the name is unknown."""
+
+    version: typing.Text = ...
+    def __init__(self,
+        *,
+        name : typing.Text = ...,
+        version : typing.Text = ...,
+        ) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["name",b"name","version",b"version"]) -> None: ...
+global___InstrumentationScope = InstrumentationScope

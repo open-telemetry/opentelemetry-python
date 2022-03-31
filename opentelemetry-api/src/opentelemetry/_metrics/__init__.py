@@ -72,12 +72,15 @@ class MeterProvider(ABC):
 
 
 class NoOpMeterProvider(MeterProvider):
+    """The default MeterProvider used when no MeterProvider implementation is available."""
+
     def get_meter(
         self,
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
     ) -> "Meter":
+        """Returns a NoOpMeter."""
         super().get_meter(name, version=version, schema_url=schema_url)
         return NoOpMeter(name, version=version, schema_url=schema_url)
 
@@ -145,7 +148,14 @@ class Meter(ABC):
         unit: Optional[str] = "",
         description: Optional[str] = "",
     ) -> Counter:
-        pass
+        """Creates a `Counter` instrument
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for measurements this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+        """
 
     @abstractmethod
     def create_up_down_counter(
@@ -154,7 +164,14 @@ class Meter(ABC):
         unit: Optional[str] = "",
         description: Optional[str] = "",
     ) -> UpDownCounter:
-        pass
+        """Creates an `UpDownCounter` instrument
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for measurements this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+        """
 
     @abstractmethod
     def create_observable_counter(
@@ -164,7 +181,7 @@ class Meter(ABC):
         unit: Optional[str] = "",
         description: Optional[str] = "",
     ) -> ObservableCounter:
-        """Creates an observable counter instrument
+        """Creates an `ObservableCounter` instrument
 
         An observable counter observes a monotonically increasing count by
         calling a provided callback which returns multiple
@@ -250,7 +267,14 @@ class Meter(ABC):
         unit: Optional[str] = "",
         description: Optional[str] = "",
     ) -> Histogram:
-        pass
+        """Creates a `Histogram` instrument
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for measurements this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+        """
 
     @abstractmethod
     def create_observable_gauge(
@@ -260,7 +284,18 @@ class Meter(ABC):
         unit: Optional[str] = "",
         description: Optional[str] = "",
     ) -> ObservableGauge:
-        pass
+        """Creates an `ObservableGauge` instrument
+
+        Args:
+            name: The name of the instrument to be created
+            callback: A callback that returns an iterable of
+                :class:`~opentelemetry._metrics.measurement.Measurement`.
+                Alternatively, can be a generator that yields iterables of
+                :class:`~opentelemetry._metrics.measurement.Measurement`.
+            unit: The unit for measurements this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+        """
 
     @abstractmethod
     def create_observable_up_down_counter(
@@ -270,7 +305,18 @@ class Meter(ABC):
         unit: Optional[str] = "",
         description: Optional[str] = "",
     ) -> ObservableUpDownCounter:
-        pass
+        """Creates an `ObservableUpDownCounter` instrument
+
+        Args:
+            name: The name of the instrument to be created
+            callback: A callback that returns an iterable of
+                :class:`~opentelemetry._metrics.measurement.Measurement`.
+                Alternatively, can be a generator that yields iterables of
+                :class:`~opentelemetry._metrics.measurement.Measurement`.
+            unit: The unit for measurements this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+        """
 
 
 class _ProxyMeter(Meter):
@@ -410,6 +456,7 @@ class NoOpMeter(Meter):
         unit: Optional[str] = "",
         description: Optional[str] = "",
     ) -> Counter:
+        """Returns a no-op Counter."""
         super().create_counter(name, unit=unit, description=description)
         return DefaultCounter(name, unit=unit, description=description)
 
@@ -419,6 +466,7 @@ class NoOpMeter(Meter):
         unit: Optional[str] = "",
         description: Optional[str] = "",
     ) -> UpDownCounter:
+        """Returns a no-op UpDownCounter."""
         super().create_up_down_counter(
             name, unit=unit, description=description
         )
@@ -431,6 +479,7 @@ class NoOpMeter(Meter):
         unit: Optional[str] = "",
         description: Optional[str] = "",
     ) -> ObservableCounter:
+        """Returns a no-op ObservableCounter."""
         super().create_observable_counter(
             name, callback, unit=unit, description=description
         )
@@ -447,6 +496,7 @@ class NoOpMeter(Meter):
         unit: Optional[str] = "",
         description: Optional[str] = "",
     ) -> Histogram:
+        """Returns a no-op Histogram."""
         super().create_histogram(name, unit=unit, description=description)
         return DefaultHistogram(name, unit=unit, description=description)
 
@@ -457,6 +507,7 @@ class NoOpMeter(Meter):
         unit: Optional[str] = "",
         description: Optional[str] = "",
     ) -> ObservableGauge:
+        """Returns a no-op ObservableGauge."""
         super().create_observable_gauge(
             name, callback, unit=unit, description=description
         )
@@ -474,6 +525,7 @@ class NoOpMeter(Meter):
         unit: Optional[str] = "",
         description: Optional[str] = "",
     ) -> ObservableUpDownCounter:
+        """Returns a no-op ObservableUpDownCounter."""
         super().create_observable_up_down_counter(
             name, callback, unit=unit, description=description
         )
