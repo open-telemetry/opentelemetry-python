@@ -45,9 +45,6 @@ class TestShim(TestCase):
         """Create an OpenTelemetry tracer and a shim before every test case."""
         trace.set_tracer_provider(TracerProvider())
         self.shim = create_tracer(trace.get_tracer_provider())
-        self.shim_with_interpret_kind = create_tracer(
-            trace.get_tracer_provider(), interpret_span_kind_tag=True
-        )
 
     @classmethod
     def setUpClass(cls):
@@ -679,49 +676,24 @@ class TestShim(TestCase):
 
     def test_span_kind(self):
         """Test span.kind Opentracing tags to be transformed in kind Opentelemetry argument"""
-        consumer_kind_tags = {"span.kind": "consumer"}
-        with self.shim.start_active_span(
-            "TestSetTag", tags=consumer_kind_tags
-        ) as scope:
-            self.assertEqual(
-                scope.span.unwrap().attributes["span.kind"], "consumer"
-            )
-            self.assertEqual(scope.span.unwrap().kind, SpanKind.INTERNAL)
-        with self.shim_with_interpret_kind.start_active_span(
-            "TestSetTag", tags=consumer_kind_tags
-        ) as scope:
-            self.assertEqual(
-                scope.span.unwrap().attributes.get("span.kind"), None
-            )
-            self.assertEqual(scope.span.unwrap().kind, SpanKind.CONSUMER)
+        tests = [
+            ({"span.kind": "consumer"}, "consumer", SpanKind.CONSUMER),
+            ({"span.kind": "unknown"}, "unknown", SpanKind.INTERNAL),
+            ({"foo": "bar"}, None, SpanKind.INTERNAL),
+        ]
 
-        unknown_kind_tags = {"span.kind": "unknown"}
-        with self.shim.start_active_span(
-            "TestSetTag", tags=unknown_kind_tags
-        ) as scope:
-            self.assertEqual(
-                scope.span.unwrap().attributes["span.kind"], "unknown"
-            )
-            self.assertEqual(scope.span.unwrap().kind, SpanKind.INTERNAL)
-        with self.shim_with_interpret_kind.start_active_span(
-            "TestSetTag", tags=unknown_kind_tags
-        ) as scope:
-            self.assertEqual(
-                scope.span.unwrap().attributes["span.kind"], "unknown"
-            )
-            self.assertEqual(scope.span.unwrap().kind, SpanKind.INTERNAL)
-        no_kind_tags = {"foo": "bar"}
-        with self.shim_with_interpret_kind.start_active_span(
-            "TestSetTag", tags=no_kind_tags
-        ) as scope:
-            self.assertEqual(
-                scope.span.unwrap().attributes.get("span.kind"), None
-            )
-            self.assertEqual(scope.span.unwrap().kind, SpanKind.INTERNAL)
-        with self.shim.start_active_span(
-            "TestSetTag", tags=no_kind_tags
-        ) as scope:
-            self.assertEqual(
-                scope.span.unwrap().attributes.get("span.kind"), None
-            )
-            self.assertEqual(scope.span.unwrap().kind, SpanKind.INTERNAL)
+        for test in tests:
+            tags, tag_kind_value, otel_kind_value = test
+            with self.subTest(
+                tags=tags,
+                tag_kind_value=tag_kind_value,
+                otel_kind_value=otel_kind_value,
+            ):
+                with self.shim.start_active_span(
+                    "TestSetTag", tags=tags
+                ) as scope:
+                    self.assertEqual(
+                        scope.span.unwrap().attributes.get("span.kind"),
+                        tag_kind_value,
+                    )
+                    self.assertEqual(scope.span.unwrap().kind, otel_kind_value)

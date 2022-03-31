@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Optional
+
 from opentracing.tags import (
-    SPAN_KIND,
     SPAN_KIND_CONSUMER,
     SPAN_KIND_PRODUCER,
     SPAN_KIND_RPC_CLIENT,
@@ -65,17 +66,17 @@ def event_name_from_kv(key_values):
     return key_values["event"]
 
 
-def opentracing_to_opentelemetry_kind_tag(opentracing_tags: Attributes):
-    """A helper function to extract opentelmetry Kind from opentracing tag"""
+def opentracing_to_otel_kind_tag(
+    opentracing_kind: str,
+) -> Optional[SpanKind]:
+    """A helper function to get opentelmetry Kind from opentracing kind tag"""
     kinds = {
         SPAN_KIND_CONSUMER: SpanKind.CONSUMER,
         SPAN_KIND_PRODUCER: SpanKind.PRODUCER,
         SPAN_KIND_RPC_CLIENT: SpanKind.CLIENT,
         SPAN_KIND_RPC_SERVER: SpanKind.SERVER,
     }
-    if opentracing_tags is not None and SPAN_KIND in opentracing_tags:
-        opentracing_kind = opentracing_tags.get(SPAN_KIND)
-        if opentracing_kind in kinds:
-            opentelemetry_kind = kinds[opentracing_kind]
-            return opentelemetry_kind
+    if opentracing_kind in kinds:
+        opentelemetry_kind = kinds[opentracing_kind]
+        return opentelemetry_kind
     return None

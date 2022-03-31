@@ -679,9 +679,12 @@ class TracerShim(Tracer):
             "attributes": tags,
             "start_time": start_time_ns,
         }
-        if util.opentracing_to_opentelemetry_kind_tag(tags) is not None:
-            kwargs["kind"] = util.opentracing_to_opentelemetry_kind_tag(tags)
-            del tags[SPAN_KIND]
+
+        if tags is not None and SPAN_KIND in tags:
+            if util.opentracing_to_otel_kind_tag(tags[SPAN_KIND]) is not None:
+                kwargs["kind"] = util.opentracing_to_otel_kind_tag(
+                    tags.get(SPAN_KIND, None)
+                )
 
         span = self._otel_tracer.start_span(operation_name, **kwargs)
 
