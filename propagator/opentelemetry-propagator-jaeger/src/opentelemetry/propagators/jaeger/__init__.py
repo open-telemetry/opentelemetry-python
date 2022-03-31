@@ -81,7 +81,9 @@ class JaegerPropagator(TextMapPropagator):
         if span_context == trace.INVALID_SPAN_CONTEXT:
             return
 
-        span_parent_id = span.parent.span_id if span.parent else 0
+        span_parent_id = (
+            span.parent.span_id if hasattr(span, parent) and span.parent else 0
+        )
         trace_flags = span_context.trace_flags
         if trace_flags.sampled:
             trace_flags |= self.DEBUG_FLAG
