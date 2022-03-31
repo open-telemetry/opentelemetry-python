@@ -19,6 +19,7 @@ from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry._metrics import NoOpMeter
 from opentelemetry.sdk._metrics import Meter, MeterProvider
+from opentelemetry.sdk._metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk._metrics.instrument import (
     Counter,
     Histogram,
@@ -45,6 +46,25 @@ class DummyMetricReader(MetricReader):
 
 
 class TestMeterProvider(ConcurrencyTestBase):
+    def tearDown(self):
+
+        MeterProvider._all_metric_readers = set()
+
+    def test_register_metric_readers(self):
+
+        metric_reader_0 = PeriodicExportingMetricReader(Mock())
+        metric_reader_1 = PeriodicExportingMetricReader(Mock())
+
+        try:
+            MeterProvider(metric_readers=(metric_reader_0,))
+            MeterProvider(metric_readers=(metric_reader_1,))
+        except Exception as error:
+            self.fail(f"Unexpected exception {error} raised")
+
+        with self.assertRaises(Exception):
+            MeterProvider(metric_readers=(metric_reader_0,))
+            MeterProvider(metric_readers=(metric_reader_0,))
+
     def test_resource(self):
         """
         `MeterProvider` provides a way to allow a `Resource` to be specified.
@@ -190,7 +210,13 @@ class TestMeterProvider(ConcurrencyTestBase):
     def test_measurement_collect_callback(
         self, mock_sync_measurement_consumer
     ):
-        metric_readers = [DummyMetricReader()] * 5
+        metric_readers = [
+            DummyMetricReader(),
+            DummyMetricReader(),
+            DummyMetricReader(),
+            DummyMetricReader(),
+            DummyMetricReader(),
+        ]
         sync_consumer_instance = mock_sync_measurement_consumer()
         sync_consumer_instance.collect = MockFunc()
         MeterProvider(metric_readers=metric_readers)

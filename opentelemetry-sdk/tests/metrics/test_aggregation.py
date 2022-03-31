@@ -360,6 +360,17 @@ class TestConvertAggregationTemporality(TestCase):
                 current_point,
             )
 
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                self.assertIs(
+                    _convert_aggregation_temporality(
+                        Gauge(time_unix_nano=0, value=0),
+                        None,
+                        AggregationTemporality.DELTA,
+                    ),
+                    current_point,
+                )
+
     def test_current_point_sum_previous_point_none(self):
 
         current_point = Sum(
