@@ -44,7 +44,6 @@ class TestDatapointToJSON(TestCase):
                 value=9,
             )
         )
-        print(point.to_json())
         self.assertEqual(
             '{"attributes": {"attr-key": "test-val"}, "description": "test-description", "instrumentation_info": "InstrumentationInfo(name, version, None)", "name": "test-name", "resource": "BoundedAttributes({\'resource-key\': \'resource-val\'}, maxlen=None)", "unit": "test-unit", "point": {"aggregation_temporality": 2, "is_monotonic": true, "start_time_unix_nano": 10, "time_unix_nano": 20, "value": 9}}',
             point.to_json(),
@@ -71,7 +70,6 @@ class TestDatapointToJSON(TestCase):
             )
         )
         self.maxDiff = None
-        print(point.to_json())
         self.assertEqual(
             '{"attributes": {"attr-key": "test-val"}, "description": "test-description", "instrumentation_info": "InstrumentationInfo(name, version, None)", "name": "test-name", "resource": "BoundedAttributes({\'resource-key\': \'resource-val\'}, maxlen=None)", "unit": "test-unit", "point": {"aggregation_temporality": 1, "bucket_counts": [0, 0, 1, 0], "explicit_bounds": [0.1, 0.5, 0.9, 1], "max": 0.8, "min": 0.8, "start_time_unix_nano": 50, "sum": 0.8, "time_unix_nano": 60}}',
             point.to_json(),
