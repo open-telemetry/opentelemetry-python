@@ -15,7 +15,7 @@
 import json
 from dataclasses import asdict, dataclass
 from enum import IntEnum
-from typing import Sequence, Union
+from typing import Optional, Sequence, Union
 
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
@@ -30,11 +30,11 @@ class AggregationTemporality(IntEnum):
 
 @dataclass(frozen=True)
 class Sum:
+    aggregation_temporality: AggregationTemporality
+    is_monotonic: bool
     start_time_unix_nano: int
     time_unix_nano: int
     value: Union[int, float]
-    aggregation_temporality: AggregationTemporality
-    is_monotonic: bool
 
 
 @dataclass(frozen=True)
@@ -45,12 +45,14 @@ class Gauge:
 
 @dataclass(frozen=True)
 class Histogram:
-    start_time_unix_nano: int
-    time_unix_nano: int
+    aggregation_temporality: AggregationTemporality
     bucket_counts: Sequence[int]
     explicit_bounds: Sequence[float]
+    max: Optional[int]
+    min: Optional[int]
+    start_time_unix_nano: int
     sum: Union[int, float]
-    aggregation_temporality: AggregationTemporality
+    time_unix_nano: int
 
 
 PointT = Union[Sum, Gauge, Histogram]
