@@ -267,9 +267,8 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             value = self._bucket_counts
             start_time_unix_nano = self._start_time_unix_nano
             histogram_sum = self._sum
-            if self._record_min_max:
-                histogram_max = self._max
-                histogram_min = self._min
+            histogram_max = self._max
+            histogram_min = self._min
 
             self._bucket_counts = self._get_empty_bucket_counts()
             self._start_time_unix_nano = now + 1
@@ -399,14 +398,18 @@ def _convert_aggregation_temporality(
                     current_point.bucket_counts, previous_point.bucket_counts
                 )
             ]
+        max_ = max(current_point.max, previous_point.max)
+        min_ = min(current_point.min, previous_point.min)
 
         return HistogramPoint(
-            start_time_unix_nano=start_time_unix_nano,
-            time_unix_nano=current_point.time_unix_nano,
+            aggregation_temporality=aggregation_temporality,
             bucket_counts=bucket_counts,
             explicit_bounds=current_point.explicit_bounds,
+            max=max_,
+            min=min_,
+            start_time_unix_nano=start_time_unix_nano,
             sum=sum_,
-            aggregation_temporality=aggregation_temporality,
+            time_unix_nano=current_point.time_unix_nano,
         )
     return None
 

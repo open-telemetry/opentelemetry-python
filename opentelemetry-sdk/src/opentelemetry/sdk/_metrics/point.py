@@ -15,7 +15,7 @@
 import json
 from dataclasses import asdict, dataclass
 from enum import IntEnum
-from typing import Optional, Sequence, Union
+from typing import Sequence, Union
 
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
@@ -48,8 +48,8 @@ class Histogram:
     aggregation_temporality: AggregationTemporality
     bucket_counts: Sequence[int]
     explicit_bounds: Sequence[float]
-    max: Optional[int]
-    min: Optional[int]
+    max: int
+    min: int
     start_time_unix_nano: int
     sum: Union[int, float]
     time_unix_nano: int
