@@ -79,7 +79,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
             trace_id=int(trace_id, 16),
             span_id=int(span_id, 16),
             is_remote=True,
-            trace_flags=trace.TraceFlags(trace_flags),
+            trace_flags=trace.TraceFlags(int(trace_flags, 16)),
             trace_state=tracestate,
         )
         return trace.set_span_in_context(

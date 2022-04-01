@@ -1745,3 +1745,27 @@ class TestSpanLimits(unittest.TestCase):
             self.assertEqual(len(root.attributes), num_attributes)
             for attr_val in root.attributes.values():
                 self.assertEqual(attr_val, self.long_val)
+
+
+class TestTraceFlags(unittest.TestCase):
+    def test_constant_default(self):
+        self.assertEqual(trace_api.TraceFlags.DEFAULT, 0)
+
+    def test_constant_sampled(self):
+        self.assertEqual(trace_api.TraceFlags.SAMPLED, 1)
+
+    def test_get_default(self):
+        self.assertEqual(
+            trace_api.TraceFlags.get_default(), trace_api.TraceFlags.DEFAULT
+        )
+
+    def test_sampled_true(self):
+        self.assertTrue(trace_api.TraceFlags(0xF1).sampled)
+
+    def test_sampled_false(self):
+        self.assertFalse(trace_api.TraceFlags(0xF0).sampled)
+
+    def test_constant_default_trace_options(self):
+        self.assertEqual(
+            trace_api.DEFAULT_TRACE_OPTIONS, trace_api.TraceFlags.DEFAULT
+        )
