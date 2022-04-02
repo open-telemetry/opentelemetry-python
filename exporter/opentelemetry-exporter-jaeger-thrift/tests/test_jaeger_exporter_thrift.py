@@ -36,7 +36,7 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import SERVICE_NAME
 from opentelemetry.sdk.trace import Resource, TracerProvider
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.globals_test import TraceGlobalsTest
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
@@ -303,7 +303,7 @@ class TestJaegerExporter(TraceGlobalsTest, unittest.TestCase):
                 context=other_context,
                 parent=None,
                 resource=Resource({}),
-                instrumentation_info=InstrumentationInfo(
+                instrumentation_scope=InstrumentationScope(
                     name="name", version="version"
                 ),
             ),
@@ -458,6 +458,16 @@ class TestJaegerExporter(TraceGlobalsTest, unittest.TestCase):
                     ),
                     jaeger.Tag(
                         key=jaeger_exporter.translate.VERSION_KEY,
+                        vType=jaeger.TagType.STRING,
+                        vStr="version",
+                    ),
+                    jaeger.Tag(
+                        key=jaeger_exporter.translate.SCOPE_NAME_KEY,
+                        vType=jaeger.TagType.STRING,
+                        vStr="name",
+                    ),
+                    jaeger.Tag(
+                        key=jaeger_exporter.translate.SCOPE_VERSION_KEY,
                         vType=jaeger.TagType.STRING,
                         vStr="version",
                     ),

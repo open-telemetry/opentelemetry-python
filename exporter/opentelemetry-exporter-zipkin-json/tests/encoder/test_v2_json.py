@@ -14,7 +14,12 @@
 import json
 
 from opentelemetry import trace as trace_api
-from opentelemetry.exporter.zipkin.encoder import NAME_KEY, VERSION_KEY
+from opentelemetry.exporter.zipkin.encoder import (
+    NAME_KEY,
+    SCOPE_NAME_KEY,
+    SCOPE_VERSION_KEY,
+    VERSION_KEY,
+)
 from opentelemetry.exporter.zipkin.json.v2 import JsonV2Encoder
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk import trace
@@ -124,7 +129,12 @@ class TestV2JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                 - (otel_spans[3].start_time // 10**3),
                 "localEndpoint": local_endpoint,
                 "kind": span_kind,
-                "tags": {NAME_KEY: "name", VERSION_KEY: "version"},
+                "tags": {
+                    NAME_KEY: "name",
+                    VERSION_KEY: "version",
+                    SCOPE_NAME_KEY: "name",
+                    SCOPE_VERSION_KEY: "version",
+                },
             },
         ]
 

@@ -14,7 +14,12 @@
 import ipaddress
 import json
 
-from opentelemetry.exporter.zipkin.encoder import NAME_KEY, VERSION_KEY
+from opentelemetry.exporter.zipkin.encoder import (
+    NAME_KEY,
+    SCOPE_NAME_KEY,
+    SCOPE_VERSION_KEY,
+    VERSION_KEY,
+)
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.exporter.zipkin.proto.http.v2 import ProtobufEncoder
 from opentelemetry.exporter.zipkin.proto.http.v2.gen import zipkin_pb2
@@ -183,7 +188,12 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
                     ),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
-                    tags={NAME_KEY: "name", VERSION_KEY: "version"},
+                    tags={
+                        NAME_KEY: "name",
+                        VERSION_KEY: "version",
+                        SCOPE_NAME_KEY: "name",
+                        SCOPE_VERSION_KEY: "version",
+                    },
                     debug=False,
                 ),
             ],
