@@ -19,9 +19,9 @@ DESCRIPTOR = _descriptor.FileDescriptor(
   name='opentelemetry/proto/trace/v1/trace.proto',
   package='opentelemetry.proto.trace.v1',
   syntax='proto3',
-  serialized_options=b'\n\037io.opentelemetry.proto.trace.v1B\nTraceProtoP\001Z=github.com/open-telemetry/opentelemetry-proto/gen/go/trace/v1',
+  serialized_options=b'\n\037io.opentelemetry.proto.trace.v1B\nTraceProtoP\001Z\'go.opentelemetry.io/proto/otlp/trace/v1',
   create_key=_descriptor._internal_create_key,
-  serialized_pb=b'\n(opentelemetry/proto/trace/v1/trace.proto\x12\x1copentelemetry.proto.trace.v1\x1a*opentelemetry/proto/common/v1/common.proto\x1a.opentelemetry/proto/resource/v1/resource.proto\"Q\n\nTracesData\x12\x43\n\x0eresource_spans\x18\x01 \x03(\x0b\x32+.opentelemetry.proto.trace.v1.ResourceSpans\"\xc2\x01\n\rResourceSpans\x12;\n\x08resource\x18\x01 \x01(\x0b\x32).opentelemetry.proto.resource.v1.Resource\x12`\n\x1dinstrumentation_library_spans\x18\x02 \x03(\x0b\x32\x39.opentelemetry.proto.trace.v1.InstrumentationLibrarySpans\x12\x12\n\nschema_url\x18\x03 \x01(\t\"\xbc\x01\n\x1bInstrumentationLibrarySpans\x12V\n\x17instrumentation_library\x18\x01 \x01(\x0b\x32\x35.opentelemetry.proto.common.v1.InstrumentationLibrary\x12\x31\n\x05spans\x18\x02 \x03(\x0b\x32\".opentelemetry.proto.trace.v1.Span\x12\x12\n\nschema_url\x18\x03 \x01(\t\"\xe6\x07\n\x04Span\x12\x10\n\x08trace_id\x18\x01 \x01(\x0c\x12\x0f\n\x07span_id\x18\x02 \x01(\x0c\x12\x13\n\x0btrace_state\x18\x03 \x01(\t\x12\x16\n\x0eparent_span_id\x18\x04 \x01(\x0c\x12\x0c\n\x04name\x18\x05 \x01(\t\x12\x39\n\x04kind\x18\x06 \x01(\x0e\x32+.opentelemetry.proto.trace.v1.Span.SpanKind\x12\x1c\n\x14start_time_unix_nano\x18\x07 \x01(\x06\x12\x1a\n\x12\x65nd_time_unix_nano\x18\x08 \x01(\x06\x12;\n\nattributes\x18\t \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\n \x01(\r\x12\x38\n\x06\x65vents\x18\x0b \x03(\x0b\x32(.opentelemetry.proto.trace.v1.Span.Event\x12\x1c\n\x14\x64ropped_events_count\x18\x0c \x01(\r\x12\x36\n\x05links\x18\r \x03(\x0b\x32\'.opentelemetry.proto.trace.v1.Span.Link\x12\x1b\n\x13\x64ropped_links_count\x18\x0e \x01(\r\x12\x34\n\x06status\x18\x0f \x01(\x0b\x32$.opentelemetry.proto.trace.v1.Status\x1a\x8c\x01\n\x05\x45vent\x12\x16\n\x0etime_unix_nano\x18\x01 \x01(\x06\x12\x0c\n\x04name\x18\x02 \x01(\t\x12;\n\nattributes\x18\x03 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\x04 \x01(\r\x1a\x9d\x01\n\x04Link\x12\x10\n\x08trace_id\x18\x01 \x01(\x0c\x12\x0f\n\x07span_id\x18\x02 \x01(\x0c\x12\x13\n\x0btrace_state\x18\x03 \x01(\t\x12;\n\nattributes\x18\x04 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\x05 \x01(\r\"\x99\x01\n\x08SpanKind\x12\x19\n\x15SPAN_KIND_UNSPECIFIED\x10\x00\x12\x16\n\x12SPAN_KIND_INTERNAL\x10\x01\x12\x14\n\x10SPAN_KIND_SERVER\x10\x02\x12\x14\n\x10SPAN_KIND_CLIENT\x10\x03\x12\x16\n\x12SPAN_KIND_PRODUCER\x10\x04\x12\x16\n\x12SPAN_KIND_CONSUMER\x10\x05\"\xae\x01\n\x06Status\x12\x0f\n\x07message\x18\x02 \x01(\t\x12=\n\x04\x63ode\x18\x03 \x01(\x0e\x32/.opentelemetry.proto.trace.v1.Status.StatusCode\"N\n\nStatusCode\x12\x15\n\x11STATUS_CODE_UNSET\x10\x00\x12\x12\n\x0eSTATUS_CODE_OK\x10\x01\x12\x15\n\x11STATUS_CODE_ERROR\x10\x02J\x04\x08\x01\x10\x02\x42n\n\x1fio.opentelemetry.proto.trace.v1B\nTraceProtoP\x01Z=github.com/open-telemetry/opentelemetry-proto/gen/go/trace/v1b\x06proto3'
+  serialized_pb=b'\n(opentelemetry/proto/trace/v1/trace.proto\x12\x1copentelemetry.proto.trace.v1\x1a*opentelemetry/proto/common/v1/common.proto\x1a.opentelemetry/proto/resource/v1/resource.proto\"Q\n\nTracesData\x12\x43\n\x0eresource_spans\x18\x01 \x03(\x0b\x32+.opentelemetry.proto.trace.v1.ResourceSpans\"\x86\x02\n\rResourceSpans\x12;\n\x08resource\x18\x01 \x01(\x0b\x32).opentelemetry.proto.resource.v1.Resource\x12=\n\x0bscope_spans\x18\x02 \x03(\x0b\x32(.opentelemetry.proto.trace.v1.ScopeSpans\x12\x65\n\x1dinstrumentation_library_spans\x18\xe8\x07 \x03(\x0b\x32\x39.opentelemetry.proto.trace.v1.InstrumentationLibrarySpansB\x02\x18\x01\x12\x12\n\nschema_url\x18\x03 \x01(\t\"\x97\x01\n\nScopeSpans\x12\x42\n\x05scope\x18\x01 \x01(\x0b\x32\x33.opentelemetry.proto.common.v1.InstrumentationScope\x12\x31\n\x05spans\x18\x02 \x03(\x0b\x32\".opentelemetry.proto.trace.v1.Span\x12\x12\n\nschema_url\x18\x03 \x01(\t\"\xc0\x01\n\x1bInstrumentationLibrarySpans\x12V\n\x17instrumentation_library\x18\x01 \x01(\x0b\x32\x35.opentelemetry.proto.common.v1.InstrumentationLibrary\x12\x31\n\x05spans\x18\x02 \x03(\x0b\x32\".opentelemetry.proto.trace.v1.Span\x12\x12\n\nschema_url\x18\x03 \x01(\t:\x02\x18\x01\"\xe6\x07\n\x04Span\x12\x10\n\x08trace_id\x18\x01 \x01(\x0c\x12\x0f\n\x07span_id\x18\x02 \x01(\x0c\x12\x13\n\x0btrace_state\x18\x03 \x01(\t\x12\x16\n\x0eparent_span_id\x18\x04 \x01(\x0c\x12\x0c\n\x04name\x18\x05 \x01(\t\x12\x39\n\x04kind\x18\x06 \x01(\x0e\x32+.opentelemetry.proto.trace.v1.Span.SpanKind\x12\x1c\n\x14start_time_unix_nano\x18\x07 \x01(\x06\x12\x1a\n\x12\x65nd_time_unix_nano\x18\x08 \x01(\x06\x12;\n\nattributes\x18\t \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\n \x01(\r\x12\x38\n\x06\x65vents\x18\x0b \x03(\x0b\x32(.opentelemetry.proto.trace.v1.Span.Event\x12\x1c\n\x14\x64ropped_events_count\x18\x0c \x01(\r\x12\x36\n\x05links\x18\r \x03(\x0b\x32\'.opentelemetry.proto.trace.v1.Span.Link\x12\x1b\n\x13\x64ropped_links_count\x18\x0e \x01(\r\x12\x34\n\x06status\x18\x0f \x01(\x0b\x32$.opentelemetry.proto.trace.v1.Status\x1a\x8c\x01\n\x05\x45vent\x12\x16\n\x0etime_unix_nano\x18\x01 \x01(\x06\x12\x0c\n\x04name\x18\x02 \x01(\t\x12;\n\nattributes\x18\x03 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\x04 \x01(\r\x1a\x9d\x01\n\x04Link\x12\x10\n\x08trace_id\x18\x01 \x01(\x0c\x12\x0f\n\x07span_id\x18\x02 \x01(\x0c\x12\x13\n\x0btrace_state\x18\x03 \x01(\t\x12;\n\nattributes\x18\x04 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\x05 \x01(\r\"\x99\x01\n\x08SpanKind\x12\x19\n\x15SPAN_KIND_UNSPECIFIED\x10\x00\x12\x16\n\x12SPAN_KIND_INTERNAL\x10\x01\x12\x14\n\x10SPAN_KIND_SERVER\x10\x02\x12\x14\n\x10SPAN_KIND_CLIENT\x10\x03\x12\x16\n\x12SPAN_KIND_PRODUCER\x10\x04\x12\x16\n\x12SPAN_KIND_CONSUMER\x10\x05\"\xae\x01\n\x06Status\x12\x0f\n\x07message\x18\x02 \x01(\t\x12=\n\x04\x63ode\x18\x03 \x01(\x0e\x32/.opentelemetry.proto.trace.v1.Status.StatusCode\"N\n\nStatusCode\x12\x15\n\x11STATUS_CODE_UNSET\x10\x00\x12\x12\n\x0eSTATUS_CODE_OK\x10\x01\x12\x15\n\x11STATUS_CODE_ERROR\x10\x02J\x04\x08\x01\x10\x02\x42X\n\x1fio.opentelemetry.proto.trace.v1B\nTraceProtoP\x01Z\'go.opentelemetry.io/proto/otlp/trace/v1b\x06proto3'
   ,
   dependencies=[opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2.DESCRIPTOR,opentelemetry_dot_proto_dot_resource_dot_v1_dot_resource__pb2.DESCRIPTOR,])
 
@@ -67,8 +67,8 @@ _SPAN_SPANKIND = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1483,
-  serialized_end=1636,
+  serialized_start=1709,
+  serialized_end=1862,
 )
 _sym_db.RegisterEnumDescriptor(_SPAN_SPANKIND)
 
@@ -97,8 +97,8 @@ _STATUS_STATUSCODE = _descriptor.EnumDescriptor(
   ],
   containing_type=None,
   serialized_options=None,
-  serialized_start=1729,
-  serialized_end=1807,
+  serialized_start=1955,
+  serialized_end=2033,
 )
 _sym_db.RegisterEnumDescriptor(_STATUS_STATUSCODE)
 
@@ -151,14 +151,21 @@ _RESOURCESPANS = _descriptor.Descriptor(
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='instrumentation_library_spans', full_name='opentelemetry.proto.trace.v1.ResourceSpans.instrumentation_library_spans', index=1,
+      name='scope_spans', full_name='opentelemetry.proto.trace.v1.ResourceSpans.scope_spans', index=1,
       number=2, type=11, cpp_type=10, label=3,
       has_default_value=False, default_value=[],
       message_type=None, enum_type=None, containing_type=None,
       is_extension=False, extension_scope=None,
       serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
     _descriptor.FieldDescriptor(
-      name='schema_url', full_name='opentelemetry.proto.trace.v1.ResourceSpans.schema_url', index=2,
+      name='instrumentation_library_spans', full_name='opentelemetry.proto.trace.v1.ResourceSpans.instrumentation_library_spans', index=2,
+      number=1000, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=b'\030\001', file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='schema_url', full_name='opentelemetry.proto.trace.v1.ResourceSpans.schema_url', index=3,
       number=3, type=9, cpp_type=9, label=1,
       has_default_value=False, default_value=b"".decode('utf-8'),
       message_type=None, enum_type=None, containing_type=None,
@@ -177,7 +184,53 @@ _RESOURCESPANS = _descriptor.Descriptor(
   oneofs=[
   ],
   serialized_start=250,
-  serialized_end=444,
+  serialized_end=512,
+)
+
+
+_SCOPESPANS = _descriptor.Descriptor(
+  name='ScopeSpans',
+  full_name='opentelemetry.proto.trace.v1.ScopeSpans',
+  filename=None,
+  file=DESCRIPTOR,
+  containing_type=None,
+  create_key=_descriptor._internal_create_key,
+  fields=[
+    _descriptor.FieldDescriptor(
+      name='scope', full_name='opentelemetry.proto.trace.v1.ScopeSpans.scope', index=0,
+      number=1, type=11, cpp_type=10, label=1,
+      has_default_value=False, default_value=None,
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='spans', full_name='opentelemetry.proto.trace.v1.ScopeSpans.spans', index=1,
+      number=2, type=11, cpp_type=10, label=3,
+      has_default_value=False, default_value=[],
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+    _descriptor.FieldDescriptor(
+      name='schema_url', full_name='opentelemetry.proto.trace.v1.ScopeSpans.schema_url', index=2,
+      number=3, type=9, cpp_type=9, label=1,
+      has_default_value=False, default_value=b"".decode('utf-8'),
+      message_type=None, enum_type=None, containing_type=None,
+      is_extension=False, extension_scope=None,
+      serialized_options=None, file=DESCRIPTOR,  create_key=_descriptor._internal_create_key),
+  ],
+  extensions=[
+  ],
+  nested_types=[],
+  enum_types=[
+  ],
+  serialized_options=None,
+  is_extendable=False,
+  syntax='proto3',
+  extension_ranges=[],
+  oneofs=[
+  ],
+  serialized_start=515,
+  serialized_end=666,
 )
 
 
@@ -216,14 +269,14 @@ _INSTRUMENTATIONLIBRARYSPANS = _descriptor.Descriptor(
   nested_types=[],
   enum_types=[
   ],
-  serialized_options=None,
+  serialized_options=b'\030\001',
   is_extendable=False,
   syntax='proto3',
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=447,
-  serialized_end=635,
+  serialized_start=669,
+  serialized_end=861,
 )
 
 
@@ -275,8 +328,8 @@ _SPAN_EVENT = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1180,
-  serialized_end=1320,
+  serialized_start=1406,
+  serialized_end=1546,
 )
 
 _SPAN_LINK = _descriptor.Descriptor(
@@ -334,8 +387,8 @@ _SPAN_LINK = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1323,
-  serialized_end=1480,
+  serialized_start=1549,
+  serialized_end=1706,
 )
 
 _SPAN = _descriptor.Descriptor(
@@ -464,8 +517,8 @@ _SPAN = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=638,
-  serialized_end=1636,
+  serialized_start=864,
+  serialized_end=1862,
 )
 
 
@@ -504,13 +557,16 @@ _STATUS = _descriptor.Descriptor(
   extension_ranges=[],
   oneofs=[
   ],
-  serialized_start=1639,
-  serialized_end=1813,
+  serialized_start=1865,
+  serialized_end=2039,
 )
 
 _TRACESDATA.fields_by_name['resource_spans'].message_type = _RESOURCESPANS
 _RESOURCESPANS.fields_by_name['resource'].message_type = opentelemetry_dot_proto_dot_resource_dot_v1_dot_resource__pb2._RESOURCE
+_RESOURCESPANS.fields_by_name['scope_spans'].message_type = _SCOPESPANS
 _RESOURCESPANS.fields_by_name['instrumentation_library_spans'].message_type = _INSTRUMENTATIONLIBRARYSPANS
+_SCOPESPANS.fields_by_name['scope'].message_type = opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2._INSTRUMENTATIONSCOPE
+_SCOPESPANS.fields_by_name['spans'].message_type = _SPAN
 _INSTRUMENTATIONLIBRARYSPANS.fields_by_name['instrumentation_library'].message_type = opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2._INSTRUMENTATIONLIBRARY
 _INSTRUMENTATIONLIBRARYSPANS.fields_by_name['spans'].message_type = _SPAN
 _SPAN_EVENT.fields_by_name['attributes'].message_type = opentelemetry_dot_proto_dot_common_dot_v1_dot_common__pb2._KEYVALUE
@@ -527,6 +583,7 @@ _STATUS.fields_by_name['code'].enum_type = _STATUS_STATUSCODE
 _STATUS_STATUSCODE.containing_type = _STATUS
 DESCRIPTOR.message_types_by_name['TracesData'] = _TRACESDATA
 DESCRIPTOR.message_types_by_name['ResourceSpans'] = _RESOURCESPANS
+DESCRIPTOR.message_types_by_name['ScopeSpans'] = _SCOPESPANS
 DESCRIPTOR.message_types_by_name['InstrumentationLibrarySpans'] = _INSTRUMENTATIONLIBRARYSPANS
 DESCRIPTOR.message_types_by_name['Span'] = _SPAN
 DESCRIPTOR.message_types_by_name['Status'] = _STATUS
@@ -545,6 +602,13 @@ ResourceSpans = _reflection.GeneratedProtocolMessageType('ResourceSpans', (_mess
   # @@protoc_insertion_point(class_scope:opentelemetry.proto.trace.v1.ResourceSpans)
   })
 _sym_db.RegisterMessage(ResourceSpans)
+
+ScopeSpans = _reflection.GeneratedProtocolMessageType('ScopeSpans', (_message.Message,), {
+  'DESCRIPTOR' : _SCOPESPANS,
+  '__module__' : 'opentelemetry.proto.trace.v1.trace_pb2'
+  # @@protoc_insertion_point(class_scope:opentelemetry.proto.trace.v1.ScopeSpans)
+  })
+_sym_db.RegisterMessage(ScopeSpans)
 
 InstrumentationLibrarySpans = _reflection.GeneratedProtocolMessageType('InstrumentationLibrarySpans', (_message.Message,), {
   'DESCRIPTOR' : _INSTRUMENTATIONLIBRARYSPANS,
@@ -585,4 +649,6 @@ _sym_db.RegisterMessage(Status)
 
 
 DESCRIPTOR._options = None
+_RESOURCESPANS.fields_by_name['instrumentation_library_spans']._options = None
+_INSTRUMENTATIONLIBRARYSPANS._options = None
 # @@protoc_insertion_point(module_scope)

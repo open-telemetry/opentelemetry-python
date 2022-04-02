@@ -36,7 +36,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
         reader_mocks = [Mock() for _ in range(5)]
         SynchronousMeasurementConsumer(
             SdkConfiguration(
-                resource=Mock(), metric_readers=reader_mocks, views=()
+                resource=Mock(),
+                metric_readers=reader_mocks,
+                views=Mock(),
             )
         )
         self.assertEqual(len(MockMetricReaderStorage.mock_calls), 5)
@@ -50,7 +52,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
 
         consumer = SynchronousMeasurementConsumer(
             SdkConfiguration(
-                resource=Mock(), metric_readers=reader_mocks, views=()
+                resource=Mock(),
+                metric_readers=reader_mocks,
+                views=Mock(),
             )
         )
         measurement_mock = Mock()
@@ -69,7 +73,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
 
         consumer = SynchronousMeasurementConsumer(
             SdkConfiguration(
-                resource=Mock(), metric_readers=reader_mocks, views=()
+                resource=Mock(),
+                metric_readers=reader_mocks,
+                views=Mock(),
             )
         )
         for r_mock, rs_mock in zip(reader_mocks, reader_storage_mocks):
@@ -87,7 +93,9 @@ class TestSynchronousMeasurementConsumer(TestCase):
         MockMetricReaderStorage.return_value = reader_storage_mock
         consumer = SynchronousMeasurementConsumer(
             SdkConfiguration(
-                resource=Mock(), metric_readers=[reader_mock], views=()
+                resource=Mock(),
+                metric_readers=[reader_mock],
+                views=Mock(),
             )
         )
         async_instrument_mocks = [MagicMock() for _ in range(5)]

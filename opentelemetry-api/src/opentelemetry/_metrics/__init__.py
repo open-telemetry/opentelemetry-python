@@ -70,12 +70,15 @@ class MeterProvider(ABC):
 
 
 class NoOpMeterProvider(MeterProvider):
+    """The default MeterProvider used when no MeterProvider implementation is available."""
+
     def get_meter(
         self,
         name,
         version=None,
         schema_url=None,
     ) -> "Meter":
+        """Returns a NoOpMeter."""
         super().get_meter(name, version=version, schema_url=schema_url)
         return NoOpMeter(name, version=version, schema_url=schema_url)
 
@@ -133,19 +136,33 @@ class Meter(ABC):
 
     @abstractmethod
     def create_counter(self, name, unit="", description="") -> Counter:
-        pass
+        """Creates a `Counter` instrument
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for measurements this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+        """
 
     @abstractmethod
     def create_up_down_counter(
         self, name, unit="", description=""
     ) -> UpDownCounter:
-        pass
+        """Creates an `UpDownCounter` instrument
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for measurements this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+        """
 
     @abstractmethod
     def create_observable_counter(
         self, name, callback, unit="", description=""
     ) -> ObservableCounter:
-        """Creates an observable counter instrument
+        """Creates an `ObservableCounter` instrument
 
         An observable counter observes a monotonically increasing count by
         calling a provided callback which returns multiple
@@ -226,19 +243,48 @@ class Meter(ABC):
 
     @abstractmethod
     def create_histogram(self, name, unit="", description="") -> Histogram:
-        pass
+        """Creates a `Histogram` instrument
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for measurements this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+        """
 
     @abstractmethod
     def create_observable_gauge(
         self, name, callback, unit="", description=""
     ) -> ObservableGauge:
-        pass
+        """Creates an `ObservableGauge` instrument
+
+        Args:
+            name: The name of the instrument to be created
+            callback: A callback that returns an iterable of
+                :class:`~opentelemetry._metrics.measurement.Measurement`.
+                Alternatively, can be a generator that yields iterables of
+                :class:`~opentelemetry._metrics.measurement.Measurement`.
+            unit: The unit for measurements this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+        """
 
     @abstractmethod
     def create_observable_up_down_counter(
         self, name, callback, unit="", description=""
     ) -> ObservableUpDownCounter:
-        pass
+        """Creates an `ObservableUpDownCounter` instrument
+
+        Args:
+            name: The name of the instrument to be created
+            callback: A callback that returns an iterable of
+                :class:`~opentelemetry._metrics.measurement.Measurement`.
+                Alternatively, can be a generator that yields iterables of
+                :class:`~opentelemetry._metrics.measurement.Measurement`.
+            unit: The unit for measurements this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+        """
 
 
 class _ProxyMeter(Meter):
@@ -347,13 +393,20 @@ class _ProxyMeter(Meter):
 
 
 class NoOpMeter(Meter):
+    """The default Meter used when no Meter implementation is available.
+
+    All operations are no-op.
+    """
+
     def create_counter(self, name, unit="", description="") -> Counter:
+        """Returns a no-op Counter."""
         super().create_counter(name, unit=unit, description=description)
         return DefaultCounter(name, unit=unit, description=description)
 
     def create_up_down_counter(
         self, name, unit="", description=""
     ) -> UpDownCounter:
+        """Returns a no-op UpDownCounter."""
         super().create_up_down_counter(
             name, unit=unit, description=description
         )
@@ -362,6 +415,7 @@ class NoOpMeter(Meter):
     def create_observable_counter(
         self, name, callback, unit="", description=""
     ) -> ObservableCounter:
+        """Returns a no-op ObservableCounter."""
         super().create_observable_counter(
             name, callback, unit=unit, description=description
         )
@@ -373,12 +427,14 @@ class NoOpMeter(Meter):
         )
 
     def create_histogram(self, name, unit="", description="") -> Histogram:
+        """Returns a no-op Histogram."""
         super().create_histogram(name, unit=unit, description=description)
         return DefaultHistogram(name, unit=unit, description=description)
 
     def create_observable_gauge(
         self, name, callback, unit="", description=""
     ) -> ObservableGauge:
+        """Returns a no-op ObservableGauge."""
         super().create_observable_gauge(
             name, callback, unit=unit, description=description
         )
@@ -392,6 +448,7 @@ class NoOpMeter(Meter):
     def create_observable_up_down_counter(
         self, name, callback, unit="", description=""
     ) -> ObservableUpDownCounter:
+        """Returns a no-op ObservableUpDownCounter."""
         super().create_observable_up_down_counter(
             name, callback, unit=unit, description=description
         )

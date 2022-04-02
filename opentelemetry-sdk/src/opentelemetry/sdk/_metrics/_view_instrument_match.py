@@ -15,15 +15,20 @@
 
 from logging import getLogger
 from threading import Lock
-from typing import Iterable, Set
+from typing import TYPE_CHECKING, Dict, Iterable
 
 from opentelemetry.sdk._metrics.aggregation import (
+    _Aggregation,
     _convert_aggregation_temporality,
+    _PointVarT,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
+from opentelemetry.sdk._metrics.view import View
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk._metrics.instrument import _Instrument
 
 _logger = getLogger(__name__)
 
@@ -31,33 +36,26 @@ _logger = getLogger(__name__)
 class _ViewInstrumentMatch:
     def __init__(
         self,
-        name: str,
-        unit: str,
-        description: str,
-        aggregation: type,
-        instrumentation_info: InstrumentationInfo,
-        resource: Resource,
-        attribute_keys: Set[str] = None,
+        view: View,
+        instrument: "_Instrument",
+        sdk_config: SdkConfiguration,
     ):
-        self._name = name
-        self._unit = unit
-        self._description = description
-        self._aggregation = aggregation
-        self._instrumentation_info = instrumentation_info
-        self._resource = resource
-        self._attribute_keys = attribute_keys
-        self._attributes_aggregation = {}
-        self._attributes_previous_point = {}
+        self._view = view
+        self._instrument = instrument
+        self._sdk_config = sdk_config
+        self._attributes_aggregation: Dict[frozenset, _Aggregation] = {}
+        self._attributes_previous_point: Dict[frozenset, _PointVarT] = {}
         self._lock = Lock()
 
+    # pylint: disable=protected-access
     def consume_measurement(self, measurement: Measurement) -> None:
 
-        if self._attribute_keys is not None:
+        if self._view._attribute_keys is not None:
 
             attributes = {}
 
-            for key, value in measurement.attributes.items():
-                if key in self._attribute_keys:
+            for key, value in (measurement.attributes or {}).items():
+                if key in self._view._attribute_keys:
                     attributes[key] = value
         elif measurement.attributes is not None:
             attributes = measurement.attributes
@@ -66,9 +64,14 @@ class _ViewInstrumentMatch:
 
         attributes = frozenset(attributes.items())
 
-        if attributes not in self._attributes_aggregation.keys():
+        if attributes not in self._attributes_aggregation:
             with self._lock:
-                self._attributes_aggregation[attributes] = self._aggregation()
+                if attributes not in self._attributes_aggregation:
+                    self._attributes_aggregation[
+                        attributes
+                    ] = self._view._aggregation._create_aggregation(
+                        self._instrument
+                    )
 
         self._attributes_aggregation[attributes].aggregate(measurement)
 
@@ -99,11 +102,14 @@ class _ViewInstrumentMatch:
 
                     yield Metric(
                         attributes=dict(attributes),
-                        description=self._description,
-                        instrumentation_info=self._instrumentation_info,
-                        name=self._name,
-                        resource=self._resource,
-                        unit=self._unit,
+                        description=(
+                            self._view._description
+                            or self._instrument.description
+                        ),
+                        instrumentation_info=self._instrument.instrumentation_info,
+                        name=self._view._name or self._instrument.name,
+                        resource=self._sdk_config.resource,
+                        unit=self._instrument.unit,
                         point=_convert_aggregation_temporality(
                             previous_point,
                             current_point,

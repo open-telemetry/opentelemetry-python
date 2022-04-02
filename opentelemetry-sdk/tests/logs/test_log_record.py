@@ -23,7 +23,6 @@ class TestLogRecord(unittest.TestCase):
         expected = json.dumps(
             {
                 "body": "a log line",
-                "name": None,
                 "severity_number": "None",
                 "severity_text": None,
                 "attributes": None,

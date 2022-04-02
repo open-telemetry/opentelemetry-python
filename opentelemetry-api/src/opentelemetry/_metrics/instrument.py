@@ -111,6 +111,8 @@ class _NonMonotonic(_Adding):
 
 
 class Counter(_Monotonic, Synchronous):
+    """A Counter is a synchronous `Instrument` which supports non-negative increments."""
+
     @abstractmethod
     def add(self, amount, attributes=None):
         # FIXME check that the amount is non negative
@@ -135,6 +137,8 @@ class _ProxyCounter(_ProxyInstrument[Counter], Counter):
 
 
 class UpDownCounter(_NonMonotonic, Synchronous):
+    """An UpDownCounter is a synchronous `Instrument` which supports increments and decrements."""
+
     @abstractmethod
     def add(self, amount, attributes=None):
         pass
@@ -160,7 +164,9 @@ class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
 
 
 class ObservableCounter(_Monotonic, Asynchronous):
-    pass
+    """An ObservableCounter is an asynchronous `Instrument` which reports monotonically
+    increasing value(s) when the instrument is being observed.
+    """
 
 
 class DefaultObservableCounter(ObservableCounter):
@@ -180,7 +186,10 @@ class _ProxyObservableCounter(
 
 
 class ObservableUpDownCounter(_NonMonotonic, Asynchronous):
-    pass
+    """An ObservableUpDownCounter is an asynchronous `Instrument` which reports additive value(s) (e.g.
+    the process heap size - it makes sense to report the heap size from multiple processes and sum them
+    up, so we get the total heap usage) when the instrument is being observed.
+    """
 
 
 class DefaultObservableUpDownCounter(ObservableUpDownCounter):
@@ -201,6 +210,11 @@ class _ProxyObservableUpDownCounter(
 
 
 class Histogram(_Grouping, Synchronous):
+    """Histogram is a synchronous `Instrument` which can be used to report arbitrary values
+    that are likely to be statistically meaningful. It is intended for statistics such as
+    histograms, summaries, and percentile.
+    """
+
     @abstractmethod
     def record(self, amount, attributes=None):
         pass
@@ -226,7 +240,10 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
 
 
 class ObservableGauge(_Grouping, Asynchronous):
-    pass
+    """Asynchronous Gauge is an asynchronous `Instrument` which reports non-additive value(s) (e.g.
+    the room temperature - it makes no sense to report the temperature value from multiple rooms
+    and sum them up) when the instrument is being observed.
+    """
 
 
 class DefaultObservableGauge(ObservableGauge):

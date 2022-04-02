@@ -125,9 +125,10 @@ class LogsData(google.protobuf.message.Message):
 global___LogsData = LogsData
 
 class ResourceLogs(google.protobuf.message.Message):
-    """A collection of InstrumentationLibraryLogs from a Resource."""
+    """A collection of ScopeLogs from a Resource."""
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     RESOURCE_FIELD_NUMBER: builtins.int
+    SCOPE_LOGS_FIELD_NUMBER: builtins.int
     INSTRUMENTATION_LIBRARY_LOGS_FIELD_NUMBER: builtins.int
     SCHEMA_URL_FIELD_NUMBER: builtins.int
     @property
@@ -137,27 +138,92 @@ class ResourceLogs(google.protobuf.message.Message):
         """
         pass
     @property
+    def scope_logs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ScopeLogs]:
+        """A list of ScopeLogs that originate from a resource."""
+        pass
+    @property
     def instrumentation_library_logs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___InstrumentationLibraryLogs]:
-        """A list of InstrumentationLibraryLogs that originate from a resource."""
+        """A list of InstrumentationLibraryLogs that originate from a resource.
+        This field is deprecated and will be removed after grace period expires on June 15, 2022.
+
+        During the grace period the following rules SHOULD be followed:
+
+        For Binary Protobufs
+        ====================
+        Binary Protobuf senders SHOULD NOT set instrumentation_library_logs. Instead
+        scope_logs SHOULD be set.
+
+        Binary Protobuf receivers SHOULD check if instrumentation_library_logs is set
+        and scope_logs is not set then the value in instrumentation_library_logs
+        SHOULD be used instead by converting InstrumentationLibraryLogs into ScopeLogs.
+        If scope_logs is set then instrumentation_library_logs SHOULD be ignored.
+
+        For JSON
+        ========
+        JSON senders that set instrumentation_library_logs field MAY also set
+        scope_logs to carry the same logs, essentially double-publishing the same data.
+        Such double-publishing MAY be controlled by a user-settable option.
+        If double-publishing is not used then the senders SHOULD set scope_logs and
+        SHOULD NOT set instrumentation_library_logs.
+
+        JSON receivers SHOULD check if instrumentation_library_logs is set and
+        scope_logs is not set then the value in instrumentation_library_logs
+        SHOULD be used instead by converting InstrumentationLibraryLogs into ScopeLogs.
+        If scope_logs is set then instrumentation_library_logs field SHOULD be ignored.
+        """
         pass
     schema_url: typing.Text = ...
     """This schema_url applies to the data in the "resource" field. It does not apply
-    to the data in the "instrumentation_library_logs" field which have their own
-    schema_url field.
+    to the data in the "scope_logs" field which have their own schema_url field.
     """
 
     def __init__(self,
         *,
         resource : typing.Optional[opentelemetry.proto.resource.v1.resource_pb2.Resource] = ...,
+        scope_logs : typing.Optional[typing.Iterable[global___ScopeLogs]] = ...,
         instrumentation_library_logs : typing.Optional[typing.Iterable[global___InstrumentationLibraryLogs]] = ...,
         schema_url : typing.Text = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["resource",b"resource"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["instrumentation_library_logs",b"instrumentation_library_logs","resource",b"resource","schema_url",b"schema_url"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["instrumentation_library_logs",b"instrumentation_library_logs","resource",b"resource","schema_url",b"schema_url","scope_logs",b"scope_logs"]) -> None: ...
 global___ResourceLogs = ResourceLogs
 
+class ScopeLogs(google.protobuf.message.Message):
+    """A collection of Logs produced by a Scope."""
+    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
+    SCOPE_FIELD_NUMBER: builtins.int
+    LOG_RECORDS_FIELD_NUMBER: builtins.int
+    SCHEMA_URL_FIELD_NUMBER: builtins.int
+    @property
+    def scope(self) -> opentelemetry.proto.common.v1.common_pb2.InstrumentationScope:
+        """The instrumentation scope information for the logs in this message.
+        Semantically when InstrumentationScope isn't set, it is equivalent with
+        an empty instrumentation scope name (unknown).
+        """
+        pass
+    @property
+    def log_records(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___LogRecord]:
+        """A list of log records."""
+        pass
+    schema_url: typing.Text = ...
+    """This schema_url applies to all logs in the "logs" field."""
+
+    def __init__(self,
+        *,
+        scope : typing.Optional[opentelemetry.proto.common.v1.common_pb2.InstrumentationScope] = ...,
+        log_records : typing.Optional[typing.Iterable[global___LogRecord]] = ...,
+        schema_url : typing.Text = ...,
+        ) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["scope",b"scope"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["log_records",b"log_records","schema_url",b"schema_url","scope",b"scope"]) -> None: ...
+global___ScopeLogs = ScopeLogs
+
 class InstrumentationLibraryLogs(google.protobuf.message.Message):
-    """A collection of Logs produced by an InstrumentationLibrary."""
+    """A collection of Logs produced by an InstrumentationLibrary.
+    InstrumentationLibraryLogs is wire-compatible with ScopeLogs for binary
+    Protobuf format.
+    This message is deprecated and will be removed on June 15, 2022.
+    """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     INSTRUMENTATION_LIBRARY_FIELD_NUMBER: builtins.int
     LOG_RECORDS_FIELD_NUMBER: builtins.int
@@ -171,7 +237,7 @@ class InstrumentationLibraryLogs(google.protobuf.message.Message):
         pass
     @property
     def log_records(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___LogRecord]:
-        """A list of log records."""
+        """A list of logs that originate from an instrumentation library."""
         pass
     schema_url: typing.Text = ...
     """This schema_url applies to all logs in the "logs" field."""
@@ -192,6 +258,7 @@ class LogRecord(google.protobuf.message.Message):
     """
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
+    OBSERVED_TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
     SEVERITY_NUMBER_FIELD_NUMBER: builtins.int
     SEVERITY_TEXT_FIELD_NUMBER: builtins.int
     NAME_FIELD_NUMBER: builtins.int
@@ -203,6 +270,24 @@ class LogRecord(google.protobuf.message.Message):
     SPAN_ID_FIELD_NUMBER: builtins.int
     time_unix_nano: builtins.int = ...
     """time_unix_nano is the time when the event occurred.
+    Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January 1970.
+    Value of 0 indicates unknown or missing timestamp.
+    """
+
+    observed_time_unix_nano: builtins.int = ...
+    """Time when the event was observed by the collection system.
+    For events that originate in OpenTelemetry (e.g. using OpenTelemetry Logging SDK)
+    this timestamp is typically set at the generation time and is equal to Timestamp.
+    For events originating externally and collected by OpenTelemetry (e.g. using
+    Collector) this is the time when OpenTelemetry's code observed the event measured
+    by the clock of the OpenTelemetry code. This field MUST be set once the event is
+    observed by OpenTelemetry.
+
+    For converting OpenTelemetry log data to formats that support only one timestamp or
+    when receiving OpenTelemetry log data by recipients that support only one timestamp
+    internally the following logic is recommended:
+      - Use time_unix_nano if it is present, otherwise use observed_time_unix_nano.
+
     Value is UNIX Epoch time in nanoseconds since 00:00:00 UTC on 1 January 1970.
     Value of 0 indicates unknown or missing timestamp.
     """
@@ -221,6 +306,8 @@ class LogRecord(google.protobuf.message.Message):
     """Short event identifier that does not contain varying parts. Name describes
     what happened (e.g. "ProcessStarted"). Recommended to be no longer than 50
     characters. Not guaranteed to be unique in any way. [Optional].
+    This deprecated field is planned to be removed March 15, 2022. Receivers can
+    ignore this field.
     """
 
     @property
@@ -232,7 +319,10 @@ class LogRecord(google.protobuf.message.Message):
         pass
     @property
     def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
-        """Additional attributes that describe the specific event occurrence. [Optional]."""
+        """Additional attributes that describe the specific event occurrence. [Optional].
+        Attribute keys MUST be unique (it is not allowed to have more than one
+        attribute with the same key).
+        """
         pass
     dropped_attributes_count: builtins.int = ...
     flags: builtins.int = ...
@@ -260,6 +350,7 @@ class LogRecord(google.protobuf.message.Message):
     def __init__(self,
         *,
         time_unix_nano : builtins.int = ...,
+        observed_time_unix_nano : builtins.int = ...,
         severity_number : global___SeverityNumber.V = ...,
         severity_text : typing.Text = ...,
         name : typing.Text = ...,
@@ -271,5 +362,5 @@ class LogRecord(google.protobuf.message.Message):
         span_id : builtins.bytes = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["body",b"body"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","body",b"body","dropped_attributes_count",b"dropped_attributes_count","flags",b"flags","name",b"name","severity_number",b"severity_number","severity_text",b"severity_text","span_id",b"span_id","time_unix_nano",b"time_unix_nano","trace_id",b"trace_id"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","body",b"body","dropped_attributes_count",b"dropped_attributes_count","flags",b"flags","name",b"name","observed_time_unix_nano",b"observed_time_unix_nano","severity_number",b"severity_number","severity_text",b"severity_text","span_id",b"span_id","time_unix_nano",b"time_unix_nano","trace_id",b"trace_id"]) -> None: ...
 global___LogRecord = LogRecord

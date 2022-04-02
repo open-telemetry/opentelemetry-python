@@ -55,16 +55,16 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         if not match:
             return context
 
-        version = match.group(1)
-        trace_id = match.group(2)
-        span_id = match.group(3)
-        trace_flags = match.group(4)
+        version: str = match.group(1)
+        trace_id: str = match.group(2)
+        span_id: str = match.group(3)
+        trace_flags: str = match.group(4)
 
         if trace_id == "0" * 32 or span_id == "0" * 16:
             return context
 
         if version == "00":
-            if match.group(5):
+            if match.group(5):  # type: ignore
                 return context
         if version == "ff":
             return context
@@ -79,7 +79,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
             trace_id=int(trace_id, 16),
             span_id=int(span_id, 16),
             is_remote=True,
-            trace_flags=trace.TraceFlags(trace_flags),
+            trace_flags=trace.TraceFlags(int(trace_flags, 16)),
             trace_state=tracestate,
         )
         return trace.set_span_in_context(

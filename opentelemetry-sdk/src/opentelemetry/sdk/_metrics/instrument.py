@@ -15,7 +15,7 @@
 # pylint: disable=too-many-ancestors
 
 import logging
-from typing import Dict, Generator, Iterable, Union
+from typing import Callable, Dict, Generator, Iterable, Union
 
 from opentelemetry._metrics.instrument import CallbackT
 from opentelemetry._metrics.instrument import Counter as APICounter
@@ -30,6 +30,7 @@ from opentelemetry._metrics.instrument import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
 from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
+from opentelemetry._metrics.measurement import Measurement as APIMeasurement
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.measurement_consumer import MeasurementConsumer
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
@@ -49,7 +50,7 @@ class _Synchronous:
         self.name = name
         self.unit = unit
         self.description = description
-        self._instrumentation_info = instrumentation_info
+        self.instrumentation_info = instrumentation_info
         self._measurement_consumer = measurement_consumer
         super().__init__(name, unit=unit, description=description)
 
@@ -67,11 +68,11 @@ class _Asynchronous:
         self.name = name
         self.unit = unit
         self.description = description
-        self._instrumentation_info = instrumentation_info
+        self.instrumentation_info = instrumentation_info
         self._measurement_consumer = measurement_consumer
         super().__init__(name, callback, unit=unit, description=description)
 
-        self._callback = callback
+        self._callback: Callable[[], Iterable[APIMeasurement]]
 
         if isinstance(callback, Generator):
 
@@ -79,10 +80,16 @@ class _Asynchronous:
                 return next(callback)
 
             self._callback = inner
+        else:
+            self._callback = callback
 
-    @property
-    def callback(self) -> CallbackT:
-        return self._callback
+    def callback(self) -> Iterable[Measurement]:
+        for api_measurement in self._callback():
+            yield Measurement(
+                api_measurement.value,
+                instrument=self,
+                attributes=api_measurement.attributes,
+            )
 
 
 class Counter(_Synchronous, APICounter):

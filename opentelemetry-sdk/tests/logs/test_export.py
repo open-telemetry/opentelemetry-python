@@ -26,8 +26,8 @@ from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
     LogData,
     LogEmitterProvider,
+    LoggingHandler,
     LogRecord,
-    OTLPHandler,
 )
 from opentelemetry.sdk._logs.export import (
     BatchLogProcessor,
@@ -56,7 +56,7 @@ class TestSimpleLogProcessor(unittest.TestCase):
         log_emitter_provider.add_log_processor(SimpleLogProcessor(exporter))
 
         logger = logging.getLogger("default_level")
-        logger.addHandler(OTLPHandler(log_emitter=log_emitter))
+        logger.addHandler(LoggingHandler(log_emitter=log_emitter))
 
         logger.warning("Something is wrong")
         finished_logs = exporter.get_finished_logs()
@@ -77,7 +77,7 @@ class TestSimpleLogProcessor(unittest.TestCase):
 
         logger = logging.getLogger("custom_level")
         logger.setLevel(logging.ERROR)
-        logger.addHandler(OTLPHandler(log_emitter=log_emitter))
+        logger.addHandler(LoggingHandler(log_emitter=log_emitter))
 
         logger.warning("Warning message")
         logger.debug("Debug message")
@@ -107,7 +107,7 @@ class TestSimpleLogProcessor(unittest.TestCase):
         log_emitter_provider.add_log_processor(SimpleLogProcessor(exporter))
 
         logger = logging.getLogger("trace_correlation")
-        logger.addHandler(OTLPHandler(log_emitter=log_emitter))
+        logger.addHandler(LoggingHandler(log_emitter=log_emitter))
 
         logger.warning("Warning message")
         finished_logs = exporter.get_finished_logs()
@@ -145,7 +145,7 @@ class TestSimpleLogProcessor(unittest.TestCase):
         log_emitter_provider.add_log_processor(SimpleLogProcessor(exporter))
 
         logger = logging.getLogger("shutdown")
-        logger.addHandler(OTLPHandler(log_emitter=log_emitter))
+        logger.addHandler(LoggingHandler(log_emitter=log_emitter))
 
         logger.warning("Something is wrong")
         finished_logs = exporter.get_finished_logs()
@@ -172,7 +172,7 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
 
         emitter = provider.get_log_emitter(__name__)
         logger = logging.getLogger("emit_call")
-        logger.addHandler(OTLPHandler(log_emitter=emitter))
+        logger.addHandler(LoggingHandler(log_emitter=emitter))
 
         logger.error("error")
         self.assertEqual(log_processor.emit.call_count, 1)
@@ -186,7 +186,7 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
 
         emitter = provider.get_log_emitter(__name__)
         logger = logging.getLogger("shutdown")
-        logger.addHandler(OTLPHandler(log_emitter=emitter))
+        logger.addHandler(LoggingHandler(log_emitter=emitter))
 
         logger.warning("warning message: %s", "possible upcoming heatwave")
         logger.error("Very high rise in temperatures across the globe")
@@ -219,7 +219,7 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
 
         emitter = provider.get_log_emitter(__name__)
         logger = logging.getLogger("force_flush")
-        logger.addHandler(OTLPHandler(log_emitter=emitter))
+        logger.addHandler(LoggingHandler(log_emitter=emitter))
 
         logger.critical("Earth is burning")
         log_processor.force_flush()
@@ -238,7 +238,7 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
 
         emitter = provider.get_log_emitter(__name__)
         logger = logging.getLogger("many_logs")
-        logger.addHandler(OTLPHandler(log_emitter=emitter))
+        logger.addHandler(LoggingHandler(log_emitter=emitter))
 
         for log_no in range(1000):
             logger.critical("Log no: %s", log_no)
@@ -256,7 +256,7 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
 
         emitter = provider.get_log_emitter(__name__)
         logger = logging.getLogger("threads")
-        logger.addHandler(OTLPHandler(log_emitter=emitter))
+        logger.addHandler(LoggingHandler(log_emitter=emitter))
 
         def bulk_log_and_flush(num_logs):
             for _ in range(num_logs):
@@ -291,7 +291,7 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
 
         emitter = provider.get_log_emitter(__name__)
         logger = logging.getLogger("test-fork")
-        logger.addHandler(OTLPHandler(log_emitter=emitter))
+        logger.addHandler(LoggingHandler(log_emitter=emitter))
 
         logger.critical("yolo")
         time.sleep(0.5)  # give some time for the exporter to upload
@@ -334,7 +334,6 @@ class TestConsoleLogExporter(unittest.TestCase):
                 trace_flags=TraceFlags(0x01),
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
-                name="name",
                 body="Zhengzhou, We have a heaviest rains in 1000 years",
                 resource=SDKResource({"key": "value"}),
                 attributes={"a": 1, "b": "c"},
