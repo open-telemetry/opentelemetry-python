@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2547](https://github.com/open-telemetry/opentelemetry-python/pull/2547))
 - Update otlp-proto-grpc and otlp-proto-http exporters to have more lax requirements for `backoff` lib
   ([#2575](https://github.com/open-telemetry/opentelemetry-python/pull/2575))
+- `opentelemetry-exporter-otlp-proto-http` Add support for OTLP/HTTP log exporter
+  ([#2462](https://github.com/open-telemetry/opentelemetry-python/pull/2462))
 
 ## [1.10.0-0.29b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.10.0-0.29b0) - 2022-03-10
 
@@ -45,8 +47,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2450](https://github.com/open-telemetry/opentelemetry-python/pull/2450))
 - Bump semantic conventions from 1.6.1 to 1.8.0
   ([#2461](https://github.com/open-telemetry/opentelemetry-python/pull/2461))
-- `opentelemetry-exporter-otlp-proto-http` Add support for OTLP/HTTP log exporter
-  ([#2462](https://github.com/open-telemetry/opentelemetry-python/pull/2462))
 - fix exception handling in get_aggregated_resources
   ([#2464](https://github.com/open-telemetry/opentelemetry-python/pull/2464))
 - Fix `OTEL_EXPORTER_OTLP_ENDPOINT` usage in OTLP HTTP trace exporter
