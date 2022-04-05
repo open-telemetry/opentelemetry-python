@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.10.0-0.29b0...HEAD)
 
+- Fix parsing of trace flags when extracting traceparent
+  ([#2577](https://github.com/open-telemetry/opentelemetry-python/pull/2577))
 - Add default aggregation
   ([#2543](https://github.com/open-telemetry/opentelemetry-python/pull/2543))
 - Fix incorrect installation of some exporter “convenience” packages into
@@ -26,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2566](https://github.com/open-telemetry/opentelemetry-python/pull/2566))
 - Remove `enable_default_view` option from sdk MeterProvider
   ([#2547](https://github.com/open-telemetry/opentelemetry-python/pull/2547))
+- Update otlp-proto-grpc and otlp-proto-http exporters to have more lax requirements for `backoff` lib
+  ([#2575](https://github.com/open-telemetry/opentelemetry-python/pull/2575))
 
 ## [1.10.0-0.29b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.10.0-0.29b0) - 2022-03-10
 
