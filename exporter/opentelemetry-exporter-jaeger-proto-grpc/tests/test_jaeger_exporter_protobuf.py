@@ -25,9 +25,9 @@ from opentelemetry.exporter.jaeger.proto.grpc import JaegerExporter
 # pylint:disable=import-error
 from opentelemetry.exporter.jaeger.proto.grpc.gen import model_pb2
 from opentelemetry.exporter.jaeger.proto.grpc.translate import (
+    _SCOPE_NAME_KEY,
+    _SCOPE_VERSION_KEY,
     NAME_KEY,
-    SCOPE_NAME_KEY,
-    SCOPE_VERSION_KEY,
     VERSION_KEY,
     Translate,
 )
@@ -394,12 +394,12 @@ class TestJaegerExporter(unittest.TestCase):
                         v_str="version",
                     ),
                     model_pb2.KeyValue(
-                        key=SCOPE_NAME_KEY,
+                        key=_SCOPE_NAME_KEY,
                         v_type=model_pb2.ValueType.STRING,
                         v_str="name",
                     ),
                     model_pb2.KeyValue(
-                        key=SCOPE_VERSION_KEY,
+                        key=_SCOPE_VERSION_KEY,
                         v_type=model_pb2.ValueType.STRING,
                         v_str="version",
                     ),

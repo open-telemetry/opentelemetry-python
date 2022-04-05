@@ -462,12 +462,12 @@ class TestJaegerExporter(TraceGlobalsTest, unittest.TestCase):
                         vStr="version",
                     ),
                     jaeger.Tag(
-                        key=jaeger_exporter.translate.SCOPE_NAME_KEY,
+                        key=jaeger_exporter.translate._SCOPE_NAME_KEY,
                         vType=jaeger.TagType.STRING,
                         vStr="name",
                     ),
                     jaeger.Tag(
-                        key=jaeger_exporter.translate.SCOPE_VERSION_KEY,
+                        key=jaeger_exporter.translate._SCOPE_VERSION_KEY,
                         vType=jaeger.TagType.STRING,
                         vStr="version",
                     ),

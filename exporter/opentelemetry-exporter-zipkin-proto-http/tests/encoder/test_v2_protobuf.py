@@ -15,9 +15,9 @@ import ipaddress
 import json
 
 from opentelemetry.exporter.zipkin.encoder import (
+    _SCOPE_NAME_KEY,
+    _SCOPE_VERSION_KEY,
     NAME_KEY,
-    SCOPE_NAME_KEY,
-    SCOPE_VERSION_KEY,
     VERSION_KEY,
 )
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
@@ -191,8 +191,8 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
                     tags={
                         NAME_KEY: "name",
                         VERSION_KEY: "version",
-                        SCOPE_NAME_KEY: "name",
-                        SCOPE_VERSION_KEY: "version",
+                        _SCOPE_NAME_KEY: "name",
+                        _SCOPE_VERSION_KEY: "version",
                     },
                     debug=False,
                 ),

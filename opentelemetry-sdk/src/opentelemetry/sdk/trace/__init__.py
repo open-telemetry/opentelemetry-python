@@ -36,8 +36,8 @@ from typing import (
     Type,
     Union,
 )
-from deprecated import deprecated
 
+from deprecated import deprecated
 
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
@@ -444,7 +444,9 @@ class ReadableSpan:
         return self._resource
 
     @property
-    @deprecated(version='1.10.0', reason="You should use instrumentation_scope")
+    @deprecated(
+        version="1.10.0", reason="You should use instrumentation_scope"
+    )
     def instrumentation_info(self) -> InstrumentationInfo:
         return self._instrumentation_info
 

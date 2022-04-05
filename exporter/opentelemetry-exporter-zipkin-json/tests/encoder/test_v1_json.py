@@ -15,9 +15,9 @@ import json
 
 from opentelemetry import trace as trace_api
 from opentelemetry.exporter.zipkin.encoder import (
+    _SCOPE_NAME_KEY,
+    _SCOPE_VERSION_KEY,
     NAME_KEY,
-    SCOPE_NAME_KEY,
-    SCOPE_VERSION_KEY,
     VERSION_KEY,
 )
 from opentelemetry.exporter.zipkin.json.v1 import JsonV1Encoder
@@ -170,12 +170,12 @@ class TestV1JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
                         "endpoint": local_endpoint,
                     },
                     {
-                        "key": SCOPE_NAME_KEY,
+                        "key": _SCOPE_NAME_KEY,
                         "value": "name",
                         "endpoint": local_endpoint,
                     },
                     {
-                        "key": SCOPE_VERSION_KEY,
+                        "key": _SCOPE_VERSION_KEY,
                         "value": "version",
                         "endpoint": local_endpoint,
                     },

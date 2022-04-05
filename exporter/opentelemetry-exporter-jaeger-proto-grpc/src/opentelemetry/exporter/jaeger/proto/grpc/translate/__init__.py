@@ -35,8 +35,8 @@ OTLP_JAEGER_SPAN_KIND = {
 
 NAME_KEY = "otel.library.name"
 VERSION_KEY = "otel.library.version"
-SCOPE_NAME_KEY = "otel.scope.name"
-SCOPE_VERSION_KEY = "otel.scope.version"
+_SCOPE_NAME_KEY = "otel.scope.name"
+_SCOPE_VERSION_KEY = "otel.scope.version"
 
 
 def _nsec_to_usec_round(nsec: int) -> int:
@@ -310,10 +310,10 @@ class ProtobufTranslator(Translator):
                 VERSION_KEY, span.instrumentation_scope.version
             )
             scope_name = _get_string_key_value(
-                SCOPE_NAME_KEY, span.instrumentation_scope.name
+                _SCOPE_NAME_KEY, span.instrumentation_scope.name
             )
             scope_version = _get_string_key_value(
-                SCOPE_VERSION_KEY, span.instrumentation_scope.version
+                _SCOPE_VERSION_KEY, span.instrumentation_scope.version
             )
             translated.extend([name, version])
             translated.extend([scope_name, scope_version])

@@ -13,6 +13,8 @@
 # limitations under the License.
 import typing
 
+from deprecated import deprecated
+
 
 class InstrumentationInfo:
     """Immutable information about an instrumentation library module.
@@ -23,6 +25,7 @@ class InstrumentationInfo:
 
     __slots__ = ("_name", "_version", "_schema_url")
 
+    @deprecated(version="1.10.0", reason="You should use InstrumentationScope")
     def __init__(
         self,
         name: str,
