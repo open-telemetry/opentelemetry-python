@@ -63,6 +63,7 @@ API
 """
 
 import collections
+import json
 import logging
 import re
 from itertools import chain
@@ -157,7 +158,7 @@ class _CustomCollector:
         label_keys = []
         for key, value in metric.attributes.items():
             label_keys.append(self._sanitize(key))
-            label_values.append(str(value))
+            label_values.append(json.dumps(value, default=str))
 
         metric_name = ""
         if self._prefix != "":
