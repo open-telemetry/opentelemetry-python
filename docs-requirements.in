@@ -14,3 +14,4 @@ click==8.0.4
 opentracing~=2.2.0
 thrift>=0.10.0
 wrapt>=1.0.0,<2.0.0
+dataclasses==0.6

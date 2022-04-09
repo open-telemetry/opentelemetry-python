@@ -28,8 +28,10 @@ click==8.0.4
     #   black
 coverage==6.2
     # via pytest-cov
-dataclasses==0.8
-    # via black
+dataclasses==0.6
+    # via
+    #   -r dev-requirements.in
+    #   black
 docutils==0.16
     # via
     #   readme-renderer

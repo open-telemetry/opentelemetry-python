@@ -28,8 +28,10 @@ click==8.0.4
     # via
     #   -r docs-requirements.in
     #   flask
-dataclasses==0.8
-    # via werkzeug
+dataclasses==0.6
+    # via
+    #   -r docs-requirements.in
+    #   werkzeug
 ddtrace==0.60.1
     # via -r docs-requirements.in
 deprecated==1.2.13
