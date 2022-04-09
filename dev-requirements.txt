@@ -26,10 +26,8 @@ click==8.0.4
     # via
     #   -r dev-requirements.in
     #   black
-coverage[toml]==5.5
-    # via
-    #   -r dev-requirements.in
-    #   pytest-cov
+coverage[toml]==6.3.2
+    # via pytest-cov
 docutils==0.16
     # via
     #   readme-renderer
@@ -65,8 +63,6 @@ mccabe==0.6.1
     # via
     #   flake8
     #   pylint
-more-itertools==8.12.0
-    # via pytest
 mypy==0.931
     # via -r dev-requirements.in
 mypy-extensions==0.4.3
@@ -86,7 +82,7 @@ platformdirs==2.5.1
     # via
     #   black
     #   pylint
-pluggy==0.13.1
+pluggy==1.0.0
     # via pytest
 protobuf==3.18.1
     # via
@@ -107,11 +103,11 @@ pylint==2.11.0
     # via -r dev-requirements.in
 pyparsing==3.0.7
     # via packaging
-pytest==6.0.0
+pytest==7.1.1
     # via
     #   -r dev-requirements.in
     #   pytest-cov
-pytest-cov==2.8
+pytest-cov==3.0.0
     # via -r dev-requirements.in
 pytz==2022.1
     # via babel
@@ -147,14 +143,13 @@ sphinxcontrib-qthelp==1.0.3
 sphinxcontrib-serializinghtml==1.1.5
     # via sphinx
 toml==0.10.2
-    # via
-    #   coverage
-    #   pylint
-    #   pytest
+    # via pylint
 tomli==2.0.1
     # via
     #   black
+    #   coverage
     #   mypy
+    #   pytest
 types-protobuf==3.19.15
     # via mypy-protobuf
 typing-extensions==4.1.1
