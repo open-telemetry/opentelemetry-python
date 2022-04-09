@@ -5,12 +5,12 @@ sphinx-autodoc-typehints~=1.17.0
 sphinx-jekyll-builder==0.3.0
 
 # Required by instrumentation and exporter packages
-ddtrace>=0.34.0
+ddtrace~=0.34
 grpcio~=1.27
-Deprecated>=1.2.6
-django>=2.2
+Deprecated==1.2.6
+django~=2.2
 flask~=2.0
 click==8.0.4
 opentracing~=2.2.0
-thrift>=0.10.0
+thrift~=0.10
 wrapt>=1.0.0,<2.0.0

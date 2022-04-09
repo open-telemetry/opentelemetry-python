@@ -8,16 +8,10 @@ alabaster==0.7.12
     # via
     #   sphinx
     #   sphinx-jekyll-builder
-asgiref==3.5.0
-    # via django
-attrs==21.4.0
-    # via ddtrace
 babel==2.9.1
     # via
     #   sphinx
     #   sphinx-jekyll-builder
-backports-zoneinfo==0.2.1
-    # via django
 certifi==2021.10.8
     # via
     #   requests
@@ -30,11 +24,11 @@ click==8.0.4
     # via
     #   -r docs-requirements.in
     #   flask
-ddtrace==0.60.1
+ddtrace==0.34.2
     # via -r docs-requirements.in
-deprecated==1.2.13
+deprecated==1.2.6
     # via -r docs-requirements.in
-django==4.0.3
+django==2.2.27
     # via -r docs-requirements.in
 docutils==0.16
     # via
@@ -72,17 +66,16 @@ markupsafe==2.0.1
     # via
     #   jinja2
     #   sphinx-jekyll-builder
+msgpack==1.0.3
+    # via ddtrace
 munch==2.5.0
     # via sphinx-jekyll-builder
 opentracing==2.2.0
     # via -r docs-requirements.in
 packaging==21.3
     # via
-    #   ddtrace
     #   sphinx
     #   sphinx-jekyll-builder
-protobuf==3.18.1
-    # via ddtrace
 pydash==5.1.0
     # via
     #   sphinx-jekyll-builder
@@ -98,6 +91,7 @@ pyparsing==3.0.7
 pytz==2022.1
     # via
     #   babel
+    #   django
     #   sphinx-jekyll-builder
 pyyaml==6.0
     # via sphinx-jekyll-builder
@@ -107,7 +101,6 @@ requests==2.27.1
     #   sphinx-jekyll-builder
 six==1.16.0
     # via
-    #   ddtrace
     #   grpcio
     #   munch
     #   sphinx-jekyll-builder
@@ -149,9 +142,7 @@ sphinxcontrib-websupport==1.2.4
     # via sphinx-jekyll-builder
 sqlparse==0.4.2
     # via django
-tenacity==8.0.1
-    # via ddtrace
-thrift==0.16.0
+thrift==0.10.0
     # via -r docs-requirements.in
 typing==3.7.4.3
     # via sphinx-jekyll-builder
