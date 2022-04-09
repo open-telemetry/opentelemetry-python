@@ -14,3 +14,4 @@ bleach==4.1.0
 grpcio-tools~=1.41.0
 mypy-protobuf~=3.0.0
 protobuf~=3.18.1
+click==8.0.4

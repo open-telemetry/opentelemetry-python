@@ -26,8 +26,10 @@ chardet==4.0.0
     # via sphinx-jekyll-builder
 charset-normalizer==2.0.12
     # via requests
-click==8.1.2
-    # via flask
+click==8.0.4
+    # via
+    #   -r docs-requirements.in
+    #   flask
 ddtrace==0.60.1
     # via -r docs-requirements.in
 deprecated==1.2.13
