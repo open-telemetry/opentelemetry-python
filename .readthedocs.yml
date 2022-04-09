@@ -12,3 +12,9 @@ python:
   version: 3.8
   install:
     - requirements: docs-requirements.txt
+    - method: pip
+      path: ./opentelemetry-api
+    - method: pip
+      path: ./opentelemetry-sdk
+    - method: pip
+      path: ./opentelemetry-semantic-conventions
