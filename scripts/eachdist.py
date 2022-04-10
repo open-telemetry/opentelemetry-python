@@ -500,7 +500,7 @@ def install_args(args):
                 "install",
                 "--upgrade",
                 "-r",
-                str(rootpath / "dev-requirements.txt"),
+                str(rootpath / "requirements/dev.txt"),
             ]
             + args.pipargs,
             check=True,

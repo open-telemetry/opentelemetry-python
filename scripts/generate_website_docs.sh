@@ -2,7 +2,7 @@
 # this script generates the documentation required for
 # opentelemetry.io
 
-pip install -r docs-requirements.txt
+pip install -r requirements/docs.txt
 
 pip install -e opentelemetry-api
 pip install -e opentelemetry-semantic-conventions

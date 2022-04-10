@@ -32,8 +32,7 @@ echo "Creating temporary virtualenv at $venv_dir using $(python3 --version)"
 python3 -m venv $venv_dir
 source $venv_dir/bin/activate
 python -m pip install \
-    -c $repo_root/dev-requirements.txt \
-    grpcio-tools mypy-protobuf
+    -r $repo_root/requirements/gen.txt
 
 # Clone the proto repo if it doesn't exist
 if [ ! -d "$PROTO_REPO_DIR" ]; then
