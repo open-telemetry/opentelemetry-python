@@ -34,10 +34,10 @@ Example::
 
     import flask
     import requests
-    from opentelemetry import propagators
+    from opentelemetry import propagate
 
 
-    PROPAGATOR = propagators.get_global_textmap()
+    PROPAGATOR = propagate.get_global_textmap()
 
 
     def get_header_from_flask_request(request, key):
