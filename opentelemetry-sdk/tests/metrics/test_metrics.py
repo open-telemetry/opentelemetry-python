@@ -243,17 +243,17 @@ class TestMeterProvider(ConcurrencyTestBase):
 
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
             meter_provider.get_meter("name").create_observable_counter(
-                "name", Mock()
+                "name0", Mock()
             )
         )
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
             meter_provider.get_meter("name").create_observable_up_down_counter(
-                "name", Mock()
+                "name1", Mock()
             )
         )
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
             meter_provider.get_meter("name").create_observable_gauge(
-                "name", Mock()
+                "name2", Mock()
             )
         )
 
@@ -297,6 +297,39 @@ class TestMeterProvider(ConcurrencyTestBase):
 class TestMeter(TestCase):
     def setUp(self):
         self.meter = Meter(Mock(), Mock())
+
+    def test_repeated_instrument_names(self):
+        try:
+            self.meter.create_counter("counter")
+            self.meter.create_up_down_counter("up_down_counter")
+            self.meter.create_observable_counter("observable_counter", Mock())
+            self.meter.create_histogram("histogram")
+            self.meter.create_observable_gauge("observable_gauge", Mock())
+            self.meter.create_observable_up_down_counter(
+                "observable_up_down_counter", Mock()
+            )
+        except Exception as error:
+            self.fail(f"Unexpected exception raised {error}")
+
+        for instrument_name in [
+            "counter",
+            "up_down_counter",
+            "histogram",
+        ]:
+            with self.assertLogs(level=WARNING):
+                getattr(self.meter, f"create_{instrument_name}")(
+                    instrument_name
+                )
+
+        for instrument_name in [
+            "observable_counter",
+            "observable_gauge",
+            "observable_up_down_counter",
+        ]:
+            with self.assertLogs(level=WARNING):
+                getattr(self.meter, f"create_{instrument_name}")(
+                    instrument_name, Mock()
+                )
 
     def test_create_counter(self):
         counter = self.meter.create_counter(
