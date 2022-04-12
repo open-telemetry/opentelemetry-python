@@ -17,15 +17,7 @@ from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock
 
-from opentelemetry._metrics import Meter
-from opentelemetry._metrics.instrument import (
-    Counter,
-    Histogram,
-    ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
-    UpDownCounter,
-)
+from opentelemetry._metrics import Meter, NoOpMeter
 
 # FIXME Test that the meter methods can be called concurrently safely.
 
@@ -64,63 +56,9 @@ class ChildMeter(Meter):
 
 class TestMeter(TestCase):
     def test_repeated_instrument_names(self):
-        class TestMeter(Meter):
-            def create_counter(self, name, unit="", description="") -> Counter:
-                self._check_instrument_id(name, Counter, unit, description)
-                super().create_counter(
-                    name, unit=unit, description=description
-                )
-
-            def create_up_down_counter(
-                self, name, unit="", description=""
-            ) -> UpDownCounter:
-                self._check_instrument_id(
-                    name, UpDownCounter, unit, description
-                )
-                super().create_up_down_counter(
-                    name, unit=unit, description=description
-                )
-
-            def create_observable_counter(
-                self, name, callback, unit="", description=""
-            ) -> ObservableCounter:
-                self._check_instrument_id(
-                    name, ObservableCounter, unit, description
-                )
-                super().create_observable_up_down_counter(
-                    name, callback, unit=unit, description=description
-                )
-
-            def create_histogram(
-                self, name, unit="", description=""
-            ) -> Histogram:
-                self._check_instrument_id(name, Histogram, unit, description)
-                super().create_histogram(
-                    name, unit=unit, description=description
-                )
-
-            def create_observable_gauge(
-                self, name, callback, unit="", description=""
-            ) -> ObservableGauge:
-                self._check_instrument_id(
-                    name, ObservableGauge, unit, description
-                )
-                super().create_observable_gauge(
-                    name, callback, unit=unit, description=description
-                )
-
-            def create_observable_up_down_counter(
-                self, name, callback, unit="", description=""
-            ) -> ObservableUpDownCounter:
-                self._check_instrument_id(
-                    name, ObservableUpDownCounter, unit, description
-                )
-                super().create_observable_up_down_counter(
-                    name, callback, unit=unit, description=description
-                )
 
         try:
-            test_meter = TestMeter("name")
+            test_meter = NoOpMeter("name")
 
             test_meter.create_counter("counter")
             test_meter.create_up_down_counter("up_down_counter")
