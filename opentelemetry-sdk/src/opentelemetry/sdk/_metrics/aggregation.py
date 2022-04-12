@@ -380,9 +380,15 @@ def _convert_aggregation_temporality(
         if current_point.aggregation_temporality is aggregation_temporality:
             return current_point
 
+        max_ = current_point.max
+        min_ = current_point.min
+
         if aggregation_temporality is AggregationTemporality.CUMULATIVE:
             start_time_unix_nano = previous_point.start_time_unix_nano
             sum_ = current_point.sum + previous_point.sum
+            # Only update min/max on delta -> cumulative
+            max_ = max(current_point.max, previous_point.max)
+            min_ = min(current_point.min, previous_point.min)
             bucket_counts = [
                 curr_count + prev_count
                 for curr_count, prev_count in zip(
@@ -398,8 +404,6 @@ def _convert_aggregation_temporality(
                     current_point.bucket_counts, previous_point.bucket_counts
                 )
             ]
-        max_ = max(current_point.max, previous_point.max)
-        min_ = min(current_point.min, previous_point.min)
 
         return HistogramPoint(
             aggregation_temporality=aggregation_temporality,
