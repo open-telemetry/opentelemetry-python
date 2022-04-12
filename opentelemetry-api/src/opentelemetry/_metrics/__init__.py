@@ -294,7 +294,8 @@ class Meter(ABC):
     def create_observable_up_down_counter(
         self, name, callback, unit="", description=""
     ) -> ObservableUpDownCounter:
-        """
+        """Creates an `ObservableUpDownCounter` instrument
+
         Args:
             name: The name of the instrument to be created
             callback: A callback that returns an iterable of
