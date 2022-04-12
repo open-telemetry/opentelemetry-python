@@ -73,7 +73,7 @@ class Meter(APIMeter):
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
                 name,
-                Counter.__name__,
+                APICounter.__name__,
                 unit,
                 description,
             )
@@ -97,7 +97,7 @@ class Meter(APIMeter):
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
                 name,
-                UpDownCounter.__name__,
+                APIUpDownCounter.__name__,
                 unit,
                 description,
             )
@@ -123,7 +123,7 @@ class Meter(APIMeter):
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
                 name,
-                ObservableCounter.__name__,
+                APIObservableCounter.__name__,
                 unit,
                 description,
             )
@@ -149,7 +149,7 @@ class Meter(APIMeter):
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
                 name,
-                Histogram.__name__,
+                APIHistogram.__name__,
                 unit,
                 description,
             )
@@ -172,7 +172,7 @@ class Meter(APIMeter):
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
                 name,
-                ObservableGauge.__name__,
+                APIObservableGauge.__name__,
                 unit,
                 description,
             )
@@ -203,7 +203,7 @@ class Meter(APIMeter):
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
                 name,
-                ObservableUpDownCounter.__name__,
+                APIObservableUpDownCounter.__name__,
                 unit,
                 description,
             )

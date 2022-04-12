@@ -426,7 +426,7 @@ class NoOpMeter(Meter):
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
                 name,
-                DefaultCounter.__name__,
+                Counter.__name__,
                 unit,
                 description,
             )
@@ -446,7 +446,7 @@ class NoOpMeter(Meter):
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
                 name,
-                DefaultUpDownCounter.__name__,
+                UpDownCounter.__name__,
                 unit,
                 description,
             )
@@ -466,7 +466,7 @@ class NoOpMeter(Meter):
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
                 name,
-                DefaultObservableCounter.__name__,
+                ObservableCounter.__name__,
                 unit,
                 description,
             )
@@ -487,7 +487,7 @@ class NoOpMeter(Meter):
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
                 name,
-                DefaultHistogram.__name__,
+                Histogram.__name__,
                 unit,
                 description,
             )
@@ -507,7 +507,7 @@ class NoOpMeter(Meter):
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
                 name,
-                DefaultObservableGauge.__name__,
+                ObservableGauge.__name__,
                 unit,
                 description,
             )
@@ -532,7 +532,7 @@ class NoOpMeter(Meter):
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
                 name,
-                DefaultObservableUpDownCounter.__name__,
+                ObservableUpDownCounter.__name__,
                 unit,
                 description,
             )
