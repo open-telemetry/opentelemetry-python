@@ -12,16 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import List
+
 
 class Failure(Exception):
     "Exception raised when a function fails"
 
-    def __init__(self, method, exceptions):
+    def __init__(self, method: str, exceptions: List[Exception]):
         super().__init__()
         self._method = method
         self._exceptions = exceptions
 
-    def __str__(self):
+    def __str__(self) -> str:
 
         exceptions = ", ".join(
             [repr(exception) for exception in self._exceptions]
