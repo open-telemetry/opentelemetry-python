@@ -117,12 +117,14 @@ class TestOTLPMetricExporter(TestCase):
             "histogram": _generate_metric(
                 "histogram",
                 Histogram(
-                    time_unix_nano=1641946016139533244,
-                    start_time_unix_nano=1641946016139533244,
-                    bucket_counts=[1, 4],
-                    sum=67,
-                    explicit_bounds=[10.0, 20.0],
                     aggregation_temporality=AggregationTemporality.DELTA,
+                    bucket_counts=[1, 4],
+                    explicit_bounds=[10.0, 20.0],
+                    max=18,
+                    min=8,
+                    start_time_unix_nano=1641946016139533244,
+                    sum=67,
+                    time_unix_nano=1641946016139533244,
                 ),
             ),
         }
