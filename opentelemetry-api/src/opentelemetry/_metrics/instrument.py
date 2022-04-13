@@ -73,9 +73,9 @@ class _ProxyInstrument(ABC, Generic[InstrumentT]):
 
 
 class _ProxyAsynchronousInstrument(_ProxyInstrument[InstrumentT]):
-    def __init__(self, name, callback, unit, description) -> None:
+    def __init__(self, name, callbacks, unit, description) -> None:
         super().__init__(name, unit, description)
-        self._callback = callback
+        self._callbacks = callbacks
 
 
 class Synchronous(Instrument):
@@ -87,7 +87,7 @@ class Asynchronous(Instrument):
     def __init__(
         self,
         name,
-        callback,
+        callbacks=None,
         unit="",
         description="",
     ):
@@ -170,8 +170,8 @@ class ObservableCounter(_Monotonic, Asynchronous):
 
 
 class DefaultObservableCounter(ObservableCounter):
-    def __init__(self, name, callback, unit="", description=""):
-        super().__init__(name, callback, unit=unit, description=description)
+    def __init__(self, name, callbacks=None, unit="", description=""):
+        super().__init__(name, callbacks, unit=unit, description=description)
 
 
 class _ProxyObservableCounter(
@@ -181,7 +181,7 @@ class _ProxyObservableCounter(
         self, meter: "metrics.Meter"
     ) -> ObservableCounter:
         return meter.create_observable_counter(
-            self._name, self._callback, self._unit, self._description
+            self._name, self._callbacks, self._unit, self._description
         )
 
 
@@ -193,8 +193,8 @@ class ObservableUpDownCounter(_NonMonotonic, Asynchronous):
 
 
 class DefaultObservableUpDownCounter(ObservableUpDownCounter):
-    def __init__(self, name, callback, unit="", description=""):
-        super().__init__(name, callback, unit=unit, description=description)
+    def __init__(self, name, callbacks=None, unit="", description=""):
+        super().__init__(name, callbacks, unit=unit, description=description)
 
 
 class _ProxyObservableUpDownCounter(
@@ -205,7 +205,7 @@ class _ProxyObservableUpDownCounter(
         self, meter: "metrics.Meter"
     ) -> ObservableUpDownCounter:
         return meter.create_observable_up_down_counter(
-            self._name, self._callback, self._unit, self._description
+            self._name, self._callbacks, self._unit, self._description
         )
 
 
@@ -247,8 +247,8 @@ class ObservableGauge(_Grouping, Asynchronous):
 
 
 class DefaultObservableGauge(ObservableGauge):
-    def __init__(self, name, callback, unit="", description=""):
-        super().__init__(name, callback, unit=unit, description=description)
+    def __init__(self, name, callbacks=None, unit="", description=""):
+        super().__init__(name, callbacks, unit=unit, description=description)
 
 
 class _ProxyObservableGauge(
@@ -259,5 +259,5 @@ class _ProxyObservableGauge(
         self, meter: "metrics.Meter"
     ) -> ObservableGauge:
         return meter.create_observable_gauge(
-            self._name, self._callback, self._unit, self._description
+            self._name, self._callbacks, self._unit, self._description
         )

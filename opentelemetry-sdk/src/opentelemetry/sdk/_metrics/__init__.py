@@ -111,7 +111,7 @@ class Meter(APIMeter):
         )
 
     def create_observable_counter(
-        self, name, callback, unit="", description=""
+        self, name, callbacks=None, unit="", description=""
     ) -> APIObservableCounter:
         if self._check_instrument_id(
             name, ObservableCounter, unit, description
@@ -131,7 +131,7 @@ class Meter(APIMeter):
             name,
             self._instrumentation_info,
             self._measurement_consumer,
-            callback,
+            callbacks,
             unit,
             description,
         )
@@ -162,7 +162,7 @@ class Meter(APIMeter):
         )
 
     def create_observable_gauge(
-        self, name, callback, unit="", description=""
+        self, name, callbacks=None, unit="", description=""
     ) -> APIObservableGauge:
         if self._check_instrument_id(name, ObservableGauge, unit, description):
             # FIXME #2558 go through all views here and check if this
@@ -181,7 +181,7 @@ class Meter(APIMeter):
             name,
             self._instrumentation_info,
             self._measurement_consumer,
-            callback,
+            callbacks,
             unit,
             description,
         )
@@ -191,7 +191,7 @@ class Meter(APIMeter):
         return instrument
 
     def create_observable_up_down_counter(
-        self, name, callback, unit="", description=""
+        self, name, callbacks=None, unit="", description=""
     ) -> APIObservableUpDownCounter:
         if self._check_instrument_id(
             name, ObservableUpDownCounter, unit, description
@@ -212,7 +212,7 @@ class Meter(APIMeter):
             name,
             self._instrumentation_info,
             self._measurement_consumer,
-            callback,
+            callbacks,
             unit,
             description,
         )
