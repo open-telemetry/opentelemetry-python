@@ -15,7 +15,7 @@
 from typing import List
 
 
-class Failure(Exception):
+class _Failure(Exception):
     "Exception raised when a function fails"
 
     def __init__(self, method: str, exceptions: List[Exception]):
@@ -35,5 +35,5 @@ class Failure(Exception):
         )
 
 
-class Timeout(Exception):
+class _Timeout(Exception):
     "Exception raised when a function times out"

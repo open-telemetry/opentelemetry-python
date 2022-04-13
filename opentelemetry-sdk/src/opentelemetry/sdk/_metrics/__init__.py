@@ -50,7 +50,7 @@ from opentelemetry.sdk._metrics.view import View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.util._once import Once
-from opentelemetry.util.exceptions import Failure
+from opentelemetry.util.exceptions import _Failure
 
 _logger = getLogger(__name__)
 
@@ -334,7 +334,7 @@ class MeterProvider(APIMeterProvider):
             self._atexit_handler = None
 
         if metric_reader_errors:
-            raise Failure("MeterProvider.shutdown", metric_reader_errors)
+            raise _Failure("MeterProvider.shutdown", metric_reader_errors)
 
     def get_meter(
         self,

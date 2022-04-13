@@ -32,7 +32,7 @@ from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.point import AggregationTemporality
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
-from opentelemetry.util.exceptions import Failure
+from opentelemetry.util.exceptions import _Failure
 
 
 class DummyMetricReader(MetricReader):
@@ -162,12 +162,12 @@ class TestMeterProvider(ConcurrencyTestBase):
             metric_readers=[mock_metric_reader_0, mock_metric_reader_1]
         )
 
-        with self.assertRaises(Failure) as error:
+        with self.assertRaises(_Failure) as error:
             meter_provider.shutdown()
 
         error = error.exception
 
-        self.assertIsInstance(error, Failure)
+        self.assertIsInstance(error, _Failure)
         self.assertEqual(
             str(error),
             (
