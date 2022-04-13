@@ -32,7 +32,6 @@ from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.point import AggregationTemporality
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
-from opentelemetry.util._exceptions import _Failure
 
 
 class DummyMetricReader(MetricReader):
@@ -153,26 +152,30 @@ class TestMeterProvider(ConcurrencyTestBase):
         mock_metric_reader_0 = MagicMock(
             **{
                 "shutdown.side_effect": ZeroDivisionError(),
-                "__str__.return_value": "mock_metric_reader_0",
             }
         )
-        mock_metric_reader_1 = Mock(**{"shutdown.return_value": True})
+        mock_metric_reader_1 = MagicMock(
+            **{
+                "shutdown.side_effect": AssertionError(),
+            }
+        )
 
         meter_provider = MeterProvider(
             metric_readers=[mock_metric_reader_0, mock_metric_reader_1]
         )
 
-        with self.assertRaises(_Failure) as error:
+        with self.assertRaises(Exception) as error:
             meter_provider.shutdown()
 
         error = error.exception
 
-        self.assertIsInstance(error, _Failure)
         self.assertEqual(
             str(error),
             (
-                "MeterProvider.shutdown failed with the following exceptions:"
-                " ZeroDivisionError()"
+                "MeterProvider.shutdown failed because the following "
+                "metric readers failed during shutdown:\n"
+                "MagicMock: ZeroDivisionError()\n"
+                "MagicMock: AssertionError()"
             ),
         )
 
