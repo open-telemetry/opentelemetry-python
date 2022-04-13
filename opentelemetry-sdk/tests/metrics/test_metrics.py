@@ -151,33 +151,45 @@ class TestMeterProvider(ConcurrencyTestBase):
 
         mock_metric_reader_0 = MagicMock(
             **{
-                "shutdown.return_value": False,
-                "__str__.return_value": "mock_metric_reader_0",
+                "shutdown.side_effect": ZeroDivisionError(),
             }
         )
-        mock_metric_reader_1 = Mock(**{"shutdown.return_value": True})
+        mock_metric_reader_1 = MagicMock(
+            **{
+                "shutdown.side_effect": AssertionError(),
+            }
+        )
 
         meter_provider = MeterProvider(
             metric_readers=[mock_metric_reader_0, mock_metric_reader_1]
         )
 
-        with self.assertLogs(level=WARNING) as log:
-            self.assertFalse(meter_provider.shutdown())
-            self.assertEqual(
-                log.records[0].getMessage(),
-                "MetricReader mock_metric_reader_0 failed to shutdown",
-            )
+        with self.assertRaises(Exception) as error:
+            meter_provider.shutdown()
+
+        error = error.exception
+
+        self.assertEqual(
+            str(error),
+            (
+                "MeterProvider.shutdown failed because the following "
+                "metric readers failed during shutdown:\n"
+                "MagicMock: ZeroDivisionError()\n"
+                "MagicMock: AssertionError()"
+            ),
+        )
+
         mock_metric_reader_0.shutdown.assert_called_once()
         mock_metric_reader_1.shutdown.assert_called_once()
 
-        mock_metric_reader_0 = Mock(**{"shutdown.return_value": True})
-        mock_metric_reader_1 = Mock(**{"shutdown.return_value": True})
+        mock_metric_reader_0 = Mock()
+        mock_metric_reader_1 = Mock()
 
         meter_provider = MeterProvider(
             metric_readers=[mock_metric_reader_0, mock_metric_reader_1]
         )
 
-        self.assertTrue(meter_provider.shutdown())
+        self.assertIsNone(meter_provider.shutdown())
         mock_metric_reader_0.shutdown.assert_called_once()
         mock_metric_reader_1.shutdown.assert_called_once()
 

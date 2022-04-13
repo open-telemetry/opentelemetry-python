@@ -315,25 +315,39 @@ class MeterProvider(APIMeterProvider):
 
         if not did_shutdown:
             _logger.warning("shutdown can only be called once")
-            return False
+            return
 
-        overall_result = True
+        metric_reader_error = {}
 
         for metric_reader in self._sdk_config.metric_readers:
-            metric_reader_result = metric_reader.shutdown()
+            try:
+                metric_reader.shutdown()
 
-            if not metric_reader_result:
-                _logger.warning(
-                    "MetricReader %s failed to shutdown", metric_reader
-                )
+            # pylint: disable=broad-except
+            except Exception as error:
 
-            overall_result = overall_result and metric_reader_result
+                metric_reader_error[metric_reader] = error
 
         if self._atexit_handler is not None:
             unregister(self._atexit_handler)
             self._atexit_handler = None
 
-        return overall_result
+        if metric_reader_error:
+
+            metric_reader_error_string = "\n".join(
+                [
+                    f"{metric_reader.__class__.__name__}: {repr(error)}"
+                    for metric_reader, error in metric_reader_error.items()
+                ]
+            )
+
+            raise Exception(
+                (
+                    "MeterProvider.shutdown failed because the following "
+                    "metric readers failed during shutdown:\n"
+                    f"{metric_reader_error_string}"
+                )
+            )
 
     def get_meter(
         self,

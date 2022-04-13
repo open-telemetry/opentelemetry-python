@@ -65,7 +65,7 @@ class MetricReader(ABC):
         """Called by `MetricReader.collect` when it receives a batch of metrics"""
 
     @abstractmethod
-    def shutdown(self) -> bool:
+    def shutdown(self):
         """Shuts down the MetricReader. This method provides a way
         for the MetricReader to do any cleanup required. A metric reader can
         only be shutdown once, any subsequent calls are ignored and return
