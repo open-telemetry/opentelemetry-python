@@ -50,7 +50,7 @@ from opentelemetry.sdk._metrics.view import View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.util._once import Once
-from opentelemetry.util.exceptions import _Failure
+from opentelemetry.util._exceptions import _Failure
 
 _logger = getLogger(__name__)
 

@@ -32,7 +32,7 @@ from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.point import AggregationTemporality
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
-from opentelemetry.util.exceptions import _Failure
+from opentelemetry.util._exceptions import _Failure
 
 
 class DummyMetricReader(MetricReader):
