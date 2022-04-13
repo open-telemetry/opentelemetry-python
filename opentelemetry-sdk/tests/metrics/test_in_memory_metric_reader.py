@@ -63,7 +63,7 @@ class TestInMemoryMetricReader(TestCase):
 
     def test_shutdown(self):
         # shutdown should always be successful
-        self.assertTrue(InMemoryMetricReader().shutdown())
+        self.assertIsNone(InMemoryMetricReader().shutdown())
 
     def test_integration(self):
         reader = InMemoryMetricReader()
