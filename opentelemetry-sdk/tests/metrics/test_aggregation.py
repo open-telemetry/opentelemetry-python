@@ -897,7 +897,7 @@ class TestDefaultAggregation(TestCase):
     def test_observable_counter(self):
 
         aggregation = self.default_aggregation._create_aggregation(
-            ObservableCounter(Mock(), Mock(), Mock(), Mock())
+            ObservableCounter(Mock(), Mock(), Mock(), callbacks=[Mock()])
         )
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertTrue(aggregation._instrument_is_monotonic)
@@ -909,7 +909,7 @@ class TestDefaultAggregation(TestCase):
     def test_observable_up_down_counter(self):
 
         aggregation = self.default_aggregation._create_aggregation(
-            ObservableUpDownCounter(Mock(), Mock(), Mock(), Mock())
+            ObservableUpDownCounter(Mock(), Mock(), Mock(), callbacks=[Mock()])
         )
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertFalse(aggregation._instrument_is_monotonic)
@@ -938,7 +938,7 @@ class TestDefaultAggregation(TestCase):
                 Mock(),
                 Mock(),
                 Mock(),
-                Mock(),
+                callbacks=[Mock()],
             )
         )
         self.assertIsInstance(aggregation, _LastValueAggregation)

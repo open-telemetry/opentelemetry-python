@@ -195,15 +195,15 @@ class TestProxy(MetricsGlobalsTest, TestCase):
             name, unit=unit, description=description
         )
         proxy_observable_counter = proxy_meter.create_observable_counter(
-            name, callback=callback, unit=unit, description=description
+            name, callbacks=[callback], unit=unit, description=description
         )
         proxy_observable_updowncounter = (
             proxy_meter.create_observable_up_down_counter(
-                name, callback=callback, unit=unit, description=description
+                name, callbacks=[callback], unit=unit, description=description
             )
         )
         proxy_overvable_gauge = proxy_meter.create_observable_gauge(
-            name, callback=callback, unit=unit, description=description
+            name, callbacks=[callback], unit=unit, description=description
         )
         self.assertIsInstance(proxy_counter, _ProxyCounter)
         self.assertIsInstance(proxy_updowncounter, _ProxyUpDownCounter)
@@ -243,13 +243,13 @@ class TestProxy(MetricsGlobalsTest, TestCase):
             name, unit, description
         )
         real_meter.create_observable_counter.assert_called_once_with(
-            name, callback, unit, description
+            name, [callback], unit, description
         )
         real_meter.create_observable_up_down_counter.assert_called_once_with(
-            name, callback, unit, description
+            name, [callback], unit, description
         )
         real_meter.create_observable_gauge.assert_called_once_with(
-            name, callback, unit, description
+            name, [callback], unit, description
         )
 
         # The synchronous instrument measurement methods should call through to
@@ -292,15 +292,15 @@ class TestProxy(MetricsGlobalsTest, TestCase):
             name, unit=unit, description=description
         )
         observable_counter = proxy_meter.create_observable_counter(
-            name, callback=callback, unit=unit, description=description
+            name, callbacks=[callback], unit=unit, description=description
         )
         observable_updowncounter = (
             proxy_meter.create_observable_up_down_counter(
-                name, callback=callback, unit=unit, description=description
+                name, callbacks=[callback], unit=unit, description=description
             )
         )
         observable_gauge = proxy_meter.create_observable_gauge(
-            name, callback=callback, unit=unit, description=description
+            name, callbacks=[callback], unit=unit, description=description
         )
 
         real_meter: Mock = real_meter_provider.get_meter()
