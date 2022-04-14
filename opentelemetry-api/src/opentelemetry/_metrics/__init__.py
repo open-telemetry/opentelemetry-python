@@ -226,7 +226,7 @@ class Meter(ABC):
                         # ... other states
 
         Alternatively, you can pass a sequence of generators directly instead
-        of a sequence of callbacks, which should return iterables of
+        of a sequence of callbacks, which each should return iterables of
         :class:`~opentelemetry._metrics.measurement.Measurement`::
 
             def cpu_time_callback(states_to_include: set[str]) -> Iterable[Iterable[Measurement]]:
