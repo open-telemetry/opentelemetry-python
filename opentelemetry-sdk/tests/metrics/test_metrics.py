@@ -255,17 +255,17 @@ class TestMeterProvider(ConcurrencyTestBase):
 
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
             meter_provider.get_meter("name").create_observable_counter(
-                "name0", Mock()
+                "name0", callbacks=[Mock()]
             )
         )
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
             meter_provider.get_meter("name").create_observable_up_down_counter(
-                "name1", Mock()
+                "name1", callbacks=[Mock()]
             )
         )
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
             meter_provider.get_meter("name").create_observable_gauge(
-                "name2", Mock()
+                "name2", callbacks=[Mock()]
             )
         )
 
@@ -314,11 +314,15 @@ class TestMeter(TestCase):
         try:
             self.meter.create_counter("counter")
             self.meter.create_up_down_counter("up_down_counter")
-            self.meter.create_observable_counter("observable_counter", Mock())
+            self.meter.create_observable_counter(
+                "observable_counter", callbacks=[Mock()]
+            )
             self.meter.create_histogram("histogram")
-            self.meter.create_observable_gauge("observable_gauge", Mock())
+            self.meter.create_observable_gauge(
+                "observable_gauge", callbacks=[Mock()]
+            )
             self.meter.create_observable_up_down_counter(
-                "observable_up_down_counter", Mock()
+                "observable_up_down_counter", callbacks=[Mock()]
             )
         except Exception as error:
             self.fail(f"Unexpected exception raised {error}")
@@ -340,7 +344,7 @@ class TestMeter(TestCase):
         ]:
             with self.assertLogs(level=WARNING):
                 getattr(self.meter, f"create_{instrument_name}")(
-                    instrument_name, Mock()
+                    instrument_name, callbacks=[Mock()]
                 )
 
     def test_create_counter(self):
@@ -361,7 +365,7 @@ class TestMeter(TestCase):
 
     def test_create_observable_counter(self):
         observable_counter = self.meter.create_observable_counter(
-            "name", Mock(), unit="unit", description="description"
+            "name", callbacks=[Mock()], unit="unit", description="description"
         )
 
         self.assertIsInstance(observable_counter, ObservableCounter)
@@ -377,7 +381,7 @@ class TestMeter(TestCase):
 
     def test_create_observable_gauge(self):
         observable_gauge = self.meter.create_observable_gauge(
-            "name", Mock(), unit="unit", description="description"
+            "name", callbacks=[Mock()], unit="unit", description="description"
         )
 
         self.assertIsInstance(observable_gauge, ObservableGauge)
@@ -386,7 +390,10 @@ class TestMeter(TestCase):
     def test_create_observable_up_down_counter(self):
         observable_up_down_counter = (
             self.meter.create_observable_up_down_counter(
-                "name", Mock(), unit="unit", description="description"
+                "name",
+                callbacks=[Mock()],
+                unit="unit",
+                description="description",
             )
         )
         self.assertIsInstance(
