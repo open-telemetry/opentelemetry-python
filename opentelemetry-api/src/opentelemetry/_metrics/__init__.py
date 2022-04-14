@@ -255,7 +255,7 @@ class Meter(ABC):
             name: The name of the instrument to be created
             callbacks: A sequence of callbacks that return an iterable of
                 :class:`~opentelemetry._metrics.measurement.Measurement`.
-                Alternatively, can be a sequence of generator that yields
+                Alternatively, can be a sequence of generators that each yields
                 iterables of
                 :class:`~opentelemetry._metrics.measurement.Measurement`.
             unit: The unit for measurements this instrument reports. For
