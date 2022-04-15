@@ -70,7 +70,7 @@ class TestInMemoryMetricReader(TestCase):
         meter = MeterProvider(metric_readers=[reader]).get_meter("test_meter")
         counter1 = meter.create_counter("counter1")
         meter.create_observable_gauge(
-            "observable_gauge1", lambda: [Measurement(value=12)]
+            "observable_gauge1", callbacks=[lambda: [Measurement(value=12)]]
         )
         counter1.add(1, {"foo": "1"})
         counter1.add(1, {"foo": "2"})

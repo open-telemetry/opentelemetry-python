@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+- Add support for zero or more callbacks
+  ([#2602](https://github.com/open-telemetry/opentelemetry-python/pull/2602))
 - Fix parsing of trace flags when extracting traceparent
   ([#2577](https://github.com/open-telemetry/opentelemetry-python/pull/2577))
 - Add default aggregation
