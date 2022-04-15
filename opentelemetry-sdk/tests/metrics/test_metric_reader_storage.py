@@ -12,20 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import WARNING
 from unittest.mock import MagicMock, Mock, patch
 
-from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
-    MetricReaderStorage,
-)
 from opentelemetry.sdk._metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
 from opentelemetry.sdk._metrics.aggregation import (
     DefaultAggregation,
     DropAggregation,
+    ExplicitBucketHistogramAggregation,
 )
-from opentelemetry.sdk._metrics.instrument import Counter
+from opentelemetry.sdk._metrics.instrument import Counter, ObservableCounter
 from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry.sdk._metrics.metric_reader_storage import (
+    _DEFAULT_VIEW,
+    MetricReaderStorage,
+)
 from opentelemetry.sdk._metrics.point import AggregationTemporality
 from opentelemetry.sdk._metrics.view import View
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
@@ -220,4 +223,38 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
 
         self.assertEqual(
             [], metric_reader_storage.collect(AggregationTemporality.DELTA)
+        )
+
+    def test_conflicting_view_configuration(self):
+
+        observable_counter = ObservableCounter(
+            "observable_counter",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(
+                    View(
+                        instrument_name="observable_counter",
+                        aggregation=ExplicitBucketHistogramAggregation(),
+                    ),
+                ),
+            )
+        )
+
+        with self.assertLogs(level=WARNING):
+            metric_reader_storage.consume_measurement(
+                Measurement(1, observable_counter)
+            )
+
+        self.assertIs(
+            metric_reader_storage._instrument_view_instrument_matches[
+                observable_counter
+            ][0]._view,
+            _DEFAULT_VIEW,
         )

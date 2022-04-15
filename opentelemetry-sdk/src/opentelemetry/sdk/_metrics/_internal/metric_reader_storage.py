@@ -12,20 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import getLogger
 from threading import RLock
 from typing import Dict, Iterable, List
 
-from opentelemetry._metrics import Instrument
-from opentelemetry.sdk._metrics._internal._view_instrument_match import (
+from opentelemetry._metrics.instrument import Asynchronous, Instrument
+from opentelemetry.sdk._metrics._view_instrument_match import (
     _ViewInstrumentMatch,
 )
-from opentelemetry.sdk._metrics._internal.aggregation import Aggregation
+from opentelemetry.sdk._metrics.aggregation import (
+    Aggregation,
+    ExplicitBucketHistogramAggregation,
+)
 from opentelemetry.sdk._metrics._internal.sdk_configuration import (
-    SdkConfiguration,
+    SdkConfiguration
 )
 from opentelemetry.sdk._metrics._internal.view import View
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
+
+_logger = getLogger(__name__)
 
 _DEFAULT_VIEW = View(instrument_name="")
 
@@ -40,7 +46,7 @@ class MetricReaderStorage:
     ) -> None:
         self._lock = RLock()
         self._sdk_config = sdk_config
-        self._view_instrument_match: Dict[
+        self._instrument_view_instrument_matches: Dict[
             Instrument, List[_ViewInstrumentMatch]
         ] = {}
         self._instrument_class_aggregation = instrument_class_aggregation
@@ -51,29 +57,62 @@ class MetricReaderStorage:
         # Optimistically get the relevant views for the given instrument. Once set for a given
         # instrument, the mapping will never change
 
-        if instrument in self._view_instrument_match:
-            return self._view_instrument_match[instrument]
+        if instrument in self._instrument_view_instrument_matches:
+            return self._instrument_view_instrument_matches[instrument]
 
         with self._lock:
             # double check if it was set before we held the lock
-            if instrument in self._view_instrument_match:
-                return self._view_instrument_match[instrument]
+            if instrument in self._instrument_view_instrument_matches:
+                return self._instrument_view_instrument_matches[instrument]
 
             # not present, hold the lock and add a new mapping
             view_instrument_matches = []
             for view in self._sdk_config.views:
                 # pylint: disable=protected-access
                 if view._match(instrument):
-                    view_instrument_matches.append(
-                        _ViewInstrumentMatch(
-                            view=view,
-                            instrument=instrument,
-                            sdk_config=self._sdk_config,
-                            instrument_class_aggregation=(
-                                self._instrument_class_aggregation
-                            ),
-                        )
+
+                    new_view_instrument_match = _ViewInstrumentMatch(
+                        view=view,
+                        instrument=instrument,
+                        sdk_config=self._sdk_config,
+                        instrument_class_aggregation=(
+                            self._instrument_class_aggregation
+                        ),
                     )
+
+                    if isinstance(instrument, Asynchronous) and isinstance(
+                        view._aggregation, ExplicitBucketHistogramAggregation
+                    ):
+                        _logger.warning(
+                            "View %s and instrument %s will produce "
+                            "semantic errors when matched, the view "
+                            "has not been applied.",
+                            view,
+                            instrument,
+                        )
+                        continue
+
+                    for (
+                        existing_view_instrument_matches
+                    ) in self._instrument_view_instrument_matches.values():
+                        for (
+                            existing_view_instrument_match
+                        ) in existing_view_instrument_matches:
+                            if (
+                                existing_view_instrument_match._name
+                                == new_view_instrument_match._name
+                                and existing_view_instrument_match._description
+                                == new_view_instrument_match._description
+                            ):
+
+                                _logger.warning(
+                                    "Views %s and %s will cause conflicting"
+                                    "metrics identities",
+                                    existing_view_instrument_match._view,
+                                    new_view_instrument_match._view,
+                                )
+
+                    view_instrument_matches.append(new_view_instrument_match)
 
             # if no view targeted the instrument, use the default
             if not view_instrument_matches:
@@ -87,7 +126,10 @@ class MetricReaderStorage:
                         ),
                     )
                 )
-            self._view_instrument_match[instrument] = view_instrument_matches
+            self._instrument_view_instrument_matches[
+                instrument
+            ] = view_instrument_matches
+
             return view_instrument_matches
 
     def consume_measurement(self, measurement: Measurement) -> None:
@@ -114,7 +156,7 @@ class MetricReaderStorage:
         with self._lock:
             for (
                 view_instrument_matches
-            ) in self._view_instrument_match.values():
+            ) in self._instrument_view_instrument_matches.values():
                 for view_instrument_match in view_instrument_matches:
                     metrics.extend(
                         view_instrument_match.collect(

@@ -52,6 +52,10 @@ class _ViewInstrumentMatch:
         self._attributes_previous_point: Dict[frozenset, _PointVarT] = {}
         self._lock = Lock()
         self._instrument_class_aggregation = instrument_class_aggregation
+        self._name = self._view._name or self._instrument.name
+        self._description = (
+            self._view._description or self._instrument.description
+        )
 
     # pylint: disable=protected-access
     def consume_measurement(self, measurement: Measurement) -> None:
@@ -118,14 +122,11 @@ class _ViewInstrumentMatch:
 
                     yield Metric(
                         attributes=dict(attributes),
-                        description=(
-                            self._view._description
-                            or self._instrument.description
-                        ),
+                        description=self._description,
                         instrumentation_scope=(
                             self._instrument.instrumentation_scope
                         ),
-                        name=self._view._name or self._instrument.name,
+                        name=self._name,
                         resource=self._sdk_config.resource,
                         unit=self._instrument.unit,
                         point=_convert_aggregation_temporality(
