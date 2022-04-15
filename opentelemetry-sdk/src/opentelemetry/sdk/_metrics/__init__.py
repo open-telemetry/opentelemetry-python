@@ -64,7 +64,20 @@ class Meter(APIMeter):
         self._instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
 
-    def create_counter(self, name, unit=None, description=None) -> APICounter:
+    def create_counter(self, name, unit="", description="") -> APICounter:
+        if self._check_instrument_id(name, Counter, unit, description):
+            # FIXME #2558 go through all views here and check if this
+            # instrument registration conflict can be fixed. If it can be, do
+            # not log the following warning.
+            _logger.warning(
+                "An instrument with name %s, type %s, unit %s and "
+                "description %s has been created already.",
+                name,
+                APICounter.__name__,
+                unit,
+                description,
+            )
+
         return Counter(
             name,
             self._instrumentation_scope,
@@ -74,8 +87,21 @@ class Meter(APIMeter):
         )
 
     def create_up_down_counter(
-        self, name, unit=None, description=None
+        self, name, unit="", description=""
     ) -> APIUpDownCounter:
+        if self._check_instrument_id(name, UpDownCounter, unit, description):
+            # FIXME #2558 go through all views here and check if this
+            # instrument registration conflict can be fixed. If it can be, do
+            # not log the following warning.
+            _logger.warning(
+                "An instrument with name %s, type %s, unit %s and "
+                "description %s has been created already.",
+                name,
+                APIUpDownCounter.__name__,
+                unit,
+                description,
+            )
+
         return UpDownCounter(
             name,
             self._instrumentation_scope,
@@ -85,14 +111,27 @@ class Meter(APIMeter):
         )
 
     def create_observable_counter(
-        self, name, callback, unit=None, description=None
+        self, name, callbacks=None, unit="", description=""
     ) -> APIObservableCounter:
-
+        if self._check_instrument_id(
+            name, ObservableCounter, unit, description
+        ):
+            # FIXME #2558 go through all views here and check if this
+            # instrument registration conflict can be fixed. If it can be, do
+            # not log the following warning.
+            _logger.warning(
+                "An instrument with name %s, type %s, unit %s and "
+                "description %s has been created already.",
+                name,
+                APIObservableCounter.__name__,
+                unit,
+                description,
+            )
         instrument = ObservableCounter(
             name,
             self._instrumentation_scope,
             self._measurement_consumer,
-            callback,
+            callbacks,
             unit,
             description,
         )
@@ -101,9 +140,19 @@ class Meter(APIMeter):
 
         return instrument
 
-    def create_histogram(
-        self, name, unit=None, description=None
-    ) -> APIHistogram:
+    def create_histogram(self, name, unit="", description="") -> APIHistogram:
+        if self._check_instrument_id(name, Histogram, unit, description):
+            # FIXME #2558 go through all views here and check if this
+            # instrument registration conflict can be fixed. If it can be, do
+            # not log the following warning.
+            _logger.warning(
+                "An instrument with name %s, type %s, unit %s and "
+                "description %s has been created already.",
+                name,
+                APIHistogram.__name__,
+                unit,
+                description,
+            )
         return Histogram(
             name,
             self._instrumentation_scope,
@@ -113,14 +162,26 @@ class Meter(APIMeter):
         )
 
     def create_observable_gauge(
-        self, name, callback, unit=None, description=None
+        self, name, callbacks=None, unit="", description=""
     ) -> APIObservableGauge:
+        if self._check_instrument_id(name, ObservableGauge, unit, description):
+            # FIXME #2558 go through all views here and check if this
+            # instrument registration conflict can be fixed. If it can be, do
+            # not log the following warning.
+            _logger.warning(
+                "An instrument with name %s, type %s, unit %s and "
+                "description %s has been created already.",
+                name,
+                APIObservableGauge.__name__,
+                unit,
+                description,
+            )
 
         instrument = ObservableGauge(
             name,
             self._instrumentation_scope,
             self._measurement_consumer,
-            callback,
+            callbacks,
             unit,
             description,
         )
@@ -130,14 +191,28 @@ class Meter(APIMeter):
         return instrument
 
     def create_observable_up_down_counter(
-        self, name, callback, unit=None, description=None
+        self, name, callbacks=None, unit="", description=""
     ) -> APIObservableUpDownCounter:
+        if self._check_instrument_id(
+            name, ObservableUpDownCounter, unit, description
+        ):
+            # FIXME #2558 go through all views here and check if this
+            # instrument registration conflict can be fixed. If it can be, do
+            # not log the following warning.
+            _logger.warning(
+                "An instrument with name %s, type %s, unit %s and "
+                "description %s has been created already.",
+                name,
+                APIObservableUpDownCounter.__name__,
+                unit,
+                description,
+            )
 
         instrument = ObservableUpDownCounter(
             name,
             self._instrumentation_scope,
             self._measurement_consumer,
-            callback,
+            callbacks,
             unit,
             description,
         )
@@ -240,25 +315,39 @@ class MeterProvider(APIMeterProvider):
 
         if not did_shutdown:
             _logger.warning("shutdown can only be called once")
-            return False
+            return
 
-        overall_result = True
+        metric_reader_error = {}
 
         for metric_reader in self._sdk_config.metric_readers:
-            metric_reader_result = metric_reader.shutdown()
+            try:
+                metric_reader.shutdown()
 
-            if not metric_reader_result:
-                _logger.warning(
-                    "MetricReader %s failed to shutdown", metric_reader
-                )
+            # pylint: disable=broad-except
+            except Exception as error:
 
-            overall_result = overall_result and metric_reader_result
+                metric_reader_error[metric_reader] = error
 
         if self._atexit_handler is not None:
             unregister(self._atexit_handler)
             self._atexit_handler = None
 
-        return overall_result
+        if metric_reader_error:
+
+            metric_reader_error_string = "\n".join(
+                [
+                    f"{metric_reader.__class__.__name__}: {repr(error)}"
+                    for metric_reader, error in metric_reader_error.items()
+                ]
+            )
+
+            raise Exception(
+                (
+                    "MeterProvider.shutdown failed because the following "
+                    "metric readers failed during shutdown:\n"
+                    f"{metric_reader_error_string}"
+                )
+            )
 
     def get_meter(
         self,
@@ -280,6 +369,8 @@ class MeterProvider(APIMeterProvider):
         info = InstrumentationScope(name, version, schema_url)
         with self._meter_lock:
             if not self._meters.get(info):
+                # FIXME #2558 pass SDKConfig object to meter so that the meter
+                # has access to views.
                 self._meters[info] = Meter(
                     info,
                     self._measurement_consumer,

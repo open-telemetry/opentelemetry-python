@@ -60,12 +60,14 @@ class TestPrometheusMetricReader(unittest.TestCase):
         record = _generate_metric(
             "test@name",
             Histogram(
-                time_unix_nano=1641946016139533244,
-                start_time_unix_nano=1641946016139533244,
-                bucket_counts=[1, 3, 2],
-                sum=579.0,
-                explicit_bounds=[123.0, 456.0],
                 aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                bucket_counts=[1, 3, 2],
+                explicit_bounds=[123.0, 456.0],
+                start_time_unix_nano=1641946016139533244,
+                max=457,
+                min=1,
+                sum=579.0,
+                time_unix_nano=1641946016139533244,
             ),
             attributes={"histo": 1},
         )

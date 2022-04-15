@@ -118,7 +118,7 @@ class TestObservableCounter(TestCase):
         self.assertTrue(
             isinstance(
                 NoOpMeter("name").create_observable_counter(
-                    "name", callback()
+                    "name", callbacks=[callback()]
                 ),
                 ObservableCounter,
             )
@@ -134,7 +134,7 @@ class TestObservableCounter(TestCase):
     def test_create_observable_counter_api(self):
         """
         Test that the API for creating a observable_counter accepts the name of the instrument.
-        Test that the API for creating a observable_counter accepts a callback.
+        Test that the API for creating a observable_counter accepts a sequence of callbacks.
         Test that the API for creating a observable_counter accepts the unit of the instrument.
         Test that the API for creating a observable_counter accepts the description of the instrument
         """
@@ -153,11 +153,13 @@ class TestObservableCounter(TestCase):
             Meter.create_observable_counter
         )
         self.assertIn(
-            "callback", create_observable_counter_signature.parameters.keys()
+            "callbacks", create_observable_counter_signature.parameters.keys()
         )
         self.assertIs(
-            create_observable_counter_signature.parameters["callback"].default,
-            Signature.empty,
+            create_observable_counter_signature.parameters[
+                "callbacks"
+            ].default,
+            None,
         )
         create_observable_counter_signature = signature(
             Meter.create_observable_counter
@@ -196,7 +198,7 @@ class TestObservableCounter(TestCase):
             Meter.create_observable_counter
         )
         self.assertIn(
-            "callback", create_observable_counter_signature.parameters.keys()
+            "callbacks", create_observable_counter_signature.parameters.keys()
         )
         self.assertIs(
             create_observable_counter_signature.parameters["name"].default,
@@ -285,7 +287,9 @@ class TestObservableGauge(TestCase):
 
         self.assertTrue(
             isinstance(
-                NoOpMeter("name").create_observable_gauge("name", callback()),
+                NoOpMeter("name").create_observable_gauge(
+                    "name", [callback()]
+                ),
                 ObservableGauge,
             )
         )
@@ -300,7 +304,7 @@ class TestObservableGauge(TestCase):
     def test_create_observable_gauge_api(self):
         """
         Test that the API for creating a observable_gauge accepts the name of the instrument.
-        Test that the API for creating a observable_gauge accepts a callback.
+        Test that the API for creating a observable_gauge accepts a sequence of callbacks.
         Test that the API for creating a observable_gauge accepts the unit of the instrument.
         Test that the API for creating a observable_gauge accepts the description of the instrument
         """
@@ -319,11 +323,11 @@ class TestObservableGauge(TestCase):
             Meter.create_observable_gauge
         )
         self.assertIn(
-            "callback", create_observable_gauge_signature.parameters.keys()
+            "callbacks", create_observable_gauge_signature.parameters.keys()
         )
         self.assertIs(
-            create_observable_gauge_signature.parameters["callback"].default,
-            Signature.empty,
+            create_observable_gauge_signature.parameters["callbacks"].default,
+            None,
         )
         create_observable_gauge_signature = signature(
             Meter.create_observable_gauge
@@ -350,7 +354,7 @@ class TestObservableGauge(TestCase):
 
     def test_observable_gauge_callback(self):
         """
-        Test that the API for creating a asynchronous gauge accepts a callback.
+        Test that the API for creating a asynchronous gauge accepts a sequence of callbacks.
         Test that the callback function reports measurements.
         Test that there is a way to pass state to the callback.
         """
@@ -359,7 +363,7 @@ class TestObservableGauge(TestCase):
             Meter.create_observable_gauge
         )
         self.assertIn(
-            "callback", create_observable_gauge_signature.parameters.keys()
+            "callbacks", create_observable_gauge_signature.parameters.keys()
         )
         self.assertIs(
             create_observable_gauge_signature.parameters["name"].default,
@@ -461,7 +465,7 @@ class TestObservableUpDownCounter(TestCase):
         self.assertTrue(
             isinstance(
                 NoOpMeter("name").create_observable_up_down_counter(
-                    "name", callback()
+                    "name", [callback()]
                 ),
                 ObservableUpDownCounter,
             )
@@ -477,7 +481,7 @@ class TestObservableUpDownCounter(TestCase):
     def test_create_observable_up_down_counter_api(self):
         """
         Test that the API for creating a observable_up_down_counter accepts the name of the instrument.
-        Test that the API for creating a observable_up_down_counter accepts a callback.
+        Test that the API for creating a observable_up_down_counter accepts a sequence of callbacks.
         Test that the API for creating a observable_up_down_counter accepts the unit of the instrument.
         Test that the API for creating a observable_up_down_counter accepts the description of the instrument
         """
@@ -499,14 +503,14 @@ class TestObservableUpDownCounter(TestCase):
             Meter.create_observable_up_down_counter
         )
         self.assertIn(
-            "callback",
+            "callbacks",
             create_observable_up_down_counter_signature.parameters.keys(),
         )
         self.assertIs(
             create_observable_up_down_counter_signature.parameters[
-                "callback"
+                "callbacks"
             ].default,
-            Signature.empty,
+            None,
         )
         create_observable_up_down_counter_signature = signature(
             Meter.create_observable_up_down_counter
@@ -538,7 +542,7 @@ class TestObservableUpDownCounter(TestCase):
 
     def test_observable_up_down_counter_callback(self):
         """
-        Test that the API for creating a asynchronous up_down_counter accepts a callback.
+        Test that the API for creating a asynchronous up_down_counter accepts a sequence of callbacks.
         Test that the callback function reports measurements.
         Test that there is a way to pass state to the callback.
         Test that the instrument accepts positive and negative values.
@@ -548,7 +552,7 @@ class TestObservableUpDownCounter(TestCase):
             Meter.create_observable_up_down_counter
         )
         self.assertIn(
-            "callback",
+            "callbacks",
             create_observable_up_down_counter_signature.parameters.keys(),
         )
         self.assertIs(

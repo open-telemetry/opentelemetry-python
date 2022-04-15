@@ -35,17 +35,18 @@ def _create_metric(value):
 
 class TestDatapointToJSON(TestCase):
     def test_sum(self):
+        self.maxDiff = None
         point = _create_metric(
             Sum(
+                aggregation_temporality=2,
+                is_monotonic=True,
                 start_time_unix_nano=10,
                 time_unix_nano=20,
                 value=9,
-                aggregation_temporality=2,
-                is_monotonic=True,
             )
         )
         self.assertEqual(
-            '{"attributes": {"attr-key": "test-val"}, "description": "test-description", "instrumentation_scope": "InstrumentationScope(name, version, None)", "name": "test-name", "resource": "BoundedAttributes({\'resource-key\': \'resource-val\'}, maxlen=None)", "unit": "test-unit", "point": {"start_time_unix_nano": 10, "time_unix_nano": 20, "value": 9, "aggregation_temporality": 2, "is_monotonic": true}}',
+            '{"attributes": {"attr-key": "test-val"}, "description": "test-description", "instrumentation_scope": "InstrumentationScope(name, version, None)", "name": "test-name", "resource": "BoundedAttributes({\'resource-key\': \'resource-val\'}, maxlen=None)", "unit": "test-unit", "point": {"aggregation_temporality": 2, "is_monotonic": true, "start_time_unix_nano": 10, "time_unix_nano": 20, "value": 9}}',
             point.to_json(),
         )
 
@@ -59,16 +60,18 @@ class TestDatapointToJSON(TestCase):
     def test_histogram(self):
         point = _create_metric(
             Histogram(
-                start_time_unix_nano=50,
-                time_unix_nano=60,
+                aggregation_temporality=1,
                 bucket_counts=[0, 0, 1, 0],
                 explicit_bounds=[0.1, 0.5, 0.9, 1],
-                aggregation_temporality=1,
+                max=0.8,
+                min=0.8,
+                start_time_unix_nano=50,
                 sum=0.8,
+                time_unix_nano=60,
             )
         )
         self.maxDiff = None
         self.assertEqual(
-            '{"attributes": {"attr-key": "test-val"}, "description": "test-description", "instrumentation_scope": "InstrumentationScope(name, version, None)", "name": "test-name", "resource": "BoundedAttributes({\'resource-key\': \'resource-val\'}, maxlen=None)", "unit": "test-unit", "point": {"start_time_unix_nano": 50, "time_unix_nano": 60, "bucket_counts": [0, 0, 1, 0], "explicit_bounds": [0.1, 0.5, 0.9, 1], "sum": 0.8, "aggregation_temporality": 1}}',
+            '{"attributes": {"attr-key": "test-val"}, "description": "test-description", "instrumentation_scope": "InstrumentationScope(name, version, None)", "name": "test-name", "resource": "BoundedAttributes({\'resource-key\': \'resource-val\'}, maxlen=None)", "unit": "test-unit", "point": {"aggregation_temporality": 1, "bucket_counts": [0, 0, 1, 0], "explicit_bounds": [0.1, 0.5, 0.9, 1], "max": 0.8, "min": 0.8, "start_time_unix_nano": 50, "sum": 0.8, "time_unix_nano": 60}}',
             point.to_json(),
         )

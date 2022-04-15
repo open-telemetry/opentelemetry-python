@@ -177,7 +177,7 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
         meter = MeterProvider().get_meter("name")
         observable_counter = meter.create_observable_counter(
             "system.cpu.time",
-            cpu_time_callback,
+            callbacks=[cpu_time_callback],
             unit="s",
             description="CPU time",
         )
@@ -256,7 +256,7 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
         meter = MeterProvider().get_meter("name")
         observable_counter = meter.create_observable_counter(
             "system.cpu.time",
-            callback=cpu_time_generator(),
+            callbacks=[cpu_time_generator()],
             unit="s",
             description="CPU time",
         )
