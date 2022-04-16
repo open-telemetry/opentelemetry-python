@@ -554,6 +554,8 @@ class TestOTLPMetricExporter(TestCase):
                                                 explicit_bounds=[10.0, 20.0],
                                                 exemplars=[],
                                                 flags=pb2.DataPointFlags.FLAG_NONE,
+                                                max=18.0,
+                                                min=8.0
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.DELTA,

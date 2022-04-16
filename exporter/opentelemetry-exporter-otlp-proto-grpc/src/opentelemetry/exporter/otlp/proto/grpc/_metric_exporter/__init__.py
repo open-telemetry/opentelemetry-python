@@ -140,6 +140,8 @@ class OTLPMetricExporter(
                     sum=metric.point.sum,
                     bucket_counts=metric.point.bucket_counts,
                     explicit_bounds=metric.point.explicit_bounds,
+                    max=metric.point.max,
+                    min=metric.point.min
                 )
                 pbmetric.histogram.aggregation_temporality = (
                     metric.point.aggregation_temporality
