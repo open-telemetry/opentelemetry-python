@@ -19,6 +19,9 @@ from typing import Callable, Iterable
 from typing_extensions import final
 
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
+from opentelemetry.sdk._metrics.aggregation import (
+    DefaultAggregation, _AggregationFactory
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -31,12 +34,16 @@ class MetricReader(ABC):
 
     def __init__(
         self,
-        preferred_temporality: AggregationTemporality = AggregationTemporality.CUMULATIVE,
+        preferred_aggregation: _AggregationFactory = DefaultAggregation(),
+        preferred_temporality: AggregationTemporality = (
+            AggregationTemporality.CUMULATIVE
+        ),
     ) -> None:
         self._collect: Callable[
             ["MetricReader", AggregationTemporality], Iterable[Metric]
         ] = None
         self._preferred_temporality = preferred_temporality
+        self._preferred_aggregation = preferred_aggregation
 
     @final
     def collect(self) -> None:

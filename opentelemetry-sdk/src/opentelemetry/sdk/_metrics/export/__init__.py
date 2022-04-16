@@ -30,6 +30,9 @@ from opentelemetry.context import (
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
 from opentelemetry.util._once import Once
+from opentelemetry.sdk._aggregation import (
+    _AggregationFactory, DefaultAggregation
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -104,9 +107,13 @@ class InMemoryMetricReader(MetricReader):
 
     def __init__(
         self,
+        preferred_aggregation: _AggregationFactory = DefaultAggregation(),
         preferred_temporality: AggregationTemporality = AggregationTemporality.CUMULATIVE,
     ) -> None:
-        super().__init__(preferred_temporality=preferred_temporality)
+        super().__init__(
+            preferred_aggregation=preferred_aggregation,
+            preferred_temporality=preferred_temporality
+        )
         self._lock = RLock()
         self._metrics: List[Metric] = []
 
@@ -137,8 +144,12 @@ class PeriodicExportingMetricReader(MetricReader):
         exporter: MetricExporter,
         export_interval_millis: Optional[float] = None,
         export_timeout_millis: Optional[float] = None,
+        preferred_aggregation: _AggregationFactory = DefaultAggregation(),
     ) -> None:
-        super().__init__(preferred_temporality=exporter.preferred_temporality)
+        super().__init__(
+            preferred_temporality=exporter.preferred_temporality,
+            preferred_aggregation=preferred_aggregation
+        )
         self._exporter = exporter
         if export_interval_millis is None:
             try:

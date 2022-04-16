@@ -19,7 +19,9 @@ from opentelemetry._metrics.instrument import Instrument
 from opentelemetry.sdk._metrics._view_instrument_match import (
     _ViewInstrumentMatch,
 )
-from opentelemetry.sdk._metrics.aggregation import AggregationTemporality
+from opentelemetry.sdk._metrics.aggregation import (
+    AggregationTemporality, _AggregationFactory
+)
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import Metric
 from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
@@ -77,11 +79,13 @@ class MetricReaderStorage:
             self._view_instrument_match[instrument] = view_instrument_matches
             return view_instrument_matches
 
-    def consume_measurement(self, measurement: Measurement) -> None:
+    def consume_measurement(
+        self, measurement: Measurement, aggregation: _AggregationFactory
+    ) -> None:
         for view_instrument_match in self._get_or_init_view_instrument_match(
             measurement.instrument
         ):
-            view_instrument_match.consume_measurement(measurement)
+            view_instrument_match.consume_measurement(measurement, aggregation)
 
     def collect(self, temporality: AggregationTemporality) -> Iterable[Metric]:
         # use a list instead of yielding to prevent a slow reader from holding SDK locks

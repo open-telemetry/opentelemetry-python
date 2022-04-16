@@ -22,6 +22,7 @@ from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.metric_reader_storage import (
     MetricReaderStorage,
 )
+from opentelemetry.sdk._metrics.aggregation import _AggregationFactory
 from opentelemetry.sdk._metrics.point import Metric
 from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
 
@@ -56,9 +57,11 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         }
         self._async_instruments: List["_Asynchronous"] = []
 
-    def consume_measurement(self, measurement: Measurement) -> None:
+    def consume_measurement(
+        self, measurement: Measurement, aggregation: _AggregationFactory
+    ) -> None:
         for reader_storage in self._reader_storages.values():
-            reader_storage.consume_measurement(measurement)
+            reader_storage.consume_measurement(measurement, aggregation)
 
     def register_asynchronous_instrument(
         self, instrument: "_Asynchronous"

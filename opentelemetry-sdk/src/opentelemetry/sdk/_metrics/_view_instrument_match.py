@@ -26,6 +26,7 @@ from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
 from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
 from opentelemetry.sdk._metrics.view import View
+from opentelemetry.sdk._metrics.aggregation import _AggregationFactory
 
 if TYPE_CHECKING:
     from opentelemetry.sdk._metrics.instrument import _Instrument
@@ -48,7 +49,9 @@ class _ViewInstrumentMatch:
         self._lock = Lock()
 
     # pylint: disable=protected-access
-    def consume_measurement(self, measurement: Measurement) -> None:
+    def consume_measurement(
+        self, measurement: Measurement, aggregation: _AggregationFactory
+    ) -> None:
 
         if self._view._attribute_keys is not None:
 
@@ -67,6 +70,11 @@ class _ViewInstrumentMatch:
         if attributes not in self._attributes_aggregation:
             with self._lock:
                 if attributes not in self._attributes_aggregation:
+
+                    # Here decide which aggregation has priority, the one
+                    # passed as an attribute to this method or the one from
+                    # the view.
+
                     self._attributes_aggregation[
                         attributes
                     ] = self._view._aggregation._create_aggregation(
