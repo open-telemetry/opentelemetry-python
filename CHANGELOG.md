@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.10.0-0.29b0...HEAD)
 
+- Update opentelemetry-proto to v0.16.0
+  ([#2602](https://github.com/open-telemetry/opentelemetry-python/pull/2602))
 - Add support for zero or more callbacks
   ([#2602](https://github.com/open-telemetry/opentelemetry-python/pull/2602))
 - Fix parsing of trace flags when extracting traceparent
