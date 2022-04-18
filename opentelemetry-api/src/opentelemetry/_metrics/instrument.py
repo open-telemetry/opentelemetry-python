@@ -119,7 +119,7 @@ class Counter(_Monotonic, Synchronous):
         pass
 
 
-class DefaultCounter(Counter):
+class NoOpCounter(Counter):
     def __init__(self, name, unit="", description=""):
         super().__init__(name, unit=unit, description=description)
 
@@ -144,7 +144,7 @@ class UpDownCounter(_NonMonotonic, Synchronous):
         pass
 
 
-class DefaultUpDownCounter(UpDownCounter):
+class NoOpUpDownCounter(UpDownCounter):
     def __init__(self, name, unit="", description=""):
         super().__init__(name, unit=unit, description=description)
 
@@ -169,7 +169,7 @@ class ObservableCounter(_Monotonic, Asynchronous):
     """
 
 
-class DefaultObservableCounter(ObservableCounter):
+class NoOpObservableCounter(ObservableCounter):
     def __init__(self, name, callbacks=None, unit="", description=""):
         super().__init__(name, callbacks, unit=unit, description=description)
 
@@ -192,7 +192,7 @@ class ObservableUpDownCounter(_NonMonotonic, Asynchronous):
     """
 
 
-class DefaultObservableUpDownCounter(ObservableUpDownCounter):
+class NoOpObservableUpDownCounter(ObservableUpDownCounter):
     def __init__(self, name, callbacks=None, unit="", description=""):
         super().__init__(name, callbacks, unit=unit, description=description)
 
@@ -220,7 +220,7 @@ class Histogram(_Grouping, Synchronous):
         pass
 
 
-class DefaultHistogram(Histogram):
+class NoOpHistogram(Histogram):
     def __init__(self, name, unit="", description=""):
         super().__init__(name, unit=unit, description=description)
 
@@ -246,7 +246,7 @@ class ObservableGauge(_Grouping, Asynchronous):
     """
 
 
-class DefaultObservableGauge(ObservableGauge):
+class NoOpObservableGauge(ObservableGauge):
     def __init__(self, name, callbacks=None, unit="", description=""):
         super().__init__(name, callbacks, unit=unit, description=description)
 

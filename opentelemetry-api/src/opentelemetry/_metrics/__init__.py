@@ -30,12 +30,12 @@ from typing import List, Optional, Set, cast
 
 from opentelemetry._metrics.instrument import (
     Counter,
-    DefaultCounter,
-    DefaultHistogram,
-    DefaultObservableCounter,
-    DefaultObservableGauge,
-    DefaultObservableUpDownCounter,
-    DefaultUpDownCounter,
+    NoOpCounter,
+    NoOpHistogram,
+    NoOpObservableCounter,
+    NoOpObservableGauge,
+    NoOpObservableUpDownCounter,
+    NoOpUpDownCounter,
     Histogram,
     ObservableCounter,
     ObservableGauge,
@@ -423,7 +423,7 @@ class NoOpMeter(Meter):
     def create_counter(self, name, unit="", description="") -> Counter:
         """Returns a no-op Counter."""
         super().create_counter(name, unit=unit, description=description)
-        if self._check_instrument_id(name, DefaultCounter, unit, description):
+        if self._check_instrument_id(name, NoOpCounter, unit, description):
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
@@ -432,7 +432,7 @@ class NoOpMeter(Meter):
                 unit,
                 description,
             )
-        return DefaultCounter(name, unit=unit, description=description)
+        return NoOpCounter(name, unit=unit, description=description)
 
     def create_up_down_counter(
         self, name, unit="", description=""
@@ -442,7 +442,7 @@ class NoOpMeter(Meter):
             name, unit=unit, description=description
         )
         if self._check_instrument_id(
-            name, DefaultUpDownCounter, unit, description
+            name, NoOpUpDownCounter, unit, description
         ):
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
@@ -452,7 +452,7 @@ class NoOpMeter(Meter):
                 unit,
                 description,
             )
-        return DefaultUpDownCounter(name, unit=unit, description=description)
+        return NoOpUpDownCounter(name, unit=unit, description=description)
 
     def create_observable_counter(
         self, name, callbacks=None, unit="", description=""
@@ -462,7 +462,7 @@ class NoOpMeter(Meter):
             name, callbacks, unit=unit, description=description
         )
         if self._check_instrument_id(
-            name, DefaultObservableCounter, unit, description
+            name, NoOpObservableCounter, unit, description
         ):
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
@@ -472,7 +472,7 @@ class NoOpMeter(Meter):
                 unit,
                 description,
             )
-        return DefaultObservableCounter(
+        return NoOpObservableCounter(
             name,
             callbacks,
             unit=unit,
@@ -482,9 +482,7 @@ class NoOpMeter(Meter):
     def create_histogram(self, name, unit="", description="") -> Histogram:
         """Returns a no-op Histogram."""
         super().create_histogram(name, unit=unit, description=description)
-        if self._check_instrument_id(
-            name, DefaultHistogram, unit, description
-        ):
+        if self._check_instrument_id(name, NoOpHistogram, unit, description):
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
@@ -493,7 +491,7 @@ class NoOpMeter(Meter):
                 unit,
                 description,
             )
-        return DefaultHistogram(name, unit=unit, description=description)
+        return NoOpHistogram(name, unit=unit, description=description)
 
     def create_observable_gauge(
         self, name, callbacks=None, unit="", description=""
@@ -503,7 +501,7 @@ class NoOpMeter(Meter):
             name, callbacks, unit=unit, description=description
         )
         if self._check_instrument_id(
-            name, DefaultObservableGauge, unit, description
+            name, NoOpObservableGauge, unit, description
         ):
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
@@ -513,7 +511,7 @@ class NoOpMeter(Meter):
                 unit,
                 description,
             )
-        return DefaultObservableGauge(
+        return NoOpObservableGauge(
             name,
             callbacks,
             unit=unit,
@@ -528,7 +526,7 @@ class NoOpMeter(Meter):
             name, callbacks, unit=unit, description=description
         )
         if self._check_instrument_id(
-            name, DefaultObservableUpDownCounter, unit, description
+            name, NoOpObservableUpDownCounter, unit, description
         ):
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
@@ -538,7 +536,7 @@ class NoOpMeter(Meter):
                 unit,
                 description,
             )
-        return DefaultObservableUpDownCounter(
+        return NoOpObservableUpDownCounter(
             name,
             callbacks,
             unit=unit,
