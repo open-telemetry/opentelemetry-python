@@ -98,7 +98,7 @@ class _Asynchronous:
             except StopIteration:
                 pass
             except Exception:  # pylint: disable=broad-except
-                _logger.warning(
+                _logger.exception(
                     "Callback failed for instrument %s.", self.name
                 )
 
