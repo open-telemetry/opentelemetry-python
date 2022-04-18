@@ -97,6 +97,10 @@ class _Asynchronous:
                     )
             except StopIteration:
                 pass
+            except Exception:  # pylint: disable=broad-except
+                _logger.warning(
+                    "Callback failed for instrument %s.", self.name
+                )
 
 
 class Counter(_Synchronous, APICounter):
