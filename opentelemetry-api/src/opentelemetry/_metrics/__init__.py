@@ -15,10 +15,30 @@
 # pylint: disable=too-many-ancestors
 # type: ignore
 
-# FIXME enhance the documentation of this module
 """
-This module provides abstract and concrete (but noop) classes that can be used
-to generate metrics.
+The OpenTelemetry metrics API  describes the classes used to generate
+metrics.
+
+The :class:`.MeterProvider` provides users access to the :class:`.Meter` which in
+turn is used to create :class:`.Instrument` objects. The :class:`.Instrument` objects are
+used to record measurements.
+
+This module provides abstract (i.e. unimplemented) classes required for
+metrics, and a concrete no-op implementation :class:`.NoOpMeter` that allows applications
+to use the API package alone without a supporting implementation.
+
+To get a meter, you need to provide the package name from which you are
+calling the meter APIs to OpenTelemetry by calling `MeterProvider.get_meter`
+with the calling instrumentation name and the version of your package.
+
+The following obtains a meter using the global :class:`.MeterProvider`::
+
+    from opentelemetry._metrics import get_meter
+
+    meter = get_meter("example-meter")
+    counter = meter.get_counter("example-counter")
+
+.. versionadded:: 1.10.0
 """
 
 
@@ -59,14 +79,43 @@ _logger = getLogger(__name__)
 
 
 class MeterProvider(ABC):
+    """
+    MeterProvider is the entry point of the API. It provides access to `Meter` instances.
+    """
+
     @abstractmethod
     def get_meter(
         self,
-        name,
-        version=None,
-        schema_url=None,
+        name: str,
+        version: str = None,
+        schema_url: str = None,
     ) -> "Meter":
-        pass
+        """Returns a `Meter` for use by the given instrumentation library.
+
+        For any two calls it is undefined whether the same or different
+        `Meter` instances are returned, even for different library names.
+
+        This function may return different `Meter` types (e.g. a no-op meter
+        vs. a functional meter).
+
+        Args:
+            name: The name of the instrumenting module.
+                ``__name__`` may not be used as this can result in
+                different meter names if the meters are in different files.
+                It is better to use a fixed string that can be imported where
+                needed and used consistently as the name of the meter.
+
+                This should *not* be the name of the module that is
+                instrumented but the name of the module doing the instrumentation.
+                E.g., instead of ``"requests"``, use
+                ``"opentelemetry.instrumentation.requests"``.
+
+            version: Optional. The version string of the
+                instrumenting library.  Usually this should be the same as
+                ``pkg_resources.get_distribution(instrumenting_library_name).version``.
+
+            schema_url: Optional. Specifies the Schema URL of the emitted telemetry.
+        """
 
 
 class NoOpMeterProvider(MeterProvider):
@@ -113,7 +162,13 @@ class _ProxyMeterProvider(MeterProvider):
 
 
 class Meter(ABC):
-    def __init__(self, name, version=None, schema_url=None):
+    """Handles instrument creation.
+
+    This class provides methods for creating instruments which are then
+    used to produce measurements.
+    """
+
+    def __init__(self, name: str, version: str = None, schema_url: str = None):
         super().__init__()
         self._name = name
         self._version = version
@@ -123,14 +178,23 @@ class Meter(ABC):
 
     @property
     def name(self):
+        """
+        The name of the instrumenting module.
+        """
         return self._name
 
     @property
     def version(self):
+        """
+        The version string of the instrumenting library.
+        """
         return self._version
 
     @property
     def schema_url(self):
+        """
+        Specifies the Schema URL of the emitted telemetry
+        """
         return self._schema_url
 
     def _check_instrument_id(
@@ -156,7 +220,9 @@ class Meter(ABC):
         return result
 
     @abstractmethod
-    def create_counter(self, name, unit="", description="") -> Counter:
+    def create_counter(
+        self, name: str, unit: str = "", description: str = ""
+    ) -> Counter:
         """Creates a `Counter` instrument
 
         Args:
@@ -168,7 +234,7 @@ class Meter(ABC):
 
     @abstractmethod
     def create_up_down_counter(
-        self, name, unit="", description=""
+        self, name: str, unit: str = "", description: str = ""
     ) -> UpDownCounter:
         """Creates an `UpDownCounter` instrument
 
