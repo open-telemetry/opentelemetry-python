@@ -5,7 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.10.0-0.29b0...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.11.0-0.30b0...HEAD)
+
+- Fix unhandled callback exceptions on async instruments
+  ([#2614](https://github.com/open-telemetry/opentelemetry-python/pull/2614))
+- Rename `DefaultCounter`, `DefaultHistogram`, `DefaultObservableCounter`,
+  `DefaultObservableGauge`, `DefaultObservableUpDownCounter`, `DefaultUpDownCounter`
+  instruments to `NoOpCounter`, `NoOpHistogram`, `NoOpObservableCounter`,
+  `NoOpObservableGauge`, `NoOpObservableUpDownCounter`, `NoOpUpDownCounter`
+  ([#2616](https://github.com/open-telemetry/opentelemetry-python/pull/2616))
+
+## [1.11.0-0.30b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.11.0-0.30b0) - 2022-04-18
 
 - Add support for zero or more callbacks
   ([#2602](https://github.com/open-telemetry/opentelemetry-python/pull/2602))
@@ -34,6 +44,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2575](https://github.com/open-telemetry/opentelemetry-python/pull/2575))
 - Add min/max to histogram point
   ([#2581](https://github.com/open-telemetry/opentelemetry-python/pull/2581))
+- Update opentelemetry-proto to v0.16.0
+  ([#2619](https://github.com/open-telemetry/opentelemetry-python/pull/2619))
 
 ## [1.10.0-0.29b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.10.0-0.29b0) - 2022-03-10
 

@@ -19,11 +19,11 @@ from unittest import TestCase
 from opentelemetry._metrics import Meter, NoOpMeter
 from opentelemetry._metrics.instrument import (
     Counter,
-    DefaultCounter,
-    DefaultHistogram,
-    DefaultUpDownCounter,
     Histogram,
     Instrument,
+    NoOpCounter,
+    NoOpHistogram,
+    NoOpUpDownCounter,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
@@ -94,7 +94,7 @@ class TestCounter(TestCase):
 
         self.assertTrue(hasattr(Counter, "add"))
 
-        self.assertIsNone(DefaultCounter("name").add(1))
+        self.assertIsNone(NoOpCounter("name").add(1))
 
         add_signature = signature(Counter.add)
         self.assertIn("attributes", add_signature.parameters.keys())
@@ -262,7 +262,7 @@ class TestHistogram(TestCase):
 
         self.assertTrue(hasattr(Histogram, "record"))
 
-        self.assertIsNone(DefaultHistogram("name").record(1))
+        self.assertIsNone(NoOpHistogram("name").record(1))
 
         record_signature = signature(Histogram.record)
         self.assertIn("attributes", record_signature.parameters.keys())
@@ -273,7 +273,7 @@ class TestHistogram(TestCase):
             record_signature.parameters["amount"].default, Signature.empty
         )
 
-        self.assertIsNone(DefaultHistogram("name").record(1))
+        self.assertIsNone(NoOpHistogram("name").record(1))
 
 
 class TestObservableGauge(TestCase):
@@ -441,7 +441,7 @@ class TestUpDownCounter(TestCase):
 
         self.assertTrue(hasattr(UpDownCounter, "add"))
 
-        self.assertIsNone(DefaultUpDownCounter("name").add(1))
+        self.assertIsNone(NoOpUpDownCounter("name").add(1))
 
         add_signature = signature(UpDownCounter.add)
         self.assertIn("attributes", add_signature.parameters.keys())
