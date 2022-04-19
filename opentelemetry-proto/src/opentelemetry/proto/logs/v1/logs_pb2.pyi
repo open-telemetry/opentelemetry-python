@@ -261,7 +261,6 @@ class LogRecord(google.protobuf.message.Message):
     OBSERVED_TIME_UNIX_NANO_FIELD_NUMBER: builtins.int
     SEVERITY_NUMBER_FIELD_NUMBER: builtins.int
     SEVERITY_TEXT_FIELD_NUMBER: builtins.int
-    NAME_FIELD_NUMBER: builtins.int
     BODY_FIELD_NUMBER: builtins.int
     ATTRIBUTES_FIELD_NUMBER: builtins.int
     DROPPED_ATTRIBUTES_COUNT_FIELD_NUMBER: builtins.int
@@ -300,14 +299,6 @@ class LogRecord(google.protobuf.message.Message):
     severity_text: typing.Text = ...
     """The severity text (also known as log level). The original string representation as
     it is known at the source. [Optional].
-    """
-
-    name: typing.Text = ...
-    """Short event identifier that does not contain varying parts. Name describes
-    what happened (e.g. "ProcessStarted"). Recommended to be no longer than 50
-    characters. Not guaranteed to be unique in any way. [Optional].
-    This deprecated field is planned to be removed March 15, 2022. Receivers can
-    ignore this field.
     """
 
     @property
@@ -353,7 +344,6 @@ class LogRecord(google.protobuf.message.Message):
         observed_time_unix_nano : builtins.int = ...,
         severity_number : global___SeverityNumber.V = ...,
         severity_text : typing.Text = ...,
-        name : typing.Text = ...,
         body : typing.Optional[opentelemetry.proto.common.v1.common_pb2.AnyValue] = ...,
         attributes : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue]] = ...,
         dropped_attributes_count : builtins.int = ...,
@@ -362,5 +352,5 @@ class LogRecord(google.protobuf.message.Message):
         span_id : builtins.bytes = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["body",b"body"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","body",b"body","dropped_attributes_count",b"dropped_attributes_count","flags",b"flags","name",b"name","observed_time_unix_nano",b"observed_time_unix_nano","severity_number",b"severity_number","severity_text",b"severity_text","span_id",b"span_id","time_unix_nano",b"time_unix_nano","trace_id",b"trace_id"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","body",b"body","dropped_attributes_count",b"dropped_attributes_count","flags",b"flags","observed_time_unix_nano",b"observed_time_unix_nano","severity_number",b"severity_number","severity_text",b"severity_text","span_id",b"span_id","time_unix_nano",b"time_unix_nano","trace_id",b"trace_id"]) -> None: ...
 global___LogRecord = LogRecord
