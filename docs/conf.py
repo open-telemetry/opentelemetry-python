@@ -142,12 +142,31 @@ exclude_patterns = [
     "examples/error_handler/error_handler_1",
 ]
 
+_exclude_members = [
+    "_ProxyObservableUpDownCounter",
+    "_ProxyHistogram",
+    "_ProxyObservableGauge",
+    "_ProxyInstrument",
+    "_ProxyAsynchronousInstrument",
+    "_ProxyCounter",
+    "_ProxyUpDownCounter",
+    "_ProxyObservableCounter",
+    "_ProxyObservableGauge",
+    "_abc_impl",
+    "_Adding",
+    "_Grouping",
+    "_Monotonic",
+    "_NonMonotonic",
+    "Synchronous",
+    "Asynchronous",
+]
+
 autodoc_default_options = {
     "members": True,
     "undoc-members": True,
     "show-inheritance": True,
     "member-order": "bysource",
-    "exclude-members": "_ProxyObservableUpDownCounter,_ProxyHistogram,_ProxyObservableGauge,_ProxyInstrument,_ProxyAsynchronousInstrument,_ProxyCounter,_ProxyUpDownCounter,_ProxyObservableCounter,_ProxyObservableGauge,_abc_impl",
+    "exclude-members": ",".join(_exclude_members),
 }
 
 # -- Options for HTML output -------------------------------------------------

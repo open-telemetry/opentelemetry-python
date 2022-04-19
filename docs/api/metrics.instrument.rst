@@ -5,4 +5,4 @@ opentelemetry._metrics.instrument
     :members:
     :private-members:
     :undoc-members:
-    :show-inheritance:
+    :no-show-inheritance:
