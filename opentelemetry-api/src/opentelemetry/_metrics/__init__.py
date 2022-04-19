@@ -31,7 +31,7 @@ To get a meter, you need to provide the package name from which you are
 calling the meter APIs to OpenTelemetry by calling `MeterProvider.get_meter`
 with the calling instrumentation name and the version of your package.
 
-The following obtains a meter using the global :class:`.MeterProvider`::
+The following code shows how to obtain a meter using the global :class:`.MeterProvider`::
 
     from opentelemetry._metrics import get_meter
 
