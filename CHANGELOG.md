@@ -42,6 +42,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2575](https://github.com/open-telemetry/opentelemetry-python/pull/2575))
 - Add min/max to histogram point
   ([#2581](https://github.com/open-telemetry/opentelemetry-python/pull/2581))
+- Update opentelemetry-proto to v0.16.0
+  ([#2619](https://github.com/open-telemetry/opentelemetry-python/pull/2619))
 
 ## [1.10.0-0.29b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.10.0-0.29b0) - 2022-03-10
 
