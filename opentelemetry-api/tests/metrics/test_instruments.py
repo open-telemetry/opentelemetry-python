@@ -19,11 +19,11 @@ from unittest import TestCase
 from opentelemetry._metrics import Meter, NoOpMeter
 from opentelemetry._metrics.instrument import (
     Counter,
+    Histogram,
+    Instrument,
     NoOpCounter,
     NoOpHistogram,
     NoOpUpDownCounter,
-    Histogram,
-    Instrument,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,

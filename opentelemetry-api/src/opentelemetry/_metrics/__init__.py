@@ -30,13 +30,13 @@ from typing import List, Optional, Set, cast
 
 from opentelemetry._metrics.instrument import (
     Counter,
+    Histogram,
     NoOpCounter,
     NoOpHistogram,
     NoOpObservableCounter,
     NoOpObservableGauge,
     NoOpObservableUpDownCounter,
     NoOpUpDownCounter,
-    Histogram,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
