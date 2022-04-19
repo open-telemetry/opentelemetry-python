@@ -445,7 +445,7 @@ class ReadableSpan:
 
     @property
     @deprecated(
-        version="1.10.0", reason="You should use instrumentation_scope"
+        version="1.12.0", reason="You should use instrumentation_scope"
     )
     def instrumentation_info(self) -> InstrumentationInfo:
         return self._instrumentation_info
