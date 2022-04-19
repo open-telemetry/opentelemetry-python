@@ -97,7 +97,7 @@ class ConsoleMetricExporter(MetricExporter):
 
 
 class InMemoryMetricReader(MetricReader):
-    """Implementation of MetricReader that returns its metrics from :func:`get_metrics`.
+    """Implementation of `MetricReader` that returns its metrics from :func:`get_metrics`.
 
     This is useful for e.g. unit tests.
     """
