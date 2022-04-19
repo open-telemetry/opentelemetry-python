@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.11.0-0.30b0...HEAD)
 
+- Rename `DefaultCounter`, `DefaultHistogram`, `DefaultObservableCounter`,
+  `DefaultObservableGauge`, `DefaultObservableUpDownCounter`, `DefaultUpDownCounter`
+  instruments to `NoOpCounter`, `NoOpHistogram`, `NoOpObservableCounter`,
+  `NoOpObservableGauge`, `NoOpObservableUpDownCounter`, `NoOpUpDownCounter`
+  ([#2616](https://github.com/open-telemetry/opentelemetry-python/pull/2616))
+
 ## [1.11.0-0.30b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.11.0-0.30b0) - 2022-04-18
 
 - Add support for zero or more callbacks
