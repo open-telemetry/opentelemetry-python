@@ -36,7 +36,7 @@ The following code shows how to obtain a meter using the global :class:`.MeterPr
     from opentelemetry._metrics import get_meter
 
     meter = get_meter("example-meter")
-    counter = meter.get_counter("example-counter")
+    counter = meter.create_counter("example-counter")
 
 .. versionadded:: 1.10.0
 """
