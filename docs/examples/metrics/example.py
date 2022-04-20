@@ -1,7 +1,7 @@
 from typing import Iterable
 
 from opentelemetry._metrics import get_meter_provider, set_meter_provider
-from opentelemetry._metrics.measurement import Measurement
+from opentelemetry._metrics.observation import Observation
 from opentelemetry.exporter.otlp.proto.grpc._metric_exporter import (
     OTLPMetricExporter,
 )
@@ -14,16 +14,16 @@ provider = MeterProvider(metric_readers=[reader])
 set_meter_provider(provider)
 
 
-def observable_counter_func() -> Iterable[Measurement]:
-    yield Measurement(1, {})
+def observable_counter_func() -> Iterable[Observation]:
+    yield Observation(1, {})
 
 
-def observable_up_down_counter_func() -> Iterable[Measurement]:
-    yield Measurement(-10, {})
+def observable_up_down_counter_func() -> Iterable[Observation]:
+    yield Observation(-10, {})
 
 
-def observable_gauge_func() -> Iterable[Measurement]:
-    yield Measurement(9, {})
+def observable_gauge_func() -> Iterable[Observation]:
+    yield Observation(9, {})
 
 
 meter = get_meter_provider().get_meter("getting-started", "0.1.2")

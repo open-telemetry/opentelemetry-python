@@ -14,7 +14,7 @@ Submodules
 .. toctree::
 
    metrics.instrument
-   metrics.measurement
+   metrics.observation
 
 Module contents
 ---------------
