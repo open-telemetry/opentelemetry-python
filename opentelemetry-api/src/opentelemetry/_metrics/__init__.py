@@ -331,7 +331,7 @@ class Meter(ABC):
 
     @abstractmethod
     def create_histogram(self, name, unit="", description="") -> Histogram:
-        """Creates a `Histogram` instrument
+        """Creates a `opentelemetry._metrics.instrument.Histogram` instrument
 
         Args:
             name: The name of the instrument to be created

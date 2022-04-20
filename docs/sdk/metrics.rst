@@ -16,6 +16,8 @@ Submodules
    metrics.view
    metrics.aggregation
    metrics.metric_reader
+   metrics.point
+   metrics.export
 
 .. automodule:: opentelemetry.sdk._metrics
     :members:

@@ -43,6 +43,8 @@ _logger = getLogger(__name__)
 
 
 class Instrument(ABC):
+    """Abstract class that serves as base for all instruments."""
+
     @abstractmethod
     def __init__(self, name, unit="", description=""):
         pass
@@ -120,6 +122,8 @@ class Counter(_Monotonic, Synchronous):
 
 
 class NoOpCounter(Counter):
+    """No-op implementation of `Counter`."""
+
     def __init__(self, name, unit="", description=""):
         super().__init__(name, unit=unit, description=description)
 
@@ -145,6 +149,8 @@ class UpDownCounter(_NonMonotonic, Synchronous):
 
 
 class NoOpUpDownCounter(UpDownCounter):
+    """No-op implementation of `UpDownCounter`."""
+
     def __init__(self, name, unit="", description=""):
         super().__init__(name, unit=unit, description=description)
 
@@ -170,6 +176,8 @@ class ObservableCounter(_Monotonic, Asynchronous):
 
 
 class NoOpObservableCounter(ObservableCounter):
+    """No-op implementation of `ObservableCounter`."""
+
     def __init__(self, name, callbacks=None, unit="", description=""):
         super().__init__(name, callbacks, unit=unit, description=description)
 
@@ -193,6 +201,8 @@ class ObservableUpDownCounter(_NonMonotonic, Asynchronous):
 
 
 class NoOpObservableUpDownCounter(ObservableUpDownCounter):
+    """No-op implementation of `ObservableUpDownCounter`."""
+
     def __init__(self, name, callbacks=None, unit="", description=""):
         super().__init__(name, callbacks, unit=unit, description=description)
 
@@ -221,6 +231,8 @@ class Histogram(_Grouping, Synchronous):
 
 
 class NoOpHistogram(Histogram):
+    """No-op implementation of `Histogram`."""
+
     def __init__(self, name, unit="", description=""):
         super().__init__(name, unit=unit, description=description)
 
@@ -247,6 +259,8 @@ class ObservableGauge(_Grouping, Asynchronous):
 
 
 class NoOpObservableGauge(ObservableGauge):
+    """No-op implementation of `ObservableGauge`."""
+
     def __init__(self, name, callbacks=None, unit="", description=""):
         super().__init__(name, callbacks, unit=unit, description=description)
 
