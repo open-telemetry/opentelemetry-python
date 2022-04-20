@@ -1,7 +1,7 @@
-opentelemetry._metrics.measurement
+opentelemetry._metrics.observation
 ==================================
 
-.. automodule:: opentelemetry._metrics.measurement
+.. automodule:: opentelemetry._metrics.observation
     :members:
     :undoc-members:
     :show-inheritance:
