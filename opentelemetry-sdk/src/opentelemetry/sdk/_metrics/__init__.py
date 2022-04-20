@@ -223,7 +223,7 @@ class Meter(APIMeter):
 
 
 class MeterProvider(APIMeterProvider):
-    r"""See `opentelemetry._metrics.MeterProvider`.
+    r"""See `opentelemetry._metrics.___init__.MeterProvider`.
 
     Args:
         metric_readers: Register metric readers to collect metrics from the SDK on demand. Each
