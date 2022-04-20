@@ -25,7 +25,7 @@ class InstrumentationInfo:
 
     __slots__ = ("_name", "_version", "_schema_url")
 
-    @deprecated(version="1.12.0", reason="You should use InstrumentationScope")
+    @deprecated(version="1.11.1", reason="You should use InstrumentationScope")
     def __init__(
         self,
         name: str,
