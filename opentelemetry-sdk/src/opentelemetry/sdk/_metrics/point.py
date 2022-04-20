@@ -12,99 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-from dataclasses import asdict, dataclass
-from enum import IntEnum
-from typing import Sequence, Union
+# pylint: disable=unused-import
 
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.util.types import Attributes
+# FIXME Remove when 3.6 is no longer supported
+from sys import version_info as _version_info
 
+from opentelemetry.sdk._metrics._internal.point import (  # noqa: F401
+    AggregationTemporality,
+    Gauge,
+    Histogram,
+    Metric,
+    PointT,
+    Sum,
+)
 
-class AggregationTemporality(IntEnum):
-    """
-    The temporality to use when aggregating data.
-
-    Can be one of the following values:
-    """
-
-    UNSPECIFIED = 0
-    DELTA = 1
-    CUMULATIVE = 2
-
-
-@dataclass(frozen=True)
-class Sum:
-    """Represents the type of a scalar metric that is calculated as a sum of
-    all reported measurements over a time interval."""
-
-    aggregation_temporality: AggregationTemporality
-    is_monotonic: bool
-    start_time_unix_nano: int
-    time_unix_nano: int
-    value: Union[int, float]
-
-
-@dataclass(frozen=True)
-class Gauge:
-    """Represents the type of a scalar metric that always exports the current
-    value for every data point. It should be used for an unknown
-    aggregation."""
-
-    time_unix_nano: int
-    value: Union[int, float]
-
-
-@dataclass(frozen=True)
-class Histogram:
-    """Represents the type of a metric that is calculated by aggregating as a
-    histogram of all reported measurements over a time interval."""
-
-    aggregation_temporality: AggregationTemporality
-    bucket_counts: Sequence[int]
-    explicit_bounds: Sequence[float]
-    max: int
-    min: int
-    start_time_unix_nano: int
-    sum: Union[int, float]
-    time_unix_nano: int
-
-
-PointT = Union[Sum, Gauge, Histogram]
-
-
-@dataclass(frozen=True)
-class Metric:
-    """Represents a metric point in the OpenTelemetry data model to be exported
-
-    Concrete metric types contain all the information as in the OTLP proto definitions
-    (https://github.com/open-telemetry/opentelemetry-proto/blob/b43e9b18b76abf3ee040164b55b9c355217151f3/opentelemetry/proto/metrics/v1/metrics.proto#L37) but are flattened as much as possible.
-    """
-
-    # common fields to all metric kinds
-    attributes: Attributes
-    description: str
-    instrumentation_scope: InstrumentationScope
-    name: str
-    resource: Resource
-    unit: str
-    point: PointT
-    """Contains non-common fields for the given metric"""
-
-    def to_json(self) -> str:
-        return json.dumps(
-            {
-                "attributes": self.attributes if self.attributes else "",
-                "description": self.description if self.description else "",
-                "instrumentation_scope": repr(self.instrumentation_scope)
-                if self.instrumentation_scope
-                else "",
-                "name": self.name,
-                "resource": repr(self.resource.attributes)
-                if self.resource
-                else "",
-                "unit": self.unit if self.unit else "",
-                "point": asdict(self.point) if self.point else "",
-            }
-        )
+__all__ = []
+for key, value in globals().copy().items():
+    if not key.startswith("_"):
+        if _version_info.minor == 6 and key == "PointT":
+            continue
+        value.__module__ = __name__
+        __all__.append(key)

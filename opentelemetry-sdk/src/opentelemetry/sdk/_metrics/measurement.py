@@ -12,21 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import dataclass
-from typing import TYPE_CHECKING, Union
+# pylint: disable=unused-import
 
-from opentelemetry.util.types import Attributes
+from opentelemetry.sdk._metrics._internal.measurement import (  # noqa: F401
+    Measurement,
+)
 
-if TYPE_CHECKING:
-    from opentelemetry.sdk._metrics.instrument import _Instrument
-
-
-@dataclass(frozen=True)
-class Measurement:
-    """
-    Represents a data point reported via the metrics API to the SDK.
-    """
-
-    value: Union[int, float]
-    instrument: "_Instrument"
-    attributes: Attributes = None
+__all__ = []
+for key, value in globals().copy().items():
+    if not key.startswith("_"):
+        value.__module__ = __name__
+        __all__.append(key)

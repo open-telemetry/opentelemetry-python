@@ -16,14 +16,15 @@ from abc import ABC, abstractmethod
 from threading import Lock
 from typing import TYPE_CHECKING, Dict, Iterable, List, Mapping
 
-from opentelemetry.sdk._metrics.aggregation import AggregationTemporality
-from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.metric_reader import MetricReader
-from opentelemetry.sdk._metrics.metric_reader_storage import (
+from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
 )
-from opentelemetry.sdk._metrics.point import Metric
-from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
+from opentelemetry.sdk._metrics._internal.sdk_configuration import (
+    SdkConfiguration,
+)
+from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry.sdk._metrics.metric_reader import MetricReader
+from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
 
 if TYPE_CHECKING:
     from opentelemetry.sdk._metrics.instrument import _Asynchronous
