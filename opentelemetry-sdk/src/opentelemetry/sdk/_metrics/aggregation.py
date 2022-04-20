@@ -267,18 +267,24 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             value = self._bucket_counts
             start_time_unix_nano = self._start_time_unix_nano
             histogram_sum = self._sum
+            histogram_max = self._max
+            histogram_min = self._min
 
             self._bucket_counts = self._get_empty_bucket_counts()
             self._start_time_unix_nano = now + 1
             self._sum = 0
+            self._min = inf
+            self._max = -inf
 
         return HistogramPoint(
-            start_time_unix_nano=start_time_unix_nano,
-            time_unix_nano=now,
+            aggregation_temporality=AggregationTemporality.DELTA,
             bucket_counts=tuple(value),
             explicit_bounds=self._boundaries,
-            aggregation_temporality=AggregationTemporality.DELTA,
+            max=histogram_max,
+            min=histogram_min,
+            start_time_unix_nano=start_time_unix_nano,
             sum=histogram_sum,
+            time_unix_nano=now,
         )
 
 
@@ -374,9 +380,15 @@ def _convert_aggregation_temporality(
         if current_point.aggregation_temporality is aggregation_temporality:
             return current_point
 
+        max_ = current_point.max
+        min_ = current_point.min
+
         if aggregation_temporality is AggregationTemporality.CUMULATIVE:
             start_time_unix_nano = previous_point.start_time_unix_nano
             sum_ = current_point.sum + previous_point.sum
+            # Only update min/max on delta -> cumulative
+            max_ = max(current_point.max, previous_point.max)
+            min_ = min(current_point.min, previous_point.min)
             bucket_counts = [
                 curr_count + prev_count
                 for curr_count, prev_count in zip(
@@ -394,12 +406,14 @@ def _convert_aggregation_temporality(
             ]
 
         return HistogramPoint(
-            start_time_unix_nano=start_time_unix_nano,
-            time_unix_nano=current_point.time_unix_nano,
+            aggregation_temporality=aggregation_temporality,
             bucket_counts=bucket_counts,
             explicit_bounds=current_point.explicit_bounds,
+            max=max_,
+            min=min_,
+            start_time_unix_nano=start_time_unix_nano,
             sum=sum_,
-            aggregation_temporality=aggregation_temporality,
+            time_unix_nano=current_point.time_unix_nano,
         )
     return None
 

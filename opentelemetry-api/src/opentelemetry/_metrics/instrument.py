@@ -23,6 +23,7 @@ from typing import (
     Generic,
     Iterable,
     Optional,
+    Sequence,
     TypeVar,
     Union,
 )
@@ -47,8 +48,8 @@ class Instrument(ABC):
     def __init__(
         self,
         name: str,
-        unit: Optional[str] = "",
-        description: Optional[str] = "",
+        unit: str = "",
+        description: str = "",
     ) -> None:
         pass
 
@@ -61,8 +62,8 @@ class _ProxyInstrument(ABC, Generic[InstrumentT]):
     def __init__(
         self,
         name: str,
-        unit: Optional[str] = "",
-        description: Optional[str] = "",
+        unit: str = "",
+        description: str = "",
     ) -> None:
         self._name = name
         self._unit = unit
@@ -86,12 +87,12 @@ class _ProxyAsynchronousInstrument(_ProxyInstrument[InstrumentT]):
     def __init__(
         self,
         name: str,
-        callback: CallbackT,
-        unit: Optional[str] = "",
-        description: Optional[str] = "",
+        callbacks: Sequence[CallbackT],
+        unit: str = "",
+        description: str = "",
     ) -> None:
         super().__init__(name, unit, description)
-        self._callback = callback
+        self._callbacks = callbacks
 
 
 class Synchronous(Instrument):
@@ -103,9 +104,9 @@ class Asynchronous(Instrument):
     def __init__(
         self,
         name: str,
-        callback: CallbackT,
-        unit: Optional[str] = "",
-        description: Optional[str] = "",
+        callbacks: Sequence[CallbackT],
+        unit: str = "",
+        description: str = "",
     ) -> None:
         super().__init__(name, unit=unit, description=description)
 
@@ -139,12 +140,12 @@ class Counter(_Monotonic, Synchronous):
         pass
 
 
-class DefaultCounter(Counter):
+class NoOpCounter(Counter):
     def __init__(
         self,
         name: str,
-        unit: Optional[str] = "",
-        description: Optional[str] = "",
+        unit: str = "",
+        description: str = "",
     ) -> None:
         super().__init__(name, unit=unit, description=description)
 
@@ -181,12 +182,12 @@ class UpDownCounter(_NonMonotonic, Synchronous):
         pass
 
 
-class DefaultUpDownCounter(UpDownCounter):
+class NoOpUpDownCounter(UpDownCounter):
     def __init__(
         self,
         name: str,
-        unit: Optional[str] = "",
-        description: Optional[str] = "",
+        unit: str = "",
+        description: str = "",
     ) -> None:
         super().__init__(name, unit=unit, description=description)
 
@@ -219,15 +220,15 @@ class ObservableCounter(_Monotonic, Asynchronous):
     """
 
 
-class DefaultObservableCounter(ObservableCounter):
+class NoOpObservableCounter(ObservableCounter):
     def __init__(
         self,
         name: str,
-        callback: CallbackT,
-        unit: Optional[str] = "",
-        description: Optional[str] = "",
+        callbacks: Sequence[CallbackT],
+        unit: str = "",
+        description: str = "",
     ) -> None:
-        super().__init__(name, callback, unit=unit, description=description)
+        super().__init__(name, callbacks, unit=unit, description=description)
 
 
 class _ProxyObservableCounter(
@@ -237,7 +238,7 @@ class _ProxyObservableCounter(
         self, meter: "metrics.Meter"
     ) -> ObservableCounter:
         return meter.create_observable_counter(
-            self._name, self._callback, self._unit, self._description
+            self._name, self._callbacks, self._unit, self._description
         )
 
 
@@ -248,15 +249,15 @@ class ObservableUpDownCounter(_NonMonotonic, Asynchronous):
     """
 
 
-class DefaultObservableUpDownCounter(ObservableUpDownCounter):
+class NoOpObservableUpDownCounter(ObservableUpDownCounter):
     def __init__(
         self,
         name: str,
-        callback: CallbackT,
-        unit: Optional[str] = "",
-        description: Optional[str] = "",
+        callbacks: Sequence[CallbackT],
+        unit: str = "",
+        description: str = "",
     ) -> None:
-        super().__init__(name, callback, unit=unit, description=description)
+        super().__init__(name, callbacks, unit=unit, description=description)
 
 
 class _ProxyObservableUpDownCounter(
@@ -267,7 +268,7 @@ class _ProxyObservableUpDownCounter(
         self, meter: "metrics.Meter"
     ) -> ObservableUpDownCounter:
         return meter.create_observable_up_down_counter(
-            self._name, self._callback, self._unit, self._description
+            self._name, self._callbacks, self._unit, self._description
         )
 
 
@@ -286,12 +287,12 @@ class Histogram(_Grouping, Synchronous):
         pass
 
 
-class DefaultHistogram(Histogram):
+class NoOpHistogram(Histogram):
     def __init__(
         self,
         name: str,
-        unit: Optional[str] = "",
-        description: Optional[str] = "",
+        unit: str = "",
+        description: str = "",
     ) -> None:
         super().__init__(name, unit=unit, description=description)
 
@@ -325,15 +326,15 @@ class ObservableGauge(_Grouping, Asynchronous):
     """
 
 
-class DefaultObservableGauge(ObservableGauge):
+class NoOpObservableGauge(ObservableGauge):
     def __init__(
         self,
         name: str,
-        callback: CallbackT,
-        unit: Optional[str] = "",
-        description: Optional[str] = "",
+        callbacks: Sequence[CallbackT],
+        unit: str = "",
+        description: str = "",
     ) -> None:
-        super().__init__(name, callback, unit=unit, description=description)
+        super().__init__(name, callbacks, unit=unit, description=description)
 
 
 class _ProxyObservableGauge(
@@ -344,5 +345,5 @@ class _ProxyObservableGauge(
         self, meter: "metrics.Meter"
     ) -> ObservableGauge:
         return meter.create_observable_gauge(
-            self._name, self._callback, self._unit, self._description
+            self._name, self._callbacks, self._unit, self._description
         )
