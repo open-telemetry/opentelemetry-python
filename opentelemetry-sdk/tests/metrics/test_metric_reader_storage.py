@@ -280,14 +280,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 resource=Mock(),
                 metric_readers=(),
                 views=(
-                    View(
-                        instrument_name="observable_counter_0",
-                        name="foo"
-                    ),
-                    View(
-                        instrument_name="observable_counter_1",
-                        name="foo"
-                    ),
+                    View(instrument_name="observable_counter_0", name="foo"),
+                    View(instrument_name="observable_counter_1", name="foo"),
                 ),
             )
         )
