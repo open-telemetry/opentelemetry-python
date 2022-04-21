@@ -55,7 +55,7 @@ class MetricExporter(ABC):
         """Exports a batch of telemetry data.
 
         Args:
-            metrics: The list of `opentelemetry.sdk._metrics.data.MetricData` objects to be exported
+            metrics: The list of `opentelemetry.sdk._metrics.point.Metric` objects to be exported
 
         Returns:
             The result of the export
@@ -97,7 +97,7 @@ class ConsoleMetricExporter(MetricExporter):
 
 
 class InMemoryMetricReader(MetricReader):
-    """Implementation of :class:`MetricReader` that returns its metrics from :func:`metrics`.
+    """Implementation of `MetricReader` that returns its metrics from :func:`get_metrics`.
 
     This is useful for e.g. unit tests.
     """

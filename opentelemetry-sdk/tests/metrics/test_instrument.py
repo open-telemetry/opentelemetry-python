@@ -15,7 +15,7 @@
 from unittest import TestCase
 from unittest.mock import Mock
 
-from opentelemetry._metrics.measurement import Measurement as APIMeasurement
+from opentelemetry._metrics.observation import Observation
 from opentelemetry.sdk._metrics.instrument import (
     Counter,
     Histogram,
@@ -60,33 +60,33 @@ TEST_ATTRIBUTES = {"foo": "bar"}
 
 def callable_callback_0():
     return [
-        APIMeasurement(1, attributes=TEST_ATTRIBUTES),
-        APIMeasurement(2, attributes=TEST_ATTRIBUTES),
-        APIMeasurement(3, attributes=TEST_ATTRIBUTES),
+        Observation(1, attributes=TEST_ATTRIBUTES),
+        Observation(2, attributes=TEST_ATTRIBUTES),
+        Observation(3, attributes=TEST_ATTRIBUTES),
     ]
 
 
 def callable_callback_1():
     return [
-        APIMeasurement(4, attributes=TEST_ATTRIBUTES),
-        APIMeasurement(5, attributes=TEST_ATTRIBUTES),
-        APIMeasurement(6, attributes=TEST_ATTRIBUTES),
+        Observation(4, attributes=TEST_ATTRIBUTES),
+        Observation(5, attributes=TEST_ATTRIBUTES),
+        Observation(6, attributes=TEST_ATTRIBUTES),
     ]
 
 
 def generator_callback_0():
     yield [
-        APIMeasurement(1, attributes=TEST_ATTRIBUTES),
-        APIMeasurement(2, attributes=TEST_ATTRIBUTES),
-        APIMeasurement(3, attributes=TEST_ATTRIBUTES),
+        Observation(1, attributes=TEST_ATTRIBUTES),
+        Observation(2, attributes=TEST_ATTRIBUTES),
+        Observation(3, attributes=TEST_ATTRIBUTES),
     ]
 
 
 def generator_callback_1():
     yield [
-        APIMeasurement(4, attributes=TEST_ATTRIBUTES),
-        APIMeasurement(5, attributes=TEST_ATTRIBUTES),
-        APIMeasurement(6, attributes=TEST_ATTRIBUTES),
+        Observation(4, attributes=TEST_ATTRIBUTES),
+        Observation(5, attributes=TEST_ATTRIBUTES),
+        Observation(6, attributes=TEST_ATTRIBUTES),
     ]
 
 

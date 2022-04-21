@@ -14,33 +14,33 @@
 
 from unittest import TestCase
 
-from opentelemetry._metrics.measurement import Measurement
+from opentelemetry._metrics.observation import Observation
 
 
-class TestMeasurement(TestCase):
+class TestObservation(TestCase):
     def test_measurement_init(self):
         try:
             # int
-            Measurement(321, {"hello": "world"})
+            Observation(321, {"hello": "world"})
 
             # float
-            Measurement(321.321, {"hello": "world"})
+            Observation(321.321, {"hello": "world"})
         except Exception:  # pylint: disable=broad-except
             self.fail(
-                "Unexpected exception raised when instantiating Measurement"
+                "Unexpected exception raised when instantiating Observation"
             )
 
     def test_measurement_equality(self):
         self.assertEqual(
-            Measurement(321, {"hello": "world"}),
-            Measurement(321, {"hello": "world"}),
+            Observation(321, {"hello": "world"}),
+            Observation(321, {"hello": "world"}),
         )
 
         self.assertNotEqual(
-            Measurement(321, {"hello": "world"}),
-            Measurement(321.321, {"hello": "world"}),
+            Observation(321, {"hello": "world"}),
+            Observation(321.321, {"hello": "world"}),
         )
         self.assertNotEqual(
-            Measurement(321, {"baz": "world"}),
-            Measurement(321, {"hello": "world"}),
+            Observation(321, {"baz": "world"}),
+            Observation(321, {"hello": "world"}),
         )

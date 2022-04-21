@@ -30,13 +30,13 @@ from typing import (
 
 # pylint: disable=unused-import; needed for typing and sphinx
 from opentelemetry import _metrics as metrics
-from opentelemetry._metrics.measurement import Measurement
+from opentelemetry._metrics.observation import Observation
 from opentelemetry.util.types import Attributes
 
 InstrumentT = TypeVar("InstrumentT", bound="Instrument")
 CallbackT = Union[
-    Callable[[], Iterable[Measurement]],
-    Generator[Iterable[Measurement], None, None],
+    Callable[[], Iterable[Observation]],
+    Generator[Iterable[Observation], None, None],
 ]
 
 
@@ -44,6 +44,8 @@ _logger = getLogger(__name__)
 
 
 class Instrument(ABC):
+    """Abstract class that serves as base for all instruments."""
+
     @abstractmethod
     def __init__(
         self,
@@ -147,6 +149,8 @@ class NoOpCounter(Counter):
         unit: str = "",
         description: str = "",
     ) -> None:
+        """No-op implementation of `Counter`."""
+
         super().__init__(name, unit=unit, description=description)
 
     def add(
@@ -189,6 +193,8 @@ class NoOpUpDownCounter(UpDownCounter):
         unit: str = "",
         description: str = "",
     ) -> None:
+        """No-op implementation of `UpDownCounter`."""
+
         super().__init__(name, unit=unit, description=description)
 
     def add(
@@ -228,6 +234,8 @@ class NoOpObservableCounter(ObservableCounter):
         unit: str = "",
         description: str = "",
     ) -> None:
+        """No-op implementation of `ObservableCounter`."""
+
         super().__init__(name, callbacks, unit=unit, description=description)
 
 
@@ -257,6 +265,8 @@ class NoOpObservableUpDownCounter(ObservableUpDownCounter):
         unit: str = "",
         description: str = "",
     ) -> None:
+        """No-op implementation of `ObservableUpDownCounter`."""
+
         super().__init__(name, callbacks, unit=unit, description=description)
 
 
@@ -294,6 +304,8 @@ class NoOpHistogram(Histogram):
         unit: str = "",
         description: str = "",
     ) -> None:
+        """No-op implementation of `Histogram`."""
+
         super().__init__(name, unit=unit, description=description)
 
     def record(
@@ -334,6 +346,8 @@ class NoOpObservableGauge(ObservableGauge):
         unit: str = "",
         description: str = "",
     ) -> None:
+        """No-op implementation of `ObservableGauge`."""
+
         super().__init__(name, callbacks, unit=unit, description=description)
 
 

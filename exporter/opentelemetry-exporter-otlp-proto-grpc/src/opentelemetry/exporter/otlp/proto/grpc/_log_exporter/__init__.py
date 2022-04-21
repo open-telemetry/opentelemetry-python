@@ -24,9 +24,9 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2_grpc import (
     LogsServiceStub,
 )
-from opentelemetry.proto.common.v1.common_pb2 import InstrumentationLibrary
+from opentelemetry.proto.common.v1.common_pb2 import InstrumentationScope
 from opentelemetry.proto.logs.v1.logs_pb2 import (
-    InstrumentationLibraryLogs,
+    ScopeLogs,
     ResourceLogs,
 )
 from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord as PB2LogRecord
@@ -96,44 +96,30 @@ class OTLPLogExporter(
     ) -> ExportLogsServiceRequest:
         # pylint: disable=attribute-defined-outside-init
 
-        sdk_resource_instrumentation_library_logs = {}
+        sdk_resource_scope_logs = {}
 
         for log_data in data:
             resource = log_data.log_record.resource
 
-            instrumentation_library_logs_map = (
-                sdk_resource_instrumentation_library_logs.get(resource, {})
-            )
-            if not instrumentation_library_logs_map:
-                sdk_resource_instrumentation_library_logs[
-                    resource
-                ] = instrumentation_library_logs_map
+            scope_logs_map = sdk_resource_scope_logs.get(resource, {})
+            if not scope_logs_map:
+                sdk_resource_scope_logs[resource] = scope_logs_map
 
-            instrumentation_library_logs = (
-                instrumentation_library_logs_map.get(
-                    log_data.instrumentation_info
-                )
-            )
-            if not instrumentation_library_logs:
-                if log_data.instrumentation_info is not None:
-                    instrumentation_library_logs_map[
-                        log_data.instrumentation_info
-                    ] = InstrumentationLibraryLogs(
-                        instrumentation_library=InstrumentationLibrary(
-                            name=log_data.instrumentation_info.name,
-                            version=log_data.instrumentation_info.version,
+            scope_logs = scope_logs_map.get(log_data.instrumentation_scope)
+            if not scope_logs:
+                if log_data.instrumentation_scope is not None:
+                    scope_logs_map[log_data.instrumentation_scope] = ScopeLogs(
+                        scope=InstrumentationScope(
+                            name=log_data.instrumentation_scope.name,
+                            version=log_data.instrumentation_scope.version,
                         )
                     )
                 else:
-                    instrumentation_library_logs_map[
-                        log_data.instrumentation_info
-                    ] = InstrumentationLibraryLogs()
+                    scope_logs_map[
+                        log_data.instrumentation_scope
+                    ] = ScopeLogs()
 
-            instrumentation_library_logs = (
-                instrumentation_library_logs_map.get(
-                    log_data.instrumentation_info
-                )
-            )
+            scope_logs = scope_logs_map.get(log_data.instrumentation_scope)
 
             self._collector_kwargs = {}
 
@@ -151,13 +137,13 @@ class OTLPLogExporter(
                 "severity_number"
             ] = log_data.log_record.severity_number.value
 
-            instrumentation_library_logs.log_records.append(
+            scope_logs.log_records.append(
                 PB2LogRecord(**self._collector_kwargs)
             )
 
         return ExportLogsServiceRequest(
             resource_logs=get_resource_data(
-                sdk_resource_instrumentation_library_logs,
+                sdk_resource_scope_logs,
                 ResourceLogs,
                 "logs",
             )

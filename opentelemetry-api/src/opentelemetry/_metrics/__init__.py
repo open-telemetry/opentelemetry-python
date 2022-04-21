@@ -236,7 +236,7 @@ class Meter(ABC):
 
         Args:
             name: The name of the instrument to be created
-            unit: The unit for measurements this instrument reports. For
+            unit: The unit for observations this instrument reports. For
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
@@ -252,7 +252,7 @@ class Meter(ABC):
 
         Args:
             name: The name of the instrument to be created
-            unit: The unit for measurements this instrument reports. For
+            unit: The unit for observations this instrument reports. For
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
@@ -269,23 +269,23 @@ class Meter(ABC):
 
         An observable counter observes a monotonically increasing count by
         calling provided callbacks which returns multiple
-        :class:`~opentelemetry._metrics.measurement.Measurement`.
+        :class:`~opentelemetry._metrics.observation.Observation`.
 
         For example, an observable counter could be used to report system CPU
         time periodically. Here is a basic implementation::
 
-            def cpu_time_callback() -> Iterable[Measurement]:
-                measurements = []
+            def cpu_time_callback() -> Iterable[Observation]:
+                observations = []
                 with open("/proc/stat") as procstat:
                     procstat.readline()  # skip the first line
                     for line in procstat:
                         if not line.startswith("cpu"): break
                         cpu, *states = line.split()
-                        measurements.append(Measurement(int(states[0]) // 100, {"cpu": cpu, "state": "user"}))
-                        measurements.append(Measurement(int(states[1]) // 100, {"cpu": cpu, "state": "nice"}))
-                        measurements.append(Measurement(int(states[2]) // 100, {"cpu": cpu, "state": "system"}))
+                        observations.append(Observation(int(states[0]) // 100, {"cpu": cpu, "state": "user"}))
+                        observations.append(Observation(int(states[1]) // 100, {"cpu": cpu, "state": "nice"}))
+                        observations.append(Observation(int(states[2]) // 100, {"cpu": cpu, "state": "system"}))
                         # ... other states
-                return measurements
+                return observations
 
             meter.create_observable_counter(
                 "system.cpu.time",
@@ -297,34 +297,34 @@ class Meter(ABC):
         To reduce memory usage, you can use generator callbacks instead of
         building the full list::
 
-            def cpu_time_callback() -> Iterable[Measurement]:
+            def cpu_time_callback() -> Iterable[Observation]:
                 with open("/proc/stat") as procstat:
                     procstat.readline()  # skip the first line
                     for line in procstat:
                         if not line.startswith("cpu"): break
                         cpu, *states = line.split()
-                        yield Measurement(int(states[0]) // 100, {"cpu": cpu, "state": "user"})
-                        yield Measurement(int(states[1]) // 100, {"cpu": cpu, "state": "nice"})
+                        yield Observation(int(states[0]) // 100, {"cpu": cpu, "state": "user"})
+                        yield Observation(int(states[1]) // 100, {"cpu": cpu, "state": "nice"})
                         # ... other states
 
         Alternatively, you can pass a sequence of generators directly instead
         of a sequence of callbacks, which each should return iterables of
-        :class:`~opentelemetry._metrics.measurement.Measurement`::
+        :class:`~opentelemetry._metrics.observation.Observation`::
 
-            def cpu_time_callback(states_to_include: set[str]) -> Iterable[Iterable[Measurement]]:
+            def cpu_time_callback(states_to_include: set[str]) -> Iterable[Iterable[Observation]]:
                 while True:
-                    measurements = []
+                    observations = []
                     with open("/proc/stat") as procstat:
                         procstat.readline()  # skip the first line
                         for line in procstat:
                             if not line.startswith("cpu"): break
                             cpu, *states = line.split()
                             if "user" in states_to_include:
-                                measurements.append(Measurement(int(states[0]) // 100, {"cpu": cpu, "state": "user"}))
+                                observations.append(Observation(int(states[0]) // 100, {"cpu": cpu, "state": "user"}))
                             if "nice" in states_to_include:
-                                measurements.append(Measurement(int(states[1]) // 100, {"cpu": cpu, "state": "nice"}))
+                                observations.append(Observation(int(states[1]) // 100, {"cpu": cpu, "state": "nice"}))
                             # ... other states
-                    yield measurements
+                    yield observations
 
             meter.create_observable_counter(
                 "system.cpu.time",
@@ -336,11 +336,11 @@ class Meter(ABC):
         Args:
             name: The name of the instrument to be created
             callbacks: A sequence of callbacks that return an iterable of
-                :class:`~opentelemetry._metrics.measurement.Measurement`.
+                :class:`~opentelemetry._metrics.observation.Observation`.
                 Alternatively, can be a sequence of generators that each yields
                 iterables of
-                :class:`~opentelemetry._metrics.measurement.Measurement`.
-            unit: The unit for measurements this instrument reports. For
+                :class:`~opentelemetry._metrics.observation.Observation`.
+            unit: The unit for observations this instrument reports. For
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
@@ -352,11 +352,11 @@ class Meter(ABC):
         unit: str = "",
         description: str = "",
     ) -> Histogram:
-        """Creates a `Histogram` instrument
+        """Creates a `opentelemetry._metrics.instrument.Histogram` instrument
 
         Args:
             name: The name of the instrument to be created
-            unit: The unit for measurements this instrument reports. For
+            unit: The unit for observations this instrument reports. For
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
@@ -374,10 +374,10 @@ class Meter(ABC):
         Args:
             name: The name of the instrument to be created
             callbacks: A sequence of callbacks that return an iterable of
-                :class:`~opentelemetry._metrics.measurement.Measurement`.
+                :class:`~opentelemetry._metrics.observation.Observation`.
                 Alternatively, can be a generator that yields iterables of
-                :class:`~opentelemetry._metrics.measurement.Measurement`.
-            unit: The unit for measurements this instrument reports. For
+                :class:`~opentelemetry._metrics.observation.Observation`.
+            unit: The unit for observations this instrument reports. For
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """
@@ -395,10 +395,10 @@ class Meter(ABC):
         Args:
             name: The name of the instrument to be created
             callbacks: A sequence of callbacks that return an iterable of
-                :class:`~opentelemetry._metrics.measurement.Measurement`.
+                :class:`~opentelemetry._metrics.observation.Observation`.
                 Alternatively, can be a generator that yields iterables of
-                :class:`~opentelemetry._metrics.measurement.Measurement`.
-            unit: The unit for measurements this instrument reports. For
+                :class:`~opentelemetry._metrics.observation.Observation`.
+            unit: The unit for observations this instrument reports. For
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
         """

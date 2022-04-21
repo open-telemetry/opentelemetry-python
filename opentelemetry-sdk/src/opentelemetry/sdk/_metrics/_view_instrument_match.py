@@ -106,7 +106,7 @@ class _ViewInstrumentMatch:
                             self._view._description
                             or self._instrument.description
                         ),
-                        instrumentation_info=self._instrument.instrumentation_info,
+                        instrumentation_scope=self._instrument.instrumentation_scope,
                         name=self._view._name or self._instrument.name,
                         resource=self._sdk_config.resource,
                         unit=self._instrument.unit,
