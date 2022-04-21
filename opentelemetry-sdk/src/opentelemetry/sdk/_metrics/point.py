@@ -63,7 +63,7 @@ class Metric:
     """Represents a metric point in the OpenTelemetry data model to be exported
 
     Concrete metric types contain all the information as in the OTLP proto definitions
-    (https://tinyurl.com/7h6yx24v) but are flattened as much as possible.
+    (https://github.com/open-telemetry/opentelemetry-proto/blob/b43e9b18b76abf3ee040164b55b9c355217151f3/opentelemetry/proto/metrics/v1/metrics.proto#L37) but are flattened as much as possible.
     """
 
     # common fields to all metric kinds
