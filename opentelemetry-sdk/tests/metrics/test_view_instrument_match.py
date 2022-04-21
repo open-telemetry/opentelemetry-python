@@ -37,11 +37,11 @@ class Test_ViewInstrumentMatch(TestCase):
             cls.mock_aggregation_factory._create_aggregation()
         )
         cls.mock_resource = Mock()
-        cls.mock_instrumentation_info = Mock()
+        cls.mock_instrumentation_scope = Mock()
 
     def test_consume_measurement(self):
         instrument1 = Mock(name="instrument1")
-        instrument1.instrumentation_info = self.mock_instrumentation_info
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
         sdk_config = SdkConfiguration(
             resource=self.mock_resource,
             metric_readers=[],
@@ -158,7 +158,7 @@ class Test_ViewInstrumentMatch(TestCase):
         instrument1 = Mock(
             name="instrument1", description="description", unit="unit"
         )
-        instrument1.instrumentation_info = self.mock_instrumentation_info
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
         sdk_config = SdkConfiguration(
             resource=self.mock_resource,
             metric_readers=[],
@@ -191,7 +191,7 @@ class Test_ViewInstrumentMatch(TestCase):
             Metric(
                 attributes={"c": "d"},
                 description="description",
-                instrumentation_info=self.mock_instrumentation_info,
+                instrumentation_scope=self.mock_instrumentation_scope,
                 name="name",
                 resource=self.mock_resource,
                 unit="unit",

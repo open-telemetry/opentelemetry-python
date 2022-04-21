@@ -33,7 +33,7 @@ from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
 )
 from opentelemetry.proto.common.v1.common_pb2 import (
     AnyValue,
-    InstrumentationLibrary,
+    InstrumentationScope,
     KeyValue,
 )
 from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
@@ -293,9 +293,9 @@ class TestOTLPMetricExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_metrics=[
-                        pb2.InstrumentationLibraryMetrics(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_metrics=[
+                        pb2.ScopeMetrics(
+                            scope=InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
                             metrics=[
@@ -351,9 +351,9 @@ class TestOTLPMetricExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_metrics=[
-                        pb2.InstrumentationLibraryMetrics(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_metrics=[
+                        pb2.ScopeMetrics(
+                            scope=InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
                             metrics=[
@@ -409,9 +409,9 @@ class TestOTLPMetricExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_metrics=[
-                        pb2.InstrumentationLibraryMetrics(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_metrics=[
+                        pb2.ScopeMetrics(
+                            scope=InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
                             metrics=[
@@ -464,9 +464,9 @@ class TestOTLPMetricExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_metrics=[
-                        pb2.InstrumentationLibraryMetrics(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_metrics=[
+                        pb2.ScopeMetrics(
+                            scope=InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
                             metrics=[
@@ -519,9 +519,9 @@ class TestOTLPMetricExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_metrics=[
-                        pb2.InstrumentationLibraryMetrics(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_metrics=[
+                        pb2.ScopeMetrics(
+                            scope=InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
                             metrics=[

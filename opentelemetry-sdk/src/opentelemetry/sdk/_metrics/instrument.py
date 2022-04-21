@@ -32,7 +32,7 @@ from opentelemetry._metrics.instrument import (
 from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.measurement_consumer import MeasurementConsumer
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 _logger = logging.getLogger(__name__)
 
@@ -41,7 +41,7 @@ class _Synchronous:
     def __init__(
         self,
         name: str,
-        instrumentation_info: InstrumentationInfo,
+        instrumentation_scope: InstrumentationScope,
         measurement_consumer: MeasurementConsumer,
         unit: str = "",
         description: str = "",
@@ -49,7 +49,7 @@ class _Synchronous:
         self.name = name
         self.unit = unit
         self.description = description
-        self.instrumentation_info = instrumentation_info
+        self.instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
         super().__init__(name, unit=unit, description=description)
 
@@ -58,7 +58,7 @@ class _Asynchronous:
     def __init__(
         self,
         name: str,
-        instrumentation_info: InstrumentationInfo,
+        instrumentation_scope: InstrumentationScope,
         measurement_consumer: MeasurementConsumer,
         callbacks: Optional[Iterable[CallbackT]] = None,
         unit: str = "",
@@ -67,7 +67,7 @@ class _Asynchronous:
         self.name = name
         self.unit = unit
         self.description = description
-        self.instrumentation_info = instrumentation_info
+        self.instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
         super().__init__(name, callbacks, unit=unit, description=description)
 
