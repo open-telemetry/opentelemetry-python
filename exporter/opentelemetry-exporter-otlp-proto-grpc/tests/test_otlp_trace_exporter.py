@@ -40,14 +40,14 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
 from opentelemetry.proto.common.v1.common_pb2 import (
     AnyValue,
     ArrayValue,
-    InstrumentationLibrary,
+    InstrumentationScope,
     KeyValue,
 )
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (
-    InstrumentationLibrarySpans,
+    ScopeSpans,
     ResourceSpans,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as OTLPSpan
@@ -493,9 +493,9 @@ class TestOTLPSpanExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_spans=[
-                        InstrumentationLibrarySpans(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_spans=[
+                        ScopeSpans(
+                            scope=InstrumentationScope(
                                 name="name", version="version"
                             ),
                             spans=[
@@ -595,9 +595,9 @@ class TestOTLPSpanExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_spans=[
-                        InstrumentationLibrarySpans(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_spans=[
+                        ScopeSpans(
+                            scope=InstrumentationScope(
                                 name="name", version="version"
                             ),
                             spans=[
@@ -677,8 +677,8 @@ class TestOTLPSpanExporter(TestCase):
                                 )
                             ],
                         ),
-                        InstrumentationLibrarySpans(
-                            instrumentation_library=InstrumentationLibrary(
+                        ScopeSpans(
+                            scope=InstrumentationScope(
                                 name="name2", version="version2"
                             ),
                             spans=[
@@ -717,9 +717,9 @@ class TestOTLPSpanExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_spans=[
-                        InstrumentationLibrarySpans(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_spans=[
+                        ScopeSpans(
+                            scope=InstrumentationScope(
                                 name="name", version="version"
                             ),
                             spans=[
@@ -765,7 +765,7 @@ class TestOTLPSpanExporter(TestCase):
     ):
         status = (
             translated.resource_spans[0]
-            .instrumentation_library_spans[0]
+            .scope_spans[0]
             .spans[0]
             .status
         )
@@ -861,28 +861,28 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(
             1,
             translated.resource_spans[0]
-            .instrumentation_library_spans[0]
+            .scope_spans[0]
             .spans[0]
             .dropped_links_count,
         )
         self.assertEqual(
             2,
             translated.resource_spans[0]
-            .instrumentation_library_spans[0]
+            .scope_spans[0]
             .spans[0]
             .dropped_attributes_count,
         )
         self.assertEqual(
             3,
             translated.resource_spans[0]
-            .instrumentation_library_spans[0]
+            .scope_spans[0]
             .spans[0]
             .dropped_events_count,
         )
         self.assertEqual(
             2,
             translated.resource_spans[0]
-            .instrumentation_library_spans[0]
+            .scope_spans[0]
             .spans[0]
             .links[0]
             .dropped_attributes_count,
@@ -890,7 +890,7 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(
             2,
             translated.resource_spans[0]
-            .instrumentation_library_spans[0]
+            .scope_spans[0]
             .spans[0]
             .events[0]
             .dropped_attributes_count,

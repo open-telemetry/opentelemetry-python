@@ -32,9 +32,9 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
     TraceServiceStub,
 )
-from opentelemetry.proto.common.v1.common_pb2 import InstrumentationLibrary
+from opentelemetry.proto.common.v1.common_pb2 import InstrumentationScope
 from opentelemetry.proto.trace.v1.trace_pb2 import (
-    InstrumentationLibrarySpans,
+    ScopeSpans,
     ResourceSpans,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as CollectorSpan
@@ -217,42 +217,42 @@ class OTLPSpanExporter(
     ) -> ExportTraceServiceRequest:
         # pylint: disable=attribute-defined-outside-init
 
-        sdk_resource_instrumentation_library_spans = {}
+        sdk_resource_scope_spans = {}
 
         for sdk_span in data:
-            instrumentation_library_spans_map = (
-                sdk_resource_instrumentation_library_spans.get(
+            scope_spans_map = (
+                sdk_resource_scope_spans.get(
                     sdk_span.resource, {}
                 )
             )
             # If we haven't seen the Resource yet, add it to the map
-            if not instrumentation_library_spans_map:
-                sdk_resource_instrumentation_library_spans[
+            if not scope_spans_map:
+                sdk_resource_scope_spans[
                     sdk_span.resource
-                ] = instrumentation_library_spans_map
-            instrumentation_library_spans = (
-                instrumentation_library_spans_map.get(
+                ] = scope_spans_map
+            scope_spans = (
+                scope_spans_map.get(
                     sdk_span.instrumentation_info
                 )
             )
             # If we haven't seen the InstrumentationInfo for this Resource yet, add it to the map
-            if not instrumentation_library_spans:
+            if not scope_spans:
                 if sdk_span.instrumentation_info is not None:
-                    instrumentation_library_spans_map[
+                    scope_spans_map[
                         sdk_span.instrumentation_info
-                    ] = InstrumentationLibrarySpans(
-                        instrumentation_library=InstrumentationLibrary(
+                    ] = ScopeSpans(
+                        scope=InstrumentationScope(
                             name=sdk_span.instrumentation_info.name,
                             version=sdk_span.instrumentation_info.version,
                         )
                     )
                 else:
                     # If no InstrumentationInfo, store in None key
-                    instrumentation_library_spans_map[
+                    scope_spans_map[
                         sdk_span.instrumentation_info
-                    ] = InstrumentationLibrarySpans()
-            instrumentation_library_spans = (
-                instrumentation_library_spans_map.get(
+                    ] = ScopeSpans()
+            scope_spans = (
+                scope_spans_map.get(
                     sdk_span.instrumentation_info
                 )
             )
@@ -289,13 +289,13 @@ class OTLPSpanExporter(
                 f"SPAN_KIND_{sdk_span.kind.name}",
             )
 
-            instrumentation_library_spans.spans.append(
+            scope_spans.spans.append(
                 CollectorSpan(**self._collector_kwargs)
             )
 
         return ExportTraceServiceRequest(
             resource_spans=get_resource_data(
-                sdk_resource_instrumentation_library_spans,
+                sdk_resource_scope_spans,
                 ResourceSpans,
                 "spans",
             )

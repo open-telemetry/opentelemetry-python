@@ -24,14 +24,14 @@ from opentelemetry.proto.common.v1.common_pb2 import (
     ArrayValue as PB2ArrayValue,
 )
 from opentelemetry.proto.common.v1.common_pb2 import (
-    InstrumentationLibrary as PB2InstrumentationLibrary,
+    InstrumentationScope as PB2InstrumentationScope,
 )
 from opentelemetry.proto.common.v1.common_pb2 import KeyValue as PB2KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (
-    InstrumentationLibrarySpans as PB2InstrumentationLibrarySpans,
+    ScopeSpans as PB2ScopeSpans,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (
     ResourceSpans as PB2ResourceSpans,
@@ -79,7 +79,7 @@ def _encode_resource_spans(
     # We need to inspect the spans and group + structure them as:
     #
     #   Resource
-    #     Instrumentation Library
+    #     Scope Spans
     #       Spans
     #
     # First loop organizes the SDK spans in this structure. Protobuf messages
@@ -110,12 +110,12 @@ def _encode_resource_spans(
     pb2_resource_spans = []
 
     for sdk_resource, sdk_instrumentations in sdk_resource_spans.items():
-        instrumentation_library_spans = []
+        scope_spans = []
         for sdk_instrumentation, pb2_spans in sdk_instrumentations.items():
-            instrumentation_library_spans.append(
-                PB2InstrumentationLibrarySpans(
-                    instrumentation_library=(
-                        _encode_instrumentation_library(sdk_instrumentation)
+            scope_spans.append(
+                PB2ScopeSpans(
+                    scope=(
+                        _encode_instrumentation_scope(sdk_instrumentation)
                     ),
                     spans=pb2_spans,
                 )
@@ -123,7 +123,7 @@ def _encode_resource_spans(
         pb2_resource_spans.append(
             PB2ResourceSpans(
                 resource=_encode_resource(sdk_resource),
-                instrumentation_library_spans=instrumentation_library_spans,
+                scope_spans=scope_spans,
             )
         )
 
@@ -245,17 +245,17 @@ def _encode_resource(resource: Resource) -> PB2Resource:
     return pb2_resource
 
 
-def _encode_instrumentation_library(
+def _encode_instrumentation_scope(
     instrumentation_info: InstrumentationInfo,
-) -> PB2InstrumentationLibrary:
+) -> PB2InstrumentationScope:
     if instrumentation_info is None:
-        pb2_instrumentation_library = PB2InstrumentationLibrary()
+        pb2_instrumentation_scope = PB2InstrumentationScope()
     else:
-        pb2_instrumentation_library = PB2InstrumentationLibrary(
+        pb2_instrumentation_scope = PB2InstrumentationScope(
             name=instrumentation_info.name,
             version=instrumentation_info.version,
         )
-    return pb2_instrumentation_library
+    return pb2_instrumentation_scope
 
 
 def _encode_value(value: Any) -> PB2AnyValue:
