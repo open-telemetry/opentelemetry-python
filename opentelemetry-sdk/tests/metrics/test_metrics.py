@@ -88,7 +88,7 @@ class TestMeterProvider(ConcurrencyTestBase):
     def test_get_meter(self):
         """
         `MeterProvider.get_meter` arguments are used to create an
-        `InstrumentationInfo` object on the created `Meter`.
+        `InstrumentationScope` object on the created `Meter`.
         """
 
         meter = MeterProvider().get_meter(
@@ -97,9 +97,9 @@ class TestMeterProvider(ConcurrencyTestBase):
             schema_url="schema_url",
         )
 
-        self.assertEqual(meter._instrumentation_info.name, "name")
-        self.assertEqual(meter._instrumentation_info.version, "version")
-        self.assertEqual(meter._instrumentation_info.schema_url, "schema_url")
+        self.assertEqual(meter._instrumentation_scope.name, "name")
+        self.assertEqual(meter._instrumentation_scope.version, "version")
+        self.assertEqual(meter._instrumentation_scope.schema_url, "schema_url")
 
     def test_get_meter_empty(self):
         """

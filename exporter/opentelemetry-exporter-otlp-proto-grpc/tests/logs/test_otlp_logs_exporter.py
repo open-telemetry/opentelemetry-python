@@ -33,14 +33,13 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2_grpc import (
     LogsServiceServicer,
     add_LogsServiceServicer_to_server,
 )
+from opentelemetry.proto.common.v1.common_pb2 import AnyValue
 from opentelemetry.proto.common.v1.common_pb2 import (
-    AnyValue,
-    InstrumentationLibrary,
-    KeyValue,
+    InstrumentationScope as PB2InstrumentationScope,
 )
-from opentelemetry.proto.logs.v1.logs_pb2 import InstrumentationLibraryLogs
+from opentelemetry.proto.common.v1.common_pb2 import KeyValue
 from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord as PB2LogRecord
-from opentelemetry.proto.logs.v1.logs_pb2 import ResourceLogs
+from opentelemetry.proto.logs.v1.logs_pb2 import ResourceLogs, ScopeLogs
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
@@ -50,7 +49,7 @@ from opentelemetry.sdk._logs.severity import (
     SeverityNumber as SDKSeverityNumber,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import TraceFlags
 
 
@@ -123,7 +122,7 @@ class TestOTLPLogExporter(TestCase):
                 resource=SDKResource({"key": "value"}),
                 attributes={"a": 1, "b": "c"},
             ),
-            instrumentation_info=InstrumentationInfo(
+            instrumentation_scope=InstrumentationScope(
                 "first_name", "first_version"
             ),
         )
@@ -139,7 +138,7 @@ class TestOTLPLogExporter(TestCase):
                 resource=SDKResource({"key": "value"}),
                 attributes={"custom_attr": [1, 2, 3]},
             ),
-            instrumentation_info=InstrumentationInfo(
+            instrumentation_scope=InstrumentationScope(
                 "second_name", "second_version"
             ),
         )
@@ -154,7 +153,7 @@ class TestOTLPLogExporter(TestCase):
                 body="Mumbai, Boil water before drinking",
                 resource=SDKResource({"service": "myapp"}),
             ),
-            instrumentation_info=InstrumentationInfo(
+            instrumentation_scope=InstrumentationScope(
                 "third_name", "third_version"
             ),
         )
@@ -304,9 +303,9 @@ class TestOTLPLogExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_logs=[
-                        InstrumentationLibraryLogs(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_logs=[
+                        ScopeLogs(
+                            scope=PB2InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
                             log_records=[
@@ -363,9 +362,9 @@ class TestOTLPLogExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_logs=[
-                        InstrumentationLibraryLogs(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_logs=[
+                        ScopeLogs(
+                            scope=PB2InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
                             log_records=[
@@ -401,8 +400,8 @@ class TestOTLPLogExporter(TestCase):
                                 )
                             ],
                         ),
-                        InstrumentationLibraryLogs(
-                            instrumentation_library=InstrumentationLibrary(
+                        ScopeLogs(
+                            scope=PB2InstrumentationScope(
                                 name="second_name", version="second_version"
                             ),
                             log_records=[
@@ -445,9 +444,9 @@ class TestOTLPLogExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_logs=[
-                        InstrumentationLibraryLogs(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_logs=[
+                        ScopeLogs(
+                            scope=PB2InstrumentationScope(
                                 name="third_name", version="third_version"
                             ),
                             log_records=[

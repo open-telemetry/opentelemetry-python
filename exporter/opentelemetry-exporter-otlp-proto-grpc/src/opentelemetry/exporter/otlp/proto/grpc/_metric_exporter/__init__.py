@@ -25,7 +25,7 @@ from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
     MetricsServiceStub,
 )
-from opentelemetry.proto.common.v1.common_pb2 import InstrumentationLibrary
+from opentelemetry.proto.common.v1.common_pb2 import InstrumentationScope
 from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
@@ -81,40 +81,30 @@ class OTLPMetricExporter(
     def _translate_data(
         self, data: Sequence[Metric]
     ) -> ExportMetricsServiceRequest:
-        sdk_resource_instrumentation_library_metrics = {}
+        sdk_resource_scope_metrics = {}
 
         for metric in data:
             resource = metric.resource
-            instrumentation_library_map = (
-                sdk_resource_instrumentation_library_metrics.get(resource, {})
-            )
-            if not instrumentation_library_map:
-                sdk_resource_instrumentation_library_metrics[
-                    resource
-                ] = instrumentation_library_map
+            scope_map = sdk_resource_scope_metrics.get(resource, {})
+            if not scope_map:
+                sdk_resource_scope_metrics[resource] = scope_map
 
-            instrumentation_library_metrics = instrumentation_library_map.get(
-                metric.instrumentation_info
-            )
+            scope_metrics = scope_map.get(metric.instrumentation_scope)
 
-            if not instrumentation_library_metrics:
-                if metric.instrumentation_info is not None:
-                    instrumentation_library_map[
-                        metric.instrumentation_info
-                    ] = pb2.InstrumentationLibraryMetrics(
-                        instrumentation_library=InstrumentationLibrary(
-                            name=metric.instrumentation_info.name,
-                            version=metric.instrumentation_info.version,
+            if not scope_metrics:
+                if metric.instrumentation_scope is not None:
+                    scope_map[metric.instrumentation_scope] = pb2.ScopeMetrics(
+                        scope=InstrumentationScope(
+                            name=metric.instrumentation_scope.name,
+                            version=metric.instrumentation_scope.version,
                         )
                     )
                 else:
-                    instrumentation_library_map[
-                        metric.instrumentation_info
-                    ] = pb2.InstrumentationLibraryMetrics()
+                    scope_map[
+                        metric.instrumentation_scope
+                    ] = pb2.ScopeMetrics()
 
-            instrumentation_library_metrics = instrumentation_library_map.get(
-                metric.instrumentation_info
-            )
+            scope_metrics = scope_map.get(metric.instrumentation_scope)
 
             pbmetric = pb2.Metric(
                 name=metric.name,
@@ -167,12 +157,12 @@ class OTLPMetricExporter(
                 logger.warn("unsupported datapoint type %s", metric.point)
                 continue
 
-            instrumentation_library_metrics.metrics.append(
+            scope_metrics.metrics.append(
                 pbmetric,
             )
         return ExportMetricsServiceRequest(
             resource_metrics=get_resource_data(
-                sdk_resource_instrumentation_library_metrics,
+                sdk_resource_scope_metrics,
                 pb2.ResourceMetrics,
                 "metrics",
             )

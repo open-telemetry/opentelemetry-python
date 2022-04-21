@@ -144,16 +144,16 @@ class View:
                 return False
 
         if self._meter_name is not None:
-            if instrument.instrumentation_info.name != self._meter_name:
+            if instrument.instrumentation_scope.name != self._meter_name:
                 return False
 
         if self._meter_version is not None:
-            if instrument.instrumentation_info.version != self._meter_version:
+            if instrument.instrumentation_scope.version != self._meter_version:
                 return False
 
         if self._meter_schema_url is not None:
             if (
-                instrument.instrumentation_info.schema_url
+                instrument.instrumentation_scope.schema_url
                 != self._meter_schema_url
             ):
                 return False

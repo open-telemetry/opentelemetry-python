@@ -24,7 +24,7 @@ from opentelemetry.sdk._metrics.point import (
     Sum,
 )
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 
 class TestInMemoryMetricReader(TestCase):
@@ -39,7 +39,7 @@ class TestInMemoryMetricReader(TestCase):
         metric = Metric(
             attributes={"myattr": "baz"},
             description="",
-            instrumentation_info=InstrumentationInfo("testmetrics"),
+            instrumentation_scope=InstrumentationScope("testmetrics"),
             name="foo",
             resource=Resource.create(),
             unit="",

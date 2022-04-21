@@ -24,7 +24,7 @@ from opentelemetry.exporter.zipkin.encoder import (
 )
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk import trace
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import TraceFlags
 from opentelemetry.trace.status import Status, StatusCode
 
@@ -417,7 +417,7 @@ class CommonEncoderTestCases:
                 context=other_context,
                 parent=None,
                 resource=trace.Resource({}),
-                instrumentation_info=InstrumentationInfo(
+                instrumentation_scope=InstrumentationScope(
                     name="name", version="version"
                 ),
             )

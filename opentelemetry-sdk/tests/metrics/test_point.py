@@ -16,14 +16,14 @@ from unittest import TestCase
 
 from opentelemetry.sdk._metrics.point import Gauge, Histogram, Metric, Sum
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 
 def _create_metric(value):
     return Metric(
         attributes={"attr-key": "test-val"},
         description="test-description",
-        instrumentation_info=InstrumentationInfo(
+        instrumentation_scope=InstrumentationScope(
             name="name", version="version"
         ),
         name="test-name",
@@ -35,6 +35,7 @@ def _create_metric(value):
 
 class TestDatapointToJSON(TestCase):
     def test_sum(self):
+        self.maxDiff = None
         point = _create_metric(
             Sum(
                 aggregation_temporality=2,
@@ -45,14 +46,14 @@ class TestDatapointToJSON(TestCase):
             )
         )
         self.assertEqual(
-            '{"attributes": {"attr-key": "test-val"}, "description": "test-description", "instrumentation_info": "InstrumentationInfo(name, version, None)", "name": "test-name", "resource": "BoundedAttributes({\'resource-key\': \'resource-val\'}, maxlen=None)", "unit": "test-unit", "point": {"aggregation_temporality": 2, "is_monotonic": true, "start_time_unix_nano": 10, "time_unix_nano": 20, "value": 9}}',
+            '{"attributes": {"attr-key": "test-val"}, "description": "test-description", "instrumentation_scope": "InstrumentationScope(name, version, None)", "name": "test-name", "resource": "BoundedAttributes({\'resource-key\': \'resource-val\'}, maxlen=None)", "unit": "test-unit", "point": {"aggregation_temporality": 2, "is_monotonic": true, "start_time_unix_nano": 10, "time_unix_nano": 20, "value": 9}}',
             point.to_json(),
         )
 
     def test_gauge(self):
         point = _create_metric(Gauge(time_unix_nano=40, value=20))
         self.assertEqual(
-            '{"attributes": {"attr-key": "test-val"}, "description": "test-description", "instrumentation_info": "InstrumentationInfo(name, version, None)", "name": "test-name", "resource": "BoundedAttributes({\'resource-key\': \'resource-val\'}, maxlen=None)", "unit": "test-unit", "point": {"time_unix_nano": 40, "value": 20}}',
+            '{"attributes": {"attr-key": "test-val"}, "description": "test-description", "instrumentation_scope": "InstrumentationScope(name, version, None)", "name": "test-name", "resource": "BoundedAttributes({\'resource-key\': \'resource-val\'}, maxlen=None)", "unit": "test-unit", "point": {"time_unix_nano": 40, "value": 20}}',
             point.to_json(),
         )
 
@@ -71,6 +72,6 @@ class TestDatapointToJSON(TestCase):
         )
         self.maxDiff = None
         self.assertEqual(
-            '{"attributes": {"attr-key": "test-val"}, "description": "test-description", "instrumentation_info": "InstrumentationInfo(name, version, None)", "name": "test-name", "resource": "BoundedAttributes({\'resource-key\': \'resource-val\'}, maxlen=None)", "unit": "test-unit", "point": {"aggregation_temporality": 1, "bucket_counts": [0, 0, 1, 0], "explicit_bounds": [0.1, 0.5, 0.9, 1], "max": 0.8, "min": 0.8, "start_time_unix_nano": 50, "sum": 0.8, "time_unix_nano": 60}}',
+            '{"attributes": {"attr-key": "test-val"}, "description": "test-description", "instrumentation_scope": "InstrumentationScope(name, version, None)", "name": "test-name", "resource": "BoundedAttributes({\'resource-key\': \'resource-val\'}, maxlen=None)", "unit": "test-unit", "point": {"aggregation_temporality": 1, "bucket_counts": [0, 0, 1, 0], "explicit_bounds": [0.1, 0.5, 0.9, 1], "max": 0.8, "min": 0.8, "start_time_unix_nano": 50, "sum": 0.8, "time_unix_nano": 60}}',
             point.to_json(),
         )

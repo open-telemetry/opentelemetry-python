@@ -18,7 +18,7 @@ from enum import IntEnum
 from typing import Sequence, Union
 
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util.types import Attributes
 
 
@@ -69,7 +69,7 @@ class Metric:
     # common fields to all metric kinds
     attributes: Attributes
     description: str
-    instrumentation_info: InstrumentationInfo
+    instrumentation_scope: InstrumentationScope
     name: str
     resource: Resource
     unit: str
@@ -81,8 +81,8 @@ class Metric:
             {
                 "attributes": self.attributes if self.attributes else "",
                 "description": self.description if self.description else "",
-                "instrumentation_info": repr(self.instrumentation_info)
-                if self.instrumentation_info
+                "instrumentation_scope": repr(self.instrumentation_scope)
+                if self.instrumentation_scope
                 else "",
                 "name": self.name,
                 "resource": repr(self.resource.attributes)

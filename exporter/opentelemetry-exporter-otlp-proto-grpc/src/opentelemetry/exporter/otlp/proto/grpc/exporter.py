@@ -126,9 +126,7 @@ def _translate_key_values(key: str, value: Any) -> KeyValue:
 
 
 def get_resource_data(
-    sdk_resource_instrumentation_library_data: Dict[
-        SDKResource, ResourceDataT
-    ],
+    sdk_resource_scope_data: Dict[SDKResource, ResourceDataT],
     resource_class: Callable[..., TypingResourceT],
     name: str,
 ) -> List[TypingResourceT]:
@@ -137,8 +135,8 @@ def get_resource_data(
 
     for (
         sdk_resource,
-        instrumentation_library_data,
-    ) in sdk_resource_instrumentation_library_data.items():
+        scope_data,
+    ) in sdk_resource_scope_data.items():
 
         collector_resource = Resource()
 
@@ -156,9 +154,7 @@ def get_resource_data(
             resource_class(
                 **{
                     "resource": collector_resource,
-                    "instrumentation_library_{}".format(
-                        name
-                    ): instrumentation_library_data.values(),
+                    "scope_{}".format(name): scope_data.values(),
                 }
             )
         )
