@@ -258,3 +258,52 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             ][0]._view,
             _DEFAULT_VIEW,
         )
+
+    def test_view_instrument_match_collision(self):
+
+        observable_counter_0 = ObservableCounter(
+            "observable_counter_0",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        observable_counter_1 = ObservableCounter(
+            "observable_counter_1",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(
+                    View(
+                        instrument_name="observable_counter_0",
+                        name="foo"
+                    ),
+                    View(
+                        instrument_name="observable_counter_1",
+                        name="foo"
+                    ),
+                ),
+            )
+        )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, observable_counter_0)
+                )
+
+        with self.assertLogs(level=WARNING) as log:
+            metric_reader_storage.consume_measurement(
+                Measurement(1, observable_counter_1)
+            )
+
+        self.assertIn(
+            "will cause conflicting metrics",
+            log.records[0].message,
+        )

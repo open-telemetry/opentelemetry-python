@@ -101,12 +101,13 @@ class MetricReaderStorage:
                             if (
                                 existing_view_instrument_match._name
                                 == new_view_instrument_match._name
-                                and existing_view_instrument_match._description
-                                == new_view_instrument_match._description
+                                # Should description be considered as well?
+                                # and existing_view_instrument_match._description
+                                # == new_view_instrument_match._description
                             ):
 
                                 _logger.warning(
-                                    "Views %s and %s will cause conflicting"
+                                    "Views %s and %s will cause conflicting "
                                     "metrics identities",
                                     existing_view_instrument_match._view,
                                     new_view_instrument_match._view,
