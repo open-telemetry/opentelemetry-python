@@ -87,7 +87,7 @@ class _ProxyAsynchronousInstrument(_ProxyInstrument[InstrumentT]):
     def __init__(
         self,
         name: str,
-        callbacks: Sequence[CallbackT],
+        callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
     ) -> None:
@@ -104,7 +104,7 @@ class Asynchronous(Instrument):
     def __init__(
         self,
         name: str,
-        callbacks: Sequence[CallbackT],
+        callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
     ) -> None:
@@ -224,7 +224,7 @@ class NoOpObservableCounter(ObservableCounter):
     def __init__(
         self,
         name: str,
-        callbacks: Sequence[CallbackT],
+        callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
     ) -> None:
@@ -253,7 +253,7 @@ class NoOpObservableUpDownCounter(ObservableUpDownCounter):
     def __init__(
         self,
         name: str,
-        callbacks: Sequence[CallbackT],
+        callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
     ) -> None:
@@ -330,7 +330,7 @@ class NoOpObservableGauge(ObservableGauge):
     def __init__(
         self,
         name: str,
-        callbacks: Sequence[CallbackT],
+        callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
     ) -> None:

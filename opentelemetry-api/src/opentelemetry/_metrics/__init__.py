@@ -261,7 +261,7 @@ class Meter(ABC):
     def create_observable_counter(
         self,
         name: str,
-        callbacks: Sequence[CallbackT],
+        callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableCounter:
@@ -365,7 +365,7 @@ class Meter(ABC):
     def create_observable_gauge(
         self,
         name: str,
-        callbacks: Sequence[CallbackT],
+        callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableGauge:
@@ -386,7 +386,7 @@ class Meter(ABC):
     def create_observable_up_down_counter(
         self,
         name: str,
-        callbacks: Sequence[CallbackT],
+        callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableUpDownCounter:
@@ -464,7 +464,7 @@ class _ProxyMeter(Meter):
     def create_observable_counter(
         self,
         name: str,
-        callbacks: Sequence[CallbackT],
+        callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableCounter:
@@ -497,7 +497,7 @@ class _ProxyMeter(Meter):
     def create_observable_gauge(
         self,
         name: str,
-        callbacks: Sequence[CallbackT],
+        callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableGauge:
@@ -515,7 +515,7 @@ class _ProxyMeter(Meter):
     def create_observable_up_down_counter(
         self,
         name: str,
-        callbacks: Sequence[CallbackT],
+        callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableUpDownCounter:
@@ -580,7 +580,7 @@ class NoOpMeter(Meter):
     def create_observable_counter(
         self,
         name: str,
-        callbacks: Sequence[CallbackT],
+        callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableCounter:
@@ -628,7 +628,7 @@ class NoOpMeter(Meter):
     def create_observable_gauge(
         self,
         name: str,
-        callbacks: Sequence[CallbackT],
+        callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableGauge:
@@ -657,7 +657,7 @@ class NoOpMeter(Meter):
     def create_observable_up_down_counter(
         self,
         name: str,
-        callbacks: Sequence[CallbackT],
+        callbacks: Optional[Sequence[CallbackT]] = None,
         unit: str = "",
         description: str = "",
     ) -> ObservableUpDownCounter:
