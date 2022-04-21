@@ -213,7 +213,7 @@ class Meter(ABC):
             [name.strip().lower(), type_.__name__, unit, description]
         )
 
-        result = None
+        result = False
 
         with self._instrument_ids_lock:
             if instrument_id in self._instrument_ids:
