@@ -15,7 +15,7 @@
 from unittest import TestCase
 from unittest.mock import Mock
 
-from opentelemetry._metrics.measurement import Measurement
+from opentelemetry._metrics.observation import Observation
 from opentelemetry.sdk._metrics import MeterProvider
 from opentelemetry.sdk._metrics.export import InMemoryMetricReader
 from opentelemetry.sdk._metrics.point import (
@@ -24,7 +24,7 @@ from opentelemetry.sdk._metrics.point import (
     Sum,
 )
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 
 class TestInMemoryMetricReader(TestCase):
@@ -39,7 +39,7 @@ class TestInMemoryMetricReader(TestCase):
         metric = Metric(
             attributes={"myattr": "baz"},
             description="",
-            instrumentation_info=InstrumentationInfo("testmetrics"),
+            instrumentation_scope=InstrumentationScope("testmetrics"),
             name="foo",
             resource=Resource.create(),
             unit="",
@@ -63,14 +63,14 @@ class TestInMemoryMetricReader(TestCase):
 
     def test_shutdown(self):
         # shutdown should always be successful
-        self.assertTrue(InMemoryMetricReader().shutdown())
+        self.assertIsNone(InMemoryMetricReader().shutdown())
 
     def test_integration(self):
         reader = InMemoryMetricReader()
         meter = MeterProvider(metric_readers=[reader]).get_meter("test_meter")
         counter1 = meter.create_counter("counter1")
         meter.create_observable_gauge(
-            "observable_gauge1", lambda: [Measurement(value=12)]
+            "observable_gauge1", callbacks=[lambda: [Observation(value=12)]]
         )
         counter1.add(1, {"foo": "1"})
         counter1.add(1, {"foo": "2"})

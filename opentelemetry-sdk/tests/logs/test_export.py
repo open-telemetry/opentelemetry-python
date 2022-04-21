@@ -39,7 +39,7 @@ from opentelemetry.sdk._logs.export.in_memory_log_exporter import (
 )
 from opentelemetry.sdk._logs.severity import SeverityNumber
 from opentelemetry.sdk.resources import Resource as SDKResource
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 from opentelemetry.trace import TraceFlags
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
@@ -338,7 +338,7 @@ class TestConsoleLogExporter(unittest.TestCase):
                 resource=SDKResource({"key": "value"}),
                 attributes={"a": 1, "b": "c"},
             ),
-            instrumentation_info=InstrumentationInfo(
+            instrumentation_scope=InstrumentationScope(
                 "first_name", "first_version"
             ),
         )
@@ -366,7 +366,7 @@ class TestConsoleLogExporter(unittest.TestCase):
         exporter = ConsoleLogExporter(out=mock_stdout, formatter=formatter)
         log_data = LogData(
             log_record=LogRecord(),
-            instrumentation_info=InstrumentationInfo(
+            instrumentation_scope=InstrumentationScope(
                 "first_name", "first_version"
             ),
         )

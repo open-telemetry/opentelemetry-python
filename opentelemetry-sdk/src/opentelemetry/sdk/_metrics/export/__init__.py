@@ -55,7 +55,7 @@ class MetricExporter(ABC):
         """Exports a batch of telemetry data.
 
         Args:
-            metrics: The list of `opentelemetry.sdk._metrics.data.MetricData` objects to be exported
+            metrics: The list of `opentelemetry.sdk._metrics.point.Metric` objects to be exported
 
         Returns:
             The result of the export
@@ -97,7 +97,7 @@ class ConsoleMetricExporter(MetricExporter):
 
 
 class InMemoryMetricReader(MetricReader):
-    """Implementation of :class:`MetricReader` that returns its metrics from :func:`metrics`.
+    """Implementation of `MetricReader` that returns its metrics from :func:`get_metrics`.
 
     This is useful for e.g. unit tests.
     """
@@ -122,8 +122,8 @@ class InMemoryMetricReader(MetricReader):
         with self._lock:
             self._metrics = list(metrics)
 
-    def shutdown(self) -> bool:
-        return True
+    def shutdown(self):
+        pass
 
 
 class PeriodicExportingMetricReader(MetricReader):
@@ -193,16 +193,15 @@ class PeriodicExportingMetricReader(MetricReader):
             _logger.exception("Exception while exporting metrics %s", str(e))
         detach(token)
 
-    def shutdown(self) -> bool:
+    def shutdown(self):
         def _shutdown():
             self._shutdown = True
 
         did_set = self._shutdown_once.do_once(_shutdown)
         if not did_set:
             _logger.warning("Can't shutdown multiple times")
-            return False
+            return
 
         self._shutdown_event.set()
         self._daemon_thread.join()
         self._exporter.shutdown()
-        return True

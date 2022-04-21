@@ -15,7 +15,7 @@
 # pylint: disable=too-many-ancestors
 
 import logging
-from typing import Callable, Dict, Generator, Iterable, Union
+from typing import Dict, Generator, Iterable, Optional, Union
 
 from opentelemetry._metrics.instrument import CallbackT
 from opentelemetry._metrics.instrument import Counter as APICounter
@@ -30,10 +30,9 @@ from opentelemetry._metrics.instrument import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
 from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
-from opentelemetry._metrics.measurement import Measurement as APIMeasurement
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.measurement_consumer import MeasurementConsumer
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 _logger = logging.getLogger(__name__)
 
@@ -42,7 +41,7 @@ class _Synchronous:
     def __init__(
         self,
         name: str,
-        instrumentation_info: InstrumentationInfo,
+        instrumentation_scope: InstrumentationScope,
         measurement_consumer: MeasurementConsumer,
         unit: str = "",
         description: str = "",
@@ -50,7 +49,7 @@ class _Synchronous:
         self.name = name
         self.unit = unit
         self.description = description
-        self.instrumentation_info = instrumentation_info
+        self.instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
         super().__init__(name, unit=unit, description=description)
 
@@ -59,37 +58,49 @@ class _Asynchronous:
     def __init__(
         self,
         name: str,
-        instrumentation_info: InstrumentationInfo,
+        instrumentation_scope: InstrumentationScope,
         measurement_consumer: MeasurementConsumer,
-        callback: CallbackT,
+        callbacks: Optional[Iterable[CallbackT]] = None,
         unit: str = "",
         description: str = "",
     ):
         self.name = name
         self.unit = unit
         self.description = description
-        self.instrumentation_info = instrumentation_info
+        self.instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
-        super().__init__(name, callback, unit=unit, description=description)
+        super().__init__(name, callbacks, unit=unit, description=description)
 
-        self._callback: Callable[[], Iterable[APIMeasurement]]
+        self._callbacks = []
 
-        if isinstance(callback, Generator):
+        if callbacks is not None:
 
-            def inner() -> Iterable[Measurement]:
-                return next(callback)
+            for callback in callbacks:
 
-            self._callback = inner
-        else:
-            self._callback = callback
+                if isinstance(callback, Generator):
+
+                    def inner(callback=callback) -> Iterable[Measurement]:
+                        return next(callback)
+
+                    self._callbacks.append(inner)
+                else:
+                    self._callbacks.append(callback)
 
     def callback(self) -> Iterable[Measurement]:
-        for api_measurement in self._callback():
-            yield Measurement(
-                api_measurement.value,
-                instrument=self,
-                attributes=api_measurement.attributes,
-            )
+        for callback in self._callbacks:
+            try:
+                for api_measurement in callback():
+                    yield Measurement(
+                        api_measurement.value,
+                        instrument=self,
+                        attributes=api_measurement.attributes,
+                    )
+            except StopIteration:
+                pass
+            except Exception:  # pylint: disable=broad-except
+                _logger.exception(
+                    "Callback failed for instrument %s.", self.name
+                )
 
 
 class Counter(_Synchronous, APICounter):

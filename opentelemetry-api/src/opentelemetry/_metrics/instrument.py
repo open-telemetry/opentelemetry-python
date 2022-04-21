@@ -30,12 +30,12 @@ from typing import (
 
 # pylint: disable=unused-import; needed for typing and sphinx
 from opentelemetry import _metrics as metrics
-from opentelemetry._metrics.measurement import Measurement
+from opentelemetry._metrics.observation import Observation
 
 InstrumentT = TypeVar("InstrumentT", bound="Instrument")
 CallbackT = Union[
-    Callable[[], Iterable[Measurement]],
-    Generator[Iterable[Measurement], None, None],
+    Callable[[], Iterable[Observation]],
+    Generator[Iterable[Observation], None, None],
 ]
 
 
@@ -43,6 +43,8 @@ _logger = getLogger(__name__)
 
 
 class Instrument(ABC):
+    """Abstract class that serves as base for all instruments."""
+
     @abstractmethod
     def __init__(self, name, unit="", description=""):
         pass
@@ -73,9 +75,9 @@ class _ProxyInstrument(ABC, Generic[InstrumentT]):
 
 
 class _ProxyAsynchronousInstrument(_ProxyInstrument[InstrumentT]):
-    def __init__(self, name, callback, unit, description) -> None:
+    def __init__(self, name, callbacks, unit, description) -> None:
         super().__init__(name, unit, description)
-        self._callback = callback
+        self._callbacks = callbacks
 
 
 class Synchronous(Instrument):
@@ -87,7 +89,7 @@ class Asynchronous(Instrument):
     def __init__(
         self,
         name,
-        callback,
+        callbacks=None,
         unit="",
         description="",
     ):
@@ -119,7 +121,9 @@ class Counter(_Monotonic, Synchronous):
         pass
 
 
-class DefaultCounter(Counter):
+class NoOpCounter(Counter):
+    """No-op implementation of `Counter`."""
+
     def __init__(self, name, unit="", description=""):
         super().__init__(name, unit=unit, description=description)
 
@@ -144,7 +148,9 @@ class UpDownCounter(_NonMonotonic, Synchronous):
         pass
 
 
-class DefaultUpDownCounter(UpDownCounter):
+class NoOpUpDownCounter(UpDownCounter):
+    """No-op implementation of `UpDownCounter`."""
+
     def __init__(self, name, unit="", description=""):
         super().__init__(name, unit=unit, description=description)
 
@@ -169,9 +175,11 @@ class ObservableCounter(_Monotonic, Asynchronous):
     """
 
 
-class DefaultObservableCounter(ObservableCounter):
-    def __init__(self, name, callback, unit="", description=""):
-        super().__init__(name, callback, unit=unit, description=description)
+class NoOpObservableCounter(ObservableCounter):
+    """No-op implementation of `ObservableCounter`."""
+
+    def __init__(self, name, callbacks=None, unit="", description=""):
+        super().__init__(name, callbacks, unit=unit, description=description)
 
 
 class _ProxyObservableCounter(
@@ -181,7 +189,7 @@ class _ProxyObservableCounter(
         self, meter: "metrics.Meter"
     ) -> ObservableCounter:
         return meter.create_observable_counter(
-            self._name, self._callback, self._unit, self._description
+            self._name, self._callbacks, self._unit, self._description
         )
 
 
@@ -192,9 +200,11 @@ class ObservableUpDownCounter(_NonMonotonic, Asynchronous):
     """
 
 
-class DefaultObservableUpDownCounter(ObservableUpDownCounter):
-    def __init__(self, name, callback, unit="", description=""):
-        super().__init__(name, callback, unit=unit, description=description)
+class NoOpObservableUpDownCounter(ObservableUpDownCounter):
+    """No-op implementation of `ObservableUpDownCounter`."""
+
+    def __init__(self, name, callbacks=None, unit="", description=""):
+        super().__init__(name, callbacks, unit=unit, description=description)
 
 
 class _ProxyObservableUpDownCounter(
@@ -205,7 +215,7 @@ class _ProxyObservableUpDownCounter(
         self, meter: "metrics.Meter"
     ) -> ObservableUpDownCounter:
         return meter.create_observable_up_down_counter(
-            self._name, self._callback, self._unit, self._description
+            self._name, self._callbacks, self._unit, self._description
         )
 
 
@@ -220,7 +230,9 @@ class Histogram(_Grouping, Synchronous):
         pass
 
 
-class DefaultHistogram(Histogram):
+class NoOpHistogram(Histogram):
+    """No-op implementation of `Histogram`."""
+
     def __init__(self, name, unit="", description=""):
         super().__init__(name, unit=unit, description=description)
 
@@ -246,9 +258,11 @@ class ObservableGauge(_Grouping, Asynchronous):
     """
 
 
-class DefaultObservableGauge(ObservableGauge):
-    def __init__(self, name, callback, unit="", description=""):
-        super().__init__(name, callback, unit=unit, description=description)
+class NoOpObservableGauge(ObservableGauge):
+    """No-op implementation of `ObservableGauge`."""
+
+    def __init__(self, name, callbacks=None, unit="", description=""):
+        super().__init__(name, callbacks, unit=unit, description=description)
 
 
 class _ProxyObservableGauge(
@@ -259,5 +273,5 @@ class _ProxyObservableGauge(
         self, meter: "metrics.Meter"
     ) -> ObservableGauge:
         return meter.create_observable_gauge(
-            self._name, self._callback, self._unit, self._description
+            self._name, self._callbacks, self._unit, self._description
         )

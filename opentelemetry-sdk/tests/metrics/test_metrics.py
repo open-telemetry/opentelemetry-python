@@ -88,7 +88,7 @@ class TestMeterProvider(ConcurrencyTestBase):
     def test_get_meter(self):
         """
         `MeterProvider.get_meter` arguments are used to create an
-        `InstrumentationInfo` object on the created `Meter`.
+        `InstrumentationScope` object on the created `Meter`.
         """
 
         meter = MeterProvider().get_meter(
@@ -97,9 +97,9 @@ class TestMeterProvider(ConcurrencyTestBase):
             schema_url="schema_url",
         )
 
-        self.assertEqual(meter._instrumentation_info.name, "name")
-        self.assertEqual(meter._instrumentation_info.version, "version")
-        self.assertEqual(meter._instrumentation_info.schema_url, "schema_url")
+        self.assertEqual(meter._instrumentation_scope.name, "name")
+        self.assertEqual(meter._instrumentation_scope.version, "version")
+        self.assertEqual(meter._instrumentation_scope.schema_url, "schema_url")
 
     def test_get_meter_empty(self):
         """
@@ -151,33 +151,45 @@ class TestMeterProvider(ConcurrencyTestBase):
 
         mock_metric_reader_0 = MagicMock(
             **{
-                "shutdown.return_value": False,
-                "__str__.return_value": "mock_metric_reader_0",
+                "shutdown.side_effect": ZeroDivisionError(),
             }
         )
-        mock_metric_reader_1 = Mock(**{"shutdown.return_value": True})
+        mock_metric_reader_1 = MagicMock(
+            **{
+                "shutdown.side_effect": AssertionError(),
+            }
+        )
 
         meter_provider = MeterProvider(
             metric_readers=[mock_metric_reader_0, mock_metric_reader_1]
         )
 
-        with self.assertLogs(level=WARNING) as log:
-            self.assertFalse(meter_provider.shutdown())
-            self.assertEqual(
-                log.records[0].getMessage(),
-                "MetricReader mock_metric_reader_0 failed to shutdown",
-            )
+        with self.assertRaises(Exception) as error:
+            meter_provider.shutdown()
+
+        error = error.exception
+
+        self.assertEqual(
+            str(error),
+            (
+                "MeterProvider.shutdown failed because the following "
+                "metric readers failed during shutdown:\n"
+                "MagicMock: ZeroDivisionError()\n"
+                "MagicMock: AssertionError()"
+            ),
+        )
+
         mock_metric_reader_0.shutdown.assert_called_once()
         mock_metric_reader_1.shutdown.assert_called_once()
 
-        mock_metric_reader_0 = Mock(**{"shutdown.return_value": True})
-        mock_metric_reader_1 = Mock(**{"shutdown.return_value": True})
+        mock_metric_reader_0 = Mock()
+        mock_metric_reader_1 = Mock()
 
         meter_provider = MeterProvider(
             metric_readers=[mock_metric_reader_0, mock_metric_reader_1]
         )
 
-        self.assertTrue(meter_provider.shutdown())
+        self.assertIsNone(meter_provider.shutdown())
         mock_metric_reader_0.shutdown.assert_called_once()
         mock_metric_reader_1.shutdown.assert_called_once()
 
@@ -243,17 +255,17 @@ class TestMeterProvider(ConcurrencyTestBase):
 
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
             meter_provider.get_meter("name").create_observable_counter(
-                "name0", Mock()
+                "name0", callbacks=[Mock()]
             )
         )
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
             meter_provider.get_meter("name").create_observable_up_down_counter(
-                "name1", Mock()
+                "name1", callbacks=[Mock()]
             )
         )
         meter_provider._measurement_consumer.register_asynchronous_instrument.assert_called_with(
             meter_provider.get_meter("name").create_observable_gauge(
-                "name2", Mock()
+                "name2", callbacks=[Mock()]
             )
         )
 
@@ -302,11 +314,15 @@ class TestMeter(TestCase):
         try:
             self.meter.create_counter("counter")
             self.meter.create_up_down_counter("up_down_counter")
-            self.meter.create_observable_counter("observable_counter", Mock())
+            self.meter.create_observable_counter(
+                "observable_counter", callbacks=[Mock()]
+            )
             self.meter.create_histogram("histogram")
-            self.meter.create_observable_gauge("observable_gauge", Mock())
+            self.meter.create_observable_gauge(
+                "observable_gauge", callbacks=[Mock()]
+            )
             self.meter.create_observable_up_down_counter(
-                "observable_up_down_counter", Mock()
+                "observable_up_down_counter", callbacks=[Mock()]
             )
         except Exception as error:
             self.fail(f"Unexpected exception raised {error}")
@@ -328,7 +344,7 @@ class TestMeter(TestCase):
         ]:
             with self.assertLogs(level=WARNING):
                 getattr(self.meter, f"create_{instrument_name}")(
-                    instrument_name, Mock()
+                    instrument_name, callbacks=[Mock()]
                 )
 
     def test_create_counter(self):
@@ -349,7 +365,7 @@ class TestMeter(TestCase):
 
     def test_create_observable_counter(self):
         observable_counter = self.meter.create_observable_counter(
-            "name", Mock(), unit="unit", description="description"
+            "name", callbacks=[Mock()], unit="unit", description="description"
         )
 
         self.assertIsInstance(observable_counter, ObservableCounter)
@@ -365,7 +381,7 @@ class TestMeter(TestCase):
 
     def test_create_observable_gauge(self):
         observable_gauge = self.meter.create_observable_gauge(
-            "name", Mock(), unit="unit", description="description"
+            "name", callbacks=[Mock()], unit="unit", description="description"
         )
 
         self.assertIsInstance(observable_gauge, ObservableGauge)
@@ -374,7 +390,10 @@ class TestMeter(TestCase):
     def test_create_observable_up_down_counter(self):
         observable_up_down_counter = (
             self.meter.create_observable_up_down_counter(
-                "name", Mock(), unit="unit", description="description"
+                "name",
+                callbacks=[Mock()],
+                unit="unit",
+                description="description",
             )
         )
         self.assertIsInstance(

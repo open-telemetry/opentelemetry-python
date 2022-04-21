@@ -48,7 +48,7 @@ from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
 from opentelemetry.sdk._metrics.view import View
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._once import Once
 
 _logger = getLogger(__name__)
@@ -57,11 +57,11 @@ _logger = getLogger(__name__)
 class Meter(APIMeter):
     def __init__(
         self,
-        instrumentation_info: InstrumentationInfo,
+        instrumentation_scope: InstrumentationScope,
         measurement_consumer: MeasurementConsumer,
     ):
-        super().__init__(instrumentation_info)
-        self._instrumentation_info = instrumentation_info
+        super().__init__(instrumentation_scope)
+        self._instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
 
     def create_counter(self, name, unit="", description="") -> APICounter:
@@ -80,7 +80,7 @@ class Meter(APIMeter):
 
         return Counter(
             name,
-            self._instrumentation_info,
+            self._instrumentation_scope,
             self._measurement_consumer,
             unit,
             description,
@@ -104,14 +104,14 @@ class Meter(APIMeter):
 
         return UpDownCounter(
             name,
-            self._instrumentation_info,
+            self._instrumentation_scope,
             self._measurement_consumer,
             unit,
             description,
         )
 
     def create_observable_counter(
-        self, name, callback, unit="", description=""
+        self, name, callbacks=None, unit="", description=""
     ) -> APIObservableCounter:
         if self._check_instrument_id(
             name, ObservableCounter, unit, description
@@ -129,9 +129,9 @@ class Meter(APIMeter):
             )
         instrument = ObservableCounter(
             name,
-            self._instrumentation_info,
+            self._instrumentation_scope,
             self._measurement_consumer,
-            callback,
+            callbacks,
             unit,
             description,
         )
@@ -155,14 +155,14 @@ class Meter(APIMeter):
             )
         return Histogram(
             name,
-            self._instrumentation_info,
+            self._instrumentation_scope,
             self._measurement_consumer,
             unit,
             description,
         )
 
     def create_observable_gauge(
-        self, name, callback, unit="", description=""
+        self, name, callbacks=None, unit="", description=""
     ) -> APIObservableGauge:
         if self._check_instrument_id(name, ObservableGauge, unit, description):
             # FIXME #2558 go through all views here and check if this
@@ -179,9 +179,9 @@ class Meter(APIMeter):
 
         instrument = ObservableGauge(
             name,
-            self._instrumentation_info,
+            self._instrumentation_scope,
             self._measurement_consumer,
-            callback,
+            callbacks,
             unit,
             description,
         )
@@ -191,7 +191,7 @@ class Meter(APIMeter):
         return instrument
 
     def create_observable_up_down_counter(
-        self, name, callback, unit="", description=""
+        self, name, callbacks=None, unit="", description=""
     ) -> APIObservableUpDownCounter:
         if self._check_instrument_id(
             name, ObservableUpDownCounter, unit, description
@@ -210,9 +210,9 @@ class Meter(APIMeter):
 
         instrument = ObservableUpDownCounter(
             name,
-            self._instrumentation_info,
+            self._instrumentation_scope,
             self._measurement_consumer,
-            callback,
+            callbacks,
             unit,
             description,
         )
@@ -315,25 +315,39 @@ class MeterProvider(APIMeterProvider):
 
         if not did_shutdown:
             _logger.warning("shutdown can only be called once")
-            return False
+            return
 
-        overall_result = True
+        metric_reader_error = {}
 
         for metric_reader in self._sdk_config.metric_readers:
-            metric_reader_result = metric_reader.shutdown()
+            try:
+                metric_reader.shutdown()
 
-            if not metric_reader_result:
-                _logger.warning(
-                    "MetricReader %s failed to shutdown", metric_reader
-                )
+            # pylint: disable=broad-except
+            except Exception as error:
 
-            overall_result = overall_result and metric_reader_result
+                metric_reader_error[metric_reader] = error
 
         if self._atexit_handler is not None:
             unregister(self._atexit_handler)
             self._atexit_handler = None
 
-        return overall_result
+        if metric_reader_error:
+
+            metric_reader_error_string = "\n".join(
+                [
+                    f"{metric_reader.__class__.__name__}: {repr(error)}"
+                    for metric_reader, error in metric_reader_error.items()
+                ]
+            )
+
+            raise Exception(
+                (
+                    "MeterProvider.shutdown failed because the following "
+                    "metric readers failed during shutdown:\n"
+                    f"{metric_reader_error_string}"
+                )
+            )
 
     def get_meter(
         self,
@@ -352,7 +366,7 @@ class MeterProvider(APIMeterProvider):
             _logger.warning("Meter name cannot be None or empty.")
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
-        info = InstrumentationInfo(name, version, schema_url)
+        info = InstrumentationScope(name, version, schema_url)
         with self._meter_lock:
             if not self._meters.get(info):
                 # FIXME #2558 pass SDKConfig object to meter so that the meter
