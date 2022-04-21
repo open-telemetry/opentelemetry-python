@@ -23,7 +23,7 @@ from opentelemetry.sdk._metrics.point import (
     Sum,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 
 def _generate_metric(
@@ -37,7 +37,7 @@ def _generate_metric(
         unit = "s"
     return Metric(
         resource=SDKResource(OrderedDict([("a", 1), ("b", False)])),
-        instrumentation_info=InstrumentationInfo(
+        instrumentation_scope=InstrumentationScope(
             "first_name", "first_version"
         ),
         attributes=attributes,

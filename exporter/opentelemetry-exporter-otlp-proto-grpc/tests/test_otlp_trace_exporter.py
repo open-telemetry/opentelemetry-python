@@ -37,19 +37,15 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
     TraceServiceServicer,
     add_TraceServiceServicer_to_server,
 )
+from opentelemetry.proto.common.v1.common_pb2 import AnyValue, ArrayValue
 from opentelemetry.proto.common.v1.common_pb2 import (
-    AnyValue,
-    ArrayValue,
-    InstrumentationLibrary,
-    KeyValue,
+    InstrumentationScope as PB2InstrumentationScope,
 )
+from opentelemetry.proto.common.v1.common_pb2 import KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
-from opentelemetry.proto.trace.v1.trace_pb2 import (
-    InstrumentationLibrarySpans,
-    ResourceSpans,
-)
+from opentelemetry.proto.trace.v1.trace_pb2 import ResourceSpans, ScopeSpans
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as OTLPSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
 from opentelemetry.sdk.environment_variables import (
@@ -69,7 +65,7 @@ from opentelemetry.sdk.trace.export import (
     SimpleSpanProcessor,
     SpanExportResult,
 )
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
 )
@@ -174,7 +170,7 @@ class TestOTLPSpanExporter(TestCase):
                     }
                 )
             ],
-            instrumentation_info=InstrumentationInfo(
+            instrumentation_scope=InstrumentationScope(
                 name="name", version="version"
             ),
         )
@@ -190,7 +186,7 @@ class TestOTLPSpanExporter(TestCase):
             ),
             resource=SDKResource(OrderedDict([("a", 2), ("b", False)])),
             parent=Mock(**{"span_id": 12345}),
-            instrumentation_info=InstrumentationInfo(
+            instrumentation_scope=InstrumentationScope(
                 name="name", version="version"
             ),
         )
@@ -206,7 +202,7 @@ class TestOTLPSpanExporter(TestCase):
             ),
             resource=SDKResource(OrderedDict([("a", 1), ("b", False)])),
             parent=Mock(**{"span_id": 12345}),
-            instrumentation_info=InstrumentationInfo(
+            instrumentation_scope=InstrumentationScope(
                 name="name2", version="version2"
             ),
         )
@@ -493,9 +489,9 @@ class TestOTLPSpanExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_spans=[
-                        InstrumentationLibrarySpans(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_spans=[
+                        ScopeSpans(
+                            scope=PB2InstrumentationScope(
                                 name="name", version="version"
                             ),
                             spans=[
@@ -595,9 +591,9 @@ class TestOTLPSpanExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_spans=[
-                        InstrumentationLibrarySpans(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_spans=[
+                        ScopeSpans(
+                            scope=PB2InstrumentationScope(
                                 name="name", version="version"
                             ),
                             spans=[
@@ -677,8 +673,8 @@ class TestOTLPSpanExporter(TestCase):
                                 )
                             ],
                         ),
-                        InstrumentationLibrarySpans(
-                            instrumentation_library=InstrumentationLibrary(
+                        ScopeSpans(
+                            scope=PB2InstrumentationScope(
                                 name="name2", version="version2"
                             ),
                             spans=[
@@ -717,9 +713,9 @@ class TestOTLPSpanExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_spans=[
-                        InstrumentationLibrarySpans(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_spans=[
+                        ScopeSpans(
+                            scope=PB2InstrumentationScope(
                                 name="name", version="version"
                             ),
                             spans=[
@@ -763,12 +759,7 @@ class TestOTLPSpanExporter(TestCase):
         translated: ExportTraceServiceRequest,
         code_expected: Status,
     ):
-        status = (
-            translated.resource_spans[0]
-            .instrumentation_library_spans[0]
-            .spans[0]
-            .status
-        )
+        status = translated.resource_spans[0].scope_spans[0].spans[0].status
 
         self.assertEqual(
             status.code,
@@ -861,28 +852,28 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(
             1,
             translated.resource_spans[0]
-            .instrumentation_library_spans[0]
+            .scope_spans[0]
             .spans[0]
             .dropped_links_count,
         )
         self.assertEqual(
             2,
             translated.resource_spans[0]
-            .instrumentation_library_spans[0]
+            .scope_spans[0]
             .spans[0]
             .dropped_attributes_count,
         )
         self.assertEqual(
             3,
             translated.resource_spans[0]
-            .instrumentation_library_spans[0]
+            .scope_spans[0]
             .spans[0]
             .dropped_events_count,
         )
         self.assertEqual(
             2,
             translated.resource_spans[0]
-            .instrumentation_library_spans[0]
+            .scope_spans[0]
             .spans[0]
             .links[0]
             .dropped_attributes_count,
@@ -890,7 +881,7 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(
             2,
             translated.resource_spans[0]
-            .instrumentation_library_spans[0]
+            .scope_spans[0]
             .spans[0]
             .events[0]
             .dropped_attributes_count,
@@ -908,7 +899,7 @@ def _create_span_with_status(status: SDKStatus):
             }
         ),
         parent=Mock(**{"span_id": 12345}),
-        instrumentation_info=InstrumentationInfo(
+        instrumentation_scope=InstrumentationScope(
             name="name", version="version"
         ),
     )

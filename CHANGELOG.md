@@ -14,6 +14,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   instruments to `NoOpCounter`, `NoOpHistogram`, `NoOpObservableCounter`,
   `NoOpObservableGauge`, `NoOpObservableUpDownCounter`, `NoOpUpDownCounter`
   ([#2616](https://github.com/open-telemetry/opentelemetry-python/pull/2616))
+- Deprecate InstrumentationLibraryInfo and Add InstrumentationScope
+  ([#2583](https://github.com/open-telemetry/opentelemetry-python/pull/2583))
 
 ## [1.11.0-0.30b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.11.0-0.30b0) - 2022-04-18
 
