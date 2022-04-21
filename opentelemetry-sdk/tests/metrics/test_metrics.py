@@ -474,6 +474,8 @@ class TestDuplicateInstrumentAggregateData(TestCase):
 
         reader.shutdown()
 
+        sleep(1)
+
         metrics = exporter.metrics[0]
 
         self.assertEqual(len(metrics), 2)
