@@ -35,6 +35,8 @@ OTLP_JAEGER_SPAN_KIND = {
 
 NAME_KEY = "otel.library.name"
 VERSION_KEY = "otel.library.version"
+_SCOPE_NAME_KEY = "otel.scope.name"
+_SCOPE_VERSION_KEY = "otel.scope.version"
 
 
 def _nsec_to_usec_round(nsec: int) -> int:
@@ -299,15 +301,22 @@ class ProtobufTranslator(Translator):
             )
         )
 
-        # Instrumentation info KeyValues
-        if span.instrumentation_info:
+        # Instrumentation scope KeyValues
+        if span.instrumentation_scope:
             name = _get_string_key_value(
-                NAME_KEY, span.instrumentation_info.name
+                NAME_KEY, span.instrumentation_scope.name
             )
             version = _get_string_key_value(
-                VERSION_KEY, span.instrumentation_info.version
+                VERSION_KEY, span.instrumentation_scope.version
+            )
+            scope_name = _get_string_key_value(
+                _SCOPE_NAME_KEY, span.instrumentation_scope.name
+            )
+            scope_version = _get_string_key_value(
+                _SCOPE_VERSION_KEY, span.instrumentation_scope.version
             )
             translated.extend([name, version])
+            translated.extend([scope_name, scope_version])
 
         # Make sure to add "error" tag if span status is not OK
         if not span.status.is_ok:

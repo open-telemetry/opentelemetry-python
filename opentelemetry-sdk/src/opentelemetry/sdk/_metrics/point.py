@@ -18,7 +18,7 @@ from enum import IntEnum
 from typing import Sequence, Union
 
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util.types import Attributes
 
 
@@ -63,13 +63,13 @@ class Metric:
     """Represents a metric point in the OpenTelemetry data model to be exported
 
     Concrete metric types contain all the information as in the OTLP proto definitions
-    (https://tinyurl.com/7h6yx24v) but are flattened as much as possible.
+    (https://github.com/open-telemetry/opentelemetry-proto/blob/b43e9b18b76abf3ee040164b55b9c355217151f3/opentelemetry/proto/metrics/v1/metrics.proto#L37) but are flattened as much as possible.
     """
 
     # common fields to all metric kinds
     attributes: Attributes
     description: str
-    instrumentation_info: InstrumentationInfo
+    instrumentation_scope: InstrumentationScope
     name: str
     resource: Resource
     unit: str
@@ -81,8 +81,8 @@ class Metric:
             {
                 "attributes": self.attributes if self.attributes else "",
                 "description": self.description if self.description else "",
-                "instrumentation_info": repr(self.instrumentation_info)
-                if self.instrumentation_info
+                "instrumentation_scope": repr(self.instrumentation_scope)
+                if self.instrumentation_scope
                 else "",
                 "name": self.name,
                 "resource": repr(self.resource.attributes)

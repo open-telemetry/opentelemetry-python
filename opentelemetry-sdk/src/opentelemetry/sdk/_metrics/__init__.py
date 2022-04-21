@@ -48,7 +48,7 @@ from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
 from opentelemetry.sdk._metrics.view import View
 from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._once import Once
 
 _logger = getLogger(__name__)
@@ -57,11 +57,11 @@ _logger = getLogger(__name__)
 class Meter(APIMeter):
     def __init__(
         self,
-        instrumentation_info: InstrumentationInfo,
+        instrumentation_scope: InstrumentationScope,
         measurement_consumer: MeasurementConsumer,
     ):
-        super().__init__(instrumentation_info)
-        self._instrumentation_info = instrumentation_info
+        super().__init__(instrumentation_scope)
+        self._instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
 
     def create_counter(self, name, unit="", description="") -> APICounter:
@@ -80,7 +80,7 @@ class Meter(APIMeter):
 
         return Counter(
             name,
-            self._instrumentation_info,
+            self._instrumentation_scope,
             self._measurement_consumer,
             unit,
             description,
@@ -104,7 +104,7 @@ class Meter(APIMeter):
 
         return UpDownCounter(
             name,
-            self._instrumentation_info,
+            self._instrumentation_scope,
             self._measurement_consumer,
             unit,
             description,
@@ -129,7 +129,7 @@ class Meter(APIMeter):
             )
         instrument = ObservableCounter(
             name,
-            self._instrumentation_info,
+            self._instrumentation_scope,
             self._measurement_consumer,
             callbacks,
             unit,
@@ -155,7 +155,7 @@ class Meter(APIMeter):
             )
         return Histogram(
             name,
-            self._instrumentation_info,
+            self._instrumentation_scope,
             self._measurement_consumer,
             unit,
             description,
@@ -179,7 +179,7 @@ class Meter(APIMeter):
 
         instrument = ObservableGauge(
             name,
-            self._instrumentation_info,
+            self._instrumentation_scope,
             self._measurement_consumer,
             callbacks,
             unit,
@@ -210,7 +210,7 @@ class Meter(APIMeter):
 
         instrument = ObservableUpDownCounter(
             name,
-            self._instrumentation_info,
+            self._instrumentation_scope,
             self._measurement_consumer,
             callbacks,
             unit,
@@ -366,7 +366,7 @@ class MeterProvider(APIMeterProvider):
             _logger.warning("Meter name cannot be None or empty.")
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
-        info = InstrumentationInfo(name, version, schema_url)
+        info = InstrumentationScope(name, version, schema_url)
         with self._meter_lock:
             if not self._meters.get(info):
                 # FIXME #2558 pass SDKConfig object to meter so that the meter
