@@ -98,7 +98,7 @@ class InstrumentationScope:
         return hash((self._name, self._version, self._schema_url))
 
     def __eq__(self, value: object) -> bool:
-        if not isinstance(value, InstrumentationInfo):
+        if not isinstance(value, InstrumentationScope):
             return NotImplemented
         return (self._name, self._version, self._schema_url) == (
             value._name,
@@ -107,7 +107,7 @@ class InstrumentationScope:
         )
 
     def __lt__(self, value: object) -> bool:
-        if not isinstance(value, InstrumentationInfo):
+        if not isinstance(value, InstrumentationScope):
             return NotImplemented
         return (self._name, self._version, self._schema_url) < (
             value._name,
