@@ -220,7 +220,6 @@ class Meter(ABC):
                 result = True
             else:
                 self._instrument_ids.add(instrument_id)
-                result = False
 
         return (result, instrument_id)
 
