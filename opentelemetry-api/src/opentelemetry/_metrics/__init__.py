@@ -162,19 +162,18 @@ class _ProxyMeterProvider(MeterProvider):
 
 
 class Meter(ABC):
+    """Handles instrument creation.
+
+    This class provides methods for creating instruments which are then
+    used to produce measurements.
+    """
+
     def __init__(
         self,
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
     ) -> None:
-
-        """Handles instrument creation.
-
-        This class provides methods for creating instruments which are then
-        used to produce measurements.
-        """
-
         super().__init__()
         self._name = name
         self._version = version
@@ -535,6 +534,11 @@ class _ProxyMeter(Meter):
 
 
 class NoOpMeter(Meter):
+    """The default Meter used when no Meter implementation is available.
+
+    All operations are no-op.
+    """
+
     def create_counter(
         self,
         name: str,

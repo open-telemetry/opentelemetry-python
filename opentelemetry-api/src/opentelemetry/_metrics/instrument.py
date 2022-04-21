@@ -143,14 +143,14 @@ class Counter(_Monotonic, Synchronous):
 
 
 class NoOpCounter(Counter):
+    """No-op implementation of `Counter`."""
+
     def __init__(
         self,
         name: str,
         unit: str = "",
         description: str = "",
     ) -> None:
-        """No-op implementation of `Counter`."""
-
         super().__init__(name, unit=unit, description=description)
 
     def add(
@@ -187,14 +187,14 @@ class UpDownCounter(_NonMonotonic, Synchronous):
 
 
 class NoOpUpDownCounter(UpDownCounter):
+    """No-op implementation of `UpDownCounter`."""
+
     def __init__(
         self,
         name: str,
         unit: str = "",
         description: str = "",
     ) -> None:
-        """No-op implementation of `UpDownCounter`."""
-
         super().__init__(name, unit=unit, description=description)
 
     def add(
@@ -227,6 +227,8 @@ class ObservableCounter(_Monotonic, Asynchronous):
 
 
 class NoOpObservableCounter(ObservableCounter):
+    """No-op implementation of `ObservableCounter`."""
+
     def __init__(
         self,
         name: str,
@@ -234,8 +236,6 @@ class NoOpObservableCounter(ObservableCounter):
         unit: str = "",
         description: str = "",
     ) -> None:
-        """No-op implementation of `ObservableCounter`."""
-
         super().__init__(name, callbacks, unit=unit, description=description)
 
 
@@ -258,6 +258,8 @@ class ObservableUpDownCounter(_NonMonotonic, Asynchronous):
 
 
 class NoOpObservableUpDownCounter(ObservableUpDownCounter):
+    """No-op implementation of `ObservableUpDownCounter`."""
+
     def __init__(
         self,
         name: str,
@@ -265,8 +267,6 @@ class NoOpObservableUpDownCounter(ObservableUpDownCounter):
         unit: str = "",
         description: str = "",
     ) -> None:
-        """No-op implementation of `ObservableUpDownCounter`."""
-
         super().__init__(name, callbacks, unit=unit, description=description)
 
 
@@ -298,14 +298,14 @@ class Histogram(_Grouping, Synchronous):
 
 
 class NoOpHistogram(Histogram):
+    """No-op implementation of `Histogram`."""
+
     def __init__(
         self,
         name: str,
         unit: str = "",
         description: str = "",
     ) -> None:
-        """No-op implementation of `Histogram`."""
-
         super().__init__(name, unit=unit, description=description)
 
     def record(
@@ -339,6 +339,8 @@ class ObservableGauge(_Grouping, Asynchronous):
 
 
 class NoOpObservableGauge(ObservableGauge):
+    """No-op implementation of `ObservableGauge`."""
+
     def __init__(
         self,
         name: str,
@@ -346,8 +348,6 @@ class NoOpObservableGauge(ObservableGauge):
         unit: str = "",
         description: str = "",
     ) -> None:
-        """No-op implementation of `ObservableGauge`."""
-
         super().__init__(name, callbacks, unit=unit, description=description)
 
 

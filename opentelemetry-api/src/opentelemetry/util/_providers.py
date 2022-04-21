@@ -14,7 +14,7 @@
 
 from logging import getLogger
 from os import environ
-from typing import TYPE_CHECKING, TypeVar, Union, cast
+from typing import TYPE_CHECKING, Union, cast
 
 from pkg_resources import iter_entry_points
 
@@ -22,7 +22,7 @@ if TYPE_CHECKING:
     from opentelemetry._metrics import MeterProvider
     from opentelemetry.trace import TracerProvider
 
-Provider = TypeVar("Provider", "TracerProvider", "MeterProvider")
+Provider = Union["TracerProvider"]
 
 logger = getLogger(__name__)
 
