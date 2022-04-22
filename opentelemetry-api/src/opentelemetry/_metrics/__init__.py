@@ -78,6 +78,16 @@ from opentelemetry.util._providers import _load_provider
 _logger = getLogger(__name__)
 
 
+ProxyInstrumentT = Union[
+    _ProxyCounter,
+    _ProxyHistogram,
+    _ProxyObservableCounter,
+    _ProxyObservableGauge,
+    _ProxyObservableUpDownCounter,
+    _ProxyUpDownCounter,
+]
+
+
 class MeterProvider(ABC):
     """
     MeterProvider is the entry point of the API. It provides access to `Meter` instances.
@@ -412,7 +422,7 @@ class _ProxyMeter(Meter):
     ) -> None:
         super().__init__(name, version=version, schema_url=schema_url)
         self._lock = Lock()
-        self._instruments: List[_ProxyInstrument] = []
+        self._instruments: List[ProxyInstrumentT] = []
         self._real_meter: Optional[Meter] = None
 
     def on_set_meter_provider(self, meter_provider: MeterProvider) -> None:
@@ -740,7 +750,7 @@ def get_meter_provider() -> MeterProvider:
         if OTEL_PYTHON_METER_PROVIDER not in environ.keys():
             return _PROXY_METER_PROVIDER
 
-        meter_provider: MeterProvider = _load_provider(
+        meter_provider: MeterProvider = _load_provider(  # type: ignore
             OTEL_PYTHON_METER_PROVIDER, "meter_provider"
         )
         _set_meter_provider(meter_provider, log=False)
