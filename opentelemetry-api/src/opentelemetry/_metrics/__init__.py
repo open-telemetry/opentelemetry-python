@@ -63,7 +63,6 @@ from opentelemetry._metrics.instrument import (
     UpDownCounter,
     _ProxyCounter,
     _ProxyHistogram,
-    _ProxyInstrument,
     _ProxyObservableCounter,
     _ProxyObservableGauge,
     _ProxyObservableUpDownCounter,
