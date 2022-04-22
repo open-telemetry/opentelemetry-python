@@ -14,7 +14,7 @@
 
 from abc import ABC, abstractmethod
 from threading import Lock
-from typing import TYPE_CHECKING, Iterable, List, Mapping
+from typing import TYPE_CHECKING, Dict, Iterable, List, Mapping
 
 from opentelemetry.sdk._metrics.aggregation import AggregationTemporality
 from opentelemetry.sdk._metrics.measurement import Measurement
@@ -40,7 +40,9 @@ class MeasurementConsumer(ABC):
 
     @abstractmethod
     def collect(
-        self, metric_reader: MetricReader, temporality: AggregationTemporality
+        self,
+        metric_reader: MetricReader,
+        instrument_type_temporality: Dict[type, AggregationTemporality],
     ) -> Iterable[Metric]:
         pass
 
@@ -67,11 +69,15 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             self._async_instruments.append(instrument)
 
     def collect(
-        self, metric_reader: MetricReader, temporality: AggregationTemporality
+        self,
+        metric_reader: MetricReader,
+        instrument_type_temporality: Dict[type, AggregationTemporality],
     ) -> Iterable[Metric]:
         with self._lock:
             metric_reader_storage = self._reader_storages[metric_reader]
             for async_instrument in self._async_instruments:
                 for measurement in async_instrument.callback():
                     metric_reader_storage.consume_measurement(measurement)
-        return self._reader_storages[metric_reader].collect(temporality)
+        return self._reader_storages[metric_reader].collect(
+            instrument_type_temporality
+        )

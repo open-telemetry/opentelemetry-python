@@ -406,3 +406,18 @@ The :envvar:`OTEL_PYTHON_LOG_EMITTER_PROVIDER` environment variable allows users
 provide the entry point for loading the log emitter provider. If not specified, SDK
 LogEmitterProvider is used.
 """
+
+_OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE = (
+    "OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE"
+)
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE` environment
+variable allows users to set the default aggregation temporality policy to use
+on the basis of instrument kind. The valid (case-insensitive) values are:
+
+``CUMULATIVE``: Choose ``CUMULATIVE`` aggregation temporality for all instrument kinds.
+``DELTA``: Choose ``DELTA`` aggregation temporality for ``Counter``, ``Asynchronous Counter`` and ``Histogram``.
+Choose ``CUMULATIVE`` aggregation temporality for ``UpDownCounter`` and ``Asynchronous UpDownCounter``.
+"""

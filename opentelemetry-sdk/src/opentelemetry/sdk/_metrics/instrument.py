@@ -15,7 +15,7 @@
 # pylint: disable=too-many-ancestors
 
 import logging
-from typing import Dict, Generator, Iterable, Optional, Union
+from typing import TYPE_CHECKING, Dict, Generator, Iterable, Optional, Union
 
 from opentelemetry._metrics.instrument import CallbackT
 from opentelemetry._metrics.instrument import Counter as APICounter
@@ -31,8 +31,12 @@ from opentelemetry._metrics.instrument import (
 )
 from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
 from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.measurement_consumer import MeasurementConsumer
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+
+if TYPE_CHECKING:
+    from opentelemetry.sdk._metrics.measurement_consumer import (
+        MeasurementConsumer,
+    )
 
 _logger = logging.getLogger(__name__)
 
@@ -42,7 +46,7 @@ class _Synchronous:
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
-        measurement_consumer: MeasurementConsumer,
+        measurement_consumer: "MeasurementConsumer",
         unit: str = "",
         description: str = "",
     ):
@@ -59,7 +63,7 @@ class _Asynchronous:
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
-        measurement_consumer: MeasurementConsumer,
+        measurement_consumer: "MeasurementConsumer",
         callbacks: Optional[Iterable[CallbackT]] = None,
         unit: str = "",
         description: str = "",

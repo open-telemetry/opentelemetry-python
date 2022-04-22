@@ -83,21 +83,30 @@ class MetricReaderStorage:
         ):
             view_instrument_match.consume_measurement(measurement)
 
-    def collect(self, temporality: AggregationTemporality) -> Iterable[Metric]:
-        # use a list instead of yielding to prevent a slow reader from holding SDK locks
+    def collect(
+        self, instrument_type_temporality: Dict[type, AggregationTemporality]
+    ) -> Iterable[Metric]:
+        # Use a list instead of yielding to prevent a slow reader from holding
+        # SDK locks
         metrics: List[Metric] = []
 
-        # While holding the lock, new _ViewInstrumentMatch can't be added from another thread (so we are
-        # sure we collect all existing view). However, instruments can still send measurements
-        # that will make it into the individual aggregations; collection will acquire those
-        # locks iteratively to keep locking as fine-grained as possible. One side effect is
-        # that end times can be slightly skewed among the metric streams produced by the SDK,
-        # but we still align the output timestamps for a single instrument.
+        # While holding the lock, new _ViewInstrumentMatch can't be added from
+        # another thread (so we are sure we collect all existing view).
+        # However, instruments can still send measurements that will make it
+        # into the individual aggregations; collection will acquire those locks
+        # iteratively to keep locking as fine-grained as possible. One side
+        # effect is that end times can be slightly skewed among the metric
+        # streams produced by the SDK, but we still align the output timestamps
+        # for a single instrument.
         with self._lock:
             for (
                 view_instrument_matches
             ) in self._view_instrument_match.values():
                 for view_instrument_match in view_instrument_matches:
-                    metrics.extend(view_instrument_match.collect(temporality))
+                    metrics.extend(
+                        view_instrument_match.collect(
+                            instrument_type_temporality
+                        )
+                    )
 
         return metrics

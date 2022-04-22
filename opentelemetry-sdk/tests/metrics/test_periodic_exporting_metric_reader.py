@@ -84,7 +84,9 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         self, metrics, exporter, collect_wait=0, interval=60000
     ):
 
-        pmr = PeriodicExportingMetricReader(exporter, interval)
+        pmr = PeriodicExportingMetricReader(
+            exporter, export_interval_millis=interval
+        )
 
         def _collect(reader, temp):
             time.sleep(collect_wait)
@@ -95,7 +97,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
 
     def test_ticker_called(self):
         collect_mock = Mock()
-        pmr = PeriodicExportingMetricReader(Mock(), 1)
+        pmr = PeriodicExportingMetricReader(Mock(), export_interval_millis=1)
         pmr._set_collect_callback(collect_mock)
         time.sleep(0.1)
         self.assertTrue(collect_mock.assert_called_once)

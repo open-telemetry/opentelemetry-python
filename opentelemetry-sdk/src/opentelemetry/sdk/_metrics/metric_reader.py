@@ -12,31 +12,85 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
 from abc import ABC, abstractmethod
-from typing import Callable, Iterable
+from logging import getLogger
+from os import environ
+from typing import Callable, Dict, Iterable
 
 from typing_extensions import final
 
+from opentelemetry.sdk._metrics.instrument import (
+    Counter,
+    Histogram,
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
+)
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
+from opentelemetry.sdk.environment_variables import (
+    _OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
+)
 
-_logger = logging.getLogger(__name__)
+_logger = getLogger(__name__)
 
 
 class MetricReader(ABC):
     """
+    Base class for all metric readers
+
+    Args:
+        preferred_temporality: A mapping between instrument classes and
+            aggregation temporality. By default uses CUMULATIVE for all instrument
+            classes. This mapping will be used to define the default aggregation
+            temporality of every instrument class. If the user wants to make a
+            change in the default aggregation temporality of an instrument class,
+            it is enough to pass here a dictionary whose keys are the instrument
+            classes and the values are the corresponding desired aggregation
+            temporalities of the classes that the user wants to change, not all of
+            them. The classes not included in the passed dictionary will retain
+            their association to their default aggregation temporalities.
+
     .. document protected _receive_metrics which is a intended to be overriden by subclass
     .. automethod:: _receive_metrics
     """
 
     def __init__(
-        self,
-        preferred_temporality: AggregationTemporality = AggregationTemporality.CUMULATIVE,
+        self, preferred_temporality: Dict[type, AggregationTemporality] = None
     ) -> None:
         self._collect: Callable[
             ["MetricReader", AggregationTemporality], Iterable[Metric]
         ] = None
-        self._preferred_temporality = preferred_temporality
+
+        if (
+            environ.get(
+                _OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
+                "CUMULATIVE",
+            )
+            .upper()
+            .strip()
+            == "DELTA"
+        ):
+            self._instrument_class_temporality = {
+                Counter: AggregationTemporality.DELTA,
+                UpDownCounter: AggregationTemporality.CUMULATIVE,
+                Histogram: AggregationTemporality.DELTA,
+                ObservableCounter: AggregationTemporality.DELTA,
+                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+                ObservableGauge: AggregationTemporality.CUMULATIVE,
+            }
+
+        else:
+            self._instrument_class_temporality = {
+                Counter: AggregationTemporality.CUMULATIVE,
+                UpDownCounter: AggregationTemporality.CUMULATIVE,
+                Histogram: AggregationTemporality.CUMULATIVE,
+                ObservableCounter: AggregationTemporality.CUMULATIVE,
+                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+                ObservableGauge: AggregationTemporality.CUMULATIVE,
+            }
+
+        self._instrument_class_temporality.update(preferred_temporality or {})
 
     @final
     def collect(self) -> None:
@@ -48,7 +102,9 @@ class MetricReader(ABC):
                 "Cannot call collect on a MetricReader until it is registered on a MeterProvider"
             )
             return
-        self._receive_metrics(self._collect(self, self._preferred_temporality))
+        self._receive_metrics(
+            self._collect(self, self._instrument_class_temporality)
+        )
 
     @final
     def _set_collect_callback(
