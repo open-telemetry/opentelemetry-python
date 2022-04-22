@@ -419,6 +419,19 @@ def _convert_aggregation_temporality(
 
 
 class ExplicitBucketHistogramAggregation(_AggregationFactory):
+    """This aggregation informs the SDK to collect:
+
+    - Count of Measurement values falling within explicit bucket boundaries.
+    - Arithmetic sum of Measurement values in population. This SHOULD NOT be collected when used with instruments that record negative measurements, e.g. UpDownCounter or ObservableGauge.
+    - Min (optional) Measurement value in population.
+    - Max (optional) Measurement value in population.
+
+
+    Args:
+        boundaries: Array of increasing values representing explicit bucket boundary values.
+        record_min_max: Whether to record min and max.
+    """
+
     def __init__(
         self,
         boundaries: Sequence[float] = (
@@ -446,6 +459,11 @@ class ExplicitBucketHistogramAggregation(_AggregationFactory):
 
 
 class SumAggregation(_AggregationFactory):
+    """This aggregation informs the SDK to collect:
+
+    - The arithmetic sum of Measurement values.
+    """
+
     def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
 
         temporality = AggregationTemporality.UNSPECIFIED
@@ -461,6 +479,13 @@ class SumAggregation(_AggregationFactory):
 
 
 class LastValueAggregation(_AggregationFactory):
+    """
+    This aggregation informs the SDK to collect:
+
+    - The last Measurement.
+    - The timestamp of the last Measurement.
+    """
+
     def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
         return _LastValueAggregation()
 

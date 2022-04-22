@@ -45,7 +45,7 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
 from threading import Lock
-from typing import List, Optional, Sequence, Set, Union, cast
+from typing import List, Optional, Sequence, Set, Tuple, Union, cast
 
 from opentelemetry._metrics.instrument import (
     CallbackT,
@@ -212,19 +212,23 @@ class Meter(ABC):
         """
         return self._schema_url
 
-    def _check_instrument_id(
+    def _is_instrument_registered(
         self, name: str, type_: type, unit: str, description: str
-    ) -> bool:
+    ) -> Tuple[bool, str]:
         """
         Check if an instrument with the same name, type, unit and description
         has been registered already.
-        """
 
-        result = False
+        Returns a tuple. The first value is `True` if the instrument has been
+        registered already, `False` otherwise. The second value is the
+        instrument id.
+        """
 
         instrument_id = ",".join(
             [name.strip().lower(), type_.__name__, unit, description]
         )
+
+        result = False
 
         with self._instrument_ids_lock:
             if instrument_id in self._instrument_ids:
@@ -232,7 +236,7 @@ class Meter(ABC):
             else:
                 self._instrument_ids.add(instrument_id)
 
-        return result
+        return (result, instrument_id)
 
     @abstractmethod
     def create_counter(
@@ -557,7 +561,9 @@ class NoOpMeter(Meter):
     ) -> Counter:
         """Returns a no-op Counter."""
         super().create_counter(name, unit=unit, description=description)
-        if self._check_instrument_id(name, NoOpCounter, unit, description):
+        if self._is_instrument_registered(
+            name, NoOpCounter, unit, description
+        )[0]:
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
@@ -578,9 +584,9 @@ class NoOpMeter(Meter):
         super().create_up_down_counter(
             name, unit=unit, description=description
         )
-        if self._check_instrument_id(
+        if self._is_instrument_registered(
             name, NoOpUpDownCounter, unit, description
-        ):
+        )[0]:
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
@@ -602,9 +608,9 @@ class NoOpMeter(Meter):
         super().create_observable_counter(
             name, callbacks, unit=unit, description=description
         )
-        if self._check_instrument_id(
+        if self._is_instrument_registered(
             name, NoOpObservableCounter, unit, description
-        ):
+        )[0]:
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
@@ -628,7 +634,9 @@ class NoOpMeter(Meter):
     ) -> Histogram:
         """Returns a no-op Histogram."""
         super().create_histogram(name, unit=unit, description=description)
-        if self._check_instrument_id(name, NoOpHistogram, unit, description):
+        if self._is_instrument_registered(
+            name, NoOpHistogram, unit, description
+        )[0]:
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
@@ -650,9 +658,9 @@ class NoOpMeter(Meter):
         super().create_observable_gauge(
             name, callbacks, unit=unit, description=description
         )
-        if self._check_instrument_id(
+        if self._is_instrument_registered(
             name, NoOpObservableGauge, unit, description
-        ):
+        )[0]:
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
@@ -679,9 +687,9 @@ class NoOpMeter(Meter):
         super().create_observable_up_down_counter(
             name, callbacks, unit=unit, description=description
         )
-        if self._check_instrument_id(
+        if self._is_instrument_registered(
             name, NoOpObservableUpDownCounter, unit, description
-        ):
+        )[0]:
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",
