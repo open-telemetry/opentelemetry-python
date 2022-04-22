@@ -13,11 +13,17 @@
 # limitations under the License.
 
 from os import environ
-from typing import Dict
-from unittest import TestCase
 from unittest.mock import patch
 
-from opentelemetry.sdk._metrics.aggregation import AggregationTemporality
+from typing import Dict
+from unittest import TestCase
+
+from opentelemetry.sdk._metrics.aggregation import (
+    AggregationTemporality,
+    DefaultAggregation,
+    LastValueAggregation,
+    _AggregationFactory,
+)
 from opentelemetry.sdk._metrics.instrument import (
     Counter,
     Histogram,
@@ -34,10 +40,13 @@ from opentelemetry.sdk.environment_variables import (
 
 class DummyMetricReader(MetricReader):
     def __init__(
-        self, preferred_temporality: Dict[type, AggregationTemporality] = None
+        self,
+        preferred_temporality: Dict[type, AggregationTemporality] = None,
+        preferred_aggregation: Dict[type, _AggregationFactory] = None,
     ) -> None:
         super().__init__(
             preferred_temporality=preferred_temporality,
+            preferred_aggregation=preferred_aggregation,
         )
 
     def _receive_metrics(self, metrics):
@@ -172,4 +181,45 @@ class TestMetricReader(TestCase):
         self.assertEqual(
             dummy_metric_reader._instrument_class_temporality[ObservableGauge],
             AggregationTemporality.DELTA,
+        )
+
+    def test_default_temporality(self):
+        dummy_metric_reader = DummyMetricReader()
+        self.assertEqual(
+            dummy_metric_reader._instrument_class_aggregation.keys(),
+            set(
+                [
+                    Counter,
+                    UpDownCounter,
+                    Histogram,
+                    ObservableCounter,
+                    ObservableUpDownCounter,
+                    ObservableGauge,
+                ]
+            ),
+        )
+        for (
+            value
+        ) in dummy_metric_reader._instrument_class_aggregation.values():
+            self.assertIsInstance(value, DefaultAggregation)
+
+        dummy_metric_reader = DummyMetricReader(
+            preferred_aggregation={Counter: LastValueAggregation()}
+        )
+        self.assertEqual(
+            dummy_metric_reader._instrument_class_aggregation.keys(),
+            set(
+                [
+                    Counter,
+                    UpDownCounter,
+                    Histogram,
+                    ObservableCounter,
+                    ObservableUpDownCounter,
+                    ObservableGauge,
+                ]
+            ),
+        )
+        self.assertIsInstance(
+            dummy_metric_reader._instrument_class_aggregation[Counter],
+            LastValueAggregation,
         )
