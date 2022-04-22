@@ -63,9 +63,17 @@ class Meter(APIMeter):
         super().__init__(instrumentation_scope)
         self._instrumentation_scope = instrumentation_scope
         self._measurement_consumer = measurement_consumer
+        self._instrument_id_instrument = {}
+        self._instrument_id_instrument_lock = Lock()
 
     def create_counter(self, name, unit="", description="") -> APICounter:
-        if self._check_instrument_id(name, Counter, unit, description):
+
+        (
+            is_instrument_registered,
+            instrument_id,
+        ) = self._is_instrument_registered(name, Counter, unit, description)
+
+        if is_instrument_registered:
             # FIXME #2558 go through all views here and check if this
             # instrument registration conflict can be fixed. If it can be, do
             # not log the following warning.
@@ -77,8 +85,10 @@ class Meter(APIMeter):
                 unit,
                 description,
             )
+            with self._instrument_id_instrument_lock:
+                return self._instrument_id_instrument[instrument_id]
 
-        return Counter(
+        instrument = Counter(
             name,
             self._instrumentation_scope,
             self._measurement_consumer,
@@ -86,10 +96,22 @@ class Meter(APIMeter):
             description,
         )
 
+        with self._instrument_id_instrument_lock:
+            self._instrument_id_instrument[instrument_id] = instrument
+            return instrument
+
     def create_up_down_counter(
         self, name, unit="", description=""
     ) -> APIUpDownCounter:
-        if self._check_instrument_id(name, UpDownCounter, unit, description):
+
+        (
+            is_instrument_registered,
+            instrument_id,
+        ) = self._is_instrument_registered(
+            name, UpDownCounter, unit, description
+        )
+
+        if is_instrument_registered:
             # FIXME #2558 go through all views here and check if this
             # instrument registration conflict can be fixed. If it can be, do
             # not log the following warning.
@@ -101,8 +123,10 @@ class Meter(APIMeter):
                 unit,
                 description,
             )
+            with self._instrument_id_instrument_lock:
+                return self._instrument_id_instrument[instrument_id]
 
-        return UpDownCounter(
+        instrument = UpDownCounter(
             name,
             self._instrumentation_scope,
             self._measurement_consumer,
@@ -110,12 +134,22 @@ class Meter(APIMeter):
             description,
         )
 
+        with self._instrument_id_instrument_lock:
+            self._instrument_id_instrument[instrument_id] = instrument
+            return instrument
+
     def create_observable_counter(
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableCounter:
-        if self._check_instrument_id(
+
+        (
+            is_instrument_registered,
+            instrument_id,
+        ) = self._is_instrument_registered(
             name, ObservableCounter, unit, description
-        ):
+        )
+
+        if is_instrument_registered:
             # FIXME #2558 go through all views here and check if this
             # instrument registration conflict can be fixed. If it can be, do
             # not log the following warning.
@@ -127,6 +161,9 @@ class Meter(APIMeter):
                 unit,
                 description,
             )
+            with self._instrument_id_instrument_lock:
+                return self._instrument_id_instrument[instrument_id]
+
         instrument = ObservableCounter(
             name,
             self._instrumentation_scope,
@@ -138,10 +175,18 @@ class Meter(APIMeter):
 
         self._measurement_consumer.register_asynchronous_instrument(instrument)
 
-        return instrument
+        with self._instrument_id_instrument_lock:
+            self._instrument_id_instrument[instrument_id] = instrument
+            return instrument
 
     def create_histogram(self, name, unit="", description="") -> APIHistogram:
-        if self._check_instrument_id(name, Histogram, unit, description):
+
+        (
+            is_instrument_registered,
+            instrument_id,
+        ) = self._is_instrument_registered(name, Histogram, unit, description)
+
+        if is_instrument_registered:
             # FIXME #2558 go through all views here and check if this
             # instrument registration conflict can be fixed. If it can be, do
             # not log the following warning.
@@ -153,18 +198,32 @@ class Meter(APIMeter):
                 unit,
                 description,
             )
-        return Histogram(
+            with self._instrument_id_instrument_lock:
+                return self._instrument_id_instrument[instrument_id]
+
+        instrument = Histogram(
             name,
             self._instrumentation_scope,
             self._measurement_consumer,
             unit,
             description,
         )
+        with self._instrument_id_instrument_lock:
+            self._instrument_id_instrument[instrument_id] = instrument
+            return instrument
 
     def create_observable_gauge(
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableGauge:
-        if self._check_instrument_id(name, ObservableGauge, unit, description):
+
+        (
+            is_instrument_registered,
+            instrument_id,
+        ) = self._is_instrument_registered(
+            name, ObservableGauge, unit, description
+        )
+
+        if is_instrument_registered:
             # FIXME #2558 go through all views here and check if this
             # instrument registration conflict can be fixed. If it can be, do
             # not log the following warning.
@@ -176,6 +235,8 @@ class Meter(APIMeter):
                 unit,
                 description,
             )
+            with self._instrument_id_instrument_lock:
+                return self._instrument_id_instrument[instrument_id]
 
         instrument = ObservableGauge(
             name,
@@ -188,14 +249,20 @@ class Meter(APIMeter):
 
         self._measurement_consumer.register_asynchronous_instrument(instrument)
 
-        return instrument
+        with self._instrument_id_instrument_lock:
+            self._instrument_id_instrument[instrument_id] = instrument
+            return instrument
 
     def create_observable_up_down_counter(
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableUpDownCounter:
-        if self._check_instrument_id(
-            name, ObservableUpDownCounter, unit, description
-        ):
+
+        (
+            is_instrument_registered,
+            instrument_id,
+        ) = self._is_instrument_registered(name, Counter, unit, description)
+
+        if is_instrument_registered:
             # FIXME #2558 go through all views here and check if this
             # instrument registration conflict can be fixed. If it can be, do
             # not log the following warning.
@@ -207,6 +274,8 @@ class Meter(APIMeter):
                 unit,
                 description,
             )
+            with self._instrument_id_instrument_lock:
+                return self._instrument_id_instrument[instrument_id]
 
         instrument = ObservableUpDownCounter(
             name,
@@ -219,7 +288,9 @@ class Meter(APIMeter):
 
         self._measurement_consumer.register_asynchronous_instrument(instrument)
 
-        return instrument
+        with self._instrument_id_instrument_lock:
+            self._instrument_id_instrument[instrument_id] = instrument
+            return instrument
 
 
 class MeterProvider(APIMeterProvider):
