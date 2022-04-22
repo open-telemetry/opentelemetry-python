@@ -14,7 +14,6 @@
 
 # pylint: disable=too-many-ancestors
 
-# type: ignore
 
 from abc import ABC, abstractmethod
 from logging import getLogger
@@ -24,6 +23,7 @@ from typing import (
     Generic,
     Iterable,
     Optional,
+    Sequence,
     TypeVar,
     Union,
 )
@@ -31,6 +31,7 @@ from typing import (
 # pylint: disable=unused-import; needed for typing and sphinx
 from opentelemetry import _metrics as metrics
 from opentelemetry._metrics.observation import Observation
+from opentelemetry.util.types import Attributes
 
 InstrumentT = TypeVar("InstrumentT", bound="Instrument")
 CallbackT = Union[
@@ -46,7 +47,12 @@ class Instrument(ABC):
     """Abstract class that serves as base for all instruments."""
 
     @abstractmethod
-    def __init__(self, name, unit="", description=""):
+    def __init__(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+    ) -> None:
         pass
 
         # FIXME check that the instrument name is valid
@@ -55,7 +61,12 @@ class Instrument(ABC):
 
 
 class _ProxyInstrument(ABC, Generic[InstrumentT]):
-    def __init__(self, name, unit, description) -> None:
+    def __init__(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+    ) -> None:
         self._name = name
         self._unit = unit
         self._description = description
@@ -75,7 +86,13 @@ class _ProxyInstrument(ABC, Generic[InstrumentT]):
 
 
 class _ProxyAsynchronousInstrument(_ProxyInstrument[InstrumentT]):
-    def __init__(self, name, callbacks, unit, description) -> None:
+    def __init__(
+        self,
+        name: str,
+        callbacks: Optional[Sequence[CallbackT]] = None,
+        unit: str = "",
+        description: str = "",
+    ) -> None:
         super().__init__(name, unit, description)
         self._callbacks = callbacks
 
@@ -88,11 +105,11 @@ class Asynchronous(Instrument):
     @abstractmethod
     def __init__(
         self,
-        name,
-        callbacks=None,
-        unit="",
-        description="",
-    ):
+        name: str,
+        callbacks: Optional[Sequence[CallbackT]] = None,
+        unit: str = "",
+        description: str = "",
+    ) -> None:
         super().__init__(name, unit=unit, description=description)
 
 
@@ -116,7 +133,11 @@ class Counter(_Monotonic, Synchronous):
     """A Counter is a synchronous `Instrument` which supports non-negative increments."""
 
     @abstractmethod
-    def add(self, amount, attributes=None):
+    def add(
+        self,
+        amount: Union[int, float],
+        attributes: Optional[Attributes] = None,
+    ) -> None:
         # FIXME check that the amount is non negative
         pass
 
@@ -124,15 +145,28 @@ class Counter(_Monotonic, Synchronous):
 class NoOpCounter(Counter):
     """No-op implementation of `Counter`."""
 
-    def __init__(self, name, unit="", description=""):
+    def __init__(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+    ) -> None:
         super().__init__(name, unit=unit, description=description)
 
-    def add(self, amount, attributes=None):
+    def add(
+        self,
+        amount: Union[int, float],
+        attributes: Optional[Attributes] = None,
+    ) -> None:
         return super().add(amount, attributes=attributes)
 
 
 class _ProxyCounter(_ProxyInstrument[Counter], Counter):
-    def add(self, amount, attributes=None):
+    def add(
+        self,
+        amount: Union[int, float],
+        attributes: Optional[Attributes] = None,
+    ) -> None:
         if self._real_instrument:
             self._real_instrument.add(amount, attributes)
 
@@ -144,22 +178,39 @@ class UpDownCounter(_NonMonotonic, Synchronous):
     """An UpDownCounter is a synchronous `Instrument` which supports increments and decrements."""
 
     @abstractmethod
-    def add(self, amount, attributes=None):
+    def add(
+        self,
+        amount: Union[int, float],
+        attributes: Optional[Attributes] = None,
+    ) -> None:
         pass
 
 
 class NoOpUpDownCounter(UpDownCounter):
     """No-op implementation of `UpDownCounter`."""
 
-    def __init__(self, name, unit="", description=""):
+    def __init__(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+    ) -> None:
         super().__init__(name, unit=unit, description=description)
 
-    def add(self, amount, attributes=None):
+    def add(
+        self,
+        amount: Union[int, float],
+        attributes: Optional[Attributes] = None,
+    ) -> None:
         return super().add(amount, attributes=attributes)
 
 
 class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
-    def add(self, amount, attributes=None):
+    def add(
+        self,
+        amount: Union[int, float],
+        attributes: Optional[Attributes] = None,
+    ) -> None:
         if self._real_instrument:
             self._real_instrument.add(amount, attributes)
 
@@ -178,7 +229,13 @@ class ObservableCounter(_Monotonic, Asynchronous):
 class NoOpObservableCounter(ObservableCounter):
     """No-op implementation of `ObservableCounter`."""
 
-    def __init__(self, name, callbacks=None, unit="", description=""):
+    def __init__(
+        self,
+        name: str,
+        callbacks: Optional[Sequence[CallbackT]] = None,
+        unit: str = "",
+        description: str = "",
+    ) -> None:
         super().__init__(name, callbacks, unit=unit, description=description)
 
 
@@ -203,7 +260,13 @@ class ObservableUpDownCounter(_NonMonotonic, Asynchronous):
 class NoOpObservableUpDownCounter(ObservableUpDownCounter):
     """No-op implementation of `ObservableUpDownCounter`."""
 
-    def __init__(self, name, callbacks=None, unit="", description=""):
+    def __init__(
+        self,
+        name: str,
+        callbacks: Optional[Sequence[CallbackT]] = None,
+        unit: str = "",
+        description: str = "",
+    ) -> None:
         super().__init__(name, callbacks, unit=unit, description=description)
 
 
@@ -226,22 +289,39 @@ class Histogram(_Grouping, Synchronous):
     """
 
     @abstractmethod
-    def record(self, amount, attributes=None):
+    def record(
+        self,
+        amount: Union[int, float],
+        attributes: Optional[Attributes] = None,
+    ) -> None:
         pass
 
 
 class NoOpHistogram(Histogram):
     """No-op implementation of `Histogram`."""
 
-    def __init__(self, name, unit="", description=""):
+    def __init__(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+    ) -> None:
         super().__init__(name, unit=unit, description=description)
 
-    def record(self, amount, attributes=None):
+    def record(
+        self,
+        amount: Union[int, float],
+        attributes: Optional[Attributes] = None,
+    ) -> None:
         return super().record(amount, attributes=attributes)
 
 
 class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
-    def record(self, amount, attributes=None):
+    def record(
+        self,
+        amount: Union[int, float],
+        attributes: Optional[Attributes] = None,
+    ) -> None:
         if self._real_instrument:
             self._real_instrument.record(amount, attributes)
 
@@ -261,7 +341,13 @@ class ObservableGauge(_Grouping, Asynchronous):
 class NoOpObservableGauge(ObservableGauge):
     """No-op implementation of `ObservableGauge`."""
 
-    def __init__(self, name, callbacks=None, unit="", description=""):
+    def __init__(
+        self,
+        name: str,
+        callbacks: Optional[Sequence[CallbackT]] = None,
+        unit: str = "",
+        description: str = "",
+    ) -> None:
         super().__init__(name, callbacks, unit=unit, description=description)
 
 
