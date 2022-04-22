@@ -86,26 +86,28 @@ class InstrumentationScope:
         name: str,
         version: typing.Optional[str] = None,
         schema_url: typing.Optional[str] = None,
-    ):
+    ) -> None:
         self._name = name
         self._version = version
         self._schema_url = schema_url
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"{type(self).__name__}({self._name}, {self._version}, {self._schema_url})"
 
-    def __hash__(self):
+    def __hash__(self) -> int:
         return hash((self._name, self._version, self._schema_url))
 
-    def __eq__(self, value):
-        return type(value) is type(self) and (
-            self._name,
-            self._version,
-            self._schema_url,
-        ) == (value._name, value._version, value._schema_url)
+    def __eq__(self, value: object) -> bool:
+        if not isinstance(value, InstrumentationScope):
+            return NotImplemented
+        return (self._name, self._version, self._schema_url) == (
+            value._name,
+            value._version,
+            value._schema_url,
+        )
 
-    def __lt__(self, value):
-        if type(value) is not type(self):
+    def __lt__(self, value: object) -> bool:
+        if not isinstance(value, InstrumentationScope):
             return NotImplemented
         return (self._name, self._version, self._schema_url) < (
             value._name,
