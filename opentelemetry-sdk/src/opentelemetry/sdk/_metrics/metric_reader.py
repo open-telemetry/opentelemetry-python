@@ -92,9 +92,9 @@ class MetricReader(ABC):
 
         if preferred_temporality is not None:
             for temporality in preferred_temporality.values():
-                if (
-                    temporality != AggregationTemporality.CUMULATIVE
-                    and temporality != AggregationTemporality.DELTA
+                if temporality not in (
+                    AggregationTemporality.CUMULATIVE,
+                    AggregationTemporality.DELTA,
                 ):
                     raise Exception(
                         f"Invalid temporality value found {temporality}"
