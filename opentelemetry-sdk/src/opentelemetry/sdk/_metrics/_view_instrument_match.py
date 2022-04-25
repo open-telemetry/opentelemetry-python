@@ -76,8 +76,7 @@ class _ViewInstrumentMatch:
         self._attributes_aggregation[attributes].aggregate(measurement)
 
     def collect(
-        self,
-        instrument_class_temporality: Dict[type, AggregationTemporality]
+        self, instrument_class_temporality: Dict[type, AggregationTemporality]
     ) -> Iterable[Metric]:
 
         with self._lock:
