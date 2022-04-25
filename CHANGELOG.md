@@ -10,7 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [1.11.1-0.30b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.11.1-0.30b1) - 2022-04-21
 
 
-
+- Implement MetricReader temporality controls
+  ([#2637](https://github.com/open-telemetry/opentelemetry-python/pull/2637))
 - Fix unhandled callback exceptions on async instruments
   ([#2614](https://github.com/open-telemetry/opentelemetry-python/pull/2614))
 - Rename `DefaultCounter`, `DefaultHistogram`, `DefaultObservableCounter`,
