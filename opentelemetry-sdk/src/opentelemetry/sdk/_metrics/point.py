@@ -23,6 +23,12 @@ from opentelemetry.util.types import Attributes
 
 
 class AggregationTemporality(IntEnum):
+    """
+    The temporality to use when aggregating data.
+
+    Can be one of the following values:
+    """
+
     UNSPECIFIED = 0
     DELTA = 1
     CUMULATIVE = 2
@@ -30,6 +36,9 @@ class AggregationTemporality(IntEnum):
 
 @dataclass(frozen=True)
 class Sum:
+    """Represents the type of a scalar metric that is calculated as a sum of
+    all reported measurements over a time interval."""
+
     aggregation_temporality: AggregationTemporality
     is_monotonic: bool
     start_time_unix_nano: int
@@ -39,12 +48,19 @@ class Sum:
 
 @dataclass(frozen=True)
 class Gauge:
+    """Represents the type of a scalar metric that always exports the current
+    value for every data point. It should be used for an unknown
+    aggregation."""
+
     time_unix_nano: int
     value: Union[int, float]
 
 
 @dataclass(frozen=True)
 class Histogram:
+    """Represents the type of a metric that is calculated by aggregating as a
+    histogram of all reported measurements over a time interval."""
+
     aggregation_temporality: AggregationTemporality
     bucket_counts: Sequence[int]
     explicit_bounds: Sequence[float]

@@ -55,6 +55,8 @@ _logger = getLogger(__name__)
 
 
 class Meter(APIMeter):
+    """See `opentelemetry._metrics.Meter`."""
+
     def __init__(
         self,
         instrumentation_scope: InstrumentationScope,

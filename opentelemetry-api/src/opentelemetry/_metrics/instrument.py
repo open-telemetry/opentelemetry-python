@@ -98,10 +98,12 @@ class _ProxyAsynchronousInstrument(_ProxyInstrument[InstrumentT]):
 
 
 class Synchronous(Instrument):
-    pass
+    """Base class for all synchronous instruments"""
 
 
 class Asynchronous(Instrument):
+    """Base class for all asynchronous instruments"""
+
     @abstractmethod
     def __init__(
         self,
