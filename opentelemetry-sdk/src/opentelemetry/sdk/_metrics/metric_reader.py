@@ -90,14 +90,15 @@ class MetricReader(ABC):
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             }
 
-        for temporality in preferred_temporality.values():
-            if (
-                temporality != AggregationTemporality.CUMULATIVE
-                or temporality != AggregationTemporality.DELTA
-            ):
-                raise Exception(
-                    f"Invalid temporality value found {temporality}"
-                )
+        if preferred_temporality is not None:
+            for temporality in preferred_temporality.values():
+                if (
+                    temporality != AggregationTemporality.CUMULATIVE
+                    or temporality != AggregationTemporality.DELTA
+                ):
+                    raise Exception(
+                        f"Invalid temporality value found {temporality}"
+                    )
 
         self._instrument_class_temporality.update(preferred_temporality or {})
 
