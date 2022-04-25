@@ -50,10 +50,15 @@ class MetricReader(ABC):
             temporalities of the classes that the user wants to change, not all of
             them. The classes not included in the passed dictionary will retain
             their association to their default aggregation temporalities.
+            The value passed here will override the corresponding values set
+            via the environment variable
 
     .. document protected _receive_metrics which is a intended to be overriden by subclass
     .. automethod:: _receive_metrics
     """
+
+    # FIXME add :std:envvar:`OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE`
+    # to the end of the documentation paragraph above.
 
     def __init__(
         self, preferred_temporality: Dict[type, AggregationTemporality] = None
