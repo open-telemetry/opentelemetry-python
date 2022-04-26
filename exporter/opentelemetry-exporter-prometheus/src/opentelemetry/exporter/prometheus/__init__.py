@@ -67,9 +67,15 @@ from itertools import chain
 from json import dumps
 from logging import getLogger
 from re import IGNORECASE, UNICODE, compile
-from typing import Iterable, Sequence, Tuple, Union
+from typing import Dict, Iterable, Sequence, Tuple, Union
 
-from prometheus_client import core
+from prometheus_client.core import (
+    REGISTRY,
+    CounterMetricFamily,
+    GaugeMetricFamily,
+    HistogramMetricFamily,
+)
+from prometheus_client.core import Metric as PrometheusMetric
 
 from opentelemetry.sdk._metrics.export import MetricReader
 from opentelemetry.sdk._metrics.point import Gauge, Histogram, Metric, Sum
@@ -101,7 +107,7 @@ class PrometheusMetricReader(MetricReader):
     def __init__(self, prefix: str = "") -> None:
         super().__init__()
         self._collector = _CustomCollector(prefix)
-        core.REGISTRY.register(self._collector)
+        REGISTRY.register(self._collector)
         self._collector._callback = self.collect
 
     def _receive_metrics(self, metrics: Iterable[Metric]) -> None:
@@ -110,7 +116,7 @@ class PrometheusMetricReader(MetricReader):
         self._collector.add_metrics_data(metrics)
 
     def shutdown(self) -> bool:
-        core.REGISTRY.unregister(self._collector)
+        REGISTRY.unregister(self._collector)
         return True
 
 
@@ -155,7 +161,9 @@ class _CustomCollector:
                     yield metric_family
 
     def _translate_to_prometheus(
-        self, metric: Metric, metric_family_id_metric_family
+        self,
+        metric: Metric,
+        metric_family_id_metric_family: Dict[str, PrometheusMetric],
     ):
         label_values = []
         label_keys = []
@@ -177,13 +185,13 @@ class _CustomCollector:
         if isinstance(metric.point, Sum):
 
             metric_family_id = "|".join(
-                [metric_family_id, core.CounterMetricFamily.__name__]
+                [metric_family_id, CounterMetricFamily.__name__]
             )
 
             if metric_family_id not in metric_family_id_metric_family.keys():
                 metric_family_id_metric_family[
                     metric_family_id
-                ] = core.CounterMetricFamily(
+                ] = CounterMetricFamily(
                     name=metric_name,
                     documentation=description,
                     labels=label_keys,
@@ -195,13 +203,13 @@ class _CustomCollector:
         elif isinstance(metric.point, Gauge):
 
             metric_family_id = "|".join(
-                [metric_family_id, core.GaugeMetricFamily.__name__]
+                [metric_family_id, GaugeMetricFamily.__name__]
             )
 
             if metric_family_id not in metric_family_id_metric_family.keys():
                 metric_family_id_metric_family[
                     metric_family_id
-                ] = core.GaugeMetricFamily(
+                ] = GaugeMetricFamily(
                     name=metric_name,
                     documentation=description,
                     labels=label_keys,
@@ -213,13 +221,13 @@ class _CustomCollector:
         elif isinstance(metric.point, Histogram):
 
             metric_family_id = "|".join(
-                [metric_family_id, core.HistogramMetricFamily.__name__]
+                [metric_family_id, HistogramMetricFamily.__name__]
             )
 
             if metric_family_id not in metric_family_id_metric_family.keys():
                 metric_family_id_metric_family[
                     metric_family_id
-                ] = core.HistogramMetricFamily(
+                ] = HistogramMetricFamily(
                     name=metric_name,
                     documentation=description,
                     labels=label_keys,
