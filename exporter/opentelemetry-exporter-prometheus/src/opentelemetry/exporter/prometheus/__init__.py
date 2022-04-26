@@ -62,11 +62,11 @@ API
 ---
 """
 
-import collections
-import json
-import logging
-import re
+from collections import deque
 from itertools import chain
+from json import dumps
+from logging import getLogger
+from re import IGNORECASE, UNICODE, compile
 from typing import Iterable, Optional, Sequence, Tuple
 
 from prometheus_client import core
@@ -74,7 +74,7 @@ from prometheus_client import core
 from opentelemetry.sdk._metrics.export import MetricReader
 from opentelemetry.sdk._metrics.point import Gauge, Histogram, Metric, Sum
 
-_logger = logging.getLogger(__name__)
+_logger = getLogger(__name__)
 
 
 def _convert_buckets(metric: Metric) -> Sequence[Tuple[str, int]]:
@@ -124,9 +124,9 @@ class _CustomCollector:
     def __init__(self, prefix: str = ""):
         self._prefix = prefix
         self._callback = None
-        self._metrics_to_export = collections.deque()
-        self._non_letters_digits_underscore_re = re.compile(
-            r"[^\w]", re.UNICODE | re.IGNORECASE
+        self._metrics_to_export = deque()
+        self._non_letters_digits_underscore_re = compile(
+            r"[^\w]", UNICODE | IGNORECASE
         )
 
     def add_metrics_data(self, export_records: Sequence[Metric]) -> None:
@@ -158,7 +158,10 @@ class _CustomCollector:
         label_keys = []
         for key, value in metric.attributes.items():
             label_keys.append(self._sanitize(key))
-            label_values.append(json.dumps(value, default=str))
+            if isinstance(value, (list, tuple)):
+                label_values.append(dumps(value, default=str))
+            else:
+                label_values.append(str(value))
 
         metric_name = ""
         if self._prefix != "":

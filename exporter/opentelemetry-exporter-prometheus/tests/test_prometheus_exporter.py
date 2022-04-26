@@ -167,3 +167,30 @@ class TestPrometheusMetricReader(unittest.TestCase):
         self.assertEqual(collector._sanitize(",./?;:[]{}"), "__________")
         self.assertEqual(collector._sanitize("TestString"), "TestString")
         self.assertEqual(collector._sanitize("aAbBcC_12_oi"), "aAbBcC_12_oi")
+
+    def test_list_labels(self):
+        labels = {"environment@": ["1", "2", "3"], "os": "Unix"}
+        record = _generate_gauge(
+            "test@gauge",
+            123,
+            attributes=labels,
+            description="testdesc",
+            unit="testunit",
+        )
+        collector = _CustomCollector("testprefix")
+        collector.add_metrics_data([record])
+
+        for prometheus_metric in collector.collect():
+            self.assertEqual(type(prometheus_metric), GaugeMetricFamily)
+            self.assertEqual(
+                prometheus_metric.name, "testprefix_test_gauge_testunit"
+            )
+            self.assertEqual(prometheus_metric.documentation, "testdesc")
+            self.assertTrue(len(prometheus_metric.samples) == 1)
+            self.assertEqual(prometheus_metric.samples[0].value, 123)
+            self.assertTrue(len(prometheus_metric.samples[0].labels) == 2)
+            self.assertEqual(
+                prometheus_metric.samples[0].labels["environment_"],
+                '["1", "2", "3"]',
+            )
+            self.assertEqual(prometheus_metric.samples[0].labels["os"], "Unix")
