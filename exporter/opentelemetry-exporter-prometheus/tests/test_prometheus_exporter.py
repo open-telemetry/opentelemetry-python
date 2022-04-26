@@ -194,3 +194,14 @@ class TestPrometheusMetricReader(unittest.TestCase):
                 '["1", "2", "3"]',
             )
             self.assertEqual(prometheus_metric.samples[0].labels["os"], "Unix")
+
+    def test_check_value(self):
+
+        collector = _CustomCollector("")
+
+        self.assertEqual(collector._check_value(1), "1")
+        self.assertEqual(collector._check_value(1.0), "1.0")
+        self.assertEqual(collector._check_value("a"), "a")
+        self.assertEqual(collector._check_value([1, 2]), "[1, 2]")
+        self.assertEqual(collector._check_value((1, 2)), "[1, 2]")
+        self.assertEqual(collector._check_value(["a", 2]), '["a", 2]')

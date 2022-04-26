@@ -67,7 +67,7 @@ from itertools import chain
 from json import dumps
 from logging import getLogger
 from re import IGNORECASE, UNICODE, compile
-from typing import Iterable, Optional, Sequence, Tuple
+from typing import Iterable, Optional, Sequence, Tuple, Union
 
 from prometheus_client import core
 
@@ -158,10 +158,7 @@ class _CustomCollector:
         label_keys = []
         for key, value in metric.attributes.items():
             label_keys.append(self._sanitize(key))
-            if not isinstance(value, str) and isinstance(value, Sequence):
-                label_values.append(dumps(value, default=str))
-            else:
-                label_values.append(str(value))
+            label_values.append(self._check_value(value))
 
         metric_name = ""
         if self._prefix != "":
@@ -210,3 +207,10 @@ class _CustomCollector:
         Replace all characters other than [A-Za-z0-9_] with '_'.
         """
         return self._non_letters_digits_underscore_re.sub("_", key)
+
+    # pylint: disable=no-self-use
+    def _check_value(self, value: Union[int, float, str, Sequence]) -> str:
+        """Check the label value and return is appropriate representation"""
+        if not isinstance(value, str) and isinstance(value, Sequence):
+            return dumps(value, default=str)
+        return str(value)
