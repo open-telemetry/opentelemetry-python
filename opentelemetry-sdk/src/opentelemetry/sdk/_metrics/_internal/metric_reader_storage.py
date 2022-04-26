@@ -101,9 +101,6 @@ class MetricReaderStorage:
                             if (
                                 existing_view_instrument_match._name
                                 == new_view_instrument_match._name
-                                # Should description be considered as well?
-                                # and existing_view_instrument_match._description
-                                # == new_view_instrument_match._description
                             ):
 
                                 _logger.warning(

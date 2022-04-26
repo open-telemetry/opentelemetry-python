@@ -259,7 +259,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             _DEFAULT_VIEW,
         )
 
-    def test_view_instrument_match_collision(self):
+    def test_view_instrument_match_instrument_name(self):
 
         observable_counter_0 = ObservableCounter(
             "observable_counter_0",
@@ -301,3 +301,71 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             "will cause conflicting metrics",
             log.records[0].message,
         )
+
+    def test_view_instrument_match_view_name(self):
+
+        observable_counter_foo = ObservableCounter(
+            "foo",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        observable_counter_bar = ObservableCounter(
+            "bar",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        observable_counter_baz = ObservableCounter(
+            "baz",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(
+                    View(instrument_name="bar", name="foo"),
+                    View(instrument_name="baz", name="foo"),
+                ),
+            )
+        )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, observable_counter_foo)
+                )
+
+        with self.assertLogs(level=WARNING) as log:
+            metric_reader_storage.consume_measurement(
+                Measurement(1, observable_counter_bar)
+            )
+
+        self.assertIn(
+            "will cause conflicting metrics",
+            log.records[0].message,
+        )
+
+        with self.assertLogs(level=WARNING) as log:
+            metric_reader_storage.consume_measurement(
+                Measurement(1, observable_counter_baz)
+            )
+
+        self.assertIn(
+            "will cause conflicting metrics",
+            log.records[0].message,
+        )
+
+        for (
+            view_instrument_matches
+        ) in (
+            metric_reader_storage._instrument_view_instrument_matches.values()
+        ):
+            for view_instrument_match in view_instrument_matches:
+                self.assertEqual(view_instrument_match._name, "foo")
