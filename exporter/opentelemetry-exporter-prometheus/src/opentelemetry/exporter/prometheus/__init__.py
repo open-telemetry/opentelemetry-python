@@ -62,18 +62,19 @@ API
 ---
 """
 
-import collections
-import logging
-import re
+from collections import deque
 from itertools import chain
-from typing import Iterable, Optional, Sequence, Tuple
+from json import dumps
+from logging import getLogger
+from re import IGNORECASE, UNICODE, compile
+from typing import Iterable, Optional, Sequence, Tuple, Union
 
 from prometheus_client import core
 
 from opentelemetry.sdk._metrics.export import MetricReader
 from opentelemetry.sdk._metrics.point import Gauge, Histogram, Metric, Sum
 
-_logger = logging.getLogger(__name__)
+_logger = getLogger(__name__)
 
 
 def _convert_buckets(metric: Metric) -> Sequence[Tuple[str, int]]:
@@ -123,9 +124,9 @@ class _CustomCollector:
     def __init__(self, prefix: str = ""):
         self._prefix = prefix
         self._callback = None
-        self._metrics_to_export = collections.deque()
-        self._non_letters_digits_underscore_re = re.compile(
-            r"[^\w]", re.UNICODE | re.IGNORECASE
+        self._metrics_to_export = deque()
+        self._non_letters_digits_underscore_re = compile(
+            r"[^\w]", UNICODE | IGNORECASE
         )
 
     def add_metrics_data(self, export_records: Sequence[Metric]) -> None:
@@ -157,7 +158,7 @@ class _CustomCollector:
         label_keys = []
         for key, value in metric.attributes.items():
             label_keys.append(self._sanitize(key))
-            label_values.append(str(value))
+            label_values.append(self._check_value(value))
 
         metric_name = ""
         if self._prefix != "":
@@ -206,3 +207,10 @@ class _CustomCollector:
         Replace all characters other than [A-Za-z0-9_] with '_'.
         """
         return self._non_letters_digits_underscore_re.sub("_", key)
+
+    # pylint: disable=no-self-use
+    def _check_value(self, value: Union[int, float, str, Sequence]) -> str:
+        """Check the label value and return is appropriate representation"""
+        if not isinstance(value, str) and isinstance(value, Sequence):
+            return dumps(value, default=str)
+        return str(value)
