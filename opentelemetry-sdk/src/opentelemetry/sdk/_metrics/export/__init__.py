@@ -35,6 +35,10 @@ _logger = logging.getLogger(__name__)
 
 
 class MetricExportResult(Enum):
+    """Result of exporting a metric
+
+    Can be any of the following values:"""
+
     SUCCESS = 0
     FAILURE = 1
 
