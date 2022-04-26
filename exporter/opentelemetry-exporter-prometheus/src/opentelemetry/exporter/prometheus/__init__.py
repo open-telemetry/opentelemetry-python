@@ -158,7 +158,7 @@ class _CustomCollector:
         label_keys = []
         for key, value in metric.attributes.items():
             label_keys.append(self._sanitize(key))
-            if isinstance(value, (list, tuple)):
+            if not isinstance(value, str) and isinstance(value, Sequence):
                 label_values.append(dumps(value, default=str))
             else:
                 label_values.append(str(value))
