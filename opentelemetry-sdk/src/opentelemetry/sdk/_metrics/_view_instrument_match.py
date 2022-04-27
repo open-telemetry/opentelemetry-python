@@ -75,7 +75,9 @@ class _ViewInstrumentMatch:
 
         self._attributes_aggregation[attributes].aggregate(measurement)
 
-    def collect(self, temporality: int) -> Iterable[Metric]:
+    def collect(
+        self, instrument_class_temporality: Dict[type, AggregationTemporality]
+    ) -> Iterable[Metric]:
 
         with self._lock:
             for (
@@ -106,13 +108,17 @@ class _ViewInstrumentMatch:
                             self._view._description
                             or self._instrument.description
                         ),
-                        instrumentation_scope=self._instrument.instrumentation_scope,
+                        instrumentation_scope=(
+                            self._instrument.instrumentation_scope
+                        ),
                         name=self._view._name or self._instrument.name,
                         resource=self._sdk_config.resource,
                         unit=self._instrument.unit,
                         point=_convert_aggregation_temporality(
                             previous_point,
                             current_point,
-                            temporality,
+                            instrument_class_temporality[
+                                self._instrument.__class__
+                            ],
                         ),
                     )
