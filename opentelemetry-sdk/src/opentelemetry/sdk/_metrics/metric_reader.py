@@ -44,7 +44,6 @@ class MetricReader(ABC):
     Base class for all metric readers
 
     Args:
-<<<<<<< HEAD
         preferred_temporality: A mapping between instrument classes and
             aggregation temporality. By default uses CUMULATIVE for all instrument
             classes. This mapping will be used to define the default aggregation
@@ -57,7 +56,6 @@ class MetricReader(ABC):
             their association to their default aggregation temporalities.
             The value passed here will override the corresponding values set
             via the environment variable
-=======
         preferred_aggregation: A mapping between instrument classes and
             aggregation instances. By default maps all instrument classes to an
             instance of `DefaultAggregation`. This mapping will be used to
@@ -71,7 +69,6 @@ class MetricReader(ABC):
             default aggregations. The aggregation defined here will be
             overriden by an aggregation defined by a view that is not
             `DefaultAggregation`.
->>>>>>> 4b0317eb9 (Implement metric reader default aggregation controls)
 
     .. document protected _receive_metrics which is a intended to be overriden by subclass
     .. automethod:: _receive_metrics

@@ -13,10 +13,9 @@
 # limitations under the License.
 
 from os import environ
-from unittest.mock import patch
-
 from typing import Dict
 from unittest import TestCase
+from unittest.mock import patch
 
 from opentelemetry.sdk._metrics.aggregation import (
     AggregationTemporality,

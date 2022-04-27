@@ -146,7 +146,7 @@ class PeriodicExportingMetricReader(MetricReader):
         export_timeout_millis: Optional[float] = None,
     ) -> None:
         super().__init__(
-            preferred_temporality=exporter.preferred_temporality,
+            preferred_temporality=preferred_temporality,
             preferred_aggregation=preferred_aggregation,
         )
         self._exporter = exporter
