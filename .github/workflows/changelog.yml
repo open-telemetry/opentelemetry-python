@@ -13,7 +13,10 @@ on:
 jobs:
   changelog:
     runs-on: ubuntu-latest
-    if: "!contains(github.event.pull_request.labels.*.name, 'Skip Changelog')"
+    # TODO update with opentelemetry-python-bot or a shared otel bot
+    if: |
+      !contains(github.event.pull_request.labels.*.name, 'Skip Changelog')
+      && github.actor != 'opentelemetry-java-bot'
 
     steps:
       - uses: actions/checkout@v2
