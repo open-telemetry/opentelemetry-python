@@ -53,7 +53,9 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         self._sdk_config = sdk_config
         # should never be mutated
         self._reader_storages: Mapping[MetricReader, MetricReaderStorage] = {
-            reader: MetricReaderStorage(sdk_config)
+            reader: MetricReaderStorage(
+                sdk_config, reader._instrument_class_aggregation
+            )
             for reader in sdk_config.metric_readers
         }
         self._async_instruments: List["_Asynchronous"] = []

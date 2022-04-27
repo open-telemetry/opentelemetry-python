@@ -18,7 +18,9 @@ from threading import Lock
 from typing import TYPE_CHECKING, Dict, Iterable
 
 from opentelemetry.sdk._metrics.aggregation import (
+    DefaultAggregation,
     _Aggregation,
+    _AggregationFactory,
     _convert_aggregation_temporality,
     _PointVarT,
 )
@@ -39,6 +41,7 @@ class _ViewInstrumentMatch:
         view: View,
         instrument: "_Instrument",
         sdk_config: SdkConfiguration,
+        instrument_class_aggregation: Dict[type, _AggregationFactory],
     ):
         self._view = view
         self._instrument = instrument
@@ -46,6 +49,7 @@ class _ViewInstrumentMatch:
         self._attributes_aggregation: Dict[frozenset, _Aggregation] = {}
         self._attributes_previous_point: Dict[frozenset, _PointVarT] = {}
         self._lock = Lock()
+        self._instrument_class_aggregation = instrument_class_aggregation
 
     # pylint: disable=protected-access
     def consume_measurement(self, measurement: Measurement) -> None:
@@ -67,11 +71,19 @@ class _ViewInstrumentMatch:
         if attributes not in self._attributes_aggregation:
             with self._lock:
                 if attributes not in self._attributes_aggregation:
-                    self._attributes_aggregation[
-                        attributes
-                    ] = self._view._aggregation._create_aggregation(
-                        self._instrument
-                    )
+                    if not isinstance(
+                        self._view._aggregation, DefaultAggregation
+                    ):
+                        aggregation = (
+                            self._view._aggregation._create_aggregation(
+                                self._instrument
+                            )
+                        )
+                    else:
+                        aggregation = self._instrument_class_aggregation[
+                            self._instrument.__class__
+                        ]._create_aggregation(self._instrument)
+                    self._attributes_aggregation[attributes] = aggregation
 
         self._attributes_aggregation[attributes].aggregate(measurement)
 
