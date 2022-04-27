@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
 from opentelemetry.sdk._metrics._view_instrument_match import (
     _ViewInstrumentMatch,
@@ -185,7 +185,11 @@ class Test_ViewInstrumentMatch(TestCase):
         self.assertEqual(
             next(
                 view_instrument_match.collect(
-                    AggregationTemporality.CUMULATIVE
+                    MagicMock(
+                        **{
+                            "__getitem__.return_value": AggregationTemporality.CUMULATIVE
+                        }
+                    )
                 )
             ),
             Metric(

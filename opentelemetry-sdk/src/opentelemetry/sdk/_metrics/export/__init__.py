@@ -19,7 +19,7 @@ from enum import Enum
 from os import environ, linesep
 from sys import stdout
 from threading import Event, RLock, Thread
-from typing import IO, Callable, Iterable, List, Optional, Sequence
+from typing import IO, Callable, Dict, Iterable, List, Optional, Sequence
 
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
@@ -49,10 +49,6 @@ class MetricExporter(ABC):
     Interface to be implemented by services that want to export metrics received
     in their own format.
     """
-
-    @property
-    def preferred_temporality(self) -> AggregationTemporality:
-        return AggregationTemporality.CUMULATIVE
 
     @abstractmethod
     def export(self, metrics: Sequence[Metric]) -> "MetricExportResult":
@@ -107,8 +103,7 @@ class InMemoryMetricReader(MetricReader):
     """
 
     def __init__(
-        self,
-        preferred_temporality: AggregationTemporality = AggregationTemporality.CUMULATIVE,
+        self, preferred_temporality: Dict[type, AggregationTemporality] = None
     ) -> None:
         super().__init__(preferred_temporality=preferred_temporality)
         self._lock = RLock()
@@ -139,10 +134,11 @@ class PeriodicExportingMetricReader(MetricReader):
     def __init__(
         self,
         exporter: MetricExporter,
+        preferred_temporality: Dict[type, AggregationTemporality] = None,
         export_interval_millis: Optional[float] = None,
         export_timeout_millis: Optional[float] = None,
     ) -> None:
-        super().__init__(preferred_temporality=exporter.preferred_temporality)
+        super().__init__(preferred_temporality=preferred_temporality)
         self._exporter = exporter
         if export_interval_millis is None:
             try:

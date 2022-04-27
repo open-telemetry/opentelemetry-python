@@ -36,7 +36,7 @@ from opentelemetry.sdk._metrics.instrument import (
     UpDownCounter,
 )
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
-from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
+from opentelemetry.sdk._metrics.point import Metric
 from opentelemetry.sdk._metrics.view import View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
@@ -44,7 +44,7 @@ from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
 
 class DummyMetricReader(MetricReader):
     def __init__(self):
-        super().__init__(AggregationTemporality.CUMULATIVE)
+        super().__init__()
 
     def _receive_metrics(self, metrics):
         pass
