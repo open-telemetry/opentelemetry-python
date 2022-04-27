@@ -244,7 +244,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                         aggregation=ExplicitBucketHistogramAggregation(),
                     ),
                 ),
-            )
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         with self.assertLogs(level=WARNING):
@@ -283,7 +284,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     View(instrument_name="observable_counter_0", name="foo"),
                     View(instrument_name="observable_counter_1", name="foo"),
                 ),
-            )
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         with self.assertRaises(AssertionError):
@@ -333,7 +335,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     View(instrument_name="bar", name="foo"),
                     View(instrument_name="baz", name="foo"),
                 ),
-            )
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         with self.assertRaises(AssertionError):
