@@ -12,9 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest.mock import Mock, patch
+from unittest.mock import MagicMock, Mock, patch
 
-from opentelemetry.sdk._metrics.aggregation import DropAggregation
+from opentelemetry.sdk._metrics.aggregation import (
+    DefaultAggregation,
+    DropAggregation,
+)
 from opentelemetry.sdk._metrics.instrument import Counter
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.metric_reader_storage import (
@@ -56,7 +59,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 resource=Mock(),
                 metric_readers=(),
                 views=(view1, view2),
-            )
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         # instrument1 matches view1 and view2, so should create two ViewInstrumentMatch objects
@@ -100,7 +104,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 resource=Mock(),
                 metric_readers=(),
                 views=(view1, view2),
-            )
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         # Measurements from an instrument should be passed on to each ViewInstrumentMatch objects
@@ -147,7 +152,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 resource=Mock(),
                 metric_readers=(),
                 views=(view1,),
-            )
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         def send_measurement():
@@ -172,7 +178,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                 resource=Mock(),
                 metric_readers=(),
                 views=(),
-            )
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
 
         storage.consume_measurement(Measurement(1, instrument1))
@@ -200,7 +207,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                         instrument_name="name", aggregation=DropAggregation()
                     ),
                 ),
-            )
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
         )
         metric_reader_storage.consume_measurement(Measurement(1, counter))
 

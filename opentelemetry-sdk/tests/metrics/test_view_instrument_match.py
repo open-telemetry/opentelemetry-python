@@ -19,9 +19,13 @@ from opentelemetry.sdk._metrics._view_instrument_match import (
     _ViewInstrumentMatch,
 )
 from opentelemetry.sdk._metrics.aggregation import (
+    DefaultAggregation,
     DropAggregation,
+    LastValueAggregation,
     _DropAggregation,
+    _LastValueAggregation,
 )
+from opentelemetry.sdk._metrics.instrument import Counter
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
 from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
@@ -56,6 +60,9 @@ class Test_ViewInstrumentMatch(TestCase):
             ),
             instrument=instrument1,
             sdk_config=sdk_config,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
         )
 
         view_instrument_match.consume_measurement(
@@ -95,6 +102,9 @@ class Test_ViewInstrumentMatch(TestCase):
             ),
             instrument=instrument1,
             sdk_config=sdk_config,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
         )
 
         view_instrument_match.consume_measurement(
@@ -123,6 +133,9 @@ class Test_ViewInstrumentMatch(TestCase):
             ),
             instrument=instrument1,
             sdk_config=sdk_config,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
         )
         view_instrument_match.consume_measurement(
             Measurement(value=0, instrument=instrument1, attributes=None)
@@ -145,6 +158,9 @@ class Test_ViewInstrumentMatch(TestCase):
             ),
             instrument=instrument1,
             sdk_config=sdk_config,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
         )
         view_instrument_match.consume_measurement(
             Measurement(value=0, instrument=instrument1, attributes=None)
@@ -173,6 +189,9 @@ class Test_ViewInstrumentMatch(TestCase):
             ),
             instrument=instrument1,
             sdk_config=sdk_config,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
         )
 
         view_instrument_match.consume_measurement(
@@ -201,4 +220,45 @@ class Test_ViewInstrumentMatch(TestCase):
                 unit="unit",
                 point=None,
             ),
+        )
+
+    def test_setting_aggregation(self):
+        instrument1 = Counter(
+            name="instrument1",
+            instrumentation_scope=Mock(),
+            measurement_consumer=Mock(),
+            description="description",
+            unit="unit",
+        )
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+        sdk_config = SdkConfiguration(
+            resource=self.mock_resource,
+            metric_readers=[],
+            views=[],
+        )
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=DefaultAggregation(),
+                attribute_keys={"a", "c"},
+            ),
+            instrument=instrument1,
+            sdk_config=sdk_config,
+            instrument_class_aggregation={Counter: LastValueAggregation()},
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0,
+                instrument=Mock(name="instrument1"),
+                attributes={"c": "d", "f": "g"},
+            )
+        )
+
+        self.assertIsInstance(
+            view_instrument_match._attributes_aggregation[
+                frozenset({("c", "d")})
+            ],
+            _LastValueAggregation,
         )

@@ -27,6 +27,7 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
+from opentelemetry.sdk._metrics.aggregation import _AggregationFactory
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
 from opentelemetry.util._once import Once
@@ -103,9 +104,14 @@ class InMemoryMetricReader(MetricReader):
     """
 
     def __init__(
-        self, preferred_temporality: Dict[type, AggregationTemporality] = None
+        self,
+        preferred_temporality: Dict[type, AggregationTemporality] = None,
+        preferred_aggregation: Dict[type, _AggregationFactory] = None,
     ) -> None:
-        super().__init__(preferred_temporality=preferred_temporality)
+        super().__init__(
+            preferred_temporality=preferred_temporality,
+            preferred_aggregation=preferred_aggregation,
+        )
         self._lock = RLock()
         self._metrics: List[Metric] = []
 
@@ -135,10 +141,14 @@ class PeriodicExportingMetricReader(MetricReader):
         self,
         exporter: MetricExporter,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
+        preferred_aggregation: Dict[type, _AggregationFactory] = None,
         export_interval_millis: Optional[float] = None,
         export_timeout_millis: Optional[float] = None,
     ) -> None:
-        super().__init__(preferred_temporality=preferred_temporality)
+        super().__init__(
+            preferred_temporality=preferred_temporality,
+            preferred_aggregation=preferred_aggregation,
+        )
         self._exporter = exporter
         if export_interval_millis is None:
             try:

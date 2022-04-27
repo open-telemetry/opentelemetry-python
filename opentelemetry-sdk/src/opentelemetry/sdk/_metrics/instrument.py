@@ -14,7 +14,7 @@
 
 # pylint: disable=too-many-ancestors
 
-import logging
+from logging import getLogger
 from typing import TYPE_CHECKING, Dict, Generator, Iterable, Optional, Union
 
 from opentelemetry._metrics.instrument import CallbackT
@@ -38,7 +38,8 @@ if TYPE_CHECKING:
         MeasurementConsumer,
     )
 
-_logger = logging.getLogger(__name__)
+
+_logger = getLogger(__name__)
 
 
 class _Synchronous:

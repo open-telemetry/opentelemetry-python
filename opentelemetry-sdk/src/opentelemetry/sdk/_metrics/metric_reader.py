@@ -19,6 +19,10 @@ from typing import Callable, Dict, Iterable
 
 from typing_extensions import final
 
+from opentelemetry.sdk._metrics.aggregation import (
+    DefaultAggregation,
+    _AggregationFactory,
+)
 from opentelemetry.sdk._metrics.instrument import (
     Counter,
     Histogram,
@@ -52,6 +56,19 @@ class MetricReader(ABC):
             their association to their default aggregation temporalities.
             The value passed here will override the corresponding values set
             via the environment variable
+        preferred_aggregation: A mapping between instrument classes and
+            aggregation instances. By default maps all instrument classes to an
+            instance of `DefaultAggregation`. This mapping will be used to
+            define the default aggregation of every instrument class. If the
+            user wants to make a change in the default aggregation of an
+            instrument class, it is enough to pass here a dictionary whose keys
+            are the instrument classes and the values are the corresponding
+            desired aggregation for the instrument classes that the user wants
+            to change, not necessarily all of them. The classes not included in
+            the passed dictionary will retain their association to their
+            default aggregations. The aggregation defined here will be
+            overriden by an aggregation defined by a view that is not
+            `DefaultAggregation`.
 
     .. document protected _receive_metrics which is a intended to be overriden by subclass
     .. automethod:: _receive_metrics
@@ -61,7 +78,9 @@ class MetricReader(ABC):
     # to the end of the documentation paragraph above.
 
     def __init__(
-        self, preferred_temporality: Dict[type, AggregationTemporality] = None
+        self,
+        preferred_temporality: Dict[type, AggregationTemporality] = None,
+        preferred_aggregation: Dict[type, _AggregationFactory] = None,
     ) -> None:
         self._collect: Callable[
             ["MetricReader", AggregationTemporality], Iterable[Metric]
@@ -106,6 +125,17 @@ class MetricReader(ABC):
                     )
 
         self._instrument_class_temporality.update(preferred_temporality or {})
+        self._preferred_temporality = preferred_temporality
+        self._instrument_class_aggregation = {
+            Counter: DefaultAggregation(),
+            UpDownCounter: DefaultAggregation(),
+            Histogram: DefaultAggregation(),
+            ObservableCounter: DefaultAggregation(),
+            ObservableUpDownCounter: DefaultAggregation(),
+            ObservableGauge: DefaultAggregation(),
+        }
+
+        self._instrument_class_aggregation.update(preferred_aggregation or {})
 
     @final
     def collect(self) -> None:
