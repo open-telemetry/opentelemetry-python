@@ -211,6 +211,6 @@ class _CustomCollector:
     # pylint: disable=no-self-use
     def _check_value(self, value: Union[int, float, str, Sequence]) -> str:
         """Check the label value and return is appropriate representation"""
-        if not isinstance(value, str) and isinstance(value, Sequence):
+        if not isinstance(value, str):
             return dumps(value, default=str)
         return str(value)

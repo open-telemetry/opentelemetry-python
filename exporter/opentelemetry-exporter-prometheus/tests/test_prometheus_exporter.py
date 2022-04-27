@@ -205,3 +205,6 @@ class TestPrometheusMetricReader(unittest.TestCase):
         self.assertEqual(collector._check_value([1, 2]), "[1, 2]")
         self.assertEqual(collector._check_value((1, 2)), "[1, 2]")
         self.assertEqual(collector._check_value(["a", 2]), '["a", 2]')
+        self.assertEqual(collector._check_value(True), "true")
+        self.assertEqual(collector._check_value(False), "false")
+        self.assertEqual(collector._check_value(None), "null")
