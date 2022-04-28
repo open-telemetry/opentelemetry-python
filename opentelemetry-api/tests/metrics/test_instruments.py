@@ -16,13 +16,14 @@
 from inspect import Signature, isabstract, signature
 from unittest import TestCase
 
-from opentelemetry._metrics import Meter, NoOpMeter
-from opentelemetry._metrics.instrument import (
+from opentelemetry._metrics import (
     Counter,
     Histogram,
     Instrument,
+    Meter,
     NoOpCounter,
     NoOpHistogram,
+    NoOpMeter,
     NoOpUpDownCounter,
     ObservableCounter,
     ObservableGauge,

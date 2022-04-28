@@ -17,8 +17,7 @@ import io
 from typing import Generator, Iterable, List
 from unittest import TestCase
 
-from opentelemetry._metrics.instrument import Instrument
-from opentelemetry._metrics.observation import Observation
+from opentelemetry._metrics import Instrument, Observation
 from opentelemetry.sdk._metrics import MeterProvider
 from opentelemetry.sdk._metrics.measurement import Measurement
 

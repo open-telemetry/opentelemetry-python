@@ -8,13 +8,8 @@ opentelemetry._metrics package
 
    Once metrics become stable, this package will be be renamed to ``opentelemetry.metrics``.
 
-Submodules
-----------
-
 .. toctree::
 
-   metrics.instrument
-   metrics.observation
 
 Module contents
 ---------------

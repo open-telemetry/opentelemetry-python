@@ -17,19 +17,15 @@
 from logging import getLogger
 from typing import TYPE_CHECKING, Dict, Generator, Iterable, Optional, Union
 
-from opentelemetry._metrics.instrument import CallbackT
-from opentelemetry._metrics.instrument import Counter as APICounter
-from opentelemetry._metrics.instrument import Histogram as APIHistogram
-from opentelemetry._metrics.instrument import (
-    ObservableCounter as APIObservableCounter,
-)
-from opentelemetry._metrics.instrument import (
-    ObservableGauge as APIObservableGauge,
-)
-from opentelemetry._metrics.instrument import (
+from opentelemetry._metrics import CallbackT
+from opentelemetry._metrics import Counter as APICounter
+from opentelemetry._metrics import Histogram as APIHistogram
+from opentelemetry._metrics import ObservableCounter as APIObservableCounter
+from opentelemetry._metrics import ObservableGauge as APIObservableGauge
+from opentelemetry._metrics import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
-from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
+from opentelemetry._metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 

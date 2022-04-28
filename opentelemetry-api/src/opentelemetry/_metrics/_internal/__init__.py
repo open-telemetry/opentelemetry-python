@@ -47,7 +47,7 @@ from os import environ
 from threading import Lock
 from typing import List, Optional, Sequence, Set, Tuple, Union, cast
 
-from opentelemetry._metrics.instrument import (
+from opentelemetry._metrics._internal.instrument import (
     CallbackT,
     Counter,
     Histogram,
@@ -77,7 +77,7 @@ from opentelemetry.util._providers import _load_provider
 _logger = getLogger(__name__)
 
 
-ProxyInstrumentT = Union[
+_ProxyInstrumentT = Union[
     _ProxyCounter,
     _ProxyHistogram,
     _ProxyObservableCounter,
@@ -279,9 +279,8 @@ class Meter(ABC):
     ) -> ObservableCounter:
         """Creates an `ObservableCounter` instrument
 
-        An observable counter observes a monotonically increasing count by
-        calling provided callbacks which returns multiple
-        :class:`~opentelemetry._metrics.observation.Observation`.
+        An observable counter observes a monotonically increasing count by calling provided
+        callbacks which returns multiple :class:`~opentelemetry._metrics.Observation`.
 
         For example, an observable counter could be used to report system CPU
         time periodically. Here is a basic implementation::
@@ -319,9 +318,8 @@ class Meter(ABC):
                         yield Observation(int(states[1]) // 100, {"cpu": cpu, "state": "nice"})
                         # ... other states
 
-        Alternatively, you can pass a sequence of generators directly instead
-        of a sequence of callbacks, which each should return iterables of
-        :class:`~opentelemetry._metrics.observation.Observation`::
+        Alternatively, you can pass a sequence of generators directly instead of a sequence of
+        callbacks, which each should return iterables of :class:`~opentelemetry._metrics.Observation`::
 
             def cpu_time_callback(states_to_include: set[str]) -> Iterable[Iterable[Observation]]:
                 while True:
@@ -348,10 +346,8 @@ class Meter(ABC):
         Args:
             name: The name of the instrument to be created
             callbacks: A sequence of callbacks that return an iterable of
-                :class:`~opentelemetry._metrics.observation.Observation`.
-                Alternatively, can be a sequence of generators that each yields
-                iterables of
-                :class:`~opentelemetry._metrics.observation.Observation`.
+                :class:`~opentelemetry._metrics.Observation`. Alternatively, can be a sequence of generators that each
+                yields iterables of :class:`~opentelemetry._metrics.Observation`.
             unit: The unit for observations this instrument reports. For
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
@@ -364,7 +360,7 @@ class Meter(ABC):
         unit: str = "",
         description: str = "",
     ) -> Histogram:
-        """Creates a `opentelemetry._metrics.instrument.Histogram` instrument
+        """Creates a :class:`~opentelemetry._metrics.Histogram` instrument
 
         Args:
             name: The name of the instrument to be created
@@ -386,9 +382,8 @@ class Meter(ABC):
         Args:
             name: The name of the instrument to be created
             callbacks: A sequence of callbacks that return an iterable of
-                :class:`~opentelemetry._metrics.observation.Observation`.
-                Alternatively, can be a generator that yields iterables of
-                :class:`~opentelemetry._metrics.observation.Observation`.
+                :class:`~opentelemetry._metrics.Observation`. Alternatively, can be a generator that yields iterables
+                of :class:`~opentelemetry._metrics.Observation`.
             unit: The unit for observations this instrument reports. For
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
@@ -407,9 +402,8 @@ class Meter(ABC):
         Args:
             name: The name of the instrument to be created
             callbacks: A sequence of callbacks that return an iterable of
-                :class:`~opentelemetry._metrics.observation.Observation`.
-                Alternatively, can be a generator that yields iterables of
-                :class:`~opentelemetry._metrics.observation.Observation`.
+                :class:`~opentelemetry._metrics.Observation`. Alternatively, can be a generator that yields iterables
+                of :class:`~opentelemetry._metrics.Observation`.
             unit: The unit for observations this instrument reports. For
                 example, ``By`` for bytes. UCUM units are recommended.
             description: A description for this instrument and what it measures.
@@ -425,7 +419,7 @@ class _ProxyMeter(Meter):
     ) -> None:
         super().__init__(name, version=version, schema_url=schema_url)
         self._lock = Lock()
-        self._instruments: List[ProxyInstrumentT] = []
+        self._instruments: List[_ProxyInstrumentT] = []
         self._real_meter: Optional[Meter] = None
 
     def on_set_meter_provider(self, meter_provider: MeterProvider) -> None:
@@ -718,7 +712,7 @@ def get_meter(
     """Returns a `Meter` for use by the given instrumentation library.
 
     This function is a convenience wrapper for
-    opentelemetry.trace.MeterProvider.get_meter.
+    `opentelemetry._metrics.MeterProvider.get_meter`.
 
     If meter_provider is omitted the current configured one is used.
     """

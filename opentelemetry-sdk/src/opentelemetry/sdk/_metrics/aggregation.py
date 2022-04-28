@@ -25,7 +25,7 @@ from math import inf
 from threading import Lock
 from typing import Generic, List, Optional, Sequence, TypeVar
 
-from opentelemetry._metrics.instrument import (
+from opentelemetry._metrics import (
     Asynchronous,
     Counter,
     Histogram,
@@ -35,7 +35,6 @@ from opentelemetry._metrics.instrument import (
     ObservableUpDownCounter,
     Synchronous,
     UpDownCounter,
-    _Monotonic,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Gauge
@@ -89,7 +88,7 @@ class DefaultAggregation(_AggregationFactory):
     `UpDownCounter`                               `SumAggregation`
     `ObservableCounter`                           `SumAggregation`
     `ObservableUpDownCounter`                     `SumAggregation`
-    `opentelemetry._metrics.instrument.Histogram` `ExplicitBucketHistogramAggregation`
+    `opentelemetry._metrics.Histogram`            `ExplicitBucketHistogramAggregation`
     `ObservableGauge`                             `LastValueAggregation`
     ============================================= ====================================
     """
@@ -473,7 +472,7 @@ class SumAggregation(_AggregationFactory):
             temporality = AggregationTemporality.CUMULATIVE
 
         return _SumAggregation(
-            isinstance(instrument, _Monotonic),
+            isinstance(instrument, (Counter, ObservableCounter)),
             temporality,
         )
 
