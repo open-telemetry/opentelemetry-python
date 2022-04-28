@@ -1,48 +1,62 @@
-# Releasing OpenTelemetry Packages (for maintainers only)
-This document explains how to publish all OT modules at version x.y.z. Ensure that you’re following semver when choosing a version number.
+# Release instructions
+
+## Preparing a new major or minor release
+
+* Merge a pull request to `main` updating the `CHANGELOG.md`.
+  * The heading for the release should include the release version but not the release date, e.g.
+    `## Version 1.9.0 (unreleased)`.
+  * Use `.github/scripts/draft-change-log-entries.sh` as a starting point for writing the change
+    log.
+* Run the [Prepare release branch workflow](https://github.com/trask/repository-template/actions/workflows/prepare-release-branch.yml).
+  * Press the "Run workflow" button, and leave the default branch `main` selected.
+* Review and merge the two pull requests that it creates
+  (one is targeted to the release branch and one is targeted to `main`).
+
+## Preparing a new patch release
+
+* Backport pull request(s) to the release branch.
+  * Run the [Backport workflow](https://github.com/trask/repository-template/actions/workflows/backport.yml).
+  * Press the "Run workflow" button, then select the release branch from the dropdown list,
+    e.g. `release/v1.9.x`, then enter the pull request number that you want to backport,
+    then click the "Run workflow" button below that.
+  * Review and merge the backport pull request that it generates.
+* Merge a pull request to the release branch updating the `CHANGELOG.md`.
+  * The heading for the release should include the release version but not the release date, e.g.
+    `## Version 1.9.1 (Unreleased)`.
+* Run the [Prepare patch release workflow](https://github.com/trask/repository-template/actions/workflows/prepare-patch-release.yml).
+  * Press the "Run workflow" button, then select the release branch from the dropdown list,
+    e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
+* Review and merge the pull request that it creates.
+
+## Making the release
+
+Run the [Release workflow](https://github.com/trask/repository-template/actions/workflows/release.yml).
+
+* Press the "Run workflow" button, then select the release branch from the dropdown list,
+  e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
+* This workflow will publish the artifacts and publish a GitHub release with release notes based on the change log.
+* Review and merge the pull request that the release workflow creates against the release branch
+  which adds the release date to the change log.
+
+## After the release
+
+Run the [Merge change log to main workflow](https://github.com/trask/repository-template/actions/workflows/merge-change-log-to-main.yml).
+
+* Press the "Run workflow" button, then select the release branch from the dropdown list,
+  e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
+* This will create a pull request that merges the change log updates from the release branch
+  back to `main`.
+* Review and merge the pull request that it creates.
+* This workflow will fail if there have been conflicting change log updates introduced in `main`,
+  in which case you will need to merge the change log updates manually and send your own pull
+  request against `main`.
+
 
 Release Process:
-- [Checkout a clean repo](#checkout-a-clean-repo)
-- [Update versions](#update-versions)
-- [Create a new branch](#create-a-new-branch)
-- [Open a Pull Request](#open-a-pull-request)
-- [Create a Release](#create-a-release)
-- [Check PyPI](#check-pypi)
-- [Move stable tag](#move-stable-tag)
-- [Update main](#update-main)
-- [Hotfix procedure](#hotfix-procedure)
+- [Check PyPI](#Check-PyPI)
+- [Move stable tag](#Move-stable-tag)
+- [Update main](#Update-main)
 - [Troubleshooting](#troubleshooting)
-  - [Publish failed](#publish-failed)
-
-## Checkout a clean repo
-To avoid pushing untracked changes, check out the repo in a new dir
-
-## Update versions
-The update of the version information relies on the information in eachdist.ini to identify which packages are stable, prerelease or
-experimental. Update the desired version there to begin the release process.
-
-## Create a new branch
-The following script does the following:
-- update main locally
-- creates a new release branch `release/<version>`
-- updates version and changelog files
-- commits the change
-
-*NOTE: This script was run by a GitHub Action but required the Action bot to be excluded from the CLA check, which it currently is not.*
-
-```bash
-./scripts/prepare_release.sh
-```
-
-## Open a Pull Request
-
-The PR should be opened from the `release/<version>` branch created as part of running `prepare_release.sh` in the steps above.
-
-## Create a Release
-
-- Create the GH release from the main branch, using a new tag for this micro version, e.g. `v0.7.0`
-- Copy the changelogs from all packages that changed into the release notes (and reformat to remove hard line wraps)
-
 
 ## Check PyPI
 
