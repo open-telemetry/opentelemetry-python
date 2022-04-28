@@ -47,7 +47,15 @@ class _Synchronous:
         unit: str = "",
         description: str = "",
     ):
-        self.name = name
+        # pylint: disable=no-member
+        is_name_valid, is_unit_valid = self._check_name_and_unit(name, unit)
+
+        if not is_name_valid:
+            raise Exception(f"Invalid name received {name}")
+
+        if not is_unit_valid:
+            raise Exception(f"Invalid unit received {unit}")
+        self.name = name.lower()
         self.unit = unit
         self.description = description
         self.instrumentation_scope = instrumentation_scope
@@ -65,7 +73,15 @@ class _Asynchronous:
         unit: str = "",
         description: str = "",
     ):
-        self.name = name
+        # pylint: disable=no-member
+        is_name_valid, is_unit_valid = self._check_name_and_unit(name, unit)
+
+        if not is_name_valid:
+            raise Exception(f"Invalid name received {name}")
+
+        if not is_unit_valid:
+            raise Exception(f"Invalid unit received {unit}")
+        self.name = name.lower()
         self.unit = unit
         self.description = description
         self.instrumentation_scope = instrumentation_scope
