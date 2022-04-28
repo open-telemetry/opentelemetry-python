@@ -28,6 +28,7 @@ from typing import (
     Sequence,
     TypeVar,
     Union,
+    Tuple
 )
 
 # pylint: disable=unused-import; needed for typing and sphinx
