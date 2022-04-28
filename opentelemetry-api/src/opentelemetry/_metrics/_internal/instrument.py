@@ -26,9 +26,9 @@ from typing import (
     Iterable,
     Optional,
     Sequence,
+    Tuple,
     TypeVar,
     Union,
-    Tuple
 )
 
 # pylint: disable=unused-import; needed for typing and sphinx
