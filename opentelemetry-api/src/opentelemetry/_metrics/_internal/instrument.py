@@ -61,7 +61,7 @@ class Instrument(ABC):
         pass
 
     # pylint: disable=no-self-use
-    def _check_name_and_unit(self, name: str, unit: str) -> tuple:
+    def _check_name_and_unit(self, name: str, unit: str) -> Tuple[bool, bool]:
         """
         Checks the following instrument name and unit for compliance with the
         spec.
