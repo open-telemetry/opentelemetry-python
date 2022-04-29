@@ -20,7 +20,7 @@ from typing import Optional, Set, Type
 # FIXME import from typing when support for 3.6 is removed
 from typing_extensions import final
 
-from opentelemetry._metrics.instrument import Instrument
+from opentelemetry._metrics import Instrument
 from opentelemetry.sdk._metrics.aggregation import (
     DefaultAggregation,
     _AggregationFactory,

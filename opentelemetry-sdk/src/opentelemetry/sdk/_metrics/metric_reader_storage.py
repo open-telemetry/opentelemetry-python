@@ -15,7 +15,7 @@
 from threading import RLock
 from typing import Dict, Iterable, List
 
-from opentelemetry._metrics.instrument import Instrument
+from opentelemetry._metrics import Instrument
 from opentelemetry.sdk._metrics._view_instrument_match import (
     _ViewInstrumentMatch,
 )

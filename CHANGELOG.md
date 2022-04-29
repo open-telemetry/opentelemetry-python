@@ -7,8 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.11.1-0.30b1...HEAD)
 
-## [1.11.1-0.30b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.11.1-0.30b1) - 2022-04-21
+- Move Metrics API behind internal package
+  ([#2651](https://github.com/open-telemetry/opentelemetry-python/pull/2651))
 
+## [1.11.1-0.30b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.11.1-0.30b1) - 2022-04-21
 
 - Add parameter to MetricReader constructor to select aggregation per instrument kind
   ([#2638](https://github.com/open-telemetry/opentelemetry-python/pull/2638))

@@ -17,21 +17,17 @@ from logging import getLogger
 from threading import Lock
 from typing import Optional, Sequence
 
+from opentelemetry._metrics import Counter as APICounter
+from opentelemetry._metrics import Histogram as APIHistogram
 from opentelemetry._metrics import Meter as APIMeter
 from opentelemetry._metrics import MeterProvider as APIMeterProvider
 from opentelemetry._metrics import NoOpMeter
-from opentelemetry._metrics.instrument import Counter as APICounter
-from opentelemetry._metrics.instrument import Histogram as APIHistogram
-from opentelemetry._metrics.instrument import (
-    ObservableCounter as APIObservableCounter,
-)
-from opentelemetry._metrics.instrument import (
-    ObservableGauge as APIObservableGauge,
-)
-from opentelemetry._metrics.instrument import (
+from opentelemetry._metrics import ObservableCounter as APIObservableCounter
+from opentelemetry._metrics import ObservableGauge as APIObservableGauge
+from opentelemetry._metrics import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
-from opentelemetry._metrics.instrument import UpDownCounter as APIUpDownCounter
+from opentelemetry._metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.sdk._metrics.instrument import (
     Counter,
     Histogram,
