@@ -61,8 +61,8 @@ class Instrument(ABC):
     ) -> None:
         pass
 
-    # pylint: disable=no-self-use
-    def _check_name_and_unit(self, name: str, unit: str) -> Tuple[bool, bool]:
+    @staticmethod
+    def _check_name_and_unit(name: str, unit: str) -> Tuple[bool, bool]:
         """
         Checks the following instrument name and unit for compliance with the
         spec.
