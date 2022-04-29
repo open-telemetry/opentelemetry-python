@@ -38,6 +38,11 @@ if TYPE_CHECKING:
 _logger = getLogger(__name__)
 
 
+_ERROR_MESSAGE = (
+    "Expected ASCII string of maximum length 63 characters but got {}"
+)
+
+
 class _Synchronous:
     def __init__(
         self,
@@ -47,7 +52,15 @@ class _Synchronous:
         unit: str = "",
         description: str = "",
     ):
-        self.name = name
+        # pylint: disable=no-member
+        is_name_valid, is_unit_valid = self._check_name_and_unit(name, unit)
+
+        if not is_name_valid:
+            raise Exception(_ERROR_MESSAGE.format(name))
+
+        if not is_unit_valid:
+            raise Exception(_ERROR_MESSAGE.format(unit))
+        self.name = name.lower()
         self.unit = unit
         self.description = description
         self.instrumentation_scope = instrumentation_scope
@@ -65,7 +78,15 @@ class _Asynchronous:
         unit: str = "",
         description: str = "",
     ):
-        self.name = name
+        # pylint: disable=no-member
+        is_name_valid, is_unit_valid = self._check_name_and_unit(name, unit)
+
+        if not is_name_valid:
+            raise Exception(_ERROR_MESSAGE.format(name))
+
+        if not is_unit_valid:
+            raise Exception(_ERROR_MESSAGE.format(unit))
+        self.name = name.lower()
         self.unit = unit
         self.description = description
         self.instrumentation_scope = instrumentation_scope

@@ -17,6 +17,8 @@
 
 from abc import ABC, abstractmethod
 from logging import getLogger
+from re import ASCII
+from re import compile as re_compile
 from typing import (
     Callable,
     Generator,
@@ -24,6 +26,7 @@ from typing import (
     Iterable,
     Optional,
     Sequence,
+    Tuple,
     TypeVar,
     Union,
 )
@@ -42,6 +45,9 @@ CallbackT = Union[
 
 _logger = getLogger(__name__)
 
+_name_regex = re_compile(r"[a-zA-Z][-.\w]{0,62}", ASCII)
+_unit_regex = re_compile(r"\w{0,63}", ASCII)
+
 
 class Instrument(ABC):
     """Abstract class that serves as base for all instruments."""
@@ -55,9 +61,21 @@ class Instrument(ABC):
     ) -> None:
         pass
 
-        # FIXME check that the instrument name is valid
-        # FIXME check that the unit is 63 characters or shorter
-        # FIXME check that the unit contains only ASCII characters
+    @staticmethod
+    def _check_name_and_unit(name: str, unit: str) -> Tuple[bool, bool]:
+        """
+        Checks the following instrument name and unit for compliance with the
+        spec.
+
+        Returns a tuple of boolean value, the first one will be `True` if the
+        name is valid, `False` otherwise. The second value will be `True` if
+        the unit is valid, `False` otherwise.
+        """
+
+        return (
+            _name_regex.fullmatch(name) is not None,
+            _unit_regex.fullmatch(unit) is not None,
+        )
 
 
 class _ProxyInstrument(ABC, Generic[InstrumentT]):
@@ -124,7 +142,6 @@ class Counter(Synchronous):
         amount: Union[int, float],
         attributes: Optional[Attributes] = None,
     ) -> None:
-        # FIXME check that the amount is non negative
         pass
 
 

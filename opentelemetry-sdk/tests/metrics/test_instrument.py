@@ -28,6 +28,10 @@ from opentelemetry.sdk._metrics.measurement import Measurement
 
 
 class TestCounter(TestCase):
+    def testname(self):
+        self.assertEqual(Counter("name", Mock(), Mock()).name, "name")
+        self.assertEqual(Counter("Name", Mock(), Mock()).name, "name")
+
     def test_add(self):
         mc = Mock()
         counter = Counter("name", Mock(), mc)
@@ -91,6 +95,10 @@ def generator_callback_1():
 
 
 class TestObservableGauge(TestCase):
+    def testname(self):
+        self.assertEqual(ObservableGauge("name", Mock(), Mock()).name, "name")
+        self.assertEqual(ObservableGauge("Name", Mock(), Mock()).name, "name")
+
     def test_callable_callback_0(self):
         observable_gauge = ObservableGauge(
             "name", Mock(), Mock(), [callable_callback_0]

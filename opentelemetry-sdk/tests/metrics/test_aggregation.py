@@ -875,7 +875,7 @@ class TestDefaultAggregation(TestCase):
     def test_counter(self):
 
         aggregation = self.default_aggregation._create_aggregation(
-            Counter(Mock(), Mock(), Mock())
+            Counter("name", Mock(), Mock())
         )
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertTrue(aggregation._instrument_is_monotonic)
@@ -886,7 +886,7 @@ class TestDefaultAggregation(TestCase):
     def test_up_down_counter(self):
 
         aggregation = self.default_aggregation._create_aggregation(
-            UpDownCounter(Mock(), Mock(), Mock())
+            UpDownCounter("name", Mock(), Mock())
         )
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertFalse(aggregation._instrument_is_monotonic)
@@ -897,7 +897,7 @@ class TestDefaultAggregation(TestCase):
     def test_observable_counter(self):
 
         aggregation = self.default_aggregation._create_aggregation(
-            ObservableCounter(Mock(), Mock(), Mock(), callbacks=[Mock()])
+            ObservableCounter("name", Mock(), Mock(), callbacks=[Mock()])
         )
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertTrue(aggregation._instrument_is_monotonic)
@@ -909,7 +909,7 @@ class TestDefaultAggregation(TestCase):
     def test_observable_up_down_counter(self):
 
         aggregation = self.default_aggregation._create_aggregation(
-            ObservableUpDownCounter(Mock(), Mock(), Mock(), callbacks=[Mock()])
+            ObservableUpDownCounter("name", Mock(), Mock(), callbacks=[Mock()])
         )
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertFalse(aggregation._instrument_is_monotonic)
@@ -922,9 +922,7 @@ class TestDefaultAggregation(TestCase):
 
         aggregation = self.default_aggregation._create_aggregation(
             Histogram(
-                Mock(),
-                Mock(),
-                Mock(),
+                "name",
                 Mock(),
                 Mock(),
             )
@@ -935,7 +933,7 @@ class TestDefaultAggregation(TestCase):
 
         aggregation = self.default_aggregation._create_aggregation(
             ObservableGauge(
-                Mock(),
+                "name",
                 Mock(),
                 Mock(),
                 callbacks=[Mock()],
