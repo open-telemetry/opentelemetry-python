@@ -17,6 +17,7 @@ import os
 from abc import ABC, abstractmethod
 from enum import Enum
 from os import environ, linesep
+from socket import timeout
 from sys import stdout
 from threading import Event, RLock, Thread
 from typing import IO, Callable, Dict, Iterable, List, Optional, Sequence
@@ -31,6 +32,7 @@ from opentelemetry.sdk._metrics._internal.aggregation import Aggregation
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
 from opentelemetry.util._once import Once
+from opentelemetry.util._time import time_ns
 
 _logger = logging.getLogger(__name__)
 
@@ -53,8 +55,11 @@ class MetricExporter(ABC):
 
     @abstractmethod
     def export(
-        self, metrics: Sequence[Metric], *args, **kwargs
-    ) -> "MetricExportResult":
+        self,
+        metrics: Sequence[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> MetricExportResult:
         """Exports a batch of telemetry data.
 
         Args:
@@ -65,7 +70,7 @@ class MetricExporter(ABC):
         """
 
     @abstractmethod
-    def shutdown(self, *args, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 10_000, **kwargs) -> None:
         """Shuts down the exporter.
 
         Called when the SDK is shut down.
@@ -90,14 +95,17 @@ class ConsoleMetricExporter(MetricExporter):
         self.formatter = formatter
 
     def export(
-        self, metrics: Sequence[Metric], *args, **kwargs
+        self,
+        metrics: Sequence[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
     ) -> MetricExportResult:
         for metric in metrics:
             self.out.write(self.formatter(metric))
         self.out.flush()
         return MetricExportResult.SUCCESS
 
-    def shutdown(self, *args, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 10_000, **kwargs) -> None:
         pass
 
 
@@ -127,11 +135,16 @@ class InMemoryMetricReader(MetricReader):
             self._metrics = []
         return metrics
 
-    def _receive_metrics(self, metrics: Iterable[Metric], *args, **kwargs):
+    def _receive_metrics(
+        self,
+        metrics: Iterable[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> None:
         with self._lock:
             self._metrics = list(metrics)
 
-    def shutdown(self, *args, **kwargs):
+    def shutdown(self, timeout_millis: float = 10_000, **kwargs) -> None:
         pass
 
 
@@ -193,23 +206,28 @@ class PeriodicExportingMetricReader(MetricReader):
     def _ticker(self) -> None:
         interval_secs = self._export_interval_millis / 1e3
         while not self._shutdown_event.wait(interval_secs):
-            self.collect()
+            self.collect(timeout_millis=self._export_timeout_millis)
         # one last collection below before shutting down completely
-        self.collect()
+        self.collect(timeout_millis=self._export_interval_millis)
 
     def _receive_metrics(
-        self, metrics: Iterable[Metric], *args, **kwargs
+        self,
+        metrics: Iterable[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
     ) -> None:
         if metrics is None:
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
-            self._exporter.export(metrics)
+            self._exporter.export(metrics, timeout_millis=timeout_millis)
         except Exception as e:  # pylint: disable=broad-except,invalid-name
             _logger.exception("Exception while exporting metrics %s", str(e))
         detach(token)
 
-    def shutdown(self, *args, **kwargs):
+    def shutdown(self, timeout_millis: float = 10_000, **kwargs) -> None:
+        deadline_ns = time_ns() + timeout_millis * 10**6
+
         def _shutdown():
             self._shutdown = True
 
@@ -219,5 +237,5 @@ class PeriodicExportingMetricReader(MetricReader):
             return
 
         self._shutdown_event.set()
-        self._daemon_thread.join()
-        self._exporter.shutdown()
+        self._daemon_thread.join(timeout=(deadline_ns - time_ns()) / 10**9)
+        self._exporter.shutdown(timeout=(deadline_ns - time_ns()) / 10**6)

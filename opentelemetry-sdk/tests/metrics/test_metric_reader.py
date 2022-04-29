@@ -51,7 +51,7 @@ class DummyMetricReader(MetricReader):
     def _receive_metrics(self, metrics):
         pass
 
-    def shutdown(self):
+    def shutdown(self, *args, **kwargs):
         return True
 
 

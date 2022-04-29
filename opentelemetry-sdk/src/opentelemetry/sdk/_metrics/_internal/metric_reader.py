@@ -138,7 +138,7 @@ class MetricReader(ABC):
         self._instrument_class_aggregation.update(preferred_aggregation or {})
 
     @final
-    def collect(self) -> None:
+    def collect(self, timeout_millis: float = 10_000) -> None:
         """Collects the metrics from the internal SDK state and
         invokes the `_receive_metrics` with the collection.
         """
@@ -148,7 +148,8 @@ class MetricReader(ABC):
             )
             return
         self._receive_metrics(
-            self._collect(self, self._instrument_class_temporality)
+            self._collect(self, self._instrument_class_temporality),
+            timeout_millis=timeout_millis,
         )
 
     @final
@@ -162,11 +163,16 @@ class MetricReader(ABC):
         self._collect = func
 
     @abstractmethod
-    def _receive_metrics(self, metrics: Iterable[Metric], *args, **kwargs):
+    def _receive_metrics(
+        self,
+        metrics: Iterable[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> None:
         """Called by `MetricReader.collect` when it receives a batch of metrics"""
 
     @abstractmethod
-    def shutdown(self, *args, **kwargs):
+    def shutdown(self, timeout_millis: float = 10_000, **kwargs) -> None:
         """Shuts down the MetricReader. This method provides a way
         for the MetricReader to do any cleanup required. A metric reader can
         only be shutdown once, any subsequent calls are ignored and return

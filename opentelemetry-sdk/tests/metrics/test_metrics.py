@@ -49,7 +49,7 @@ class DummyMetricReader(MetricReader):
     def _receive_metrics(self, metrics):
         pass
 
-    def shutdown(self):
+    def shutdown(self, *args, **kwargs):
         return True
 
 
@@ -433,12 +433,17 @@ class InMemoryMetricExporter(MetricExporter):
         self.metrics = {}
         self._counter = 0
 
-    def export(self, metrics: Sequence[Metric]) -> MetricExportResult:
+    def export(
+        self,
+        metrics: Sequence[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> MetricExportResult:
         self.metrics[self._counter] = metrics
         self._counter += 1
         return MetricExportResult.SUCCESS
 
-    def shutdown(self) -> None:
+    def shutdown(self, timeout_millis: float = 10_000, **kwargs) -> None:
         pass
 
 
