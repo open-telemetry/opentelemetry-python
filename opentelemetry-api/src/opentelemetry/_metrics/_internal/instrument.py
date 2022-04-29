@@ -30,7 +30,7 @@ from typing import (
 
 # pylint: disable=unused-import; needed for typing and sphinx
 from opentelemetry import _metrics as metrics
-from opentelemetry._metrics.observation import Observation
+from opentelemetry._metrics._internal.observation import Observation
 from opentelemetry.util.types import Attributes
 
 InstrumentT = TypeVar("InstrumentT", bound="Instrument")
@@ -115,23 +115,7 @@ class Asynchronous(Instrument):
         super().__init__(name, unit=unit, description=description)
 
 
-class _Adding(Instrument):
-    pass
-
-
-class _Grouping(Instrument):
-    pass
-
-
-class _Monotonic(_Adding):
-    pass
-
-
-class _NonMonotonic(_Adding):
-    pass
-
-
-class Counter(_Monotonic, Synchronous):
+class Counter(Synchronous):
     """A Counter is a synchronous `Instrument` which supports non-negative increments."""
 
     @abstractmethod
@@ -176,7 +160,7 @@ class _ProxyCounter(_ProxyInstrument[Counter], Counter):
         return meter.create_counter(self._name, self._unit, self._description)
 
 
-class UpDownCounter(_NonMonotonic, Synchronous):
+class UpDownCounter(Synchronous):
     """An UpDownCounter is a synchronous `Instrument` which supports increments and decrements."""
 
     @abstractmethod
@@ -222,7 +206,7 @@ class _ProxyUpDownCounter(_ProxyInstrument[UpDownCounter], UpDownCounter):
         )
 
 
-class ObservableCounter(_Monotonic, Asynchronous):
+class ObservableCounter(Asynchronous):
     """An ObservableCounter is an asynchronous `Instrument` which reports monotonically
     increasing value(s) when the instrument is being observed.
     """
@@ -252,7 +236,7 @@ class _ProxyObservableCounter(
         )
 
 
-class ObservableUpDownCounter(_NonMonotonic, Asynchronous):
+class ObservableUpDownCounter(Asynchronous):
     """An ObservableUpDownCounter is an asynchronous `Instrument` which reports additive value(s) (e.g.
     the process heap size - it makes sense to report the heap size from multiple processes and sum them
     up, so we get the total heap usage) when the instrument is being observed.
@@ -284,7 +268,7 @@ class _ProxyObservableUpDownCounter(
         )
 
 
-class Histogram(_Grouping, Synchronous):
+class Histogram(Synchronous):
     """Histogram is a synchronous `Instrument` which can be used to report arbitrary values
     that are likely to be statistically meaningful. It is intended for statistics such as
     histograms, summaries, and percentile.
@@ -333,7 +317,7 @@ class _ProxyHistogram(_ProxyInstrument[Histogram], Histogram):
         )
 
 
-class ObservableGauge(_Grouping, Asynchronous):
+class ObservableGauge(Asynchronous):
     """Asynchronous Gauge is an asynchronous `Instrument` which reports non-additive value(s) (e.g.
     the room temperature - it makes no sense to report the temperature value from multiple rooms
     and sum them up) when the instrument is being observed.

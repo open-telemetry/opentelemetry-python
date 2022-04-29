@@ -14,8 +14,9 @@
 
 import unittest
 
-from opentelemetry import _metrics as metrics_api
 from opentelemetry import trace as trace_api
+from opentelemetry._metrics import _internal as metrics_api
+from opentelemetry._metrics._internal import _ProxyMeterProvider
 from opentelemetry.util._once import Once
 
 
@@ -32,7 +33,7 @@ def reset_metrics_globals() -> None:
     """WARNING: only use this for tests."""
     metrics_api._METER_PROVIDER_SET_ONCE = Once()  # type: ignore[attr-defined]
     metrics_api._METER_PROVIDER = None  # type: ignore[attr-defined]
-    metrics_api._PROXY_METER_PROVIDER = metrics_api._ProxyMeterProvider()  # type: ignore[attr-defined]
+    metrics_api._PROXY_METER_PROVIDER = _ProxyMeterProvider()  # type: ignore[attr-defined]
 
 
 class TraceGlobalsTest(unittest.TestCase):

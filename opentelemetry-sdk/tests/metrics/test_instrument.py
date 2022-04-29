@@ -15,7 +15,7 @@
 from unittest import TestCase
 from unittest.mock import Mock
 
-from opentelemetry._metrics.observation import Observation
+from opentelemetry._metrics import Observation
 from opentelemetry.sdk._metrics.instrument import (
     Counter,
     Histogram,

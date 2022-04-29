@@ -15,7 +15,7 @@
 from unittest import TestCase
 from unittest.mock import Mock
 
-from opentelemetry._metrics.observation import Observation
+from opentelemetry._metrics import Observation
 from opentelemetry.sdk._metrics import MeterProvider
 from opentelemetry.sdk._metrics.export import InMemoryMetricReader
 from opentelemetry.sdk._metrics.point import (
