@@ -110,12 +110,14 @@ class PrometheusMetricReader(MetricReader):
         REGISTRY.register(self._collector)
         self._collector._callback = self.collect
 
-    def _receive_metrics(self, metrics: Iterable[Metric]) -> None:
+    def _receive_metrics(
+        self, metrics: Iterable[Metric], *args, **kwargs
+    ) -> None:
         if metrics is None:
             return
         self._collector.add_metrics_data(metrics)
 
-    def shutdown(self) -> bool:
+    def shutdown(self, *args, **kwargs) -> bool:
         REGISTRY.unregister(self._collector)
         return True
 
