@@ -16,17 +16,16 @@ from threading import RLock
 from typing import Dict, Iterable, List
 
 from opentelemetry._metrics import Instrument
-from opentelemetry.sdk._metrics._view_instrument_match import (
+from opentelemetry.sdk._metrics._internal._view_instrument_match import (
     _ViewInstrumentMatch,
 )
-from opentelemetry.sdk._metrics.aggregation import (
-    AggregationTemporality,
-    _AggregationFactory,
+from opentelemetry.sdk._metrics._internal.aggregation import Aggregation
+from opentelemetry.sdk._metrics._internal.sdk_configuration import (
+    SdkConfiguration,
 )
+from opentelemetry.sdk._metrics._internal.view import View
 from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.point import Metric
-from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
-from opentelemetry.sdk._metrics.view import View
+from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
 
 _DEFAULT_VIEW = View(instrument_name="")
 
@@ -37,7 +36,7 @@ class MetricReaderStorage:
     def __init__(
         self,
         sdk_config: SdkConfiguration,
-        instrument_class_aggregation: Dict[type, _AggregationFactory],
+        instrument_class_aggregation: Dict[type, Aggregation],
     ) -> None:
         self._lock = RLock()
         self._sdk_config = sdk_config

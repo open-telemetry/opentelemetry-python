@@ -17,11 +17,10 @@ from typing import Dict
 from unittest import TestCase
 from unittest.mock import patch
 
+from opentelemetry.sdk._metrics._internal.aggregation import Aggregation
 from opentelemetry.sdk._metrics.aggregation import (
-    AggregationTemporality,
     DefaultAggregation,
     LastValueAggregation,
-    _AggregationFactory,
 )
 from opentelemetry.sdk._metrics.instrument import (
     Counter,
@@ -32,6 +31,7 @@ from opentelemetry.sdk._metrics.instrument import (
     UpDownCounter,
 )
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
+from opentelemetry.sdk._metrics.point import AggregationTemporality
 from opentelemetry.sdk.environment_variables import (
     _OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
 )
@@ -41,7 +41,7 @@ class DummyMetricReader(MetricReader):
     def __init__(
         self,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[type, _AggregationFactory] = None,
+        preferred_aggregation: Dict[type, Aggregation] = None,
     ) -> None:
         super().__init__(
             preferred_temporality=preferred_temporality,

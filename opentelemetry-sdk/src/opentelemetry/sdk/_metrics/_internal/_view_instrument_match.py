@@ -17,20 +17,22 @@ from logging import getLogger
 from threading import Lock
 from typing import TYPE_CHECKING, Dict, Iterable
 
-from opentelemetry.sdk._metrics.aggregation import (
-    DefaultAggregation,
+from opentelemetry.sdk._metrics._internal.aggregation import (
+    Aggregation,
     _Aggregation,
-    _AggregationFactory,
     _convert_aggregation_temporality,
     _PointVarT,
 )
+from opentelemetry.sdk._metrics._internal.sdk_configuration import (
+    SdkConfiguration,
+)
+from opentelemetry.sdk._metrics.aggregation import DefaultAggregation
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
-from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
-from opentelemetry.sdk._metrics.view import View
 
 if TYPE_CHECKING:
-    from opentelemetry.sdk._metrics.instrument import _Instrument
+    from opentelemetry.sdk._metrics._internal.instrument import _Instrument
+    from opentelemetry.sdk._metrics.view import View
 
 _logger = getLogger(__name__)
 
@@ -38,10 +40,10 @@ _logger = getLogger(__name__)
 class _ViewInstrumentMatch:
     def __init__(
         self,
-        view: View,
+        view: "View",
         instrument: "_Instrument",
         sdk_config: SdkConfiguration,
-        instrument_class_aggregation: Dict[type, _AggregationFactory],
+        instrument_class_aggregation: Dict[type, Aggregation],
     ):
         self._view = view
         self._instrument = instrument
