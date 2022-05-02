@@ -169,9 +169,9 @@ class OTLPMetricExporter(
         )
 
     def export(
-        self, metrics: Sequence[Metric], *args, **kwargs
+        self, metrics: Sequence[Metric], **kwargs
     ) -> MetricExportResult:
         return self._export(metrics)
 
-    def shutdown(self, *args, **kwargs):
+    def shutdown(self, **kwargs):
         pass

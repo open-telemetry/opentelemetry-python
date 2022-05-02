@@ -32,14 +32,12 @@ if TYPE_CHECKING:
 
 class MeasurementConsumer(ABC):
     @abstractmethod
-    def consume_measurement(
-        self, measurement: Measurement, *args, **kwargs
-    ) -> None:
+    def consume_measurement(self, measurement: Measurement, **kwargs) -> None:
         pass
 
     @abstractmethod
     def register_asynchronous_instrument(
-        self, instrument: "_Asynchronous", *args, **kwargs
+        self, instrument: "_Asynchronous", **kwargs
     ):
         pass
 
@@ -48,7 +46,6 @@ class MeasurementConsumer(ABC):
         self,
         metric_reader: MetricReader,
         instrument_type_temporality: Dict[type, AggregationTemporality],
-        *args,
         **kwargs
     ) -> Iterable[Metric]:
         pass
@@ -67,14 +64,12 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         }
         self._async_instruments: List["_Asynchronous"] = []
 
-    def consume_measurement(
-        self, measurement: Measurement, *args, **kwargs
-    ) -> None:
+    def consume_measurement(self, measurement: Measurement, **kwargs) -> None:
         for reader_storage in self._reader_storages.values():
             reader_storage.consume_measurement(measurement)
 
     def register_asynchronous_instrument(
-        self, instrument: "_Asynchronous", *args, **kwargs
+        self, instrument: "_Asynchronous", **kwargs
     ) -> None:
         with self._lock:
             self._async_instruments.append(instrument)
@@ -83,7 +78,6 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         self,
         metric_reader: MetricReader,
         instrument_type_temporality: Dict[type, AggregationTemporality],
-        *args,
         **kwargs
     ) -> Iterable[Metric]:
         with self._lock:
