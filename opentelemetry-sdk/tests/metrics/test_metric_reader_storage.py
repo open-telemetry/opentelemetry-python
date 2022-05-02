@@ -14,17 +14,19 @@
 
 from unittest.mock import MagicMock, Mock, patch
 
+from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
+    MetricReaderStorage,
+)
+from opentelemetry.sdk._metrics._internal.sdk_configuration import (
+    SdkConfiguration,
+)
 from opentelemetry.sdk._metrics.aggregation import (
     DefaultAggregation,
     DropAggregation,
 )
 from opentelemetry.sdk._metrics.instrument import Counter
 from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.metric_reader_storage import (
-    MetricReaderStorage,
-)
 from opentelemetry.sdk._metrics.point import AggregationTemporality
-from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
 from opentelemetry.sdk._metrics.view import View
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
 
@@ -43,7 +45,8 @@ def mock_instrument() -> Mock:
 
 class TestMetricReaderStorage(ConcurrencyTestBase):
     @patch(
-        "opentelemetry.sdk._metrics.metric_reader_storage._ViewInstrumentMatch"
+        "opentelemetry.sdk._metrics._internal"
+        ".metric_reader_storage._ViewInstrumentMatch"
     )
     def test_creates_view_instrument_matches(
         self, MockViewInstrumentMatch: Mock
@@ -80,7 +83,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
 
     @patch(
-        "opentelemetry.sdk._metrics.metric_reader_storage._ViewInstrumentMatch"
+        "opentelemetry.sdk._metrics._internal."
+        "metric_reader_storage._ViewInstrumentMatch"
     )
     def test_forwards_calls_to_view_instrument_match(
         self, MockViewInstrumentMatch: Mock
@@ -139,7 +143,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         self.assertEqual(result, all_metrics)
 
     @patch(
-        "opentelemetry.sdk._metrics.metric_reader_storage._ViewInstrumentMatch"
+        "opentelemetry.sdk._metrics._internal."
+        "metric_reader_storage._ViewInstrumentMatch"
     )
     def test_race_concurrent_measurements(self, MockViewInstrumentMatch: Mock):
         mock_view_instrument_match_ctor = MockFunc()
@@ -166,7 +171,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         self.assertEqual(mock_view_instrument_match_ctor.call_count, 1)
 
     @patch(
-        "opentelemetry.sdk._metrics.metric_reader_storage._ViewInstrumentMatch"
+        "opentelemetry.sdk._metrics._internal."
+        "metric_reader_storage._ViewInstrumentMatch"
     )
     def test_default_view_enabled(self, MockViewInstrumentMatch: Mock):
         """Instruments should be matched with default views when enabled"""

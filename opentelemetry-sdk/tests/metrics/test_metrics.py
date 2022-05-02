@@ -216,7 +216,7 @@ class TestMeterProvider(ConcurrencyTestBase):
         with self.assertLogs(level=WARNING):
             meter_provider.shutdown()
 
-    @patch("opentelemetry.sdk._metrics._logger")
+    @patch("opentelemetry.sdk._metrics._internal._logger")
     def test_shutdown_race(self, mock_logger):
         mock_logger.warning = MockFunc()
         meter_provider = MeterProvider()
@@ -226,7 +226,10 @@ class TestMeterProvider(ConcurrencyTestBase):
         )
         self.assertEqual(mock_logger.warning.call_count, num_threads - 1)
 
-    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
+    @patch(
+        "opentelemetry.sdk._metrics._internal."
+        "SynchronousMeasurementConsumer"
+    )
     def test_measurement_collect_callback(
         self, mock_sync_measurement_consumer
     ):
@@ -247,14 +250,20 @@ class TestMeterProvider(ConcurrencyTestBase):
             sync_consumer_instance.collect.call_count, len(metric_readers)
         )
 
-    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
+    @patch(
+        "opentelemetry.sdk._metrics."
+        "_internal.SynchronousMeasurementConsumer"
+    )
     def test_creates_sync_measurement_consumer(
         self, mock_sync_measurement_consumer
     ):
         MeterProvider()
         mock_sync_measurement_consumer.assert_called()
 
-    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
+    @patch(
+        "opentelemetry.sdk._metrics."
+        "_internal.SynchronousMeasurementConsumer"
+    )
     def test_register_asynchronous_instrument(
         self, mock_sync_measurement_consumer
     ):
@@ -277,7 +286,10 @@ class TestMeterProvider(ConcurrencyTestBase):
             )
         )
 
-    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
+    @patch(
+        "opentelemetry.sdk._metrics._internal."
+        "SynchronousMeasurementConsumer"
+    )
     def test_consume_measurement_counter(self, mock_sync_measurement_consumer):
         sync_consumer_instance = mock_sync_measurement_consumer()
         meter_provider = MeterProvider()
@@ -287,7 +299,10 @@ class TestMeterProvider(ConcurrencyTestBase):
 
         sync_consumer_instance.consume_measurement.assert_called()
 
-    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
+    @patch(
+        "opentelemetry.sdk._metrics."
+        "_internal.SynchronousMeasurementConsumer"
+    )
     def test_consume_measurement_up_down_counter(
         self, mock_sync_measurement_consumer
     ):
@@ -301,7 +316,10 @@ class TestMeterProvider(ConcurrencyTestBase):
 
         sync_consumer_instance.consume_measurement.assert_called()
 
-    @patch("opentelemetry.sdk._metrics.SynchronousMeasurementConsumer")
+    @patch(
+        "opentelemetry.sdk._metrics._internal."
+        "SynchronousMeasurementConsumer"
+    )
     def test_consume_measurement_histogram(
         self, mock_sync_measurement_consumer
     ):

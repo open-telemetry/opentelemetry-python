@@ -77,7 +77,7 @@ from prometheus_client.core import (
 )
 from prometheus_client.core import Metric as PrometheusMetric
 
-from opentelemetry.sdk._metrics.export import MetricReader
+from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.point import Gauge, Histogram, Metric, Sum
 
 _logger = getLogger(__name__)

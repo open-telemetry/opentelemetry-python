@@ -20,17 +20,17 @@ from typing import Union
 from unittest import TestCase
 from unittest.mock import Mock
 
-from opentelemetry.sdk._metrics import instrument
-from opentelemetry.sdk._metrics.aggregation import (
-    AggregationTemporality,
-    DefaultAggregation,
-    ExplicitBucketHistogramAggregation,
-    LastValueAggregation,
-    SumAggregation,
+from opentelemetry.sdk._metrics._internal.aggregation import (
     _convert_aggregation_temporality,
     _ExplicitBucketHistogramAggregation,
     _LastValueAggregation,
     _SumAggregation,
+)
+from opentelemetry.sdk._metrics.aggregation import (
+    DefaultAggregation,
+    ExplicitBucketHistogramAggregation,
+    LastValueAggregation,
+    SumAggregation,
 )
 from opentelemetry.sdk._metrics.instrument import (
     Counter,
@@ -41,7 +41,7 @@ from opentelemetry.sdk._metrics.instrument import (
     UpDownCounter,
 )
 from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.point import Gauge
+from opentelemetry.sdk._metrics.point import AggregationTemporality, Gauge
 from opentelemetry.sdk._metrics.point import Histogram as HistogramPoint
 from opentelemetry.sdk._metrics.point import Sum
 from opentelemetry.util.types import Attributes
@@ -812,7 +812,7 @@ class TestHistogramConvertAggregationTemporality(TestCase):
 
 class TestAggregationFactory(TestCase):
     def test_sum_factory(self):
-        counter = instrument.Counter("name", Mock(), Mock())
+        counter = Counter("name", Mock(), Mock())
         factory = SumAggregation()
         aggregation = factory._create_aggregation(counter)
         self.assertIsInstance(aggregation, _SumAggregation)
@@ -823,7 +823,7 @@ class TestAggregationFactory(TestCase):
         aggregation2 = factory._create_aggregation(counter)
         self.assertNotEqual(aggregation, aggregation2)
 
-        counter = instrument.UpDownCounter("name", Mock(), Mock())
+        counter = UpDownCounter("name", Mock(), Mock())
         factory = SumAggregation()
         aggregation = factory._create_aggregation(counter)
         self.assertIsInstance(aggregation, _SumAggregation)
@@ -832,7 +832,7 @@ class TestAggregationFactory(TestCase):
             aggregation._instrument_temporality, AggregationTemporality.DELTA
         )
 
-        counter = instrument.ObservableCounter("name", Mock(), Mock(), None)
+        counter = ObservableCounter("name", Mock(), Mock(), None)
         factory = SumAggregation()
         aggregation = factory._create_aggregation(counter)
         self.assertIsInstance(aggregation, _SumAggregation)
@@ -843,7 +843,7 @@ class TestAggregationFactory(TestCase):
         )
 
     def test_explicit_bucket_histogram_factory(self):
-        histo = instrument.Histogram("name", Mock(), Mock())
+        histo = Histogram("name", Mock(), Mock())
         factory = ExplicitBucketHistogramAggregation(
             boundaries=(
                 0.0,
@@ -859,7 +859,7 @@ class TestAggregationFactory(TestCase):
         self.assertNotEqual(aggregation, aggregation2)
 
     def test_last_value_factory(self):
-        counter = instrument.Counter("name", Mock(), Mock())
+        counter = Counter("name", Mock(), Mock())
         factory = LastValueAggregation()
         aggregation = factory._create_aggregation(counter)
         self.assertIsInstance(aggregation, _LastValueAggregation)
