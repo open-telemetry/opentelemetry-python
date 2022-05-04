@@ -162,11 +162,11 @@ class MetricReader(ABC):
         self._collect = func
 
     @abstractmethod
-    def _receive_metrics(self, metrics: Iterable[Metric]):
+    def _receive_metrics(self, metrics: Iterable[Metric], *args, **kwargs):
         """Called by `MetricReader.collect` when it receives a batch of metrics"""
 
     @abstractmethod
-    def shutdown(self):
+    def shutdown(self, *args, **kwargs):
         """Shuts down the MetricReader. This method provides a way
         for the MetricReader to do any cleanup required. A metric reader can
         only be shutdown once, any subsequent calls are ignored and return

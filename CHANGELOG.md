@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.11.1-0.30b1...HEAD)
 
+- Add variadic arguments to metric exporter/reader interfaces
+  ([#2654](https://github.com/open-telemetry/opentelemetry-python/pull/2654))
 - Move Metrics API behind internal package
   ([#2651](https://github.com/open-telemetry/opentelemetry-python/pull/2651))
 
