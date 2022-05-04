@@ -25,7 +25,7 @@ from opentelemetry.sdk._metrics.aggregation import (
 )
 from opentelemetry.sdk._metrics.instrument import Counter, ObservableCounter
 from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.metric_reader_storage import (
+from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
     _DEFAULT_VIEW,
     MetricReaderStorage,
 )
