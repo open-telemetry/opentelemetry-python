@@ -99,8 +99,8 @@ class MetricReaderStorage:
                             existing_view_instrument_match
                         ) in existing_view_instrument_matches:
                             if (
-                                existing_view_instrument_match._name
-                                == new_view_instrument_match._name
+                                existing_view_instrument_match
+                                == new_view_instrument_match
                             ):
 
                                 _logger.warning(
