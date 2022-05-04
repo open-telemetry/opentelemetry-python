@@ -53,7 +53,7 @@ class MetricExporter(ABC):
 
     @abstractmethod
     def export(
-        self, metrics: Sequence[Metric], **kwargs
+        self, metrics: Sequence[Metric], *args, **kwargs
     ) -> "MetricExportResult":
         """Exports a batch of telemetry data.
 
@@ -65,7 +65,7 @@ class MetricExporter(ABC):
         """
 
     @abstractmethod
-    def shutdown(self, **kwargs) -> None:
+    def shutdown(self, *args, **kwargs) -> None:
         """Shuts down the exporter.
 
         Called when the SDK is shut down.
@@ -90,14 +90,14 @@ class ConsoleMetricExporter(MetricExporter):
         self.formatter = formatter
 
     def export(
-        self, metrics: Sequence[Metric], **kwargs
+        self, metrics: Sequence[Metric], *args, **kwargs
     ) -> MetricExportResult:
         for metric in metrics:
             self.out.write(self.formatter(metric))
         self.out.flush()
         return MetricExportResult.SUCCESS
 
-    def shutdown(self, **kwargs) -> None:
+    def shutdown(self, *args, **kwargs) -> None:
         pass
 
 
@@ -127,11 +127,11 @@ class InMemoryMetricReader(MetricReader):
             self._metrics = []
         return metrics
 
-    def _receive_metrics(self, metrics: Iterable[Metric], **kwargs):
+    def _receive_metrics(self, metrics: Iterable[Metric], *args, **kwargs):
         with self._lock:
             self._metrics = list(metrics)
 
-    def shutdown(self, **kwargs):
+    def shutdown(self, *args, **kwargs):
         pass
 
 
@@ -197,7 +197,9 @@ class PeriodicExportingMetricReader(MetricReader):
         # one last collection below before shutting down completely
         self.collect()
 
-    def _receive_metrics(self, metrics: Iterable[Metric], **kwargs) -> None:
+    def _receive_metrics(
+        self, metrics: Iterable[Metric], *args, **kwargs
+    ) -> None:
         if metrics is None:
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
@@ -207,7 +209,7 @@ class PeriodicExportingMetricReader(MetricReader):
             _logger.exception("Exception while exporting metrics %s", str(e))
         detach(token)
 
-    def shutdown(self, **kwargs):
+    def shutdown(self, *args, **kwargs):
         def _shutdown():
             self._shutdown = True
 
