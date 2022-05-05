@@ -67,49 +67,10 @@ class MetricReaderStorage:
 
             # not present, hold the lock and add a new mapping
             view_instrument_matches = []
-            for view in self._sdk_config.views:
-                # pylint: disable=protected-access
-                if view._match(instrument):
 
-                    new_view_instrument_match = _ViewInstrumentMatch(
-                        view=view,
-                        instrument=instrument,
-                        sdk_config=self._sdk_config,
-                        instrument_class_aggregation=(
-                            self._instrument_class_aggregation
-                        ),
-                    )
-
-                    if isinstance(instrument, Asynchronous) and isinstance(
-                        view._aggregation, ExplicitBucketHistogramAggregation
-                    ):
-                        _logger.warning(
-                            "View %s and instrument %s will produce "
-                            "semantic errors when matched, the view "
-                            "has not been applied.",
-                            view,
-                            instrument,
-                        )
-                        continue
-
-                    for (
-                        existing_view_instrument_matches
-                    ) in self._instrument_view_instrument_matches.values():
-                        for (
-                            existing_view_instrument_match
-                        ) in existing_view_instrument_matches:
-                            if existing_view_instrument_match.conflicts(
-                                new_view_instrument_match
-                            ):
-
-                                _logger.warning(
-                                    "Views %s and %s will cause conflicting "
-                                    "metrics identities",
-                                    existing_view_instrument_match._view,
-                                    new_view_instrument_match._view,
-                                )
-
-                    view_instrument_matches.append(new_view_instrument_match)
+            self._handle_view_instrument_match(
+                instrument, view_instrument_matches
+            )
 
             # if no view targeted the instrument, use the default
             if not view_instrument_matches:
@@ -162,3 +123,52 @@ class MetricReaderStorage:
                     )
 
         return metrics
+
+    def _handle_view_instrument_match(
+        self,
+        instrument: Instrument,
+        view_instrument_matches: List["_ViewInstrumentMatch"],
+    ):
+        for view in self._sdk_config.views:
+            # pylint: disable=protected-access
+            if view._match(instrument):
+
+                new_view_instrument_match = _ViewInstrumentMatch(
+                    view=view,
+                    instrument=instrument,
+                    sdk_config=self._sdk_config,
+                    instrument_class_aggregation=(
+                        self._instrument_class_aggregation
+                    ),
+                )
+
+                if isinstance(instrument, Asynchronous) and isinstance(
+                    view._aggregation, ExplicitBucketHistogramAggregation
+                ):
+                    _logger.warning(
+                        "View %s and instrument %s will produce "
+                        "semantic errors when matched, the view "
+                        "has not been applied.",
+                        view,
+                        instrument,
+                    )
+                    continue
+
+                for (
+                    existing_view_instrument_matches
+                ) in self._instrument_view_instrument_matches.values():
+                    for (
+                        existing_view_instrument_match
+                    ) in existing_view_instrument_matches:
+                        if existing_view_instrument_match.conflicts(
+                            new_view_instrument_match
+                        ):
+
+                            _logger.warning(
+                                "Views %s and %s will cause conflicting "
+                                "metrics identities",
+                                existing_view_instrument_match._view,
+                                new_view_instrument_match._view,
+                            )
+
+                view_instrument_matches.append(new_view_instrument_match)
