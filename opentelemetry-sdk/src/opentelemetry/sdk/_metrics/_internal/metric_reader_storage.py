@@ -128,10 +128,15 @@ class MetricReaderStorage:
         self,
         instrument: Instrument,
         view_instrument_matches: List["_ViewInstrumentMatch"],
-    ):
+    ) -> None:
         for view in self._sdk_config.views:
             # pylint: disable=protected-access
             if view._match(instrument):
+
+                if not self._check_view_instrument_compatibility(
+                    view, instrument
+                ):
+                    continue
 
                 new_view_instrument_match = _ViewInstrumentMatch(
                     view=view,
@@ -141,18 +146,6 @@ class MetricReaderStorage:
                         self._instrument_class_aggregation
                     ),
                 )
-
-                if isinstance(instrument, Asynchronous) and isinstance(
-                    view._aggregation, ExplicitBucketHistogramAggregation
-                ):
-                    _logger.warning(
-                        "View %s and instrument %s will produce "
-                        "semantic errors when matched, the view "
-                        "has not been applied.",
-                        view,
-                        instrument,
-                    )
-                    continue
 
                 for (
                     existing_view_instrument_matches
@@ -172,3 +165,31 @@ class MetricReaderStorage:
                             )
 
                 view_instrument_matches.append(new_view_instrument_match)
+
+    @staticmethod
+    def _check_view_instrument_compatibility(
+        view: View, instrument: Instrument
+    ) -> bool:
+        """
+        Checks if a view and an instrument are compatible.
+
+        Returns `true` if they are compatible and a `_ViewInstrumentMatch`
+        object should be created, `false` otherwise.
+        """
+
+        result = True
+
+        # pylint: disable=protected-access
+        if isinstance(instrument, Asynchronous) and isinstance(
+            view._aggregation, ExplicitBucketHistogramAggregation
+        ):
+            _logger.warning(
+                "View %s and instrument %s will produce "
+                "semantic errors when matched, the view "
+                "has not been applied.",
+                view,
+                instrument,
+            )
+            result = False
+
+        return result
