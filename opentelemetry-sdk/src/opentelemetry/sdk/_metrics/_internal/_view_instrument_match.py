@@ -66,7 +66,8 @@ class _ViewInstrumentMatch:
                 self._instrument.__class__
             ]._create_aggregation(self._instrument)
 
-    def __eq__(self, other):
+    def conflicts(self, other: "_ViewInstrumentMatch"):
+        # pylint: disable=protected-access
 
         result = (
             self._name == other._name
