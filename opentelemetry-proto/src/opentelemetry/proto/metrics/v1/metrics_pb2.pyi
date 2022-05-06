@@ -683,6 +683,8 @@ class HistogramDataPoint(google.protobuf.message.Message):
     EXPLICIT_BOUNDS_FIELD_NUMBER: builtins.int
     EXEMPLARS_FIELD_NUMBER: builtins.int
     FLAGS_FIELD_NUMBER: builtins.int
+    MIN_FIELD_NUMBER: builtins.int
+    MAX_FIELD_NUMBER: builtins.int
     @property
     def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
         """The set of key/value pairs that uniquely identify the timeseries from
@@ -762,6 +764,12 @@ class HistogramDataPoint(google.protobuf.message.Message):
     for the available flags and their meaning.
     """
 
+    min: builtins.float = ...
+    """min is the minimum value over (start_time, end_time]."""
+
+    max: builtins.float = ...
+    """max is the maximum value over (start_time, end_time]."""
+
     def __init__(self,
         *,
         attributes : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue]] = ...,
@@ -773,9 +781,16 @@ class HistogramDataPoint(google.protobuf.message.Message):
         explicit_bounds : typing.Optional[typing.Iterable[builtins.float]] = ...,
         exemplars : typing.Optional[typing.Iterable[global___Exemplar]] = ...,
         flags : builtins.int = ...,
+        min : builtins.float = ...,
+        max : builtins.float = ...,
         ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["_sum",b"_sum","sum",b"sum"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["_sum",b"_sum","attributes",b"attributes","bucket_counts",b"bucket_counts","count",b"count","exemplars",b"exemplars","explicit_bounds",b"explicit_bounds","flags",b"flags","start_time_unix_nano",b"start_time_unix_nano","sum",b"sum","time_unix_nano",b"time_unix_nano"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_max",b"_max","_min",b"_min","_sum",b"_sum","max",b"max","min",b"min","sum",b"sum"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_max",b"_max","_min",b"_min","_sum",b"_sum","attributes",b"attributes","bucket_counts",b"bucket_counts","count",b"count","exemplars",b"exemplars","explicit_bounds",b"explicit_bounds","flags",b"flags","max",b"max","min",b"min","start_time_unix_nano",b"start_time_unix_nano","sum",b"sum","time_unix_nano",b"time_unix_nano"]) -> None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_max",b"_max"]) -> typing.Optional[typing_extensions.Literal["max"]]: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_min",b"_min"]) -> typing.Optional[typing_extensions.Literal["min"]]: ...
+    @typing.overload
     def WhichOneof(self, oneof_group: typing_extensions.Literal["_sum",b"_sum"]) -> typing.Optional[typing_extensions.Literal["sum"]]: ...
 global___HistogramDataPoint = HistogramDataPoint
 
@@ -830,6 +845,8 @@ class ExponentialHistogramDataPoint(google.protobuf.message.Message):
     NEGATIVE_FIELD_NUMBER: builtins.int
     FLAGS_FIELD_NUMBER: builtins.int
     EXEMPLARS_FIELD_NUMBER: builtins.int
+    MIN_FIELD_NUMBER: builtins.int
+    MAX_FIELD_NUMBER: builtins.int
     @property
     def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
         """The set of key/value pairs that uniquely identify the timeseries from
@@ -918,6 +935,12 @@ class ExponentialHistogramDataPoint(google.protobuf.message.Message):
         measurements that were used to form the data point
         """
         pass
+    min: builtins.float = ...
+    """min is the minimum value over (start_time, end_time]."""
+
+    max: builtins.float = ...
+    """max is the maximum value over (start_time, end_time]."""
+
     def __init__(self,
         *,
         attributes : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue]] = ...,
@@ -931,9 +954,15 @@ class ExponentialHistogramDataPoint(google.protobuf.message.Message):
         negative : typing.Optional[global___ExponentialHistogramDataPoint.Buckets] = ...,
         flags : builtins.int = ...,
         exemplars : typing.Optional[typing.Iterable[global___Exemplar]] = ...,
+        min : builtins.float = ...,
+        max : builtins.float = ...,
         ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["negative",b"negative","positive",b"positive"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","count",b"count","exemplars",b"exemplars","flags",b"flags","negative",b"negative","positive",b"positive","scale",b"scale","start_time_unix_nano",b"start_time_unix_nano","sum",b"sum","time_unix_nano",b"time_unix_nano","zero_count",b"zero_count"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_max",b"_max","_min",b"_min","max",b"max","min",b"min","negative",b"negative","positive",b"positive"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_max",b"_max","_min",b"_min","attributes",b"attributes","count",b"count","exemplars",b"exemplars","flags",b"flags","max",b"max","min",b"min","negative",b"negative","positive",b"positive","scale",b"scale","start_time_unix_nano",b"start_time_unix_nano","sum",b"sum","time_unix_nano",b"time_unix_nano","zero_count",b"zero_count"]) -> None: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_max",b"_max"]) -> typing.Optional[typing_extensions.Literal["max"]]: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_min",b"_min"]) -> typing.Optional[typing_extensions.Literal["min"]]: ...
 global___ExponentialHistogramDataPoint = ExponentialHistogramDataPoint
 
 class SummaryDataPoint(google.protobuf.message.Message):
