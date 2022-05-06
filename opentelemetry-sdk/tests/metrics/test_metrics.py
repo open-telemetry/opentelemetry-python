@@ -15,7 +15,7 @@
 
 from logging import WARNING
 from time import sleep
-from typing import Sequence
+from typing import Iterable, Sequence
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
@@ -46,10 +46,15 @@ class DummyMetricReader(MetricReader):
     def __init__(self):
         super().__init__()
 
-    def _receive_metrics(self, metrics):
+    def _receive_metrics(
+        self,
+        metrics: Iterable[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> None:
         pass
 
-    def shutdown(self):
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         return True
 
 
@@ -433,12 +438,17 @@ class InMemoryMetricExporter(MetricExporter):
         self.metrics = {}
         self._counter = 0
 
-    def export(self, metrics: Sequence[Metric]) -> MetricExportResult:
+    def export(
+        self,
+        metrics: Sequence[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> MetricExportResult:
         self.metrics[self._counter] = metrics
         self._counter += 1
         return MetricExportResult.SUCCESS
 
-    def shutdown(self) -> None:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass
 
 

@@ -169,9 +169,13 @@ class OTLPMetricExporter(
         )
 
     def export(
-        self, metrics: Sequence[Metric], *args, **kwargs
+        self,
+        metrics: Sequence[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
     ) -> MetricExportResult:
+        # TODO(#2663): OTLPExporterMixin should pass timeout to gRPC
         return self._export(metrics)
 
-    def shutdown(self, *args, **kwargs):
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass
