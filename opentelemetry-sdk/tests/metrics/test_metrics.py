@@ -15,11 +15,9 @@
 
 from logging import WARNING
 from time import sleep
-from typing import Sequence
+from typing import Sequence, Iterable
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
-
-from pyparsing import Iterable
 
 from opentelemetry._metrics import NoOpMeter
 from opentelemetry.sdk._metrics import Meter, MeterProvider
