@@ -22,6 +22,7 @@ from opentelemetry.sdk._metrics._internal.aggregation import (
     _Aggregation,
     _convert_aggregation_temporality,
     _PointVarT,
+    _SumAggregation,
 )
 from opentelemetry.sdk._metrics._internal.sdk_configuration import (
     SdkConfiguration,
@@ -52,6 +53,39 @@ class _ViewInstrumentMatch:
         self._attributes_previous_point: Dict[frozenset, _PointVarT] = {}
         self._lock = Lock()
         self._instrument_class_aggregation = instrument_class_aggregation
+        self._name = self._view._name or self._instrument.name
+        self._description = (
+            self._view._description or self._instrument.description
+        )
+        if not isinstance(self._view._aggregation, DefaultAggregation):
+            self._aggregation = self._view._aggregation._create_aggregation(
+                self._instrument
+            )
+        else:
+            self._aggregation = self._instrument_class_aggregation[
+                self._instrument.__class__
+            ]._create_aggregation(self._instrument)
+
+    def conflicts(self, other: "_ViewInstrumentMatch") -> bool:
+        # pylint: disable=protected-access
+
+        result = (
+            self._name == other._name
+            and self._instrument.unit == other._instrument.unit
+            # The aggregation class is being used here instead of data point
+            # type since they are functionally equivalent.
+            and self._aggregation.__class__ == other._aggregation.__class__
+        )
+        if isinstance(self._aggregation, _SumAggregation):
+            result = (
+                result
+                and self._aggregation._instrument_is_monotonic
+                == other._aggregation._instrument_is_monotonic
+                and self._aggregation._instrument_temporality
+                == other._aggregation._instrument_temporality
+            )
+
+        return result
 
     # pylint: disable=protected-access
     def consume_measurement(self, measurement: Measurement) -> None:
@@ -118,14 +152,11 @@ class _ViewInstrumentMatch:
 
                     yield Metric(
                         attributes=dict(attributes),
-                        description=(
-                            self._view._description
-                            or self._instrument.description
-                        ),
+                        description=self._description,
                         instrumentation_scope=(
                             self._instrument.instrumentation_scope
                         ),
-                        name=self._view._name or self._instrument.name,
+                        name=self._name,
                         resource=self._sdk_config.resource,
                         unit=self._instrument.unit,
                         point=_convert_aggregation_temporality(
