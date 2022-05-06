@@ -134,9 +134,7 @@ class MetricReaderStorage:
             if not view._match(instrument):
                 continue
 
-            if not self._check_view_instrument_compatibility(
-                view, instrument
-            ):
+            if not self._check_view_instrument_compatibility(view, instrument):
                 continue
 
             new_view_instrument_match = _ViewInstrumentMatch(
