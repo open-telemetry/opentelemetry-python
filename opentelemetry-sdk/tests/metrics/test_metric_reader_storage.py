@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import WARNING
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
+    _DEFAULT_VIEW,
     MetricReaderStorage,
 )
 from opentelemetry.sdk._metrics._internal.sdk_configuration import (
@@ -23,8 +25,15 @@ from opentelemetry.sdk._metrics._internal.sdk_configuration import (
 from opentelemetry.sdk._metrics.aggregation import (
     DefaultAggregation,
     DropAggregation,
+    ExplicitBucketHistogramAggregation,
+    SumAggregation,
 )
-from opentelemetry.sdk._metrics.instrument import Counter
+from opentelemetry.sdk._metrics.instrument import (
+    Counter,
+    Histogram,
+    ObservableCounter,
+    UpDownCounter,
+)
 from opentelemetry.sdk._metrics.measurement import Measurement
 from opentelemetry.sdk._metrics.point import AggregationTemporality
 from opentelemetry.sdk._metrics.view import View
@@ -220,4 +229,463 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
 
         self.assertEqual(
             [], metric_reader_storage.collect(AggregationTemporality.DELTA)
+        )
+
+    def test_conflicting_view_configuration(self):
+
+        observable_counter = ObservableCounter(
+            "observable_counter",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(
+                    View(
+                        instrument_name="observable_counter",
+                        aggregation=ExplicitBucketHistogramAggregation(),
+                    ),
+                ),
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        with self.assertLogs(level=WARNING):
+            metric_reader_storage.consume_measurement(
+                Measurement(1, observable_counter)
+            )
+
+        self.assertIs(
+            metric_reader_storage._instrument_view_instrument_matches[
+                observable_counter
+            ][0]._view,
+            _DEFAULT_VIEW,
+        )
+
+    def test_view_instrument_match_conflict_0(self):
+        # There is a conflict between views and instruments.
+
+        observable_counter_0 = ObservableCounter(
+            "observable_counter_0",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        observable_counter_1 = ObservableCounter(
+            "observable_counter_1",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(
+                    View(instrument_name="observable_counter_0", name="foo"),
+                    View(instrument_name="observable_counter_1", name="foo"),
+                ),
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, observable_counter_0)
+                )
+
+        with self.assertLogs(level=WARNING) as log:
+            metric_reader_storage.consume_measurement(
+                Measurement(1, observable_counter_1)
+            )
+
+        self.assertIn(
+            "will cause conflicting metrics",
+            log.records[0].message,
+        )
+
+    def test_view_instrument_match_conflict_1(self):
+        # There is a conflict between views and instruments.
+
+        observable_counter_foo = ObservableCounter(
+            "foo",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        observable_counter_bar = ObservableCounter(
+            "bar",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        observable_counter_baz = ObservableCounter(
+            "baz",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(
+                    View(instrument_name="bar", name="foo"),
+                    View(instrument_name="baz", name="foo"),
+                ),
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, observable_counter_foo)
+                )
+
+        with self.assertLogs(level=WARNING) as log:
+            metric_reader_storage.consume_measurement(
+                Measurement(1, observable_counter_bar)
+            )
+
+        self.assertIn(
+            "will cause conflicting metrics",
+            log.records[0].message,
+        )
+
+        with self.assertLogs(level=WARNING) as log:
+            metric_reader_storage.consume_measurement(
+                Measurement(1, observable_counter_baz)
+            )
+
+        self.assertIn(
+            "will cause conflicting metrics",
+            log.records[0].message,
+        )
+
+        for (
+            view_instrument_matches
+        ) in (
+            metric_reader_storage._instrument_view_instrument_matches.values()
+        ):
+            for view_instrument_match in view_instrument_matches:
+                self.assertEqual(view_instrument_match._name, "foo")
+
+    def test_view_instrument_match_conflict_2(self):
+        # There is no conflict because the metric streams names are different.
+        observable_counter_foo = ObservableCounter(
+            "foo",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        observable_counter_bar = ObservableCounter(
+            "bar",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(
+                    View(instrument_name="foo"),
+                    View(instrument_name="bar"),
+                ),
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, observable_counter_foo)
+                )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, observable_counter_bar)
+                )
+
+    def test_view_instrument_match_conflict_3(self):
+        # There is no conflict because the aggregation temporality of the
+        # instruments is different.
+
+        counter_bar = Counter(
+            "bar",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        observable_counter_baz = ObservableCounter(
+            "baz",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(
+                    View(instrument_name="bar", name="foo"),
+                    View(instrument_name="baz", name="foo"),
+                ),
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, counter_bar)
+                )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, observable_counter_baz)
+                )
+
+    def test_view_instrument_match_conflict_4(self):
+        # There is no conflict because the monotonicity of the instruments is
+        # different.
+
+        counter_bar = Counter(
+            "bar",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        up_down_counter_baz = UpDownCounter(
+            "baz",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(
+                    View(instrument_name="bar", name="foo"),
+                    View(instrument_name="baz", name="foo"),
+                ),
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, counter_bar)
+                )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, up_down_counter_baz)
+                )
+
+    def test_view_instrument_match_conflict_5(self):
+        # There is no conflict because the instrument units are different.
+
+        observable_counter_0 = ObservableCounter(
+            "observable_counter_0",
+            Mock(),
+            [Mock()],
+            unit="unit_0",
+            description="description",
+        )
+        observable_counter_1 = ObservableCounter(
+            "observable_counter_1",
+            Mock(),
+            [Mock()],
+            unit="unit_1",
+            description="description",
+        )
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(
+                    View(instrument_name="observable_counter_0", name="foo"),
+                    View(instrument_name="observable_counter_1", name="foo"),
+                ),
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, observable_counter_0)
+                )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, observable_counter_1)
+                )
+
+    def test_view_instrument_match_conflict_6(self):
+        # There is no conflict because the instrument data points are
+        # different.
+
+        observable_counter = ObservableCounter(
+            "observable_counter",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        histogram = Histogram(
+            "histogram",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(
+                    View(instrument_name="observable_counter", name="foo"),
+                    View(instrument_name="histogram", name="foo"),
+                ),
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, observable_counter)
+                )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, histogram)
+                )
+
+    def test_view_instrument_match_conflict_7(self):
+        # There is a conflict between views and instruments because the
+        # description being different does not avoid a conflict.
+
+        observable_counter_0 = ObservableCounter(
+            "observable_counter_0",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description_0",
+        )
+        observable_counter_1 = ObservableCounter(
+            "observable_counter_1",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description_1",
+        )
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(
+                    View(instrument_name="observable_counter_0", name="foo"),
+                    View(instrument_name="observable_counter_1", name="foo"),
+                ),
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, observable_counter_0)
+                )
+
+        with self.assertLogs(level=WARNING) as log:
+            metric_reader_storage.consume_measurement(
+                Measurement(1, observable_counter_1)
+            )
+
+        self.assertIn(
+            "will cause conflicting metrics",
+            log.records[0].message,
+        )
+
+    def test_view_instrument_match_conflict_8(self):
+        # There is a conflict because the histogram-matching view changes the
+        # default aggregation of the histogram to Sum aggregation which is the
+        # same aggregation as the default aggregation of the up down counter
+        # and also the temporality and monotonicity of the up down counter and
+        # the histogram are the same.
+
+        observable_counter = UpDownCounter(
+            "up_down_counter",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        histogram = Histogram(
+            "histogram",
+            Mock(),
+            [Mock()],
+            unit="unit",
+            description="description",
+        )
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(
+                    View(instrument_name="up_down_counter", name="foo"),
+                    View(
+                        instrument_name="histogram",
+                        name="foo",
+                        aggregation=SumAggregation(),
+                    ),
+                ),
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        with self.assertRaises(AssertionError):
+            with self.assertLogs(level=WARNING):
+                metric_reader_storage.consume_measurement(
+                    Measurement(1, observable_counter)
+                )
+
+        with self.assertLogs(level=WARNING) as log:
+            metric_reader_storage.consume_measurement(
+                Measurement(1, histogram)
+            )
+
+        self.assertIn(
+            "will cause conflicting metrics",
+            log.records[0].message,
         )
