@@ -106,7 +106,7 @@ class _Asynchronous:
 
         if callbacks is not None:
 
-            for i, callback in enumerate(callbacks):
+            for callback in callbacks:
 
                 if isinstance(callback, Generator):
 
