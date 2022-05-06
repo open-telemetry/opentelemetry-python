@@ -15,7 +15,7 @@
 
 from logging import WARNING
 from time import sleep
-from typing import Sequence, Iterable
+from typing import Iterable, Sequence
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
