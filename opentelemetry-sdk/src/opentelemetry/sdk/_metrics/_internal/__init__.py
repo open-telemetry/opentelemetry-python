@@ -48,7 +48,7 @@ from opentelemetry.sdk._metrics.view import View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._once import Once
-from opentelemetry.util._time import time_ns
+from opentelemetry.util._time import _time_ns
 
 _logger = getLogger(__name__)
 
@@ -371,10 +371,10 @@ class MeterProvider(APIMeterProvider):
         self._shutdown = False
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
-        deadline_ns = time_ns() + timeout_millis * 10**6
+        deadline_ns = _time_ns() + timeout_millis * 10**6
 
         for metric_reader in self._sdk_config.metric_readers:
-            current_ts = time_ns()
+            current_ts = _time_ns()
             if current_ts >= deadline_ns:
                 raise Exception("Timed out while flushing metric readers")
             metric_reader.collect(
@@ -383,7 +383,7 @@ class MeterProvider(APIMeterProvider):
         return True
 
     def shutdown(self, timeout_millis: float = 30_000):
-        deadline_ns = time_ns() + timeout_millis * 10**6
+        deadline_ns = _time_ns() + timeout_millis * 10**6
 
         def _shutdown():
             self._shutdown = True
@@ -397,7 +397,7 @@ class MeterProvider(APIMeterProvider):
         metric_reader_error = {}
 
         for metric_reader in self._sdk_config.metric_readers:
-            current_ts = time_ns()
+            current_ts = _time_ns()
             try:
                 if current_ts >= deadline_ns:
                     raise Exception(

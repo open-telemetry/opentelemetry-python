@@ -31,7 +31,7 @@ from opentelemetry.sdk._metrics._internal.aggregation import Aggregation
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
 from opentelemetry.util._once import Once
-from opentelemetry.util._time import time_ns
+from opentelemetry.util._time import _time_ns
 
 _logger = logging.getLogger(__name__)
 
@@ -225,7 +225,7 @@ class PeriodicExportingMetricReader(MetricReader):
         detach(token)
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
-        deadline_ns = time_ns() + timeout_millis * 10**6
+        deadline_ns = _time_ns() + timeout_millis * 10**6
 
         def _shutdown():
             self._shutdown = True
@@ -236,5 +236,5 @@ class PeriodicExportingMetricReader(MetricReader):
             return
 
         self._shutdown_event.set()
-        self._daemon_thread.join(timeout=(deadline_ns - time_ns()) / 10**9)
-        self._exporter.shutdown(timeout=(deadline_ns - time_ns()) / 10**6)
+        self._daemon_thread.join(timeout=(deadline_ns - _time_ns()) / 10**9)
+        self._exporter.shutdown(timeout=(deadline_ns - _time_ns()) / 10**6)
