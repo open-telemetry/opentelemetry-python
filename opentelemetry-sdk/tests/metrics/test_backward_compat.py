@@ -73,11 +73,17 @@ class TestBackwardCompat(TestCase):
         )
         # produce some data
         meter_provider.get_meter("foo").create_counter("mycounter").add(12)
-        meter_provider.shutdown()
+        try:
+            meter_provider.shutdown()
+        except Exception:
+            self.fail()
 
     def test_metric_reader(self):
         reader = OrigMetricReader()
         meter_provider = MeterProvider(metric_readers=[reader])
         # produce some data
         meter_provider.get_meter("foo").create_counter("mycounter").add(12)
-        meter_provider.shutdown()
+        try:
+            meter_provider.shutdown()
+        except Exception:
+            self.fail()
