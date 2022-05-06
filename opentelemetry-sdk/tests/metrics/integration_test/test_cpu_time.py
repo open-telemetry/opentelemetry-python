@@ -17,7 +17,7 @@ import io
 from typing import Generator, Iterable, List
 from unittest import TestCase
 
-from opentelemetry._metrics import Instrument, Observation
+from opentelemetry._metrics import CallbackOptions, Instrument, Observation
 from opentelemetry.sdk._metrics import MeterProvider
 from opentelemetry.sdk._metrics.measurement import Measurement
 
@@ -138,7 +138,9 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
         ]
 
     def test_cpu_time_callback(self):
-        def cpu_time_callback() -> Iterable[Observation]:
+        def cpu_time_callback(
+            options: CallbackOptions,
+        ) -> Iterable[Observation]:
             procstat = io.StringIO(self.procstat_str)
             procstat.readline()  # skip the first line
             for line in procstat:
@@ -180,7 +182,7 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
             unit="s",
             description="CPU time",
         )
-        measurements = list(observable_counter.callback())
+        measurements = list(observable_counter.callback(CallbackOptions()))
         self.assertEqual(
             measurements, self.create_measurements_expected(observable_counter)
         )
@@ -189,7 +191,9 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
         def cpu_time_generator() -> Generator[
             Iterable[Observation], None, None
         ]:
+            options = yield
             while True:
+                self.assertIsInstance(options, CallbackOptions)
                 measurements = []
                 procstat = io.StringIO(self.procstat_str)
                 procstat.readline()  # skip the first line
@@ -250,7 +254,7 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
                             {"cpu": cpu, "state": "guest_nice"},
                         )
                     )
-                yield measurements
+                options = yield measurements
 
         meter = MeterProvider().get_meter("name")
         observable_counter = meter.create_observable_counter(
@@ -259,7 +263,7 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
             unit="s",
             description="CPU time",
         )
-        measurements = list(observable_counter.callback())
+        measurements = list(observable_counter.callback(CallbackOptions()))
         self.assertEqual(
             measurements, self.create_measurements_expected(observable_counter)
         )
