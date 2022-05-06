@@ -172,7 +172,7 @@ class MetricReader(ABC):
         """Called by `MetricReader.collect` when it receives a batch of metrics"""
 
     @abstractmethod
-    def shutdown(self, timeout_millis: float = 10_000, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         """Shuts down the MetricReader. This method provides a way
         for the MetricReader to do any cleanup required. A metric reader can
         only be shutdown once, any subsequent calls are ignored and return

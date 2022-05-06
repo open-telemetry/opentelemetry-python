@@ -13,12 +13,12 @@
 # limitations under the License.
 
 from os import environ
-from typing import Dict
+from typing import Dict, Iterable
 from unittest import TestCase
 from unittest.mock import patch
 
-from opentelemetry.sdk._metrics._internal.aggregation import Aggregation
 from opentelemetry.sdk._metrics.aggregation import (
+    Aggregation,
     DefaultAggregation,
     LastValueAggregation,
 )
@@ -31,7 +31,7 @@ from opentelemetry.sdk._metrics.instrument import (
     UpDownCounter,
 )
 from opentelemetry.sdk._metrics.metric_reader import MetricReader
-from opentelemetry.sdk._metrics.point import AggregationTemporality
+from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
 from opentelemetry.sdk.environment_variables import (
     _OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
 )
@@ -48,10 +48,15 @@ class DummyMetricReader(MetricReader):
             preferred_aggregation=preferred_aggregation,
         )
 
-    def _receive_metrics(self, metrics):
+    def _receive_metrics(
+        self,
+        metrics: Iterable[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> None:
         pass
 
-    def shutdown(self, *args, **kwargs):
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         return True
 
 

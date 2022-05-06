@@ -40,12 +40,6 @@ from opentelemetry.sdk._metrics.point import Metric
 
 # Do not change these classes until after major version 1
 class OrigMetricExporter(MetricExporter):
-    def shutdown(self, timeout_millis: float = 10_000, **kwargs) -> None:
-        """Shuts down the exporter.
-
-        Called when the SDK is shut down.
-        """
-
     def export(
         self,
         metrics: Sequence[Metric],
@@ -54,7 +48,7 @@ class OrigMetricExporter(MetricExporter):
     ) -> MetricExportResult:
         pass
 
-    def shutdown(self, timeout_millis: float = 10_000, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass
 
 
@@ -67,7 +61,7 @@ class OrigMetricReader(MetricReader):
     ) -> None:
         pass
 
-    def shutdown(self, timeout_millis: float = 10_000, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         self.collect()
 
 

@@ -120,7 +120,7 @@ class PrometheusMetricReader(MetricReader):
             return
         self._collector.add_metrics_data(metrics)
 
-    def shutdown(self, timeout_millis: float = 10_000, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         REGISTRY.unregister(self._collector)
 
 

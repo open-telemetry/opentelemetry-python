@@ -371,14 +371,18 @@ class MeterProvider(APIMeterProvider):
         self._shutdown = False
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
-
-        # FIXME implement a timeout
+        deadline_ns = time_ns() + timeout_millis * 10**6
 
         for metric_reader in self._sdk_config.metric_readers:
-            metric_reader.collect(timeout_millis=timeout_millis)
+            current_ts = time_ns()
+            if current_ts >= deadline_ns:
+                raise Exception("Timed out while flushing metric readers")
+            metric_reader.collect(
+                timeout_millis=(deadline_ns - current_ts) / 10**6
+            )
         return True
 
-    def shutdown(self, timeout_millis: float = 10_000):
+    def shutdown(self, timeout_millis: float = 30_000):
         deadline_ns = time_ns() + timeout_millis * 10**6
 
         def _shutdown():

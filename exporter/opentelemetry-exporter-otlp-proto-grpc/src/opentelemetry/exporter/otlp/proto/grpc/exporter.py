@@ -277,15 +277,7 @@ class OTLPExporterMixin(
                     logger.exception(error)
         return output
 
-    def _export(
-        self,
-        data: TypingSequence[SDKDataT],
-        timeout_millis: Optional[float] = None,
-    ) -> ExportResultT:
-        if timeout_millis is not None:
-            timeout_seconds = timeout_millis / 10**3
-        else:
-            timeout_seconds = self._timeout
+    def _export(self, data: TypingSequence[SDKDataT]) -> ExportResultT:
 
         max_value = 64
         # expo returns a generator that yields delay values which grow
@@ -300,7 +292,7 @@ class OTLPExporterMixin(
                 self._client.Export(
                     request=self._translate_data(data),
                     metadata=self._headers,
-                    timeout=timeout_seconds,
+                    timeout=self._timeout,
                 )
 
                 return self._result.SUCCESS

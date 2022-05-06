@@ -19,6 +19,8 @@ from typing import Sequence
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
+from pyparsing import Iterable
+
 from opentelemetry._metrics import NoOpMeter
 from opentelemetry.sdk._metrics import Meter, MeterProvider
 from opentelemetry.sdk._metrics.aggregation import SumAggregation
@@ -46,10 +48,15 @@ class DummyMetricReader(MetricReader):
     def __init__(self):
         super().__init__()
 
-    def _receive_metrics(self, metrics):
+    def _receive_metrics(
+        self,
+        metrics: Iterable[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> None:
         pass
 
-    def shutdown(self, *args, **kwargs):
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         return True
 
 
@@ -443,7 +450,7 @@ class InMemoryMetricExporter(MetricExporter):
         self._counter += 1
         return MetricExportResult.SUCCESS
 
-    def shutdown(self, timeout_millis: float = 10_000, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass
 
 

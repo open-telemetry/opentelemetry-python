@@ -17,7 +17,6 @@ import os
 from abc import ABC, abstractmethod
 from enum import Enum
 from os import environ, linesep
-from socket import timeout
 from sys import stdout
 from threading import Event, RLock, Thread
 from typing import IO, Callable, Dict, Iterable, List, Optional, Sequence
@@ -70,7 +69,7 @@ class MetricExporter(ABC):
         """
 
     @abstractmethod
-    def shutdown(self, timeout_millis: float = 10_000, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         """Shuts down the exporter.
 
         Called when the SDK is shut down.
@@ -105,7 +104,7 @@ class ConsoleMetricExporter(MetricExporter):
         self.out.flush()
         return MetricExportResult.SUCCESS
 
-    def shutdown(self, timeout_millis: float = 10_000, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass
 
 
@@ -144,7 +143,7 @@ class InMemoryMetricReader(MetricReader):
         with self._lock:
             self._metrics = list(metrics)
 
-    def shutdown(self, timeout_millis: float = 10_000, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass
 
 
@@ -225,7 +224,7 @@ class PeriodicExportingMetricReader(MetricReader):
             _logger.exception("Exception while exporting metrics %s", str(e))
         detach(token)
 
-    def shutdown(self, timeout_millis: float = 10_000, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         deadline_ns = time_ns() + timeout_millis * 10**6
 
         def _shutdown():

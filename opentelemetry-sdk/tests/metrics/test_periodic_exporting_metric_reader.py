@@ -45,7 +45,7 @@ class FakeMetricsExporter(MetricExporter):
         self.metrics.extend(metrics)
         return True
 
-    def shutdown(self, timeout_millis: float = 10_000, **kwargs) -> None:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         self._shutdown = True
 
 
