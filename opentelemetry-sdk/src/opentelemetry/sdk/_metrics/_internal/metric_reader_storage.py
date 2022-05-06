@@ -131,40 +131,41 @@ class MetricReaderStorage:
     ) -> None:
         for view in self._sdk_config.views:
             # pylint: disable=protected-access
-            if view._match(instrument):
+            if not view._match(instrument):
+                continue
 
-                if not self._check_view_instrument_compatibility(
-                    view, instrument
-                ):
-                    continue
+            if not self._check_view_instrument_compatibility(
+                view, instrument
+            ):
+                continue
 
-                new_view_instrument_match = _ViewInstrumentMatch(
-                    view=view,
-                    instrument=instrument,
-                    sdk_config=self._sdk_config,
-                    instrument_class_aggregation=(
-                        self._instrument_class_aggregation
-                    ),
-                )
+            new_view_instrument_match = _ViewInstrumentMatch(
+                view=view,
+                instrument=instrument,
+                sdk_config=self._sdk_config,
+                instrument_class_aggregation=(
+                    self._instrument_class_aggregation
+                ),
+            )
 
+            for (
+                existing_view_instrument_matches
+            ) in self._instrument_view_instrument_matches.values():
                 for (
-                    existing_view_instrument_matches
-                ) in self._instrument_view_instrument_matches.values():
-                    for (
-                        existing_view_instrument_match
-                    ) in existing_view_instrument_matches:
-                        if existing_view_instrument_match.conflicts(
-                            new_view_instrument_match
-                        ):
+                    existing_view_instrument_match
+                ) in existing_view_instrument_matches:
+                    if existing_view_instrument_match.conflicts(
+                        new_view_instrument_match
+                    ):
 
-                            _logger.warning(
-                                "Views %s and %s will cause conflicting "
-                                "metrics identities",
-                                existing_view_instrument_match._view,
-                                new_view_instrument_match._view,
-                            )
+                        _logger.warning(
+                            "Views %s and %s will cause conflicting "
+                            "metrics identities",
+                            existing_view_instrument_match._view,
+                            new_view_instrument_match._view,
+                        )
 
-                view_instrument_matches.append(new_view_instrument_match)
+            view_instrument_matches.append(new_view_instrument_match)
 
     @staticmethod
     def _check_view_instrument_compatibility(
