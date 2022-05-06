@@ -20,16 +20,17 @@ from opentelemetry._metrics import Asynchronous, Instrument
 from opentelemetry.sdk._metrics._internal._view_instrument_match import (
     _ViewInstrumentMatch,
 )
+from opentelemetry.sdk._metrics._internal.aggregation import (
+    Aggregation,
+    AggregationTemporality,
+    ExplicitBucketHistogramAggregation,
+)
+from opentelemetry.sdk._metrics._internal.measurement import Measurement
 from opentelemetry.sdk._metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
 from opentelemetry.sdk._metrics._internal.view import View
-from opentelemetry.sdk._metrics.aggregation import (
-    Aggregation,
-    ExplicitBucketHistogramAggregation,
-)
-from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
+from opentelemetry.sdk._metrics.export import Metric
 
 _logger = getLogger(__name__)
 
@@ -53,7 +54,7 @@ class MetricReaderStorage:
 
     def _get_or_init_view_instrument_match(
         self, instrument: Instrument
-    ) -> List["_ViewInstrumentMatch"]:
+    ) -> List[_ViewInstrumentMatch]:
         # Optimistically get the relevant views for the given instrument. Once set for a given
         # instrument, the mapping will never change
 

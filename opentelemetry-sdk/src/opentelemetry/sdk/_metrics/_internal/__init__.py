@@ -17,6 +17,8 @@ from logging import getLogger
 from threading import Lock
 from typing import Optional, Sequence
 
+import opentelemetry.sdk._metrics
+import opentelemetry.sdk._metrics.export
 from opentelemetry._metrics import Counter as APICounter
 from opentelemetry._metrics import Histogram as APIHistogram
 from opentelemetry._metrics import Meter as APIMeter
@@ -28,14 +30,7 @@ from opentelemetry._metrics import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
 from opentelemetry._metrics import UpDownCounter as APIUpDownCounter
-from opentelemetry.sdk._metrics._internal.measurement_consumer import (
-    MeasurementConsumer,
-    SynchronousMeasurementConsumer,
-)
-from opentelemetry.sdk._metrics._internal.sdk_configuration import (
-    SdkConfiguration,
-)
-from opentelemetry.sdk._metrics.instrument import (
+from opentelemetry.sdk._metrics._internal.instrument import (
     Counter,
     Histogram,
     ObservableCounter,
@@ -43,8 +38,13 @@ from opentelemetry.sdk._metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk._metrics.metric_reader import MetricReader
-from opentelemetry.sdk._metrics.view import View
+from opentelemetry.sdk._metrics._internal.measurement_consumer import (
+    MeasurementConsumer,
+    SynchronousMeasurementConsumer,
+)
+from opentelemetry.sdk._metrics._internal.sdk_configuration import (
+    SdkConfiguration,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._once import Once
@@ -298,8 +298,9 @@ class MeterProvider(APIMeterProvider):
     r"""See `opentelemetry._metrics.MeterProvider`.
 
     Args:
-        metric_readers: Register metric readers to collect metrics from the SDK on demand. Each
-            `MetricReader` is completely independent and will collect separate streams of
+        metric_readers: Register metric readers to collect metrics from the SDK
+            on demand. Each :class:`opentelemetry.sdk._metrics.export.MetricReader` is
+            completely independent and will collect separate streams of
             metrics. TODO: reference ``PeriodicExportingMetricReader`` usage with push
             exporters here.
         resource: The resource representing what the metrics emitted from the SDK pertain to.
@@ -330,10 +331,12 @@ class MeterProvider(APIMeterProvider):
 
     def __init__(
         self,
-        metric_readers: Sequence[MetricReader] = (),
+        metric_readers: Sequence[
+            "opentelemetry.sdk._metrics.export.MetricReader"
+        ] = (),
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
-        views: Sequence[View] = (),
+        views: Sequence["opentelemetry.sdk._metrics.View"] = (),
     ):
         self._lock = Lock()
         self._meter_lock = Lock()

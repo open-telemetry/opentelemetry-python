@@ -19,7 +19,17 @@ from opentelemetry.sdk._metrics._internal.export import (  # noqa: F401
     InMemoryMetricReader,
     MetricExporter,
     MetricExportResult,
+    MetricReader,
     PeriodicExportingMetricReader,
+)
+
+# The point module is not in the export directory to avoid a circular import.
+from opentelemetry.sdk._metrics._internal.point import (  # noqa: F401
+    Gauge,
+    Histogram,
+    Metric,
+    PointT,
+    Sum,
 )
 
 __all__ = []

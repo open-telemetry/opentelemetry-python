@@ -19,21 +19,22 @@ from typing import TYPE_CHECKING, Dict, Iterable
 
 from opentelemetry.sdk._metrics._internal.aggregation import (
     Aggregation,
+    AggregationTemporality,
+    DefaultAggregation,
     _Aggregation,
     _convert_aggregation_temporality,
     _PointVarT,
     _SumAggregation,
 )
+from opentelemetry.sdk._metrics._internal.measurement import Measurement
 from opentelemetry.sdk._metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
-from opentelemetry.sdk._metrics.aggregation import DefaultAggregation
-from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
+from opentelemetry.sdk._metrics.export import Metric
 
 if TYPE_CHECKING:
+    from opentelemetry.sdk._metrics import View
     from opentelemetry.sdk._metrics._internal.instrument import _Instrument
-    from opentelemetry.sdk._metrics.view import View
 
 _logger = getLogger(__name__)
 

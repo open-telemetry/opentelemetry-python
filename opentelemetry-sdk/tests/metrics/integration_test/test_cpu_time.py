@@ -19,7 +19,7 @@ from unittest import TestCase
 
 from opentelemetry._metrics import CallbackOptions, Instrument, Observation
 from opentelemetry.sdk._metrics import MeterProvider
-from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry.sdk._metrics._internal.measurement import Measurement
 
 # FIXME Test that the instrument methods can be called concurrently safely.
 

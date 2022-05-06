@@ -16,12 +16,8 @@
 from collections import OrderedDict
 
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.sdk._metrics.point import (
-    AggregationTemporality,
-    Gauge,
-    Metric,
-    Sum,
-)
+from opentelemetry.sdk._metrics import AggregationTemporality
+from opentelemetry.sdk._metrics.export import Gauge, Metric, Sum
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 

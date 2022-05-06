@@ -20,24 +20,25 @@ from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry._metrics import NoOpMeter
-from opentelemetry.sdk._metrics import Meter, MeterProvider
-from opentelemetry.sdk._metrics.aggregation import SumAggregation
-from opentelemetry.sdk._metrics.export import (
-    MetricExporter,
-    MetricExportResult,
-    PeriodicExportingMetricReader,
-)
-from opentelemetry.sdk._metrics.instrument import (
+from opentelemetry.sdk._metrics import (
     Counter,
     Histogram,
+    Meter,
+    MeterProvider,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
+    SumAggregation,
     UpDownCounter,
+    View,
 )
-from opentelemetry.sdk._metrics.metric_reader import MetricReader
-from opentelemetry.sdk._metrics.point import Metric
-from opentelemetry.sdk._metrics.view import View
+from opentelemetry.sdk._metrics.export import (
+    Metric,
+    MetricExporter,
+    MetricExportResult,
+    MetricReader,
+    PeriodicExportingMetricReader,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
 

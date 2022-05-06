@@ -40,8 +40,8 @@ from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
-from opentelemetry.sdk._metrics.export import MetricExportResult
-from opentelemetry.sdk._metrics.point import AggregationTemporality, Histogram
+from opentelemetry.sdk._metrics import AggregationTemporality
+from opentelemetry.sdk._metrics.export import Histogram, MetricExportResult
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
 )

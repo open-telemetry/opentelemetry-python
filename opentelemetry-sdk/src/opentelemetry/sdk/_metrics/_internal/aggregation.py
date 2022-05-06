@@ -15,6 +15,7 @@
 from abc import ABC, abstractmethod
 from bisect import bisect_left
 from dataclasses import replace
+from enum import IntEnum
 from logging import getLogger
 from math import inf
 from threading import Lock
@@ -31,10 +32,12 @@ from opentelemetry._metrics import (
     Synchronous,
     UpDownCounter,
 )
-from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.point import AggregationTemporality, Gauge
-from opentelemetry.sdk._metrics.point import Histogram as HistogramPoint
-from opentelemetry.sdk._metrics.point import PointT, Sum
+from opentelemetry.sdk._metrics._internal.measurement import Measurement
+from opentelemetry.sdk._metrics._internal.point import Gauge
+from opentelemetry.sdk._metrics._internal.point import (
+    Histogram as HistogramPoint,
+)
+from opentelemetry.sdk._metrics._internal.point import PointT, Sum
 from opentelemetry.util._time import _time_ns
 
 _PointVarT = TypeVar("_PointVarT", bound=PointT)
@@ -61,6 +64,18 @@ class _DropAggregation(_Aggregation):
 
     def collect(self) -> Optional[_PointVarT]:
         pass
+
+
+class AggregationTemporality(IntEnum):
+    """
+    The temporality to use when aggregating data.
+
+    Can be one of the following values:
+    """
+
+    UNSPECIFIED = 0
+    DELTA = 1
+    CUMULATIVE = 2
 
 
 class Aggregation(ABC):
