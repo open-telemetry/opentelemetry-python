@@ -80,9 +80,9 @@ class _ViewInstrumentMatch:
             result = (
                 result
                 and self._aggregation._instrument_is_monotonic
-                == (other._aggregation._instrument_is_monotonic)
+                == other._aggregation._instrument_is_monotonic
                 and self._aggregation._instrument_temporality
-                == (other._aggregation._instrument_temporality)
+                == other._aggregation._instrument_temporality
             )
 
         return result
