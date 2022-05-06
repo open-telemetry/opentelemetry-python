@@ -400,7 +400,7 @@ class MeterProvider(APIMeterProvider):
             current_ts = time_ns()
             try:
                 if current_ts >= deadline_ns:
-                    raise TimeoutError(
+                    raise Exception(
                         "Didn't get to execute, deadline already exceeded"
                     )
                 metric_reader.shutdown(
