@@ -24,6 +24,37 @@ class SpanAttributes:
     Note: This may be different from `faas.id` if an alias is involved.
     """
 
+    CLOUDEVENTS_EVENT_ID = "cloudevents.event_id"
+    """
+    The [event_id](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#id) uniquely identifies the event.
+    """
+
+    CLOUDEVENTS_EVENT_SOURCE = "cloudevents.event_source"
+    """
+    The [source](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#source-1) identifies the context in which an event happened.
+    """
+
+    CLOUDEVENTS_EVENT_SPEC_VERSION = "cloudevents.event_spec_version"
+    """
+    The [version of the CloudEvents specification](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#specversion) which the event uses.
+    """
+
+    CLOUDEVENTS_EVENT_TYPE = "cloudevents.event_type"
+    """
+    The [event_type](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#type) contains a value describing the type of event related to the originating occurrence.
+    """
+
+    CLOUDEVENTS_EVENT_SUBJECT = "cloudevents.event_subject"
+    """
+    The [subject](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#subject) of the event in the context of the event producer (identified by source).
+    """
+
+    OPENTRACING_REF_TYPE = "opentracing.ref_type"
+    """
+    Parent-child Reference type.
+    Note: The causal relationship between a child Span and a parent Span.
+    """
+
     DB_SYSTEM = "db.system"
     """
     An identifier for the database management system (DBMS) product being used. See below for a list of well-known identifiers.
@@ -65,6 +96,7 @@ class SpanAttributes:
     NET_PEER_NAME = "net.peer.name"
     """
     Remote hostname or similar, see note below.
+    Note: `net.peer.name` SHOULD NOT be set if capturing it would require an extra DNS lookup.
     """
 
     NET_PEER_IP = "net.peer.ip"
@@ -170,7 +202,7 @@ It is usually not possible to determine at the point where an exception is throw
 whether it will escape the scope of a span.
 However, it is trivial to know that an exception
 will escape, if one checks for an active exception just before ending the span,
-as done in the [example above](#exception-end-example).
+as done in the [example above](#recording-an-exception).
 
 It follows that an exception may still escape the scope of the span
 even if the `exception.escaped` attribute was not set or set to false,
@@ -282,6 +314,11 @@ call to invoke the lambda, which is often HTTP).
     )
     """
     The size of the uncompressed response payload body after transport decoding. Not set if transport encoding not used.
+    """
+
+    HTTP_RETRY_COUNT = "http.retry_count"
+    """
+    The ordinal number of request re-sending attempt.
     """
 
     HTTP_SERVER_NAME = "http.server_name"
@@ -762,6 +799,14 @@ the closest proxy.
     """
 
 
+class OpentracingRefTypeValues(Enum):
+    CHILD_OF = "child_of"
+    """The parent Span depends on the child Span in some capacity."""
+
+    FOLLOWS_FROM = "follows_from"
+    """The parent Span does not depend in any way on the result of the child Span."""
+
+
 class DbSystemValues(Enum):
     OTHER_SQL = "other_sql"
     """Some other SQL database. Fallback only. See notes."""
@@ -993,13 +1038,16 @@ class FaasDocumentOperationValues(Enum):
 
 class HttpFlavorValues(Enum):
     HTTP_1_0 = "1.0"
-    """HTTP 1.0."""
+    """HTTP/1.0."""
 
     HTTP_1_1 = "1.1"
-    """HTTP 1.1."""
+    """HTTP/1.1."""
 
     HTTP_2_0 = "2.0"
-    """HTTP 2."""
+    """HTTP/2."""
+
+    HTTP_3_0 = "3.0"
+    """HTTP/3."""
 
     SPDY = "SPDY"
     """SPDY protocol."""
@@ -1113,6 +1161,20 @@ class FaasInvokedProviderValues(Enum):
 
     TENCENT_CLOUD = "tencent_cloud"
     """Tencent Cloud."""
+
+
+class RpcSystemValues(Enum):
+    GRPC = "grpc"
+    """gRPC."""
+
+    JAVA_RMI = "java_rmi"
+    """Java RMI."""
+
+    DOTNET_WCF = "dotnet_wcf"
+    """.NET WCF."""
+
+    APACHE_DUBBO = "apache_dubbo"
+    """Apache Dubbo."""
 
 
 class MessagingOperationValues(Enum):
