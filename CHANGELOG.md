@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update to semantic conventions v1.11.0
   ([#2669](https://github.com/open-telemetry/opentelemetry-python/pull/2669))
+- Update opentelemetry-proto to v0.17.0
+  ([#2668](https://github.com/open-telemetry/opentelemetry-python/pull/2668))
 - Add CallbackOptions to observable instrument callback params
   ([#2664](https://github.com/open-telemetry/opentelemetry-python/pull/2664))
 - Add timeouts to metric SDK
