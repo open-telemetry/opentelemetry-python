@@ -280,12 +280,13 @@ class Meter(ABC):
         """Creates an `ObservableCounter` instrument
 
         An observable counter observes a monotonically increasing count by calling provided
-        callbacks which returns multiple :class:`~opentelemetry._metrics.Observation`.
+        callbacks which accept a :class:`~opentelemetry._metrics.CallbackOptions` and return
+        multiple :class:`~opentelemetry._metrics.Observation`.
 
         For example, an observable counter could be used to report system CPU
         time periodically. Here is a basic implementation::
 
-            def cpu_time_callback() -> Iterable[Observation]:
+            def cpu_time_callback(options: CallbackOptions) -> Iterable[Observation]:
                 observations = []
                 with open("/proc/stat") as procstat:
                     procstat.readline()  # skip the first line
@@ -308,7 +309,7 @@ class Meter(ABC):
         To reduce memory usage, you can use generator callbacks instead of
         building the full list::
 
-            def cpu_time_callback() -> Iterable[Observation]:
+            def cpu_time_callback(options: CallbackOptions) -> Iterable[Observation]:
                 with open("/proc/stat") as procstat:
                     procstat.readline()  # skip the first line
                     for line in procstat:
@@ -322,6 +323,8 @@ class Meter(ABC):
         callbacks, which each should return iterables of :class:`~opentelemetry._metrics.Observation`::
 
             def cpu_time_callback(states_to_include: set[str]) -> Iterable[Iterable[Observation]]:
+                # accept options sent in from OpenTelemetry
+                options = yield
                 while True:
                     observations = []
                     with open("/proc/stat") as procstat:
@@ -334,7 +337,8 @@ class Meter(ABC):
                             if "nice" in states_to_include:
                                 observations.append(Observation(int(states[1]) // 100, {"cpu": cpu, "state": "nice"}))
                             # ... other states
-                    yield observations
+                    # yield the observations and receive the options for next iteration
+                    options = yield observations
 
             meter.create_observable_counter(
                 "system.cpu.time",
@@ -342,6 +346,15 @@ class Meter(ABC):
                 unit="s",
                 description="CPU time"
             )
+
+        The :class:`~opentelemetry._metrics.CallbackOptions` contain a timeout which the
+        callback should respect. For example if the callback does asynchronous work, like
+        making HTTP requests, it should respect the timeout::
+
+            def scrape_http_callback(options: CallbackOptions) -> Iterable[Observation]:
+                r = requests.get('http://scrapethis.com', timeout=options.timeout_millis / 10**3)
+                for value in r.json():
+                    yield Observation(value)
 
         Args:
             name: The name of the instrument to be created

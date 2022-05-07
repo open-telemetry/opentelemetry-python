@@ -28,7 +28,9 @@ Ideally, we could use mypy for this as well, but SDK is not type checked atm.
 from typing import Iterable, Sequence
 from unittest import TestCase
 
+from opentelemetry._metrics import CallbackOptions, Observation
 from opentelemetry.sdk._metrics import MeterProvider
+from opentelemetry.sdk._metrics._internal.export import InMemoryMetricReader
 from opentelemetry.sdk._metrics.export import (
     MetricExporter,
     MetricExportResult,
@@ -65,6 +67,10 @@ class OrigMetricReader(MetricReader):
         self.collect()
 
 
+def orig_callback(options: CallbackOptions) -> Iterable[Observation]:
+    yield Observation(2)
+
+
 class TestBackwardCompat(TestCase):
     def test_metric_exporter(self):
         exporter = OrigMetricExporter()
@@ -87,3 +93,15 @@ class TestBackwardCompat(TestCase):
             meter_provider.shutdown()
         except Exception:
             self.fail()
+
+    def test_observable_callback(self):
+        reader = InMemoryMetricReader()
+        meter_provider = MeterProvider(metric_readers=[reader])
+        # produce some data
+        meter_provider.get_meter("foo").create_counter("mycounter").add(12)
+        try:
+            metrics = reader.get_metrics()
+        except Exception:
+            self.fail()
+
+        self.assertEqual(len(metrics), 1)

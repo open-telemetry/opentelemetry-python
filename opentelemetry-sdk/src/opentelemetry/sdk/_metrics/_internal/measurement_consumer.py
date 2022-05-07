@@ -16,6 +16,7 @@ from abc import ABC, abstractmethod
 from threading import Lock
 from typing import TYPE_CHECKING, Dict, Iterable, List, Mapping
 
+from opentelemetry._metrics._internal.instrument import CallbackOptions
 from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
 )
@@ -27,7 +28,7 @@ from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
 
 if TYPE_CHECKING:
-    from opentelemetry.sdk._metrics.instrument import _Asynchronous
+    from opentelemetry.sdk._metrics._internal.instrument import _Asynchronous
 
 
 class MeasurementConsumer(ABC):
@@ -78,8 +79,10 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
     ) -> Iterable[Metric]:
         with self._lock:
             metric_reader_storage = self._reader_storages[metric_reader]
+            # for now, just use the defaults
+            callback_options = CallbackOptions()
             for async_instrument in self._async_instruments:
-                for measurement in async_instrument.callback():
+                for measurement in async_instrument.callback(callback_options):
                     metric_reader_storage.consume_measurement(measurement)
         return self._reader_storages[metric_reader].collect(
             instrument_type_temporality
