@@ -150,6 +150,12 @@ class ResourceAttributes:
     Note: It's recommended this value represents a human readable version of the device model rather than a machine readable alternative.
     """
 
+    DEVICE_MANUFACTURER = "device.manufacturer"
+    """
+    The name of the device manufacturer.
+    Note: The Android OS provides this field via [Build](https://developer.android.com/reference/android/os/Build#MANUFACTURER). iOS apps SHOULD hardcode the value `Apple`.
+    """
+
     FAAS_NAME = "faas.name"
     """
     The name of the single function that this runtime instance executes.
@@ -610,7 +616,7 @@ class OsTypeValues(Enum):
     """AIX (Advanced Interactive eXecutive)."""
 
     SOLARIS = "solaris"
-    """Oracle Solaris."""
+    """SunOS, Oracle Solaris."""
 
     Z_OS = "z_os"
     """IBM z/OS."""
