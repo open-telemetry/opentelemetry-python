@@ -16,6 +16,7 @@
 
 
 from abc import ABC, abstractmethod
+from dataclasses import dataclass
 from logging import getLogger
 from re import ASCII
 from re import compile as re_compile
@@ -36,17 +37,29 @@ from opentelemetry import _metrics as metrics
 from opentelemetry._metrics._internal.observation import Observation
 from opentelemetry.util.types import Attributes
 
-InstrumentT = TypeVar("InstrumentT", bound="Instrument")
-CallbackT = Union[
-    Callable[[], Iterable[Observation]],
-    Generator[Iterable[Observation], None, None],
-]
-
-
 _logger = getLogger(__name__)
 
 _name_regex = re_compile(r"[a-zA-Z][-.\w]{0,62}", ASCII)
 _unit_regex = re_compile(r"\w{0,63}", ASCII)
+
+
+@dataclass(frozen=True)
+class CallbackOptions:
+    """Options for the callback
+
+    Args:
+        timeout_millis: Timeout for the callback's execution. If the callback does asynchronous
+            work (e.g. HTTP requests), it should respect this timeout.
+    """
+
+    timeout_millis: float = 10_000
+
+
+InstrumentT = TypeVar("InstrumentT", bound="Instrument")
+CallbackT = Union[
+    Callable[[CallbackOptions], Iterable[Observation]],
+    Generator[Iterable[Observation], CallbackOptions, None],
+]
 
 
 class Instrument(ABC):

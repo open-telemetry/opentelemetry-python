@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.11.1-0.30b1...HEAD)
 
+- Add CallbackOptions to observable instrument callback params
+  ([#2664](https://github.com/open-telemetry/opentelemetry-python/pull/2664))
 - Add timeouts to metric SDK
   ([#2653](https://github.com/open-telemetry/opentelemetry-python/pull/2653))
 - Add variadic arguments to metric exporter/reader interfaces
