@@ -49,6 +49,7 @@ from opentelemetry._metrics._internal import (
 )
 from opentelemetry._metrics._internal.instrument import (
     Asynchronous,
+    CallbackOptions,
     CallbackT,
     Counter,
     Histogram,
@@ -71,6 +72,7 @@ for obj in [
     Counter,
     Synchronous,
     Asynchronous,
+    CallbackOptions,
     get_meter_provider,
     get_meter,
     Histogram,
@@ -95,6 +97,7 @@ for obj in [
     obj.__module__ = __name__
 
 __all__ = [
+    "CallbackOptions",
     "MeterProvider",
     "NoOpMeterProvider",
     "Meter",
