@@ -13,6 +13,8 @@
 # limitations under the License.
 
 # pylint: disable=unused-import
+# FIXME Remove when 3.6 is no longer supported
+from sys import version_info as _version_info
 
 from opentelemetry.sdk._metrics._internal.export import (  # noqa: F401
     ConsoleMetricExporter,
@@ -35,5 +37,7 @@ from opentelemetry.sdk._metrics._internal.point import (  # noqa: F401
 __all__ = []
 for key, value in globals().copy().items():
     if not key.startswith("_"):
+        if _version_info.minor == 6 and key == "PointT":
+            continue
         value.__module__ = __name__
         __all__.append(key)
