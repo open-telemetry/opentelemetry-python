@@ -389,10 +389,6 @@ class MeterProvider(APIMeterProvider):
 
                 metric_reader_error[metric_reader] = error
 
-        if self._atexit_handler is not None:
-            unregister(self._atexit_handler)
-            self._atexit_handler = None
-
         if metric_reader_error:
 
             metric_reader_error_string = "\n".join(
@@ -403,11 +399,9 @@ class MeterProvider(APIMeterProvider):
             )
 
             raise Exception(
-                (
-                    "MeterProvider.force_flush failed because the following "
-                    "metric readers failed during collect:\n"
-                    f"{metric_reader_error_string}"
-                )
+                "MeterProvider.force_flush failed because the following "
+                "metric readers failed during collect:\n"
+                f"{metric_reader_error_string}"
             )
         return True
 
