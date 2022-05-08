@@ -18,6 +18,7 @@ from dataclasses import asdict, dataclass
 from json import dumps
 from typing import Sequence, Union
 
+# This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk._metrics._internal
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope

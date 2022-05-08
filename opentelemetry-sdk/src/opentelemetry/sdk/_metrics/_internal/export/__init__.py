@@ -23,6 +23,7 @@ from typing import IO, Callable, Dict, Iterable, List, Optional, Sequence
 
 from typing_extensions import final
 
+# This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk._metrics._internal
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,

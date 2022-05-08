@@ -17,6 +17,7 @@ from logging import getLogger
 from threading import Lock
 from typing import Optional, Sequence
 
+# This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk._metrics
 from opentelemetry._metrics import Counter as APICounter
 from opentelemetry._metrics import Histogram as APIHistogram

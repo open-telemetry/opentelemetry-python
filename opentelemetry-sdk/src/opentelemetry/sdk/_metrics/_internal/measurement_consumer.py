@@ -18,6 +18,7 @@ from abc import ABC, abstractmethod
 from threading import Lock
 from typing import Dict, Iterable, List, Mapping
 
+# This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk._metrics
 import opentelemetry.sdk._metrics._internal.instrument
 import opentelemetry.sdk._metrics._internal.sdk_configuration

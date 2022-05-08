@@ -17,6 +17,7 @@
 from dataclasses import dataclass
 from typing import Sequence
 
+# This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk._metrics
 import opentelemetry.sdk.resources
 

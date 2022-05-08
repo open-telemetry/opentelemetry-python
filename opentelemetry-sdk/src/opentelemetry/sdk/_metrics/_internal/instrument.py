@@ -17,6 +17,7 @@
 from logging import getLogger
 from typing import Dict, Generator, Iterable, List, Optional, Union
 
+# This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk._metrics
 from opentelemetry._metrics import CallbackT
 from opentelemetry._metrics import Counter as APICounter
