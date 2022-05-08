@@ -62,18 +62,25 @@ API
 ---
 """
 
-import collections
-import logging
-import re
+from collections import deque
 from itertools import chain
-from typing import Iterable, Optional, Sequence, Tuple
+from json import dumps
+from logging import getLogger
+from re import IGNORECASE, UNICODE, compile
+from typing import Dict, Iterable, Sequence, Tuple, Union
 
-from prometheus_client import core
+from prometheus_client.core import (
+    REGISTRY,
+    CounterMetricFamily,
+    GaugeMetricFamily,
+    HistogramMetricFamily,
+)
+from prometheus_client.core import Metric as PrometheusMetric
 
-from opentelemetry.sdk._metrics.export import MetricReader
+from opentelemetry.sdk._metrics.metric_reader import MetricReader
 from opentelemetry.sdk._metrics.point import Gauge, Histogram, Metric, Sum
 
-_logger = logging.getLogger(__name__)
+_logger = getLogger(__name__)
 
 
 def _convert_buckets(metric: Metric) -> Sequence[Tuple[str, int]]:
@@ -100,17 +107,21 @@ class PrometheusMetricReader(MetricReader):
     def __init__(self, prefix: str = "") -> None:
         super().__init__()
         self._collector = _CustomCollector(prefix)
-        core.REGISTRY.register(self._collector)
+        REGISTRY.register(self._collector)
         self._collector._callback = self.collect
 
-    def _receive_metrics(self, metrics: Iterable[Metric]) -> None:
+    def _receive_metrics(
+        self,
+        metrics: Iterable[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> None:
         if metrics is None:
             return
         self._collector.add_metrics_data(metrics)
 
-    def shutdown(self) -> bool:
-        core.REGISTRY.unregister(self._collector)
-        return True
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+        REGISTRY.unregister(self._collector)
 
 
 class _CustomCollector:
@@ -123,9 +134,9 @@ class _CustomCollector:
     def __init__(self, prefix: str = ""):
         self._prefix = prefix
         self._callback = None
-        self._metrics_to_export = collections.deque()
-        self._non_letters_digits_underscore_re = re.compile(
-            r"[^\w]", re.UNICODE | re.IGNORECASE
+        self._metrics_to_export = deque()
+        self._non_letters_digits_underscore_re = compile(
+            r"[^\w]", UNICODE | IGNORECASE
         )
 
     def add_metrics_data(self, export_records: Sequence[Metric]) -> None:
@@ -141,23 +152,28 @@ class _CustomCollector:
         if self._callback is not None:
             self._callback()
 
+        metric_family_id_metric_family = {}
+
         while self._metrics_to_export:
             for export_record in self._metrics_to_export.popleft():
-                prometheus_metric = self._translate_to_prometheus(
-                    export_record
+                self._translate_to_prometheus(
+                    export_record, metric_family_id_metric_family
                 )
-                if prometheus_metric is not None:
-                    yield prometheus_metric
+
+            if metric_family_id_metric_family:
+                for metric_family in metric_family_id_metric_family.values():
+                    yield metric_family
 
     def _translate_to_prometheus(
-        self, metric: Metric
-    ) -> Optional[core.Metric]:
-        prometheus_metric = None
+        self,
+        metric: Metric,
+        metric_family_id_metric_family: Dict[str, PrometheusMetric],
+    ):
         label_values = []
         label_keys = []
         for key, value in metric.attributes.items():
             label_keys.append(self._sanitize(key))
-            label_values.append(str(value))
+            label_values.append(self._check_value(value))
 
         metric_name = ""
         if self._prefix != "":
@@ -165,44 +181,79 @@ class _CustomCollector:
         metric_name += self._sanitize(metric.name)
 
         description = metric.description or ""
+
+        metric_family_id = "|".join(
+            [metric_name, description, "%".join(label_keys), metric.unit]
+        )
+
         if isinstance(metric.point, Sum):
-            prometheus_metric = core.CounterMetricFamily(
-                name=metric_name,
-                documentation=description,
-                labels=label_keys,
-                unit=metric.unit,
+
+            metric_family_id = "|".join(
+                [metric_family_id, CounterMetricFamily.__name__]
             )
-            prometheus_metric.add_metric(
+
+            if metric_family_id not in metric_family_id_metric_family.keys():
+                metric_family_id_metric_family[
+                    metric_family_id
+                ] = CounterMetricFamily(
+                    name=metric_name,
+                    documentation=description,
+                    labels=label_keys,
+                    unit=metric.unit,
+                )
+            metric_family_id_metric_family[metric_family_id].add_metric(
                 labels=label_values, value=metric.point.value
             )
         elif isinstance(metric.point, Gauge):
-            prometheus_metric = core.GaugeMetricFamily(
-                name=metric_name,
-                documentation=description,
-                labels=label_keys,
-                unit=metric.unit,
+
+            metric_family_id = "|".join(
+                [metric_family_id, GaugeMetricFamily.__name__]
             )
-            prometheus_metric.add_metric(
+
+            if metric_family_id not in metric_family_id_metric_family.keys():
+                metric_family_id_metric_family[
+                    metric_family_id
+                ] = GaugeMetricFamily(
+                    name=metric_name,
+                    documentation=description,
+                    labels=label_keys,
+                    unit=metric.unit,
+                )
+            metric_family_id_metric_family[metric_family_id].add_metric(
                 labels=label_values, value=metric.point.value
             )
         elif isinstance(metric.point, Histogram):
-            value = metric.point.sum
-            prometheus_metric = core.HistogramMetricFamily(
-                name=metric_name,
-                documentation=description,
-                labels=label_keys,
-                unit=metric.unit,
+
+            metric_family_id = "|".join(
+                [metric_family_id, HistogramMetricFamily.__name__]
             )
-            buckets = _convert_buckets(metric)
-            prometheus_metric.add_metric(
-                labels=label_values, buckets=buckets, sum_value=value
+
+            if metric_family_id not in metric_family_id_metric_family.keys():
+                metric_family_id_metric_family[
+                    metric_family_id
+                ] = HistogramMetricFamily(
+                    name=metric_name,
+                    documentation=description,
+                    labels=label_keys,
+                    unit=metric.unit,
+                )
+            metric_family_id_metric_family[metric_family_id].add_metric(
+                labels=label_values,
+                buckets=_convert_buckets(metric),
+                sum_value=metric.point.sum,
             )
         else:
             _logger.warning("Unsupported metric type. %s", type(metric.point))
-        return prometheus_metric
 
     def _sanitize(self, key: str) -> str:
         """sanitize the given metric name or label according to Prometheus rule.
         Replace all characters other than [A-Za-z0-9_] with '_'.
         """
         return self._non_letters_digits_underscore_re.sub("_", key)
+
+    # pylint: disable=no-self-use
+    def _check_value(self, value: Union[int, float, str, Sequence]) -> str:
+        """Check the label value and return is appropriate representation"""
+        if not isinstance(value, str):
+            return dumps(value, default=str)
+        return str(value)

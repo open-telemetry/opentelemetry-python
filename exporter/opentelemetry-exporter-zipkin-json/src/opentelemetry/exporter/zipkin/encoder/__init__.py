@@ -38,6 +38,8 @@ EncodedLocalEndpointT = TypeVar("EncodedLocalEndpointT")
 DEFAULT_MAX_TAG_VALUE_LENGTH = 128
 NAME_KEY = "otel.library.name"
 VERSION_KEY = "otel.library.version"
+_SCOPE_NAME_KEY = "otel.scope.name"
+_SCOPE_VERSION_KEY = "otel.scope.version"
 
 logger = logging.getLogger(__name__)
 
@@ -196,11 +198,13 @@ class Encoder(abc.ABC):
         tags = self._extract_tags_from_dict(span.attributes)
         if span.resource:
             tags.update(self._extract_tags_from_dict(span.resource.attributes))
-        if span.instrumentation_info is not None:
+        if span.instrumentation_scope is not None:
             tags.update(
                 {
-                    NAME_KEY: span.instrumentation_info.name,
-                    VERSION_KEY: span.instrumentation_info.version,
+                    NAME_KEY: span.instrumentation_scope.name,
+                    VERSION_KEY: span.instrumentation_scope.version,
+                    _SCOPE_NAME_KEY: span.instrumentation_scope.name,
+                    _SCOPE_VERSION_KEY: span.instrumentation_scope.version,
                 }
             )
         if span.status.status_code is not StatusCode.UNSET:

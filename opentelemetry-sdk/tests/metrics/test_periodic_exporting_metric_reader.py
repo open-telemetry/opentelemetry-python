@@ -13,12 +13,14 @@
 # limitations under the License.
 
 import time
+from typing import Sequence
 from unittest.mock import Mock
 
 from flaky import flaky
 
 from opentelemetry.sdk._metrics.export import (
     MetricExporter,
+    MetricExportResult,
     PeriodicExportingMetricReader,
 )
 from opentelemetry.sdk._metrics.point import Gauge, Metric, Sum
@@ -33,12 +35,17 @@ class FakeMetricsExporter(MetricExporter):
         self.metrics = []
         self._shutdown = False
 
-    def export(self, metrics):
+    def export(
+        self,
+        metrics: Sequence[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> MetricExportResult:
         time.sleep(self.wait)
         self.metrics.extend(metrics)
         return True
 
-    def shutdown(self):
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         self._shutdown = True
 
 
@@ -47,7 +54,7 @@ metrics_list = [
         name="sum_name",
         attributes={},
         description="",
-        instrumentation_info=None,
+        instrumentation_scope=None,
         resource=Resource.create(),
         unit="",
         point=Sum(
@@ -62,7 +69,7 @@ metrics_list = [
         name="gauge_name",
         attributes={},
         description="",
-        instrumentation_info=None,
+        instrumentation_scope=None,
         resource=Resource.create(),
         unit="",
         point=Gauge(
@@ -84,7 +91,9 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         self, metrics, exporter, collect_wait=0, interval=60000
     ):
 
-        pmr = PeriodicExportingMetricReader(exporter, interval)
+        pmr = PeriodicExportingMetricReader(
+            exporter, export_interval_millis=interval
+        )
 
         def _collect(reader, temp):
             time.sleep(collect_wait)
@@ -95,7 +104,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
 
     def test_ticker_called(self):
         collect_mock = Mock()
-        pmr = PeriodicExportingMetricReader(Mock(), 1)
+        pmr = PeriodicExportingMetricReader(Mock(), export_interval_millis=1)
         pmr._set_collect_callback(collect_mock)
         time.sleep(0.1)
         self.assertTrue(collect_mock.assert_called_once)

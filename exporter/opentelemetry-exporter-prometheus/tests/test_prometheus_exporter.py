@@ -60,12 +60,14 @@ class TestPrometheusMetricReader(unittest.TestCase):
         record = _generate_metric(
             "test@name",
             Histogram(
-                time_unix_nano=1641946016139533244,
-                start_time_unix_nano=1641946016139533244,
-                bucket_counts=[1, 3, 2],
-                sum=579.0,
-                explicit_bounds=[123.0, 456.0],
                 aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                bucket_counts=[1, 3, 2],
+                explicit_bounds=[123.0, 456.0],
+                start_time_unix_nano=1641946016139533244,
+                max=457,
+                min=1,
+                sum=579.0,
+                time_unix_nano=1641946016139533244,
             ),
             attributes={"histo": 1},
         )
@@ -165,3 +167,44 @@ class TestPrometheusMetricReader(unittest.TestCase):
         self.assertEqual(collector._sanitize(",./?;:[]{}"), "__________")
         self.assertEqual(collector._sanitize("TestString"), "TestString")
         self.assertEqual(collector._sanitize("aAbBcC_12_oi"), "aAbBcC_12_oi")
+
+    def test_list_labels(self):
+        labels = {"environment@": ["1", "2", "3"], "os": "Unix"}
+        record = _generate_gauge(
+            "test@gauge",
+            123,
+            attributes=labels,
+            description="testdesc",
+            unit="testunit",
+        )
+        collector = _CustomCollector("testprefix")
+        collector.add_metrics_data([record])
+
+        for prometheus_metric in collector.collect():
+            self.assertEqual(type(prometheus_metric), GaugeMetricFamily)
+            self.assertEqual(
+                prometheus_metric.name, "testprefix_test_gauge_testunit"
+            )
+            self.assertEqual(prometheus_metric.documentation, "testdesc")
+            self.assertTrue(len(prometheus_metric.samples) == 1)
+            self.assertEqual(prometheus_metric.samples[0].value, 123)
+            self.assertTrue(len(prometheus_metric.samples[0].labels) == 2)
+            self.assertEqual(
+                prometheus_metric.samples[0].labels["environment_"],
+                '["1", "2", "3"]',
+            )
+            self.assertEqual(prometheus_metric.samples[0].labels["os"], "Unix")
+
+    def test_check_value(self):
+
+        collector = _CustomCollector("")
+
+        self.assertEqual(collector._check_value(1), "1")
+        self.assertEqual(collector._check_value(1.0), "1.0")
+        self.assertEqual(collector._check_value("a"), "a")
+        self.assertEqual(collector._check_value([1, 2]), "[1, 2]")
+        self.assertEqual(collector._check_value((1, 2)), "[1, 2]")
+        self.assertEqual(collector._check_value(["a", 2]), '["a", 2]')
+        self.assertEqual(collector._check_value(True), "true")
+        self.assertEqual(collector._check_value(False), "false")
+        self.assertEqual(collector._check_value(None), "null")

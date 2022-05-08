@@ -41,7 +41,7 @@ class TestView(TestCase):
 
         self.assertTrue(
             View(meter_name="meter_name")._match(
-                Mock(**{"instrumentation_info.name": "meter_name"})
+                Mock(**{"instrumentation_scope.name": "meter_name"})
             )
         )
 
@@ -49,7 +49,7 @@ class TestView(TestCase):
 
         self.assertTrue(
             View(meter_version="meter_version")._match(
-                Mock(**{"instrumentation_info.version": "meter_version"})
+                Mock(**{"instrumentation_scope.version": "meter_version"})
             )
         )
 
@@ -57,21 +57,25 @@ class TestView(TestCase):
 
         self.assertTrue(
             View(meter_schema_url="meter_schema_url")._match(
-                Mock(**{"instrumentation_info.schema_url": "meter_schema_url"})
+                Mock(
+                    **{"instrumentation_scope.schema_url": "meter_schema_url"}
+                )
             )
         )
         self.assertFalse(
             View(meter_schema_url="meter_schema_url")._match(
                 Mock(
                     **{
-                        "instrumentation_info.schema_url": "meter_schema_urlabc"
+                        "instrumentation_scope.schema_url": "meter_schema_urlabc"
                     }
                 )
             )
         )
         self.assertTrue(
             View(meter_schema_url="meter_schema_url")._match(
-                Mock(**{"instrumentation_info.schema_url": "meter_schema_url"})
+                Mock(
+                    **{"instrumentation_scope.schema_url": "meter_schema_url"}
+                )
             )
         )
 
@@ -87,9 +91,9 @@ class TestView(TestCase):
             view._match(
                 Mock(
                     **{
-                        "instrumentation_info.name": "meter_name",
-                        "instrumentation_info.version": "meter_version",
-                        "instrumentation_info.schema_url": "meter_schema_url",
+                        "instrumentation_scope.name": "meter_name",
+                        "instrumentation_scope.version": "meter_version",
+                        "instrumentation_scope.schema_url": "meter_schema_url",
                     }
                 )
             )
@@ -98,9 +102,9 @@ class TestView(TestCase):
             view._match(
                 Mock(
                     **{
-                        "instrumentation_info.name": "meter_name",
-                        "instrumentation_info.version": "meter_version",
-                        "instrumentation_info.schema_url": "meter_schema_vrl",
+                        "instrumentation_scope.name": "meter_name",
+                        "instrumentation_scope.version": "meter_version",
+                        "instrumentation_scope.schema_url": "meter_schema_vrl",
                     }
                 )
             )

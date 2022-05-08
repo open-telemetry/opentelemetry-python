@@ -33,7 +33,7 @@ from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
 )
 from opentelemetry.proto.common.v1.common_pb2 import (
     AnyValue,
-    InstrumentationLibrary,
+    InstrumentationScope,
     KeyValue,
 )
 from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
@@ -117,12 +117,14 @@ class TestOTLPMetricExporter(TestCase):
             "histogram": _generate_metric(
                 "histogram",
                 Histogram(
-                    time_unix_nano=1641946016139533244,
-                    start_time_unix_nano=1641946016139533244,
-                    bucket_counts=[1, 4],
-                    sum=67,
-                    explicit_bounds=[10.0, 20.0],
                     aggregation_temporality=AggregationTemporality.DELTA,
+                    bucket_counts=[1, 4],
+                    explicit_bounds=[10.0, 20.0],
+                    max=18,
+                    min=8,
+                    start_time_unix_nano=1641946016139533244,
+                    sum=67,
+                    time_unix_nano=1641946016139533244,
                 ),
             ),
         }
@@ -291,9 +293,9 @@ class TestOTLPMetricExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_metrics=[
-                        pb2.InstrumentationLibraryMetrics(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_metrics=[
+                        pb2.ScopeMetrics(
+                            scope=InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
                             metrics=[
@@ -349,9 +351,9 @@ class TestOTLPMetricExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_metrics=[
-                        pb2.InstrumentationLibraryMetrics(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_metrics=[
+                        pb2.ScopeMetrics(
+                            scope=InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
                             metrics=[
@@ -407,9 +409,9 @@ class TestOTLPMetricExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_metrics=[
-                        pb2.InstrumentationLibraryMetrics(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_metrics=[
+                        pb2.ScopeMetrics(
+                            scope=InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
                             metrics=[
@@ -462,9 +464,9 @@ class TestOTLPMetricExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_metrics=[
-                        pb2.InstrumentationLibraryMetrics(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_metrics=[
+                        pb2.ScopeMetrics(
+                            scope=InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
                             metrics=[
@@ -517,9 +519,9 @@ class TestOTLPMetricExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_metrics=[
-                        pb2.InstrumentationLibraryMetrics(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_metrics=[
+                        pb2.ScopeMetrics(
+                            scope=InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
                             metrics=[

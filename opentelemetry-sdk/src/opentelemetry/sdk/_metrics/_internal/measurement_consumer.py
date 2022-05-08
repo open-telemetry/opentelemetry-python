@@ -14,19 +14,21 @@
 
 from abc import ABC, abstractmethod
 from threading import Lock
-from typing import TYPE_CHECKING, Iterable, List, Mapping
+from typing import TYPE_CHECKING, Dict, Iterable, List, Mapping
 
-from opentelemetry.sdk._metrics.aggregation import AggregationTemporality
-from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.metric_reader import MetricReader
-from opentelemetry.sdk._metrics.metric_reader_storage import (
+from opentelemetry._metrics._internal.instrument import CallbackOptions
+from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
 )
-from opentelemetry.sdk._metrics.point import Metric
-from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
+from opentelemetry.sdk._metrics._internal.sdk_configuration import (
+    SdkConfiguration,
+)
+from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry.sdk._metrics.metric_reader import MetricReader
+from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
 
 if TYPE_CHECKING:
-    from opentelemetry.sdk._metrics.instrument import _Asynchronous
+    from opentelemetry.sdk._metrics._internal.instrument import _Asynchronous
 
 
 class MeasurementConsumer(ABC):
@@ -40,7 +42,9 @@ class MeasurementConsumer(ABC):
 
     @abstractmethod
     def collect(
-        self, metric_reader: MetricReader, temporality: AggregationTemporality
+        self,
+        metric_reader: MetricReader,
+        instrument_type_temporality: Dict[type, AggregationTemporality],
     ) -> Iterable[Metric]:
         pass
 
@@ -51,7 +55,9 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         self._sdk_config = sdk_config
         # should never be mutated
         self._reader_storages: Mapping[MetricReader, MetricReaderStorage] = {
-            reader: MetricReaderStorage(sdk_config)
+            reader: MetricReaderStorage(
+                sdk_config, reader._instrument_class_aggregation
+            )
             for reader in sdk_config.metric_readers
         }
         self._async_instruments: List["_Asynchronous"] = []
@@ -67,11 +73,17 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             self._async_instruments.append(instrument)
 
     def collect(
-        self, metric_reader: MetricReader, temporality: AggregationTemporality
+        self,
+        metric_reader: MetricReader,
+        instrument_type_temporality: Dict[type, AggregationTemporality],
     ) -> Iterable[Metric]:
         with self._lock:
             metric_reader_storage = self._reader_storages[metric_reader]
+            # for now, just use the defaults
+            callback_options = CallbackOptions()
             for async_instrument in self._async_instruments:
-                for measurement in async_instrument.callback():
+                for measurement in async_instrument.callback(callback_options):
                     metric_reader_storage.consume_measurement(measurement)
-        return self._reader_storages[metric_reader].collect(temporality)
+        return self._reader_storages[metric_reader].collect(
+            instrument_type_temporality
+        )

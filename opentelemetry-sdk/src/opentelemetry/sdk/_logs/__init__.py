@@ -28,7 +28,7 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import (
     format_span_id,
@@ -107,10 +107,10 @@ class LogData:
     def __init__(
         self,
         log_record: LogRecord,
-        instrumentation_info: InstrumentationInfo,
+        instrumentation_scope: InstrumentationScope,
     ):
         self.log_record = log_record
-        self.instrumentation_info = instrumentation_info
+        self.instrumentation_scope = instrumentation_scope
 
 
 class LogProcessor(abc.ABC):
@@ -379,11 +379,11 @@ class LogEmitter:
         multi_log_processor: Union[
             SynchronousMultiLogProcessor, ConcurrentMultiLogProcessor
         ],
-        instrumentation_info: InstrumentationInfo,
+        instrumentation_scope: InstrumentationScope,
     ):
         self._resource = resource
         self._multi_log_processor = multi_log_processor
-        self._instrumentation_info = instrumentation_info
+        self._instrumentation_scope = instrumentation_scope
 
     @property
     def resource(self):
@@ -393,7 +393,7 @@ class LogEmitter:
         """Emits the :class:`LogData` by associating :class:`LogRecord`
         and instrumentation info.
         """
-        log_data = LogData(record, self._instrumentation_info)
+        log_data = LogData(record, self._instrumentation_scope)
         self._multi_log_processor.emit(log_data)
 
     # TODO: Should this flush everything in pipeline?
@@ -432,7 +432,7 @@ class LogEmitterProvider:
         return LogEmitter(
             self._resource,
             self._multi_log_processor,
-            InstrumentationInfo(
+            InstrumentationScope(
                 instrumenting_module_name, instrumenting_module_verison
             ),
         )

@@ -17,8 +17,7 @@ import io
 from typing import Generator, Iterable, List
 from unittest import TestCase
 
-from opentelemetry._metrics.instrument import Instrument
-from opentelemetry._metrics.measurement import Measurement as APIMeasurement
+from opentelemetry._metrics import CallbackOptions, Instrument, Observation
 from opentelemetry.sdk._metrics import MeterProvider
 from opentelemetry.sdk._metrics.measurement import Measurement
 
@@ -139,58 +138,62 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
         ]
 
     def test_cpu_time_callback(self):
-        def cpu_time_callback() -> Iterable[APIMeasurement]:
+        def cpu_time_callback(
+            options: CallbackOptions,
+        ) -> Iterable[Observation]:
             procstat = io.StringIO(self.procstat_str)
             procstat.readline()  # skip the first line
             for line in procstat:
                 if not line.startswith("cpu"):
                     break
                 cpu, *states = line.split()
-                yield APIMeasurement(
+                yield Observation(
                     int(states[0]) / 100, {"cpu": cpu, "state": "user"}
                 )
-                yield APIMeasurement(
+                yield Observation(
                     int(states[1]) / 100, {"cpu": cpu, "state": "nice"}
                 )
-                yield APIMeasurement(
+                yield Observation(
                     int(states[2]) / 100, {"cpu": cpu, "state": "system"}
                 )
-                yield APIMeasurement(
+                yield Observation(
                     int(states[3]) / 100, {"cpu": cpu, "state": "idle"}
                 )
-                yield APIMeasurement(
+                yield Observation(
                     int(states[4]) / 100, {"cpu": cpu, "state": "iowait"}
                 )
-                yield APIMeasurement(
+                yield Observation(
                     int(states[5]) / 100, {"cpu": cpu, "state": "irq"}
                 )
-                yield APIMeasurement(
+                yield Observation(
                     int(states[6]) / 100, {"cpu": cpu, "state": "softirq"}
                 )
-                yield APIMeasurement(
+                yield Observation(
                     int(states[7]) / 100, {"cpu": cpu, "state": "guest"}
                 )
-                yield APIMeasurement(
+                yield Observation(
                     int(states[8]) / 100, {"cpu": cpu, "state": "guest_nice"}
                 )
 
         meter = MeterProvider().get_meter("name")
         observable_counter = meter.create_observable_counter(
             "system.cpu.time",
-            cpu_time_callback,
+            callbacks=[cpu_time_callback],
             unit="s",
             description="CPU time",
         )
-        measurements = list(observable_counter.callback())
+        measurements = list(observable_counter.callback(CallbackOptions()))
         self.assertEqual(
             measurements, self.create_measurements_expected(observable_counter)
         )
 
     def test_cpu_time_generator(self):
         def cpu_time_generator() -> Generator[
-            Iterable[APIMeasurement], None, None
+            Iterable[Observation], None, None
         ]:
+            options = yield
             while True:
+                self.assertIsInstance(options, CallbackOptions)
                 measurements = []
                 procstat = io.StringIO(self.procstat_str)
                 procstat.readline()  # skip the first line
@@ -199,68 +202,68 @@ softirq 1644603067 0 166540056 208 309152755 8936439 0 1354908 935642970 13 2229
                         break
                     cpu, *states = line.split()
                     measurements.append(
-                        APIMeasurement(
+                        Observation(
                             int(states[0]) / 100,
                             {"cpu": cpu, "state": "user"},
                         )
                     )
                     measurements.append(
-                        APIMeasurement(
+                        Observation(
                             int(states[1]) / 100,
                             {"cpu": cpu, "state": "nice"},
                         )
                     )
                     measurements.append(
-                        APIMeasurement(
+                        Observation(
                             int(states[2]) / 100,
                             {"cpu": cpu, "state": "system"},
                         )
                     )
                     measurements.append(
-                        APIMeasurement(
+                        Observation(
                             int(states[3]) / 100,
                             {"cpu": cpu, "state": "idle"},
                         )
                     )
                     measurements.append(
-                        APIMeasurement(
+                        Observation(
                             int(states[4]) / 100,
                             {"cpu": cpu, "state": "iowait"},
                         )
                     )
                     measurements.append(
-                        APIMeasurement(
+                        Observation(
                             int(states[5]) / 100, {"cpu": cpu, "state": "irq"}
                         )
                     )
                     measurements.append(
-                        APIMeasurement(
+                        Observation(
                             int(states[6]) / 100,
                             {"cpu": cpu, "state": "softirq"},
                         )
                     )
                     measurements.append(
-                        APIMeasurement(
+                        Observation(
                             int(states[7]) / 100,
                             {"cpu": cpu, "state": "guest"},
                         )
                     )
                     measurements.append(
-                        APIMeasurement(
+                        Observation(
                             int(states[8]) / 100,
                             {"cpu": cpu, "state": "guest_nice"},
                         )
                     )
-                yield measurements
+                options = yield measurements
 
         meter = MeterProvider().get_meter("name")
         observable_counter = meter.create_observable_counter(
             "system.cpu.time",
-            callback=cpu_time_generator(),
+            callbacks=[cpu_time_generator()],
             unit="s",
             description="CPU time",
         )
-        measurements = list(observable_counter.callback())
+        measurements = list(observable_counter.callback(CallbackOptions()))
         self.assertEqual(
             measurements, self.create_measurements_expected(observable_counter)
         )

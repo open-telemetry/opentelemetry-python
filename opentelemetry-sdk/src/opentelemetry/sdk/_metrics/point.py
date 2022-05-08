@@ -12,81 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
-from dataclasses import asdict, dataclass
-from enum import IntEnum
-from typing import Sequence, Union
+# pylint: disable=unused-import
 
-from opentelemetry.sdk.resources import Resource
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
-from opentelemetry.util.types import Attributes
+# FIXME Remove when 3.6 is no longer supported
+from sys import version_info as _version_info
 
+from opentelemetry.sdk._metrics._internal.point import (  # noqa: F401
+    AggregationTemporality,
+    Gauge,
+    Histogram,
+    Metric,
+    PointT,
+    Sum,
+)
 
-class AggregationTemporality(IntEnum):
-    UNSPECIFIED = 0
-    DELTA = 1
-    CUMULATIVE = 2
-
-
-@dataclass(frozen=True)
-class Sum:
-    start_time_unix_nano: int
-    time_unix_nano: int
-    value: Union[int, float]
-    aggregation_temporality: AggregationTemporality
-    is_monotonic: bool
-
-
-@dataclass(frozen=True)
-class Gauge:
-    time_unix_nano: int
-    value: Union[int, float]
-
-
-@dataclass(frozen=True)
-class Histogram:
-    start_time_unix_nano: int
-    time_unix_nano: int
-    bucket_counts: Sequence[int]
-    explicit_bounds: Sequence[float]
-    sum: Union[int, float]
-    aggregation_temporality: AggregationTemporality
-
-
-PointT = Union[Sum, Gauge, Histogram]
-
-
-@dataclass(frozen=True)
-class Metric:
-    """Represents a metric point in the OpenTelemetry data model to be exported
-
-    Concrete metric types contain all the information as in the OTLP proto definitions
-    (https://tinyurl.com/7h6yx24v) but are flattened as much as possible.
-    """
-
-    # common fields to all metric kinds
-    attributes: Attributes
-    description: str
-    instrumentation_info: InstrumentationInfo
-    name: str
-    resource: Resource
-    unit: str
-    point: PointT
-    """Contains non-common fields for the given metric"""
-
-    def to_json(self) -> str:
-        return json.dumps(
-            {
-                "attributes": self.attributes if self.attributes else "",
-                "description": self.description if self.description else "",
-                "instrumentation_info": repr(self.instrumentation_info)
-                if self.instrumentation_info
-                else "",
-                "name": self.name,
-                "resource": repr(self.resource.attributes)
-                if self.resource
-                else "",
-                "unit": self.unit if self.unit else "",
-                "point": asdict(self.point) if self.point else "",
-            }
-        )
+__all__ = []
+for key, value in globals().copy().items():
+    if not key.startswith("_"):
+        if _version_info.minor == 6 and key == "PointT":
+            continue
+        value.__module__ = __name__
+        __all__.append(key)
