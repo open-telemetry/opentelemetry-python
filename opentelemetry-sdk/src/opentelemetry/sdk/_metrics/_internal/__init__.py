@@ -308,10 +308,10 @@ class MeterProvider(APIMeterProvider):
             `MeterProvider.shutdown`
         views: The views to configure the metric output the SDK
 
-    By default, instruments which do not match any `View` (or if no `View`\ s
+    By default, instruments which do not match any :class:`opentelemetry.sdk._metrics.view.View` (or if no :class:`opentelemetry.sdk._metrics.view.View`\ s
     are provided) will report metrics with the default aggregation for the
     instrument's kind. To disable instruments by default, configure a match-all
-    `View` with `DropAggregation` and then create `View`\ s to re-enable
+    :class:`opentelemetry.sdk._metrics.view.View` with `DropAggregation` and then create :class:`opentelemetry.sdk._metrics.view.View`\ s to re-enable
     individual instruments:
 
     .. code-block:: python
@@ -336,7 +336,7 @@ class MeterProvider(APIMeterProvider):
         ] = (),
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
-        views: Sequence["opentelemetry.sdk._metrics.View"] = (),
+        views: Sequence["opentelemetry.sdk._metrics.view.View"] = (),
     ):
         self._lock = Lock()
         self._meter_lock = Lock()

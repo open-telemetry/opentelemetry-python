@@ -14,6 +14,7 @@ Submodules
 .. toctree::
 
    metrics.export
+   metrics.view
 
 .. automodule:: opentelemetry.sdk._metrics
     :members:

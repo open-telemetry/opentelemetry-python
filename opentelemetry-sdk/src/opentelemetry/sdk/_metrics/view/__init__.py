@@ -14,18 +14,15 @@
 
 # pylint: disable=unused-import
 
-from opentelemetry.sdk._metrics._internal import (  # noqa: F401
-    Meter,
-    MeterProvider,
+from opentelemetry.sdk._metrics._internal.aggregation import (  # noqa: F401
+    Aggregation,
+    DefaultAggregation,
+    DropAggregation,
+    ExplicitBucketHistogramAggregation,
+    LastValueAggregation,
+    SumAggregation,
 )
-from opentelemetry.sdk._metrics._internal.instrument import (  # noqa: F401
-    Counter,
-    Histogram,
-    ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
-    UpDownCounter,
-)
+from opentelemetry.sdk._metrics._internal.view import View  # noqa: F401
 
 __all__ = []
 for key, value in globals().copy().items():

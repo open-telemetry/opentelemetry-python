@@ -22,14 +22,10 @@ from unittest.mock import Mock
 
 from opentelemetry.sdk._metrics import (
     Counter,
-    DefaultAggregation,
-    ExplicitBucketHistogramAggregation,
     Histogram,
-    LastValueAggregation,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
-    SumAggregation,
     UpDownCounter,
 )
 from opentelemetry.sdk._metrics._internal.aggregation import (
@@ -42,6 +38,12 @@ from opentelemetry.sdk._metrics._internal.measurement import Measurement
 from opentelemetry.sdk._metrics.export import AggregationTemporality, Gauge
 from opentelemetry.sdk._metrics.export import Histogram as HistogramPoint
 from opentelemetry.sdk._metrics.export import Sum
+from opentelemetry.sdk._metrics.view import (
+    DefaultAggregation,
+    ExplicitBucketHistogramAggregation,
+    LastValueAggregation,
+    SumAggregation,
+)
 from opentelemetry.util.types import Attributes
 
 

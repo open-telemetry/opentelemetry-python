@@ -25,19 +25,13 @@ class TestImport(TestCase):
 
         try:
             from opentelemetry.sdk._metrics import (  # noqa: F401
-                Aggregation,
                 Counter,
-                DefaultAggregation,
-                DropAggregation,
-                ExplicitBucketHistogramAggregation,
                 Histogram,
-                LastValueAggregation,
                 Meter,
                 MeterProvider,
                 ObservableCounter,
                 ObservableGauge,
                 ObservableUpDownCounter,
-                SumAggregation,
                 UpDownCounter,
             )
         except Exception as error:
@@ -62,6 +56,24 @@ class TestImport(TestCase):
                 PeriodicExportingMetricReader,
                 PointT,
                 Sum,
+            )
+        except Exception as error:
+            self.fail(f"Unexpected error {error} was raised")
+
+    def test_import_view(self):
+        """
+        Test that the metrics view module has the right symbols
+        """
+
+        try:
+            from opentelemetry.sdk._metrics.view import (  # noqa: F401
+                Aggregation,
+                DefaultAggregation,
+                DropAggregation,
+                ExplicitBucketHistogramAggregation,
+                LastValueAggregation,
+                SumAggregation,
+                View,
             )
         except Exception as error:
             self.fail(f"Unexpected error {error} was raised")

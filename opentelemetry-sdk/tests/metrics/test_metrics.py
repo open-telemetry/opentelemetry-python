@@ -28,9 +28,7 @@ from opentelemetry.sdk._metrics import (
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
-    SumAggregation,
     UpDownCounter,
-    View,
 )
 from opentelemetry.sdk._metrics.export import (
     Metric,
@@ -39,6 +37,7 @@ from opentelemetry.sdk._metrics.export import (
     MetricReader,
     PeriodicExportingMetricReader,
 )
+from opentelemetry.sdk._metrics.view import SumAggregation, View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
 

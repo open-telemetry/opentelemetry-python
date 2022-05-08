@@ -17,14 +17,9 @@ from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.sdk._metrics import (
     Counter,
-    DefaultAggregation,
-    DropAggregation,
-    ExplicitBucketHistogramAggregation,
     Histogram,
     ObservableCounter,
-    SumAggregation,
     UpDownCounter,
-    View,
 )
 from opentelemetry.sdk._metrics._internal.measurement import Measurement
 from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
@@ -35,6 +30,13 @@ from opentelemetry.sdk._metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
 from opentelemetry.sdk._metrics.export import AggregationTemporality
+from opentelemetry.sdk._metrics.view import (
+    DefaultAggregation,
+    DropAggregation,
+    ExplicitBucketHistogramAggregation,
+    SumAggregation,
+    View,
+)
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
 
 

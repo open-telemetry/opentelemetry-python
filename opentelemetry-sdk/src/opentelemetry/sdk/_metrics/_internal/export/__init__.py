@@ -168,7 +168,7 @@ class MetricReader(ABC):
         self,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
         preferred_aggregation: Dict[
-            type, "opentelemetry.sdk._metrics.Aggregation"
+            type, "opentelemetry.sdk._metrics.view.Aggregation"
         ] = None,
     ) -> None:
         self._collect: Callable[
@@ -292,7 +292,7 @@ class InMemoryMetricReader(MetricReader):
         self,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
         preferred_aggregation: Dict[
-            type, "opentelemetry.sdk._metrics.Aggregation"
+            type, "opentelemetry.sdk._metrics.view.Aggregation"
         ] = None,
     ) -> None:
         super().__init__(
@@ -334,7 +334,7 @@ class PeriodicExportingMetricReader(MetricReader):
         exporter: MetricExporter,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
         preferred_aggregation: Dict[
-            type, "opentelemetry.sdk._metrics.Aggregation"
+            type, "opentelemetry.sdk._metrics.view.Aggregation"
         ] = None,
         export_interval_millis: Optional[float] = None,
         export_timeout_millis: Optional[float] = None,

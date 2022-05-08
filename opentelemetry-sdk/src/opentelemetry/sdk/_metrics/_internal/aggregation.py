@@ -95,16 +95,16 @@ class DefaultAggregation(Aggregation):
     This aggregation will create an actual aggregation depending on the
     instrument type, as specified next:
 
-    ============================================= ====================================
-    Instrument                                    Aggregation
-    ============================================= ====================================
-    `Counter`                                     `SumAggregation`
-    `UpDownCounter`                               `SumAggregation`
-    `ObservableCounter`                           `SumAggregation`
-    `ObservableUpDownCounter`                     `SumAggregation`
-    `opentelemetry._metrics.Histogram`            `ExplicitBucketHistogramAggregation`
-    `ObservableGauge`                             `LastValueAggregation`
-    ============================================= ====================================
+    ==================================================== ====================================
+    Instrument                                           Aggregation
+    ==================================================== ====================================
+    `opentelemetry.sdk._metrics.Counter`                 `SumAggregation`
+    `opentelemetry.sdk._metrics.UpDownCounter`           `SumAggregation`
+    `opentelemetry.sdk._metrics.ObservableCounter`       `SumAggregation`
+    `opentelemetry.sdk._metrics.ObservableUpDownCounter` `SumAggregation`
+    `opentelemetry.sdk._metrics.Histogram`               `ExplicitBucketHistogramAggregation`
+    `opentelemetry.sdk._metrics.ObservableGauge`         `LastValueAggregation`
+    ==================================================== ====================================
     """
 
     def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
