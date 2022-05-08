@@ -18,12 +18,12 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
 from opentelemetry.proto.logs.v1.logs_pb2 import (
-    InstrumentationLibraryLogs,
+    ScopeLogs,
     ResourceLogs,
 )
 from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord as PB2LogRecord
 from opentelemetry.exporter.otlp.proto.http.trace_exporter.encoder import (
-    _encode_instrumentation_library,
+    _encode_instrumentation_scope,
     _encode_resource,
     _encode_span_id,
     _encode_trace_id,
@@ -59,7 +59,6 @@ def _encode_log(log_data: LogData) -> PB2LogRecord:
     kwargs["severity_text"] = log_data.log_record.severity_text
     kwargs["attributes"] = _encode_attributes(log_data.log_record.attributes)
     kwargs["severity_number"] = log_data.log_record.severity_number.value
-    kwargs["name"] = log_data.log_record.name
 
     return PB2LogRecord(**kwargs)
 
@@ -70,7 +69,7 @@ def _encode_resource_logs(batch: Sequence[LogData]) -> List[ResourceLogs]:
 
     for sdk_log in batch:
         sdk_resource = sdk_log.log_record.resource
-        sdk_instrumentation = sdk_log.instrumentation_info or None
+        sdk_instrumentation = sdk_log.instrumentation_scope or None
         pb2_log = _encode_log(sdk_log)
 
         if sdk_resource not in sdk_resource_logs.keys():
@@ -85,20 +84,18 @@ def _encode_resource_logs(batch: Sequence[LogData]) -> List[ResourceLogs]:
     pb2_resource_logs = []
 
     for sdk_resource, sdk_instrumentations in sdk_resource_logs.items():
-        instrumentation_library_logs = []
+        scope_logs = []
         for sdk_instrumentation, pb2_logs in sdk_instrumentations.items():
-            instrumentation_library_logs.append(
-                InstrumentationLibraryLogs(
-                    instrumentation_library=(
-                        _encode_instrumentation_library(sdk_instrumentation)
-                    ),
+            scope_logs.append(
+                ScopeLogs(
+                    scope=(_encode_instrumentation_scope(sdk_instrumentation)),
                     log_records=pb2_logs,
                 )
             )
         pb2_resource_logs.append(
             ResourceLogs(
                 resource=_encode_resource(sdk_resource),
-                instrumentation_library_logs=instrumentation_library_logs,
+                scope_logs=scope_logs,
             )
         )
 

@@ -37,16 +37,14 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
 )
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue as PB2AnyValue
 from opentelemetry.proto.common.v1.common_pb2 import (
-    InstrumentationLibrary as PB2InstrumentationLibrary,
+    InstrumentationScope as PB2InstrumentationScope,
 )
 from opentelemetry.proto.common.v1.common_pb2 import KeyValue as PB2KeyValue
-from opentelemetry.proto.logs.v1.logs_pb2 import (
-    InstrumentationLibraryLogs as PB2InstrumentationLibraryLogs,
-)
 from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord as PB2LogRecord
 from opentelemetry.proto.logs.v1.logs_pb2 import (
     ResourceLogs as PB2ResourceLogs,
 )
+from opentelemetry.proto.logs.v1.logs_pb2 import ScopeLogs as PB2ScopeLogs
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
 )
@@ -61,7 +59,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import TraceFlags
 
 ENV_ENDPOINT = "http://localhost.env:8080/logs"
@@ -159,12 +157,11 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 trace_flags=TraceFlags(0x01),
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
-                name="name",
                 body="Do not go gentle into that good night. Rage, rage against the dying of the light",
                 resource=SDKResource({"first_resource": "value"}),
                 attributes={"a": 1, "b": "c"},
             ),
-            instrumentation_info=InstrumentationInfo(
+            instrumentation_scope=InstrumentationScope(
                 "first_name", "first_version"
             ),
         )
@@ -177,12 +174,11 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 trace_flags=TraceFlags.DEFAULT,
                 severity_text="WARN",
                 severity_number=SeverityNumber.WARN,
-                name="name",
                 body="Cooper, this is no time for caution!",
                 resource=SDKResource({"second_resource": "CASE"}),
                 attributes={},
             ),
-            instrumentation_info=InstrumentationInfo(
+            instrumentation_scope=InstrumentationScope(
                 "second_name", "second_version"
             ),
         )
@@ -195,12 +191,11 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 trace_flags=TraceFlags(0x01),
                 severity_text="DEBUG",
                 severity_number=SeverityNumber.DEBUG,
-                name="name",
                 body="To our galaxy",
                 resource=SDKResource({"second_resource": "CASE"}),
                 attributes={"a": 1, "b": "c"},
             ),
-            instrumentation_info=None,
+            instrumentation_scope=None,
         )
 
         log4 = LogData(
@@ -211,12 +206,11 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                 trace_flags=TraceFlags(0x01),
                 severity_text="INFO",
                 severity_number=SeverityNumber.INFO,
-                name="name",
                 body="Love is the one thing that transcends time and space",
                 resource=SDKResource({"first_resource": "value"}),
                 attributes={"filename": "model.py", "func_name": "run_method"},
             ),
-            instrumentation_info=InstrumentationInfo(
+            instrumentation_scope=InstrumentationScope(
                 "another_name", "another_version"
             ),
         )
@@ -239,9 +233,9 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                             )
                         ]
                     ),
-                    instrumentation_library_logs=[
-                        PB2InstrumentationLibraryLogs(
-                            instrumentation_library=PB2InstrumentationLibrary(
+                    scope_logs=[
+                        PB2ScopeLogs(
+                            scope=PB2InstrumentationScope(
                                 name="first_name", version="first_version"
                             ),
                             log_records=[
@@ -256,7 +250,6 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                                     flags=int(TraceFlags(0x01)),
                                     severity_text="WARN",
                                     severity_number=SeverityNumber.WARN.value,
-                                    name="name",
                                     body=_encode_value(
                                         "Do not go gentle into that good night. Rage, rage against the dying of the light"
                                     ),
@@ -266,8 +259,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                                 )
                             ],
                         ),
-                        PB2InstrumentationLibraryLogs(
-                            instrumentation_library=PB2InstrumentationLibrary(
+                        PB2ScopeLogs(
+                            scope=PB2InstrumentationScope(
                                 name="another_name",
                                 version="another_version",
                             ),
@@ -283,7 +276,6 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                                     flags=int(TraceFlags(0x01)),
                                     severity_text="INFO",
                                     severity_number=SeverityNumber.INFO.value,
-                                    name="name",
                                     body=_encode_value(
                                         "Love is the one thing that transcends time and space"
                                     ),
@@ -307,9 +299,9 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                             )
                         ]
                     ),
-                    instrumentation_library_logs=[
-                        PB2InstrumentationLibraryLogs(
-                            instrumentation_library=PB2InstrumentationLibrary(
+                    scope_logs=[
+                        PB2ScopeLogs(
+                            scope=PB2InstrumentationScope(
                                 name="second_name",
                                 version="second_version",
                             ),
@@ -321,7 +313,6 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                                     flags=int(TraceFlags.DEFAULT),
                                     severity_text="WARN",
                                     severity_number=SeverityNumber.WARN.value,
-                                    name="name",
                                     body=_encode_value(
                                         "Cooper, this is no time for caution!"
                                     ),
@@ -329,8 +320,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                                 ),
                             ],
                         ),
-                        PB2InstrumentationLibraryLogs(
-                            instrumentation_library=PB2InstrumentationLibrary(),
+                        PB2ScopeLogs(
+                            scope=PB2InstrumentationScope(),
                             log_records=[
                                 PB2LogRecord(
                                     time_unix_nano=1644650427658989056,
@@ -343,7 +334,6 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
                                     flags=int(TraceFlags(0x01)),
                                     severity_text="DEBUG",
                                     severity_number=SeverityNumber.DEBUG.value,
-                                    name="name",
                                     body=_encode_value("To our galaxy"),
                                     attributes=_encode_attributes(
                                         {"a": 1, "b": "c"}
