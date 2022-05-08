@@ -29,7 +29,7 @@ from opentelemetry.sdk._metrics._internal.measurement import Measurement
 from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
 )
-from opentelemetry.sdk._metrics.export import Metric
+from opentelemetry.sdk._metrics._internal.point import Metric
 
 
 class MeasurementConsumer(ABC):

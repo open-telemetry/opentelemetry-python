@@ -18,7 +18,6 @@ from threading import Lock
 from typing import Optional, Sequence
 
 import opentelemetry.sdk._metrics
-import opentelemetry.sdk._metrics.export
 from opentelemetry._metrics import Counter as APICounter
 from opentelemetry._metrics import Histogram as APIHistogram
 from opentelemetry._metrics import Meter as APIMeter

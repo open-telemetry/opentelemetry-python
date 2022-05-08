@@ -26,11 +26,11 @@ from opentelemetry.sdk._metrics._internal.aggregation import (
     ExplicitBucketHistogramAggregation,
 )
 from opentelemetry.sdk._metrics._internal.measurement import Measurement
+from opentelemetry.sdk._metrics._internal.point import Metric
 from opentelemetry.sdk._metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
 from opentelemetry.sdk._metrics._internal.view import View
-from opentelemetry.sdk._metrics.export import Metric
 
 _logger = getLogger(__name__)
 
