@@ -20,7 +20,6 @@ from opentelemetry.sdk._metrics._internal import (  # noqa: F401
 )
 from opentelemetry.sdk._metrics._internal.aggregation import (  # noqa: F401
     Aggregation,
-    AggregationTemporality,
     DefaultAggregation,
     DropAggregation,
     ExplicitBucketHistogramAggregation,

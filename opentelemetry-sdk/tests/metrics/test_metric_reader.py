@@ -19,7 +19,6 @@ from unittest.mock import patch
 
 from opentelemetry.sdk._metrics import (
     Aggregation,
-    AggregationTemporality,
     Counter,
     DefaultAggregation,
     Histogram,
@@ -29,7 +28,11 @@ from opentelemetry.sdk._metrics import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk._metrics.export import Metric, MetricReader
+from opentelemetry.sdk._metrics.export import (
+    AggregationTemporality,
+    Metric,
+    MetricReader,
+)
 from opentelemetry.sdk.environment_variables import (
     _OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
 )

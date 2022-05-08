@@ -45,6 +45,18 @@ _PointVarT = TypeVar("_PointVarT", bound=PointT)
 _logger = getLogger(__name__)
 
 
+class AggregationTemporality(IntEnum):
+    """
+    The temporality to use when aggregating data.
+
+    Can be one of the following values:
+    """
+
+    UNSPECIFIED = 0
+    DELTA = 1
+    CUMULATIVE = 2
+
+
 class _Aggregation(ABC, Generic[_PointVarT]):
     def __init__(self):
         self._lock = Lock()
@@ -64,18 +76,6 @@ class _DropAggregation(_Aggregation):
 
     def collect(self) -> Optional[_PointVarT]:
         pass
-
-
-class AggregationTemporality(IntEnum):
-    """
-    The temporality to use when aggregating data.
-
-    Can be one of the following values:
-    """
-
-    UNSPECIFIED = 0
-    DELTA = 1
-    CUMULATIVE = 2
 
 
 class Aggregation(ABC):

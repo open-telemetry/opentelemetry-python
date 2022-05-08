@@ -16,7 +16,6 @@ from logging import WARNING
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.sdk._metrics import (
-    AggregationTemporality,
     Counter,
     DefaultAggregation,
     DropAggregation,
@@ -35,6 +34,7 @@ from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
 from opentelemetry.sdk._metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
+from opentelemetry.sdk._metrics.export import AggregationTemporality
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
 
 

@@ -22,9 +22,7 @@ import opentelemetry.sdk._metrics
 import opentelemetry.sdk._metrics._internal.instrument
 import opentelemetry.sdk._metrics._internal.sdk_configuration
 from opentelemetry._metrics._internal.instrument import CallbackOptions
-from opentelemetry.sdk._metrics._internal.aggregation import (
-    AggregationTemporality,
-)
+from opentelemetry.sdk._metrics._internal.export import AggregationTemporality
 from opentelemetry.sdk._metrics._internal.measurement import Measurement
 from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
     MetricReaderStorage,

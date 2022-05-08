@@ -20,13 +20,13 @@ from typing import Dict, Iterable
 from opentelemetry._metrics import Instrument
 from opentelemetry.sdk._metrics._internal.aggregation import (
     Aggregation,
-    AggregationTemporality,
     DefaultAggregation,
     _Aggregation,
     _convert_aggregation_temporality,
     _PointVarT,
     _SumAggregation,
 )
+from opentelemetry.sdk._metrics._internal.export import AggregationTemporality
 from opentelemetry.sdk._metrics._internal.measurement import Measurement
 from opentelemetry.sdk._metrics._internal.point import Metric
 from opentelemetry.sdk._metrics._internal.sdk_configuration import (

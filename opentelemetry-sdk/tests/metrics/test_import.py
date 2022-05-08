@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=unused-import
+
 from unittest import TestCase
 
 
@@ -22,9 +24,8 @@ class TestImport(TestCase):
         """
 
         try:
-            from opentelemetry.sdk._metrics import (
+            from opentelemetry.sdk._metrics import (  # noqa: F401
                 Aggregation,
-                AggregationTemporality,
                 Counter,
                 DefaultAggregation,
                 DropAggregation,
@@ -39,23 +40,6 @@ class TestImport(TestCase):
                 SumAggregation,
                 UpDownCounter,
             )
-
-            Meter
-            MeterProvider
-            Aggregation
-            AggregationTemporality
-            DefaultAggregation
-            DropAggregation
-            ExplicitBucketHistogramAggregation
-            LastValueAggregation
-            SumAggregation
-            Counter
-            Histogram
-            ObservableCounter
-            ObservableGauge
-            ObservableUpDownCounter
-            UpDownCounter
-
         except Exception as error:
             self.fail(f"Unexpected error {error} was raised")
 
@@ -65,7 +49,8 @@ class TestImport(TestCase):
         """
 
         try:
-            from opentelemetry.sdk._metrics.export import (
+            from opentelemetry.sdk._metrics.export import (  # noqa: F401
+                AggregationTemporality,
                 ConsoleMetricExporter,
                 Gauge,
                 Histogram,
@@ -78,17 +63,5 @@ class TestImport(TestCase):
                 PointT,
                 Sum,
             )
-
-            ConsoleMetricExporter
-            InMemoryMetricReader
-            MetricExporter
-            MetricExportResult
-            MetricReader
-            PeriodicExportingMetricReader
-            Gauge
-            Histogram
-            Metric
-            PointT
-            Sum
         except Exception as error:
             self.fail(f"Unexpected error {error} was raised")

@@ -17,6 +17,7 @@
 from sys import version_info as _version_info
 
 from opentelemetry.sdk._metrics._internal.export import (  # noqa: F401
+    AggregationTemporality,
     ConsoleMetricExporter,
     InMemoryMetricReader,
     MetricExporter,

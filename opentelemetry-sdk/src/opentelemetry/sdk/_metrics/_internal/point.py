@@ -29,7 +29,9 @@ class Sum:
     """Represents the type of a scalar metric that is calculated as a sum of
     all reported measurements over a time interval."""
 
-    aggregation_temporality: "opentelemetry.sdk._metrics.AggregationTemporality"
+    aggregation_temporality: (
+        "opentelemetry.sdk._metrics.export.AggregationTemporality"
+    )
     is_monotonic: bool
     start_time_unix_nano: int
     time_unix_nano: int
@@ -51,7 +53,9 @@ class Histogram:
     """Represents the type of a metric that is calculated by aggregating as a
     histogram of all reported measurements over a time interval."""
 
-    aggregation_temporality: "opentelemetry.sdk._metrics.AggregationTemporality"
+    aggregation_temporality: (
+        "opentelemetry.sdk._metrics.export.AggregationTemporality"
+    )
     bucket_counts: Sequence[int]
     explicit_bounds: Sequence[float]
     max: int

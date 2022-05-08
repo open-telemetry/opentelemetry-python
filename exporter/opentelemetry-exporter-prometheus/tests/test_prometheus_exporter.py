@@ -23,8 +23,7 @@ from opentelemetry.exporter.prometheus import (
     PrometheusMetricReader,
     _CustomCollector,
 )
-from opentelemetry.sdk._metrics import AggregationTemporality
-from opentelemetry.sdk._metrics.export import Histogram
+from opentelemetry.sdk._metrics.export import AggregationTemporality, Histogram
 from opentelemetry.test.metrictestutil import (
     _generate_gauge,
     _generate_metric,

@@ -16,8 +16,13 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 from opentelemetry._metrics import Observation
-from opentelemetry.sdk._metrics import AggregationTemporality, MeterProvider
-from opentelemetry.sdk._metrics.export import InMemoryMetricReader, Metric, Sum
+from opentelemetry.sdk._metrics import MeterProvider
+from opentelemetry.sdk._metrics.export import (
+    AggregationTemporality,
+    InMemoryMetricReader,
+    Metric,
+    Sum,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 

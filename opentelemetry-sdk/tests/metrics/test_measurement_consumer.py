@@ -15,7 +15,6 @@
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
-from opentelemetry.sdk._metrics import AggregationTemporality
 from opentelemetry.sdk._metrics._internal.measurement_consumer import (
     MeasurementConsumer,
     SynchronousMeasurementConsumer,
@@ -23,6 +22,7 @@ from opentelemetry.sdk._metrics._internal.measurement_consumer import (
 from opentelemetry.sdk._metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
+from opentelemetry.sdk._metrics.export import AggregationTemporality
 
 
 @patch(

@@ -22,9 +22,9 @@ from opentelemetry.sdk._metrics._internal._view_instrument_match import (
 )
 from opentelemetry.sdk._metrics._internal.aggregation import (
     Aggregation,
-    AggregationTemporality,
     ExplicitBucketHistogramAggregation,
 )
+from opentelemetry.sdk._metrics._internal.export import AggregationTemporality
 from opentelemetry.sdk._metrics._internal.measurement import Measurement
 from opentelemetry.sdk._metrics._internal.point import Metric
 from opentelemetry.sdk._metrics._internal.sdk_configuration import (
