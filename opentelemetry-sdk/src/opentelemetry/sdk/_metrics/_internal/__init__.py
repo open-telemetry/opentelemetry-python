@@ -376,12 +376,35 @@ class MeterProvider(APIMeterProvider):
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         deadline_ns = _time_ns() + timeout_millis * 10**6
 
+        metric_reader_error = {}
+
         for metric_reader in self._sdk_config.metric_readers:
             current_ts = _time_ns()
-            if current_ts >= deadline_ns:
-                raise Exception("Timed out while flushing metric readers")
-            metric_reader.collect(
-                timeout_millis=(deadline_ns - current_ts) / 10**6
+            try:
+                if current_ts >= deadline_ns:
+                    raise Exception("Timed out while flushing metric readers")
+                metric_reader.collect(
+                    timeout_millis=(deadline_ns - current_ts) / 10**6
+                )
+
+            # pylint: disable=broad-except
+            except Exception as error:
+
+                metric_reader_error[metric_reader] = error
+
+        if metric_reader_error:
+
+            metric_reader_error_string = "\n".join(
+                [
+                    f"{metric_reader.__class__.__name__}: {repr(error)}"
+                    for metric_reader, error in metric_reader_error.items()
+                ]
+            )
+
+            raise Exception(
+                "MeterProvider.force_flush failed because the following "
+                "metric readers failed during collect:\n"
+                f"{metric_reader_error_string}"
             )
         return True
 
