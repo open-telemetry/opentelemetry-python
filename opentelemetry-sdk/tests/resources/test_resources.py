@@ -516,3 +516,22 @@ class TestOTELResourceDetector(unittest.TestCase):
             detector.detect(),
             resources.Resource({"service.name": "from-service-name"}),
         )
+
+    def test_process_detector(self):
+        initial_resource = resources.Resource({"foo": "bar"})
+        aggregated_resource = resources.get_aggregated_resources(
+            [resources.ProcessResourceDetector()], initial_resource
+        )
+
+        self.assertIn(
+            resources.PROCESS_RUNTIME_NAME,
+            aggregated_resource.attributes.keys(),
+        )
+        self.assertIn(
+            resources.PROCESS_RUNTIME_DESCRIPTION,
+            aggregated_resource.attributes.keys(),
+        )
+        self.assertIn(
+            resources.PROCESS_RUNTIME_VERSION,
+            aggregated_resource.attributes.keys(),
+        )
