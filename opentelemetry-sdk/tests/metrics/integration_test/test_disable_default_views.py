@@ -31,8 +31,15 @@ class TestDisableDefaultViews(TestCase):
         counter.add(10, {"label": "value1"})
         counter.add(10, {"label": "value2"})
         counter.add(10, {"label": "value3"})
-
-        self.assertEqual(reader.get_metrics(), [])
+        self.assertEqual(
+            (
+                reader.get_metrics_data()
+                .resource_metrics[0]
+                .scope_metrics[0]
+                .metrics
+            ),
+            [],
+        )
 
     def test_disable_default_views_add_custom(self):
         reader = InMemoryMetricReader()
@@ -51,6 +58,16 @@ class TestDisableDefaultViews(TestCase):
         counter.add(10, {"label": "value3"})
         histogram.record(12, {"label": "value"})
 
-        metrics = reader.get_metrics()
-        self.assertEqual(len(metrics), 1)
-        self.assertEqual(metrics[0].name, "testhist")
+        metrics = reader.get_metrics_data()
+        self.assertEqual(len(metrics.resource_metrics), 1)
+        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics), 2)
+        self.assertEqual(
+            len(metrics.resource_metrics[0].scope_metrics[0].metrics), 0
+        )
+        self.assertEqual(
+            len(metrics.resource_metrics[0].scope_metrics[1].metrics), 1
+        )
+        self.assertEqual(
+            metrics.resource_metrics[0].scope_metrics[1].metrics[0].name,
+            "testhist",
+        )

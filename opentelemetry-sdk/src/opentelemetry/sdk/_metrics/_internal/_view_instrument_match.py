@@ -22,16 +22,11 @@ from opentelemetry.sdk._metrics._internal.aggregation import (
     Aggregation,
     DefaultAggregation,
     _Aggregation,
-    _convert_aggregation_temporality,
-    _PointVarT,
     _SumAggregation,
 )
 from opentelemetry.sdk._metrics._internal.export import AggregationTemporality
 from opentelemetry.sdk._metrics._internal.measurement import Measurement
-from opentelemetry.sdk._metrics._internal.point import Metric
-from opentelemetry.sdk._metrics._internal.sdk_configuration import (
-    SdkConfiguration,
-)
+from opentelemetry.sdk._metrics._internal.point import DataPointT
 from opentelemetry.sdk._metrics._internal.view import View
 
 _logger = getLogger(__name__)
@@ -42,17 +37,12 @@ class _ViewInstrumentMatch:
         self,
         view: View,
         instrument: Instrument,
-        sdk_config: SdkConfiguration,
-        instrument_class_temporality: Dict[type, AggregationTemporality],
         instrument_class_aggregation: Dict[type, Aggregation],
     ):
         self._view = view
         self._instrument = instrument
-        self._sdk_config = sdk_config
         self._attributes_aggregation: Dict[frozenset, _Aggregation] = {}
-        self._attributes_previous_point: Dict[frozenset, _PointVarT] = {}
         self._lock = Lock()
-        self._instrument_class_temporality = instrument_class_temporality
         self._instrument_class_aggregation = instrument_class_aggregation
         self._name = self._view._name or self._instrument.name
         self._description = (
@@ -124,46 +114,15 @@ class _ViewInstrumentMatch:
 
         self._attributes_aggregation[attributes].aggregate(measurement)
 
-    def collect(self) -> Iterable[Metric]:
+    def collect(
+        self, aggregation_temporality: AggregationTemporality
+    ) -> Iterable[DataPointT]:
 
+        data_points = []
         with self._lock:
-            for (
-                attributes,
-                aggregation,
-            ) in self._attributes_aggregation.items():
-
-                previous_point = self._attributes_previous_point.get(
-                    attributes
+            for aggregation in self._attributes_aggregation.values():
+                data_points.append(
+                    aggregation.collect(aggregation_temporality)
                 )
 
-                current_point = aggregation.collect()
-
-                # pylint: disable=assignment-from-none
-
-                self._attributes_previous_point[
-                    attributes
-                ] = _convert_aggregation_temporality(
-                    previous_point,
-                    current_point,
-                    AggregationTemporality.CUMULATIVE,
-                )
-
-                if current_point is not None:
-
-                    yield Metric(
-                        attributes=dict(attributes),
-                        description=self._description,
-                        instrumentation_scope=(
-                            self._instrument.instrumentation_scope
-                        ),
-                        name=self._name,
-                        resource=self._sdk_config.resource,
-                        unit=self._instrument.unit,
-                        point=_convert_aggregation_temporality(
-                            previous_point,
-                            current_point,
-                            self._instrument_class_temporality[
-                                self._instrument.__class__
-                            ],
-                        ),
-                    )
+        return data_points

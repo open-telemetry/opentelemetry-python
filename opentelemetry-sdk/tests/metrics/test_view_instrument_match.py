@@ -27,7 +27,7 @@ from opentelemetry.sdk._metrics._internal.measurement import Measurement
 from opentelemetry.sdk._metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
-from opentelemetry.sdk._metrics.export import AggregationTemporality, Metric
+from opentelemetry.sdk._metrics.export import AggregationTemporality
 from opentelemetry.sdk._metrics.view import (
     DefaultAggregation,
     DropAggregation,
@@ -63,12 +63,6 @@ class Test_ViewInstrumentMatch(TestCase):
                 attribute_keys={"a", "c"},
             ),
             instrument=instrument1,
-            sdk_config=self.sdk_configuration,
-            instrument_class_temporality=MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
             instrument_class_aggregation=MagicMock(
                 **{"__getitem__.return_value": DefaultAggregation()}
             ),
@@ -110,12 +104,6 @@ class Test_ViewInstrumentMatch(TestCase):
                 aggregation=self.mock_aggregation_factory,
             ),
             instrument=instrument1,
-            sdk_config=self.sdk_configuration,
-            instrument_class_temporality=MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
             instrument_class_aggregation=MagicMock(
                 **{"__getitem__.return_value": DefaultAggregation()}
             ),
@@ -147,12 +135,6 @@ class Test_ViewInstrumentMatch(TestCase):
                 attribute_keys={},
             ),
             instrument=instrument1,
-            sdk_config=self.sdk_configuration,
-            instrument_class_temporality=MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
             instrument_class_aggregation=MagicMock(
                 **{"__getitem__.return_value": DefaultAggregation()}
             ),
@@ -177,12 +159,6 @@ class Test_ViewInstrumentMatch(TestCase):
                 attribute_keys={},
             ),
             instrument=instrument1,
-            sdk_config=self.sdk_configuration,
-            instrument_class_temporality=MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
             instrument_class_aggregation=MagicMock(
                 **{"__getitem__.return_value": DefaultAggregation()}
             ),
@@ -196,24 +172,22 @@ class Test_ViewInstrumentMatch(TestCase):
         )
 
     def test_collect(self):
-        instrument1 = Mock(
-            name="instrument1", description="description", unit="unit"
+        instrument1 = Counter(
+            "instrument1",
+            Mock(),
+            Mock(),
+            description="description",
+            unit="unit",
         )
         instrument1.instrumentation_scope = self.mock_instrumentation_scope
         view_instrument_match = _ViewInstrumentMatch(
             view=View(
                 instrument_name="instrument1",
                 name="name",
-                aggregation=self.mock_aggregation_factory,
+                aggregation=DefaultAggregation(),
                 attribute_keys={"a", "c"},
             ),
             instrument=instrument1,
-            sdk_config=self.sdk_configuration,
-            instrument_class_temporality=MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
             instrument_class_aggregation=MagicMock(
                 **{"__getitem__.return_value": DefaultAggregation()}
             ),
@@ -226,18 +200,16 @@ class Test_ViewInstrumentMatch(TestCase):
                 attributes={"c": "d", "f": "g"},
             )
         )
-        self.assertEqual(
-            next(view_instrument_match.collect()),
-            Metric(
-                attributes={"c": "d"},
-                description="description",
-                instrumentation_scope=self.mock_instrumentation_scope,
-                name="name",
-                resource=self.mock_resource,
-                unit="unit",
-                point=None,
-            ),
+
+        number_data_points = view_instrument_match.collect(
+            AggregationTemporality.CUMULATIVE
         )
+        self.assertEqual(len(number_data_points), 1)
+
+        number_data_point = number_data_points[0]
+
+        self.assertEqual(number_data_point.attributes, frozenset({("c", "d")}))
+        self.assertEqual(number_data_point.value, 0)
 
     def test_setting_aggregation(self):
         instrument1 = Counter(
@@ -256,12 +228,6 @@ class Test_ViewInstrumentMatch(TestCase):
                 attribute_keys={"a", "c"},
             ),
             instrument=instrument1,
-            sdk_config=self.sdk_configuration,
-            instrument_class_temporality=MagicMock(
-                **{
-                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                }
-            ),
             instrument_class_aggregation={Counter: LastValueAggregation()},
         )
 
