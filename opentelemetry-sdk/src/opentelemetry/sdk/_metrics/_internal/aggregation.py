@@ -39,6 +39,7 @@ from opentelemetry.sdk._metrics._internal.point import (
 )
 from opentelemetry.sdk._metrics._internal.point import PointT, Sum
 from opentelemetry.util._time import _time_ns
+from opentelemetry.util.types import Attributes
 
 _PointVarT = TypeVar("_PointVarT", bound=PointT)
 
@@ -58,8 +59,9 @@ class AggregationTemporality(IntEnum):
 
 
 class _Aggregation(ABC, Generic[_PointVarT]):
-    def __init__(self):
+    def __init__(self, attributes: Attributes):
         self._lock = Lock()
+        self._attributes = attributes
 
     @abstractmethod
     def aggregate(self, measurement: Measurement) -> None:
@@ -84,7 +86,9 @@ class Aggregation(ABC):
     """
 
     @abstractmethod
-    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
+    def _create_aggregation(
+        self, instrument: Instrument, attributes: Attributes
+    ) -> _Aggregation:
         """Creates an aggregation"""
 
 
@@ -107,37 +111,43 @@ class DefaultAggregation(Aggregation):
     ==================================================== ====================================
     """
 
-    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
+    def _create_aggregation(
+        self, instrument: Instrument, attributes: Attributes
+    ) -> _Aggregation:
 
         # pylint: disable=too-many-return-statements
         if isinstance(instrument, Counter):
             return _SumAggregation(
+                attributes,
                 instrument_is_monotonic=True,
                 instrument_temporality=AggregationTemporality.DELTA,
             )
         if isinstance(instrument, UpDownCounter):
             return _SumAggregation(
+                attributes,
                 instrument_is_monotonic=False,
                 instrument_temporality=AggregationTemporality.DELTA,
             )
 
         if isinstance(instrument, ObservableCounter):
             return _SumAggregation(
+                attributes,
                 instrument_is_monotonic=True,
                 instrument_temporality=AggregationTemporality.CUMULATIVE,
             )
 
         if isinstance(instrument, ObservableUpDownCounter):
             return _SumAggregation(
+                attributes,
                 instrument_is_monotonic=False,
                 instrument_temporality=AggregationTemporality.CUMULATIVE,
             )
 
         if isinstance(instrument, Histogram):
-            return _ExplicitBucketHistogramAggregation()
+            return _ExplicitBucketHistogramAggregation(attributes)
 
         if isinstance(instrument, ObservableGauge):
-            return _LastValueAggregation()
+            return _LastValueAggregation(attributes)
 
         raise Exception(f"Invalid instrument type {type(instrument)} found")
 
@@ -145,10 +155,11 @@ class DefaultAggregation(Aggregation):
 class _SumAggregation(_Aggregation[Sum]):
     def __init__(
         self,
+        attributes: Attributes,
         instrument_is_monotonic: bool,
         instrument_temporality: AggregationTemporality,
     ):
-        super().__init__()
+        super().__init__(attributes)
 
         self._start_time_unix_nano = _time_ns()
         self._instrument_temporality = instrument_temporality
@@ -205,8 +216,8 @@ class _SumAggregation(_Aggregation[Sum]):
 
 
 class _LastValueAggregation(_Aggregation[Gauge]):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, attributes: Attributes):
+        super().__init__(attributes)
         self._value = None
 
     def aggregate(self, measurement: Measurement):
@@ -232,6 +243,7 @@ class _LastValueAggregation(_Aggregation[Gauge]):
 class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     def __init__(
         self,
+        attributes: Attributes,
         boundaries: Sequence[float] = (
             0.0,
             5.0,
@@ -246,7 +258,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         ),
         record_min_max: bool = True,
     ):
-        super().__init__()
+        super().__init__(attributes)
         self._boundaries = tuple(boundaries)
         self._bucket_counts = self._get_empty_bucket_counts()
         self._min = inf
@@ -464,10 +476,13 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         self._boundaries = boundaries
         self._record_min_max = record_min_max
 
-    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
+    def _create_aggregation(
+        self, instrument: Instrument, attributes: Attributes
+    ) -> _Aggregation:
         return _ExplicitBucketHistogramAggregation(
-            boundaries=self._boundaries,
-            record_min_max=self._record_min_max,
+            attributes,
+            self._boundaries,
+            self._record_min_max,
         )
 
 
@@ -477,7 +492,9 @@ class SumAggregation(Aggregation):
     - The arithmetic sum of Measurement values.
     """
 
-    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
+    def _create_aggregation(
+        self, instrument: Instrument, attributes: Attributes
+    ) -> _Aggregation:
 
         temporality = AggregationTemporality.UNSPECIFIED
         if isinstance(instrument, Synchronous):
@@ -486,6 +503,7 @@ class SumAggregation(Aggregation):
             temporality = AggregationTemporality.CUMULATIVE
 
         return _SumAggregation(
+            attributes,
             isinstance(instrument, (Counter, ObservableCounter)),
             temporality,
         )
@@ -499,12 +517,16 @@ class LastValueAggregation(Aggregation):
     - The timestamp of the last Measurement.
     """
 
-    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
-        return _LastValueAggregation()
+    def _create_aggregation(
+        self, instrument: Instrument, attributes: Attributes
+    ) -> _Aggregation:
+        return _LastValueAggregation(attributes)
 
 
 class DropAggregation(Aggregation):
     """Using this aggregation will make all measurements be ignored."""
 
-    def _create_aggregation(self, instrument: Instrument) -> _Aggregation:
-        return _DropAggregation()
+    def _create_aggregation(
+        self, instrument: Instrument, attributes: Attributes
+    ) -> _Aggregation:
+        return _DropAggregation(attributes)
