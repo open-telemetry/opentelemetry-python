@@ -32,12 +32,12 @@ from opentelemetry._metrics import CallbackOptions, Observation
 from opentelemetry.sdk._metrics import MeterProvider
 from opentelemetry.sdk._metrics._internal.export import InMemoryMetricReader
 from opentelemetry.sdk._metrics.export import (
+    Metric,
     MetricExporter,
     MetricExportResult,
+    MetricReader,
     PeriodicExportingMetricReader,
 )
-from opentelemetry.sdk._metrics.metric_reader import MetricReader
-from opentelemetry.sdk._metrics.point import Metric
 
 
 # Do not change these classes until after major version 1

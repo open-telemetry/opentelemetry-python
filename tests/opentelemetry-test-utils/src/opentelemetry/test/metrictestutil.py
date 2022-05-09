@@ -16,7 +16,7 @@
 from collections import OrderedDict
 
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.sdk._metrics.point import (
+from opentelemetry.sdk._metrics.export import (
     AggregationTemporality,
     Gauge,
     Metric,
