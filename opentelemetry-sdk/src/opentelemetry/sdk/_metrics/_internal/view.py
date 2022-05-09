@@ -21,8 +21,10 @@ from typing import Optional, Set, Type
 from typing_extensions import final
 
 from opentelemetry._metrics import Instrument
-from opentelemetry.sdk._metrics._internal.aggregation import Aggregation
-from opentelemetry.sdk._metrics.aggregation import DefaultAggregation
+from opentelemetry.sdk._metrics._internal.aggregation import (
+    Aggregation,
+    DefaultAggregation,
+)
 
 _logger = getLogger(__name__)
 

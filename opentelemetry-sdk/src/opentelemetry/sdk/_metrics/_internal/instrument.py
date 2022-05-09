@@ -12,19 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-many-ancestors
+# pylint: disable=too-many-ancestors, unused-import
 
 from logging import getLogger
-from typing import (
-    TYPE_CHECKING,
-    Dict,
-    Generator,
-    Iterable,
-    List,
-    Optional,
-    Union,
-)
+from typing import Dict, Generator, Iterable, List, Optional, Union
 
+# This kind of import is needed to avoid Sphinx errors.
+import opentelemetry.sdk._metrics
 from opentelemetry._metrics import CallbackT
 from opentelemetry._metrics import Counter as APICounter
 from opentelemetry._metrics import Histogram as APIHistogram
@@ -35,14 +29,8 @@ from opentelemetry._metrics import (
 )
 from opentelemetry._metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry._metrics._internal.instrument import CallbackOptions
-from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry.sdk._metrics._internal.measurement import Measurement
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-
-if TYPE_CHECKING:
-    from opentelemetry.sdk._metrics._internal.measurement_consumer import (
-        MeasurementConsumer,
-    )
-
 
 _logger = getLogger(__name__)
 
@@ -57,7 +45,7 @@ class _Synchronous:
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
-        measurement_consumer: "MeasurementConsumer",
+        measurement_consumer: "opentelemetry.sdk._metrics.MeasurementConsumer",
         unit: str = "",
         description: str = "",
     ):
@@ -82,7 +70,7 @@ class _Asynchronous:
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
-        measurement_consumer: "MeasurementConsumer",
+        measurement_consumer: "opentelemetry.sdk._metrics.MeasurementConsumer",
         callbacks: Optional[Iterable[CallbackT]] = None,
         unit: str = "",
         description: str = "",

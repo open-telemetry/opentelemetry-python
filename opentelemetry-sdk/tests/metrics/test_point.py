@@ -14,7 +14,7 @@
 
 from unittest import TestCase
 
-from opentelemetry.sdk._metrics.point import Gauge, Histogram, Metric, Sum
+from opentelemetry.sdk._metrics.export import Gauge, Histogram, Metric, Sum
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 

@@ -15,6 +15,13 @@
 from logging import WARNING
 from unittest.mock import MagicMock, Mock, patch
 
+from opentelemetry.sdk._metrics import (
+    Counter,
+    Histogram,
+    ObservableCounter,
+    UpDownCounter,
+)
+from opentelemetry.sdk._metrics._internal.measurement import Measurement
 from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
     _DEFAULT_VIEW,
     MetricReaderStorage,
@@ -22,21 +29,14 @@ from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
 from opentelemetry.sdk._metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
-from opentelemetry.sdk._metrics.aggregation import (
+from opentelemetry.sdk._metrics.export import AggregationTemporality
+from opentelemetry.sdk._metrics.view import (
     DefaultAggregation,
     DropAggregation,
     ExplicitBucketHistogramAggregation,
     SumAggregation,
+    View,
 )
-from opentelemetry.sdk._metrics.instrument import (
-    Counter,
-    Histogram,
-    ObservableCounter,
-    UpDownCounter,
-)
-from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.point import AggregationTemporality
-from opentelemetry.sdk._metrics.view import View
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
 
 
