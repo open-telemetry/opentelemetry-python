@@ -13,11 +13,8 @@ Submodules
 
 .. toctree::
 
-   metrics.view
-   metrics.aggregation
-   metrics.metric_reader
-   metrics.point
    metrics.export
+   metrics.view
 
 .. automodule:: opentelemetry.sdk._metrics
     :members:

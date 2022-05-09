@@ -12,26 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
+# pylint: disable=unused-import
+
 from dataclasses import asdict, dataclass
-from enum import IntEnum
+from json import dumps
 from typing import Sequence, Union
 
+# This kind of import is needed to avoid Sphinx errors.
+import opentelemetry.sdk._metrics._internal
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util.types import Attributes
-
-
-class AggregationTemporality(IntEnum):
-    """
-    The temporality to use when aggregating data.
-
-    Can be one of the following values:
-    """
-
-    UNSPECIFIED = 0
-    DELTA = 1
-    CUMULATIVE = 2
 
 
 @dataclass(frozen=True)
@@ -39,7 +30,9 @@ class Sum:
     """Represents the type of a scalar metric that is calculated as a sum of
     all reported measurements over a time interval."""
 
-    aggregation_temporality: AggregationTemporality
+    aggregation_temporality: (
+        "opentelemetry.sdk._metrics.export.AggregationTemporality"
+    )
     is_monotonic: bool
     start_time_unix_nano: int
     time_unix_nano: int
@@ -61,7 +54,9 @@ class Histogram:
     """Represents the type of a metric that is calculated by aggregating as a
     histogram of all reported measurements over a time interval."""
 
-    aggregation_temporality: AggregationTemporality
+    aggregation_temporality: (
+        "opentelemetry.sdk._metrics.export.AggregationTemporality"
+    )
     bucket_counts: Sequence[int]
     explicit_bounds: Sequence[float]
     max: int
@@ -93,7 +88,7 @@ class Metric:
     """Contains non-common fields for the given metric"""
 
     def to_json(self) -> str:
-        return json.dumps(
+        return dumps(
             {
                 "attributes": self.attributes if self.attributes else "",
                 "description": self.description if self.description else "",

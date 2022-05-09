@@ -17,7 +17,7 @@ from unittest.mock import Mock
 
 from opentelemetry._metrics import Observation
 from opentelemetry._metrics._internal.instrument import CallbackOptions
-from opentelemetry.sdk._metrics.instrument import (
+from opentelemetry.sdk._metrics import (
     Counter,
     Histogram,
     ObservableCounter,
@@ -25,7 +25,7 @@ from opentelemetry.sdk._metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry.sdk._metrics._internal.measurement import Measurement
 
 
 class TestCounter(TestCase):

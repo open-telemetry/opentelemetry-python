@@ -19,11 +19,13 @@ from unittest.mock import Mock
 from flaky import flaky
 
 from opentelemetry.sdk._metrics.export import (
+    Gauge,
+    Metric,
     MetricExporter,
     MetricExportResult,
     PeriodicExportingMetricReader,
+    Sum,
 )
-from opentelemetry.sdk._metrics.point import Gauge, Metric, Sum
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 from opentelemetry.util._time import _time_ns

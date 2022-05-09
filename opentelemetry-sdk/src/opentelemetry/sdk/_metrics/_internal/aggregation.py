@@ -15,6 +15,7 @@
 from abc import ABC, abstractmethod
 from bisect import bisect_left
 from dataclasses import replace
+from enum import IntEnum
 from logging import getLogger
 from math import inf
 from threading import Lock
@@ -31,15 +32,29 @@ from opentelemetry._metrics import (
     Synchronous,
     UpDownCounter,
 )
-from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.point import AggregationTemporality, Gauge
-from opentelemetry.sdk._metrics.point import Histogram as HistogramPoint
-from opentelemetry.sdk._metrics.point import PointT, Sum
+from opentelemetry.sdk._metrics._internal.measurement import Measurement
+from opentelemetry.sdk._metrics._internal.point import Gauge
+from opentelemetry.sdk._metrics._internal.point import (
+    Histogram as HistogramPoint,
+)
+from opentelemetry.sdk._metrics._internal.point import PointT, Sum
 from opentelemetry.util._time import _time_ns
 
 _PointVarT = TypeVar("_PointVarT", bound=PointT)
 
 _logger = getLogger(__name__)
+
+
+class AggregationTemporality(IntEnum):
+    """
+    The temporality to use when aggregating data.
+
+    Can be one of the following values:
+    """
+
+    UNSPECIFIED = 0
+    DELTA = 1
+    CUMULATIVE = 2
 
 
 class _Aggregation(ABC, Generic[_PointVarT]):
@@ -80,16 +95,16 @@ class DefaultAggregation(Aggregation):
     This aggregation will create an actual aggregation depending on the
     instrument type, as specified next:
 
-    ============================================= ====================================
-    Instrument                                    Aggregation
-    ============================================= ====================================
-    `Counter`                                     `SumAggregation`
-    `UpDownCounter`                               `SumAggregation`
-    `ObservableCounter`                           `SumAggregation`
-    `ObservableUpDownCounter`                     `SumAggregation`
-    `opentelemetry._metrics.Histogram`            `ExplicitBucketHistogramAggregation`
-    `ObservableGauge`                             `LastValueAggregation`
-    ============================================= ====================================
+    ==================================================== ====================================
+    Instrument                                           Aggregation
+    ==================================================== ====================================
+    `opentelemetry.sdk._metrics.Counter`                 `SumAggregation`
+    `opentelemetry.sdk._metrics.UpDownCounter`           `SumAggregation`
+    `opentelemetry.sdk._metrics.ObservableCounter`       `SumAggregation`
+    `opentelemetry.sdk._metrics.ObservableUpDownCounter` `SumAggregation`
+    `opentelemetry.sdk._metrics.Histogram`               `ExplicitBucketHistogramAggregation`
+    `opentelemetry.sdk._metrics.ObservableGauge`         `LastValueAggregation`
+    ==================================================== ====================================
     """
 
     def _create_aggregation(self, instrument: Instrument) -> _Aggregation:

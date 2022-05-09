@@ -17,12 +17,7 @@ from typing import Dict, Iterable
 from unittest import TestCase
 from unittest.mock import patch
 
-from opentelemetry.sdk._metrics.aggregation import (
-    Aggregation,
-    DefaultAggregation,
-    LastValueAggregation,
-)
-from opentelemetry.sdk._metrics.instrument import (
+from opentelemetry.sdk._metrics import (
     Counter,
     Histogram,
     ObservableCounter,
@@ -30,8 +25,16 @@ from opentelemetry.sdk._metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk._metrics.metric_reader import MetricReader
-from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
+from opentelemetry.sdk._metrics.export import (
+    AggregationTemporality,
+    Metric,
+    MetricReader,
+)
+from opentelemetry.sdk._metrics.view import (
+    Aggregation,
+    DefaultAggregation,
+    LastValueAggregation,
+)
 from opentelemetry.sdk.environment_variables import (
     _OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
 )
