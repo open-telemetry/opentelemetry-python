@@ -296,7 +296,7 @@ class ProcessResourceDetector(ResourceDetector):
                 sys.version_info[:3]
                 if sys.version_info.releaselevel == "final"
                 and not sys.version_info.serial
-                else sys.version_info
+                else sys.version_info,
             )
         )
 
