@@ -22,7 +22,6 @@ from opentelemetry.sdk._metrics._internal.measurement_consumer import (
 from opentelemetry.sdk._metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
-from opentelemetry.sdk._metrics.export import AggregationTemporality
 
 
 @patch(
@@ -85,10 +84,8 @@ class TestSynchronousMeasurementConsumer(TestCase):
         )
         for r_mock, rs_mock in zip(reader_mocks, reader_storage_mocks):
             rs_mock.collect.assert_not_called()
-            consumer.collect(r_mock, AggregationTemporality.CUMULATIVE)
-            rs_mock.collect.assert_called_once_with(
-                AggregationTemporality.CUMULATIVE
-            )
+            consumer.collect(r_mock)
+            rs_mock.collect.assert_called_once_with()
 
     def test_collect_calls_async_instruments(self, MockMetricReaderStorage):
         """Its collect() method should invoke async instruments and pass measurements to the
@@ -108,7 +105,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
             i_mock.callback.return_value = [Mock()]
             consumer.register_asynchronous_instrument(i_mock)
 
-        consumer.collect(reader_mock, AggregationTemporality.CUMULATIVE)
+        consumer.collect(reader_mock)
 
         # it should call async instruments
         for i_mock in async_instrument_mocks:

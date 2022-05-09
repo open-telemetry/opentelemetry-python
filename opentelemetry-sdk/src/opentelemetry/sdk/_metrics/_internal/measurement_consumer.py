@@ -16,14 +16,13 @@
 
 from abc import ABC, abstractmethod
 from threading import Lock
-from typing import Dict, Iterable, List, Mapping
+from typing import Iterable, List, Mapping
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk._metrics
 import opentelemetry.sdk._metrics._internal.instrument
 import opentelemetry.sdk._metrics._internal.sdk_configuration
 from opentelemetry._metrics._internal.instrument import CallbackOptions
-from opentelemetry.sdk._metrics._internal.export import AggregationTemporality
 from opentelemetry.sdk._metrics._internal.measurement import Measurement
 from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
@@ -49,7 +48,6 @@ class MeasurementConsumer(ABC):
     def collect(
         self,
         metric_reader: "opentelemetry.sdk._metrics.MetricReader",
-        instrument_type_temporality: Dict[type, AggregationTemporality],
     ) -> Iterable[Metric]:
         pass
 
@@ -66,7 +64,9 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             "opentelemetry.sdk._metrics.MetricReader", MetricReaderStorage
         ] = {
             reader: MetricReaderStorage(
-                sdk_config, reader._instrument_class_aggregation
+                sdk_config,
+                reader._instrument_class_temporality,
+                reader._instrument_class_aggregation,
             )
             for reader in sdk_config.metric_readers
         }
@@ -90,7 +90,6 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
     def collect(
         self,
         metric_reader: "opentelemetry.sdk._metrics.MetricReader",
-        instrument_type_temporality: Dict[type, AggregationTemporality],
     ) -> Iterable[Metric]:
         with self._lock:
             metric_reader_storage = self._reader_storages[metric_reader]
@@ -99,6 +98,4 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             for async_instrument in self._async_instruments:
                 for measurement in async_instrument.callback(callback_options):
                     metric_reader_storage.consume_measurement(measurement)
-        return self._reader_storages[metric_reader].collect(
-            instrument_type_temporality
-        )
+        return self._reader_storages[metric_reader].collect()

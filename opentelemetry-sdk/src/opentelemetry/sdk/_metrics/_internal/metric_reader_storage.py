@@ -43,6 +43,7 @@ class MetricReaderStorage:
     def __init__(
         self,
         sdk_config: SdkConfiguration,
+        instrument_class_temporality: Dict[type, AggregationTemporality],
         instrument_class_aggregation: Dict[type, Aggregation],
     ) -> None:
         self._lock = RLock()
@@ -50,6 +51,7 @@ class MetricReaderStorage:
         self._instrument_view_instrument_matches: Dict[
             Instrument, List[_ViewInstrumentMatch]
         ] = {}
+        self._instrument_class_temporality = instrument_class_temporality
         self._instrument_class_aggregation = instrument_class_aggregation
 
     def _get_or_init_view_instrument_match(
@@ -80,6 +82,9 @@ class MetricReaderStorage:
                         view=_DEFAULT_VIEW,
                         instrument=instrument,
                         sdk_config=self._sdk_config,
+                        instrument_class_temporality=(
+                            self._instrument_class_temporality
+                        ),
                         instrument_class_aggregation=(
                             self._instrument_class_aggregation
                         ),
@@ -97,9 +102,7 @@ class MetricReaderStorage:
         ):
             view_instrument_match.consume_measurement(measurement)
 
-    def collect(
-        self, instrument_type_temporality: Dict[type, AggregationTemporality]
-    ) -> Iterable[Metric]:
+    def collect(self) -> Iterable[Metric]:
         # Use a list instead of yielding to prevent a slow reader from holding
         # SDK locks
         metrics: List[Metric] = []
@@ -117,11 +120,7 @@ class MetricReaderStorage:
                 view_instrument_matches
             ) in self._instrument_view_instrument_matches.values():
                 for view_instrument_match in view_instrument_matches:
-                    metrics.extend(
-                        view_instrument_match.collect(
-                            instrument_type_temporality
-                        )
-                    )
+                    metrics.extend(view_instrument_match.collect())
 
         return metrics
 
@@ -142,6 +141,9 @@ class MetricReaderStorage:
                 view=view,
                 instrument=instrument,
                 sdk_config=self._sdk_config,
+                instrument_class_temporality=(
+                    self._instrument_class_temporality
+                ),
                 instrument_class_aggregation=(
                     self._instrument_class_aggregation
                 ),
