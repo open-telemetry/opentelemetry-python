@@ -43,6 +43,7 @@ class _ViewInstrumentMatch:
         view: View,
         instrument: Instrument,
         sdk_config: SdkConfiguration,
+        instrument_class_temporality: Dict[type, AggregationTemporality],
         instrument_class_aggregation: Dict[type, Aggregation],
     ):
         self._view = view
@@ -51,6 +52,7 @@ class _ViewInstrumentMatch:
         self._attributes_aggregation: Dict[frozenset, _Aggregation] = {}
         self._attributes_previous_point: Dict[frozenset, _PointVarT] = {}
         self._lock = Lock()
+        self._instrument_class_temporality = instrument_class_temporality
         self._instrument_class_aggregation = instrument_class_aggregation
         self._name = self._view._name or self._instrument.name
         self._description = (
@@ -122,9 +124,7 @@ class _ViewInstrumentMatch:
 
         self._attributes_aggregation[attributes].aggregate(measurement)
 
-    def collect(
-        self, instrument_class_temporality: Dict[type, AggregationTemporality]
-    ) -> Iterable[Metric]:
+    def collect(self) -> Iterable[Metric]:
 
         with self._lock:
             for (
@@ -139,6 +139,7 @@ class _ViewInstrumentMatch:
                 current_point = aggregation.collect()
 
                 # pylint: disable=assignment-from-none
+
                 self._attributes_previous_point[
                     attributes
                 ] = _convert_aggregation_temporality(
@@ -161,7 +162,7 @@ class _ViewInstrumentMatch:
                         point=_convert_aggregation_temporality(
                             previous_point,
                             current_point,
-                            instrument_class_temporality[
+                            self._instrument_class_temporality[
                                 self._instrument.__class__
                             ],
                         ),
