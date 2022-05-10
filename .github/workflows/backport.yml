@@ -28,7 +28,7 @@ jobs:
           title=$(gh pr view $NUMBER --json title --jq .title)
           url=$(gh pr view $NUMBER --json url --jq .url)
 
-          branch="backport-$NUMBER-to-${GITHUB_REF_NAME//\//-}"
+          branch="backport-${NUMBER}-to-${GITHUB_REF_NAME//\//-}"
 
           git cherry-pick $commit
           git push origin HEAD:$branch
