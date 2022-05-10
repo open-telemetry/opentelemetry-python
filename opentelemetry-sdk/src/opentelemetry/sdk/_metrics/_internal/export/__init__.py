@@ -241,7 +241,7 @@ class MetricReader(ABC):
             )
             return
         self._receive_metrics(
-            self._collect(self, self._instrument_class_temporality),
+            self._collect(self),
             timeout_millis=timeout_millis,
         )
 
