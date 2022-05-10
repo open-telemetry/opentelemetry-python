@@ -60,12 +60,12 @@ class _ViewInstrumentMatch:
         )
         if not isinstance(self._view._aggregation, DefaultAggregation):
             self._aggregation = self._view._aggregation._create_aggregation(
-                self._instrument
+                self._instrument, None
             )
         else:
             self._aggregation = self._instrument_class_aggregation[
                 self._instrument.__class__
-            ]._create_aggregation(self._instrument)
+            ]._create_aggregation(self._instrument, None)
 
     def conflicts(self, other: "_ViewInstrumentMatch") -> bool:
         # pylint: disable=protected-access
@@ -113,13 +113,13 @@ class _ViewInstrumentMatch:
                     ):
                         aggregation = (
                             self._view._aggregation._create_aggregation(
-                                self._instrument
+                                self._instrument, attributes
                             )
                         )
                     else:
                         aggregation = self._instrument_class_aggregation[
                             self._instrument.__class__
-                        ]._create_aggregation(self._instrument)
+                        ]._create_aggregation(self._instrument, attributes)
                     self._attributes_aggregation[attributes] = aggregation
 
         self._attributes_aggregation[attributes].aggregate(measurement)
