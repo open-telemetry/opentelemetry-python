@@ -134,9 +134,8 @@ class OTLPMetricExporter(
                         unit=metric.unit,
                     )
 
-                    for data_point in metric.data.data_points:
-
-                        if isinstance(metric.data, Gauge):
+                    if isinstance(metric.data, Gauge):
+                        for data_point in metric.data.data_points:
                             pt = pb2.NumberDataPoint(
                                 attributes=self._translate_attributes(
                                     data_point.attributes
@@ -149,7 +148,8 @@ class OTLPMetricExporter(
                                 pt.as_double = data_point.value
                             pb2_metric.gauge.data_points.append(pt)
 
-                        elif isinstance(metric.data, Histogram):
+                    elif isinstance(metric.data, Histogram):
+                        for data_point in metric.data.data_points:
                             pt = pb2.HistogramDataPoint(
                                 attributes=self._translate_attributes(
                                     data_point.attributes
@@ -167,7 +167,9 @@ class OTLPMetricExporter(
                                 metric.data.aggregation_temporality
                             )
                             pb2_metric.histogram.data_points.append(pt)
-                        elif isinstance(metric.data, Sum):
+
+                    elif isinstance(metric.data, Sum):
+                        for data_point in metric.data.data_points:
                             pt = pb2.NumberDataPoint(
                                 attributes=self._translate_attributes(
                                     data_point.attributes
@@ -191,11 +193,11 @@ class OTLPMetricExporter(
                                 metric.data.is_monotonic
                             )
                             pb2_metric.sum.data_points.append(pt)
-                        else:
-                            _logger.warn(
-                                "unsupported datapoint type %s", metric.point
-                            )
-                            continue
+                    else:
+                        _logger.warn(
+                            "unsupported datapoint type %s", metric.point
+                        )
+                        continue
 
                     pb2_scope_metrics.metrics.append(pb2_metric)
 
