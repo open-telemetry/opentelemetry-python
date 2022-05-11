@@ -19,7 +19,7 @@ from logging import getLogger
 from os import environ, linesep
 from sys import stdout
 from threading import Event, RLock, Thread
-from typing import IO, Callable, Dict, Iterable, Optional, Sequence
+from typing import IO, Callable, Dict, Iterable, Optional
 
 from typing_extensions import final
 
@@ -43,6 +43,7 @@ from opentelemetry.sdk._metrics._internal.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk._metrics._internal.point import MetricsData
 from opentelemetry.sdk.environment_variables import (
     _OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
 )
@@ -71,7 +72,7 @@ class MetricExporter(ABC):
     @abstractmethod
     def export(
         self,
-        metrics: Sequence["opentelemetry.sdk._metrics.export.Metric"],
+        metrics_data: MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
@@ -113,12 +114,11 @@ class ConsoleMetricExporter(MetricExporter):
 
     def export(
         self,
-        metrics: Sequence["opentelemetry.sdk._metrics.export.Metric"],
+        metrics_data: MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
-        for metric in metrics:
-            self.out.write(self.formatter(metric))
+        self.out.write(self.formatter(metrics_data))
         self.out.flush()
         return MetricExportResult.SUCCESS
 
@@ -393,7 +393,7 @@ class PeriodicExportingMetricReader(MetricReader):
 
     def _receive_metrics(
         self,
-        metrics_data: "opentelemetry.sdk._metrics.export.MetricsData",
+        metrics_data: MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
