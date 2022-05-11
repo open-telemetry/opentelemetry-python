@@ -53,7 +53,6 @@ Run the [Merge change log to main workflow](https://github.com/open-telemetry/op
 Release Process:
 - [Check PyPI](#Check-PyPI)
 - [Move stable tag](#Move-stable-tag)
-- [Update main](#Update-main)
 - [Troubleshooting](#troubleshooting)
 
 ## Check PyPI
@@ -77,14 +76,6 @@ git push origin stable
 ```
 
 To validate this worked, ensure the stable build has run successfully: https://readthedocs.org/projects/opentelemetry-python/builds/. If the build has not run automatically, it can be manually trigger via the readthedocs interface.
-
-## Update main
-
-Ensure the version and changelog updates have been applied to main. Update the versions in eachdist.ini once again this time to include the `.dev0` tag and
-run eachdist once again:
-```bash
-./scripts/eachdist.py update_versions --versions stable,prerelease
-```
 
 ## Hotfix procedure
 
