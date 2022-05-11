@@ -5,8 +5,6 @@
 * Merge a pull request to `main` updating the `CHANGELOG.md`.
   * The heading for the release should include the release version but not the release date, e.g.
     `## Version 1.9.0 (unreleased)`.
-  * Use `.github/scripts/draft-change-log-entries.sh` as a starting point for writing the change
-    log.
 * Run the [Prepare release branch workflow](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/prepare-release-branch.yml).
   * Press the "Run workflow" button, and leave the default branch `main` selected.
 * Review and merge the two pull requests that it creates
