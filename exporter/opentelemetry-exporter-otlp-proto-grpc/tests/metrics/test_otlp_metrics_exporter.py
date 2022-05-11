@@ -254,6 +254,56 @@ class TestOTLPMetricExporter(TestCase):
             ),
         }
 
+        self.multiple_scope_histogram = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Resource(
+                        attributes={"a": 1, "b": False},
+                        schema_url="resource_schema_url",
+                    ),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=SDKInstrumentationScope(
+                                name="first_name",
+                                version="first_version",
+                                schema_url="insrumentation_scope_schema_url",
+                            ),
+                            metrics=[histogram],
+                            schema_url="instrumentation_scope_schema_url",
+                        ),
+                        ScopeMetrics(
+                            scope=SDKInstrumentationScope(
+                                name="second_name",
+                                version="second_version",
+                                schema_url="insrumentation_scope_schema_url",
+                            ),
+                            metrics=[histogram],
+                            schema_url="instrumentation_scope_schema_url",
+                        ),
+                        ScopeMetrics(
+                            scope=SDKInstrumentationScope(
+                                name="first_name",
+                                version="first_version",
+                                schema_url="insrumentation_scope_schema_url",
+                            ),
+                            metrics=[histogram],
+                            schema_url="instrumentation_scope_schema_url",
+                        ),
+                        ScopeMetrics(
+                            scope=SDKInstrumentationScope(
+                                name="third_name",
+                                version="third_version",
+                                schema_url="insrumentation_scope_schema_url",
+                            ),
+                            metrics=[histogram],
+                            schema_url="instrumentation_scope_schema_url",
+                        ),
+                    ],
+                    schema_url="resource_schema_url",
+                )
+            ]
+        )
+
     def tearDown(self):
         self.server.stop(None)
 
@@ -692,4 +742,182 @@ class TestOTLPMetricExporter(TestCase):
         )
         # pylint: disable=protected-access
         actual = self.exporter._translate_data(self.metrics["histogram"])
+        self.assertEqual(expected, actual)
+
+    def test_translate_multiple_scope_histogram(self):
+        expected = ExportMetricsServiceRequest(
+            resource_metrics=[
+                pb2.ResourceMetrics(
+                    resource=OTLPResource(
+                        attributes=[
+                            KeyValue(key="a", value=AnyValue(int_value=1)),
+                            KeyValue(
+                                key="b", value=AnyValue(bool_value=False)
+                            ),
+                        ]
+                    ),
+                    scope_metrics=[
+                        pb2.ScopeMetrics(
+                            scope=InstrumentationScope(
+                                name="first_name", version="first_version"
+                            ),
+                            metrics=[
+                                pb2.Metric(
+                                    name="histogram",
+                                    unit="s",
+                                    description="foo",
+                                    histogram=pb2.Histogram(
+                                        data_points=[
+                                            pb2.HistogramDataPoint(
+                                                attributes=[
+                                                    KeyValue(
+                                                        key="a",
+                                                        value=AnyValue(
+                                                            int_value=1
+                                                        ),
+                                                    ),
+                                                    KeyValue(
+                                                        key="b",
+                                                        value=AnyValue(
+                                                            bool_value=True
+                                                        ),
+                                                    ),
+                                                ],
+                                                start_time_unix_nano=1641946016139533244,
+                                                time_unix_nano=1641946016139533244,
+                                                count=5,
+                                                sum=67,
+                                                bucket_counts=[1, 4],
+                                                explicit_bounds=[10.0, 20.0],
+                                                exemplars=[],
+                                                flags=pb2.DataPointFlags.FLAG_NONE,
+                                            )
+                                        ],
+                                        aggregation_temporality=AggregationTemporality.DELTA,
+                                    ),
+                                ),
+                                pb2.Metric(
+                                    name="histogram",
+                                    unit="s",
+                                    description="foo",
+                                    histogram=pb2.Histogram(
+                                        data_points=[
+                                            pb2.HistogramDataPoint(
+                                                attributes=[
+                                                    KeyValue(
+                                                        key="a",
+                                                        value=AnyValue(
+                                                            int_value=1
+                                                        ),
+                                                    ),
+                                                    KeyValue(
+                                                        key="b",
+                                                        value=AnyValue(
+                                                            bool_value=True
+                                                        ),
+                                                    ),
+                                                ],
+                                                start_time_unix_nano=1641946016139533244,
+                                                time_unix_nano=1641946016139533244,
+                                                count=5,
+                                                sum=67,
+                                                bucket_counts=[1, 4],
+                                                explicit_bounds=[10.0, 20.0],
+                                                exemplars=[],
+                                                flags=pb2.DataPointFlags.FLAG_NONE,
+                                            )
+                                        ],
+                                        aggregation_temporality=AggregationTemporality.DELTA,
+                                    ),
+                                ),
+                            ],
+                        ),
+                        pb2.ScopeMetrics(
+                            scope=InstrumentationScope(
+                                name="second_name", version="second_version"
+                            ),
+                            metrics=[
+                                pb2.Metric(
+                                    name="histogram",
+                                    unit="s",
+                                    description="foo",
+                                    histogram=pb2.Histogram(
+                                        data_points=[
+                                            pb2.HistogramDataPoint(
+                                                attributes=[
+                                                    KeyValue(
+                                                        key="a",
+                                                        value=AnyValue(
+                                                            int_value=1
+                                                        ),
+                                                    ),
+                                                    KeyValue(
+                                                        key="b",
+                                                        value=AnyValue(
+                                                            bool_value=True
+                                                        ),
+                                                    ),
+                                                ],
+                                                start_time_unix_nano=1641946016139533244,
+                                                time_unix_nano=1641946016139533244,
+                                                count=5,
+                                                sum=67,
+                                                bucket_counts=[1, 4],
+                                                explicit_bounds=[10.0, 20.0],
+                                                exemplars=[],
+                                                flags=pb2.DataPointFlags.FLAG_NONE,
+                                            )
+                                        ],
+                                        aggregation_temporality=AggregationTemporality.DELTA,
+                                    ),
+                                )
+                            ],
+                        ),
+                        pb2.ScopeMetrics(
+                            scope=InstrumentationScope(
+                                name="third_name", version="third_version"
+                            ),
+                            metrics=[
+                                pb2.Metric(
+                                    name="histogram",
+                                    unit="s",
+                                    description="foo",
+                                    histogram=pb2.Histogram(
+                                        data_points=[
+                                            pb2.HistogramDataPoint(
+                                                attributes=[
+                                                    KeyValue(
+                                                        key="a",
+                                                        value=AnyValue(
+                                                            int_value=1
+                                                        ),
+                                                    ),
+                                                    KeyValue(
+                                                        key="b",
+                                                        value=AnyValue(
+                                                            bool_value=True
+                                                        ),
+                                                    ),
+                                                ],
+                                                start_time_unix_nano=1641946016139533244,
+                                                time_unix_nano=1641946016139533244,
+                                                count=5,
+                                                sum=67,
+                                                bucket_counts=[1, 4],
+                                                explicit_bounds=[10.0, 20.0],
+                                                exemplars=[],
+                                                flags=pb2.DataPointFlags.FLAG_NONE,
+                                            )
+                                        ],
+                                        aggregation_temporality=AggregationTemporality.DELTA,
+                                    ),
+                                )
+                            ],
+                        ),
+                    ],
+                )
+            ]
+        )
+        # pylint: disable=protected-access
+        actual = self.exporter._translate_data(self.multiple_scope_histogram)
         self.assertEqual(expected, actual)
