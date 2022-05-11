@@ -27,7 +27,9 @@ jobs:
           body="Merge change log updates from \`$GITHUB_REF_NAME\`."
           branch="merge-change-log-updates-from-${GITHUB_REF_NAME//\//-}"
 
+          # perform a 3-way merge of a single file
           git format-patch --stdout HEAD..origin/$GITHUB_REF_NAME CHANGELOG.md | git apply --3way
+
           git commit -a -m "$message"
           git push origin HEAD:$branch
           gh pr create --title "$message" \
