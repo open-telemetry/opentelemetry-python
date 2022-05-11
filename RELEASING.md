@@ -9,6 +9,8 @@
   * Press the "Run workflow" button, and leave the default branch `main` selected.
 * Review and merge the two pull requests that it creates
   (one is targeted to the release branch and one is targeted to `main`).
+  * These pull requests will update the release branch to the latest release versions and will bump the main branch to
+    the next dev version.
 
 ## Preparing a new patch release
 
