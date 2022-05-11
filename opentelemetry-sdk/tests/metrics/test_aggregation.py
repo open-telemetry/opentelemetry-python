@@ -42,6 +42,7 @@ from opentelemetry.sdk._metrics.view import (
     LastValueAggregation,
     SumAggregation,
 )
+from opentelemetry.util._time import _time_ns
 from opentelemetry.util.types import Attributes
 
 
@@ -134,15 +135,19 @@ class TestSynchronousSumAggregation(TestCase):
         )
 
         synchronous_sum_aggregation.aggregate(measurement(1))
+        # _time_ns used here directly to simulate the instant the first
+        # collection process starts.
         first_sum = synchronous_sum_aggregation.collect(
-            AggregationTemporality.DELTA
+            AggregationTemporality.DELTA, _time_ns()
         )
 
         self.assertEqual(first_sum.value, 1)
 
         synchronous_sum_aggregation.aggregate(measurement(1))
+        # _time_ns used here directly to simulate the instant the second
+        # collection process starts.
         second_sum = synchronous_sum_aggregation.collect(
-            AggregationTemporality.DELTA
+            AggregationTemporality.DELTA, _time_ns()
         )
 
         self.assertEqual(second_sum.value, 1)
@@ -161,13 +166,17 @@ class TestSynchronousSumAggregation(TestCase):
         )
 
         sum_aggregation.aggregate(measurement(1))
-        first_sum = sum_aggregation.collect(AggregationTemporality.CUMULATIVE)
+        first_sum = sum_aggregation.collect(
+            AggregationTemporality.CUMULATIVE, 1
+        )
 
         self.assertEqual(first_sum.value, 1)
 
         # should have been reset after first collect
         sum_aggregation.aggregate(measurement(1))
-        second_sum = sum_aggregation.collect(AggregationTemporality.CUMULATIVE)
+        second_sum = sum_aggregation.collect(
+            AggregationTemporality.CUMULATIVE, 1
+        )
 
         self.assertEqual(second_sum.value, 1)
 
@@ -176,7 +185,9 @@ class TestSynchronousSumAggregation(TestCase):
         )
 
         # if no point seen for a whole interval, should return None
-        third_sum = sum_aggregation.collect(AggregationTemporality.CUMULATIVE)
+        third_sum = sum_aggregation.collect(
+            AggregationTemporality.CUMULATIVE, 1
+        )
         self.assertIsNone(third_sum)
 
 
@@ -206,12 +217,16 @@ class TestLastValueAggregation(TestCase):
         last_value_aggregation = _LastValueAggregation(Mock())
 
         self.assertIsNone(
-            last_value_aggregation.collect(AggregationTemporality.CUMULATIVE)
+            last_value_aggregation.collect(
+                AggregationTemporality.CUMULATIVE, 1
+            )
         )
 
         last_value_aggregation.aggregate(measurement(1))
+        # 1 is used here directly to simulate the instant the first
+        # collection process starts.
         first_number_data_point = last_value_aggregation.collect(
-            AggregationTemporality.CUMULATIVE
+            AggregationTemporality.CUMULATIVE, 1
         )
         self.assertIsInstance(first_number_data_point, NumberDataPoint)
 
@@ -222,8 +237,10 @@ class TestLastValueAggregation(TestCase):
         # CI fails the last assertion without this
         sleep(0.1)
 
+        # 2 is used here directly to simulate the instant the second
+        # collection process starts.
         second_number_data_point = last_value_aggregation.collect(
-            AggregationTemporality.CUMULATIVE
+            AggregationTemporality.CUMULATIVE, 2
         )
 
         self.assertEqual(second_number_data_point.value, 1)
@@ -233,9 +250,10 @@ class TestLastValueAggregation(TestCase):
             first_number_data_point.time_unix_nano,
         )
 
-        # if no observation seen for the interval, it should return None
+        # 3 is used here directly to simulate the instant the second
+        # collection process starts.
         third_number_data_point = last_value_aggregation.collect(
-            AggregationTemporality.CUMULATIVE
+            AggregationTemporality.CUMULATIVE, 3
         )
         self.assertIsNone(third_number_data_point)
 
@@ -279,7 +297,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         )
 
         histo = explicit_bucket_histogram_aggregation.collect(
-            AggregationTemporality.CUMULATIVE
+            AggregationTemporality.CUMULATIVE, 1
         )
         self.assertEqual(histo.sum, 14)
 
@@ -325,8 +343,10 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         )
 
         explicit_bucket_histogram_aggregation.aggregate(measurement(1))
+        # 1 is used here directly to simulate the instant the first
+        # collection process starts.
         first_histogram = explicit_bucket_histogram_aggregation.collect(
-            AggregationTemporality.CUMULATIVE
+            AggregationTemporality.CUMULATIVE, 1
         )
 
         self.assertEqual(first_histogram.bucket_counts, (0, 1, 0, 0))
@@ -336,8 +356,10 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         sleep(0.1)
 
         explicit_bucket_histogram_aggregation.aggregate(measurement(1))
+        # 2 is used here directly to simulate the instant the second
+        # collection process starts.
         second_histogram = explicit_bucket_histogram_aggregation.collect(
-            AggregationTemporality.CUMULATIVE
+            AggregationTemporality.CUMULATIVE, 2
         )
 
         self.assertEqual(second_histogram.bucket_counts, (0, 2, 0, 0))

@@ -322,6 +322,36 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             ),
         )
 
+    def test_same_collection_start(self):
+
+        counter = Counter("name", Mock(), Mock())
+        up_down_counter = UpDownCounter("name", Mock(), Mock())
+
+        metric_reader_storage = MetricReaderStorage(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=(),
+                views=(View(instrument_name="name"),),
+            ),
+            MagicMock(
+                **{
+                    "__getitem__.return_value": AggregationTemporality.CUMULATIVE
+                }
+            ),
+            MagicMock(**{"__getitem__.return_value": DefaultAggregation()}),
+        )
+
+        metric_reader_storage.consume_measurement(Measurement(1, counter))
+        metric_reader_storage.consume_measurement(
+            Measurement(1, up_down_counter)
+        )
+
+        actual = metric_reader_storage.collect()
+
+        self.assertEqual(
+            actual[0].point.time_unix_nano, actual[1].point.time_unix_nano
+        )
+
     def test_conflicting_view_configuration(self):
 
         observable_counter = ObservableCounter(

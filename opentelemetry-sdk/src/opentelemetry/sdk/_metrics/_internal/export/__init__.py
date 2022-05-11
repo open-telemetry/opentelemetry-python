@@ -235,6 +235,7 @@ class MetricReader(ABC):
         """Collects the metrics from the internal SDK state and
         invokes the `_receive_metrics` with the collection.
         """
+
         if self._collect is None:
             _logger.warning(
                 "Cannot call collect on a MetricReader until it is registered on a MeterProvider"

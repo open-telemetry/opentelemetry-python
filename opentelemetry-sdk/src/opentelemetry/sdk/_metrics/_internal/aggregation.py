@@ -187,14 +187,14 @@ class _SumAggregation(_Aggregation[Sum]):
             self._value = self._value + measurement.value
 
     def collect(
-        self, aggregation_temporality: AggregationTemporality
+        self,
+        aggregation_temporality: AggregationTemporality,
+        collection_start: int
     ) -> Optional[NumberDataPoint]:
         """
         Atomically return a point for the current value of the metric and
         reset the aggregation value.
         """
-        now = _time_ns()
-
         if self._instrument_temporality is AggregationTemporality.DELTA:
 
             with self._lock:
@@ -202,7 +202,7 @@ class _SumAggregation(_Aggregation[Sum]):
                 start_time_unix_nano = self._start_time_unix_nano
 
                 self._value = 0
-                self._start_time_unix_nano = now + 1
+                self._start_time_unix_nano = collection_start + 1
 
         else:
 
@@ -216,7 +216,7 @@ class _SumAggregation(_Aggregation[Sum]):
         current_point = NumberDataPoint(
             attributes=self._attributes,
             start_time_unix_nano=start_time_unix_nano,
-            time_unix_nano=now,
+            time_unix_nano=collection_start,
             value=value,
         )
 
@@ -331,12 +331,11 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     def collect(
         self,
         aggregation_temporality: AggregationTemporality,
+        collection_start: int
     ) -> Optional[_DataPointVarT]:
         """
         Atomically return a point for the current value of the metric.
         """
-        now = _time_ns()
-
         with self._lock:
             if not any(self._bucket_counts):
                 return None
@@ -348,7 +347,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             min_ = self._min
 
             self._bucket_counts = self._get_empty_bucket_counts()
-            self._start_time_unix_nano = now + 1
+            self._start_time_unix_nano = collection_start + 1
             self._sum = 0
             self._min = inf
             self._max = -inf
@@ -356,7 +355,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         current_point = HistogramDataPoint(
             attributes=self._attributes,
             start_time_unix_nano=start_time_unix_nano,
-            time_unix_nano=now,
+            time_unix_nano=collection_start,
             count=sum(bucket_counts),
             sum=sum_,
             bucket_counts=tuple(bucket_counts),
