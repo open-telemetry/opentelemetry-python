@@ -48,6 +48,7 @@ from opentelemetry.sdk._metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
 from opentelemetry.sdk._metrics._internal.view import View
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 _logger = getLogger(__name__)
 
@@ -129,7 +130,9 @@ class MetricReaderStorage:
         # for a single instrument.
         with self._lock:
 
-            scope_metrics: List[ScopeMetrics] = []
+            instrumentation_scope_scope_metrics: (
+                Dict[InstrumentationScope, ScopeMetrics]
+            ) = {}
 
             for (
                 instrument,
@@ -194,19 +197,32 @@ class MetricReaderStorage:
                             data=data,
                         )
                     )
-                scope_metrics.append(
-                    ScopeMetrics(
+
+                if instrument.instrumentation_scope not in (
+                    instrumentation_scope_scope_metrics
+                ):
+                    instrumentation_scope_scope_metrics[
+                        instrument.instrumentation_scope
+                    ] = ScopeMetrics(
                         scope=instrument.instrumentation_scope,
                         metrics=metrics,
                         schema_url=instrument.instrumentation_scope.schema_url,
                     )
-                )
+                else:
+                    instrumentation_scope_scope_metrics[
+                        instrument.instrumentation_scope
+                    ].metrics.extend(metrics)
 
         return MetricsData(
             resource_metrics=[
                 ResourceMetrics(
                     resource=self._sdk_config.resource,
-                    scope_metrics=scope_metrics,
+                    scope_metrics=[
+                        scope_metrics
+                        for scope_metrics in (
+                            instrumentation_scope_scope_metrics.values()
+                        )
+                    ],
                     schema_url=self._sdk_config.resource.schema_url,
                 )
             ]

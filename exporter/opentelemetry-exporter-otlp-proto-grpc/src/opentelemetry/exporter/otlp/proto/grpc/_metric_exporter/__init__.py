@@ -101,24 +101,19 @@ class OTLPMetricExporter(
 
                 instrumentation_scope = scope_metrics.scope
 
-                if instrumentation_scope not in (
-                    instrumentation_scope_pb2_scope_metrics
-                ):
-
-                    # instrumentation_scope comes from the meter, it is never
-                    # None.
-                    instrumentation_scope_pb2_scope_metrics[
-                        instrumentation_scope
-                    ] = pb2.ScopeMetrics(
-                        scope=InstrumentationScope(
-                            name=instrumentation_scope.name,
-                            version=instrumentation_scope.version,
-                        )
+                # The SDK groups metrics in instrumentation scopes already so
+                # there is no need to check for existing instrumentation scopes
+                # here.
+                pb2_scope_metrics = pb2.ScopeMetrics(
+                    scope=InstrumentationScope(
+                        name=instrumentation_scope.name,
+                        version=instrumentation_scope.version,
                     )
+                )
 
-                pb2_scope_metrics = instrumentation_scope_pb2_scope_metrics[
+                instrumentation_scope_pb2_scope_metrics[
                     instrumentation_scope
-                ]
+                ] = pb2_scope_metrics
 
                 for metric in scope_metrics.metrics:
                     pb2_metric = pb2.Metric(

@@ -80,21 +80,9 @@ class TestInMemoryMetricReader(TestCase):
         metrics = reader.get_metrics_data()
         # should be 3 number data points, one from the observable gauge and one
         # for each labelset from the counter
-        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics), 2)
+        self.assertEqual(len(metrics.resource_metrics[0].scope_metrics), 1)
         self.assertEqual(
-            len(metrics.resource_metrics[0].scope_metrics[0].metrics), 1
-        )
-        self.assertEqual(
-            len(metrics.resource_metrics[0].scope_metrics[1].metrics), 1
-        )
-        self.assertEqual(
-            len(
-                metrics.resource_metrics[0]
-                .scope_metrics[1]
-                .metrics[0]
-                .data.data_points
-            ),
-            1,
+            len(metrics.resource_metrics[0].scope_metrics[0].metrics), 2
         )
         self.assertEqual(
             len(
@@ -104,4 +92,13 @@ class TestInMemoryMetricReader(TestCase):
                 .data.data_points
             ),
             2,
+        )
+        self.assertEqual(
+            len(
+                metrics.resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[1]
+                .data.data_points
+            ),
+            1,
         )

@@ -268,22 +268,13 @@ class TestOTLPMetricExporter(TestCase):
                                 version="first_version",
                                 schema_url="insrumentation_scope_schema_url",
                             ),
-                            metrics=[histogram],
+                            metrics=[histogram, histogram],
                             schema_url="instrumentation_scope_schema_url",
                         ),
                         ScopeMetrics(
                             scope=SDKInstrumentationScope(
                                 name="second_name",
                                 version="second_version",
-                                schema_url="insrumentation_scope_schema_url",
-                            ),
-                            metrics=[histogram],
-                            schema_url="instrumentation_scope_schema_url",
-                        ),
-                        ScopeMetrics(
-                            scope=SDKInstrumentationScope(
-                                name="first_name",
-                                version="first_version",
                                 schema_url="insrumentation_scope_schema_url",
                             ),
                             metrics=[histogram],
