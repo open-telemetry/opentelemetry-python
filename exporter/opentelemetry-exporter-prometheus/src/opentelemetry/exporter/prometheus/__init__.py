@@ -244,7 +244,7 @@ class _CustomCollector:
 
                     if (
                         metric_family_id
-                        not in metric_family_id_metric_family.keys()
+                        not in metric_family_id_metric_family
                     ):
                         metric_family_id_metric_family[
                             metric_family_id
