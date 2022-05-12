@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from dataclasses import replace
-from logging import WARNING
 from math import inf
 from time import sleep
 from typing import Union
@@ -29,15 +27,15 @@ from opentelemetry.sdk._metrics import (
     UpDownCounter,
 )
 from opentelemetry.sdk._metrics._internal.aggregation import (
-    _convert_aggregation_temporality,
     _ExplicitBucketHistogramAggregation,
     _LastValueAggregation,
     _SumAggregation,
 )
 from opentelemetry.sdk._metrics._internal.measurement import Measurement
-from opentelemetry.sdk._metrics.export import AggregationTemporality, Gauge
-from opentelemetry.sdk._metrics.export import Histogram as HistogramPoint
-from opentelemetry.sdk._metrics.export import Sum
+from opentelemetry.sdk._metrics.export import (
+    AggregationTemporality,
+    NumberDataPoint,
+)
 from opentelemetry.sdk._metrics.view import (
     DefaultAggregation,
     ExplicitBucketHistogramAggregation,
@@ -110,20 +108,44 @@ class TestSynchronousSumAggregation(TestCase):
         """
 
         synchronous_sum_aggregation = _SumAggregation(
-            Mock(), True, AggregationTemporality.DELTA
+            {}, True, AggregationTemporality.DELTA
         )
 
         synchronous_sum_aggregation.aggregate(measurement(1))
-        first_sum = synchronous_sum_aggregation.collect()
+        first_sum = synchronous_sum_aggregation.collect(
+            AggregationTemporality.CUMULATIVE
+        )
 
         self.assertEqual(first_sum.value, 1)
-        self.assertTrue(first_sum.is_monotonic)
 
         synchronous_sum_aggregation.aggregate(measurement(1))
-        second_sum = synchronous_sum_aggregation.collect()
+        second_sum = synchronous_sum_aggregation.collect(
+            AggregationTemporality.CUMULATIVE
+        )
+
+        self.assertEqual(second_sum.value, 2)
+
+        self.assertEqual(
+            second_sum.start_time_unix_nano, first_sum.start_time_unix_nano
+        )
+
+        synchronous_sum_aggregation = _SumAggregation(
+            {}, True, AggregationTemporality.DELTA
+        )
+
+        synchronous_sum_aggregation.aggregate(measurement(1))
+        first_sum = synchronous_sum_aggregation.collect(
+            AggregationTemporality.DELTA
+        )
+
+        self.assertEqual(first_sum.value, 1)
+
+        synchronous_sum_aggregation.aggregate(measurement(1))
+        second_sum = synchronous_sum_aggregation.collect(
+            AggregationTemporality.DELTA
+        )
 
         self.assertEqual(second_sum.value, 1)
-        self.assertTrue(second_sum.is_monotonic)
 
         self.assertGreater(
             second_sum.start_time_unix_nano, first_sum.start_time_unix_nano
@@ -131,32 +153,30 @@ class TestSynchronousSumAggregation(TestCase):
 
     def test_collect_cumulative(self):
         """
-        `SynchronousSumAggregation` collects sum metric points
+        `SynchronousSumAggregation` collects number data points
         """
 
         sum_aggregation = _SumAggregation(
-            True, AggregationTemporality.CUMULATIVE, Mock()
+            {}, True, AggregationTemporality.CUMULATIVE
         )
 
         sum_aggregation.aggregate(measurement(1))
-        first_sum = sum_aggregation.collect()
+        first_sum = sum_aggregation.collect(AggregationTemporality.CUMULATIVE)
 
         self.assertEqual(first_sum.value, 1)
-        self.assertTrue(first_sum.is_monotonic)
 
         # should have been reset after first collect
         sum_aggregation.aggregate(measurement(1))
-        second_sum = sum_aggregation.collect()
+        second_sum = sum_aggregation.collect(AggregationTemporality.CUMULATIVE)
 
         self.assertEqual(second_sum.value, 1)
-        self.assertTrue(second_sum.is_monotonic)
 
         self.assertEqual(
             second_sum.start_time_unix_nano, first_sum.start_time_unix_nano
         )
 
         # if no point seen for a whole interval, should return None
-        third_sum = sum_aggregation.collect()
+        third_sum = sum_aggregation.collect(AggregationTemporality.CUMULATIVE)
         self.assertIsNone(third_sum)
 
 
@@ -180,35 +200,44 @@ class TestLastValueAggregation(TestCase):
 
     def test_collect(self):
         """
-        `LastValueAggregation` collects sum metric points
+        `LastValueAggregation` collects number data points
         """
 
         last_value_aggregation = _LastValueAggregation(Mock())
 
-        self.assertIsNone(last_value_aggregation.collect())
+        self.assertIsNone(
+            last_value_aggregation.collect(AggregationTemporality.CUMULATIVE)
+        )
 
         last_value_aggregation.aggregate(measurement(1))
-        first_gauge = last_value_aggregation.collect()
-        self.assertIsInstance(first_gauge, Gauge)
+        first_number_data_point = last_value_aggregation.collect(
+            AggregationTemporality.CUMULATIVE
+        )
+        self.assertIsInstance(first_number_data_point, NumberDataPoint)
 
-        self.assertEqual(first_gauge.value, 1)
+        self.assertEqual(first_number_data_point.value, 1)
 
         last_value_aggregation.aggregate(measurement(1))
 
         # CI fails the last assertion without this
         sleep(0.1)
 
-        second_gauge = last_value_aggregation.collect()
+        second_number_data_point = last_value_aggregation.collect(
+            AggregationTemporality.CUMULATIVE
+        )
 
-        self.assertEqual(second_gauge.value, 1)
+        self.assertEqual(second_number_data_point.value, 1)
 
         self.assertGreater(
-            second_gauge.time_unix_nano, first_gauge.time_unix_nano
+            second_number_data_point.time_unix_nano,
+            first_number_data_point.time_unix_nano,
         )
 
         # if no observation seen for the interval, it should return None
-        third_gauge = last_value_aggregation.collect()
-        self.assertIsNone(third_gauge)
+        third_number_data_point = last_value_aggregation.collect(
+            AggregationTemporality.CUMULATIVE
+        )
+        self.assertIsNone(third_number_data_point)
 
 
 class TestExplicitBucketHistogramAggregation(TestCase):
@@ -249,7 +278,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
             explicit_bucket_histogram_aggregation._bucket_counts[3], 1
         )
 
-        histo = explicit_bucket_histogram_aggregation.collect()
+        histo = explicit_bucket_histogram_aggregation.collect(
+            AggregationTemporality.CUMULATIVE
+        )
         self.assertEqual(histo.sum, 14)
 
     def test_min_max(self):
@@ -294,7 +325,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         )
 
         explicit_bucket_histogram_aggregation.aggregate(measurement(1))
-        first_histogram = explicit_bucket_histogram_aggregation.collect()
+        first_histogram = explicit_bucket_histogram_aggregation.collect(
+            AggregationTemporality.CUMULATIVE
+        )
 
         self.assertEqual(first_histogram.bucket_counts, (0, 1, 0, 0))
         self.assertEqual(first_histogram.sum, 1)
@@ -303,510 +336,42 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         sleep(0.1)
 
         explicit_bucket_histogram_aggregation.aggregate(measurement(1))
-        second_histogram = explicit_bucket_histogram_aggregation.collect()
+        second_histogram = explicit_bucket_histogram_aggregation.collect(
+            AggregationTemporality.CUMULATIVE
+        )
+
+        self.assertEqual(second_histogram.bucket_counts, (0, 2, 0, 0))
+        self.assertEqual(second_histogram.sum, 2)
+
+        self.assertGreater(
+            second_histogram.time_unix_nano, first_histogram.time_unix_nano
+        )
+
+        explicit_bucket_histogram_aggregation = (
+            _ExplicitBucketHistogramAggregation(Mock(), boundaries=[0, 1, 2])
+        )
+
+        explicit_bucket_histogram_aggregation.aggregate(measurement(1))
+        first_histogram = explicit_bucket_histogram_aggregation.collect(
+            AggregationTemporality.DELTA
+        )
+
+        self.assertEqual(first_histogram.bucket_counts, (0, 1, 0, 0))
+        self.assertEqual(first_histogram.sum, 1)
+
+        # CI fails the last assertion without this
+        sleep(0.1)
+
+        explicit_bucket_histogram_aggregation.aggregate(measurement(1))
+        second_histogram = explicit_bucket_histogram_aggregation.collect(
+            AggregationTemporality.DELTA
+        )
 
         self.assertEqual(second_histogram.bucket_counts, (0, 1, 0, 0))
         self.assertEqual(second_histogram.sum, 1)
 
         self.assertGreater(
             second_histogram.time_unix_nano, first_histogram.time_unix_nano
-        )
-
-
-class TestConvertAggregationTemporality(TestCase):
-    """
-    Test aggregation temporality conversion algorithm
-    """
-
-    def test_previous_point_non_cumulative(self):
-
-        with self.assertRaises(Exception):
-
-            _convert_aggregation_temporality(
-                Sum(
-                    start_time_unix_nano=0,
-                    time_unix_nano=0,
-                    value=0,
-                    aggregation_temporality=AggregationTemporality.DELTA,
-                    is_monotonic=False,
-                ),
-                Sum(
-                    start_time_unix_nano=0,
-                    time_unix_nano=0,
-                    value=0,
-                    aggregation_temporality=AggregationTemporality.DELTA,
-                    is_monotonic=False,
-                ),
-                AggregationTemporality.DELTA,
-            ),
-
-    def test_mismatched_point_types(self):
-
-        current_point = Sum(
-            start_time_unix_nano=0,
-            time_unix_nano=0,
-            value=0,
-            aggregation_temporality=AggregationTemporality.DELTA,
-            is_monotonic=False,
-        )
-
-        with self.assertLogs(level=WARNING):
-            self.assertIs(
-                _convert_aggregation_temporality(
-                    Gauge(time_unix_nano=0, value=0),
-                    current_point,
-                    AggregationTemporality.DELTA,
-                ),
-                current_point,
-            )
-
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=WARNING):
-                self.assertIs(
-                    _convert_aggregation_temporality(
-                        Gauge(time_unix_nano=0, value=0),
-                        None,
-                        AggregationTemporality.DELTA,
-                    ),
-                    current_point,
-                )
-
-    def test_current_point_sum_previous_point_none(self):
-
-        current_point = Sum(
-            start_time_unix_nano=0,
-            time_unix_nano=0,
-            value=0,
-            aggregation_temporality=AggregationTemporality.DELTA,
-            is_monotonic=False,
-        )
-
-        self.assertEqual(
-            _convert_aggregation_temporality(
-                None, current_point, AggregationTemporality.CUMULATIVE
-            ),
-            replace(
-                current_point,
-                aggregation_temporality=AggregationTemporality.CUMULATIVE,
-            ),
-        )
-
-    def test_current_point_sum_current_point_same_aggregation_temporality(
-        self,
-    ):
-
-        current_point = Sum(
-            start_time_unix_nano=0,
-            time_unix_nano=0,
-            value=0,
-            aggregation_temporality=AggregationTemporality.DELTA,
-            is_monotonic=False,
-        )
-
-        self.assertEqual(
-            _convert_aggregation_temporality(
-                Sum(
-                    start_time_unix_nano=0,
-                    time_unix_nano=0,
-                    value=0,
-                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                    is_monotonic=False,
-                ),
-                current_point,
-                AggregationTemporality.DELTA,
-            ),
-            current_point,
-        )
-
-        current_point = Sum(
-            start_time_unix_nano=0,
-            time_unix_nano=0,
-            value=0,
-            aggregation_temporality=AggregationTemporality.CUMULATIVE,
-            is_monotonic=False,
-        )
-
-        self.assertEqual(
-            _convert_aggregation_temporality(
-                Sum(
-                    start_time_unix_nano=0,
-                    time_unix_nano=0,
-                    value=0,
-                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                    is_monotonic=False,
-                ),
-                current_point,
-                AggregationTemporality.CUMULATIVE,
-            ),
-            current_point,
-        )
-
-    def test_current_point_sum_aggregation_temporality_delta(self):
-
-        self.assertEqual(
-            _convert_aggregation_temporality(
-                Sum(
-                    start_time_unix_nano=1,
-                    time_unix_nano=2,
-                    value=3,
-                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                    is_monotonic=False,
-                ),
-                Sum(
-                    start_time_unix_nano=4,
-                    time_unix_nano=5,
-                    value=6,
-                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                    is_monotonic=False,
-                ),
-                AggregationTemporality.DELTA,
-            ),
-            Sum(
-                start_time_unix_nano=2,
-                time_unix_nano=5,
-                value=3,
-                aggregation_temporality=AggregationTemporality.DELTA,
-                is_monotonic=False,
-            ),
-        )
-
-        self.assertEqual(
-            _convert_aggregation_temporality(
-                Sum(
-                    start_time_unix_nano=1,
-                    time_unix_nano=2,
-                    value=3,
-                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                    is_monotonic=True,
-                ),
-                Sum(
-                    start_time_unix_nano=4,
-                    time_unix_nano=5,
-                    value=6,
-                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                    is_monotonic=False,
-                ),
-                AggregationTemporality.DELTA,
-            ),
-            Sum(
-                start_time_unix_nano=2,
-                time_unix_nano=5,
-                value=3,
-                aggregation_temporality=AggregationTemporality.DELTA,
-                is_monotonic=False,
-            ),
-        )
-
-        self.assertEqual(
-            _convert_aggregation_temporality(
-                Sum(
-                    start_time_unix_nano=1,
-                    time_unix_nano=2,
-                    value=3,
-                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                    is_monotonic=True,
-                ),
-                Sum(
-                    start_time_unix_nano=4,
-                    time_unix_nano=5,
-                    value=6,
-                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                    is_monotonic=True,
-                ),
-                AggregationTemporality.DELTA,
-            ),
-            Sum(
-                start_time_unix_nano=2,
-                time_unix_nano=5,
-                value=3,
-                aggregation_temporality=AggregationTemporality.DELTA,
-                is_monotonic=True,
-            ),
-        )
-
-    def test_current_point_sum_aggregation_temporality_cumulative(self):
-
-        self.assertEqual(
-            _convert_aggregation_temporality(
-                Sum(
-                    start_time_unix_nano=1,
-                    time_unix_nano=2,
-                    value=3,
-                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                    is_monotonic=False,
-                ),
-                Sum(
-                    start_time_unix_nano=4,
-                    time_unix_nano=5,
-                    value=6,
-                    aggregation_temporality=AggregationTemporality.DELTA,
-                    is_monotonic=False,
-                ),
-                AggregationTemporality.CUMULATIVE,
-            ),
-            Sum(
-                start_time_unix_nano=1,
-                time_unix_nano=5,
-                value=9,
-                aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                is_monotonic=False,
-            ),
-        )
-
-        self.assertEqual(
-            _convert_aggregation_temporality(
-                Sum(
-                    start_time_unix_nano=1,
-                    time_unix_nano=2,
-                    value=3,
-                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                    is_monotonic=True,
-                ),
-                Sum(
-                    start_time_unix_nano=4,
-                    time_unix_nano=5,
-                    value=6,
-                    aggregation_temporality=AggregationTemporality.DELTA,
-                    is_monotonic=False,
-                ),
-                AggregationTemporality.CUMULATIVE,
-            ),
-            Sum(
-                start_time_unix_nano=1,
-                time_unix_nano=5,
-                value=9,
-                aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                is_monotonic=False,
-            ),
-        )
-
-        self.assertEqual(
-            _convert_aggregation_temporality(
-                Sum(
-                    start_time_unix_nano=1,
-                    time_unix_nano=2,
-                    value=3,
-                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                    is_monotonic=True,
-                ),
-                Sum(
-                    start_time_unix_nano=4,
-                    time_unix_nano=5,
-                    value=6,
-                    aggregation_temporality=AggregationTemporality.DELTA,
-                    is_monotonic=True,
-                ),
-                AggregationTemporality.CUMULATIVE,
-            ),
-            Sum(
-                start_time_unix_nano=1,
-                time_unix_nano=5,
-                value=9,
-                aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                is_monotonic=True,
-            ),
-        )
-
-    def test_current_point_gauge(self):
-
-        current_point = Gauge(time_unix_nano=1, value=0)
-        self.assertEqual(
-            _convert_aggregation_temporality(
-                Gauge(time_unix_nano=0, value=0),
-                current_point,
-                AggregationTemporality.CUMULATIVE,
-            ),
-            current_point,
-        )
-
-
-class TestHistogramConvertAggregationTemporality(TestCase):
-    def test_previous_point_none(self):
-
-        current_point = HistogramPoint(
-            aggregation_temporality=AggregationTemporality.DELTA,
-            bucket_counts=[0, 2, 1, 2, 0],
-            explicit_bounds=[0, 5, 10, 25],
-            max=24,
-            min=2,
-            start_time_unix_nano=0,
-            sum=70,
-            time_unix_nano=1,
-        )
-
-        self.assertEqual(
-            _convert_aggregation_temporality(
-                None, current_point, AggregationTemporality.CUMULATIVE
-            ),
-            replace(
-                current_point,
-                aggregation_temporality=AggregationTemporality.CUMULATIVE,
-            ),
-        )
-
-    def test_previous_point_non_cumulative(self):
-
-        with self.assertRaises(Exception):
-
-            _convert_aggregation_temporality(
-                HistogramPoint(
-                    aggregation_temporality=AggregationTemporality.DELTA,
-                    bucket_counts=[0, 2, 1, 2, 0],
-                    explicit_bounds=[0, 5, 10, 25],
-                    max=24,
-                    min=2,
-                    start_time_unix_nano=0,
-                    sum=70,
-                    time_unix_nano=1,
-                ),
-                HistogramPoint(
-                    aggregation_temporality=AggregationTemporality.DELTA,
-                    bucket_counts=[0, 1, 3, 0, 0],
-                    explicit_bounds=[0, 5, 10, 25],
-                    max=9,
-                    min=2,
-                    start_time_unix_nano=1,
-                    sum=35,
-                    time_unix_nano=2,
-                ),
-                AggregationTemporality.DELTA,
-            ),
-
-    def test_same_aggregation_temporality_cumulative(self):
-        current_point = HistogramPoint(
-            aggregation_temporality=AggregationTemporality.CUMULATIVE,
-            bucket_counts=[0, 3, 4, 2, 0],
-            explicit_bounds=[0, 5, 10, 25],
-            max=24,
-            min=1,
-            start_time_unix_nano=0,
-            sum=105,
-            time_unix_nano=2,
-        )
-        self.assertEqual(
-            _convert_aggregation_temporality(
-                HistogramPoint(
-                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                    bucket_counts=[0, 2, 1, 2, 0],
-                    explicit_bounds=[0, 5, 10, 25],
-                    max=24,
-                    min=1,
-                    start_time_unix_nano=0,
-                    sum=70,
-                    time_unix_nano=1,
-                ),
-                current_point,
-                AggregationTemporality.CUMULATIVE,
-            ),
-            current_point,
-        )
-
-    def test_same_aggregation_temporality_delta(self):
-        current_point = HistogramPoint(
-            aggregation_temporality=AggregationTemporality.DELTA,
-            bucket_counts=[0, 1, 3, 0, 0],
-            explicit_bounds=[0, 5, 10, 25],
-            max=9,
-            min=1,
-            start_time_unix_nano=1,
-            sum=35,
-            time_unix_nano=2,
-        )
-
-        self.assertEqual(
-            _convert_aggregation_temporality(
-                HistogramPoint(
-                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                    bucket_counts=[0, 3, 4, 2, 0],
-                    explicit_bounds=[0, 5, 10, 25],
-                    max=24,
-                    min=1,
-                    start_time_unix_nano=0,
-                    sum=105,
-                    time_unix_nano=2,
-                ),
-                current_point,
-                AggregationTemporality.DELTA,
-            ),
-            current_point,
-        )
-
-    def test_aggregation_temporality_to_cumulative(self):
-        current_point = HistogramPoint(
-            aggregation_temporality=AggregationTemporality.DELTA,
-            bucket_counts=[0, 1, 3, 0, 0],
-            explicit_bounds=[0, 5, 10, 25],
-            max=24,
-            min=1,
-            start_time_unix_nano=1,
-            sum=35,
-            time_unix_nano=2,
-        )
-
-        self.assertEqual(
-            _convert_aggregation_temporality(
-                HistogramPoint(
-                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                    bucket_counts=[0, 2, 1, 2, 0],
-                    explicit_bounds=[0, 5, 10, 25],
-                    max=24,
-                    min=1,
-                    start_time_unix_nano=0,
-                    sum=70,
-                    time_unix_nano=1,
-                ),
-                current_point,
-                AggregationTemporality.CUMULATIVE,
-            ),
-            HistogramPoint(
-                aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                bucket_counts=[0, 3, 4, 2, 0],
-                explicit_bounds=[0, 5, 10, 25],
-                max=24,
-                min=1,
-                start_time_unix_nano=0,
-                sum=105,
-                time_unix_nano=2,
-            ),
-        )
-
-    def test_aggregation_temporality_to_delta(self):
-        current_point = HistogramPoint(
-            aggregation_temporality=AggregationTemporality.CUMULATIVE,
-            bucket_counts=[0, 3, 4, 2, 0],
-            explicit_bounds=[0, 5, 10, 25],
-            max=22,
-            min=3,
-            start_time_unix_nano=0,
-            sum=105,
-            time_unix_nano=2,
-        )
-
-        self.assertEqual(
-            _convert_aggregation_temporality(
-                HistogramPoint(
-                    aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                    bucket_counts=[0, 2, 1, 2, 0],
-                    explicit_bounds=[0, 5, 10, 25],
-                    max=24,
-                    min=1,
-                    start_time_unix_nano=0,
-                    sum=70,
-                    time_unix_nano=1,
-                ),
-                current_point,
-                AggregationTemporality.DELTA,
-            ),
-            HistogramPoint(
-                aggregation_temporality=AggregationTemporality.DELTA,
-                bucket_counts=[0, 1, 3, 0, 0],
-                explicit_bounds=[0, 5, 10, 25],
-                max=22,
-                min=3,
-                start_time_unix_nano=1,
-                sum=35,
-                time_unix_nano=2,
-            ),
         )
 
 

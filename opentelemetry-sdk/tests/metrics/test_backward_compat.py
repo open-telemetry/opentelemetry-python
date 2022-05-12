@@ -100,8 +100,14 @@ class TestBackwardCompat(TestCase):
         # produce some data
         meter_provider.get_meter("foo").create_counter("mycounter").add(12)
         try:
-            metrics = reader.get_metrics()
+            metrics_data = reader.get_metrics_data()
         except Exception:
             self.fail()
 
-        self.assertEqual(len(metrics), 1)
+        self.assertEqual(len(metrics_data.resource_metrics), 1)
+        self.assertEqual(
+            len(metrics_data.resource_metrics[0].scope_metrics), 1
+        )
+        self.assertEqual(
+            len(metrics_data.resource_metrics[0].scope_metrics[0].metrics), 1
+        )
