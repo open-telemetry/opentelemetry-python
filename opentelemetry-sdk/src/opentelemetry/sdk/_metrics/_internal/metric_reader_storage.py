@@ -217,12 +217,9 @@ class MetricReaderStorage:
             resource_metrics=[
                 ResourceMetrics(
                     resource=self._sdk_config.resource,
-                    scope_metrics=[
-                        scope_metrics
-                        for scope_metrics in (
-                            instrumentation_scope_scope_metrics.values()
-                        )
-                    ],
+                    scope_metrics=list(
+                        instrumentation_scope_scope_metrics.values()
+                    ),
                     schema_url=self._sdk_config.resource.schema_url,
                 )
             ]
