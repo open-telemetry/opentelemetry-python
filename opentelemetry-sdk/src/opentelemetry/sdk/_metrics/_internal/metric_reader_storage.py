@@ -130,7 +130,7 @@ class MetricReaderStorage:
         # streams produced by the SDK, but we still align the output timestamps
         # for a single instrument.
 
-        collection_start = _time_ns()
+        collection_start_nanos = _time_ns()
 
         with self._lock:
 
@@ -159,7 +159,7 @@ class MetricReaderStorage:
                             aggregation_temporality=aggregation_temporality,
                             data_points=view_instrument_match.collect(
                                 aggregation_temporality,
-                                collection_start
+                                collection_start_nanos
                             ),
                             is_monotonic=isinstance(
                                 instrument, (Counter, ObservableCounter)
@@ -173,7 +173,7 @@ class MetricReaderStorage:
                         data = Gauge(
                             data_points=view_instrument_match.collect(
                                 aggregation_temporality,
-                                collection_start
+                                collection_start_nanos
                             )
                         )
                     elif isinstance(
@@ -184,7 +184,7 @@ class MetricReaderStorage:
                         data = Histogram(
                             data_points=view_instrument_match.collect(
                                 aggregation_temporality,
-                                collection_start
+                                collection_start_nanos
                             ),
                             aggregation_temporality=aggregation_temporality,
                         )
