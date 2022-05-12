@@ -91,10 +91,12 @@ class TestPrometheusMetricReader(TestCase):
                     resource=Mock(),
                     scope_metrics=[
                         ScopeMetrics(
-                            scope=Mock(), metrics=[metric], schema_url=Mock()
+                            scope=Mock(),
+                            metrics=[metric],
+                            schema_url="schema_url"
                         )
                     ],
-                    schema_url=Mock(),
+                    schema_url="schema_url",
                 )
             ]
         )
@@ -134,10 +136,12 @@ class TestPrometheusMetricReader(TestCase):
                     resource=Mock(),
                     scope_metrics=[
                         ScopeMetrics(
-                            scope=Mock(), metrics=[metric], schema_url=Mock()
+                            scope=Mock(),
+                            metrics=[metric],
+                            schema_url="schema_url"
                         )
                     ],
-                    schema_url=Mock(),
+                    schema_url="schema_url",
                 )
             ]
         )
@@ -177,10 +181,12 @@ class TestPrometheusMetricReader(TestCase):
                     resource=Mock(),
                     scope_metrics=[
                         ScopeMetrics(
-                            scope=Mock(), metrics=[metric], schema_url=Mock()
+                            scope=Mock(),
+                            metrics=[metric],
+                            schema_url="schema_url"
                         )
                     ],
-                    schema_url=Mock(),
+                    schema_url="schema_url",
                 )
             ]
         )
@@ -240,10 +246,12 @@ class TestPrometheusMetricReader(TestCase):
                     resource=Mock(),
                     scope_metrics=[
                         ScopeMetrics(
-                            scope=Mock(), metrics=[metric], schema_url=Mock()
+                            scope=Mock(),
+                            metrics=[metric],
+                            schema_url="schema_url"
                         )
                     ],
-                    schema_url=Mock(),
+                    schema_url="schema_url",
                 )
             ]
         )
