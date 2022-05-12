@@ -17,19 +17,12 @@ from unittest import TestCase
 
 from opentelemetry.sdk._metrics import MeterProvider
 from opentelemetry.sdk._metrics.export import InMemoryMetricReader
-from opentelemetry.sdk._metrics.view import View
 
 
 class TestTimeAlign(TestCase):
     def test_time_align(self):
         reader = InMemoryMetricReader()
-        meter_provider = MeterProvider(
-            metric_readers=[reader],
-            views=[
-                View(instrument_name="counter_0"),
-                View(instrument_name="counter_1"),
-            ],
-        )
+        meter_provider = MeterProvider(metric_readers=[reader])
 
         meter = meter_provider.get_meter("testmeter")
 
