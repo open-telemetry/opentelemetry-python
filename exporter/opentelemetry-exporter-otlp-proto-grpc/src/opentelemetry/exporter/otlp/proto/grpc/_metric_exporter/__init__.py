@@ -105,20 +105,16 @@ class OTLPMetricExporter(
                     instrumentation_scope_pb2_scope_metrics
                 ):
 
-                    if instrumentation_scope is None:
-                        instrumentation_scope_pb2_scope_metrics[
-                            None
-                        ] = pb2.ScopeMetrics()
-
-                    else:
-                        instrumentation_scope_pb2_scope_metrics[
-                            instrumentation_scope
-                        ] = pb2.ScopeMetrics(
-                            scope=InstrumentationScope(
-                                name=instrumentation_scope.name,
-                                version=instrumentation_scope.version,
-                            )
+                    # instrumentation_scope comes from the meter, it is never
+                    # None.
+                    instrumentation_scope_pb2_scope_metrics[
+                        instrumentation_scope
+                    ] = pb2.ScopeMetrics(
+                        scope=InstrumentationScope(
+                            name=instrumentation_scope.name,
+                            version=instrumentation_scope.version,
                         )
+                    )
 
                 pb2_scope_metrics = instrumentation_scope_pb2_scope_metrics[
                     instrumentation_scope
