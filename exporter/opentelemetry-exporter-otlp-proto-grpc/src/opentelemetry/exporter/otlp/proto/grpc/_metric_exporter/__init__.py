@@ -83,7 +83,7 @@ class OTLPMetricExporter(
         self, data: MetricsData
     ) -> ExportMetricsServiceRequest:
 
-        resource_instrumentation_scope_pb2_scope_metrics = {}
+        resource_metrics_dict = {}
 
         for resource_metrics in data.resource_metrics:
 
@@ -91,11 +91,9 @@ class OTLPMetricExporter(
 
             # It is safe to assume that each entry in data.resource_metrics is
             # associated with an unique resource.
-            instrumentation_scope_pb2_scope_metrics = {}
+            scope_metrics_dict = {}
 
-            resource_instrumentation_scope_pb2_scope_metrics[
-                resource
-            ] = instrumentation_scope_pb2_scope_metrics
+            resource_metrics_dict[resource] = scope_metrics_dict
 
             for scope_metrics in resource_metrics.scope_metrics:
 
@@ -111,9 +109,7 @@ class OTLPMetricExporter(
                     )
                 )
 
-                instrumentation_scope_pb2_scope_metrics[
-                    instrumentation_scope
-                ] = pb2_scope_metrics
+                scope_metrics_dict[instrumentation_scope] = pb2_scope_metrics
 
                 for metric in scope_metrics.metrics:
                     pb2_metric = pb2.Metric(
@@ -191,7 +187,7 @@ class OTLPMetricExporter(
 
         return ExportMetricsServiceRequest(
             resource_metrics=get_resource_data(
-                resource_instrumentation_scope_pb2_scope_metrics,
+                resource_metrics_dict,
                 pb2.ResourceMetrics,
                 "metrics",
             )
