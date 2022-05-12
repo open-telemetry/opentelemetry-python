@@ -204,6 +204,7 @@ class Test_ViewInstrumentMatch(TestCase):
         number_data_points = view_instrument_match.collect(
             AggregationTemporality.CUMULATIVE
         )
+        number_data_points = list(number_data_points)
         self.assertEqual(len(number_data_points), 1)
 
         number_data_point = number_data_points[0]

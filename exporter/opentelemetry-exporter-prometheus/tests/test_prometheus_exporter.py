@@ -93,7 +93,7 @@ class TestPrometheusMetricReader(TestCase):
                         ScopeMetrics(
                             scope=Mock(),
                             metrics=[metric],
-                            schema_url="schema_url"
+                            schema_url="schema_url",
                         )
                     ],
                     schema_url="schema_url",
@@ -138,7 +138,7 @@ class TestPrometheusMetricReader(TestCase):
                         ScopeMetrics(
                             scope=Mock(),
                             metrics=[metric],
-                            schema_url="schema_url"
+                            schema_url="schema_url",
                         )
                     ],
                     schema_url="schema_url",
@@ -183,7 +183,7 @@ class TestPrometheusMetricReader(TestCase):
                         ScopeMetrics(
                             scope=Mock(),
                             metrics=[metric],
-                            schema_url="schema_url"
+                            schema_url="schema_url",
                         )
                     ],
                     schema_url="schema_url",
@@ -248,7 +248,7 @@ class TestPrometheusMetricReader(TestCase):
                         ScopeMetrics(
                             scope=Mock(),
                             metrics=[metric],
-                            schema_url="schema_url"
+                            schema_url="schema_url",
                         )
                     ],
                     schema_url="schema_url",

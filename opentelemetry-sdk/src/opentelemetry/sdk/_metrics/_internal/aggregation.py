@@ -220,13 +220,12 @@ class _SumAggregation(_Aggregation[Sum]):
             value=value,
         )
 
-        if self._previous_point is None:
-            self._previous_point = current_point
-            return current_point
-
-        if self._instrument_temporality is aggregation_temporality:
+        if self._previous_point is None or (
+            self._instrument_temporality is aggregation_temporality
+        ):
             # Output DELTA for a synchronous instrument
             # Output CUMULATIVE for an asynchronous instrument
+            self._previous_point = current_point
             return current_point
 
         if aggregation_temporality is AggregationTemporality.DELTA:
@@ -241,12 +240,15 @@ class _SumAggregation(_Aggregation[Sum]):
                 self._previous_point.start_time_unix_nano
             )
 
-        return NumberDataPoint(
+        current_point = NumberDataPoint(
             attributes=self._attributes,
             start_time_unix_nano=output_start_time_unix_nano,
             time_unix_nano=current_point.time_unix_nano,
             value=value,
         )
+
+        self._previous_point = current_point
+        return current_point
 
 
 class _LastValueAggregation(_Aggregation[Gauge]):
@@ -363,11 +365,10 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             max=max_,
         )
 
-        if self._previous_point is None:
+        if self._previous_point is None or (
+            self._instrument_temporality is aggregation_temporality
+        ):
             self._previous_point = current_point
-            return current_point
-
-        if self._instrument_temporality is aggregation_temporality:
             return current_point
 
         max_ = current_point.max
@@ -397,7 +398,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 )
             ]
 
-        return HistogramDataPoint(
+        current_point = HistogramDataPoint(
             attributes=self._attributes,
             start_time_unix_nano=start_time_unix_nano,
             time_unix_nano=current_point.time_unix_nano,
@@ -408,6 +409,8 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             min=min_,
             max=max_,
         )
+        self._previous_point = current_point
+        return current_point
 
 
 class ExplicitBucketHistogramAggregation(Aggregation):

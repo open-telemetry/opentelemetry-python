@@ -118,11 +118,6 @@ class _ViewInstrumentMatch:
         self, aggregation_temporality: AggregationTemporality
     ) -> Iterable[DataPointT]:
 
-        data_points = []
         with self._lock:
             for aggregation in self._attributes_aggregation.values():
-                data_points.append(
-                    aggregation.collect(aggregation_temporality)
-                )
-
-        return data_points
+                yield aggregation.collect(aggregation_temporality)

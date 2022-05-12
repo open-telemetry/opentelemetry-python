@@ -86,19 +86,23 @@ class TestInMemoryMetricReader(TestCase):
         )
         self.assertEqual(
             len(
-                metrics.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points
+                list(
+                    metrics.resource_metrics[0]
+                    .scope_metrics[0]
+                    .metrics[0]
+                    .data.data_points
+                )
             ),
             2,
         )
         self.assertEqual(
             len(
-                metrics.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[1]
-                .data.data_points
+                list(
+                    metrics.resource_metrics[0]
+                    .scope_metrics[0]
+                    .metrics[1]
+                    .data.data_points
+                )
             ),
             1,
         )
