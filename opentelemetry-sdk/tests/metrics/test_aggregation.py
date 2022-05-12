@@ -42,7 +42,6 @@ from opentelemetry.sdk._metrics.view import (
     LastValueAggregation,
     SumAggregation,
 )
-from opentelemetry.util._time import _time_ns
 from opentelemetry.util.types import Attributes
 
 
@@ -135,19 +134,19 @@ class TestSynchronousSumAggregation(TestCase):
         )
 
         synchronous_sum_aggregation.aggregate(measurement(1))
-        # _time_ns used here directly to simulate the instant the first
+        # 1 is used here directly to simulate the instant the first
         # collection process starts.
         first_sum = synchronous_sum_aggregation.collect(
-            AggregationTemporality.DELTA, _time_ns()
+            AggregationTemporality.DELTA, 1
         )
 
         self.assertEqual(first_sum.value, 1)
 
         synchronous_sum_aggregation.aggregate(measurement(1))
-        # _time_ns used here directly to simulate the instant the second
+        # 2 is used here directly to simulate the instant the second
         # collection process starts.
         second_sum = synchronous_sum_aggregation.collect(
-            AggregationTemporality.DELTA, _time_ns()
+            AggregationTemporality.DELTA, 2
         )
 
         self.assertEqual(second_sum.value, 1)
