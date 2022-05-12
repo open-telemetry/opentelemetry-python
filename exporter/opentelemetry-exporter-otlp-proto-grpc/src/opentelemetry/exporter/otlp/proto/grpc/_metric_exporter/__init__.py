@@ -89,16 +89,13 @@ class OTLPMetricExporter(
 
             resource = resource_metrics.resource
 
-            instrumentation_scope_pb2_scope_metrics = (
-                resource_instrumentation_scope_pb2_scope_metrics.get(
-                    resource, {}
-                )
-            )
+            # It is safe to assume that each entry in data.resource_metrics is
+            # associated with an unique resource.
+            instrumentation_scope_pb2_scope_metrics = {}
 
-            if not instrumentation_scope_pb2_scope_metrics:
-                resource_instrumentation_scope_pb2_scope_metrics[
-                    resource
-                ] = instrumentation_scope_pb2_scope_metrics
+            resource_instrumentation_scope_pb2_scope_metrics[
+                resource
+            ] = instrumentation_scope_pb2_scope_metrics
 
             for scope_metrics in resource_metrics.scope_metrics:
 
