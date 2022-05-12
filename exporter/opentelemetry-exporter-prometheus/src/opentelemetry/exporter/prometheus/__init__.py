@@ -185,9 +185,17 @@ class _CustomCollector:
                     metrics.append(metric)
 
         for metric in metrics:
-            label_keyss = []
             label_valuess = []
             values = []
+
+            pre_metric_family_ids = []
+
+            metric_name = ""
+            if self._prefix != "":
+                metric_name = self._prefix + "_"
+            metric_name += self._sanitize(metric.name)
+
+            metric_description = metric.description or ""
 
             for number_data_point in metric.data.data_points:
                 label_keys = []
@@ -197,7 +205,17 @@ class _CustomCollector:
                     label_keys.append(self._sanitize(key))
                     label_values.append(self._check_value(value))
 
-                label_keyss.append(label_keys)
+                pre_metric_family_ids.append(
+                    "|".join(
+                        [
+                            metric_name,
+                            metric_description,
+                            "%".join(label_keys),
+                            metric.unit,
+                        ]
+                    )
+                )
+
                 label_valuess.append(label_values)
                 if isinstance(number_data_point, HistogramDataPoint):
                     values.append(
@@ -211,27 +229,6 @@ class _CustomCollector:
                     )
                 else:
                     values.append(number_data_point.value)
-
-            metric_name = ""
-            if self._prefix != "":
-                metric_name = self._prefix + "_"
-            metric_name += self._sanitize(metric.name)
-
-            description = metric.description or ""
-
-            pre_metric_family_ids = []
-
-            for label_keys in label_keyss:
-                pre_metric_family_ids.append(
-                    "|".join(
-                        [
-                            metric_name,
-                            description,
-                            "%".join(label_keys),
-                            metric.unit,
-                        ]
-                    )
-                )
 
             for pre_metric_family_id, label_values, value in zip(
                 pre_metric_family_ids, label_valuess, values
@@ -247,7 +244,7 @@ class _CustomCollector:
                             metric_family_id
                         ] = CounterMetricFamily(
                             name=metric_name,
-                            documentation=description,
+                            documentation=metric_description,
                             labels=label_keys,
                             unit=metric.unit,
                         )
@@ -268,7 +265,7 @@ class _CustomCollector:
                             metric_family_id
                         ] = GaugeMetricFamily(
                             name=metric_name,
-                            documentation=description,
+                            documentation=metric_description,
                             labels=label_keys,
                             unit=metric.unit,
                         )
@@ -289,7 +286,7 @@ class _CustomCollector:
                             metric_family_id
                         ] = HistogramMetricFamily(
                             name=metric_name,
-                            documentation=description,
+                            documentation=metric_description,
                             labels=label_keys,
                             unit=metric.unit,
                         )
