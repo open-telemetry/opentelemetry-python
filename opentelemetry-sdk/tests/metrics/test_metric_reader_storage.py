@@ -349,7 +349,18 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         actual = metric_reader_storage.collect()
 
         self.assertEqual(
-            actual[0].point.time_unix_nano, actual[1].point.time_unix_nano
+            list(
+                actual.resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[0]
+                .data.data_points
+            )[0].time_unix_nano,
+            list(
+                actual.resource_metrics[0]
+                .scope_metrics[1]
+                .metrics[0]
+                .data.data_points
+            )[0].time_unix_nano,
         )
 
     def test_conflicting_view_configuration(self):

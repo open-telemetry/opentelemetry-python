@@ -123,9 +123,13 @@ class _ViewInstrumentMatch:
         self._attributes_aggregation[attributes].aggregate(measurement)
 
     def collect(
-        self, aggregation_temporality: AggregationTemporality
+        self,
+        aggregation_temporality: AggregationTemporality,
+        collection_start_nanos: int,
     ) -> Iterable[DataPointT]:
 
         with self._lock:
             for aggregation in self._attributes_aggregation.values():
-                yield aggregation.collect(aggregation_temporality)
+                yield aggregation.collect(
+                    aggregation_temporality, collection_start_nanos
+                )

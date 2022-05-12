@@ -112,15 +112,19 @@ class TestSynchronousSumAggregation(TestCase):
         )
 
         synchronous_sum_aggregation.aggregate(measurement(1))
+        # 1 is used here directly to simulate the instant the first
+        # collection process starts.
         first_sum = synchronous_sum_aggregation.collect(
-            AggregationTemporality.CUMULATIVE
+            AggregationTemporality.CUMULATIVE, 1
         )
 
         self.assertEqual(first_sum.value, 1)
 
         synchronous_sum_aggregation.aggregate(measurement(1))
+        # 2 is used here directly to simulate the instant the first
+        # collection process starts.
         second_sum = synchronous_sum_aggregation.collect(
-            AggregationTemporality.CUMULATIVE
+            AggregationTemporality.CUMULATIVE, 2
         )
 
         self.assertEqual(second_sum.value, 2)
@@ -130,7 +134,7 @@ class TestSynchronousSumAggregation(TestCase):
         )
 
         synchronous_sum_aggregation = _SumAggregation(
-            {}, True, AggregationTemporality.DELTA
+            Mock(), True, AggregationTemporality.DELTA, 0
         )
 
         synchronous_sum_aggregation.aggregate(measurement(1))
@@ -143,7 +147,7 @@ class TestSynchronousSumAggregation(TestCase):
         self.assertEqual(first_sum.value, 1)
 
         synchronous_sum_aggregation.aggregate(measurement(1))
-        # 2 is used here directly to simulate the instant the second
+        # 2 is used here directly to simulate the instant the first
         # collection process starts.
         second_sum = synchronous_sum_aggregation.collect(
             AggregationTemporality.DELTA, 2
@@ -369,33 +373,6 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
         self.assertEqual(second_histogram.bucket_counts, (0, 2, 0, 0))
         self.assertEqual(second_histogram.sum, 2)
-
-        self.assertGreater(
-            second_histogram.time_unix_nano, first_histogram.time_unix_nano
-        )
-
-        explicit_bucket_histogram_aggregation = (
-            _ExplicitBucketHistogramAggregation(Mock(), boundaries=[0, 1, 2])
-        )
-
-        explicit_bucket_histogram_aggregation.aggregate(measurement(1))
-        first_histogram = explicit_bucket_histogram_aggregation.collect(
-            AggregationTemporality.DELTA
-        )
-
-        self.assertEqual(first_histogram.bucket_counts, (0, 1, 0, 0))
-        self.assertEqual(first_histogram.sum, 1)
-
-        # CI fails the last assertion without this
-        sleep(0.1)
-
-        explicit_bucket_histogram_aggregation.aggregate(measurement(1))
-        second_histogram = explicit_bucket_histogram_aggregation.collect(
-            AggregationTemporality.DELTA
-        )
-
-        self.assertEqual(second_histogram.bucket_counts, (0, 1, 0, 0))
-        self.assertEqual(second_histogram.sum, 1)
 
         self.assertGreater(
             second_histogram.time_unix_nano, first_histogram.time_unix_nano
