@@ -23,10 +23,10 @@ from opentelemetry.sdk._metrics.export import (
     Metric,
     MetricExporter,
     MetricExportResult,
+    NumberDataPoint,
     PeriodicExportingMetricReader,
     Sum,
 )
-from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 from opentelemetry.util._time import _time_ns
 
@@ -54,29 +54,34 @@ class FakeMetricsExporter(MetricExporter):
 metrics_list = [
     Metric(
         name="sum_name",
-        attributes={},
         description="",
-        instrumentation_scope=None,
-        resource=Resource.create(),
         unit="",
-        point=Sum(
-            start_time_unix_nano=_time_ns(),
-            time_unix_nano=_time_ns(),
-            value=2,
+        data=Sum(
+            data_points=[
+                NumberDataPoint(
+                    attributes={},
+                    start_time_unix_nano=_time_ns(),
+                    time_unix_nano=_time_ns(),
+                    value=2,
+                )
+            ],
             aggregation_temporality=1,
             is_monotonic=True,
         ),
     ),
     Metric(
         name="gauge_name",
-        attributes={},
         description="",
-        instrumentation_scope=None,
-        resource=Resource.create(),
         unit="",
-        point=Gauge(
-            time_unix_nano=_time_ns(),
-            value=2,
+        data=Gauge(
+            data_points=[
+                NumberDataPoint(
+                    attributes={},
+                    start_time_unix_nano=_time_ns(),
+                    time_unix_nano=_time_ns(),
+                    value=2,
+                )
+            ]
         ),
     ),
 ]

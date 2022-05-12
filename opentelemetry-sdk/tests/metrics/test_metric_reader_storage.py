@@ -21,6 +21,9 @@ from opentelemetry.sdk._metrics import (
     ObservableCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk._metrics._internal.aggregation import (
+    _LastValueAggregation,
+)
 from opentelemetry.sdk._metrics._internal.measurement import Measurement
 from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
     _DEFAULT_VIEW,
@@ -106,9 +109,9 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
     def test_forwards_calls_to_view_instrument_match(
         self, MockViewInstrumentMatch: Mock
     ):
-        view_instrument_match1 = Mock()
-        view_instrument_match2 = Mock()
-        view_instrument_match3 = Mock()
+        view_instrument_match1 = Mock(_aggregation=_LastValueAggregation({}))
+        view_instrument_match2 = Mock(_aggregation=_LastValueAggregation({}))
+        view_instrument_match3 = Mock(_aggregation=_LastValueAggregation({}))
         MockViewInstrumentMatch.side_effect = [
             view_instrument_match1,
             view_instrument_match2,
@@ -163,7 +166,60 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         view_instrument_match1.collect.assert_called_once()
         view_instrument_match2.collect.assert_called_once()
         view_instrument_match3.collect.assert_called_once()
-        self.assertEqual(result, all_metrics)
+        self.assertEqual(
+            (
+                result.resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[0]
+                .data.data_points[0]
+            ),
+            all_metrics[0],
+        )
+        self.assertEqual(
+            (
+                result.resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[0]
+                .data.data_points[1]
+            ),
+            all_metrics[1],
+        )
+        self.assertEqual(
+            (
+                result.resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[1]
+                .data.data_points[0]
+            ),
+            all_metrics[2],
+        )
+        self.assertEqual(
+            (
+                result.resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[1]
+                .data.data_points[1]
+            ),
+            all_metrics[3],
+        )
+        self.assertEqual(
+            (
+                result.resource_metrics[0]
+                .scope_metrics[1]
+                .metrics[0]
+                .data.data_points[0]
+            ),
+            all_metrics[4],
+        )
+        self.assertEqual(
+            (
+                result.resource_metrics[0]
+                .scope_metrics[1]
+                .metrics[0]
+                .data.data_points[1]
+            ),
+            all_metrics[5],
+        )
 
     @patch(
         "opentelemetry.sdk._metrics._internal."
@@ -256,7 +312,15 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         )
         metric_reader_storage.consume_measurement(Measurement(1, counter))
 
-        self.assertEqual([], metric_reader_storage.collect())
+        self.assertEqual(
+            [],
+            (
+                metric_reader_storage.collect()
+                .resource_metrics[0]
+                .scope_metrics[0]
+                .metrics
+            ),
+        )
 
     def test_conflicting_view_configuration(self):
 

@@ -19,7 +19,7 @@ from logging import getLogger
 from os import environ, linesep
 from sys import stdout
 from threading import Event, RLock, Thread
-from typing import IO, Callable, Dict, Iterable, List, Optional, Sequence
+from typing import IO, Callable, Dict, Iterable, Optional
 
 from typing_extensions import final
 
@@ -43,6 +43,7 @@ from opentelemetry.sdk._metrics._internal.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk._metrics._internal.point import MetricsData
 from opentelemetry.sdk.environment_variables import (
     _OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
 )
@@ -71,7 +72,7 @@ class MetricExporter(ABC):
     @abstractmethod
     def export(
         self,
-        metrics: Sequence["opentelemetry.sdk._metrics.export.Metric"],
+        metrics_data: MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
@@ -113,12 +114,11 @@ class ConsoleMetricExporter(MetricExporter):
 
     def export(
         self,
-        metrics: Sequence["opentelemetry.sdk._metrics.export.Metric"],
+        metrics_data: MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
-        for metric in metrics:
-            self.out.write(self.formatter(metric))
+        self.out.write(self.formatter(metrics_data))
         self.out.flush()
         return MetricExportResult.SUCCESS
 
@@ -262,7 +262,7 @@ class MetricReader(ABC):
     @abstractmethod
     def _receive_metrics(
         self,
-        metrics: Iterable["opentelemetry.sdk._metrics.export.Metric"],
+        metrics_data: "opentelemetry.sdk._metrics.export.MetricsData",
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
@@ -283,7 +283,7 @@ class MetricReader(ABC):
 
 
 class InMemoryMetricReader(MetricReader):
-    """Implementation of `MetricReader` that returns its metrics from :func:`get_metrics`.
+    """Implementation of `MetricReader` that returns its metrics from :func:`get_metrics_data`.
 
     This is useful for e.g. unit tests.
     """
@@ -300,24 +300,28 @@ class InMemoryMetricReader(MetricReader):
             preferred_aggregation=preferred_aggregation,
         )
         self._lock = RLock()
-        self._metrics: List["opentelemetry.sdk._metrics.export.Metric"] = []
+        self._metrics_data: (
+            "opentelemetry.sdk._metrics.export.MetricsData"
+        ) = None
 
-    def get_metrics(self) -> List["opentelemetry.sdk._metrics.export.Metric"]:
+    def get_metrics_data(
+        self,
+    ) -> ("opentelemetry.sdk._metrics.export.MetricsData"):
         """Reads and returns current metrics from the SDK"""
         with self._lock:
             self.collect()
-            metrics = self._metrics
-            self._metrics = []
-        return metrics
+            metrics_data = self._metrics_data
+            self._metrics_data = None
+        return metrics_data
 
     def _receive_metrics(
         self,
-        metrics: Iterable["opentelemetry.sdk._metrics.export.Metric"],
+        metrics_data: "opentelemetry.sdk._metrics.export.MetricsData",
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
         with self._lock:
-            self._metrics = list(metrics)
+            self._metrics_data = metrics_data
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass
@@ -389,15 +393,15 @@ class PeriodicExportingMetricReader(MetricReader):
 
     def _receive_metrics(
         self,
-        metrics: Iterable["opentelemetry.sdk._metrics.export.Metric"],
+        metrics_data: MetricsData,
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
-        if metrics is None:
+        if metrics_data is None:
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
-            self._exporter.export(metrics, timeout_millis=timeout_millis)
+            self._exporter.export(metrics_data, timeout_millis=timeout_millis)
         except Exception as e:  # pylint: disable=broad-except,invalid-name
             _logger.exception("Exception while exporting metrics %s", str(e))
         detach(token)

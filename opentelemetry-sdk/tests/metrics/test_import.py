@@ -46,15 +46,21 @@ class TestImport(TestCase):
             from opentelemetry.sdk._metrics.export import (  # noqa: F401
                 AggregationTemporality,
                 ConsoleMetricExporter,
+                DataPointT,
+                DataT,
                 Gauge,
                 Histogram,
+                HistogramDataPoint,
                 InMemoryMetricReader,
                 Metric,
                 MetricExporter,
                 MetricExportResult,
                 MetricReader,
+                MetricsData,
+                NumberDataPoint,
                 PeriodicExportingMetricReader,
-                PointT,
+                ResourceMetrics,
+                ScopeMetrics,
                 Sum,
             )
         except Exception as error:
