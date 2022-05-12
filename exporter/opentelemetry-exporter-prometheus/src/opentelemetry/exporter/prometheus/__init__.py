@@ -242,10 +242,7 @@ class _CustomCollector:
                         [pre_metric_family_id, CounterMetricFamily.__name__]
                     )
 
-                    if (
-                        metric_family_id
-                        not in metric_family_id_metric_family
-                    ):
+                    if metric_family_id not in metric_family_id_metric_family:
                         metric_family_id_metric_family[
                             metric_family_id
                         ] = CounterMetricFamily(
