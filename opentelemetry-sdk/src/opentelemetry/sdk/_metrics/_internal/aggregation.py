@@ -97,7 +97,10 @@ class Aggregation(ABC):
 
     @abstractmethod
     def _create_aggregation(
-        self, instrument: Instrument, attributes: Attributes
+        self,
+        instrument: Instrument,
+        attributes: Attributes,
+        start_time_unix_nano: int,
     ) -> _Aggregation:
         """Creates an aggregation"""
 
@@ -122,7 +125,10 @@ class DefaultAggregation(Aggregation):
     """
 
     def _create_aggregation(
-        self, instrument: Instrument, attributes: Attributes
+        self,
+        instrument: Instrument,
+        attributes: Attributes,
+        start_time_unix_nano: int,
     ) -> _Aggregation:
 
         # pylint: disable=too-many-return-statements
@@ -131,12 +137,14 @@ class DefaultAggregation(Aggregation):
                 attributes,
                 instrument_is_monotonic=True,
                 instrument_temporality=AggregationTemporality.DELTA,
+                start_time_unix_nano=start_time_unix_nano,
             )
         if isinstance(instrument, UpDownCounter):
             return _SumAggregation(
                 attributes,
                 instrument_is_monotonic=False,
                 instrument_temporality=AggregationTemporality.DELTA,
+                start_time_unix_nano=start_time_unix_nano,
             )
 
         if isinstance(instrument, ObservableCounter):
@@ -144,6 +152,7 @@ class DefaultAggregation(Aggregation):
                 attributes,
                 instrument_is_monotonic=True,
                 instrument_temporality=AggregationTemporality.CUMULATIVE,
+                start_time_unix_nano=start_time_unix_nano,
             )
 
         if isinstance(instrument, ObservableUpDownCounter):
@@ -151,10 +160,13 @@ class DefaultAggregation(Aggregation):
                 attributes,
                 instrument_is_monotonic=False,
                 instrument_temporality=AggregationTemporality.CUMULATIVE,
+                start_time_unix_nano=start_time_unix_nano,
             )
 
         if isinstance(instrument, Histogram):
-            return _ExplicitBucketHistogramAggregation(attributes)
+            return _ExplicitBucketHistogramAggregation(
+                attributes, start_time_unix_nano
+            )
 
         if isinstance(instrument, ObservableGauge):
             return _LastValueAggregation(attributes)
@@ -168,10 +180,11 @@ class _SumAggregation(_Aggregation[Sum]):
         attributes: Attributes,
         instrument_is_monotonic: bool,
         instrument_temporality: AggregationTemporality,
+        start_time_unix_nano: int,
     ):
         super().__init__(attributes)
 
-        self._start_time_unix_nano = _time_ns()
+        self._start_time_unix_nano = start_time_unix_nano
         self._instrument_temporality = instrument_temporality
         self._instrument_is_monotonic = instrument_is_monotonic
 
@@ -202,7 +215,7 @@ class _SumAggregation(_Aggregation[Sum]):
                 start_time_unix_nano = self._start_time_unix_nano
 
                 self._value = 0
-                self._start_time_unix_nano = collection_start + 1
+                self._start_time_unix_nano = collection_start
 
         else:
 
@@ -285,6 +298,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     def __init__(
         self,
         attributes: Attributes,
+        start_time_unix_nano: int,
         boundaries: Sequence[float] = (
             0.0,
             5.0,
@@ -306,7 +320,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self._max = -inf
         self._sum = 0
         self._record_min_max = record_min_max
-        self._start_time_unix_nano = _time_ns()
+        self._start_time_unix_nano = start_time_unix_nano
         # It is assumed that the "natural" aggregation temporality for a
         # Histogram instrument is DELTA, like the "natural" aggregation
         # temporality for a Counter is DELTA and the "natural" aggregation
@@ -347,7 +361,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             min_ = self._min
 
             self._bucket_counts = self._get_empty_bucket_counts()
-            self._start_time_unix_nano = collection_start + 1
+            self._start_time_unix_nano = collection_start
             self._sum = 0
             self._min = inf
             self._max = -inf
@@ -446,10 +460,14 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         self._record_min_max = record_min_max
 
     def _create_aggregation(
-        self, instrument: Instrument, attributes: Attributes
+        self,
+        instrument: Instrument,
+        attributes: Attributes,
+        start_time_unix_nano: int,
     ) -> _Aggregation:
         return _ExplicitBucketHistogramAggregation(
             attributes,
+            start_time_unix_nano,
             self._boundaries,
             self._record_min_max,
         )
@@ -462,7 +480,10 @@ class SumAggregation(Aggregation):
     """
 
     def _create_aggregation(
-        self, instrument: Instrument, attributes: Attributes
+        self,
+        instrument: Instrument,
+        attributes: Attributes,
+        start_time_unix_nano: int,
     ) -> _Aggregation:
 
         temporality = AggregationTemporality.UNSPECIFIED
@@ -475,6 +496,7 @@ class SumAggregation(Aggregation):
             attributes,
             isinstance(instrument, (Counter, ObservableCounter)),
             temporality,
+            start_time_unix_nano,
         )
 
 
@@ -487,7 +509,10 @@ class LastValueAggregation(Aggregation):
     """
 
     def _create_aggregation(
-        self, instrument: Instrument, attributes: Attributes
+        self,
+        instrument: Instrument,
+        attributes: Attributes,
+        start_time_unix_nano: int,
     ) -> _Aggregation:
         return _LastValueAggregation(attributes)
 
@@ -496,6 +521,9 @@ class DropAggregation(Aggregation):
     """Using this aggregation will make all measurements be ignored."""
 
     def _create_aggregation(
-        self, instrument: Instrument, attributes: Attributes
+        self,
+        instrument: Instrument,
+        attributes: Attributes,
+        start_time_unix_nano: int,
     ) -> _Aggregation:
         return _DropAggregation(attributes)
