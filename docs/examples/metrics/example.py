@@ -1,6 +1,6 @@
 from typing import Iterable
 
-from opentelemetry.exporter.otlp.proto.grpc._metric_exporter import (
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
     OTLPMetricExporter,
 )
 from opentelemetry.metrics import (
