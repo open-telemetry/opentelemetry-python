@@ -41,7 +41,6 @@ from opentelemetry.sdk._metrics._internal.point import (
     NumberDataPoint,
     Sum,
 )
-from opentelemetry.util._time import _time_ns
 from opentelemetry.util.types import Attributes
 
 _DataPointVarT = TypeVar("_DataPointVarT", NumberDataPoint, HistogramDataPoint)
@@ -75,6 +74,7 @@ class _Aggregation(ABC, Generic[_DataPointVarT]):
     def collect(
         self,
         aggregation_temporality: AggregationTemporality,
+        collection_start_nano: int,
     ) -> Optional[_DataPointVarT]:
         pass
 
@@ -86,80 +86,9 @@ class _DropAggregation(_Aggregation):
     def collect(
         self,
         aggregation_temporality: AggregationTemporality,
+        collection_start_nano: int,
     ) -> Optional[_DataPointVarT]:
         pass
-
-
-class Aggregation(ABC):
-    """
-    Base class for all aggregation types.
-    """
-
-    @abstractmethod
-    def _create_aggregation(
-        self, instrument: Instrument, attributes: Attributes
-    ) -> _Aggregation:
-        """Creates an aggregation"""
-
-
-class DefaultAggregation(Aggregation):
-    """
-    The default aggregation to be used in a `View`.
-
-    This aggregation will create an actual aggregation depending on the
-    instrument type, as specified next:
-
-    ==================================================== ====================================
-    Instrument                                           Aggregation
-    ==================================================== ====================================
-    `opentelemetry.sdk._metrics.Counter`                 `SumAggregation`
-    `opentelemetry.sdk._metrics.UpDownCounter`           `SumAggregation`
-    `opentelemetry.sdk._metrics.ObservableCounter`       `SumAggregation`
-    `opentelemetry.sdk._metrics.ObservableUpDownCounter` `SumAggregation`
-    `opentelemetry.sdk._metrics.Histogram`               `ExplicitBucketHistogramAggregation`
-    `opentelemetry.sdk._metrics.ObservableGauge`         `LastValueAggregation`
-    ==================================================== ====================================
-    """
-
-    def _create_aggregation(
-        self, instrument: Instrument, attributes: Attributes
-    ) -> _Aggregation:
-
-        # pylint: disable=too-many-return-statements
-        if isinstance(instrument, Counter):
-            return _SumAggregation(
-                attributes,
-                instrument_is_monotonic=True,
-                instrument_temporality=AggregationTemporality.DELTA,
-            )
-        if isinstance(instrument, UpDownCounter):
-            return _SumAggregation(
-                attributes,
-                instrument_is_monotonic=False,
-                instrument_temporality=AggregationTemporality.DELTA,
-            )
-
-        if isinstance(instrument, ObservableCounter):
-            return _SumAggregation(
-                attributes,
-                instrument_is_monotonic=True,
-                instrument_temporality=AggregationTemporality.CUMULATIVE,
-            )
-
-        if isinstance(instrument, ObservableUpDownCounter):
-            return _SumAggregation(
-                attributes,
-                instrument_is_monotonic=False,
-                instrument_temporality=AggregationTemporality.CUMULATIVE,
-            )
-
-        if isinstance(instrument, Histogram):
-            return _ExplicitBucketHistogramAggregation(attributes)
-
-        if isinstance(instrument, ObservableGauge):
-            return _LastValueAggregation(attributes)
-
-        raise Exception(f"Invalid instrument type {type(instrument)} found")
 
 
 class _SumAggregation(_Aggregation[Sum]):
@@ -168,10 +97,11 @@ class _SumAggregation(_Aggregation[Sum]):
         attributes: Attributes,
         instrument_is_monotonic: bool,
         instrument_temporality: AggregationTemporality,
+        start_time_unix_nano: int,
     ):
         super().__init__(attributes)
 
-        self._start_time_unix_nano = _time_ns()
+        self._start_time_unix_nano = start_time_unix_nano
         self._instrument_temporality = instrument_temporality
         self._instrument_is_monotonic = instrument_is_monotonic
 
@@ -187,14 +117,14 @@ class _SumAggregation(_Aggregation[Sum]):
             self._value = self._value + measurement.value
 
     def collect(
-        self, aggregation_temporality: AggregationTemporality
+        self,
+        aggregation_temporality: AggregationTemporality,
+        collection_start_nano: int,
     ) -> Optional[NumberDataPoint]:
         """
         Atomically return a point for the current value of the metric and
         reset the aggregation value.
         """
-        now = _time_ns()
-
         if self._instrument_temporality is AggregationTemporality.DELTA:
 
             with self._lock:
@@ -202,7 +132,7 @@ class _SumAggregation(_Aggregation[Sum]):
                 start_time_unix_nano = self._start_time_unix_nano
 
                 self._value = 0
-                self._start_time_unix_nano = now + 1
+                self._start_time_unix_nano = collection_start_nano
 
         else:
 
@@ -216,7 +146,7 @@ class _SumAggregation(_Aggregation[Sum]):
         current_point = NumberDataPoint(
             attributes=self._attributes,
             start_time_unix_nano=start_time_unix_nano,
-            time_unix_nano=now,
+            time_unix_nano=collection_start_nano,
             value=value,
         )
 
@@ -263,6 +193,7 @@ class _LastValueAggregation(_Aggregation[Gauge]):
     def collect(
         self,
         aggregation_temporality: AggregationTemporality,
+        collection_start_nano: int,
     ) -> Optional[_DataPointVarT]:
         """
         Atomically return a point for the current value of the metric.
@@ -276,7 +207,7 @@ class _LastValueAggregation(_Aggregation[Gauge]):
         return NumberDataPoint(
             attributes=self._attributes,
             start_time_unix_nano=0,
-            time_unix_nano=_time_ns(),
+            time_unix_nano=collection_start_nano,
             value=value,
         )
 
@@ -285,6 +216,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     def __init__(
         self,
         attributes: Attributes,
+        start_time_unix_nano: int,
         boundaries: Sequence[float] = (
             0.0,
             5.0,
@@ -306,7 +238,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self._max = -inf
         self._sum = 0
         self._record_min_max = record_min_max
-        self._start_time_unix_nano = _time_ns()
+        self._start_time_unix_nano = start_time_unix_nano
         # It is assumed that the "natural" aggregation temporality for a
         # Histogram instrument is DELTA, like the "natural" aggregation
         # temporality for a Counter is DELTA and the "natural" aggregation
@@ -331,12 +263,11 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     def collect(
         self,
         aggregation_temporality: AggregationTemporality,
+        collection_start_nano: int,
     ) -> Optional[_DataPointVarT]:
         """
         Atomically return a point for the current value of the metric.
         """
-        now = _time_ns()
-
         with self._lock:
             if not any(self._bucket_counts):
                 return None
@@ -348,7 +279,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             min_ = self._min
 
             self._bucket_counts = self._get_empty_bucket_counts()
-            self._start_time_unix_nano = now + 1
+            self._start_time_unix_nano = collection_start_nano
             self._sum = 0
             self._min = inf
             self._max = -inf
@@ -356,7 +287,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         current_point = HistogramDataPoint(
             attributes=self._attributes,
             start_time_unix_nano=start_time_unix_nano,
-            time_unix_nano=now,
+            time_unix_nano=collection_start_nano,
             count=sum(bucket_counts),
             sum=sum_,
             bucket_counts=tuple(bucket_counts),
@@ -413,6 +344,90 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         return current_point
 
 
+class Aggregation(ABC):
+    """
+    Base class for all aggregation types.
+    """
+
+    @abstractmethod
+    def _create_aggregation(
+        self,
+        instrument: Instrument,
+        attributes: Attributes,
+        start_time_unix_nano: int,
+    ) -> _Aggregation:
+        """Creates an aggregation"""
+
+
+class DefaultAggregation(Aggregation):
+    """
+    The default aggregation to be used in a `View`.
+
+    This aggregation will create an actual aggregation depending on the
+    instrument type, as specified next:
+
+    ==================================================== ====================================
+    Instrument                                           Aggregation
+    ==================================================== ====================================
+    `opentelemetry.sdk._metrics.Counter`                 `SumAggregation`
+    `opentelemetry.sdk._metrics.UpDownCounter`           `SumAggregation`
+    `opentelemetry.sdk._metrics.ObservableCounter`       `SumAggregation`
+    `opentelemetry.sdk._metrics.ObservableUpDownCounter` `SumAggregation`
+    `opentelemetry.sdk._metrics.Histogram`               `ExplicitBucketHistogramAggregation`
+    `opentelemetry.sdk._metrics.ObservableGauge`         `LastValueAggregation`
+    ==================================================== ====================================
+    """
+
+    def _create_aggregation(
+        self,
+        instrument: Instrument,
+        attributes: Attributes,
+        start_time_unix_nano: int,
+    ) -> _Aggregation:
+
+        # pylint: disable=too-many-return-statements
+        if isinstance(instrument, Counter):
+            return _SumAggregation(
+                attributes,
+                instrument_is_monotonic=True,
+                instrument_temporality=AggregationTemporality.DELTA,
+                start_time_unix_nano=start_time_unix_nano,
+            )
+        if isinstance(instrument, UpDownCounter):
+            return _SumAggregation(
+                attributes,
+                instrument_is_monotonic=False,
+                instrument_temporality=AggregationTemporality.DELTA,
+                start_time_unix_nano=start_time_unix_nano,
+            )
+
+        if isinstance(instrument, ObservableCounter):
+            return _SumAggregation(
+                attributes,
+                instrument_is_monotonic=True,
+                instrument_temporality=AggregationTemporality.CUMULATIVE,
+                start_time_unix_nano=start_time_unix_nano,
+            )
+
+        if isinstance(instrument, ObservableUpDownCounter):
+            return _SumAggregation(
+                attributes,
+                instrument_is_monotonic=False,
+                instrument_temporality=AggregationTemporality.CUMULATIVE,
+                start_time_unix_nano=start_time_unix_nano,
+            )
+
+        if isinstance(instrument, Histogram):
+            return _ExplicitBucketHistogramAggregation(
+                attributes, start_time_unix_nano
+            )
+
+        if isinstance(instrument, ObservableGauge):
+            return _LastValueAggregation(attributes)
+
+        raise Exception(f"Invalid instrument type {type(instrument)} found")
+
+
 class ExplicitBucketHistogramAggregation(Aggregation):
     """This aggregation informs the SDK to collect:
 
@@ -447,10 +462,14 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         self._record_min_max = record_min_max
 
     def _create_aggregation(
-        self, instrument: Instrument, attributes: Attributes
+        self,
+        instrument: Instrument,
+        attributes: Attributes,
+        start_time_unix_nano: int,
     ) -> _Aggregation:
         return _ExplicitBucketHistogramAggregation(
             attributes,
+            start_time_unix_nano,
             self._boundaries,
             self._record_min_max,
         )
@@ -463,7 +482,10 @@ class SumAggregation(Aggregation):
     """
 
     def _create_aggregation(
-        self, instrument: Instrument, attributes: Attributes
+        self,
+        instrument: Instrument,
+        attributes: Attributes,
+        start_time_unix_nano: int,
     ) -> _Aggregation:
 
         temporality = AggregationTemporality.UNSPECIFIED
@@ -476,6 +498,7 @@ class SumAggregation(Aggregation):
             attributes,
             isinstance(instrument, (Counter, ObservableCounter)),
             temporality,
+            start_time_unix_nano,
         )
 
 
@@ -488,7 +511,10 @@ class LastValueAggregation(Aggregation):
     """
 
     def _create_aggregation(
-        self, instrument: Instrument, attributes: Attributes
+        self,
+        instrument: Instrument,
+        attributes: Attributes,
+        start_time_unix_nano: int,
     ) -> _Aggregation:
         return _LastValueAggregation(attributes)
 
@@ -497,6 +523,9 @@ class DropAggregation(Aggregation):
     """Using this aggregation will make all measurements be ignored."""
 
     def _create_aggregation(
-        self, instrument: Instrument, attributes: Attributes
+        self,
+        instrument: Instrument,
+        attributes: Attributes,
+        start_time_unix_nano: int,
     ) -> _Aggregation:
         return _DropAggregation(attributes)
