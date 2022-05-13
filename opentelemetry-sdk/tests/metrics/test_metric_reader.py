@@ -18,7 +18,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from opentelemetry.sdk.environment_variables import (
-    _OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
+    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
 )
 from opentelemetry.sdk.metrics import (
     Counter,
@@ -66,7 +66,7 @@ class DummyMetricReader(MetricReader):
 class TestMetricReader(TestCase):
     @patch.dict(
         environ,
-        {_OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "CUMULATIVE"},
+        {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "CUMULATIVE"},
     )
     def test_configure_temporality_cumulative(self):
 
@@ -91,7 +91,7 @@ class TestMetricReader(TestCase):
             self.assertEqual(value, AggregationTemporality.CUMULATIVE)
 
     @patch.dict(
-        environ, {_OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "DELTA"}
+        environ, {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "DELTA"}
     )
     def test_configure_temporality_delta(self):
 
