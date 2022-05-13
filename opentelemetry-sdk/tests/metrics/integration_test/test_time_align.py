@@ -12,15 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from platform import system
 from time import sleep
 from unittest import TestCase
 
-from opentelemetry.sdk._metrics import MeterProvider
-from opentelemetry.sdk._metrics.export import InMemoryMetricReader
+from pytest import mark
+
+from opentelemetry.sdk._metrics import Counter, MeterProvider
+from opentelemetry.sdk._metrics.export import (
+    AggregationTemporality,
+    InMemoryMetricReader,
+)
 
 
 class TestTimeAlign(TestCase):
-    def test_time_align(self):
+    def test_time_align_cumulative(self):
         reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[reader])
 
@@ -31,33 +37,253 @@ class TestTimeAlign(TestCase):
 
         counter_0.add(10, {"label": "value1"})
         counter_0.add(10, {"label": "value2"})
-        sleep(0.1)
+        sleep(0.5)
         counter_1.add(10, {"label": "value1"})
         counter_1.add(10, {"label": "value2"})
 
         metrics = reader.get_metrics_data()
 
-        data_points_0 = list(
+        data_points_0_0 = list(
             metrics.resource_metrics[0]
             .scope_metrics[0]
             .metrics[0]
             .data.data_points
         )
-        data_points_1 = list(
+        data_points_0_1 = list(
             metrics.resource_metrics[0]
             .scope_metrics[0]
             .metrics[1]
             .data.data_points
         )
+
         self.assertEqual(
-            data_points_0[0].start_time_unix_nano,
-            data_points_0[1].start_time_unix_nano,
+            data_points_0_0[0].start_time_unix_nano,
+            data_points_0_0[1].start_time_unix_nano,
         )
         self.assertEqual(
-            data_points_1[0].start_time_unix_nano,
-            data_points_1[1].start_time_unix_nano,
+            data_points_0_1[0].start_time_unix_nano,
+            data_points_0_1[1].start_time_unix_nano,
         )
         self.assertNotEqual(
-            data_points_0[1].start_time_unix_nano,
-            data_points_1[0].start_time_unix_nano,
+            data_points_0_0[1].start_time_unix_nano,
+            data_points_0_1[0].start_time_unix_nano,
+        )
+
+        self.assertEqual(
+            data_points_0_0[0].time_unix_nano,
+            data_points_0_0[1].time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_0_1[0].time_unix_nano,
+            data_points_0_1[1].time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_0_0[1].time_unix_nano,
+            data_points_0_1[0].time_unix_nano,
+        )
+
+        counter_0.add(10, {"label": "value1"})
+        counter_0.add(10, {"label": "value2"})
+        sleep(0.5)
+        counter_1.add(10, {"label": "value1"})
+        counter_1.add(10, {"label": "value2"})
+
+        metrics = reader.get_metrics_data()
+
+        data_points_1_0 = list(
+            metrics.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points
+        )
+        data_points_1_1 = list(
+            metrics.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[1]
+            .data.data_points
+        )
+
+        self.assertEqual(
+            data_points_1_0[0].start_time_unix_nano,
+            data_points_1_0[1].start_time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_1_1[0].start_time_unix_nano,
+            data_points_1_1[1].start_time_unix_nano,
+        )
+        self.assertNotEqual(
+            data_points_1_0[1].start_time_unix_nano,
+            data_points_1_1[0].start_time_unix_nano,
+        )
+
+        self.assertEqual(
+            data_points_1_0[0].time_unix_nano,
+            data_points_1_0[1].time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_1_1[0].time_unix_nano,
+            data_points_1_1[1].time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_1_0[1].time_unix_nano,
+            data_points_1_1[0].time_unix_nano,
+        )
+
+        self.assertEqual(
+            data_points_0_0[0].start_time_unix_nano,
+            data_points_1_0[0].start_time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_0_0[1].start_time_unix_nano,
+            data_points_1_0[1].start_time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_0_1[0].start_time_unix_nano,
+            data_points_1_1[0].start_time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_0_1[1].start_time_unix_nano,
+            data_points_1_1[1].start_time_unix_nano,
+        )
+
+    @mark.skipif(
+        system() != "Linux", reason="test failing in CI when run in Windows"
+    )
+    def test_time_align_delta(self):
+        reader = InMemoryMetricReader(
+            preferred_temporality={Counter: AggregationTemporality.DELTA}
+        )
+        meter_provider = MeterProvider(metric_readers=[reader])
+
+        meter = meter_provider.get_meter("testmeter")
+
+        counter_0 = meter.create_counter("counter_0")
+        counter_1 = meter.create_counter("counter_1")
+
+        counter_0.add(10, {"label": "value1"})
+        counter_0.add(10, {"label": "value2"})
+        sleep(0.5)
+        counter_1.add(10, {"label": "value1"})
+        counter_1.add(10, {"label": "value2"})
+
+        metrics = reader.get_metrics_data()
+
+        data_points_0_0 = list(
+            metrics.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points
+        )
+        data_points_0_1 = list(
+            metrics.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[1]
+            .data.data_points
+        )
+
+        self.assertEqual(
+            data_points_0_0[0].start_time_unix_nano,
+            data_points_0_0[1].start_time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_0_1[0].start_time_unix_nano,
+            data_points_0_1[1].start_time_unix_nano,
+        )
+        self.assertNotEqual(
+            data_points_0_0[1].start_time_unix_nano,
+            data_points_0_1[0].start_time_unix_nano,
+        )
+
+        self.assertEqual(
+            data_points_0_0[0].time_unix_nano,
+            data_points_0_0[1].time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_0_1[0].time_unix_nano,
+            data_points_0_1[1].time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_0_0[1].time_unix_nano,
+            data_points_0_1[0].time_unix_nano,
+        )
+
+        counter_0.add(10, {"label": "value1"})
+        counter_0.add(10, {"label": "value2"})
+        sleep(0.5)
+        counter_1.add(10, {"label": "value1"})
+        counter_1.add(10, {"label": "value2"})
+
+        metrics = reader.get_metrics_data()
+
+        data_points_1_0 = list(
+            metrics.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points
+        )
+        data_points_1_1 = list(
+            metrics.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[1]
+            .data.data_points
+        )
+
+        self.assertEqual(
+            data_points_1_0[0].start_time_unix_nano,
+            data_points_1_0[1].start_time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_1_1[0].start_time_unix_nano,
+            data_points_1_1[1].start_time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_1_0[1].start_time_unix_nano,
+            data_points_1_1[0].start_time_unix_nano,
+        )
+
+        self.assertEqual(
+            data_points_1_0[0].time_unix_nano,
+            data_points_1_0[1].time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_1_1[0].time_unix_nano,
+            data_points_1_1[1].time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_1_0[1].time_unix_nano,
+            data_points_1_1[0].time_unix_nano,
+        )
+
+        self.assertNotEqual(
+            data_points_0_0[0].start_time_unix_nano,
+            data_points_1_0[0].start_time_unix_nano,
+        )
+        self.assertNotEqual(
+            data_points_0_0[1].start_time_unix_nano,
+            data_points_1_0[1].start_time_unix_nano,
+        )
+        self.assertNotEqual(
+            data_points_0_1[0].start_time_unix_nano,
+            data_points_1_1[0].start_time_unix_nano,
+        )
+        self.assertNotEqual(
+            data_points_0_1[1].start_time_unix_nano,
+            data_points_1_1[1].start_time_unix_nano,
+        )
+
+        self.assertEqual(
+            data_points_0_0[0].time_unix_nano,
+            data_points_1_0[0].start_time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_0_0[1].time_unix_nano,
+            data_points_1_0[1].start_time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_0_1[0].time_unix_nano,
+            data_points_1_1[0].start_time_unix_nano,
+        )
+        self.assertEqual(
+            data_points_0_1[1].time_unix_nano,
+            data_points_1_1[1].start_time_unix_nano,
         )
