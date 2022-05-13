@@ -29,7 +29,7 @@ metrics to `Prometheus`_.
 
     from prometheus_client import start_http_server
 
-    from opentelemetry._metrics import get_meter_provider, set_meter_provider
+    from opentelemetry.metrics import get_meter_provider, set_meter_provider
     from opentelemetry.exporter.prometheus import PrometheusMetricReader
     from opentelemetry.sdk.metrics import MeterProvider
 
