@@ -14,9 +14,9 @@
 
 from unittest import TestCase
 
-from opentelemetry.sdk._metrics import MeterProvider
-from opentelemetry.sdk._metrics.export import InMemoryMetricReader
-from opentelemetry.sdk._metrics.view import DropAggregation, View
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import InMemoryMetricReader
+from opentelemetry.sdk.metrics.view import DropAggregation, View
 
 
 class TestDisableDefaultViews(TestCase):

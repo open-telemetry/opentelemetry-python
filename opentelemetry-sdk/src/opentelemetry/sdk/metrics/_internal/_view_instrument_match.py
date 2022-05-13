@@ -17,17 +17,17 @@ from logging import getLogger
 from threading import Lock
 from typing import Dict, Iterable
 
-from opentelemetry._metrics import Instrument
-from opentelemetry.sdk._metrics._internal.aggregation import (
+from opentelemetry.metrics import Instrument
+from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     DefaultAggregation,
     _Aggregation,
     _SumAggregation,
 )
-from opentelemetry.sdk._metrics._internal.export import AggregationTemporality
-from opentelemetry.sdk._metrics._internal.measurement import Measurement
-from opentelemetry.sdk._metrics._internal.point import DataPointT
-from opentelemetry.sdk._metrics._internal.view import View
+from opentelemetry.sdk.metrics._internal.export import AggregationTemporality
+from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.sdk.metrics._internal.point import DataPointT
+from opentelemetry.sdk.metrics._internal.view import View
 from opentelemetry.util._time import _time_ns
 
 _logger = getLogger(__name__)

@@ -31,7 +31,7 @@ metrics to `Prometheus`_.
 
     from opentelemetry._metrics import get_meter_provider, set_meter_provider
     from opentelemetry.exporter.prometheus import PrometheusMetricReader
-    from opentelemetry.sdk._metrics import MeterProvider
+    from opentelemetry.sdk.metrics import MeterProvider
 
     # Start Prometheus client
     start_http_server(port=8000, addr="localhost")
@@ -77,7 +77,7 @@ from prometheus_client.core import (
 )
 from prometheus_client.core import Metric as PrometheusMetric
 
-from opentelemetry.sdk._metrics.export import (
+from opentelemetry.sdk.metrics.export import (
     Gauge,
     Histogram,
     HistogramDataPoint,

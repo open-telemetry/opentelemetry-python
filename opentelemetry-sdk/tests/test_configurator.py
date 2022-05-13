@@ -32,7 +32,7 @@ from opentelemetry.sdk._configuration import (
 )
 from opentelemetry.sdk._logs import LoggingHandler
 from opentelemetry.sdk._logs.export import ConsoleLogExporter
-from opentelemetry.sdk._metrics.export import ConsoleMetricExporter
+from opentelemetry.sdk.metrics.export import ConsoleMetricExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator

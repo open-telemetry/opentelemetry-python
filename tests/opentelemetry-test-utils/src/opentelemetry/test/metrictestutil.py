@@ -14,7 +14,7 @@
 
 
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.sdk._metrics.export import (
+from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Gauge,
     Metric,

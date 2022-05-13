@@ -24,18 +24,21 @@ from typing import IO, Callable, Dict, Iterable, Optional
 from typing_extensions import final
 
 # This kind of import is needed to avoid Sphinx errors.
-import opentelemetry.sdk._metrics._internal
+import opentelemetry.sdk.metrics._internal
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
     attach,
     detach,
     set_value,
 )
-from opentelemetry.sdk._metrics._internal.aggregation import (
+from opentelemetry.sdk.environment_variables import (
+    _OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
+)
+from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
     DefaultAggregation,
 )
-from opentelemetry.sdk._metrics._internal.instrument import (
+from opentelemetry.sdk.metrics._internal.instrument import (
     Counter,
     Histogram,
     ObservableCounter,
@@ -43,10 +46,7 @@ from opentelemetry.sdk._metrics._internal.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk._metrics._internal.point import MetricsData
-from opentelemetry.sdk.environment_variables import (
-    _OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
-)
+from opentelemetry.sdk.metrics._internal.point import MetricsData
 from opentelemetry.util._once import Once
 from opentelemetry.util._time import _time_ns
 
@@ -79,7 +79,7 @@ class MetricExporter(ABC):
         """Exports a batch of telemetry data.
 
         Args:
-            metrics: The list of `opentelemetry.sdk._metrics.export.Metric` objects to be exported
+            metrics: The list of `opentelemetry.sdk.metrics.export.Metric` objects to be exported
 
         Returns:
             The result of the export
@@ -105,7 +105,7 @@ class ConsoleMetricExporter(MetricExporter):
         self,
         out: IO = stdout,
         formatter: Callable[
-            ["opentelemetry.sdk._metrics.export.Metric"], str
+            ["opentelemetry.sdk.metrics.export.Metric"], str
         ] = lambda metric: metric.to_json()
         + linesep,
     ):
@@ -168,15 +168,15 @@ class MetricReader(ABC):
         self,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
         preferred_aggregation: Dict[
-            type, "opentelemetry.sdk._metrics.view.Aggregation"
+            type, "opentelemetry.sdk.metrics.view.Aggregation"
         ] = None,
     ) -> None:
         self._collect: Callable[
             [
-                "opentelemetry.sdk._metrics.export.MetricReader",
+                "opentelemetry.sdk.metrics.export.MetricReader",
                 AggregationTemporality,
             ],
-            Iterable["opentelemetry.sdk._metrics.export.Metric"],
+            Iterable["opentelemetry.sdk.metrics.export.Metric"],
         ] = None
 
         if (
@@ -250,10 +250,10 @@ class MetricReader(ABC):
         self,
         func: Callable[
             [
-                "opentelemetry.sdk._metrics.export.MetricReader",
+                "opentelemetry.sdk.metrics.export.MetricReader",
                 AggregationTemporality,
             ],
-            Iterable["opentelemetry.sdk._metrics.export.Metric"],
+            Iterable["opentelemetry.sdk.metrics.export.Metric"],
         ],
     ) -> None:
         """This function is internal to the SDK. It should not be called or overriden by users"""
@@ -262,7 +262,7 @@ class MetricReader(ABC):
     @abstractmethod
     def _receive_metrics(
         self,
-        metrics_data: "opentelemetry.sdk._metrics.export.MetricsData",
+        metrics_data: "opentelemetry.sdk.metrics.export.MetricsData",
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
@@ -276,8 +276,8 @@ class MetricReader(ABC):
         failure status.
 
         When a `MetricReader` is registered on a
-        :class:`~opentelemetry.sdk._metrics.MeterProvider`,
-        :meth:`~opentelemetry.sdk._metrics.MeterProvider.shutdown` will invoke this
+        :class:`~opentelemetry.sdk.metrics.MeterProvider`,
+        :meth:`~opentelemetry.sdk.metrics.MeterProvider.shutdown` will invoke this
         automatically.
         """
 
@@ -292,7 +292,7 @@ class InMemoryMetricReader(MetricReader):
         self,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
         preferred_aggregation: Dict[
-            type, "opentelemetry.sdk._metrics.view.Aggregation"
+            type, "opentelemetry.sdk.metrics.view.Aggregation"
         ] = None,
     ) -> None:
         super().__init__(
@@ -301,12 +301,12 @@ class InMemoryMetricReader(MetricReader):
         )
         self._lock = RLock()
         self._metrics_data: (
-            "opentelemetry.sdk._metrics.export.MetricsData"
+            "opentelemetry.sdk.metrics.export.MetricsData"
         ) = None
 
     def get_metrics_data(
         self,
-    ) -> ("opentelemetry.sdk._metrics.export.MetricsData"):
+    ) -> ("opentelemetry.sdk.metrics.export.MetricsData"):
         """Reads and returns current metrics from the SDK"""
         with self._lock:
             self.collect()
@@ -316,7 +316,7 @@ class InMemoryMetricReader(MetricReader):
 
     def _receive_metrics(
         self,
-        metrics_data: "opentelemetry.sdk._metrics.export.MetricsData",
+        metrics_data: "opentelemetry.sdk.metrics.export.MetricsData",
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
@@ -338,7 +338,7 @@ class PeriodicExportingMetricReader(MetricReader):
         exporter: MetricExporter,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
         preferred_aggregation: Dict[
-            type, "opentelemetry.sdk._metrics.view.Aggregation"
+            type, "opentelemetry.sdk.metrics.view.Aggregation"
         ] = None,
         export_interval_millis: Optional[float] = None,
         export_timeout_millis: Optional[float] = None,

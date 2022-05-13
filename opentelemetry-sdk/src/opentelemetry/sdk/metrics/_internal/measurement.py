@@ -15,7 +15,7 @@
 from dataclasses import dataclass
 from typing import Union
 
-from opentelemetry._metrics import Instrument
+from opentelemetry.metrics import Instrument
 from opentelemetry.util.types import Attributes
 
 

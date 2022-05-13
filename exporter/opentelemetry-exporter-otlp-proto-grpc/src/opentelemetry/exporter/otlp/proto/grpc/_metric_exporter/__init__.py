@@ -30,14 +30,14 @@ from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
 )
-from opentelemetry.sdk._metrics.export import (
+from opentelemetry.sdk.metrics.export import (
     Gauge,
     Histogram,
     Metric,
     Sum,
 )
 
-from opentelemetry.sdk._metrics.export import (
+from opentelemetry.sdk.metrics.export import (
     MetricExporter,
     MetricExportResult,
     MetricsData,

@@ -16,7 +16,7 @@
 from inspect import Signature, isabstract, signature
 from unittest import TestCase
 
-from opentelemetry._metrics import (
+from opentelemetry.metrics import (
     Counter,
     Histogram,
     Instrument,

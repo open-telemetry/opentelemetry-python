@@ -14,7 +14,7 @@
 
 from unittest import TestCase
 
-from opentelemetry._metrics import Observation
+from opentelemetry.metrics import Observation
 
 
 class TestObservation(TestCase):
