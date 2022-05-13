@@ -20,9 +20,7 @@ from pytest import fixture
 
 import opentelemetry.metrics._internal as metrics_internal
 from opentelemetry import metrics
-from opentelemetry.environment_variables import (
-    _OTEL_PYTHON_METER_PROVIDER as OTEL_PYTHON_METER_PROVIDER,
-)
+from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics import (
     NoOpMeter,
     NoOpMeterProvider,

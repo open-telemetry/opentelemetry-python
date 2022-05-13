@@ -47,9 +47,7 @@ from os import environ
 from threading import Lock
 from typing import List, Optional, Sequence, Set, Tuple, Union, cast
 
-from opentelemetry.environment_variables import (
-    _OTEL_PYTHON_METER_PROVIDER as OTEL_PYTHON_METER_PROVIDER,
-)
+from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics._internal.instrument import (
     CallbackT,
     Counter,
