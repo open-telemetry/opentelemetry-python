@@ -8,7 +8,7 @@ from opentelemetry.metrics import (
     get_meter_provider,
     set_meter_provider,
 )
-from opentelemetry.metrics._internal.instrument import CallbackOptions
+from opentelemetry.metrics import CallbackOptions
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 
