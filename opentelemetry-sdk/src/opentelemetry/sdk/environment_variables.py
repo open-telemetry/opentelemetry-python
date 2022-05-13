@@ -407,7 +407,7 @@ provide the entry point for loading the log emitter provider. If not specified, 
 LogEmitterProvider is used.
 """
 
-_OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE = (
+OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE = (
     "OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE"
 )
 """

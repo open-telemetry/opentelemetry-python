@@ -32,7 +32,7 @@ from opentelemetry.context import (
     set_value,
 )
 from opentelemetry.sdk.environment_variables import (
-    _OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
+    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
@@ -181,7 +181,7 @@ class MetricReader(ABC):
 
         if (
             environ.get(
-                _OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
+                OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
                 "CUMULATIVE",
             )
             .upper()
