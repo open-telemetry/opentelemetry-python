@@ -4,11 +4,11 @@ from opentelemetry.exporter.otlp.proto.grpc._metric_exporter import (
     OTLPMetricExporter,
 )
 from opentelemetry.metrics import (
+    CallbackOptions,
     Observation,
     get_meter_provider,
     set_meter_provider,
 )
-from opentelemetry.metrics import CallbackOptions
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 
