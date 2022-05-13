@@ -49,6 +49,7 @@ from opentelemetry.sdk._metrics._internal.sdk_configuration import (
 )
 from opentelemetry.sdk._metrics._internal.view import View
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.util._time import _time_ns
 
 _logger = getLogger(__name__)
 
@@ -128,6 +129,9 @@ class MetricReaderStorage:
         # effect is that end times can be slightly skewed among the metric
         # streams produced by the SDK, but we still align the output timestamps
         # for a single instrument.
+
+        collection_start_nanos = _time_ns()
+
         with self._lock:
 
             instrumentation_scope_scope_metrics: (
@@ -154,7 +158,7 @@ class MetricReaderStorage:
                         data = Sum(
                             aggregation_temporality=aggregation_temporality,
                             data_points=view_instrument_match.collect(
-                                aggregation_temporality
+                                aggregation_temporality, collection_start_nanos
                             ),
                             is_monotonic=isinstance(
                                 instrument, (Counter, ObservableCounter)
@@ -167,7 +171,7 @@ class MetricReaderStorage:
                     ):
                         data = Gauge(
                             data_points=view_instrument_match.collect(
-                                aggregation_temporality
+                                aggregation_temporality, collection_start_nanos
                             )
                         )
                     elif isinstance(
@@ -177,7 +181,7 @@ class MetricReaderStorage:
                     ):
                         data = Histogram(
                             data_points=view_instrument_match.collect(
-                                aggregation_temporality
+                                aggregation_temporality, collection_start_nanos
                             ),
                             aggregation_temporality=aggregation_temporality,
                         )
