@@ -13,69 +13,72 @@
 # limitations under the License.
 
 
-from collections import OrderedDict
-
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.sdk._metrics.point import (
+from opentelemetry.sdk._metrics.export import (
     AggregationTemporality,
     Gauge,
     Metric,
+    NumberDataPoint,
     Sum,
 )
-from opentelemetry.sdk.resources import Resource as SDKResource
-from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 
 def _generate_metric(
-    name, point, attributes=None, description=None, unit=None
+    name, data, attributes=None, description=None, unit=None
 ) -> Metric:
-    if not attributes:
-        attributes = BoundedAttributes(attributes={"a": 1, "b": True})
-    if not description:
+    if description is None:
         description = "foo"
-    if not unit:
+    if unit is None:
         unit = "s"
     return Metric(
-        resource=SDKResource(OrderedDict([("a", 1), ("b", False)])),
-        instrumentation_scope=InstrumentationScope(
-            "first_name", "first_version"
-        ),
-        attributes=attributes,
-        description=description,
         name=name,
+        description=description,
         unit=unit,
-        point=point,
+        data=data,
     )
 
 
 def _generate_sum(
-    name, val, attributes=None, description=None, unit=None
+    name, value, attributes=None, description=None, unit=None
 ) -> Sum:
+    if attributes is None:
+        attributes = BoundedAttributes(attributes={"a": 1, "b": True})
     return _generate_metric(
         name,
         Sum(
+            data_points=[
+                NumberDataPoint(
+                    attributes=attributes,
+                    start_time_unix_nano=1641946015139533244,
+                    time_unix_nano=1641946016139533244,
+                    value=value,
+                )
+            ],
             aggregation_temporality=AggregationTemporality.CUMULATIVE,
             is_monotonic=True,
-            start_time_unix_nano=1641946015139533244,
-            time_unix_nano=1641946016139533244,
-            value=val,
         ),
-        attributes=attributes,
         description=description,
         unit=unit,
     )
 
 
 def _generate_gauge(
-    name, val, attributes=None, description=None, unit=None
+    name, value, attributes=None, description=None, unit=None
 ) -> Gauge:
+    if attributes is None:
+        attributes = BoundedAttributes(attributes={"a": 1, "b": True})
     return _generate_metric(
         name,
         Gauge(
-            time_unix_nano=1641946016139533244,
-            value=val,
+            data_points=[
+                NumberDataPoint(
+                    attributes=attributes,
+                    start_time_unix_nano=1641946015139533244,
+                    time_unix_nano=1641946016139533244,
+                    value=value,
+                )
+            ],
         ),
-        attributes=attributes,
         description=description,
         unit=unit,
     )
@@ -87,7 +90,6 @@ def _generate_unsupported_metric(
     return _generate_metric(
         name,
         None,
-        attributes=attributes,
         description=description,
         unit=unit,
     )

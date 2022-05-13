@@ -13,16 +13,20 @@
 # limitations under the License.
 
 import time
+from typing import Sequence
 from unittest.mock import Mock
 
 from flaky import flaky
 
 from opentelemetry.sdk._metrics.export import (
+    Gauge,
+    Metric,
     MetricExporter,
+    MetricExportResult,
+    NumberDataPoint,
     PeriodicExportingMetricReader,
+    Sum,
 )
-from opentelemetry.sdk._metrics.point import Gauge, Metric, Sum
-from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 from opentelemetry.util._time import _time_ns
 
@@ -33,41 +37,51 @@ class FakeMetricsExporter(MetricExporter):
         self.metrics = []
         self._shutdown = False
 
-    def export(self, metrics):
+    def export(
+        self,
+        metrics: Sequence[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> MetricExportResult:
         time.sleep(self.wait)
         self.metrics.extend(metrics)
         return True
 
-    def shutdown(self):
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         self._shutdown = True
 
 
 metrics_list = [
     Metric(
         name="sum_name",
-        attributes={},
         description="",
-        instrumentation_scope=None,
-        resource=Resource.create(),
         unit="",
-        point=Sum(
-            start_time_unix_nano=_time_ns(),
-            time_unix_nano=_time_ns(),
-            value=2,
+        data=Sum(
+            data_points=[
+                NumberDataPoint(
+                    attributes={},
+                    start_time_unix_nano=_time_ns(),
+                    time_unix_nano=_time_ns(),
+                    value=2,
+                )
+            ],
             aggregation_temporality=1,
             is_monotonic=True,
         ),
     ),
     Metric(
         name="gauge_name",
-        attributes={},
         description="",
-        instrumentation_scope=None,
-        resource=Resource.create(),
         unit="",
-        point=Gauge(
-            time_unix_nano=_time_ns(),
-            value=2,
+        data=Gauge(
+            data_points=[
+                NumberDataPoint(
+                    attributes={},
+                    start_time_unix_nano=_time_ns(),
+                    time_unix_nano=_time_ns(),
+                    value=2,
+                )
+            ]
         ),
     ),
 ]
@@ -88,7 +102,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             exporter, export_interval_millis=interval
         )
 
-        def _collect(reader, temp):
+        def _collect(reader):
             time.sleep(collect_wait)
             pmr._receive_metrics(metrics)
 

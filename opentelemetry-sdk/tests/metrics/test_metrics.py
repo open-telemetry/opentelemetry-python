@@ -15,29 +15,29 @@
 
 from logging import WARNING
 from time import sleep
-from typing import Sequence
+from typing import Iterable, Sequence
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry._metrics import NoOpMeter
-from opentelemetry.sdk._metrics import Meter, MeterProvider
-from opentelemetry.sdk._metrics.aggregation import SumAggregation
-from opentelemetry.sdk._metrics.export import (
-    MetricExporter,
-    MetricExportResult,
-    PeriodicExportingMetricReader,
-)
-from opentelemetry.sdk._metrics.instrument import (
+from opentelemetry.sdk._metrics import (
     Counter,
     Histogram,
+    Meter,
+    MeterProvider,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk._metrics.metric_reader import MetricReader
-from opentelemetry.sdk._metrics.point import Metric
-from opentelemetry.sdk._metrics.view import View
+from opentelemetry.sdk._metrics.export import (
+    Metric,
+    MetricExporter,
+    MetricExportResult,
+    MetricReader,
+    PeriodicExportingMetricReader,
+)
+from opentelemetry.sdk._metrics.view import SumAggregation, View
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
 
@@ -46,10 +46,15 @@ class DummyMetricReader(MetricReader):
     def __init__(self):
         super().__init__()
 
-    def _receive_metrics(self, metrics):
+    def _receive_metrics(
+        self,
+        metrics: Iterable[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> None:
         pass
 
-    def shutdown(self):
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         return True
 
 
@@ -433,12 +438,17 @@ class InMemoryMetricExporter(MetricExporter):
         self.metrics = {}
         self._counter = 0
 
-    def export(self, metrics: Sequence[Metric]) -> MetricExportResult:
+    def export(
+        self,
+        metrics: Sequence[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> MetricExportResult:
         self.metrics[self._counter] = metrics
         self._counter += 1
         return MetricExportResult.SUCCESS
 
-    def shutdown(self) -> None:
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass
 
 
@@ -496,18 +506,19 @@ class TestDuplicateInstrumentAggregateData(TestCase):
 
         metrics = exporter.metrics[0]
 
-        self.assertEqual(len(metrics), 2)
+        scope_metrics = metrics.resource_metrics[0].scope_metrics
+        self.assertEqual(len(scope_metrics), 2)
 
-        metric_0 = metrics[0]
+        metric_0 = scope_metrics[0].metrics[0]
 
         self.assertEqual(metric_0.name, "counter")
         self.assertEqual(metric_0.unit, "unit")
         self.assertEqual(metric_0.description, "description")
-        self.assertEqual(metric_0.point.value, 3)
+        self.assertEqual(next(metric_0.data.data_points).value, 3)
 
-        metric_1 = metrics[1]
+        metric_1 = scope_metrics[1].metrics[0]
 
         self.assertEqual(metric_1.name, "counter")
         self.assertEqual(metric_1.unit, "unit")
         self.assertEqual(metric_1.description, "description")
-        self.assertEqual(metric_1.point.value, 7)
+        self.assertEqual(next(metric_1.data.data_points).value, 7)

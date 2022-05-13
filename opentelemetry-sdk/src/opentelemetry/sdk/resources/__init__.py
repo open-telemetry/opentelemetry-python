@@ -59,6 +59,7 @@ import abc
 import concurrent.futures
 import logging
 import os
+import sys
 import typing
 from json import dumps
 
@@ -284,6 +285,28 @@ class OTELResourceDetector(ResourceDetector):
         if service_name:
             env_resource_map[SERVICE_NAME] = service_name
         return Resource(env_resource_map)
+
+
+class ProcessResourceDetector(ResourceDetector):
+    # pylint: disable=no-self-use
+    def detect(self) -> "Resource":
+        _runtime_version = ".".join(
+            map(
+                str,
+                sys.version_info[:3]
+                if sys.version_info.releaselevel == "final"
+                and not sys.version_info.serial
+                else sys.version_info,
+            )
+        )
+
+        return Resource(
+            {
+                PROCESS_RUNTIME_DESCRIPTION: sys.version,
+                PROCESS_RUNTIME_NAME: sys.implementation.name,
+                PROCESS_RUNTIME_VERSION: _runtime_version,
+            }
+        )
 
 
 def get_aggregated_resources(

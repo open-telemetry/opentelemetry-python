@@ -17,6 +17,8 @@ from logging import getLogger
 from threading import Lock
 from typing import Optional, Sequence
 
+# This kind of import is needed to avoid Sphinx errors.
+import opentelemetry.sdk._metrics
 from opentelemetry._metrics import Counter as APICounter
 from opentelemetry._metrics import Histogram as APIHistogram
 from opentelemetry._metrics import Meter as APIMeter
@@ -28,14 +30,7 @@ from opentelemetry._metrics import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
 from opentelemetry._metrics import UpDownCounter as APIUpDownCounter
-from opentelemetry.sdk._metrics._internal.measurement_consumer import (
-    MeasurementConsumer,
-    SynchronousMeasurementConsumer,
-)
-from opentelemetry.sdk._metrics._internal.sdk_configuration import (
-    SdkConfiguration,
-)
-from opentelemetry.sdk._metrics.instrument import (
+from opentelemetry.sdk._metrics._internal.instrument import (
     Counter,
     Histogram,
     ObservableCounter,
@@ -43,11 +38,17 @@ from opentelemetry.sdk._metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk._metrics.metric_reader import MetricReader
-from opentelemetry.sdk._metrics.view import View
+from opentelemetry.sdk._metrics._internal.measurement_consumer import (
+    MeasurementConsumer,
+    SynchronousMeasurementConsumer,
+)
+from opentelemetry.sdk._metrics._internal.sdk_configuration import (
+    SdkConfiguration,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._once import Once
+from opentelemetry.util._time import _time_ns
 
 _logger = getLogger(__name__)
 
@@ -297,8 +298,9 @@ class MeterProvider(APIMeterProvider):
     r"""See `opentelemetry._metrics.MeterProvider`.
 
     Args:
-        metric_readers: Register metric readers to collect metrics from the SDK on demand. Each
-            `MetricReader` is completely independent and will collect separate streams of
+        metric_readers: Register metric readers to collect metrics from the SDK
+            on demand. Each :class:`opentelemetry.sdk._metrics.export.MetricReader` is
+            completely independent and will collect separate streams of
             metrics. TODO: reference ``PeriodicExportingMetricReader`` usage with push
             exporters here.
         resource: The resource representing what the metrics emitted from the SDK pertain to.
@@ -306,10 +308,10 @@ class MeterProvider(APIMeterProvider):
             `MeterProvider.shutdown`
         views: The views to configure the metric output the SDK
 
-    By default, instruments which do not match any `View` (or if no `View`\ s
+    By default, instruments which do not match any :class:`opentelemetry.sdk._metrics.view.View` (or if no :class:`opentelemetry.sdk._metrics.view.View`\ s
     are provided) will report metrics with the default aggregation for the
     instrument's kind. To disable instruments by default, configure a match-all
-    `View` with `DropAggregation` and then create `View`\ s to re-enable
+    :class:`opentelemetry.sdk._metrics.view.View` with `DropAggregation` and then create :class:`opentelemetry.sdk._metrics.view.View`\ s to re-enable
     individual instruments:
 
     .. code-block:: python
@@ -329,10 +331,12 @@ class MeterProvider(APIMeterProvider):
 
     def __init__(
         self,
-        metric_readers: Sequence[MetricReader] = (),
+        metric_readers: Sequence[
+            "opentelemetry.sdk._metrics.export.MetricReader"
+        ] = (),
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
-        views: Sequence[View] = (),
+        views: Sequence["opentelemetry.sdk._metrics.view.View"] = (),
     ):
         self._lock = Lock()
         self._meter_lock = Lock()
@@ -369,16 +373,43 @@ class MeterProvider(APIMeterProvider):
         self._shutdown_once = Once()
         self._shutdown = False
 
-    def force_flush(self) -> bool:
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        deadline_ns = _time_ns() + timeout_millis * 10**6
 
-        # FIXME implement a timeout
+        metric_reader_error = {}
 
         for metric_reader in self._sdk_config.metric_readers:
-            metric_reader.collect()
+            current_ts = _time_ns()
+            try:
+                if current_ts >= deadline_ns:
+                    raise Exception("Timed out while flushing metric readers")
+                metric_reader.collect(
+                    timeout_millis=(deadline_ns - current_ts) / 10**6
+                )
+
+            # pylint: disable=broad-except
+            except Exception as error:
+
+                metric_reader_error[metric_reader] = error
+
+        if metric_reader_error:
+
+            metric_reader_error_string = "\n".join(
+                [
+                    f"{metric_reader.__class__.__name__}: {repr(error)}"
+                    for metric_reader, error in metric_reader_error.items()
+                ]
+            )
+
+            raise Exception(
+                "MeterProvider.force_flush failed because the following "
+                "metric readers failed during collect:\n"
+                f"{metric_reader_error_string}"
+            )
         return True
 
-    def shutdown(self):
-        # FIXME implement a timeout
+    def shutdown(self, timeout_millis: float = 30_000):
+        deadline_ns = _time_ns() + timeout_millis * 10**6
 
         def _shutdown():
             self._shutdown = True
@@ -392,8 +423,15 @@ class MeterProvider(APIMeterProvider):
         metric_reader_error = {}
 
         for metric_reader in self._sdk_config.metric_readers:
+            current_ts = _time_ns()
             try:
-                metric_reader.shutdown()
+                if current_ts >= deadline_ns:
+                    raise Exception(
+                        "Didn't get to execute, deadline already exceeded"
+                    )
+                metric_reader.shutdown(
+                    timeout_millis=(deadline_ns - current_ts) / 10**6
+                )
 
             # pylint: disable=broad-except
             except Exception as error:

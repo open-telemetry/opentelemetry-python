@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.11.1-0.30b1...HEAD)
 
+- Update to semantic conventions v1.11.0
+  ([#2669](https://github.com/open-telemetry/opentelemetry-python/pull/2669))
+- Update opentelemetry-proto to v0.17.0
+  ([#2668](https://github.com/open-telemetry/opentelemetry-python/pull/2668))
+- Add CallbackOptions to observable instrument callback params
+  ([#2664](https://github.com/open-telemetry/opentelemetry-python/pull/2664))
+- Add timeouts to metric SDK
+  ([#2653](https://github.com/open-telemetry/opentelemetry-python/pull/2653))
+- Add variadic arguments to metric exporter/reader interfaces
+  ([#2654](https://github.com/open-telemetry/opentelemetry-python/pull/2654))
+- Added a `opentelemetry.sdk.resources.ProcessResourceDetector` that adds the
+  'process.runtime.{name,version,description}' resource attributes when used
+  with the `opentelemetry.sdk.resources.get_aggregated_resources` API
+  ([#2660](https://github.com/open-telemetry/opentelemetry-python/pull/2660))
 - Move Metrics API behind internal package
   ([#2651](https://github.com/open-telemetry/opentelemetry-python/pull/2651))
 

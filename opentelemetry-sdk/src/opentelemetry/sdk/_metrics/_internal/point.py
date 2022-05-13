@@ -12,26 +12,29 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import json
+# pylint: disable=unused-import
+
 from dataclasses import asdict, dataclass
-from enum import IntEnum
+from json import dumps
 from typing import Sequence, Union
 
+# This kind of import is needed to avoid Sphinx errors.
+import opentelemetry.sdk._metrics._internal
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util.types import Attributes
 
 
-class AggregationTemporality(IntEnum):
+@dataclass(frozen=True)
+class NumberDataPoint:
+    """Single data point in a timeseries that describes the time-varying scalar
+    value of a metric.
     """
-    The temporality to use when aggregating data.
 
-    Can be one of the following values:
-    """
-
-    UNSPECIFIED = 0
-    DELTA = 1
-    CUMULATIVE = 2
+    attributes: Attributes
+    start_time_unix_nano: int
+    time_unix_nano: int
+    value: Union[int, float]
 
 
 @dataclass(frozen=True)
@@ -39,11 +42,22 @@ class Sum:
     """Represents the type of a scalar metric that is calculated as a sum of
     all reported measurements over a time interval."""
 
-    aggregation_temporality: AggregationTemporality
+    data_points: Sequence[NumberDataPoint]
+    aggregation_temporality: (
+        "opentelemetry.sdk._metrics.export.AggregationTemporality"
+    )
     is_monotonic: bool
-    start_time_unix_nano: int
-    time_unix_nano: int
-    value: Union[int, float]
+
+    def to_json(self) -> str:
+        return dumps(
+            {
+                "data_points": dumps(
+                    [asdict(data_point) for data_point in self.data_points]
+                ),
+                "aggregation_temporality": self.aggregation_temporality,
+                "is_monotonic": self.is_monotonic,
+            }
+        )
 
 
 @dataclass(frozen=True)
@@ -52,8 +66,33 @@ class Gauge:
     value for every data point. It should be used for an unknown
     aggregation."""
 
+    data_points: Sequence[NumberDataPoint]
+
+    def to_json(self) -> str:
+        return dumps(
+            {
+                "data_points": dumps(
+                    [asdict(data_point) for data_point in self.data_points]
+                )
+            }
+        )
+
+
+@dataclass(frozen=True)
+class HistogramDataPoint:
+    """Single data point in a timeseries that describes the time-varying scalar
+    value of a metric.
+    """
+
+    attributes: Attributes
+    start_time_unix_nano: int
     time_unix_nano: int
-    value: Union[int, float]
+    count: int
+    sum: Union[int, float]
+    bucket_counts: Sequence[int]
+    explicit_bounds: Sequence[float]
+    min: float
+    max: float
 
 
 @dataclass(frozen=True)
@@ -61,50 +100,67 @@ class Histogram:
     """Represents the type of a metric that is calculated by aggregating as a
     histogram of all reported measurements over a time interval."""
 
-    aggregation_temporality: AggregationTemporality
-    bucket_counts: Sequence[int]
-    explicit_bounds: Sequence[float]
-    max: int
-    min: int
-    start_time_unix_nano: int
-    sum: Union[int, float]
-    time_unix_nano: int
+    data_points: Sequence[HistogramDataPoint]
+    aggregation_temporality: (
+        "opentelemetry.sdk._metrics.export.AggregationTemporality"
+    )
+
+    def to_json(self) -> str:
+        return dumps(
+            {
+                "data_points": dumps(
+                    [asdict(data_point) for data_point in self.data_points]
+                ),
+                "aggregation_temporality": self.aggregation_temporality,
+            }
+        )
 
 
-PointT = Union[Sum, Gauge, Histogram]
+DataT = Union[Sum, Gauge, Histogram]
+DataPointT = Union[NumberDataPoint, HistogramDataPoint]
 
 
 @dataclass(frozen=True)
 class Metric:
-    """Represents a metric point in the OpenTelemetry data model to be exported
+    """Represents a metric point in the OpenTelemetry data model to be
+    exported."""
 
-    Concrete metric types contain all the information as in the OTLP proto definitions
-    (https://github.com/open-telemetry/opentelemetry-proto/blob/b43e9b18b76abf3ee040164b55b9c355217151f3/opentelemetry/proto/metrics/v1/metrics.proto#L37) but are flattened as much as possible.
-    """
-
-    # common fields to all metric kinds
-    attributes: Attributes
-    description: str
-    instrumentation_scope: InstrumentationScope
     name: str
-    resource: Resource
+    description: str
     unit: str
-    point: PointT
-    """Contains non-common fields for the given metric"""
+    data: DataT
 
     def to_json(self) -> str:
-        return json.dumps(
+        return dumps(
             {
-                "attributes": self.attributes if self.attributes else "",
-                "description": self.description if self.description else "",
-                "instrumentation_scope": repr(self.instrumentation_scope)
-                if self.instrumentation_scope
-                else "",
                 "name": self.name,
-                "resource": repr(self.resource.attributes)
-                if self.resource
-                else "",
+                "description": self.description if self.description else "",
                 "unit": self.unit if self.unit else "",
-                "point": asdict(self.point) if self.point else "",
+                "data": self.data.to_json(),
             }
         )
+
+
+@dataclass(frozen=True)
+class ScopeMetrics:
+    """A collection of Metrics produced by a scope"""
+
+    scope: InstrumentationScope
+    metrics: Sequence[Metric]
+    schema_url: str
+
+
+@dataclass(frozen=True)
+class ResourceMetrics:
+    """A collection of ScopeMetrics from a Resource"""
+
+    resource: Resource
+    scope_metrics: Sequence[ScopeMetrics]
+    schema_url: str
+
+
+@dataclass(frozen=True)
+class MetricsData:
+    """An array of ResourceMetrics"""
+
+    resource_metrics: Sequence[ResourceMetrics]

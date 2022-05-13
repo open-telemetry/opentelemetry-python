@@ -16,7 +16,8 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 from opentelemetry._metrics import Observation
-from opentelemetry.sdk._metrics.instrument import (
+from opentelemetry._metrics._internal.instrument import CallbackOptions
+from opentelemetry.sdk._metrics import (
     Counter,
     Histogram,
     ObservableCounter,
@@ -24,7 +25,7 @@ from opentelemetry.sdk._metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry.sdk._metrics._internal.measurement import Measurement
 
 
 class TestCounter(TestCase):
@@ -62,7 +63,7 @@ class TestUpDownCounter(TestCase):
 TEST_ATTRIBUTES = {"foo": "bar"}
 
 
-def callable_callback_0():
+def callable_callback_0(options: CallbackOptions):
     return [
         Observation(1, attributes=TEST_ATTRIBUTES),
         Observation(2, attributes=TEST_ATTRIBUTES),
@@ -70,7 +71,7 @@ def callable_callback_0():
     ]
 
 
-def callable_callback_1():
+def callable_callback_1(options: CallbackOptions):
     return [
         Observation(4, attributes=TEST_ATTRIBUTES),
         Observation(5, attributes=TEST_ATTRIBUTES),
@@ -79,19 +80,25 @@ def callable_callback_1():
 
 
 def generator_callback_0():
-    yield [
+    options = yield
+    assert isinstance(options, CallbackOptions)
+    options = yield [
         Observation(1, attributes=TEST_ATTRIBUTES),
         Observation(2, attributes=TEST_ATTRIBUTES),
         Observation(3, attributes=TEST_ATTRIBUTES),
     ]
+    assert isinstance(options, CallbackOptions)
 
 
 def generator_callback_1():
-    yield [
+    options = yield
+    assert isinstance(options, CallbackOptions)
+    options = yield [
         Observation(4, attributes=TEST_ATTRIBUTES),
         Observation(5, attributes=TEST_ATTRIBUTES),
         Observation(6, attributes=TEST_ATTRIBUTES),
     ]
+    assert isinstance(options, CallbackOptions)
 
 
 class TestObservableGauge(TestCase):
@@ -105,7 +112,7 @@ class TestObservableGauge(TestCase):
         )
 
         self.assertEqual(
-            list(observable_gauge.callback()),
+            list(observable_gauge.callback(CallbackOptions())),
             [
                 Measurement(
                     1, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
@@ -125,7 +132,7 @@ class TestObservableGauge(TestCase):
         )
 
         self.assertEqual(
-            list(observable_gauge.callback()),
+            list(observable_gauge.callback(CallbackOptions())),
             [
                 Measurement(
                     1, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
@@ -154,7 +161,7 @@ class TestObservableGauge(TestCase):
         )
 
         self.assertEqual(
-            list(observable_gauge.callback()),
+            list(observable_gauge.callback(CallbackOptions())),
             [
                 Measurement(
                     1, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
@@ -178,7 +185,7 @@ class TestObservableGauge(TestCase):
         )
 
         self.assertEqual(
-            list(observable_gauge.callback()),
+            list(observable_gauge.callback(CallbackOptions())),
             [
                 Measurement(
                     1, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
@@ -209,7 +216,7 @@ class TestObservableCounter(TestCase):
         )
 
         self.assertEqual(
-            list(observable_counter.callback()),
+            list(observable_counter.callback(CallbackOptions())),
             [
                 Measurement(
                     1,
@@ -235,7 +242,7 @@ class TestObservableCounter(TestCase):
         )
 
         self.assertEqual(
-            list(observable_counter.callback()),
+            list(observable_counter.callback(CallbackOptions())),
             [
                 Measurement(
                     1,
@@ -263,7 +270,7 @@ class TestObservableUpDownCounter(TestCase):
         )
 
         self.assertEqual(
-            list(observable_up_down_counter.callback()),
+            list(observable_up_down_counter.callback(CallbackOptions())),
             [
                 Measurement(
                     1,
@@ -289,7 +296,7 @@ class TestObservableUpDownCounter(TestCase):
         )
 
         self.assertEqual(
-            list(observable_up_down_counter.callback()),
+            list(observable_up_down_counter.callback(CallbackOptions())),
             [
                 Measurement(
                     1,
