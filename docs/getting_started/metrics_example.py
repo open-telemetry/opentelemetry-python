@@ -17,14 +17,14 @@
 
 from typing import Iterable
 
-from opentelemetry._metrics import (
+from opentelemetry.metrics import (
     CallbackOptions,
     Observation,
     get_meter_provider,
     set_meter_provider,
 )
-from opentelemetry.sdk._metrics import MeterProvider
-from opentelemetry.sdk._metrics.export import (
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import (
     ConsoleMetricExporter,
     PeriodicExportingMetricReader,
 )

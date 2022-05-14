@@ -18,18 +18,18 @@ from logging import getLogger
 from typing import Dict, Generator, Iterable, List, Optional, Union
 
 # This kind of import is needed to avoid Sphinx errors.
-import opentelemetry.sdk._metrics
-from opentelemetry._metrics import CallbackT
-from opentelemetry._metrics import Counter as APICounter
-from opentelemetry._metrics import Histogram as APIHistogram
-from opentelemetry._metrics import ObservableCounter as APIObservableCounter
-from opentelemetry._metrics import ObservableGauge as APIObservableGauge
-from opentelemetry._metrics import (
+import opentelemetry.sdk.metrics
+from opentelemetry.metrics import CallbackT
+from opentelemetry.metrics import Counter as APICounter
+from opentelemetry.metrics import Histogram as APIHistogram
+from opentelemetry.metrics import ObservableCounter as APIObservableCounter
+from opentelemetry.metrics import ObservableGauge as APIObservableGauge
+from opentelemetry.metrics import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
-from opentelemetry._metrics import UpDownCounter as APIUpDownCounter
-from opentelemetry._metrics._internal.instrument import CallbackOptions
-from opentelemetry.sdk._metrics._internal.measurement import Measurement
+from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
+from opentelemetry.metrics._internal.instrument import CallbackOptions
+from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 
 _logger = getLogger(__name__)
@@ -45,7 +45,7 @@ class _Synchronous:
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
-        measurement_consumer: "opentelemetry.sdk._metrics.MeasurementConsumer",
+        measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",
         unit: str = "",
         description: str = "",
     ):
@@ -70,7 +70,7 @@ class _Asynchronous:
         self,
         name: str,
         instrumentation_scope: InstrumentationScope,
-        measurement_consumer: "opentelemetry.sdk._metrics.MeasurementConsumer",
+        measurement_consumer: "opentelemetry.sdk.metrics.MeasurementConsumer",
         callbacks: Optional[Iterable[CallbackT]] = None,
         unit: str = "",
         description: str = "",

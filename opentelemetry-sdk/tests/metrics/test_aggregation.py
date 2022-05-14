@@ -18,7 +18,7 @@ from typing import Union
 from unittest import TestCase
 from unittest.mock import Mock
 
-from opentelemetry.sdk._metrics import (
+from opentelemetry.sdk.metrics import (
     Counter,
     Histogram,
     ObservableCounter,
@@ -26,17 +26,17 @@ from opentelemetry.sdk._metrics import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk._metrics._internal.aggregation import (
+from opentelemetry.sdk.metrics._internal.aggregation import (
     _ExplicitBucketHistogramAggregation,
     _LastValueAggregation,
     _SumAggregation,
 )
-from opentelemetry.sdk._metrics._internal.measurement import Measurement
-from opentelemetry.sdk._metrics.export import (
+from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     NumberDataPoint,
 )
-from opentelemetry.sdk._metrics.view import (
+from opentelemetry.sdk.metrics.view import (
     DefaultAggregation,
     ExplicitBucketHistogramAggregation,
     LastValueAggregation,

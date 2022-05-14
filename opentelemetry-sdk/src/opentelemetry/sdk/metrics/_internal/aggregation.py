@@ -20,7 +20,7 @@ from math import inf
 from threading import Lock
 from typing import Generic, List, Optional, Sequence, TypeVar
 
-from opentelemetry._metrics import (
+from opentelemetry.metrics import (
     Asynchronous,
     Counter,
     Histogram,
@@ -31,12 +31,12 @@ from opentelemetry._metrics import (
     Synchronous,
     UpDownCounter,
 )
-from opentelemetry.sdk._metrics._internal.measurement import Measurement
-from opentelemetry.sdk._metrics._internal.point import Gauge
-from opentelemetry.sdk._metrics._internal.point import (
+from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.sdk.metrics._internal.point import Gauge
+from opentelemetry.sdk.metrics._internal.point import (
     Histogram as HistogramPoint,
 )
-from opentelemetry.sdk._metrics._internal.point import (
+from opentelemetry.sdk.metrics._internal.point import (
     HistogramDataPoint,
     NumberDataPoint,
     Sum,
@@ -369,12 +369,12 @@ class DefaultAggregation(Aggregation):
     ==================================================== ====================================
     Instrument                                           Aggregation
     ==================================================== ====================================
-    `opentelemetry.sdk._metrics.Counter`                 `SumAggregation`
-    `opentelemetry.sdk._metrics.UpDownCounter`           `SumAggregation`
-    `opentelemetry.sdk._metrics.ObservableCounter`       `SumAggregation`
-    `opentelemetry.sdk._metrics.ObservableUpDownCounter` `SumAggregation`
-    `opentelemetry.sdk._metrics.Histogram`               `ExplicitBucketHistogramAggregation`
-    `opentelemetry.sdk._metrics.ObservableGauge`         `LastValueAggregation`
+    `opentelemetry.sdk.metrics.Counter`                  `SumAggregation`
+    `opentelemetry.sdk.metrics.UpDownCounter`            `SumAggregation`
+    `opentelemetry.sdk.metrics.ObservableCounter`        `SumAggregation`
+    `opentelemetry.sdk.metrics.ObservableUpDownCounter`  `SumAggregation`
+    `opentelemetry.sdk.metrics.Histogram`                `ExplicitBucketHistogramAggregation`
+    `opentelemetry.sdk.metrics.ObservableGauge`          `LastValueAggregation`
     ==================================================== ====================================
     """
 

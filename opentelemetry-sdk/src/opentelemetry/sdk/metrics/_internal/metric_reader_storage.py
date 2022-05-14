@@ -16,16 +16,16 @@ from logging import getLogger
 from threading import RLock
 from typing import Dict, List
 
-from opentelemetry._metrics import (
+from opentelemetry.metrics import (
     Asynchronous,
     Counter,
     Instrument,
     ObservableCounter,
 )
-from opentelemetry.sdk._metrics._internal._view_instrument_match import (
+from opentelemetry.sdk.metrics._internal._view_instrument_match import (
     _ViewInstrumentMatch,
 )
-from opentelemetry.sdk._metrics._internal.aggregation import (
+from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     ExplicitBucketHistogramAggregation,
     _DropAggregation,
@@ -33,9 +33,9 @@ from opentelemetry.sdk._metrics._internal.aggregation import (
     _LastValueAggregation,
     _SumAggregation,
 )
-from opentelemetry.sdk._metrics._internal.export import AggregationTemporality
-from opentelemetry.sdk._metrics._internal.measurement import Measurement
-from opentelemetry.sdk._metrics._internal.point import (
+from opentelemetry.sdk.metrics._internal.export import AggregationTemporality
+from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.sdk.metrics._internal.point import (
     Gauge,
     Histogram,
     Metric,
@@ -44,10 +44,10 @@ from opentelemetry.sdk._metrics._internal.point import (
     ScopeMetrics,
     Sum,
 )
-from opentelemetry.sdk._metrics._internal.sdk_configuration import (
+from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
-from opentelemetry.sdk._metrics._internal.view import View
+from opentelemetry.sdk.metrics._internal.view import View
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._time import _time_ns
 

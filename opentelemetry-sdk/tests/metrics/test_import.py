@@ -24,7 +24,7 @@ class TestImport(TestCase):
         """
 
         try:
-            from opentelemetry.sdk._metrics import (  # noqa: F401
+            from opentelemetry.sdk.metrics import (  # noqa: F401
                 Counter,
                 Histogram,
                 Meter,
@@ -43,7 +43,7 @@ class TestImport(TestCase):
         """
 
         try:
-            from opentelemetry.sdk._metrics.export import (  # noqa: F401
+            from opentelemetry.sdk.metrics.export import (  # noqa: F401
                 AggregationTemporality,
                 ConsoleMetricExporter,
                 DataPointT,
@@ -72,7 +72,7 @@ class TestImport(TestCase):
         """
 
         try:
-            from opentelemetry.sdk._metrics.view import (  # noqa: F401
+            from opentelemetry.sdk.metrics.view import (  # noqa: F401
                 Aggregation,
                 DefaultAggregation,
                 DropAggregation,

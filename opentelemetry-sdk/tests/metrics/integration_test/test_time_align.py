@@ -18,8 +18,8 @@ from unittest import TestCase
 
 from pytest import mark
 
-from opentelemetry.sdk._metrics import Counter, MeterProvider
-from opentelemetry.sdk._metrics.export import (
+from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     InMemoryMetricReader,
 )

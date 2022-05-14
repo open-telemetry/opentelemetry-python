@@ -28,10 +28,10 @@ Ideally, we could use mypy for this as well, but SDK is not type checked atm.
 from typing import Iterable, Sequence
 from unittest import TestCase
 
-from opentelemetry._metrics import CallbackOptions, Observation
-from opentelemetry.sdk._metrics import MeterProvider
-from opentelemetry.sdk._metrics._internal.export import InMemoryMetricReader
-from opentelemetry.sdk._metrics.export import (
+from opentelemetry.metrics import CallbackOptions, Observation
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics._internal.export import InMemoryMetricReader
+from opentelemetry.sdk.metrics.export import (
     Metric,
     MetricExporter,
     MetricExportResult,
