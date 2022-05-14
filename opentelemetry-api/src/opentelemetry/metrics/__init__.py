@@ -30,15 +30,16 @@ with the calling instrumentation name and the version of your package.
 
 The following code shows how to obtain a meter using the global :class:`.MeterProvider`::
 
-    from opentelemetry._metrics import get_meter
+    from opentelemetry.metrics import get_meter
 
     meter = get_meter("example-meter")
     counter = meter.create_counter("example-counter")
 
 .. versionadded:: 1.10.0
+.. versionchanged:: 1.12.0rc
 """
 
-from opentelemetry._metrics._internal import (
+from opentelemetry.metrics._internal import (
     Meter,
     MeterProvider,
     NoOpMeter,
@@ -47,7 +48,7 @@ from opentelemetry._metrics._internal import (
     get_meter_provider,
     set_meter_provider,
 )
-from opentelemetry._metrics._internal.instrument import (
+from opentelemetry.metrics._internal.instrument import (
     Asynchronous,
     CallbackOptions,
     CallbackT,
@@ -66,7 +67,7 @@ from opentelemetry._metrics._internal.instrument import (
     Synchronous,
     UpDownCounter,
 )
-from opentelemetry._metrics._internal.observation import Observation
+from opentelemetry.metrics._internal.observation import Observation
 
 for obj in [
     Counter,

@@ -23,7 +23,7 @@ from opentelemetry.exporter.prometheus import (
     PrometheusMetricReader,
     _CustomCollector,
 )
-from opentelemetry.sdk._metrics.export import (
+from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Histogram,
     HistogramDataPoint,

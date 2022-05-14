@@ -1,16 +1,16 @@
 from typing import Iterable
 
-from opentelemetry._metrics import (
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
+    OTLPMetricExporter,
+)
+from opentelemetry.metrics import (
+    CallbackOptions,
     Observation,
     get_meter_provider,
     set_meter_provider,
 )
-from opentelemetry._metrics._internal.instrument import CallbackOptions
-from opentelemetry.exporter.otlp.proto.grpc._metric_exporter import (
-    OTLPMetricExporter,
-)
-from opentelemetry.sdk._metrics import MeterProvider
-from opentelemetry.sdk._metrics.export import PeriodicExportingMetricReader
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 
 exporter = OTLPMetricExporter(insecure=True)
 reader = PeriodicExportingMetricReader(exporter)

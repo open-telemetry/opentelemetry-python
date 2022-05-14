@@ -18,25 +18,23 @@ from unittest.mock import Mock, patch
 
 from pytest import fixture
 
-import opentelemetry._metrics._internal as metrics_internal
-from opentelemetry import _metrics as metrics
-from opentelemetry._metrics import (
+import opentelemetry.metrics._internal as metrics_internal
+from opentelemetry import metrics
+from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
+from opentelemetry.metrics import (
     NoOpMeter,
     NoOpMeterProvider,
     get_meter_provider,
     set_meter_provider,
 )
-from opentelemetry._metrics._internal import _ProxyMeter, _ProxyMeterProvider
-from opentelemetry._metrics._internal.instrument import (
+from opentelemetry.metrics._internal import _ProxyMeter, _ProxyMeterProvider
+from opentelemetry.metrics._internal.instrument import (
     _ProxyCounter,
     _ProxyHistogram,
     _ProxyObservableCounter,
     _ProxyObservableGauge,
     _ProxyObservableUpDownCounter,
     _ProxyUpDownCounter,
-)
-from opentelemetry.environment_variables import (
-    _OTEL_PYTHON_METER_PROVIDER as OTEL_PYTHON_METER_PROVIDER,
 )
 from opentelemetry.test.globals_test import (
     MetricsGlobalsTest,
@@ -72,7 +70,7 @@ def test_set_meter_provider(reset_meter_provider):
 
 def test_set_meter_provider_calls_proxy_provider(reset_meter_provider):
     with patch(
-        "opentelemetry._metrics._internal._PROXY_METER_PROVIDER"
+        "opentelemetry.metrics._internal._PROXY_METER_PROVIDER"
     ) as mock_proxy_mp:
         assert metrics_internal._PROXY_METER_PROVIDER is mock_proxy_mp
         mock_real_mp = Mock()
@@ -97,9 +95,9 @@ def test_get_meter_provider(reset_meter_provider):
         "os.environ", {OTEL_PYTHON_METER_PROVIDER: "test_meter_provider"}
     ):
 
-        with patch("opentelemetry._metrics._internal._load_provider", Mock()):
+        with patch("opentelemetry.metrics._internal._load_provider", Mock()):
             with patch(
-                "opentelemetry._metrics._internal.cast",
+                "opentelemetry.metrics._internal.cast",
                 Mock(**{"return_value": "test_meter_provider"}),
             ):
                 assert get_meter_provider() == "test_meter_provider"

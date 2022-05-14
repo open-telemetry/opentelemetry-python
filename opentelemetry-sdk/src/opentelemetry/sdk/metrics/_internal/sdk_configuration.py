@@ -18,12 +18,12 @@ from dataclasses import dataclass
 from typing import Sequence
 
 # This kind of import is needed to avoid Sphinx errors.
-import opentelemetry.sdk._metrics
+import opentelemetry.sdk.metrics
 import opentelemetry.sdk.resources
 
 
 @dataclass
 class SdkConfiguration:
     resource: "opentelemetry.sdk.resources.Resource"
-    metric_readers: Sequence["opentelemetry.sdk._metrics.MetricReader"]
-    views: Sequence["opentelemetry.sdk._metrics.View"]
+    metric_readers: Sequence["opentelemetry.sdk.metrics.MetricReader"]
+    views: Sequence["opentelemetry.sdk.metrics.View"]

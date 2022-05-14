@@ -20,7 +20,7 @@ from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import StatusCode, server
 
-from opentelemetry.exporter.otlp.proto.grpc._metric_exporter import (
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
     OTLPMetricExporter,
 )
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
@@ -40,7 +40,10 @@ from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
-from opentelemetry.sdk._metrics.export import (
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_METRICS_INSECURE,
+)
+from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Histogram,
     HistogramDataPoint,
@@ -49,9 +52,6 @@ from opentelemetry.sdk._metrics.export import (
     MetricsData,
     ResourceMetrics,
     ScopeMetrics,
-)
-from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_METRICS_INSECURE,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import (
@@ -303,7 +303,7 @@ class TestOTLPMetricExporter(TestCase):
     )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
     @patch(
-        "opentelemetry.exporter.otlp.proto.grpc._metric_exporter.OTLPMetricExporter._stub"
+        "opentelemetry.exporter.otlp.proto.grpc.metric_exporter.OTLPMetricExporter._stub"
     )
     # pylint: disable=unused-argument
     def test_no_credentials_error(

@@ -17,7 +17,7 @@ from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock
 
-from opentelemetry._metrics import Meter, NoOpMeter
+from opentelemetry.metrics import Meter, NoOpMeter
 
 # FIXME Test that the meter methods can be called concurrently safely.
 

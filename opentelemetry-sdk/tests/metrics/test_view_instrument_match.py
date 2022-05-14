@@ -15,20 +15,20 @@
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock
 
-from opentelemetry.sdk._metrics import Counter
-from opentelemetry.sdk._metrics._internal._view_instrument_match import (
+from opentelemetry.sdk.metrics import Counter
+from opentelemetry.sdk.metrics._internal._view_instrument_match import (
     _ViewInstrumentMatch,
 )
-from opentelemetry.sdk._metrics._internal.aggregation import (
+from opentelemetry.sdk.metrics._internal.aggregation import (
     _DropAggregation,
     _LastValueAggregation,
 )
-from opentelemetry.sdk._metrics._internal.measurement import Measurement
-from opentelemetry.sdk._metrics._internal.sdk_configuration import (
+from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
-from opentelemetry.sdk._metrics.export import AggregationTemporality
-from opentelemetry.sdk._metrics.view import (
+from opentelemetry.sdk.metrics.export import AggregationTemporality
+from opentelemetry.sdk.metrics.view import (
     DefaultAggregation,
     DropAggregation,
     LastValueAggregation,
