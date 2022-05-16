@@ -107,6 +107,27 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertTrue("division by zero" in stack_trace)
         self.assertTrue(__file__ in stack_trace)
 
+    def test_log_exc_info_false(self):
+        """Exception information will be included in attributes"""
+        emitter_mock = Mock(spec=LogEmitter)
+        logger = get_logger(log_emitter=emitter_mock)
+        try:
+            raise ZeroDivisionError("division by zero")
+        except ZeroDivisionError:
+            logger.error("Zero Division Error", exc_info=False)
+        args, _ = emitter_mock.emit.call_args_list[0]
+        log_record = args[0]
+
+        self.assertIsNotNone(log_record)
+        self.assertEqual(log_record.body, "Zero Division Error")
+        self.assertNotIn(SpanAttributes.EXCEPTION_TYPE, log_record.attributes)
+        self.assertNotIn(
+            SpanAttributes.EXCEPTION_MESSAGE, log_record.attributes
+        )
+        self.assertNotIn(
+            SpanAttributes.EXCEPTION_STACKTRACE, log_record.attributes
+        )
+
     def test_log_record_trace_correlation(self):
         emitter_mock = Mock(spec=LogEmitter)
         logger = get_logger(log_emitter=emitter_mock)
