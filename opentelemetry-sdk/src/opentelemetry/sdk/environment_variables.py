@@ -421,3 +421,10 @@ on the basis of instrument kind. The valid (case-insensitive) values are:
 ``DELTA``: Choose ``DELTA`` aggregation temporality for ``Counter``, ``Asynchronous Counter`` and ``Histogram``.
 Choose ``CUMULATIVE`` aggregation temporality for ``UpDownCounter`` and ``Asynchronous UpDownCounter``.
 """
+
+OTEL_PYTHON_INSECURE = "OTEL_PYTHON_INSECURE"
+"""
+.. envvar:: OTEL_PYTHON_INSECURE
+
+The :envvar:`OTEL_PYTHON_INSECURE` is a boolean flag to True if collector has no encryption or authentication.
+"""
