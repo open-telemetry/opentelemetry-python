@@ -130,7 +130,6 @@ class JaegerExporter(SpanExporter):
             environ.get(OTEL_EXPORTER_JAEGER_TIMEOUT, DEFAULT_EXPORT_TIMEOUT)
         )
         self._grpc_client = None
-        self.insecure = insecure
         self.credentials = util._get_credentials(credentials)
         tracer_provider = trace.get_tracer_provider()
         self.service_name = (
