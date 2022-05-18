@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.12.0rc1-0.31b0...HEAD)
 
+- `opentelemetry-exporter-otlp-proto-http` Add support for OTLP/HTTP log exporter
+  ([#2462](https://github.com/open-telemetry/opentelemetry-python/pull/2462))
+
 ## [1.12.0rc1-0.31b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0rc1-0.31b0) - 2022-05-17
 
 
@@ -31,8 +34,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2660](https://github.com/open-telemetry/opentelemetry-python/pull/2660))
 - Move Metrics API behind internal package
   ([#2651](https://github.com/open-telemetry/opentelemetry-python/pull/2651))
-- `opentelemetry-exporter-otlp-proto-http` Add support for OTLP/HTTP log exporter
-  ([#2462](https://github.com/open-telemetry/opentelemetry-python/pull/2462))
 
 ## [1.11.1-0.30b1](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.11.1-0.30b1) - 2022-04-21
 
