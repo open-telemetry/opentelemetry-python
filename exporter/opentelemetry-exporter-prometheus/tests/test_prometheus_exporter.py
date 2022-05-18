@@ -12,9 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 from textwrap import dedent
-from unittest import mock
+from unittest import TestCase
+from unittest.mock import Mock, patch
 
 from prometheus_client import generate_latest
 from prometheus_client.core import CounterMetricFamily, GaugeMetricFamily
@@ -23,19 +23,26 @@ from opentelemetry.exporter.prometheus import (
     PrometheusMetricReader,
     _CustomCollector,
 )
-from opentelemetry.sdk._metrics.point import AggregationTemporality, Histogram
+from opentelemetry.sdk.metrics.export import (
+    AggregationTemporality,
+    Histogram,
+    HistogramDataPoint,
+    Metric,
+    MetricsData,
+    ResourceMetrics,
+    ScopeMetrics,
+)
 from opentelemetry.test.metrictestutil import (
     _generate_gauge,
-    _generate_metric,
     _generate_sum,
     _generate_unsupported_metric,
 )
 
 
-class TestPrometheusMetricReader(unittest.TestCase):
+class TestPrometheusMetricReader(TestCase):
     def setUp(self):
-        self._mock_registry_register = mock.Mock()
-        self._registry_register_patch = mock.patch(
+        self._mock_registry_register = Mock()
+        self._registry_register_patch = patch(
             "prometheus_client.core.REGISTRY.register",
             side_effect=self._mock_registry_register,
         )
@@ -49,7 +56,7 @@ class TestPrometheusMetricReader(unittest.TestCase):
             self.assertTrue(self._mock_registry_register.called)
 
     def test_shutdown(self):
-        with mock.patch(
+        with patch(
             "prometheus_client.core.REGISTRY.unregister"
         ) as registry_unregister_patch:
             exporter = PrometheusMetricReader()
@@ -57,23 +64,45 @@ class TestPrometheusMetricReader(unittest.TestCase):
             self.assertTrue(registry_unregister_patch.called)
 
     def test_histogram_to_prometheus(self):
-        record = _generate_metric(
-            "test@name",
-            Histogram(
-                aggregation_temporality=AggregationTemporality.CUMULATIVE,
-                bucket_counts=[1, 3, 2],
-                explicit_bounds=[123.0, 456.0],
-                start_time_unix_nano=1641946016139533244,
-                max=457,
-                min=1,
-                sum=579.0,
-                time_unix_nano=1641946016139533244,
+        metric = Metric(
+            name="test@name",
+            description="foo",
+            unit="s",
+            data=Histogram(
+                data_points=[
+                    HistogramDataPoint(
+                        attributes={"histo": 1},
+                        start_time_unix_nano=1641946016139533244,
+                        time_unix_nano=1641946016139533244,
+                        count=6,
+                        sum=579.0,
+                        bucket_counts=[1, 3, 2],
+                        explicit_bounds=[123.0, 456.0],
+                        min=1,
+                        max=457,
+                    )
+                ],
+                aggregation_temporality=AggregationTemporality.DELTA,
             ),
-            attributes={"histo": 1},
+        )
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Mock(),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=Mock(),
+                            metrics=[metric],
+                            schema_url="schema_url",
+                        )
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
         )
 
         collector = _CustomCollector("testprefix")
-        collector.add_metrics_data([record])
+        collector.add_metrics_data(metrics_data)
         result_bytes = generate_latest(collector)
         result = result_bytes.decode("utf-8")
         self.assertEqual(
@@ -93,15 +122,32 @@ class TestPrometheusMetricReader(unittest.TestCase):
 
     def test_sum_to_prometheus(self):
         labels = {"environment@": "staging", "os": "Windows"}
-        record = _generate_sum(
+        metric = _generate_sum(
             "test@sum",
             123,
             attributes=labels,
             description="testdesc",
             unit="testunit",
         )
+
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Mock(),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=Mock(),
+                            metrics=[metric],
+                            schema_url="schema_url",
+                        )
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
+        )
+
         collector = _CustomCollector("testprefix")
-        collector.add_metrics_data([record])
+        collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
             self.assertEqual(type(prometheus_metric), CounterMetricFamily)
@@ -121,15 +167,32 @@ class TestPrometheusMetricReader(unittest.TestCase):
 
     def test_gauge_to_prometheus(self):
         labels = {"environment@": "dev", "os": "Unix"}
-        record = _generate_gauge(
+        metric = _generate_gauge(
             "test@gauge",
             123,
             attributes=labels,
             description="testdesc",
             unit="testunit",
         )
+
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Mock(),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=Mock(),
+                            metrics=[metric],
+                            schema_url="schema_url",
+                        )
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
+        )
+
         collector = _CustomCollector("testprefix")
-        collector.add_metrics_data([record])
+        collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
             self.assertEqual(type(prometheus_metric), GaugeMetricFamily)
@@ -170,15 +233,30 @@ class TestPrometheusMetricReader(unittest.TestCase):
 
     def test_list_labels(self):
         labels = {"environment@": ["1", "2", "3"], "os": "Unix"}
-        record = _generate_gauge(
+        metric = _generate_gauge(
             "test@gauge",
             123,
             attributes=labels,
             description="testdesc",
             unit="testunit",
         )
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Mock(),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=Mock(),
+                            metrics=[metric],
+                            schema_url="schema_url",
+                        )
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
+        )
         collector = _CustomCollector("testprefix")
-        collector.add_metrics_data([record])
+        collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
             self.assertEqual(type(prometheus_metric), GaugeMetricFamily)

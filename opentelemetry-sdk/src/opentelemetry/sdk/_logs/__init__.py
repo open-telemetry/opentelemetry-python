@@ -321,7 +321,7 @@ class LoggingHandler(logging.Handler):
         attributes = {
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }
-        if record.exc_info is not None:
+        if record.exc_info:
             exc_type = ""
             message = ""
             stack_trace = ""

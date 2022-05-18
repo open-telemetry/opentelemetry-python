@@ -14,9 +14,15 @@
 
 # pylint: disable=unused-import
 
-from opentelemetry.sdk._metrics._internal.measurement import (  # noqa: F401
-    Measurement,
+from opentelemetry.sdk.metrics._internal.aggregation import (  # noqa: F401
+    Aggregation,
+    DefaultAggregation,
+    DropAggregation,
+    ExplicitBucketHistogramAggregation,
+    LastValueAggregation,
+    SumAggregation,
 )
+from opentelemetry.sdk.metrics._internal.view import View  # noqa: F401
 
 __all__ = []
 for key, value in globals().copy().items():

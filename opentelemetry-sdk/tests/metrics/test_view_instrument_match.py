@@ -15,25 +15,25 @@
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock
 
-from opentelemetry.sdk._metrics._internal._view_instrument_match import (
+from opentelemetry.sdk.metrics import Counter
+from opentelemetry.sdk.metrics._internal._view_instrument_match import (
     _ViewInstrumentMatch,
 )
-from opentelemetry.sdk._metrics._internal.aggregation import (
+from opentelemetry.sdk.metrics._internal.aggregation import (
     _DropAggregation,
     _LastValueAggregation,
 )
-from opentelemetry.sdk._metrics._internal.sdk_configuration import (
+from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
 )
-from opentelemetry.sdk._metrics.aggregation import (
+from opentelemetry.sdk.metrics.export import AggregationTemporality
+from opentelemetry.sdk.metrics.view import (
     DefaultAggregation,
     DropAggregation,
     LastValueAggregation,
+    View,
 )
-from opentelemetry.sdk._metrics.instrument import Counter
-from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
-from opentelemetry.sdk._metrics.view import View
 
 
 class Test_ViewInstrumentMatch(TestCase):
@@ -46,15 +46,15 @@ class Test_ViewInstrumentMatch(TestCase):
         )
         cls.mock_resource = Mock()
         cls.mock_instrumentation_scope = Mock()
+        cls.sdk_configuration = SdkConfiguration(
+            resource=cls.mock_resource,
+            metric_readers=[],
+            views=[],
+        )
 
     def test_consume_measurement(self):
         instrument1 = Mock(name="instrument1")
         instrument1.instrumentation_scope = self.mock_instrumentation_scope
-        sdk_config = SdkConfiguration(
-            resource=self.mock_resource,
-            metric_readers=[],
-            views=[],
-        )
         view_instrument_match = _ViewInstrumentMatch(
             view=View(
                 instrument_name="instrument1",
@@ -63,7 +63,6 @@ class Test_ViewInstrumentMatch(TestCase):
                 attribute_keys={"a", "c"},
             ),
             instrument=instrument1,
-            sdk_config=sdk_config,
             instrument_class_aggregation=MagicMock(
                 **{"__getitem__.return_value": DefaultAggregation()}
             ),
@@ -105,7 +104,6 @@ class Test_ViewInstrumentMatch(TestCase):
                 aggregation=self.mock_aggregation_factory,
             ),
             instrument=instrument1,
-            sdk_config=sdk_config,
             instrument_class_aggregation=MagicMock(
                 **{"__getitem__.return_value": DefaultAggregation()}
             ),
@@ -127,7 +125,8 @@ class Test_ViewInstrumentMatch(TestCase):
             },
         )
 
-        # empty set attribute_keys will drop all labels and aggregate everything together
+        # empty set attribute_keys will drop all labels and aggregate
+        # everything together
         view_instrument_match = _ViewInstrumentMatch(
             view=View(
                 instrument_name="instrument1",
@@ -136,7 +135,6 @@ class Test_ViewInstrumentMatch(TestCase):
                 attribute_keys={},
             ),
             instrument=instrument1,
-            sdk_config=sdk_config,
             instrument_class_aggregation=MagicMock(
                 **{"__getitem__.return_value": DefaultAggregation()}
             ),
@@ -161,7 +159,6 @@ class Test_ViewInstrumentMatch(TestCase):
                 attribute_keys={},
             ),
             instrument=instrument1,
-            sdk_config=sdk_config,
             instrument_class_aggregation=MagicMock(
                 **{"__getitem__.return_value": DefaultAggregation()}
             ),
@@ -175,24 +172,22 @@ class Test_ViewInstrumentMatch(TestCase):
         )
 
     def test_collect(self):
-        instrument1 = Mock(
-            name="instrument1", description="description", unit="unit"
+        instrument1 = Counter(
+            "instrument1",
+            Mock(),
+            Mock(),
+            description="description",
+            unit="unit",
         )
         instrument1.instrumentation_scope = self.mock_instrumentation_scope
-        sdk_config = SdkConfiguration(
-            resource=self.mock_resource,
-            metric_readers=[],
-            views=[],
-        )
         view_instrument_match = _ViewInstrumentMatch(
             view=View(
                 instrument_name="instrument1",
                 name="name",
-                aggregation=self.mock_aggregation_factory,
+                aggregation=DefaultAggregation(),
                 attribute_keys={"a", "c"},
             ),
             instrument=instrument1,
-            sdk_config=sdk_config,
             instrument_class_aggregation=MagicMock(
                 **{"__getitem__.return_value": DefaultAggregation()}
             ),
@@ -205,26 +200,17 @@ class Test_ViewInstrumentMatch(TestCase):
                 attributes={"c": "d", "f": "g"},
             )
         )
-        self.assertEqual(
-            next(
-                view_instrument_match.collect(
-                    MagicMock(
-                        **{
-                            "__getitem__.return_value": AggregationTemporality.CUMULATIVE
-                        }
-                    )
-                )
-            ),
-            Metric(
-                attributes={"c": "d"},
-                description="description",
-                instrumentation_scope=self.mock_instrumentation_scope,
-                name="name",
-                resource=self.mock_resource,
-                unit="unit",
-                point=None,
-            ),
+
+        number_data_points = view_instrument_match.collect(
+            AggregationTemporality.CUMULATIVE, 0
         )
+        number_data_points = list(number_data_points)
+        self.assertEqual(len(number_data_points), 1)
+
+        number_data_point = number_data_points[0]
+
+        self.assertEqual(number_data_point.attributes, frozenset({("c", "d")}))
+        self.assertEqual(number_data_point.value, 0)
 
     def test_setting_aggregation(self):
         instrument1 = Counter(
@@ -235,11 +221,6 @@ class Test_ViewInstrumentMatch(TestCase):
             unit="unit",
         )
         instrument1.instrumentation_scope = self.mock_instrumentation_scope
-        sdk_config = SdkConfiguration(
-            resource=self.mock_resource,
-            metric_readers=[],
-            views=[],
-        )
         view_instrument_match = _ViewInstrumentMatch(
             view=View(
                 instrument_name="instrument1",
@@ -248,7 +229,6 @@ class Test_ViewInstrumentMatch(TestCase):
                 attribute_keys={"a", "c"},
             ),
             instrument=instrument1,
-            sdk_config=sdk_config,
             instrument_class_aggregation={Counter: LastValueAggregation()},
         )
 

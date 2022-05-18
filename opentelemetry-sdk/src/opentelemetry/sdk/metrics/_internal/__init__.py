@@ -17,25 +17,20 @@ from logging import getLogger
 from threading import Lock
 from typing import Optional, Sequence
 
-from opentelemetry._metrics import Counter as APICounter
-from opentelemetry._metrics import Histogram as APIHistogram
-from opentelemetry._metrics import Meter as APIMeter
-from opentelemetry._metrics import MeterProvider as APIMeterProvider
-from opentelemetry._metrics import NoOpMeter
-from opentelemetry._metrics import ObservableCounter as APIObservableCounter
-from opentelemetry._metrics import ObservableGauge as APIObservableGauge
-from opentelemetry._metrics import (
+# This kind of import is needed to avoid Sphinx errors.
+import opentelemetry.sdk.metrics
+from opentelemetry.metrics import Counter as APICounter
+from opentelemetry.metrics import Histogram as APIHistogram
+from opentelemetry.metrics import Meter as APIMeter
+from opentelemetry.metrics import MeterProvider as APIMeterProvider
+from opentelemetry.metrics import NoOpMeter
+from opentelemetry.metrics import ObservableCounter as APIObservableCounter
+from opentelemetry.metrics import ObservableGauge as APIObservableGauge
+from opentelemetry.metrics import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
-from opentelemetry._metrics import UpDownCounter as APIUpDownCounter
-from opentelemetry.sdk._metrics._internal.measurement_consumer import (
-    MeasurementConsumer,
-    SynchronousMeasurementConsumer,
-)
-from opentelemetry.sdk._metrics._internal.sdk_configuration import (
-    SdkConfiguration,
-)
-from opentelemetry.sdk._metrics.instrument import (
+from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
+from opentelemetry.sdk.metrics._internal.instrument import (
     Counter,
     Histogram,
     ObservableCounter,
@@ -43,8 +38,13 @@ from opentelemetry.sdk._metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk._metrics.metric_reader import MetricReader
-from opentelemetry.sdk._metrics.view import View
+from opentelemetry.sdk.metrics._internal.measurement_consumer import (
+    MeasurementConsumer,
+    SynchronousMeasurementConsumer,
+)
+from opentelemetry.sdk.metrics._internal.sdk_configuration import (
+    SdkConfiguration,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util._once import Once
@@ -54,7 +54,7 @@ _logger = getLogger(__name__)
 
 
 class Meter(APIMeter):
-    """See `opentelemetry._metrics.Meter`."""
+    """See `opentelemetry.metrics.Meter`."""
 
     def __init__(
         self,
@@ -295,11 +295,12 @@ class Meter(APIMeter):
 
 
 class MeterProvider(APIMeterProvider):
-    r"""See `opentelemetry._metrics.MeterProvider`.
+    r"""See `opentelemetry.metrics.MeterProvider`.
 
     Args:
-        metric_readers: Register metric readers to collect metrics from the SDK on demand. Each
-            `MetricReader` is completely independent and will collect separate streams of
+        metric_readers: Register metric readers to collect metrics from the SDK
+            on demand. Each :class:`opentelemetry.sdk.metrics.export.MetricReader` is
+            completely independent and will collect separate streams of
             metrics. TODO: reference ``PeriodicExportingMetricReader`` usage with push
             exporters here.
         resource: The resource representing what the metrics emitted from the SDK pertain to.
@@ -307,10 +308,10 @@ class MeterProvider(APIMeterProvider):
             `MeterProvider.shutdown`
         views: The views to configure the metric output the SDK
 
-    By default, instruments which do not match any `View` (or if no `View`\ s
+    By default, instruments which do not match any :class:`opentelemetry.sdk.metrics.view.View` (or if no :class:`opentelemetry.sdk.metrics.view.View`\ s
     are provided) will report metrics with the default aggregation for the
     instrument's kind. To disable instruments by default, configure a match-all
-    `View` with `DropAggregation` and then create `View`\ s to re-enable
+    :class:`opentelemetry.sdk.metrics.view.View` with `DropAggregation` and then create :class:`opentelemetry.sdk.metrics.view.View`\ s to re-enable
     individual instruments:
 
     .. code-block:: python
@@ -330,10 +331,12 @@ class MeterProvider(APIMeterProvider):
 
     def __init__(
         self,
-        metric_readers: Sequence[MetricReader] = (),
+        metric_readers: Sequence[
+            "opentelemetry.sdk.metrics.export.MetricReader"
+        ] = (),
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
-        views: Sequence[View] = (),
+        views: Sequence["opentelemetry.sdk.metrics.view.View"] = (),
     ):
         self._lock = Lock()
         self._meter_lock = Lock()

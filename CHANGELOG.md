@@ -5,8 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.11.1-0.30b1...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.12.0rc1-0.31b0...HEAD)
 
+## [1.12.0rc1-0.31b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0rc1-0.31b0) - 2022-05-17
+
+
+
+- Fix LoggingHandler to handle LogRecord with exc_info=False
+  ([#2690](https://github.com/open-telemetry/opentelemetry-python/pull/2690))
+- Make metrics components public
+  ([#2684](https://github.com/open-telemetry/opentelemetry-python/pull/2684))
 - Update to semantic conventions v1.11.0
   ([#2669](https://github.com/open-telemetry/opentelemetry-python/pull/2669))
 - Update opentelemetry-proto to v0.17.0
@@ -17,6 +25,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2653](https://github.com/open-telemetry/opentelemetry-python/pull/2653))
 - Add variadic arguments to metric exporter/reader interfaces
   ([#2654](https://github.com/open-telemetry/opentelemetry-python/pull/2654))
+- Added a `opentelemetry.sdk.resources.ProcessResourceDetector` that adds the
+  'process.runtime.{name,version,description}' resource attributes when used
+  with the `opentelemetry.sdk.resources.get_aggregated_resources` API
+  ([#2660](https://github.com/open-telemetry/opentelemetry-python/pull/2660))
 - Move Metrics API behind internal package
   ([#2651](https://github.com/open-telemetry/opentelemetry-python/pull/2651))
 - `opentelemetry-exporter-otlp-proto-http` Add support for OTLP/HTTP log exporter

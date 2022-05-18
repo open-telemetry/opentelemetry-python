@@ -12,23 +12,22 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=unused-import
+
 from abc import ABC, abstractmethod
 from threading import Lock
-from typing import TYPE_CHECKING, Dict, Iterable, List, Mapping
+from typing import Iterable, List, Mapping
 
-from opentelemetry._metrics._internal.instrument import CallbackOptions
-from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
+# This kind of import is needed to avoid Sphinx errors.
+import opentelemetry.sdk.metrics
+import opentelemetry.sdk.metrics._internal.instrument
+import opentelemetry.sdk.metrics._internal.sdk_configuration
+from opentelemetry.metrics._internal.instrument import CallbackOptions
+from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.sdk.metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
 )
-from opentelemetry.sdk._metrics._internal.sdk_configuration import (
-    SdkConfiguration,
-)
-from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.metric_reader import MetricReader
-from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
-
-if TYPE_CHECKING:
-    from opentelemetry.sdk._metrics._internal.instrument import _Asynchronous
+from opentelemetry.sdk.metrics._internal.point import Metric
 
 
 class MeasurementConsumer(ABC):
@@ -37,45 +36,60 @@ class MeasurementConsumer(ABC):
         pass
 
     @abstractmethod
-    def register_asynchronous_instrument(self, instrument: "_Asynchronous"):
+    def register_asynchronous_instrument(
+        self,
+        instrument: (
+            "opentelemetry.sdk.metrics._internal.instrument_Asynchronous"
+        ),
+    ):
         pass
 
     @abstractmethod
     def collect(
         self,
-        metric_reader: MetricReader,
-        instrument_type_temporality: Dict[type, AggregationTemporality],
+        metric_reader: "opentelemetry.sdk.metrics.MetricReader",
     ) -> Iterable[Metric]:
         pass
 
 
 class SynchronousMeasurementConsumer(MeasurementConsumer):
-    def __init__(self, sdk_config: SdkConfiguration) -> None:
+    def __init__(
+        self,
+        sdk_config: "opentelemetry.sdk.metrics._internal.SdkConfiguration",
+    ) -> None:
         self._lock = Lock()
         self._sdk_config = sdk_config
         # should never be mutated
-        self._reader_storages: Mapping[MetricReader, MetricReaderStorage] = {
+        self._reader_storages: Mapping[
+            "opentelemetry.sdk.metrics.MetricReader", MetricReaderStorage
+        ] = {
             reader: MetricReaderStorage(
-                sdk_config, reader._instrument_class_aggregation
+                sdk_config,
+                reader._instrument_class_temporality,
+                reader._instrument_class_aggregation,
             )
             for reader in sdk_config.metric_readers
         }
-        self._async_instruments: List["_Asynchronous"] = []
+        self._async_instruments: List[
+            "opentelemetry.sdk.metrics._internal.instrument._Asynchronous"
+        ] = []
 
     def consume_measurement(self, measurement: Measurement) -> None:
         for reader_storage in self._reader_storages.values():
             reader_storage.consume_measurement(measurement)
 
     def register_asynchronous_instrument(
-        self, instrument: "_Asynchronous"
+        self,
+        instrument: (
+            "opentelemetry.sdk.metrics._internal.instrument._Asynchronous"
+        ),
     ) -> None:
         with self._lock:
             self._async_instruments.append(instrument)
 
     def collect(
         self,
-        metric_reader: MetricReader,
-        instrument_type_temporality: Dict[type, AggregationTemporality],
+        metric_reader: "opentelemetry.sdk.metrics.MetricReader",
     ) -> Iterable[Metric]:
         with self._lock:
             metric_reader_storage = self._reader_storages[metric_reader]
@@ -84,6 +98,4 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             for async_instrument in self._async_instruments:
                 for measurement in async_instrument.callback(callback_options):
                     metric_reader_storage.consume_measurement(measurement)
-        return self._reader_storages[metric_reader].collect(
-            instrument_type_temporality
-        )
+        return self._reader_storages[metric_reader].collect()

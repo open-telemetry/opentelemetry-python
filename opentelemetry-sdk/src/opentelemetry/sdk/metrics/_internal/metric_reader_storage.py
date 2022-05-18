@@ -14,22 +14,42 @@
 
 from logging import getLogger
 from threading import RLock
-from typing import Dict, Iterable, List
+from typing import Dict, List
 
-from opentelemetry._metrics import Asynchronous, Instrument
-from opentelemetry.sdk._metrics._internal._view_instrument_match import (
+from opentelemetry.metrics import (
+    Asynchronous,
+    Counter,
+    Instrument,
+    ObservableCounter,
+)
+from opentelemetry.sdk.metrics._internal._view_instrument_match import (
     _ViewInstrumentMatch,
 )
-from opentelemetry.sdk._metrics._internal.sdk_configuration import (
-    SdkConfiguration,
-)
-from opentelemetry.sdk._metrics._internal.view import View
-from opentelemetry.sdk._metrics.aggregation import (
+from opentelemetry.sdk.metrics._internal.aggregation import (
     Aggregation,
     ExplicitBucketHistogramAggregation,
+    _DropAggregation,
+    _ExplicitBucketHistogramAggregation,
+    _LastValueAggregation,
+    _SumAggregation,
 )
-from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
+from opentelemetry.sdk.metrics._internal.export import AggregationTemporality
+from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.sdk.metrics._internal.point import (
+    Gauge,
+    Histogram,
+    Metric,
+    MetricsData,
+    ResourceMetrics,
+    ScopeMetrics,
+    Sum,
+)
+from opentelemetry.sdk.metrics._internal.sdk_configuration import (
+    SdkConfiguration,
+)
+from opentelemetry.sdk.metrics._internal.view import View
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.util._time import _time_ns
 
 _logger = getLogger(__name__)
 
@@ -42,6 +62,7 @@ class MetricReaderStorage:
     def __init__(
         self,
         sdk_config: SdkConfiguration,
+        instrument_class_temporality: Dict[type, AggregationTemporality],
         instrument_class_aggregation: Dict[type, Aggregation],
     ) -> None:
         self._lock = RLock()
@@ -49,11 +70,12 @@ class MetricReaderStorage:
         self._instrument_view_instrument_matches: Dict[
             Instrument, List[_ViewInstrumentMatch]
         ] = {}
+        self._instrument_class_temporality = instrument_class_temporality
         self._instrument_class_aggregation = instrument_class_aggregation
 
     def _get_or_init_view_instrument_match(
         self, instrument: Instrument
-    ) -> List["_ViewInstrumentMatch"]:
+    ) -> List[_ViewInstrumentMatch]:
         # Optimistically get the relevant views for the given instrument. Once set for a given
         # instrument, the mapping will never change
 
@@ -78,7 +100,6 @@ class MetricReaderStorage:
                     _ViewInstrumentMatch(
                         view=_DEFAULT_VIEW,
                         instrument=instrument,
-                        sdk_config=self._sdk_config,
                         instrument_class_aggregation=(
                             self._instrument_class_aggregation
                         ),
@@ -96,12 +117,9 @@ class MetricReaderStorage:
         ):
             view_instrument_match.consume_measurement(measurement)
 
-    def collect(
-        self, instrument_type_temporality: Dict[type, AggregationTemporality]
-    ) -> Iterable[Metric]:
+    def collect(self) -> MetricsData:
         # Use a list instead of yielding to prevent a slow reader from holding
         # SDK locks
-        metrics: List[Metric] = []
 
         # While holding the lock, new _ViewInstrumentMatch can't be added from
         # another thread (so we are sure we collect all existing view).
@@ -111,18 +129,105 @@ class MetricReaderStorage:
         # effect is that end times can be slightly skewed among the metric
         # streams produced by the SDK, but we still align the output timestamps
         # for a single instrument.
+
+        collection_start_nanos = _time_ns()
+
         with self._lock:
+
+            instrumentation_scope_scope_metrics: (
+                Dict[InstrumentationScope, ScopeMetrics]
+            ) = {}
+
             for (
-                view_instrument_matches
-            ) in self._instrument_view_instrument_matches.values():
+                instrument,
+                view_instrument_matches,
+            ) in self._instrument_view_instrument_matches.items():
+                aggregation_temporality = self._instrument_class_temporality[
+                    instrument.__class__
+                ]
+
+                metrics: List[Metric] = []
+
                 for view_instrument_match in view_instrument_matches:
-                    metrics.extend(
-                        view_instrument_match.collect(
-                            instrument_type_temporality
+
+                    if isinstance(
+                        # pylint: disable=protected-access
+                        view_instrument_match._aggregation,
+                        _SumAggregation,
+                    ):
+                        data = Sum(
+                            aggregation_temporality=aggregation_temporality,
+                            data_points=view_instrument_match.collect(
+                                aggregation_temporality, collection_start_nanos
+                            ),
+                            is_monotonic=isinstance(
+                                instrument, (Counter, ObservableCounter)
+                            ),
+                        )
+                    elif isinstance(
+                        # pylint: disable=protected-access
+                        view_instrument_match._aggregation,
+                        _LastValueAggregation,
+                    ):
+                        data = Gauge(
+                            data_points=view_instrument_match.collect(
+                                aggregation_temporality, collection_start_nanos
+                            )
+                        )
+                    elif isinstance(
+                        # pylint: disable=protected-access
+                        view_instrument_match._aggregation,
+                        _ExplicitBucketHistogramAggregation,
+                    ):
+                        data = Histogram(
+                            data_points=view_instrument_match.collect(
+                                aggregation_temporality, collection_start_nanos
+                            ),
+                            aggregation_temporality=aggregation_temporality,
+                        )
+                    elif isinstance(
+                        # pylint: disable=protected-access
+                        view_instrument_match._aggregation,
+                        _DropAggregation,
+                    ):
+                        continue
+
+                    metrics.append(
+                        Metric(
+                            # pylint: disable=protected-access
+                            name=view_instrument_match._name,
+                            description=view_instrument_match._description,
+                            unit=view_instrument_match._instrument.unit,
+                            data=data,
                         )
                     )
 
-        return metrics
+                if instrument.instrumentation_scope not in (
+                    instrumentation_scope_scope_metrics
+                ):
+                    instrumentation_scope_scope_metrics[
+                        instrument.instrumentation_scope
+                    ] = ScopeMetrics(
+                        scope=instrument.instrumentation_scope,
+                        metrics=metrics,
+                        schema_url=instrument.instrumentation_scope.schema_url,
+                    )
+                else:
+                    instrumentation_scope_scope_metrics[
+                        instrument.instrumentation_scope
+                    ].metrics.extend(metrics)
+
+        return MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=self._sdk_config.resource,
+                    scope_metrics=list(
+                        instrumentation_scope_scope_metrics.values()
+                    ),
+                    schema_url=self._sdk_config.resource.schema_url,
+                )
+            ]
+        )
 
     def _handle_view_instrument_match(
         self,
@@ -140,7 +245,6 @@ class MetricReaderStorage:
             new_view_instrument_match = _ViewInstrumentMatch(
                 view=view,
                 instrument=instrument,
-                sdk_config=self._sdk_config,
                 instrument_class_aggregation=(
                     self._instrument_class_aggregation
                 ),
