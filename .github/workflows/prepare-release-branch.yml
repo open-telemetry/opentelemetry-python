@@ -3,8 +3,22 @@ on:
   workflow_dispatch:
 
 jobs:
+  prereqs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - run: |
+          version=$(.github/scripts/get-version.sh)
+          version=${version//-dev/}
+          if ! grep --quiet "^## Version $version " CHANGELOG.md; then
+            echo the change log needs to be updated
+            exit 1
+          fi
+
   create-pull-request-against-release-branch:
     runs-on: ubuntu-latest
+    needs: prereqs
     steps:
       - uses: actions/checkout@v3
 
@@ -17,7 +31,16 @@ jobs:
           prerelease_version=$(./scripts/eachdist.py version --mode prerelease)
           prerelease_version=${prerelease_version//-dev/}
 
-          stable_version_branch_part=$(echo $stable_version | sed -E 's/([0-9]+)\.([0-9]+)\.0/\1.\2.x/')
+          if [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
+            stable_version_branch_part=$(echo $stable_version | sed -E 's/([0-9]+)\.([0-9]+)\.0/\1.\2.x/')
+          elif [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0 ]]; then
+            # pre-release version, e.g. 1.9.0rc
+            stable_version_branch_part="release/v$stable_version"
+          else
+            echo "unexpected version: $version"
+            exit 1
+          fi
+
           prerelease_version_branch_part=$(echo $prerelease_version | sed -E 's/0\.([0-9]+)b0/0.\1bx/')
           release_branch_name="release/v${stable_version_branch_part}-${prerelease_version_branch_part}"
 
@@ -29,6 +52,11 @@ jobs:
 
       - name: Update version
         run: .github/scripts/update-version.sh $STABLE_VERSION $PRERELEASE_VERSION
+
+      - name: Update the change log with the approximate release date
+        run: |
+          date=$(date "+%Y-%m-%d")
+          sed -Ei "s/## Version $STABLE_VERSION\/$PRERELEASE_VERSION .*/## Version $STABLE_VERSION\/$PRERELEASE_VERSION ($date)/" CHANGELOG.md
 
       - name: Set git user
         run: .github/scripts/set-git-user.sh
@@ -57,9 +85,15 @@ jobs:
         run: |
           stable_version=$(./scripts/eachdist.py version --mode stable)
           stable_version=${stable_version//-dev/}
-          if [[ $stable_version =~ ([0-9]+)\.([0-9]+)\.[0-9]+ ]]; then
-            stable_major="${BASH_REMATCH[1]}"
-            stable_minor="${BASH_REMATCH[2]}"
+          if [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0-dev$ ]]; then
+            major="${BASH_REMATCH[1]}"
+            minor="${BASH_REMATCH[2]}"
+            next_version="$major.$((minor + 1)).0"
+          elif [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0 ]]; then
+            # pre-release version, e.g. 1.9.0rc
+            major="${BASH_REMATCH[1]}"
+            minor="${BASH_REMATCH[2]}"
+            next_version="$major.$minor.0"
           else
             echo "unexpected stable_version: $stable_version"
             exit 1
@@ -67,7 +101,7 @@ jobs:
 
           prerelease_version=$(./scripts/eachdist.py version --mode prerelease)
           prerelease_version=${prerelease_version//-dev/}
-          if [[ $prerelease_version =~ 0\.([0-9]+)b[0-9]+ ]]; then
+          if [[ $prerelease_version =~ ^0\.([0-9]+)b[0-9]+$ ]]; then
             prerelease_minor="${BASH_REMATCH[1]}"
           else
             echo "unexpected prerelease_version: $prerelease_version"
