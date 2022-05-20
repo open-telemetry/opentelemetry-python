@@ -27,15 +27,22 @@ from pkg_resources import iter_entry_points
 from opentelemetry import trace
 from opentelemetry.environment_variables import (
     OTEL_LOGS_EXPORTER,
+    OTEL_METRICS_EXPORTER,
     OTEL_PYTHON_ID_GENERATOR,
     OTEL_TRACES_EXPORTER,
 )
+from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk._logs import (
     LogEmitterProvider,
     LoggingHandler,
     set_log_emitter_provider,
 )
 from opentelemetry.sdk._logs.export import BatchLogProcessor, LogExporter
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import (
+    MetricExporter,
+    PeriodicExportingMetricReader,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
@@ -90,6 +97,33 @@ def _init_tracing(
         provider.add_span_processor(
             BatchSpanProcessor(exporter_class(**exporter_args))
         )
+
+
+def _init_metrics(
+    exporters: Dict[str, Type[MetricExporter]],
+    auto_instrumentation_version: Optional[str] = None,
+):
+    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
+    # from the env variable else defaults to "unknown_service"
+    auto_resource = {}
+    # populate version if using auto-instrumentation
+    if auto_instrumentation_version:
+        auto_resource[
+            ResourceAttributes.TELEMETRY_AUTO_VERSION
+        ] = auto_instrumentation_version
+
+    metric_readers = []
+
+    for _, exporter_class in exporters.items():
+        exporter_args = {}
+        metric_readers.append(
+            PeriodicExportingMetricReader(exporter_class(**exporter_args))
+        )
+
+    provider = MeterProvider(
+        resource=Resource.create(auto_resource), metric_readers=metric_readers
+    )
+    set_meter_provider(provider)
 
 
 def _init_logging(
@@ -178,13 +212,15 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
 
 
 def _initialize_components(auto_instrumentation_version):
-    trace_exporters, log_exporters = _import_exporters(
+    trace_exporters, metric_exporters, log_exporters = _import_exporters(
         _get_exporter_names(environ.get(OTEL_TRACES_EXPORTER)),
+        _get_exporter_names(environ.get(OTEL_METRICS_EXPORTER)),
         _get_exporter_names(environ.get(OTEL_LOGS_EXPORTER)),
     )
     id_generator_name = _get_id_generator()
     id_generator = _import_id_generator(id_generator_name)
     _init_tracing(trace_exporters, id_generator, auto_instrumentation_version)
+    _init_metrics(metric_exporters, auto_instrumentation_version)
     _init_logging(log_exporters, auto_instrumentation_version)
 
 
