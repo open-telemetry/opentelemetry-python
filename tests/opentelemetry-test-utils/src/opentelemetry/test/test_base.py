@@ -13,14 +13,14 @@
 # limitations under the License.
 
 import logging
-from typing import Tuple
 import unittest
 from contextlib import contextmanager
+from typing import Tuple
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import MetricReader, InMemoryMetricReader
+from opentelemetry.sdk.metrics.export import InMemoryMetricReader, MetricReader
 from opentelemetry.sdk.trace import TracerProvider, export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
