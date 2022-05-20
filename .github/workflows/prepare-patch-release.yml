@@ -47,6 +47,11 @@ jobs:
       - name: Update version
         run: .github/scripts/update-version.sh $STABLE_VERSION $PRERELEASE_VERSION
 
+      - name: Update the change log with the approximate release date
+        run: |
+          date=$(date "+%Y-%m-%d")
+          sed -Ei "s/## Version $VERSION .*/## Version $VERSION ($date)/" CHANGELOG.md
+
       - name: Set git user
         run: .github/scripts/set-git-user.sh
 
