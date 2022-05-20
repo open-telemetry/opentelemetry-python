@@ -13,13 +13,14 @@
 # limitations under the License.
 
 import logging
+from typing import Tuple
 import unittest
 from contextlib import contextmanager
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import InMemoryMetricReader
+from opentelemetry.sdk.metrics.export import MetricReader, InMemoryMetricReader
 from opentelemetry.sdk.trace import TracerProvider, export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
@@ -104,11 +105,11 @@ class TestBase(unittest.TestCase):
         return tracer_provider, memory_exporter
 
     @staticmethod
-    def create_meter_provider(**kwargs):
+    def create_meter_provider(**kwargs) -> Tuple[MeterProvider, MetricReader]:
         """Helper to create a configured meter provider
         Creates a `MeterProvider` and an `InMemoryMetricReader`.
         Returns:
-            A list with the meter provider in the first element and the
+            A tuple with the meter provider in the first element and the
             in-memory metrics exporter in the second
         """
         memory_reader = InMemoryMetricReader()
