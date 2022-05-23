@@ -15,7 +15,7 @@
 from unittest import TestCase
 from unittest.mock import Mock
 
-from opentelemetry.sdk._metrics.view import View
+from opentelemetry.sdk.metrics.view import View
 
 
 class TestView(TestCase):

@@ -18,7 +18,7 @@ from unittest.mock import Mock
 
 from flaky import flaky
 
-from opentelemetry.sdk._metrics.export import (
+from opentelemetry.sdk.metrics.export import (
     Gauge,
     Metric,
     MetricExporter,

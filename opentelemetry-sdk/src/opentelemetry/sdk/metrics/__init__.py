@@ -14,11 +14,11 @@
 
 # pylint: disable=unused-import
 
-from opentelemetry.sdk._metrics._internal import (  # noqa: F401
+from opentelemetry.sdk.metrics._internal import (  # noqa: F401
     Meter,
     MeterProvider,
 )
-from opentelemetry.sdk._metrics._internal.instrument import (  # noqa: F401
+from opentelemetry.sdk.metrics._internal.instrument import (  # noqa: F401
     Counter,
     Histogram,
     ObservableCounter,

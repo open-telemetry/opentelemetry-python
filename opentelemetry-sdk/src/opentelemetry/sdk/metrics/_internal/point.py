@@ -19,7 +19,7 @@ from json import dumps
 from typing import Sequence, Union
 
 # This kind of import is needed to avoid Sphinx errors.
-import opentelemetry.sdk._metrics._internal
+import opentelemetry.sdk.metrics._internal
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.util.types import Attributes
@@ -44,7 +44,7 @@ class Sum:
 
     data_points: Sequence[NumberDataPoint]
     aggregation_temporality: (
-        "opentelemetry.sdk._metrics.export.AggregationTemporality"
+        "opentelemetry.sdk.metrics.export.AggregationTemporality"
     )
     is_monotonic: bool
 
@@ -102,7 +102,7 @@ class Histogram:
 
     data_points: Sequence[HistogramDataPoint]
     aggregation_temporality: (
-        "opentelemetry.sdk._metrics.export.AggregationTemporality"
+        "opentelemetry.sdk.metrics.export.AggregationTemporality"
     )
 
     def to_json(self) -> str:

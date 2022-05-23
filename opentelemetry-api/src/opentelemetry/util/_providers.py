@@ -19,7 +19,7 @@ from typing import TYPE_CHECKING, TypeVar, cast
 from pkg_resources import iter_entry_points
 
 if TYPE_CHECKING:
-    from opentelemetry._metrics import MeterProvider
+    from opentelemetry.metrics import MeterProvider
     from opentelemetry.trace import TracerProvider
 
 Provider = TypeVar("Provider", "TracerProvider", "MeterProvider")

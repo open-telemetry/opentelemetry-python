@@ -19,15 +19,15 @@ from threading import Lock
 from typing import Iterable, List, Mapping
 
 # This kind of import is needed to avoid Sphinx errors.
-import opentelemetry.sdk._metrics
-import opentelemetry.sdk._metrics._internal.instrument
-import opentelemetry.sdk._metrics._internal.sdk_configuration
-from opentelemetry._metrics._internal.instrument import CallbackOptions
-from opentelemetry.sdk._metrics._internal.measurement import Measurement
-from opentelemetry.sdk._metrics._internal.metric_reader_storage import (
+import opentelemetry.sdk.metrics
+import opentelemetry.sdk.metrics._internal.instrument
+import opentelemetry.sdk.metrics._internal.sdk_configuration
+from opentelemetry.metrics._internal.instrument import CallbackOptions
+from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.sdk.metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
 )
-from opentelemetry.sdk._metrics._internal.point import Metric
+from opentelemetry.sdk.metrics._internal.point import Metric
 
 
 class MeasurementConsumer(ABC):
@@ -39,7 +39,7 @@ class MeasurementConsumer(ABC):
     def register_asynchronous_instrument(
         self,
         instrument: (
-            "opentelemetry.sdk._metrics._internal.instrument_Asynchronous"
+            "opentelemetry.sdk.metrics._internal.instrument_Asynchronous"
         ),
     ):
         pass
@@ -47,7 +47,7 @@ class MeasurementConsumer(ABC):
     @abstractmethod
     def collect(
         self,
-        metric_reader: "opentelemetry.sdk._metrics.MetricReader",
+        metric_reader: "opentelemetry.sdk.metrics.MetricReader",
     ) -> Iterable[Metric]:
         pass
 
@@ -55,13 +55,13 @@ class MeasurementConsumer(ABC):
 class SynchronousMeasurementConsumer(MeasurementConsumer):
     def __init__(
         self,
-        sdk_config: "opentelemetry.sdk._metrics._internal.SdkConfiguration",
+        sdk_config: "opentelemetry.sdk.metrics._internal.SdkConfiguration",
     ) -> None:
         self._lock = Lock()
         self._sdk_config = sdk_config
         # should never be mutated
         self._reader_storages: Mapping[
-            "opentelemetry.sdk._metrics.MetricReader", MetricReaderStorage
+            "opentelemetry.sdk.metrics.MetricReader", MetricReaderStorage
         ] = {
             reader: MetricReaderStorage(
                 sdk_config,
@@ -71,7 +71,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             for reader in sdk_config.metric_readers
         }
         self._async_instruments: List[
-            "opentelemetry.sdk._metrics._internal.instrument._Asynchronous"
+            "opentelemetry.sdk.metrics._internal.instrument._Asynchronous"
         ] = []
 
     def consume_measurement(self, measurement: Measurement) -> None:
@@ -81,7 +81,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
     def register_asynchronous_instrument(
         self,
         instrument: (
-            "opentelemetry.sdk._metrics._internal.instrument._Asynchronous"
+            "opentelemetry.sdk.metrics._internal.instrument._Asynchronous"
         ),
     ) -> None:
         with self._lock:
@@ -89,7 +89,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
 
     def collect(
         self,
-        metric_reader: "opentelemetry.sdk._metrics.MetricReader",
+        metric_reader: "opentelemetry.sdk.metrics.MetricReader",
     ) -> Iterable[Metric]:
         with self._lock:
             metric_reader_storage = self._reader_storages[metric_reader]

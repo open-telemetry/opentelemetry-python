@@ -14,7 +14,7 @@
 
 from unittest import TestCase
 
-from opentelemetry.sdk._metrics.export import (
+from opentelemetry.sdk.metrics.export import (
     Gauge,
     Histogram,
     HistogramDataPoint,
