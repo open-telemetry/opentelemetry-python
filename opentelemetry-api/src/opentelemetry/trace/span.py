@@ -86,7 +86,10 @@ class Span(abc.ABC):
 
         Sets Attributes with the key and value passed as arguments dict.
 
-        Note: The behavior of `None` value attributes is undefined, and hence strongly discouraged.
+        Note: The behavior of `None` value attributes is undefined, and hence
+        strongly discouraged. It is also preferred to set attributes at span
+        creation, instead of calling this method later since samplers can only
+        consider information already present during span creation.
         """
 
     @abc.abstractmethod
@@ -95,7 +98,10 @@ class Span(abc.ABC):
 
         Sets a single Attribute with the key and value passed as arguments.
 
-        Note: The behavior of `None` value attributes is undefined, and hence strongly discouraged.
+        Note: The behavior of `None` value attributes is undefined, and hence
+        strongly discouraged. It is also preferred to set attributes at span
+        creation, instead of calling this method later since samplers can only
+        consider information already present during span creation.
         """
 
     @abc.abstractmethod
