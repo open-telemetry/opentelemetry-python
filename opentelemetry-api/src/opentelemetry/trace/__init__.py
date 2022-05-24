@@ -371,6 +371,14 @@ class Tracer(ABC):
             with opentelemetry.trace.use_span(span, end_on_exit=True):
                 do_work()
 
+        This can also be used as a decorator::
+
+            @tracer.start_as_current_span("name"):
+            def function():
+                ...
+
+            function()
+
         Args:
             name: The name of the span to be created.
             context: An optional Context containing the span's parent. Defaults to the
