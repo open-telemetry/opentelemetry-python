@@ -12,25 +12,59 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 
-from opentelemetry import trace
+from contextlib import contextmanager
+from unittest import TestCase
+from unittest.mock import Mock
+
+from opentelemetry.trace import (
+    INVALID_SPAN,
+    NoOpTracer,
+    Span,
+    Tracer,
+    get_current_span,
+)
 
 
-class TestTracer(unittest.TestCase):
+class TestTracer(TestCase):
     def setUp(self):
-        self.tracer = trace.NoOpTracer()
+        self.tracer = NoOpTracer()
 
     def test_start_span(self):
         with self.tracer.start_span("") as span:
-            self.assertIsInstance(span, trace.Span)
+            self.assertIsInstance(span, Span)
 
-    def test_start_as_current_span(self):
+    def test_start_as_current_span_context_manager(self):
         with self.tracer.start_as_current_span("") as span:
-            self.assertIsInstance(span, trace.Span)
+            self.assertIsInstance(span, Span)
+
+    def test_start_as_current_span_decorator(self):
+
+        mock_call = Mock()
+
+        class MockTracer(Tracer):
+            def start_span(self, *args, **kwargs):
+                return INVALID_SPAN
+
+            @contextmanager
+            def start_as_current_span(self, *args, **kwargs):  # type: ignore
+                mock_call()
+                yield INVALID_SPAN
+
+        mock_tracer = MockTracer()
+
+        @mock_tracer.start_as_current_span("name")
+        def function():  # type: ignore
+            pass
+
+        function()  # type: ignore
+        function()  # type: ignore
+        function()  # type: ignore
+
+        self.assertEqual(mock_call.call_count, 3)
 
     def test_get_current_span(self):
         with self.tracer.start_as_current_span("test") as span:
-            trace.get_current_span().set_attribute("test", "test")
-            self.assertEqual(span, trace.INVALID_SPAN)
+            get_current_span().set_attribute("test", "test")
+            self.assertEqual(span, INVALID_SPAN)
             self.assertFalse(hasattr("span", "attributes"))
