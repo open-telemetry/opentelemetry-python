@@ -15,8 +15,8 @@
 # pylint: disable=unused-import
 
 from dataclasses import asdict, dataclass
-from json import dumps
-from typing import Sequence, Union
+from json import dumps, loads
+from typing import Optional, Sequence, Union
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics._internal
@@ -36,46 +36,8 @@ class NumberDataPoint:
     time_unix_nano: int
     value: Union[int, float]
 
-
-@dataclass(frozen=True)
-class Sum:
-    """Represents the type of a scalar metric that is calculated as a sum of
-    all reported measurements over a time interval."""
-
-    data_points: Sequence[NumberDataPoint]
-    aggregation_temporality: (
-        "opentelemetry.sdk.metrics.export.AggregationTemporality"
-    )
-    is_monotonic: bool
-
     def to_json(self) -> str:
-        return dumps(
-            {
-                "data_points": dumps(
-                    [asdict(data_point) for data_point in self.data_points]
-                ),
-                "aggregation_temporality": self.aggregation_temporality,
-                "is_monotonic": self.is_monotonic,
-            }
-        )
-
-
-@dataclass(frozen=True)
-class Gauge:
-    """Represents the type of a scalar metric that always exports the current
-    value for every data point. It should be used for an unknown
-    aggregation."""
-
-    data_points: Sequence[NumberDataPoint]
-
-    def to_json(self) -> str:
-        return dumps(
-            {
-                "data_points": dumps(
-                    [asdict(data_point) for data_point in self.data_points]
-                )
-            }
-        )
+        return dumps(asdict(self))
 
 
 @dataclass(frozen=True)
@@ -94,6 +56,52 @@ class HistogramDataPoint:
     min: float
     max: float
 
+    def to_json(self) -> str:
+        return dumps(asdict(self))
+
+
+@dataclass(frozen=True)
+class Sum:
+    """Represents the type of a scalar metric that is calculated as a sum of
+    all reported measurements over a time interval."""
+
+    data_points: Sequence[NumberDataPoint]
+    aggregation_temporality: (
+        "opentelemetry.sdk.metrics.export.AggregationTemporality"
+    )
+    is_monotonic: bool
+
+    def to_json(self) -> str:
+        return dumps(
+            {
+                "data_points": [
+                    loads(data_point.to_json())
+                    for data_point in self.data_points
+                ],
+                "aggregation_temporality": self.aggregation_temporality,
+                "is_monotonic": self.is_monotonic,
+            }
+        )
+
+
+@dataclass(frozen=True)
+class Gauge:
+    """Represents the type of a scalar metric that always exports the current
+    value for every data point. It should be used for an unknown
+    aggregation."""
+
+    data_points: Sequence[NumberDataPoint]
+
+    def to_json(self) -> str:
+        return dumps(
+            {
+                "data_points": [
+                    loads(data_point.to_json())
+                    for data_point in self.data_points
+                ],
+            }
+        )
+
 
 @dataclass(frozen=True)
 class Histogram:
@@ -108,9 +116,10 @@ class Histogram:
     def to_json(self) -> str:
         return dumps(
             {
-                "data_points": dumps(
-                    [asdict(data_point) for data_point in self.data_points]
-                ),
+                "data_points": [
+                    loads(data_point.to_json())
+                    for data_point in self.data_points
+                ],
                 "aggregation_temporality": self.aggregation_temporality,
             }
         )
@@ -126,17 +135,17 @@ class Metric:
     exported."""
 
     name: str
-    description: str
-    unit: str
+    description: Optional[str]
+    unit: Optional[str]
     data: DataT
 
     def to_json(self) -> str:
         return dumps(
             {
                 "name": self.name,
-                "description": self.description if self.description else "",
-                "unit": self.unit if self.unit else "",
-                "data": self.data.to_json(),
+                "description": self.description or "",
+                "unit": self.unit or "",
+                "data": loads(self.data.to_json()),
             }
         )
 
@@ -149,6 +158,21 @@ class ScopeMetrics:
     metrics: Sequence[Metric]
     schema_url: str
 
+    def to_json(self) -> str:
+        return dumps(
+            {
+                "scope": {
+                    "name": self.scope.name,
+                    "version": self.scope.version,
+                    "schema_url": self.scope.schema_url,
+                },
+                "metrics": [
+                    loads(metric.to_json()) for metric in self.metrics
+                ],
+                "schema_url": self.schema_url,
+            }
+        )
+
 
 @dataclass(frozen=True)
 class ResourceMetrics:
@@ -158,9 +182,34 @@ class ResourceMetrics:
     scope_metrics: Sequence[ScopeMetrics]
     schema_url: str
 
+    def to_json(self) -> str:
+        return dumps(
+            {
+                "resource": {
+                    "attributes": dict(self.resource.attributes.items()),
+                    "schema_url": self.resource.schema_url,
+                },
+                "scope_metrics": [
+                    loads(scope_metrics.to_json())
+                    for scope_metrics in self.scope_metrics
+                ],
+                "schema_url": self.schema_url,
+            }
+        )
+
 
 @dataclass(frozen=True)
 class MetricsData:
     """An array of ResourceMetrics"""
 
     resource_metrics: Sequence[ResourceMetrics]
+
+    def to_json(self) -> str:
+        return dumps(
+            {
+                "resource_metrics": [
+                    loads(resource_metrics.to_json())
+                    for resource_metrics in self.resource_metrics
+                ]
+            }
+        )
