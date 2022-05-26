@@ -32,7 +32,6 @@ jobs:
         run: |
           commit=$(gh pr view $NUMBER --json mergeCommit --jq .mergeCommit.oid)
           title=$(gh pr view $NUMBER --json title --jq .title)
-          url=$(gh pr view $NUMBER --json url --jq .url)
 
           branch="backport-${NUMBER}-to-${GITHUB_REF_NAME//\//-}"
 
