@@ -178,7 +178,7 @@ class BatchLogProcessor(LogProcessor):
                 flush_request = self._get_and_unset_flush_request()
                 if (
                     len(self._queue) < self._max_export_batch_size
-                    and self._flush_request is None
+                    and flush_request is None
                 ):
                     self._condition.wait(timeout)
 
