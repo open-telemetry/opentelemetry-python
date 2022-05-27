@@ -84,7 +84,7 @@ logger = getLogger(__name__)
 def extract(
     carrier: textmap.CarrierT,
     context: typing.Optional[Context] = None,
-    getter: textmap.Getter = textmap.default_getter,
+    getter: textmap.Getter[textmap.CarrierT] = textmap.default_getter,
 ) -> Context:
     """Uses the configured propagator to extract a Context from the carrier.
 
@@ -105,7 +105,7 @@ def extract(
 def inject(
     carrier: textmap.CarrierT,
     context: typing.Optional[Context] = None,
-    setter: textmap.Setter = textmap.default_setter,
+    setter: textmap.Setter[textmap.CarrierT] = textmap.default_setter,
 ) -> None:
     """Uses the configured propagator to inject a Context into the carrier.
 
