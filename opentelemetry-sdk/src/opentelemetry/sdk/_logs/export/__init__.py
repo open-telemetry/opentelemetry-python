@@ -148,7 +148,9 @@ class BatchLogProcessor(LogProcessor):
         self._export_timeout_millis = export_timeout_millis
         self._queue = collections.deque()  # type: Deque[LogData]
         self._worker_thread = threading.Thread(
-            name="OtelBatchLogProcessor", target=self.worker, daemon=True
+            name="OtelBatchLogProcessor",
+            target=self.worker,
+            daemon=True,
         )
         self._condition = threading.Condition(threading.Lock())
         self._shutdown = False
@@ -167,7 +169,9 @@ class BatchLogProcessor(LogProcessor):
         self._condition = threading.Condition(threading.Lock())
         self._queue.clear()
         self._worker_thread = threading.Thread(
-            name="OtelBatchLogProcessor", target=self.worker, daemon=True
+            name="OtelBatchLogProcessor",
+            target=self.worker,
+            daemon=True,
         )
         self._worker_thread.start()
 
