@@ -43,8 +43,6 @@ from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 from opentelemetry.trace import TraceFlags
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
 
-supports_register_at_fork = hasattr(os, "fork") and sys.version_info >= (3, 7)
-
 
 class TestSimpleLogProcessor(unittest.TestCase):
     def test_simple_log_processor_default_level(self):
