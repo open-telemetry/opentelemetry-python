@@ -209,7 +209,7 @@ class Test_ViewInstrumentMatch(TestCase):
 
         number_data_point = number_data_points[0]
 
-        self.assertEqual(number_data_point.attributes, frozenset({("c", "d")}))
+        self.assertEqual(number_data_point.attributes, {"c": "d"})
         self.assertEqual(number_data_point.value, 0)
 
     def test_setting_aggregation(self):
