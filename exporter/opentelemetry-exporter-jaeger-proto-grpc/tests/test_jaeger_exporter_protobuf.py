@@ -25,6 +25,8 @@ from opentelemetry.exporter.jaeger.proto.grpc import JaegerExporter
 # pylint:disable=import-error
 from opentelemetry.exporter.jaeger.proto.grpc.gen import model_pb2
 from opentelemetry.exporter.jaeger.proto.grpc.translate import (
+    _SCOPE_NAME_KEY,
+    _SCOPE_VERSION_KEY,
     NAME_KEY,
     VERSION_KEY,
     Translate,
@@ -39,7 +41,7 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SpanExportResult
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
 )
@@ -108,13 +110,13 @@ class TestJaegerExporter(unittest.TestCase):
         parent_id = 0x1111111111111111
         other_id = 0x2222222222222222
 
-        base_time = 683647322 * 10 ** 9  # in ns
+        base_time = 683647322 * 10**9  # in ns
         start_times = (
             base_time,
-            base_time + 150 * 10 ** 6,
-            base_time + 300 * 10 ** 6,
+            base_time + 150 * 10**6,
+            base_time + 300 * 10**6,
         )
-        durations = (50 * 10 ** 6, 100 * 10 ** 6, 200 * 10 ** 6)
+        durations = (50 * 10**6, 100 * 10**6, 200 * 10**6)
         end_times = (
             start_times[0] + durations[0],
             start_times[1] + durations[1],
@@ -139,7 +141,7 @@ class TestJaegerExporter(unittest.TestCase):
             ]
         )
 
-        event_timestamp = base_time + 50 * 10 ** 6
+        event_timestamp = base_time + 50 * 10**6
         # pylint:disable=protected-access
         event_timestamp_proto = (
             pb_translator._proto_timestamp_from_epoch_nanos(event_timestamp)
@@ -188,7 +190,7 @@ class TestJaegerExporter(unittest.TestCase):
                 context=other_context,
                 parent=None,
                 resource=Resource({}),
-                instrumentation_info=InstrumentationInfo(
+                instrumentation_scope=InstrumentationScope(
                     name="name", version="version"
                 ),
             ),
@@ -388,6 +390,16 @@ class TestJaegerExporter(unittest.TestCase):
                     ),
                     model_pb2.KeyValue(
                         key=VERSION_KEY,
+                        v_type=model_pb2.ValueType.STRING,
+                        v_str="version",
+                    ),
+                    model_pb2.KeyValue(
+                        key=_SCOPE_NAME_KEY,
+                        v_type=model_pb2.ValueType.STRING,
+                        v_str="name",
+                    ),
+                    model_pb2.KeyValue(
+                        key=_SCOPE_VERSION_KEY,
                         v_type=model_pb2.ValueType.STRING,
                         v_str="version",
                     ),

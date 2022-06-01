@@ -1594,6 +1594,53 @@ class TestSpanLimits(unittest.TestCase):
             )
         )
 
+    def test_span_zero_global_limit(self):
+        self._test_span_limits(
+            new_tracer(
+                span_limits=trace.SpanLimits(
+                    max_attributes=0,
+                    max_events=0,
+                    max_links=0,
+                )
+            ),
+            0,
+            0,
+            0,
+            0,
+            0,
+        )
+
+    def test_span_zero_global_nonzero_model(self):
+        self._test_span_limits(
+            new_tracer(
+                span_limits=trace.SpanLimits(
+                    max_attributes=0,
+                    max_events=0,
+                    max_links=0,
+                    max_span_attributes=15,
+                    max_span_attribute_length=25,
+                )
+            ),
+            15,
+            0,
+            0,
+            0,
+            25,
+        )
+
+    def test_span_zero_global_unset_model(self):
+        self._test_span_no_limits(
+            new_tracer(
+                span_limits=trace.SpanLimits(
+                    max_attributes=0,
+                    max_span_attributes=trace.SpanLimits.UNSET,
+                    max_links=trace.SpanLimits.UNSET,
+                    max_events=trace.SpanLimits.UNSET,
+                    max_attribute_length=trace.SpanLimits.UNSET,
+                )
+            )
+        )
+
     def test_dropped_attributes(self):
         span = get_span_with_dropped_attributes_events_links()
         self.assertEqual(1, span.dropped_links)
@@ -1698,3 +1745,27 @@ class TestSpanLimits(unittest.TestCase):
             self.assertEqual(len(root.attributes), num_attributes)
             for attr_val in root.attributes.values():
                 self.assertEqual(attr_val, self.long_val)
+
+
+class TestTraceFlags(unittest.TestCase):
+    def test_constant_default(self):
+        self.assertEqual(trace_api.TraceFlags.DEFAULT, 0)
+
+    def test_constant_sampled(self):
+        self.assertEqual(trace_api.TraceFlags.SAMPLED, 1)
+
+    def test_get_default(self):
+        self.assertEqual(
+            trace_api.TraceFlags.get_default(), trace_api.TraceFlags.DEFAULT
+        )
+
+    def test_sampled_true(self):
+        self.assertTrue(trace_api.TraceFlags(0xF1).sampled)
+
+    def test_sampled_false(self):
+        self.assertFalse(trace_api.TraceFlags(0xF0).sampled)
+
+    def test_constant_default_trace_options(self):
+        self.assertEqual(
+            trace_api.DEFAULT_TRACE_OPTIONS, trace_api.TraceFlags.DEFAULT
+        )

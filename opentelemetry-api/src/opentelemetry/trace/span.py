@@ -86,7 +86,10 @@ class Span(abc.ABC):
 
         Sets Attributes with the key and value passed as arguments dict.
 
-        Note: The behavior of `None` value attributes is undefined, and hence strongly discouraged.
+        Note: The behavior of `None` value attributes is undefined, and hence
+        strongly discouraged. It is also preferred to set attributes at span
+        creation, instead of calling this method later since samplers can only
+        consider information already present during span creation.
         """
 
     @abc.abstractmethod
@@ -95,7 +98,10 @@ class Span(abc.ABC):
 
         Sets a single Attribute with the key and value passed as arguments.
 
-        Note: The behavior of `None` value attributes is undefined, and hence strongly discouraged.
+        Note: The behavior of `None` value attributes is undefined, and hence
+        strongly discouraged. It is also preferred to set attributes at span
+        creation, instead of calling this method later since samplers can only
+        consider information already present during span creation.
         """
 
     @abc.abstractmethod
@@ -352,9 +358,10 @@ class TraceState(typing.Mapping[str, str]):
             If the number of keys is beyond the maximum, all values
             will be discarded and an empty tracestate will be returned.
         """
-        pairs = OrderedDict()
+        pairs = OrderedDict()  # type: OrderedDict[str, str]
         for header in header_list:
-            for member in re.split(_delimiter_pattern, header):
+            members: typing.List[str] = re.split(_delimiter_pattern, header)
+            for member in members:
                 # empty members are valid, but no need to process further.
                 if not member:
                     continue
@@ -365,7 +372,8 @@ class TraceState(typing.Mapping[str, str]):
                         member,
                     )
                     return cls()
-                key, _eq, value = match.groups()
+                groups: typing.Tuple[str, ...] = match.groups()
+                key, _eq, value = groups
                 # duplicate keys are not legal in header
                 if key in pairs:
                     return cls()
@@ -387,8 +395,8 @@ class TraceState(typing.Mapping[str, str]):
 
 
 DEFAULT_TRACE_STATE = TraceState.get_default()
-_TRACE_ID_MAX_VALUE = 2 ** 128 - 1
-_SPAN_ID_MAX_VALUE = 2 ** 64 - 1
+_TRACE_ID_MAX_VALUE = 2**128 - 1
+_SPAN_ID_MAX_VALUE = 2**64 - 1
 
 
 class SpanContext(

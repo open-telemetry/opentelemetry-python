@@ -97,9 +97,14 @@ nitpicky = True
 # https://github.com/sphinx-doc/sphinx/pull/3744
 nitpick_ignore = [
     ("py:class", "ValueT"),
-    ("py:class", "MetricT"),
-    ("py:class", "InstrumentT"),
-    ("py:obj", "opentelemetry._metrics.instrument.InstrumentT"),
+    (
+        "py:class",
+        "opentelemetry.sdk.metrics._internal.instrument._Synchronous",
+    ),
+    (
+        "py:class",
+        "opentelemetry.sdk.metrics._internal.instrument._Asynchronous",
+    ),
     # Even if wrapt is added to intersphinx_mapping, sphinx keeps failing
     # with "class reference target not found: ObjectProxy".
     ("py:class", "ObjectProxy"),
@@ -142,11 +147,14 @@ exclude_patterns = [
     "examples/error_handler/error_handler_1",
 ]
 
+_exclude_members = ["_abc_impl"]
+
 autodoc_default_options = {
     "members": True,
     "undoc-members": True,
     "show-inheritance": True,
     "member-order": "bysource",
+    "exclude-members": ",".join(_exclude_members),
 }
 
 # -- Options for HTML output -------------------------------------------------

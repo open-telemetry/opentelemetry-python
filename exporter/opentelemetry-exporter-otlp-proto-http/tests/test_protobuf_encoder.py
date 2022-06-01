@@ -29,18 +29,16 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
 )
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue as PB2AnyValue
 from opentelemetry.proto.common.v1.common_pb2 import (
-    InstrumentationLibrary as PB2InstrumentationLibrary,
+    InstrumentationScope as PB2InstrumentationScope,
 )
 from opentelemetry.proto.common.v1.common_pb2 import KeyValue as PB2KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (
-    InstrumentationLibrarySpans as PB2InstrumentationLibrarySpans,
-)
-from opentelemetry.proto.trace.v1.trace_pb2 import (
     ResourceSpans as PB2ResourceSpans,
 )
+from opentelemetry.proto.trace.v1.trace_pb2 import ScopeSpans as PB2ScopeSpans
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as PB2SPan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status as PB2Status
 from opentelemetry.sdk.trace import Event as SDKEvent
@@ -48,7 +46,7 @@ from opentelemetry.sdk.trace import Resource as SDKResource
 from opentelemetry.sdk.trace import SpanContext as SDKSpanContext
 from opentelemetry.sdk.trace import _Span as SDKSpan
 from opentelemetry.sdk.util.instrumentation import (
-    InstrumentationInfo as SDKInstrumentationInfo,
+    InstrumentationScope as SDKInstrumentationScope,
 )
 from opentelemetry.trace import Link as SDKLink
 from opentelemetry.trace import SpanKind as SDKSpanKind
@@ -80,18 +78,18 @@ class TestProtobufEncoder(unittest.TestCase):
     def get_exhaustive_otel_span_list() -> List[SDKSpan]:
         trace_id = 0x3E0C63257DE34C926F9EFCD03927272E
 
-        base_time = 683647322 * 10 ** 9  # in ns
+        base_time = 683647322 * 10**9  # in ns
         start_times = (
             base_time,
-            base_time + 150 * 10 ** 6,
-            base_time + 300 * 10 ** 6,
-            base_time + 400 * 10 ** 6,
+            base_time + 150 * 10**6,
+            base_time + 300 * 10**6,
+            base_time + 400 * 10**6,
         )
         end_times = (
-            start_times[0] + (50 * 10 ** 6),
-            start_times[1] + (100 * 10 ** 6),
-            start_times[2] + (200 * 10 ** 6),
-            start_times[3] + (300 * 10 ** 6),
+            start_times[0] + (50 * 10**6),
+            start_times[1] + (100 * 10**6),
+            start_times[2] + (200 * 10**6),
+            start_times[3] + (300 * 10**6),
         )
 
         parent_span_context = SDKSpanContext(
@@ -114,7 +112,7 @@ class TestProtobufEncoder(unittest.TestCase):
             events=(
                 SDKEvent(
                     name="event0",
-                    timestamp=base_time + 50 * 10 ** 6,
+                    timestamp=base_time + 50 * 10**6,
                     attributes={
                         "annotation_bool": True,
                         "annotation_string": "annotation_test",
@@ -158,7 +156,7 @@ class TestProtobufEncoder(unittest.TestCase):
             context=other_context,
             parent=None,
             resource=SDKResource({}),
-            instrumentation_info=SDKInstrumentationInfo(
+            instrumentation_scope=SDKInstrumentationScope(
                 name="name", version="version"
             ),
         )
@@ -178,9 +176,9 @@ class TestProtobufEncoder(unittest.TestCase):
             resource_spans=[
                 PB2ResourceSpans(
                     resource=PB2Resource(),
-                    instrumentation_library_spans=[
-                        PB2InstrumentationLibrarySpans(
-                            instrumentation_library=PB2InstrumentationLibrary(),
+                    scope_spans=[
+                        PB2ScopeSpans(
+                            scope=PB2InstrumentationScope(),
                             spans=[
                                 PB2SPan(
                                     trace_id=trace_id,
@@ -268,15 +266,14 @@ class TestProtobufEncoder(unittest.TestCase):
                                         )
                                     ],
                                     status=PB2Status(
-                                        deprecated_code=PB2Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR,  # pylint: disable=no-member
                                         code=SDKStatusCode.ERROR.value,
                                         message="Example description",
                                     ),
                                 )
                             ],
                         ),
-                        PB2InstrumentationLibrarySpans(
-                            instrumentation_library=PB2InstrumentationLibrary(
+                        PB2ScopeSpans(
+                            scope=PB2InstrumentationScope(
                                 name="name",
                                 version="version",
                             ),
@@ -314,9 +311,9 @@ class TestProtobufEncoder(unittest.TestCase):
                             )
                         ]
                     ),
-                    instrumentation_library_spans=[
-                        PB2InstrumentationLibrarySpans(
-                            instrumentation_library=PB2InstrumentationLibrary(),
+                    scope_spans=[
+                        PB2ScopeSpans(
+                            scope=PB2InstrumentationScope(),
                             spans=[
                                 PB2SPan(
                                     trace_id=trace_id,
@@ -374,7 +371,6 @@ class TestProtobufEncoder(unittest.TestCase):
         self.assertEqual(
             _encode_status(SDKStatus(status_code=SDKStatusCode.UNSET)),
             PB2Status(
-                deprecated_code=PB2Status.DEPRECATED_STATUS_CODE_OK,  # pylint: disable=no-member
                 code=SDKStatusCode.UNSET.value,
             ),
         )
@@ -382,7 +378,6 @@ class TestProtobufEncoder(unittest.TestCase):
         self.assertEqual(
             _encode_status(SDKStatus(status_code=SDKStatusCode.OK)),
             PB2Status(
-                deprecated_code=PB2Status.DEPRECATED_STATUS_CODE_OK,  # pylint: disable=no-member
                 code=SDKStatusCode.OK.value,
             ),
         )
@@ -390,7 +385,6 @@ class TestProtobufEncoder(unittest.TestCase):
         self.assertEqual(
             _encode_status(SDKStatus(status_code=SDKStatusCode.ERROR)),
             PB2Status(
-                deprecated_code=PB2Status.DEPRECATED_STATUS_CODE_UNKNOWN_ERROR,  # pylint: disable=no-member
                 code=SDKStatusCode.ERROR.value,
             ),
         )

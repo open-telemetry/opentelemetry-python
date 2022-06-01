@@ -24,6 +24,37 @@ class SpanAttributes:
     Note: This may be different from `faas.id` if an alias is involved.
     """
 
+    CLOUDEVENTS_EVENT_ID = "cloudevents.event_id"
+    """
+    The [event_id](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#id) uniquely identifies the event.
+    """
+
+    CLOUDEVENTS_EVENT_SOURCE = "cloudevents.event_source"
+    """
+    The [source](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#source-1) identifies the context in which an event happened.
+    """
+
+    CLOUDEVENTS_EVENT_SPEC_VERSION = "cloudevents.event_spec_version"
+    """
+    The [version of the CloudEvents specification](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#specversion) which the event uses.
+    """
+
+    CLOUDEVENTS_EVENT_TYPE = "cloudevents.event_type"
+    """
+    The [event_type](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#type) contains a value describing the type of event related to the originating occurrence.
+    """
+
+    CLOUDEVENTS_EVENT_SUBJECT = "cloudevents.event_subject"
+    """
+    The [subject](https://github.com/cloudevents/spec/blob/v1.0.2/cloudevents/spec.md#subject) of the event in the context of the event producer (identified by source).
+    """
+
+    OPENTRACING_REF_TYPE = "opentracing.ref_type"
+    """
+    Parent-child Reference type.
+    Note: The causal relationship between a child Span and a parent Span.
+    """
+
     DB_SYSTEM = "db.system"
     """
     An identifier for the database management system (DBMS) product being used. See below for a list of well-known identifiers.
@@ -46,8 +77,8 @@ class SpanAttributes:
 
     DB_NAME = "db.name"
     """
-    If no [tech-specific attribute](#call-level-attributes-for-specific-technologies) is defined, this attribute is used to report the name of the database being accessed. For commands that switch the database, this should be set to the target database (even if the command fails).
-    Note: In some SQL databases, the database name to be used is called "schema name".
+    This attribute is used to report the name of the database being accessed. For commands that switch the database, this should be set to the target database (even if the command fails).
+    Note: In some SQL databases, the database name to be used is called "schema name". In case there are multiple layers that could be considered for database name (e.g. Oracle instance name and schema name), the database name to be used is the more specific layer (e.g. Oracle schema name).
     """
 
     DB_STATEMENT = "db.statement"
@@ -65,6 +96,7 @@ class SpanAttributes:
     NET_PEER_NAME = "net.peer.name"
     """
     Remote hostname or similar, see note below.
+    Note: `net.peer.name` SHOULD NOT be set if capturing it would require an extra DNS lookup.
     """
 
     NET_PEER_IP = "net.peer.ip"
@@ -88,11 +120,6 @@ class SpanAttributes:
     Note: If setting a `db.mssql.instance_name`, `net.peer.port` is no longer required (but still recommended if non-standard).
     """
 
-    DB_CASSANDRA_KEYSPACE = "db.cassandra.keyspace"
-    """
-    The name of the keyspace being accessed. To be used instead of the generic `db.name` attribute.
-    """
-
     DB_CASSANDRA_PAGE_SIZE = "db.cassandra.page_size"
     """
     The fetch size used for paging, i.e. how many rows will be returned at once.
@@ -105,7 +132,7 @@ class SpanAttributes:
 
     DB_CASSANDRA_TABLE = "db.cassandra.table"
     """
-    The name of the primary table that the operation is acting upon, including the schema name (if applicable).
+    The name of the primary table that the operation is acting upon, including the keyspace name (if applicable).
     Note: This mirrors the db.sql.table attribute but references cassandra rather than sql. It is not recommended to attempt any client-side parsing of `db.statement` just to get this property, but it should be set if it is provided by the library being instrumented. If the operation is acting upon an anonymous table, or more than one table, this value MUST NOT be set.
     """
 
@@ -131,11 +158,6 @@ class SpanAttributes:
     The data center of the coordinating node for a query.
     """
 
-    DB_HBASE_NAMESPACE = "db.hbase.namespace"
-    """
-    The [HBase namespace](https://hbase.apache.org/book.html#_namespace) being accessed. To be used instead of the generic `db.name` attribute.
-    """
-
     DB_REDIS_DATABASE_INDEX = "db.redis.database_index"
     """
     The index of the database being accessed as used in the [`SELECT` command](https://redis.io/commands/select), provided as an integer. To be used instead of the generic `db.name` attribute.
@@ -148,7 +170,7 @@ class SpanAttributes:
 
     DB_SQL_TABLE = "db.sql.table"
     """
-    The name of the primary table that the operation is acting upon, including the schema name (if applicable).
+    The name of the primary table that the operation is acting upon, including the database name (if applicable).
     Note: It is not recommended to attempt any client-side parsing of `db.statement` just to get this property, but it should be set if it is provided by the library being instrumented. If the operation is acting upon an anonymous table, or more than one table, this value MUST NOT be set.
     """
 
@@ -180,7 +202,7 @@ It is usually not possible to determine at the point where an exception is throw
 whether it will escape the scope of a span.
 However, it is trivial to know that an exception
 will escape, if one checks for an active exception just before ending the span,
-as done in the [example above](#exception-end-example).
+as done in the [example above](#recording-an-exception).
 
 It follows that an exception may still escape the scope of the span
 even if the `exception.escaped` attribute was not set or set to false,
@@ -190,7 +212,16 @@ clear whether the exception will escape.
 
     FAAS_TRIGGER = "faas.trigger"
     """
-    Type of the trigger on which the function is executed.
+    Type of the trigger which caused this function execution.
+    Note: For the server/consumer span on the incoming side,
+`faas.trigger` MUST be set.
+
+Clients invoking FaaS instances usually cannot set `faas.trigger`,
+since they would typically need to look in the payload to determine
+the event type. If clients set it, it should be the same as the
+trigger that corresponding incoming would have (i.e., this has
+nothing to do with the underlying transport used to make the API
+call to invoke the lambda, which is often HTTP).
     """
 
     FAAS_EXECUTION = "faas.execution"
@@ -236,7 +267,8 @@ clear whether the exception will escape.
 
     HTTP_HOST = "http.host"
     """
-    The value of the [HTTP host header](https://tools.ietf.org/html/rfc7230#section-5.4). When the header is empty or not present, this attribute should be the same.
+    The value of the [HTTP host header](https://tools.ietf.org/html/rfc7230#section-5.4). An empty Host header should also be reported, see note.
+    Note: When the header is present but empty the attribute SHOULD be set to the empty string. Note that this is a valid situation that is expected in certain cases, according the aforementioned [section of RFC 7230](https://tools.ietf.org/html/rfc7230#section-5.4). When the header is not set the attribute MUST NOT be set.
     """
 
     HTTP_SCHEME = "http.scheme"
@@ -284,6 +316,11 @@ clear whether the exception will escape.
     The size of the uncompressed response payload body after transport decoding. Not set if transport encoding not used.
     """
 
+    HTTP_RETRY_COUNT = "http.retry_count"
+    """
+    The ordinal number of request re-sending attempt.
+    """
+
     HTTP_SERVER_NAME = "http.server_name"
     """
     The primary server name of the matched virtual host. This should be obtained via configuration. If no such configuration can be obtained, this attribute MUST NOT be set ( `net.host.name` should be used instead).
@@ -298,7 +335,17 @@ clear whether the exception will escape.
     HTTP_CLIENT_IP = "http.client_ip"
     """
     The IP address of the original client behind all proxies, if known (e.g. from [X-Forwarded-For](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For)).
-    Note: This is not necessarily the same as `net.peer.ip`, which would identify the network-level peer, which may be a proxy.
+    Note: This is not necessarily the same as `net.peer.ip`, which would
+identify the network-level peer, which may be a proxy.
+
+This attribute should be set when a source of information different
+from the one used for `net.peer.ip`, is available even if that other
+source just confirms the same value as `net.peer.ip`.
+Rationale: For `net.peer.ip`, one typically does not know if it
+comes from a proxy, reverse proxy, or the actual client. Setting
+`http.client_ip` when it's the same as `net.peer.ip` means that
+one is at least somewhat confident that the address is not that of
+the closest proxy.
     """
 
     NET_HOST_IP = "net.host.ip"
@@ -632,6 +679,11 @@ clear whether the exception will escape.
     A string identifying the kind of message consumption as defined in the [Operation names](#operation-names) section above. If the operation is "send", this attribute MUST NOT be set, since the operation can be inferred from the span kind in that case.
     """
 
+    MESSAGING_CONSUMER_ID = "messaging.consumer_id"
+    """
+    The identifier for the consumer receiving a message. For Kafka, set it to `{messaging.kafka.consumer_group} - {messaging.kafka.client_id}`, if both are present, or only `messaging.kafka.consumer_group`. For brokers, such as RabbitMQ and Artemis, set it to the `client_id` of the client consuming the message.
+    """
+
     MESSAGING_RABBITMQ_ROUTING_KEY = "messaging.rabbitmq.routing_key"
     """
     RabbitMQ message routing key.
@@ -663,6 +715,43 @@ clear whether the exception will escape.
     A boolean that is true if the message is a tombstone.
     """
 
+    MESSAGING_ROCKETMQ_NAMESPACE = "messaging.rocketmq.namespace"
+    """
+    Namespace of RocketMQ resources, resources in different namespaces are individual.
+    """
+
+    MESSAGING_ROCKETMQ_CLIENT_GROUP = "messaging.rocketmq.client_group"
+    """
+    Name of the RocketMQ producer/consumer group that is handling the message. The client type is identified by the SpanKind.
+    """
+
+    MESSAGING_ROCKETMQ_CLIENT_ID = "messaging.rocketmq.client_id"
+    """
+    The unique identifier for each client.
+    """
+
+    MESSAGING_ROCKETMQ_MESSAGE_TYPE = "messaging.rocketmq.message_type"
+    """
+    Type of message.
+    """
+
+    MESSAGING_ROCKETMQ_MESSAGE_TAG = "messaging.rocketmq.message_tag"
+    """
+    The secondary classifier of message besides topic.
+    """
+
+    MESSAGING_ROCKETMQ_MESSAGE_KEYS = "messaging.rocketmq.message_keys"
+    """
+    Key(s) of message, another way to mark message besides message id.
+    """
+
+    MESSAGING_ROCKETMQ_CONSUMPTION_MODEL = (
+        "messaging.rocketmq.consumption_model"
+    )
+    """
+    Model of message consumption. This only applies to consumer spans.
+    """
+
     RPC_GRPC_STATUS_CODE = "rpc.grpc.status_code"
     """
     The [numeric status code](https://github.com/grpc/grpc/blob/v1.33.2/doc/statuscodes.md) of the gRPC request.
@@ -687,6 +776,35 @@ clear whether the exception will escape.
     """
     `error.message` property of response if it is an error response.
     """
+
+    MESSAGE_TYPE = "message.type"
+    """
+    Whether this is a received or sent message.
+    """
+
+    MESSAGE_ID = "message.id"
+    """
+    MUST be calculated as two different counters starting from `1` one for sent messages and one for received message.
+    Note: This way we guarantee that the values will be consistent between different implementations.
+    """
+
+    MESSAGE_COMPRESSED_SIZE = "message.compressed_size"
+    """
+    Compressed size of the message in bytes.
+    """
+
+    MESSAGE_UNCOMPRESSED_SIZE = "message.uncompressed_size"
+    """
+    Uncompressed size of the message in bytes.
+    """
+
+
+class OpentracingRefTypeValues(Enum):
+    CHILD_OF = "child_of"
+    """The parent Span depends on the child Span in some capacity."""
+
+    FOLLOWS_FROM = "follows_from"
+    """The parent Span does not depend in any way on the result of the child Span."""
 
 
 class DbSystemValues(Enum):
@@ -920,13 +1038,16 @@ class FaasDocumentOperationValues(Enum):
 
 class HttpFlavorValues(Enum):
     HTTP_1_0 = "1.0"
-    """HTTP 1.0."""
+    """HTTP/1.0."""
 
     HTTP_1_1 = "1.1"
-    """HTTP 1.1."""
+    """HTTP/1.1."""
 
     HTTP_2_0 = "2.0"
-    """HTTP 2."""
+    """HTTP/2."""
+
+    HTTP_3_0 = "3.0"
+    """HTTP/3."""
 
     SPDY = "SPDY"
     """SPDY protocol."""
@@ -1038,6 +1159,23 @@ class FaasInvokedProviderValues(Enum):
     GCP = "gcp"
     """Google Cloud Platform."""
 
+    TENCENT_CLOUD = "tencent_cloud"
+    """Tencent Cloud."""
+
+
+class RpcSystemValues(Enum):
+    GRPC = "grpc"
+    """gRPC."""
+
+    JAVA_RMI = "java_rmi"
+    """Java RMI."""
+
+    DOTNET_WCF = "dotnet_wcf"
+    """.NET WCF."""
+
+    APACHE_DUBBO = "apache_dubbo"
+    """Apache Dubbo."""
+
 
 class MessagingOperationValues(Enum):
     RECEIVE = "receive"
@@ -1045,6 +1183,28 @@ class MessagingOperationValues(Enum):
 
     PROCESS = "process"
     """process."""
+
+
+class MessagingRocketmqMessageTypeValues(Enum):
+    NORMAL = "normal"
+    """Normal message."""
+
+    FIFO = "fifo"
+    """FIFO message."""
+
+    DELAY = "delay"
+    """Delay message."""
+
+    TRANSACTION = "transaction"
+    """Transaction message."""
+
+
+class MessagingRocketmqConsumptionModelValues(Enum):
+    CLUSTERING = "clustering"
+    """Clustering consumption model."""
+
+    BROADCASTING = "broadcasting"
+    """Broadcasting consumption model."""
 
 
 class RpcGrpcStatusCodeValues(Enum):
@@ -1098,3 +1258,11 @@ class RpcGrpcStatusCodeValues(Enum):
 
     UNAUTHENTICATED = 16
     """UNAUTHENTICATED."""
+
+
+class MessageTypeValues(Enum):
+    SENT = "SENT"
+    """sent."""
+
+    RECEIVED = "RECEIVED"
+    """received."""

@@ -1,7 +1,8 @@
+## OpenTelemetry Python
 ---
 <p align="center">
   <strong>
-    <a href="https://opentelemetry-python.readthedocs.io/en/stable/getting-started.html">Getting Started<a/>
+    <a href="https://opentelemetry.io/docs/instrumentation/python/getting-started/">Getting Started<a/>
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
     <a href="https://opentelemetry-python.readthedocs.io/">API Documentation<a/>
     &nbsp;&nbsp;&bull;&nbsp;&nbsp;
@@ -35,8 +36,6 @@
 </p>
 
 ---
-
-## OpenTelemetry Python
 
 This page describes the Python [OpenTelemetry](https://opentelemetry.io/) implementation. OpenTelemetry is an observability framework for cloud-native software.
 
@@ -111,6 +110,14 @@ pip install scalene
 scalene opentelemetry-<PACKAGE>/tests/performance/resource-usage/<PATH_TO_TEST>/profile_resource_usage_<NAME_OF_TEST>.py
 ```
 
+## Python Version Support Addition and Removal
+
+This project supports the latest Python versions. As new Python versions are released, support for them is added and
+as old Python versions reach their end of life, support for them is removed.
+
+We add support for new Python versions no later than 3 months after they become stable.
+
+We remove support for old Python versions 6 months after they reach their [end of life](https://devguide.python.org/devcycle/#end-of-life-branches).
 
 ## Documentation
 
@@ -122,9 +129,7 @@ https://opentelemetry-python.readthedocs.io/en/latest/.
 
 For information about contributing to OpenTelemetry Python, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
-We meet weekly on Thursdays at 9AM PST. The meeting is subject to change depending on contributors' availability. Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=google.com_b79e3e90j7bbsa2n2p5an5lf60%40group.calendar.google.com) for specific dates.
-
-Meetings take place via [Zoom video conference](https://zoom.us/j/8287234601?pwd=YjN2MURycXc4cEZlYTRtYjJaM0grZz09). The passcode is _77777_.
+We meet weekly on Thursdays at 9AM PST. The meeting is subject to change depending on contributors' availability. Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=google.com_b79e3e90j7bbsa2n2p5an5lf60%40group.calendar.google.com) for specific dates and Zoom meeting links.
 
 Meeting notes are available as a public [Google doc](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit). For edit access, get in touch on [GitHub Discussions](https://github.com/open-telemetry/opentelemetry-python/discussions).
 
@@ -132,7 +137,7 @@ Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telem
 
 - [Aaron Abbott](https://github.com/aabmass), Google
 - [Alex Boten](https://github.com/codeboten), Lightstep
-- [Srikanth Chekuri](https://github.com/lonewolf3739)
+- [Owais Lone](https://github.com/owais), Splunk
 - [Nathaniel Ruiz Nowell](https://github.com/NathanielRN), AWS
 
 *For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver).*
@@ -141,7 +146,7 @@ Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-t
 
 - [Diego Hurtado](https://github.com/ocelotl), Lightstep
 - [Leighton Chen](https://github.com/lzchen), Microsoft
-- [Owais Lone](https://github.com/owais), Splunk
+- [Srikanth Chekuri](https://github.com/srikanthccv)
 
 *For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer).*
 

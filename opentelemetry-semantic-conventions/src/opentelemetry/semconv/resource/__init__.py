@@ -28,7 +28,8 @@ class ResourceAttributes:
 
     CLOUD_REGION = "cloud.region"
     """
-    The geographical region the resource is running. Refer to your provider's docs to see the available regions, for example [Alibaba Cloud regions](https://www.alibabacloud.com/help/doc-detail/40654.htm), [AWS regions](https://aws.amazon.com/about-aws/global-infrastructure/regions_az/), [Azure regions](https://azure.microsoft.com/en-us/global-infrastructure/geographies/), or [Google Cloud regions](https://cloud.google.com/about/locations).
+    The geographical region the resource is running.
+    Note: Refer to your provider's docs to see the available regions, for example [Alibaba Cloud regions](https://www.alibabacloud.com/help/doc-detail/40654.htm), [AWS regions](https://aws.amazon.com/about-aws/global-infrastructure/regions_az/), [Azure regions](https://azure.microsoft.com/en-us/global-infrastructure/geographies/), [Google Cloud regions](https://cloud.google.com/about/locations), or [Tencent Cloud regions](https://intl.cloud.tencent.com/document/product/213/6091).
     """
 
     CLOUD_AVAILABILITY_ZONE = "cloud.availability_zone"
@@ -103,7 +104,7 @@ class ResourceAttributes:
 
     CONTAINER_NAME = "container.name"
     """
-    Container name.
+    Container name used by container runtime.
     """
 
     CONTAINER_ID = "container.id"
@@ -147,6 +148,12 @@ class ResourceAttributes:
     """
     The marketing name for the device model.
     Note: It's recommended this value represents a human readable version of the device model rather than a machine readable alternative.
+    """
+
+    DEVICE_MANUFACTURER = "device.manufacturer"
+    """
+    The name of the device manufacturer.
+    Note: The Android OS provides this field via [Build](https://developer.android.com/reference/android/os/Build#MANUFACTURER). iOS apps SHOULD hardcode the value `Apple`.
     """
 
     FAAS_NAME = "faas.name"
@@ -267,7 +274,12 @@ As an alternative, consider setting `faas.id` as a span attribute instead.
 
     K8S_CONTAINER_NAME = "k8s.container.name"
     """
-    The name of the Container in a Pod template.
+    The name of the Container from Pod specification, must be unique within a Pod. Container runtime usually uses different globally unique name (`container.name`).
+    """
+
+    K8S_CONTAINER_RESTART_COUNT = "k8s.container.restart_count"
+    """
+    Number of times the container was restarted. This attribute can be used to identify a particular container (running or stopped) within a container spec.
     """
 
     K8S_REPLICASET_UID = "k8s.replicaset.uid"
@@ -472,6 +484,9 @@ class CloudProviderValues(Enum):
     GCP = "gcp"
     """Google Cloud Platform."""
 
+    TENCENT_CLOUD = "tencent_cloud"
+    """Tencent Cloud."""
+
 
 class CloudPlatformValues(Enum):
     ALIBABA_CLOUD_ECS = "alibaba_cloud_ecs"
@@ -494,6 +509,9 @@ class CloudPlatformValues(Enum):
 
     AWS_ELASTIC_BEANSTALK = "aws_elastic_beanstalk"
     """AWS Elastic Beanstalk."""
+
+    AWS_APP_RUNNER = "aws_app_runner"
+    """AWS App Runner."""
 
     AZURE_VM = "azure_vm"
     """Azure Virtual Machines."""
@@ -525,6 +543,15 @@ class CloudPlatformValues(Enum):
     GCP_APP_ENGINE = "gcp_app_engine"
     """Google Cloud App Engine (GAE)."""
 
+    TENCENT_CLOUD_CVM = "tencent_cloud_cvm"
+    """Tencent Cloud Cloud Virtual Machine (CVM)."""
+
+    TENCENT_CLOUD_EKS = "tencent_cloud_eks"
+    """Tencent Cloud Elastic Kubernetes Service (EKS)."""
+
+    TENCENT_CLOUD_SCF = "tencent_cloud_scf"
+    """Tencent Cloud Serverless Cloud Function (SCF)."""
+
 
 class AwsEcsLaunchtypeValues(Enum):
     EC2 = "ec2"
@@ -552,6 +579,9 @@ class HostArchValues(Enum):
 
     PPC64 = "ppc64"
     """64-bit PowerPC."""
+
+    S390X = "s390x"
+    """IBM z/Architecture."""
 
     X86 = "x86"
     """32-bit x86."""
@@ -586,7 +616,7 @@ class OsTypeValues(Enum):
     """AIX (Advanced Interactive eXecutive)."""
 
     SOLARIS = "solaris"
-    """Oracle Solaris."""
+    """SunOS, Oracle Solaris."""
 
     Z_OS = "z_os"
     """IBM z/OS."""
@@ -622,3 +652,6 @@ class TelemetrySdkLanguageValues(Enum):
 
     WEBJS = "webjs"
     """webjs."""
+
+    SWIFT = "swift"
+    """swift."""

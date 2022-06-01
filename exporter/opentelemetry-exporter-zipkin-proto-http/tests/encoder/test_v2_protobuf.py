@@ -14,7 +14,12 @@
 import ipaddress
 import json
 
-from opentelemetry.exporter.zipkin.encoder import NAME_KEY, VERSION_KEY
+from opentelemetry.exporter.zipkin.encoder import (
+    _SCOPE_NAME_KEY,
+    _SCOPE_VERSION_KEY,
+    NAME_KEY,
+    VERSION_KEY,
+)
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.exporter.zipkin.proto.http.v2 import ProtobufEncoder
 from opentelemetry.exporter.zipkin.proto.http.v2.gen import zipkin_pb2
@@ -33,14 +38,14 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
         return ProtobufEncoder(*args, **kwargs)
 
     def test_encode_trace_id(self):
-        for trace_id in (1, 1024, 2 ** 32, 2 ** 64, 2 ** 127):
+        for trace_id in (1, 1024, 2**32, 2**64, 2**127):
             self.assertEqual(
                 self.get_encoder_default()._encode_trace_id(trace_id),
                 trace_id.to_bytes(length=16, byteorder="big", signed=False),
             )
 
     def test_encode_span_id(self):
-        for span_id in (1, 1024, 2 ** 8, 2 ** 16, 2 ** 32, 2 ** 63):
+        for span_id in (1, 1024, 2**8, 2**16, 2**32, 2**63):
             self.assertEqual(
                 self.get_encoder_default()._encode_span_id(span_id),
                 span_id.to_bytes(length=8, byteorder="big", signed=False),
@@ -183,7 +188,12 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
                     ),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
-                    tags={NAME_KEY: "name", VERSION_KEY: "version"},
+                    tags={
+                        NAME_KEY: "name",
+                        VERSION_KEY: "version",
+                        _SCOPE_NAME_KEY: "name",
+                        _SCOPE_VERSION_KEY: "version",
+                    },
                     debug=False,
                 ),
             ],

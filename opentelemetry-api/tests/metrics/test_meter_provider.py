@@ -18,25 +18,23 @@ from unittest.mock import Mock, patch
 
 from pytest import fixture
 
-from opentelemetry import _metrics as metrics
-from opentelemetry._metrics import (
-    _DefaultMeter,
-    _DefaultMeterProvider,
-    _ProxyMeter,
-    _ProxyMeterProvider,
+import opentelemetry.metrics._internal as metrics_internal
+from opentelemetry import metrics
+from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
+from opentelemetry.metrics import (
+    NoOpMeter,
+    NoOpMeterProvider,
     get_meter_provider,
     set_meter_provider,
 )
-from opentelemetry._metrics.instrument import (
+from opentelemetry.metrics._internal import _ProxyMeter, _ProxyMeterProvider
+from opentelemetry.metrics._internal.instrument import (
     _ProxyCounter,
     _ProxyHistogram,
     _ProxyObservableCounter,
     _ProxyObservableGauge,
     _ProxyObservableUpDownCounter,
     _ProxyUpDownCounter,
-)
-from opentelemetry.environment_variables import (
-    _OTEL_PYTHON_METER_PROVIDER as OTEL_PYTHON_METER_PROVIDER,
 )
 from opentelemetry.test.globals_test import (
     MetricsGlobalsTest,
@@ -48,8 +46,10 @@ from opentelemetry.test.globals_test import (
 
 @fixture
 def reset_meter_provider():
+    print(f"calling reset_metrics_globals() {reset_metrics_globals}")
     reset_metrics_globals()
     yield
+    print("teardown - calling reset_metrics_globals()")
     reset_metrics_globals()
 
 
@@ -60,18 +60,19 @@ def test_set_meter_provider(reset_meter_provider):
 
     mock = Mock()
 
-    assert metrics._METER_PROVIDER is None
+    assert metrics_internal._METER_PROVIDER is None
 
     set_meter_provider(mock)
 
-    assert metrics._METER_PROVIDER is mock
+    assert metrics_internal._METER_PROVIDER is mock
     assert get_meter_provider() is mock
 
 
 def test_set_meter_provider_calls_proxy_provider(reset_meter_provider):
     with patch(
-        "opentelemetry._metrics._PROXY_METER_PROVIDER"
+        "opentelemetry.metrics._internal._PROXY_METER_PROVIDER"
     ) as mock_proxy_mp:
+        assert metrics_internal._PROXY_METER_PROVIDER is mock_proxy_mp
         mock_real_mp = Mock()
         set_meter_provider(mock_real_mp)
         mock_proxy_mp.on_set_meter_provider.assert_called_once_with(
@@ -84,7 +85,7 @@ def test_get_meter_provider(reset_meter_provider):
     Test that the API provides a way to get a global default MeterProvider
     """
 
-    assert metrics._METER_PROVIDER is None
+    assert metrics_internal._METER_PROVIDER is None
 
     assert isinstance(get_meter_provider(), _ProxyMeterProvider)
 
@@ -94,9 +95,9 @@ def test_get_meter_provider(reset_meter_provider):
         "os.environ", {OTEL_PYTHON_METER_PROVIDER: "test_meter_provider"}
     ):
 
-        with patch("opentelemetry._metrics._load_provider", Mock()):
+        with patch("opentelemetry.metrics._internal._load_provider", Mock()):
             with patch(
-                "opentelemetry._metrics.cast",
+                "opentelemetry.metrics._internal.cast",
                 Mock(**{"return_value": "test_meter_provider"}),
             ):
                 assert get_meter_provider() == "test_meter_provider"
@@ -108,7 +109,7 @@ class TestGetMeter(TestCase):
         Test that get_meter accepts name, version and schema_url
         """
         try:
-            _DefaultMeterProvider().get_meter(
+            NoOpMeterProvider().get_meter(
                 "name", version="version", schema_url="schema_url"
             )
         except Exception as error:
@@ -125,15 +126,15 @@ class TestGetMeter(TestCase):
         Test that a message is logged reporting the specified value for the
         fallback meter is invalid.
         """
-        meter = _DefaultMeterProvider().get_meter("")
+        meter = NoOpMeterProvider().get_meter("")
 
-        self.assertTrue(isinstance(meter, _DefaultMeter))
+        self.assertTrue(isinstance(meter, NoOpMeter))
 
         self.assertEqual(meter.name, "")
 
-        meter = _DefaultMeterProvider().get_meter(None)
+        meter = NoOpMeterProvider().get_meter(None)
 
-        self.assertTrue(isinstance(meter, _DefaultMeter))
+        self.assertTrue(isinstance(meter, NoOpMeter))
 
         self.assertEqual(meter.name, None)
 
@@ -195,15 +196,15 @@ class TestProxy(MetricsGlobalsTest, TestCase):
             name, unit=unit, description=description
         )
         proxy_observable_counter = proxy_meter.create_observable_counter(
-            name, callback=callback, unit=unit, description=description
+            name, callbacks=[callback], unit=unit, description=description
         )
         proxy_observable_updowncounter = (
             proxy_meter.create_observable_up_down_counter(
-                name, callback=callback, unit=unit, description=description
+                name, callbacks=[callback], unit=unit, description=description
             )
         )
         proxy_overvable_gauge = proxy_meter.create_observable_gauge(
-            name, callback=callback, unit=unit, description=description
+            name, callbacks=[callback], unit=unit, description=description
         )
         self.assertIsInstance(proxy_counter, _ProxyCounter)
         self.assertIsInstance(proxy_updowncounter, _ProxyUpDownCounter)
@@ -243,13 +244,13 @@ class TestProxy(MetricsGlobalsTest, TestCase):
             name, unit, description
         )
         real_meter.create_observable_counter.assert_called_once_with(
-            name, callback, unit, description
+            name, [callback], unit, description
         )
         real_meter.create_observable_up_down_counter.assert_called_once_with(
-            name, callback, unit, description
+            name, [callback], unit, description
         )
         real_meter.create_observable_gauge.assert_called_once_with(
-            name, callback, unit, description
+            name, [callback], unit, description
         )
 
         # The synchronous instrument measurement methods should call through to
@@ -292,15 +293,15 @@ class TestProxy(MetricsGlobalsTest, TestCase):
             name, unit=unit, description=description
         )
         observable_counter = proxy_meter.create_observable_counter(
-            name, callback=callback, unit=unit, description=description
+            name, callbacks=[callback], unit=unit, description=description
         )
         observable_updowncounter = (
             proxy_meter.create_observable_up_down_counter(
-                name, callback=callback, unit=unit, description=description
+                name, callbacks=[callback], unit=unit, description=description
             )
         )
         observable_gauge = proxy_meter.create_observable_gauge(
-            name, callback=callback, unit=unit, description=description
+            name, callbacks=[callback], unit=unit, description=description
         )
 
         real_meter: Mock = real_meter_provider.get_meter()

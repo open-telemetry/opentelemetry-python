@@ -34,10 +34,10 @@ Example::
 
     import flask
     import requests
-    from opentelemetry import propagators
+    from opentelemetry import propagate
 
 
-    PROPAGATOR = propagators.get_global_textmap()
+    PROPAGATOR = propagate.get_global_textmap()
 
 
     def get_header_from_flask_request(request, key):
@@ -84,7 +84,7 @@ logger = getLogger(__name__)
 def extract(
     carrier: textmap.CarrierT,
     context: typing.Optional[Context] = None,
-    getter: textmap.Getter = textmap.default_getter,
+    getter: textmap.Getter[textmap.CarrierT] = textmap.default_getter,
 ) -> Context:
     """Uses the configured propagator to extract a Context from the carrier.
 
@@ -105,7 +105,7 @@ def extract(
 def inject(
     carrier: textmap.CarrierT,
     context: typing.Optional[Context] = None,
-    setter: textmap.Setter = textmap.default_setter,
+    setter: textmap.Setter[textmap.CarrierT] = textmap.default_setter,
 ) -> None:
     """Uses the configured propagator to inject a Context into the carrier.
 
@@ -121,26 +121,27 @@ def inject(
     get_global_textmap().inject(carrier, context=context, setter=setter)
 
 
-try:
+propagators = []
 
-    propagators = []
+# Single use variable here to hack black and make lint pass
+environ_propagators = environ.get(
+    OTEL_PROPAGATORS,
+    "tracecontext,baggage",
+)
 
-    # Single use variable here to hack black and make lint pass
-    environ_propagators = environ.get(
-        OTEL_PROPAGATORS,
-        "tracecontext,baggage",
-    )
-
-    for propagator in environ_propagators.split(","):
+for propagator in environ_propagators.split(","):
+    propagator = propagator.strip()
+    try:
         propagators.append(  # type: ignore
             next(  # type: ignore
                 iter_entry_points("opentelemetry_propagator", propagator)
             ).load()()
         )
-
-except Exception:  # pylint: disable=broad-except
-    logger.exception("Failed to load configured propagators")
-    raise
+    except Exception:  # pylint: disable=broad-except
+        logger.exception(
+            "Failed to load configured propagator `%s`", propagator
+        )
+        raise
 
 _HTTP_TEXT_FORMAT = composite.CompositePropagator(propagators)  # type: ignore
 

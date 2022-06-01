@@ -21,7 +21,7 @@ CarrierT = typing.TypeVar("CarrierT")
 CarrierValT = typing.Union[typing.List[str], str]
 
 
-class Getter(abc.ABC):
+class Getter(abc.ABC, typing.Generic[CarrierT]):
     """This class implements a Getter that enables extracting propagated
     fields from a carrier.
     """
@@ -54,7 +54,7 @@ class Getter(abc.ABC):
         """
 
 
-class Setter(abc.ABC):
+class Setter(abc.ABC, typing.Generic[CarrierT]):
     """This class implements a Setter that enables injecting propagated
     fields into a carrier.
     """
@@ -71,8 +71,8 @@ class Setter(abc.ABC):
         """
 
 
-class DefaultGetter(Getter):
-    def get(  # type: ignore
+class DefaultGetter(Getter[typing.Mapping[str, CarrierValT]]):
+    def get(
         self, carrier: typing.Mapping[str, CarrierValT], key: str
     ) -> typing.Optional[typing.List[str]]:
         """Getter implementation to retrieve a value from a dictionary.
@@ -90,18 +90,18 @@ class DefaultGetter(Getter):
             return list(val)
         return [val]
 
-    def keys(  # type: ignore
-        self, carrier: typing.Dict[str, CarrierValT]
+    def keys(
+        self, carrier: typing.Mapping[str, CarrierValT]
     ) -> typing.List[str]:
         """Keys implementation that returns all keys from a dictionary."""
         return list(carrier.keys())
 
 
-default_getter = DefaultGetter()
+default_getter: Getter[CarrierT] = DefaultGetter()  # type: ignore
 
 
-class DefaultSetter(Setter):
-    def set(  # type: ignore
+class DefaultSetter(Setter[typing.MutableMapping[str, CarrierValT]]):
+    def set(
         self,
         carrier: typing.MutableMapping[str, CarrierValT],
         key: str,
@@ -117,7 +117,7 @@ class DefaultSetter(Setter):
         carrier[key] = value
 
 
-default_setter = DefaultSetter()
+default_setter: Setter[CarrierT] = DefaultSetter()  # type: ignore
 
 
 class TextMapPropagator(abc.ABC):
@@ -134,7 +134,7 @@ class TextMapPropagator(abc.ABC):
         self,
         carrier: CarrierT,
         context: typing.Optional[Context] = None,
-        getter: Getter = default_getter,
+        getter: Getter[CarrierT] = default_getter,
     ) -> Context:
         """Create a Context from values in the carrier.
 
@@ -162,7 +162,7 @@ class TextMapPropagator(abc.ABC):
         self,
         carrier: CarrierT,
         context: typing.Optional[Context] = None,
-        setter: Setter = default_setter,
+        setter: Setter[CarrierT] = default_setter,
     ) -> None:
         """Inject values from a Context into a carrier.
 

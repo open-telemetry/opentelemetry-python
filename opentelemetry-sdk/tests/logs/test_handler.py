@@ -11,25 +11,25 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
 import logging
 import unittest
 from unittest.mock import Mock
 
 from opentelemetry.sdk import trace
-from opentelemetry.sdk._logs import LogEmitter, OTLPHandler
+from opentelemetry.sdk._logs import LogEmitter, LoggingHandler
 from opentelemetry.sdk._logs.severity import SeverityNumber
+from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import INVALID_SPAN_CONTEXT
 
 
 def get_logger(level=logging.NOTSET, log_emitter=None):
     logger = logging.getLogger(__name__)
-    handler = OTLPHandler(level=level, log_emitter=log_emitter)
+    handler = LoggingHandler(level=level, log_emitter=log_emitter)
     logger.addHandler(handler)
     return logger
 
 
-class TestOTLPHandler(unittest.TestCase):
+class TestLoggingHandler(unittest.TestCase):
     def test_handler_default_log_level(self):
         emitter_mock = Mock(spec=LogEmitter)
         logger = get_logger(log_emitter=emitter_mock)
@@ -76,6 +76,57 @@ class TestOTLPHandler(unittest.TestCase):
 
         self.assertIsNotNone(log_record)
         self.assertEqual(log_record.attributes, {"http.status_code": 200})
+
+    def test_log_record_exception(self):
+        """Exception information will be included in attributes"""
+        emitter_mock = Mock(spec=LogEmitter)
+        logger = get_logger(log_emitter=emitter_mock)
+        try:
+            raise ZeroDivisionError("division by zero")
+        except ZeroDivisionError:
+            logger.exception("Zero Division Error")
+        args, _ = emitter_mock.emit.call_args_list[0]
+        log_record = args[0]
+
+        self.assertIsNotNone(log_record)
+        self.assertEqual(log_record.body, "Zero Division Error")
+        self.assertEqual(
+            log_record.attributes[SpanAttributes.EXCEPTION_TYPE],
+            ZeroDivisionError.__name__,
+        )
+        self.assertEqual(
+            log_record.attributes[SpanAttributes.EXCEPTION_MESSAGE],
+            "division by zero",
+        )
+        stack_trace = log_record.attributes[
+            SpanAttributes.EXCEPTION_STACKTRACE
+        ]
+        self.assertIsInstance(stack_trace, str)
+        self.assertTrue("Traceback" in stack_trace)
+        self.assertTrue("ZeroDivisionError" in stack_trace)
+        self.assertTrue("division by zero" in stack_trace)
+        self.assertTrue(__file__ in stack_trace)
+
+    def test_log_exc_info_false(self):
+        """Exception information will be included in attributes"""
+        emitter_mock = Mock(spec=LogEmitter)
+        logger = get_logger(log_emitter=emitter_mock)
+        try:
+            raise ZeroDivisionError("division by zero")
+        except ZeroDivisionError:
+            logger.error("Zero Division Error", exc_info=False)
+        args, _ = emitter_mock.emit.call_args_list[0]
+        log_record = args[0]
+
+        self.assertIsNotNone(log_record)
+        self.assertEqual(log_record.body, "Zero Division Error")
+        self.assertNotIn(SpanAttributes.EXCEPTION_TYPE, log_record.attributes)
+        self.assertNotIn(
+            SpanAttributes.EXCEPTION_MESSAGE, log_record.attributes
+        )
+        self.assertNotIn(
+            SpanAttributes.EXCEPTION_STACKTRACE, log_record.attributes
+        )
 
     def test_log_record_trace_correlation(self):
         emitter_mock = Mock(spec=LogEmitter)

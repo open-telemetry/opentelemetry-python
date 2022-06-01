@@ -13,9 +13,11 @@
 # limitations under the License.
 # type: ignore
 
+from logging import WARNING
 from unittest import TestCase
+from unittest.mock import Mock
 
-from opentelemetry._metrics import Meter
+from opentelemetry.metrics import Meter, NoOpMeter
 
 # FIXME Test that the meter methods can be called concurrently safely.
 
@@ -53,6 +55,42 @@ class ChildMeter(Meter):
 
 
 class TestMeter(TestCase):
+    def test_repeated_instrument_names(self):
+
+        try:
+            test_meter = NoOpMeter("name")
+
+            test_meter.create_counter("counter")
+            test_meter.create_up_down_counter("up_down_counter")
+            test_meter.create_observable_counter("observable_counter", Mock())
+            test_meter.create_histogram("histogram")
+            test_meter.create_observable_gauge("observable_gauge", Mock())
+            test_meter.create_observable_up_down_counter(
+                "observable_up_down_counter", Mock()
+            )
+        except Exception as error:
+            self.fail(f"Unexpected exception raised {error}")
+
+        for instrument_name in [
+            "counter",
+            "up_down_counter",
+            "histogram",
+        ]:
+            with self.assertLogs(level=WARNING):
+                getattr(test_meter, f"create_{instrument_name}")(
+                    instrument_name
+                )
+
+        for instrument_name in [
+            "observable_counter",
+            "observable_gauge",
+            "observable_up_down_counter",
+        ]:
+            with self.assertLogs(level=WARNING):
+                getattr(test_meter, f"create_{instrument_name}")(
+                    instrument_name, Mock()
+                )
+
     def test_create_counter(self):
         """
         Test that the meter provides a function to create a new Counter

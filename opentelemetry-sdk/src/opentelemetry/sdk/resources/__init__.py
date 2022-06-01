@@ -59,6 +59,7 @@ import abc
 import concurrent.futures
 import logging
 import os
+import sys
 import typing
 from json import dumps
 
@@ -286,6 +287,28 @@ class OTELResourceDetector(ResourceDetector):
         return Resource(env_resource_map)
 
 
+class ProcessResourceDetector(ResourceDetector):
+    # pylint: disable=no-self-use
+    def detect(self) -> "Resource":
+        _runtime_version = ".".join(
+            map(
+                str,
+                sys.version_info[:3]
+                if sys.version_info.releaselevel == "final"
+                and not sys.version_info.serial
+                else sys.version_info,
+            )
+        )
+
+        return Resource(
+            {
+                PROCESS_RUNTIME_DESCRIPTION: sys.version,
+                PROCESS_RUNTIME_NAME: sys.implementation.name,
+                PROCESS_RUNTIME_VERSION: _runtime_version,
+            }
+        )
+
+
 def get_aggregated_resources(
     detectors: typing.List["ResourceDetector"],
     initial_resource: typing.Optional[Resource] = None,
@@ -308,12 +331,12 @@ def get_aggregated_resources(
                 detected_resource = future.result(timeout=timeout)
             # pylint: disable=broad-except
             except Exception as ex:
+                detected_resource = _EMPTY_RESOURCE
                 if detector.raise_on_error:
                     raise ex
                 logger.warning(
                     "Exception %s in detector %s, ignoring", ex, detector
                 )
-                detected_resource = _EMPTY_RESOURCE
             finally:
                 detectors_merged_resource = detectors_merged_resource.merge(
                     detected_resource

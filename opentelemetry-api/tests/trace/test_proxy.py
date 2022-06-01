@@ -21,7 +21,7 @@ from opentelemetry.test.globals_test import TraceGlobalsTest
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT, NonRecordingSpan
 
 
-class TestProvider(trace._DefaultTracerProvider):
+class TestProvider(trace.NoOpTracerProvider):
     def get_tracer(
         self,
         instrumenting_module_name: str,
@@ -31,7 +31,7 @@ class TestProvider(trace._DefaultTracerProvider):
         return TestTracer()
 
 
-class TestTracer(trace._DefaultTracer):
+class TestTracer(trace.NoOpTracer):
     def start_span(self, *args, **kwargs):
         return TestSpan(INVALID_SPAN_CONTEXT)
 

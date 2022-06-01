@@ -281,18 +281,37 @@ OTEL_EXPORTER_OTLP_ENDPOINT = "OTEL_EXPORTER_OTLP_ENDPOINT"
 .. envvar:: OTEL_EXPORTER_OTLP_ENDPOINT
 
 The :envvar:`OTEL_EXPORTER_OTLP_ENDPOINT` target to which the exporter is going to send spans or metrics.
-The endpoint MUST be a valid URL with scheme (http or https) and host, and MAY contain a port and path.
-A scheme of https indicates a secure connection.
-Default: "https://localhost:4317"
+The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https), port and path.
+A scheme of https indicates a secure connection and takes precedence over the insecure configuration setting.
+Default: "http://localhost:4317"
 """
+
+OTEL_EXPORTER_OTLP_INSECURE = "OTEL_EXPORTER_OTLP_INSECURE"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_INSECURE
+
+The :envvar:`OTEL_EXPORTER_OTLP_INSECURE` represents whether to enable client transport security for gRPC requests.
+A scheme of https takes precedence over this configuration setting.
+Default: False
+"""
+
+OTEL_EXPORTER_OTLP_TRACES_INSECURE = "OTEL_EXPORTER_OTLP_TRACES_INSECURE"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_TRACES_INSECURE
+
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_INSECURE` represents whether to enable client transport security
+for gRPC requests for spans. A scheme of https takes precedence over the this configuration setting.
+Default: False
+"""
+
 
 OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
 
 The :envvar:`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` target to which the span exporter is going to send spans.
-The endpoint MUST be a valid URL with scheme (http or https) and host, and MAY contain a port and path.
-A scheme of https indicates a secure connection.
+The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https), port and path.
+A scheme of https indicates a secure connection and takes precedence over this configuration setting.
 """
 
 OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"
@@ -333,6 +352,15 @@ OTEL_EXPORTER_OTLP_TRACES_TIMEOUT = "OTEL_EXPORTER_OTLP_TRACES_TIMEOUT"
 
 The :envvar:`OTEL_EXPORTER_OTLP_TRACES_TIMEOUT` is the maximum time the OTLP exporter will
 wait for each batch export for spans.
+"""
+
+OTEL_EXPORTER_OTLP_METRICS_INSECURE = "OTEL_EXPORTER_OTLP_METRICS_INSECURE"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_INSECURE
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_INSECURE` represents whether to enable client transport security
+for gRPC requests for metrics. A scheme of https takes precedence over the this configuration setting.
+Default: False
 """
 
 OTEL_EXPORTER_JAEGER_CERTIFICATE = "OTEL_EXPORTER_JAEGER_CERTIFICATE"
@@ -377,4 +405,19 @@ _OTEL_PYTHON_LOG_EMITTER_PROVIDER = "OTEL_PYTHON_LOG_EMITTER_PROVIDER"
 The :envvar:`OTEL_PYTHON_LOG_EMITTER_PROVIDER` environment variable allows users to
 provide the entry point for loading the log emitter provider. If not specified, SDK
 LogEmitterProvider is used.
+"""
+
+OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE = (
+    "OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE"
+)
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE` environment
+variable allows users to set the default aggregation temporality policy to use
+on the basis of instrument kind. The valid (case-insensitive) values are:
+
+``CUMULATIVE``: Choose ``CUMULATIVE`` aggregation temporality for all instrument kinds.
+``DELTA``: Choose ``DELTA`` aggregation temporality for ``Counter``, ``Asynchronous Counter`` and ``Histogram``.
+Choose ``CUMULATIVE`` aggregation temporality for ``UpDownCounter`` and ``Asynchronous UpDownCounter``.
 """

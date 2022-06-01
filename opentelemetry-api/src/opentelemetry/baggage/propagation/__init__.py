@@ -14,7 +14,7 @@
 #
 from logging import getLogger
 from re import split
-from typing import Iterable, Mapping, Optional, Set
+from typing import Iterable, List, Mapping, Optional, Set
 from urllib.parse import quote_plus, unquote_plus
 
 from opentelemetry.baggage import _is_valid_pair, get_all, set_baggage
@@ -38,7 +38,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         self,
         carrier: textmap.CarrierT,
         context: Optional[Context] = None,
-        getter: textmap.Getter = textmap.default_getter,
+        getter: textmap.Getter[textmap.CarrierT] = textmap.default_getter,
     ) -> Context:
         """Extract Baggage from the carrier.
 
@@ -63,7 +63,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
             )
             return context
 
-        baggage_entries = split(_DELIMITER_PATTERN, header)
+        baggage_entries: List[str] = split(_DELIMITER_PATTERN, header)
         total_baggage_entries = self._MAX_PAIRS
 
         if len(baggage_entries) > self._MAX_PAIRS:
@@ -109,7 +109,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         self,
         carrier: textmap.CarrierT,
         context: Optional[Context] = None,
-        setter: textmap.Setter = textmap.default_setter,
+        setter: textmap.Setter[textmap.CarrierT] = textmap.default_setter,
     ) -> None:
         """Injects Baggage into the carrier.
 

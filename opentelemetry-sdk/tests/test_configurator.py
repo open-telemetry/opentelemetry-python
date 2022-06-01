@@ -13,24 +13,28 @@
 # limitations under the License.
 # type: ignore
 
+import logging
 from os import environ
 from unittest import TestCase
 from unittest.mock import patch
 
 from opentelemetry import trace
-from opentelemetry.environment_variables import (
-    OTEL_PYTHON_ID_GENERATOR,
-    OTEL_TRACES_EXPORTER,
-)
+from opentelemetry.environment_variables import OTEL_PYTHON_ID_GENERATOR
 from opentelemetry.sdk._configuration import (
     _EXPORTER_OTLP,
-    _EXPORTER_OTLP_SPAN,
+    _EXPORTER_OTLP_PROTO_GRPC,
     _get_exporter_names,
     _get_id_generator,
+    _import_exporters,
     _import_id_generator,
+    _init_logging,
     _init_tracing,
 )
+from opentelemetry.sdk._logs import LoggingHandler
+from opentelemetry.sdk._logs.export import ConsoleLogExporter
+from opentelemetry.sdk.metrics.export import ConsoleMetricExporter
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
+from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 
 
@@ -42,6 +46,45 @@ class Provider:
 
     def add_span_processor(self, processor):
         self.processor = processor
+
+
+class DummyLogEmitterProvider:
+    def __init__(self, resource=None):
+        self.resource = resource
+        self.processor = DummyLogProcessor(DummyOTLPLogExporter())
+
+    def add_log_processor(self, processor):
+        self.processor = processor
+
+    def get_log_emitter(self, name):
+        return DummyLogEmitter(name, self.resource, self.processor)
+
+
+class DummyLogEmitter:
+    def __init__(self, name, resource, processor):
+        self.name = name
+        self.resource = resource
+        self.processor = processor
+
+    def emit(self, record):
+        self.processor.emit(record)
+
+    def flush(self):
+        pass
+
+
+class DummyLogProcessor:
+    def __init__(self, exporter):
+        self.exporter = exporter
+
+    def emit(self, record):
+        self.exporter.export([record])
+
+    def force_flush(self, time):
+        pass
+
+    def shutdown(self):
+        pass
 
 
 class Processor:
@@ -62,8 +105,19 @@ class Exporter:
         pass
 
 
-class OTLPExporter:
+class OTLPSpanExporter:
     pass
+
+
+class DummyOTLPLogExporter:
+    def __init__(self, *args, **kwargs):
+        self.export_called = False
+
+    def export(self, batch):
+        self.export_called = True
+
+    def shutdown(self):
+        pass
 
 
 class CustomIdGenerator(IdGenerator):
@@ -132,14 +186,14 @@ class TestTraceInit(TestCase):
         {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-otlp-test-service"},
     )
     def test_trace_init_otlp(self):
-        _init_tracing({"otlp": OTLPExporter}, RandomIdGenerator)
+        _init_tracing({"otlp": OTLPSpanExporter}, RandomIdGenerator)
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, Provider)
         self.assertIsInstance(provider.id_generator, RandomIdGenerator)
         self.assertIsInstance(provider.processor, Processor)
-        self.assertIsInstance(provider.processor.exporter, OTLPExporter)
+        self.assertIsInstance(provider.processor.exporter, OTLPSpanExporter)
         self.assertIsInstance(provider.resource, Resource)
         self.assertEqual(
             provider.resource.attributes.get("service.name"),
@@ -162,24 +216,102 @@ class TestTraceInit(TestCase):
         self.assertIsInstance(provider.id_generator, CustomIdGenerator)
 
 
+class TestLoggingInit(TestCase):
+    def setUp(self):
+        self.processor_patch = patch(
+            "opentelemetry.sdk._configuration.BatchLogProcessor",
+            DummyLogProcessor,
+        )
+        self.provider_patch = patch(
+            "opentelemetry.sdk._configuration.LogEmitterProvider",
+            DummyLogEmitterProvider,
+        )
+        self.set_provider_patch = patch(
+            "opentelemetry.sdk._configuration.set_log_emitter_provider"
+        )
+
+        self.processor_mock = self.processor_patch.start()
+        self.provider_mock = self.provider_patch.start()
+        self.set_provider_mock = self.set_provider_patch.start()
+
+    def tearDown(self):
+        self.processor_patch.stop()
+        self.set_provider_patch.stop()
+        self.provider_patch.stop()
+        root_logger = logging.getLogger("root")
+        root_logger.handlers = [
+            handler
+            for handler in root_logger.handlers
+            if not isinstance(handler, LoggingHandler)
+        ]
+
+    def test_logging_init_empty(self):
+        _init_logging({}, "auto-version")
+        self.assertEqual(self.set_provider_mock.call_count, 1)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider, DummyLogEmitterProvider)
+        self.assertIsInstance(provider.resource, Resource)
+        self.assertEqual(
+            provider.resource.attributes.get("telemetry.auto.version"),
+            "auto-version",
+        )
+
+    @patch.dict(
+        environ,
+        {"OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service"},
+    )
+    def test_logging_init_exporter(self):
+        _init_logging({"otlp": DummyOTLPLogExporter})
+        self.assertEqual(self.set_provider_mock.call_count, 1)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider, DummyLogEmitterProvider)
+        self.assertIsInstance(provider.resource, Resource)
+        self.assertEqual(
+            provider.resource.attributes.get("service.name"),
+            "otlp-service",
+        )
+        self.assertIsInstance(provider.processor, DummyLogProcessor)
+        self.assertIsInstance(
+            provider.processor.exporter, DummyOTLPLogExporter
+        )
+        logging.getLogger(__name__).error("hello")
+        self.assertTrue(provider.processor.exporter.export_called)
+
+
 class TestExporterNames(TestCase):
     def test_otlp_exporter_overwrite(self):
-        for exporter in [_EXPORTER_OTLP, _EXPORTER_OTLP_SPAN]:
-            with patch.dict(environ, {OTEL_TRACES_EXPORTER: exporter}):
-                self.assertEqual(_get_exporter_names(), [_EXPORTER_OTLP_SPAN])
+        for exporter in [_EXPORTER_OTLP, _EXPORTER_OTLP_PROTO_GRPC]:
+            self.assertEqual(
+                _get_exporter_names(exporter), [_EXPORTER_OTLP_PROTO_GRPC]
+            )
 
-    @patch.dict(environ, {OTEL_TRACES_EXPORTER: "jaeger,zipkin"})
     def test_multiple_exporters(self):
-        self.assertEqual(sorted(_get_exporter_names()), ["jaeger", "zipkin"])
+        self.assertEqual(
+            sorted(_get_exporter_names("jaeger,zipkin")), ["jaeger", "zipkin"]
+        )
 
-    @patch.dict(environ, {OTEL_TRACES_EXPORTER: "none"})
     def test_none_exporters(self):
-        self.assertEqual(sorted(_get_exporter_names()), [])
+        self.assertEqual(sorted(_get_exporter_names("none")), [])
 
-    @patch.dict(environ, {}, clear=True)
     def test_no_exporters(self):
-        self.assertEqual(sorted(_get_exporter_names()), [])
+        self.assertEqual(sorted(_get_exporter_names(None)), [])
 
-    @patch.dict(environ, {OTEL_TRACES_EXPORTER: ""})
     def test_empty_exporters(self):
-        self.assertEqual(sorted(_get_exporter_names()), [])
+        self.assertEqual(sorted(_get_exporter_names("")), [])
+
+
+class TestImportExporters(TestCase):
+    def test_console_exporters(self):
+        trace_exporters, logs_exporters = _import_exporters(
+            ["console"], ["console"]
+        )
+        self.assertEqual(
+            trace_exporters["console"].__class__, ConsoleSpanExporter.__class__
+        )
+        self.assertEqual(
+            logs_exporters["console"].__class__, ConsoleLogExporter.__class__
+        )
+        self.assertEqual(
+            logs_exporters["console"].__class__,
+            ConsoleMetricExporter.__class__,
+        )

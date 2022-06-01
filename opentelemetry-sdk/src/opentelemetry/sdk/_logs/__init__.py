@@ -19,6 +19,7 @@ import json
 import logging
 import os
 import threading
+import traceback
 from typing import Any, Callable, Optional, Tuple, Union, cast
 
 from opentelemetry.sdk._logs.severity import SeverityNumber, std_to_otlp
@@ -27,7 +28,8 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import (
     format_span_id,
     format_trace_id,
@@ -57,7 +59,6 @@ class LogRecord:
         trace_flags: Optional[TraceFlags] = None,
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
-        name: Optional[str] = None,
         body: Optional[Any] = None,
         resource: Optional[Resource] = None,
         attributes: Optional[Attributes] = None,
@@ -68,7 +69,6 @@ class LogRecord:
         self.trace_flags = trace_flags
         self.severity_text = severity_text
         self.severity_number = severity_number
-        self.name = name
         self.body = body
         self.resource = resource
         self.attributes = attributes
@@ -82,13 +82,16 @@ class LogRecord:
         return json.dumps(
             {
                 "body": self.body,
-                "name": self.name,
                 "severity_number": repr(self.severity_number),
                 "severity_text": self.severity_text,
                 "attributes": self.attributes,
                 "timestamp": ns_to_iso_str(self.timestamp),
-                "trace_id": f"0x{format_trace_id(self.trace_id)}",
-                "span_id": f"0x{format_span_id(self.span_id)}",
+                "trace_id": f"0x{format_trace_id(self.trace_id)}"
+                if self.trace_id is not None
+                else "",
+                "span_id": f"0x{format_span_id(self.span_id)}"
+                if self.span_id is not None
+                else "",
                 "trace_flags": self.trace_flags,
                 "resource": repr(self.resource.attributes)
                 if self.resource
@@ -104,10 +107,10 @@ class LogData:
     def __init__(
         self,
         log_record: LogRecord,
-        instrumentation_info: InstrumentationInfo,
+        instrumentation_scope: InstrumentationScope,
     ):
         self.log_record = log_record
-        self.instrumentation_info = instrumentation_info
+        self.instrumentation_scope = instrumentation_scope
 
 
 class LogProcessor(abc.ABC):
@@ -299,9 +302,10 @@ _RESERVED_ATTRS = frozenset(
 )
 
 
-class OTLPHandler(logging.Handler):
+class LoggingHandler(logging.Handler):
     """A handler class which writes logging records, in OTLP format, to
-    a network destination or file.
+    a network destination or file. Supports signals from the `logging` module.
+    https://docs.python.org/3/library/logging.html
     """
 
     def __init__(
@@ -314,9 +318,27 @@ class OTLPHandler(logging.Handler):
 
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> Attributes:
-        return {
+        attributes = {
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }
+        if record.exc_info:
+            exc_type = ""
+            message = ""
+            stack_trace = ""
+            exctype, value, tb = record.exc_info
+            if exctype is not None:
+                exc_type = exctype.__name__
+            if value is not None and value.args:
+                message = value.args[0]
+            if tb is not None:
+                # https://github.com/open-telemetry/opentelemetry-specification/blob/9fa7c656b26647b27e485a6af7e38dc716eba98a/specification/trace/semantic_conventions/exceptions.md#stacktrace-representation
+                stack_trace = "".join(
+                    traceback.format_exception(*record.exc_info)
+                )
+            attributes[SpanAttributes.EXCEPTION_TYPE] = exc_type
+            attributes[SpanAttributes.EXCEPTION_MESSAGE] = message
+            attributes[SpanAttributes.EXCEPTION_STACKTRACE] = stack_trace
+        return attributes
 
     def _translate(self, record: logging.LogRecord) -> LogRecord:
         timestamp = int(record.created * 1e9)
@@ -357,11 +379,11 @@ class LogEmitter:
         multi_log_processor: Union[
             SynchronousMultiLogProcessor, ConcurrentMultiLogProcessor
         ],
-        instrumentation_info: InstrumentationInfo,
+        instrumentation_scope: InstrumentationScope,
     ):
         self._resource = resource
         self._multi_log_processor = multi_log_processor
-        self._instrumentation_info = instrumentation_info
+        self._instrumentation_scope = instrumentation_scope
 
     @property
     def resource(self):
@@ -371,7 +393,7 @@ class LogEmitter:
         """Emits the :class:`LogData` by associating :class:`LogRecord`
         and instrumentation info.
         """
-        log_data = LogData(record, self._instrumentation_info)
+        log_data = LogData(record, self._instrumentation_scope)
         self._multi_log_processor.emit(log_data)
 
     # TODO: Should this flush everything in pipeline?
@@ -410,7 +432,7 @@ class LogEmitterProvider:
         return LogEmitter(
             self._resource,
             self._multi_log_processor,
-            InstrumentationInfo(
+            InstrumentationScope(
                 instrumenting_module_name, instrumenting_module_verison
             ),
         )
