@@ -95,11 +95,11 @@ class _ViewInstrumentMatch:
         else:
             attributes = {}
 
-        attributes = frozenset(attributes.items())
+        aggr_key = frozenset(attributes.items())
 
-        if attributes not in self._attributes_aggregation:
+        if aggr_key not in self._attributes_aggregation:
             with self._lock:
-                if attributes not in self._attributes_aggregation:
+                if aggr_key not in self._attributes_aggregation:
                     if not isinstance(
                         self._view._aggregation, DefaultAggregation
                     ):
@@ -118,9 +118,9 @@ class _ViewInstrumentMatch:
                             attributes,
                             self._start_time_unix_nano,
                         )
-                    self._attributes_aggregation[attributes] = aggregation
+                    self._attributes_aggregation[aggr_key] = aggregation
 
-        self._attributes_aggregation[attributes].aggregate(measurement)
+        self._attributes_aggregation[aggr_key].aggregate(measurement)
 
     def collect(
         self,
