@@ -29,6 +29,7 @@ from opentelemetry.sdk._configuration import (
     _import_id_generator,
     _init_logging,
     _init_tracing,
+    _initialize_components,
 )
 from opentelemetry.sdk._logs import LoggingHandler
 from opentelemetry.sdk._logs.export import ConsoleLogExporter
@@ -276,6 +277,31 @@ class TestLoggingInit(TestCase):
         )
         logging.getLogger(__name__).error("hello")
         self.assertTrue(provider.processor.exporter.export_called)
+
+    @patch.dict(
+        environ,
+        {"OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service"},
+    )
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
+    def test_logging_init_disable_default(self, logging_mock, tracing_mock):
+        _initialize_components("auto-version")
+        self.assertEqual(logging_mock.call_count, 0)
+        self.assertEqual(tracing_mock.call_count, 1)
+
+    @patch.dict(
+        environ,
+        {
+            "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service",
+            "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED": "True",
+        },
+    )
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
+    def test_logging_init_enable_env(self, logging_mock, tracing_mock):
+        _initialize_components("auto-version")
+        self.assertEqual(logging_mock.call_count, 1)
+        self.assertEqual(tracing_mock.call_count, 1)
 
 
 class TestExporterNames(TestCase):
