@@ -175,9 +175,11 @@ def _import_config_components(
 
 def _import_exporters(
     trace_exporter_names: Sequence[str],
+    metric_exporter_names: Sequence[str],
     log_exporter_names: Sequence[str],
 ) -> Tuple[Dict[str, Type[SpanExporter]], Dict[str, Type[LogExporter]]]:
     trace_exporters = {}
+    metric_exporters = {}
     log_exporters = {}
 
     for (exporter_name, exporter_impl,) in _import_config_components(
@@ -189,6 +191,14 @@ def _import_exporters(
             raise RuntimeError(f"{exporter_name} is not a trace exporter")
 
     for (exporter_name, exporter_impl,) in _import_config_components(
+        metric_exporter_names, "opentelemetry_metrics_exporter"
+    ):
+        if issubclass(exporter_impl, MetricExporter):
+            metric_exporters[exporter_name] = exporter_impl
+        else:
+            raise RuntimeError(f"{exporter_name} is not a metric exporter")
+
+    for (exporter_name, exporter_impl,) in _import_config_components(
         log_exporter_names, "opentelemetry_logs_exporter"
     ):
         if issubclass(exporter_impl, LogExporter):
@@ -196,7 +206,7 @@ def _import_exporters(
         else:
             raise RuntimeError(f"{exporter_name} is not a log exporter")
 
-    return trace_exporters, log_exporters
+    return trace_exporters, metric_exporters, log_exporters
 
 
 def _import_id_generator(id_generator_name: str) -> IdGenerator:
