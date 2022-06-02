@@ -42,6 +42,7 @@ from opentelemetry.sdk.metrics.export import (
     MetricExporter,
     MetricReader,
 )
+from opentelemetry.sdk.metrics.view import Aggregation
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
@@ -110,9 +111,7 @@ class DummyMetricReader(MetricReader):
         self,
         exporter: MetricExporter,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
-        ] = None,
+        preferred_aggregation: Dict[type, Aggregation] = None,
         export_interval_millis: Optional[float] = None,
         export_timeout_millis: Optional[float] = None,
     ) -> None:
