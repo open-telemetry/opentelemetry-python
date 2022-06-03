@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # type: ignore
+# pylint: skip-file
 
 import logging
 from os import environ
