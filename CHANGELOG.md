@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2727](https://github.com/open-telemetry/opentelemetry-python/pull/2727))
 - fix: update entry point object references for metrics
   ([#2731](https://github.com/open-telemetry/opentelemetry-python/pull/2731))
+- Allow set_status to accept the StatusCode and optional description
+  ([#2735](https://github.com/open-telemetry/opentelemetry-python/pull/2735))
 
 ## [1.12.0rc1-0.31b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0rc1-0.31b0) - 2022-05-17
 
