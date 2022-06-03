@@ -889,16 +889,29 @@ class Span(trace_api.Span, ReadableSpan):
         return self._end_time is None
 
     @_check_span_ended
-    def set_status(self, status: trace_api.Status) -> None:
+    def set_status(
+        self,
+        status: typing.Union[trace_api.Status, trace_api.StatusCode],
+        description: typing.Optional[str] = None,
+    ) -> None:
         # Ignore future calls if status is already set to OK
         # Ignore calls to set to StatusCode.UNSET
-        if (
-            self._status
-            and self._status.status_code is StatusCode.OK
-            or status.status_code is StatusCode.UNSET
-        ):
-            return
-        self._status = status
+        if isinstance(status, trace_api.Status):
+            if (
+                self._status
+                and self._status.status_code is StatusCode.OK
+                or status.status_code is StatusCode.UNSET
+            ):
+                return
+            self._status = status
+        elif isinstance(status, trace_api.StatusCode):
+            if (
+                self._status
+                and self._status.status_code is StatusCode.OK
+                or status is StatusCode.UNSET
+            ):
+                return
+            self._status = trace_api.Status(status, description)
 
     def __exit__(
         self,
