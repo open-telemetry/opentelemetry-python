@@ -7,10 +7,7 @@
     `## Version 1.9.0 (unreleased)`.
 * Run the [Prepare release branch workflow](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/prepare-release-branch.yml).
   * Press the "Run workflow" button, and leave the default branch `main` selected.
-* Review and merge the two pull requests that it creates
-  (one is targeted to the release branch and one is targeted to `main`).
-  * These pull requests will update the release branch to the latest release versions and will bump the main branch to
-    the next dev version.
+  * Review and merge the pull requests that it creates for updating the version on both the release branch and main.
 
 ## Preparing a new patch release
 
@@ -26,7 +23,7 @@
 * Run the [Prepare patch release workflow](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/prepare-patch-release.yml).
   * Press the "Run workflow" button, then select the release branch from the dropdown list,
     e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
-* Review and merge the pull request that it creates.
+  * Review and merge the pull request that it creates for updating the version on the release branch.
 
 ## Making the release
 
@@ -34,20 +31,10 @@
   * Press the "Run workflow" button, then select the release branch from the dropdown list,
     e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
   * This workflow will publish the artifacts and publish a GitHub release with release notes based on the change log.
-* Review and merge the pull request that the release workflow creates against the release branch
-  which adds the release date to the change log.
+  * Review and merge the pull request that it creates for updating the change log in main.
 
 ## After the release
 
-* Run the [Merge change log to main workflow](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/merge-change-log-to-main.yml).
-  * Press the "Run workflow" button, then select the release branch from the dropdown list,
-    e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
-  * This will create a pull request that merges the change log updates from the release branch
-    back to `main`.
-  * Note: this workflow will fail if there have been conflicting change log updates introduced in `main`,
-    in which case you will need to merge the change log updates manually and send your own pull
-    request against `main`.
-* Review and merge the pull request that it creates.
 * Check PyPI
   * This should be handled automatically on release by the [publish action](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/publish.yml).
   * Check the [action logs](https://github.com/open-telemetry/opentelemetry-python/actions?query=workflow%3APublish) to make sure packages have been uploaded to PyPI
