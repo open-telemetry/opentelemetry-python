@@ -42,7 +42,7 @@ jobs:
 
           echo "STABLE_VERSION=$stable_version" >> $GITHUB_ENV
           echo "PRERELEASE_VERSION=$prerelease_version" >> $GITHUB_ENV
-          echo "VERSION=${STABLE_VERSION}/${PRERELEASE_VERSION}" >> $GITHUB_ENV
+          echo "VERSION=${stable_version}/${prerelease_version}" >> $GITHUB_ENV
 
           echo "PRIOR_VERSION_WHEN_PATCH=$prior_version_when_patch" >> $GITHUB_ENV
 

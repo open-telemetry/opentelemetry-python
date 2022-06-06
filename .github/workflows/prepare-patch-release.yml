@@ -39,9 +39,12 @@ jobs:
             exit 1
           fi
 
-          echo "STABLE_VERSION=$stable_major_minor.$((stable_patch + 1))" >> $GITHUB_ENV
-          echo "PRERELEASE_VERSION=0.${prerelease_minor}b$((prerelease_patch + 1))" >> $GITHUB_ENV
-          echo "VERSION=${STABLE_VERSION}/${PRERELEASE_VERSION}" >> $GITHUB_ENV
+          stable_version="$stable_major_minor.$((stable_patch + 1))"
+          prerelease_version="0.${prerelease_minor}b$((prerelease_patch + 1))"
+
+          echo "STABLE_VERSION=$stable_version" >> $GITHUB_ENV
+          echo "PRERELEASE_VERSION=$prerelease_version" >> $GITHUB_ENV
+          echo "VERSION=${stable_version}/${prerelease_version}" >> $GITHUB_ENV
 
       - name: Update version
         run: .github/scripts/update-version.sh $STABLE_VERSION $PRERELEASE_VERSION
