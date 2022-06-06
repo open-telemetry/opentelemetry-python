@@ -57,6 +57,7 @@ You can configure the exporter with the following environment variables:
 - :envvar:`OTEL_EXPORTER_JAEGER_ENDPOINT`
 - :envvar:`OTEL_EXPORTER_JAEGER_CERTIFICATE`
 - :envvar:`OTEL_EXPORTER_JAEGER_TIMEOUT`
+- :envvar:`OTEL_EXPORTER_JAEGER_INSECURE`
 
 API
 ---
@@ -87,6 +88,7 @@ from opentelemetry.exporter.jaeger.proto.grpc.translate import (
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_ENDPOINT,
     OTEL_EXPORTER_JAEGER_TIMEOUT,
+    OTEL_EXPORTER_JAEGER_INSECURE,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
@@ -126,7 +128,8 @@ class JaegerExporter(SpanExporter):
             environ.get(OTEL_EXPORTER_JAEGER_TIMEOUT, DEFAULT_EXPORT_TIMEOUT)
         )
         self._grpc_client = None
-        self.insecure = insecure
+        self.insecure = insecure or environ.get(
+            OTEL_EXPORTER_JAEGER_INSECURE, False) == "True"
         self.credentials = util._get_credentials(credentials)
         tracer_provider = trace.get_tracer_provider()
         self.service_name = (

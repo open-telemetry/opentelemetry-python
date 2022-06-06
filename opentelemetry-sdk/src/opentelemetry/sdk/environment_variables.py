@@ -210,6 +210,14 @@ Maximum time the Jaeger exporter will wait for each batch export.
 Default: 10
 """
 
+OTEL_EXPORTER_JAEGER_INSECURE = "OTEL_EXPORTER_JAEGER_INSECURE"
+"""
+.. envvar:: OTEL_EXPORTER_JAEGER_INSECURE
+
+True if Jaeger collector has no encryption or authentication.
+Default: False
+"""
+
 OTEL_EXPORTER_ZIPKIN_ENDPOINT = "OTEL_EXPORTER_ZIPKIN_ENDPOINT"
 """
 .. envvar:: OTEL_EXPORTER_ZIPKIN_ENDPOINT
