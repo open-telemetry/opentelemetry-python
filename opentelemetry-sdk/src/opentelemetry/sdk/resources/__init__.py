@@ -242,6 +242,15 @@ class Resource:
             f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"
         )
 
+    def to_json(self, indent=4) -> str:
+        return dumps(
+            {
+                "attributes": dict(self._attributes),
+                "schema_url": self._schema_url,
+            },
+            indent=indent,
+        )
+
 
 _EMPTY_RESOURCE = Resource({})
 _DEFAULT_RESOURCE = Resource(

@@ -190,63 +190,71 @@ class TestToJson(TestCase):
     def test_number_data_point(self):
 
         self.assertEqual(
-            self.number_data_point_0.to_json(), self.number_data_point_0_str
+            self.number_data_point_0.to_json(indent=None),
+            self.number_data_point_0_str,
         )
         self.assertEqual(
-            self.number_data_point_1.to_json(), self.number_data_point_1_str
+            self.number_data_point_1.to_json(indent=None),
+            self.number_data_point_1_str,
         )
 
     def test_histogram_data_point(self):
 
         self.assertEqual(
-            self.histogram_data_point_0.to_json(),
+            self.histogram_data_point_0.to_json(indent=None),
             self.histogram_data_point_0_str,
         )
         self.assertEqual(
-            self.histogram_data_point_1.to_json(),
+            self.histogram_data_point_1.to_json(indent=None),
             self.histogram_data_point_1_str,
         )
 
     def test_sum(self):
 
-        self.assertEqual(self.sum_0.to_json(), self.sum_0_str)
+        self.assertEqual(self.sum_0.to_json(indent=None), self.sum_0_str)
 
     def test_gauge(self):
 
-        self.assertEqual(self.gauge_0.to_json(), self.gauge_0_str)
+        self.maxDiff = None
+
+        self.assertEqual(self.gauge_0.to_json(indent=None), self.gauge_0_str)
 
     def test_histogram(self):
 
-        self.assertEqual(self.histogram_0.to_json(), self.histogram_0_str)
+        self.assertEqual(
+            self.histogram_0.to_json(indent=None), self.histogram_0_str
+        )
 
     def test_metric(self):
 
-        self.assertEqual(self.metric_0.to_json(), self.metric_0_str)
+        self.assertEqual(self.metric_0.to_json(indent=None), self.metric_0_str)
 
-        self.assertEqual(self.metric_1.to_json(), self.metric_1_str)
+        self.assertEqual(self.metric_1.to_json(indent=None), self.metric_1_str)
 
-        self.assertEqual(self.metric_2.to_json(), self.metric_2_str)
+        self.assertEqual(self.metric_2.to_json(indent=None), self.metric_2_str)
 
     def test_scope_metrics(self):
 
         self.assertEqual(
-            self.scope_metrics_0.to_json(), self.scope_metrics_0_str
+            self.scope_metrics_0.to_json(indent=None), self.scope_metrics_0_str
         )
         self.assertEqual(
-            self.scope_metrics_1.to_json(), self.scope_metrics_1_str
+            self.scope_metrics_1.to_json(indent=None), self.scope_metrics_1_str
         )
 
     def test_resource_metrics(self):
 
         self.assertEqual(
-            self.resource_metrics_0.to_json(), self.resource_metrics_0_str
+            self.resource_metrics_0.to_json(indent=None),
+            self.resource_metrics_0_str,
         )
         self.assertEqual(
-            self.resource_metrics_1.to_json(), self.resource_metrics_1_str
+            self.resource_metrics_1.to_json(indent=None),
+            self.resource_metrics_1_str,
         )
 
     def test_metrics_data(self):
 
         self.assertEqual(
-            self.metrics_data_0.to_json(), self.metrics_data_0_str
+            self.metrics_data_0.to_json(indent=None), self.metrics_data_0_str
         )
