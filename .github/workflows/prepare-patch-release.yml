@@ -22,6 +22,8 @@ jobs:
       - name: Set environment variables
         run: |
           stable_version=$(./scripts/eachdist.py version --mode stable)
+          prerelease_version=$(./scripts/eachdist.py version --mode prerelease)
+
           if [[ $stable_version =~ ^([0-9]+\.[0-9]+)\.([0-9]+)$ ]]; then
             stable_major_minor="${BASH_REMATCH[1]}"
             stable_patch="${BASH_REMATCH[2]}"
@@ -30,7 +32,6 @@ jobs:
             exit 1
           fi
 
-          prerelease_version=$(./scripts/eachdist.py version --mode prerelease)
           if [[ $prerelease_version =~ ^0\.([0-9]+)b([0-9]+)$ ]]; then
             prerelease_minor="${BASH_REMATCH[1]}"
             prerelease_patch="${BASH_REMATCH[2]}"
@@ -52,7 +53,7 @@ jobs:
       - name: Update the change log with the approximate release date
         run: |
           date=$(date "+%Y-%m-%d")
-          sed -Ei "s/^## Unreleased$/## Version $VERSION ($date)/" CHANGELOG.md
+          sed -Ei "s/^## Unreleased$/## Version ${VERSION/\//\\\/} ($date)/" CHANGELOG.md
 
       - name: Set git user
         run: .github/scripts/set-git-user.sh

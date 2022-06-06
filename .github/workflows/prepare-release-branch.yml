@@ -88,23 +88,25 @@ jobs:
       - name: Set environment variables
         run: |
           stable_version=$(./scripts/eachdist.py version --mode stable)
+          prerelease_version=$(./scripts/eachdist.py version --mode prerelease)
+
           stable_version=${stable_version//-dev/}
-          if [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0-dev$ ]]; then
+          prerelease_version=${prerelease_version//-dev/}
+
+          if [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
             stable_major="${BASH_REMATCH[1]}"
             stable_minor="${BASH_REMATCH[2]}"
-            next_version="$stable_major.$((stable_minor + 1)).0"
+            stable_next_version="$stable_major.$((stable_minor + 1)).0"
           elif [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0 ]]; then
             # pre-release version, e.g. 1.9.0rc
             stable_major="${BASH_REMATCH[1]}"
             stable_minor="${BASH_REMATCH[2]}"
-            next_version="$stable_major.$stable_minor.0"
+            stable_next_version="$stable_major.$stable_minor.0"
           else
             echo "unexpected stable_version: $stable_version"
             exit 1
           fi
 
-          prerelease_version=$(./scripts/eachdist.py version --mode prerelease)
-          prerelease_version=${prerelease_version//-dev/}
           if [[ $prerelease_version =~ ^0\.([0-9]+)b[0-9]+$ ]]; then
             prerelease_minor="${BASH_REMATCH[1]}"
           else
@@ -112,22 +114,21 @@ jobs:
             exit 1
           fi
 
-          next_stable_version="$stable_major.$((stable_minor + 1)).0-dev"
-          next_prerelease_version="0.$((prerelease_minor + 1))b0-dev"
+          prerelease_next_version="0.$((prerelease_minor + 1))b0"
 
-          echo "NEXT_STABLE_VERSION=$next_stable_version" >> $GITHUB_ENV
-          echo "NEXT_PRERELEASE_VERSION=$next_prerelease_version" >> $GITHUB_ENV
-          echo "NEXT_VERSION=${next_stable_version}/${next_prerelease_version}" >> $GITHUB_ENV
+          echo "STABLE_NEXT_VERSION=${stable_next_version}-dev" >> $GITHUB_ENV
+          echo "PRERELEASE_NEXT_VERSION=${prerelease_next_version}-dev" >> $GITHUB_ENV
+          echo "NEXT_VERSION=${stable_next_version}-dev/${prerelease_next_version}-dev" >> $GITHUB_ENV
           echo "VERSION=${stable_version}/${prerelease_version}" >> $GITHUB_ENV
 
       - name: Update version
-        run: .github/scripts/update-version.sh $NEXT_STABLE_VERSION $NEXT_PRERELEASE_VERSION
+        run: .github/scripts/update-version.sh $STABLE_NEXT_VERSION $PRERELEASE_NEXT_VERSION
 
       - name: Update the change log on main
         run: |
           # the actual release date on main will be updated at the end of the release workflow
           date=$(date "+%Y-%m-%d")
-          sed -Ei "s/^## Unreleased$/## Unreleased\n\n## Version $VERSION ($date)/" CHANGELOG.md
+          sed -Ei "s/^## Unreleased$/## Unreleased\n\n## Version ${VERSION/\//\\\/} ($date)/" CHANGELOG.md
 
       - name: Set git user
         run: .github/scripts/set-git-user.sh
