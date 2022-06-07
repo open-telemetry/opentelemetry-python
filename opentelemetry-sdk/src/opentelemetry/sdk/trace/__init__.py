@@ -903,6 +903,10 @@ class Span(trace_api.Span, ReadableSpan):
                 or status.status_code is StatusCode.UNSET
             ):
                 return
+            if description is not None:
+                logger.warning(
+                    f"Description {description} ignored. Use either `Status` or `(StatusCode, Description)`"
+                )
             self._status = status
         elif isinstance(status, StatusCode):
             if (

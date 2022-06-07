@@ -928,10 +928,11 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(span4.status.description, "span4 desc")
 
         span5 = self.tracer.start_span("span5")
-        span5.set_status(
-            Status(status_code=StatusCode.ERROR, description="desc"),
-            description="ignored",
-        )
+        with self.assertLogs(level=WARNING):
+            span5.set_status(
+                Status(status_code=StatusCode.ERROR, description="desc"),
+                description="ignored",
+            )
         self.assertEqual(span5.status.status_code, StatusCode.ERROR)
         self.assertEqual(span5.status.description, "desc")
 
