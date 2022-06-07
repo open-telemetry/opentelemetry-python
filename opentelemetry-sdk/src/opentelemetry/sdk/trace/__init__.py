@@ -905,7 +905,8 @@ class Span(trace_api.Span, ReadableSpan):
                 return
             if description is not None:
                 logger.warning(
-                    f"Description {description} ignored. Use either `Status` or `(StatusCode, Description)`"
+                    "Description %s ignored. Use either `Status` or `(StatusCode, Description)`",
+                    description,
                 )
             self._status = status
         elif isinstance(status, StatusCode):
