@@ -18,13 +18,13 @@ OpenTelemetry SDK Configurator for Easy Instrumentation with Distros
 """
 
 import logging
+import os
 from abc import ABC, abstractmethod
 from os import environ
 from typing import Dict, Optional, Sequence, Tuple, Type
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry import trace
 from opentelemetry.environment_variables import (
     OTEL_LOGS_EXPORTER,
     OTEL_METRICS_EXPORTER,
@@ -38,6 +38,9 @@ from opentelemetry.sdk._logs import (
     set_log_emitter_provider,
 )
 from opentelemetry.sdk._logs.export import BatchLogProcessor, LogExporter
+from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
+)
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
     MetricExporter,
@@ -48,6 +51,7 @@ from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
 from opentelemetry.semconv.resource import ResourceAttributes
+from opentelemetry.trace import set_tracer_provider
 
 _EXPORTER_OTLP = "otlp"
 _EXPORTER_OTLP_PROTO_GRPC = "otlp_proto_grpc"
@@ -90,7 +94,7 @@ def _init_tracing(
         id_generator=id_generator(),
         resource=Resource.create(auto_resource),
     )
-    trace.set_tracer_provider(provider)
+    set_tracer_provider(provider)
 
     for _, exporter_class in exporters.items():
         exporter_args = {}
@@ -177,7 +181,11 @@ def _import_exporters(
     trace_exporter_names: Sequence[str],
     metric_exporter_names: Sequence[str],
     log_exporter_names: Sequence[str],
-) -> Tuple[Dict[str, Type[SpanExporter]], Dict[str, Type[LogExporter]]]:
+) -> Tuple[
+    Dict[str, Type[SpanExporter]],
+    Dict[str, Type[MetricExporter]],
+    Dict[str, Type[LogExporter]],
+]:
     trace_exporters = {}
     metric_exporters = {}
     log_exporters = {}
@@ -231,7 +239,11 @@ def _initialize_components(auto_instrumentation_version):
     id_generator = _import_id_generator(id_generator_name)
     _init_tracing(trace_exporters, id_generator, auto_instrumentation_version)
     _init_metrics(metric_exporters, auto_instrumentation_version)
-    _init_logging(log_exporters, auto_instrumentation_version)
+    logging_enabled = os.getenv(
+        _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, "false"
+    )
+    if logging_enabled.strip().lower() == "true":
+        _init_logging(log_exporters, auto_instrumentation_version)
 
 
 class _BaseConfigurator(ABC):
