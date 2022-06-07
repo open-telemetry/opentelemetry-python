@@ -417,7 +417,7 @@ The :envvar:`OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED` environment varia
 enable/disabe the logging SDK auto instrumentation.
 Default: False
 
-Note: Logs SDK and it's related settings are experimental.
+Note: Logs SDK and its related settings are experimental.
 """
 
 
