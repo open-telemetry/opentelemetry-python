@@ -18,6 +18,7 @@ OpenTelemetry SDK Configurator for Easy Instrumentation with Distros
 """
 
 import logging
+import os
 from abc import ABC, abstractmethod
 from os import environ
 from typing import Dict, Optional, Sequence, Tuple, Type
@@ -36,6 +37,9 @@ from opentelemetry.sdk._logs import (
     set_log_emitter_provider,
 )
 from opentelemetry.sdk._logs.export import BatchLogProcessor, LogExporter
+from opentelemetry.sdk.environment_variables import (
+    _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
+)
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
@@ -185,7 +189,11 @@ def _initialize_components(auto_instrumentation_version):
     id_generator_name = _get_id_generator()
     id_generator = _import_id_generator(id_generator_name)
     _init_tracing(trace_exporters, id_generator, auto_instrumentation_version)
-    _init_logging(log_exporters, auto_instrumentation_version)
+    logging_enabled = os.getenv(
+        _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, "false"
+    )
+    if logging_enabled.strip().lower() == "true":
+        _init_logging(log_exporters, auto_instrumentation_version)
 
 
 class _BaseConfigurator(ABC):
