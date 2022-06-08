@@ -407,6 +407,20 @@ provide the entry point for loading the log emitter provider. If not specified, 
 LogEmitterProvider is used.
 """
 
+_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED = (
+    "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED"
+)
+"""
+.. envvar:: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+
+The :envvar:`OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED` environment variable allows users to
+enable/disabe the logging SDK auto instrumentation.
+Default: False
+
+Note: Logs SDK and its related settings are experimental.
+"""
+
+
 OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE = (
     "OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE"
 )
