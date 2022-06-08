@@ -12,9 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # type: ignore
+# pylint: skip-file
 
 import logging
 from os import environ
+from typing import Dict, Iterable, Optional
 from unittest import TestCase
 from unittest.mock import patch
 
@@ -28,11 +30,21 @@ from opentelemetry.sdk._configuration import (
     _import_exporters,
     _import_id_generator,
     _init_logging,
+    _init_metrics,
     _init_tracing,
+    _initialize_components,
 )
 from opentelemetry.sdk._logs import LoggingHandler
 from opentelemetry.sdk._logs.export import ConsoleLogExporter
-from opentelemetry.sdk.metrics.export import ConsoleMetricExporter
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import (
+    AggregationTemporality,
+    ConsoleMetricExporter,
+    Metric,
+    MetricExporter,
+    MetricReader,
+)
+from opentelemetry.sdk.metrics.view import Aggregation
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
@@ -58,6 +70,10 @@ class DummyLogEmitterProvider:
 
     def get_log_emitter(self, name):
         return DummyLogEmitter(name, self.resource, self.processor)
+
+
+class DummyMeterProvider(MeterProvider):
+    pass
 
 
 class DummyLogEmitter:
@@ -90,6 +106,44 @@ class DummyLogProcessor:
 class Processor:
     def __init__(self, exporter):
         self.exporter = exporter
+
+
+class DummyMetricReader(MetricReader):
+    def __init__(
+        self,
+        exporter: MetricExporter,
+        preferred_temporality: Dict[type, AggregationTemporality] = None,
+        preferred_aggregation: Dict[type, Aggregation] = None,
+        export_interval_millis: Optional[float] = None,
+        export_timeout_millis: Optional[float] = None,
+    ) -> None:
+        super().__init__(
+            preferred_temporality=preferred_temporality,
+            preferred_aggregation=preferred_aggregation,
+        )
+        self.exporter = exporter
+
+    def _receive_metrics(
+        self,
+        metrics: Iterable[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> None:
+        self.exporter.export(None)
+
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+        return True
+
+
+class DummyOTLPMetricExporter:
+    def __init__(self, *args, **kwargs):
+        self.export_called = False
+
+    def export(self, batch):
+        self.export_called = True
+
+    def shutdown(self):
+        pass
 
 
 class Exporter:
@@ -147,7 +201,7 @@ class TestTraceInit(TestCase):
             "opentelemetry.sdk._configuration.BatchSpanProcessor", Processor
         )
         self.set_provider_patcher = patch(
-            "opentelemetry.trace.set_tracer_provider"
+            "opentelemetry.sdk._configuration.set_tracer_provider"
         )
 
         self.get_provider_mock = self.get_provider_patcher.start()
@@ -277,6 +331,86 @@ class TestLoggingInit(TestCase):
         logging.getLogger(__name__).error("hello")
         self.assertTrue(provider.processor.exporter.export_called)
 
+    @patch.dict(
+        environ,
+        {"OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service"},
+    )
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
+    def test_logging_init_disable_default(self, logging_mock, tracing_mock):
+        _initialize_components("auto-version")
+        self.assertEqual(logging_mock.call_count, 0)
+        self.assertEqual(tracing_mock.call_count, 1)
+
+    @patch.dict(
+        environ,
+        {
+            "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service",
+            "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED": "True",
+        },
+    )
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
+    def test_logging_init_enable_env(self, logging_mock, tracing_mock):
+        _initialize_components("auto-version")
+        self.assertEqual(logging_mock.call_count, 1)
+        self.assertEqual(tracing_mock.call_count, 1)
+
+
+class TestMetricsInit(TestCase):
+    def setUp(self):
+        self.metric_reader_patch = patch(
+            "opentelemetry.sdk._configuration.PeriodicExportingMetricReader",
+            DummyMetricReader,
+        )
+        self.provider_patch = patch(
+            "opentelemetry.sdk._configuration.MeterProvider",
+            DummyMeterProvider,
+        )
+        self.set_provider_patch = patch(
+            "opentelemetry.sdk._configuration.set_meter_provider"
+        )
+
+        self.metric_reader_mock = self.metric_reader_patch.start()
+        self.provider_mock = self.provider_patch.start()
+        self.set_provider_mock = self.set_provider_patch.start()
+
+    def tearDown(self):
+        self.metric_reader_patch.stop()
+        self.set_provider_patch.stop()
+        self.provider_patch.stop()
+
+    def test_metrics_init_empty(self):
+        _init_metrics({}, "auto-version")
+        self.assertEqual(self.set_provider_mock.call_count, 1)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider, DummyMeterProvider)
+        self.assertIsInstance(provider._sdk_config.resource, Resource)
+        self.assertEqual(
+            provider._sdk_config.resource.attributes.get(
+                "telemetry.auto.version"
+            ),
+            "auto-version",
+        )
+
+    @patch.dict(
+        environ,
+        {"OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service"},
+    )
+    def test_metrics_init_exporter(self):
+        _init_metrics({"otlp": DummyOTLPMetricExporter})
+        self.assertEqual(self.set_provider_mock.call_count, 1)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider, DummyMeterProvider)
+        self.assertIsInstance(provider._sdk_config.resource, Resource)
+        self.assertEqual(
+            provider._sdk_config.resource.attributes.get("service.name"),
+            "otlp-service",
+        )
+        reader = provider._sdk_config.metric_readers[0]
+        self.assertIsInstance(reader, DummyMetricReader)
+        self.assertIsInstance(reader.exporter, DummyOTLPMetricExporter)
+
 
 class TestExporterNames(TestCase):
     def test_otlp_exporter_overwrite(self):
@@ -302,8 +436,8 @@ class TestExporterNames(TestCase):
 
 class TestImportExporters(TestCase):
     def test_console_exporters(self):
-        trace_exporters, logs_exporters = _import_exporters(
-            ["console"], ["console"]
+        trace_exporters, metric_exporterts, logs_exporters = _import_exporters(
+            ["console"], ["console"], ["console"]
         )
         self.assertEqual(
             trace_exporters["console"].__class__, ConsoleSpanExporter.__class__
@@ -312,6 +446,6 @@ class TestImportExporters(TestCase):
             logs_exporters["console"].__class__, ConsoleLogExporter.__class__
         )
         self.assertEqual(
-            logs_exporters["console"].__class__,
+            metric_exporterts["console"].__class__,
             ConsoleMetricExporter.__class__,
         )
