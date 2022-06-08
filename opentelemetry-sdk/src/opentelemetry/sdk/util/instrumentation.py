@@ -11,7 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import typing
+from json import dumps
+from typing import Optional
 
 from deprecated import deprecated
 
@@ -29,8 +30,8 @@ class InstrumentationInfo:
     def __init__(
         self,
         name: str,
-        version: typing.Optional[str] = None,
-        schema_url: typing.Optional[str] = None,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
     ):
         self._name = name
         self._version = version
@@ -59,11 +60,11 @@ class InstrumentationInfo:
         )
 
     @property
-    def schema_url(self) -> typing.Optional[str]:
+    def schema_url(self) -> Optional[str]:
         return self._schema_url
 
     @property
-    def version(self) -> typing.Optional[str]:
+    def version(self) -> Optional[str]:
         return self._version
 
     @property
@@ -84,8 +85,8 @@ class InstrumentationScope:
     def __init__(
         self,
         name: str,
-        version: typing.Optional[str] = None,
-        schema_url: typing.Optional[str] = None,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
     ) -> None:
         self._name = name
         self._version = version
@@ -116,13 +117,23 @@ class InstrumentationScope:
         )
 
     @property
-    def schema_url(self) -> typing.Optional[str]:
+    def schema_url(self) -> Optional[str]:
         return self._schema_url
 
     @property
-    def version(self) -> typing.Optional[str]:
+    def version(self) -> Optional[str]:
         return self._version
 
     @property
     def name(self) -> str:
         return self._name
+
+    def to_json(self, indent=4) -> str:
+        return dumps(
+            {
+                "name": self._name,
+                "version": self._version,
+                "schema_url": self._schema_url,
+            },
+            indent=indent,
+        )
