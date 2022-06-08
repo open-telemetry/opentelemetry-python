@@ -24,6 +24,7 @@ from typing import IO, Callable, Deque, List, Optional, Sequence
 
 from opentelemetry.context import attach, detach, set_value
 from opentelemetry.sdk._logs import LogData, LogProcessor, LogRecord
+from opentelemetry.util._once import Once
 from opentelemetry.util._time import _time_ns
 
 _logger = logging.getLogger(__name__)
@@ -129,6 +130,9 @@ class _FlushRequest:
         self.num_log_records = 0
 
 
+_BSP_RESET_ONCE = Once()
+
+
 class BatchLogProcessor(LogProcessor):
     """This is an implementation of LogProcessor which creates batches of
     received logs in the export-friendly LogData representation and
@@ -164,6 +168,7 @@ class BatchLogProcessor(LogProcessor):
             os.register_at_fork(
                 after_in_child=self._at_fork_reinit
             )  # pylint: disable=protected-access
+        self._pid = os.getpid()
 
     def _at_fork_reinit(self):
         self._condition = threading.Condition(threading.Lock())
@@ -174,6 +179,7 @@ class BatchLogProcessor(LogProcessor):
             daemon=True,
         )
         self._worker_thread.start()
+        self._pid = os.getpid()
 
     def worker(self):
         timeout = self._schedule_delay_millis / 1e3
@@ -293,6 +299,9 @@ class BatchLogProcessor(LogProcessor):
         """
         if self._shutdown:
             return
+        if self._pid != os.getpid():
+            _BSP_RESET_ONCE.do_once(self._at_fork_reinit)
+
         self._queue.appendleft(log_data)
         if len(self._queue) >= self._max_export_batch_size:
             with self._condition:
