@@ -165,11 +165,7 @@ class ScopeMetrics:
     def to_json(self, indent=4) -> str:
         return dumps(
             {
-                "scope": {
-                    "name": self.scope.name,
-                    "version": self.scope.version,
-                    "schema_url": self.scope.schema_url,
-                },
+                "scope": loads(self.scope.to_json(indent=indent)),
                 "metrics": [
                     loads(metric.to_json(indent=indent))
                     for metric in self.metrics
