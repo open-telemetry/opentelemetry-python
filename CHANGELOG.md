@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2731](https://github.com/open-telemetry/opentelemetry-python/pull/2731))
 - Configure auto instrumentation to support metrics
   ([#2705](https://github.com/open-telemetry/opentelemetry-python/pull/2705))
+- Add entrypoint for metrics exporter
+  ([#2748](https://github.com/open-telemetry/opentelemetry-python/pull/2748))
 
 ## [1.12.0rc1-0.31b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0rc1-0.31b0) - 2022-05-17
 
