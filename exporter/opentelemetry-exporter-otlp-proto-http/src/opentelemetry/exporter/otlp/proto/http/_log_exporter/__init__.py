@@ -46,7 +46,8 @@ _logger = logging.getLogger(__name__)
 
 
 DEFAULT_COMPRESSION = Compression.NoCompression
-DEFAULT_ENDPOINT = "http://localhost:4318/v1/logs"
+DEFAULT_ENDPOINT = "http://localhost:4318/"
+DEFAULT_LOGS_EXPORT_PATH = "v1/logs"
 DEFAULT_TIMEOUT = 10  # in seconds
 
 
@@ -62,8 +63,8 @@ class OTLPLogExporter(LogExporter):
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
-        self._endpoint = endpoint or environ.get(
-            OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT
+        self._endpoint = endpoint or _append_logs_path(
+            environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
         )
         self._certificate_file = certificate_file or environ.get(
             OTEL_EXPORTER_OTLP_CERTIFICATE, True
@@ -158,3 +159,9 @@ def _compression_from_env() -> Compression:
         environ.get(OTEL_EXPORTER_OTLP_COMPRESSION, "none").lower().strip()
     )
     return Compression(compression)
+
+
+def _append_logs_path(endpoint: str) -> str:
+    if endpoint.endswith("/"):
+        return endpoint + DEFAULT_LOGS_EXPORT_PATH
+    return endpoint + f"/{DEFAULT_LOGS_EXPORT_PATH}"

@@ -23,6 +23,7 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
     DEFAULT_TIMEOUT,
+    DEFAULT_LOGS_EXPORT_PATH,
     OTLPLogExporter,
 )
 from opentelemetry.exporter.otlp.proto.http._log_exporter.encoder import (
@@ -62,7 +63,7 @@ from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import TraceFlags
 
-ENV_ENDPOINT = "http://localhost.env:8080/logs"
+ENV_ENDPOINT = "http://localhost.env:8080/"
 ENV_CERTIFICATE = "/etc/base.crt"
 ENV_HEADERS = "envHeader1=val1,envHeader2=val2"
 ENV_TIMEOUT = "30"
@@ -73,7 +74,9 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
         exporter = OTLPLogExporter()
 
-        self.assertEqual(exporter._endpoint, DEFAULT_ENDPOINT)
+        self.assertEqual(
+            exporter._endpoint, DEFAULT_ENDPOINT + DEFAULT_LOGS_EXPORT_PATH
+        )
         self.assertEqual(exporter._certificate_file, True)
         self.assertEqual(exporter._timeout, DEFAULT_TIMEOUT)
         self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
@@ -121,7 +124,9 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
 
         exporter = OTLPLogExporter()
 
-        self.assertEqual(exporter._endpoint, ENV_ENDPOINT)
+        self.assertEqual(
+            exporter._endpoint, ENV_ENDPOINT + DEFAULT_LOGS_EXPORT_PATH
+        )
         self.assertEqual(exporter._certificate_file, ENV_CERTIFICATE)
         self.assertEqual(exporter._timeout, int(ENV_TIMEOUT))
         self.assertIs(exporter._compression, Compression.Gzip)
