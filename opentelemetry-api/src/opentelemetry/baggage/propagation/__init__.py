@@ -38,7 +38,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         self,
         carrier: textmap.CarrierT,
         context: Optional[Context] = None,
-        getter: textmap.Getter = textmap.default_getter,
+        getter: textmap.Getter[textmap.CarrierT] = textmap.default_getter,
     ) -> Context:
         """Extract Baggage from the carrier.
 
@@ -109,7 +109,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
         self,
         carrier: textmap.CarrierT,
         context: Optional[Context] = None,
-        setter: textmap.Setter = textmap.default_setter,
+        setter: textmap.Setter[textmap.CarrierT] = textmap.default_setter,
     ) -> None:
         """Injects Baggage into the carrier.
 

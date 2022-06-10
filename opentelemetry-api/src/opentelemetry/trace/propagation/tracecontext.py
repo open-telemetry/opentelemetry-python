@@ -37,7 +37,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         self,
         carrier: textmap.CarrierT,
         context: typing.Optional[Context] = None,
-        getter: textmap.Getter = textmap.default_getter,
+        getter: textmap.Getter[textmap.CarrierT] = textmap.default_getter,
     ) -> Context:
         """Extracts SpanContext from the carrier.
 
@@ -90,7 +90,7 @@ class TraceContextTextMapPropagator(textmap.TextMapPropagator):
         self,
         carrier: textmap.CarrierT,
         context: typing.Optional[Context] = None,
-        setter: textmap.Setter = textmap.default_setter,
+        setter: textmap.Setter[textmap.CarrierT] = textmap.default_setter,
     ) -> None:
         """Injects SpanContext into the carrier.
 

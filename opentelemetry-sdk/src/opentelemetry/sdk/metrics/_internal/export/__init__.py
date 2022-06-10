@@ -105,8 +105,8 @@ class ConsoleMetricExporter(MetricExporter):
         self,
         out: IO = stdout,
         formatter: Callable[
-            ["opentelemetry.sdk.metrics.export.Metric"], str
-        ] = lambda metric: metric.to_json()
+            ["opentelemetry.sdk.metrics.export.MetricsData"], str
+        ] = lambda metrics_data: metrics_data.to_json()
         + linesep,
     ):
         self.out = out
@@ -373,7 +373,11 @@ class PeriodicExportingMetricReader(MetricReader):
         self._shutdown = False
         self._shutdown_event = Event()
         self._shutdown_once = Once()
-        self._daemon_thread = Thread(target=self._ticker, daemon=True)
+        self._daemon_thread = Thread(
+            name="OtelPeriodicExportingMetricReader",
+            target=self._ticker,
+            daemon=True,
+        )
         self._daemon_thread.start()
         if hasattr(os, "register_at_fork"):
             os.register_at_fork(
@@ -381,7 +385,11 @@ class PeriodicExportingMetricReader(MetricReader):
             )  # pylint: disable=protected-access
 
     def _at_fork_reinit(self):
-        self._daemon_thread = Thread(target=self._ticker, daemon=True)
+        self._daemon_thread = Thread(
+            name="OtelPeriodicExportingMetricReader",
+            target=self._ticker,
+            daemon=True,
+        )
         self._daemon_thread.start()
 
     def _ticker(self) -> None:

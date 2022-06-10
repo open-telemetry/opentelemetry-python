@@ -9,10 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `opentelemetry-exporter-otlp-proto-http` Add support for OTLP/HTTP log exporter
   ([#2462](https://github.com/open-telemetry/opentelemetry-python/pull/2462))
+- Add missing `to_json` methods
+  ([#2722](https://github.com/open-telemetry/opentelemetry-python/pull/2722)
+- Fix type hints for textmap `Getter` and `Setter`
+  ([#2657](https://github.com/open-telemetry/opentelemetry-python/pull/2657))
+- Fix LogEmitterProvider.force_flush hanging randomly
+  ([#2714](https://github.com/open-telemetry/opentelemetry-python/pull/2714))
+- narrow protobuf dependencies to exclude protobuf >= 4
+  ([#2720](https://github.com/open-telemetry/opentelemetry-python/pull/2720))
+- Specify worker thread names
+  ([#2724](https://github.com/open-telemetry/opentelemetry-python/pull/2724))
+- Loosen dependency on `backoff` for newer Python versions
+  ([#2726](https://github.com/open-telemetry/opentelemetry-python/pull/2726))
+- fix: frozenset object has no attribute items
+  ([#2727](https://github.com/open-telemetry/opentelemetry-python/pull/2727))
+- Support logs SDK auto instrumentation enable/disable with env
+  ([#2728](https://github.com/open-telemetry/opentelemetry-python/pull/2728))
+- fix: update entry point object references for metrics
+  ([#2731](https://github.com/open-telemetry/opentelemetry-python/pull/2731))
+- Configure auto instrumentation to support metrics
+  ([#2705](https://github.com/open-telemetry/opentelemetry-python/pull/2705))
 
 ## [1.12.0rc1-0.31b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0rc1-0.31b0) - 2022-05-17
-
-
 
 - Fix LoggingHandler to handle LogRecord with exc_info=False
   ([#2690](https://github.com/open-telemetry/opentelemetry-python/pull/2690))
