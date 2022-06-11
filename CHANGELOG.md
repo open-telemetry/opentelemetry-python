@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - `opentelemetry-exporter-otlp-proto-http` Add support for OTLP/HTTP log exporter
   ([#2462](https://github.com/open-telemetry/opentelemetry-python/pull/2462))
+- Fix yield of `None`-valued points
+  ([#2745](https://github.com/open-telemetry/opentelemetry-python/pull/2745))
 - Add missing `to_json` methods
   ([#2722](https://github.com/open-telemetry/opentelemetry-python/pull/2722)
 - Fix type hints for textmap `Getter` and `Setter`
