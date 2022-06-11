@@ -212,6 +212,78 @@ class Test_ViewInstrumentMatch(TestCase):
         self.assertEqual(number_data_point.attributes, {"c": "d"})
         self.assertEqual(number_data_point.value, 0)
 
+    def test_data_point_check(self):
+        instrument1 = Counter(
+            "instrument1",
+            Mock(),
+            Mock(),
+            description="description",
+            unit="unit",
+        )
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=DefaultAggregation(),
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation=MagicMock(
+                **{
+                    "__getitem__.return_value": Mock(
+                        **{
+                            "_create_aggregation.return_value": Mock(
+                                **{
+                                    "collect.side_effect": [
+                                        Mock(),
+                                        Mock(),
+                                        None,
+                                        Mock(),
+                                    ]
+                                }
+                            )
+                        }
+                    )
+                }
+            ),
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0,
+                instrument=Mock(name="instrument1"),
+                attributes={"c": "d", "f": "g"},
+            )
+        )
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0,
+                instrument=Mock(name="instrument1"),
+                attributes={"h": "i", "j": "k"},
+            )
+        )
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0,
+                instrument=Mock(name="instrument1"),
+                attributes={"l": "m", "n": "o"},
+            )
+        )
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0,
+                instrument=Mock(name="instrument1"),
+                attributes={"p": "q", "r": "s"},
+            )
+        )
+
+        result = view_instrument_match.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
+
+        self.assertEqual(len(list(result)), 3)
+
     def test_setting_aggregation(self):
         instrument1 = Counter(
             name="instrument1",

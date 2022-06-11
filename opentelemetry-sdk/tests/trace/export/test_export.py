@@ -14,7 +14,6 @@
 
 import multiprocessing
 import os
-import sys
 import threading
 import time
 import unittest
@@ -369,8 +368,8 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
             self.assertIn(span.name, expected)
 
     @unittest.skipUnless(
-        hasattr(os, "fork") and sys.version_info >= (3, 7),
-        "needs *nix and minor version 7 or later",
+        hasattr(os, "fork"),
+        "needs *nix",
     )
     def test_batch_span_processor_fork(self):
         # pylint: disable=invalid-name
