@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.12.0rc1-0.31b0...HEAD)
 
+- Fix yield of `None`-valued points
+  ([#2745](https://github.com/open-telemetry/opentelemetry-python/pull/2745))
+- Add missing `to_json` methods
+  ([#2722](https://github.com/open-telemetry/opentelemetry-python/pull/2722)
 - Fix type hints for textmap `Getter` and `Setter`
   ([#2657](https://github.com/open-telemetry/opentelemetry-python/pull/2657))
 - Fix LogEmitterProvider.force_flush hanging randomly
@@ -25,6 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2731](https://github.com/open-telemetry/opentelemetry-python/pull/2731))
 - Allow set_status to accept the StatusCode and optional description
   ([#2735](https://github.com/open-telemetry/opentelemetry-python/pull/2735))
+- Configure auto instrumentation to support metrics
+  ([#2705](https://github.com/open-telemetry/opentelemetry-python/pull/2705))
+- Add entrypoint for metrics exporter
+  ([#2748](https://github.com/open-telemetry/opentelemetry-python/pull/2748))
 
 ## [1.12.0rc1-0.31b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0rc1-0.31b0) - 2022-05-17
 

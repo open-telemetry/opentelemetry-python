@@ -130,6 +130,8 @@ class _ViewInstrumentMatch:
 
         with self._lock:
             for aggregation in self._attributes_aggregation.values():
-                yield aggregation.collect(
+                data_point = aggregation.collect(
                     aggregation_temporality, collection_start_nanos
                 )
+                if data_point is not None:
+                    yield data_point
