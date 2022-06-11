@@ -45,7 +45,7 @@ from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
     new_tracer,
 )
-from opentelemetry.trace import StatusCode
+from opentelemetry.trace import Status, StatusCode
 from opentelemetry.util._time import _time_ns
 
 
@@ -902,6 +902,39 @@ class TestSpan(unittest.TestCase):
         end_time = 456
         span.end(end_time)
         self.assertEqual(end_time, span.end_time)
+
+    def test_span_set_status(self):
+
+        span1 = self.tracer.start_span("span1")
+        span1.set_status(Status(status_code=StatusCode.ERROR))
+        self.assertEqual(span1.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span1.status.description, None)
+
+        span2 = self.tracer.start_span("span2")
+        span2.set_status(
+            Status(status_code=StatusCode.ERROR, description="desc")
+        )
+        self.assertEqual(span2.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span2.status.description, "desc")
+
+        span3 = self.tracer.start_span("span3")
+        span3.set_status(StatusCode.ERROR)
+        self.assertEqual(span3.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span3.status.description, None)
+
+        span4 = self.tracer.start_span("span4")
+        span4.set_status(StatusCode.ERROR, "span4 desc")
+        self.assertEqual(span4.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span4.status.description, "span4 desc")
+
+        span5 = self.tracer.start_span("span5")
+        with self.assertLogs(level=WARNING):
+            span5.set_status(
+                Status(status_code=StatusCode.ERROR, description="desc"),
+                description="ignored",
+            )
+        self.assertEqual(span5.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span5.status.description, "desc")
 
     def test_ended_span(self):
         """Events, attributes are not allowed after span is ended"""
