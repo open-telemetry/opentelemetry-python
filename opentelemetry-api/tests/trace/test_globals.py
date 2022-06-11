@@ -12,7 +12,7 @@ class TestSpan(trace.NonRecordingSpan):
     recorded_exception = None
     recorded_status = Status(status_code=StatusCode.UNSET)
 
-    def set_status(self, status):
+    def set_status(self, status, description=None):
         self.recorded_status = status
 
     def end(self, end_time=None):
