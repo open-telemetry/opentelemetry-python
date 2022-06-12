@@ -22,8 +22,8 @@ from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
-    DEFAULT_TIMEOUT,
     DEFAULT_LOGS_EXPORT_PATH,
+    DEFAULT_TIMEOUT,
     OTLPLogExporter,
 )
 from opentelemetry.exporter.otlp.proto.http._log_exporter.encoder import (
