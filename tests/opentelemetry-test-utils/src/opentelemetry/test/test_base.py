@@ -43,11 +43,6 @@ class TestBase(unittest.TestCase):
         reset_trace_globals()
         trace_api.set_tracer_provider(cls.tracer_provider)
 
-        result = cls.create_meter_provider()
-        cls.meter_provider, cls.memory_metrics_reader = result
-        reset_metrics_globals()
-        metrics_api.set_meter_provider(cls.meter_provider)
-
     @classmethod
     def tearDownClass(cls):
         # This is done because set_tracer_provider cannot override the
@@ -56,6 +51,10 @@ class TestBase(unittest.TestCase):
 
     def setUp(self):
         self.memory_exporter.clear()
+        reset_metrics_globals()
+        result = self.create_meter_provider()
+        self.meter_provider, self.memory_metrics_reader = result
+        metrics_api.set_meter_provider(self.meter_provider)
 
     def get_finished_spans(self):
         return FinishedTestSpans(
