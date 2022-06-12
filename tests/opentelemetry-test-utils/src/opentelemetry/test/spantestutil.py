@@ -16,6 +16,7 @@ from functools import partial
 
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import trace as trace_sdk
+from opentelemetry.sdk.trace import Resource
 from opentelemetry.test.test_base import TestBase
 
 
