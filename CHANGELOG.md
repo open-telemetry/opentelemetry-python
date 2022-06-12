@@ -29,6 +29,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2728](https://github.com/open-telemetry/opentelemetry-python/pull/2728))
 - fix: update entry point object references for metrics
   ([#2731](https://github.com/open-telemetry/opentelemetry-python/pull/2731))
+- Allow set_status to accept the StatusCode and optional description
+  ([#2735](https://github.com/open-telemetry/opentelemetry-python/pull/2735))
 - Configure auto instrumentation to support metrics
   ([#2705](https://github.com/open-telemetry/opentelemetry-python/pull/2705))
 - Add entrypoint for metrics exporter
