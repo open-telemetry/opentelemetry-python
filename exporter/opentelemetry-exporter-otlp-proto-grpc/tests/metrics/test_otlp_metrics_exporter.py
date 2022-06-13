@@ -738,7 +738,6 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(expected, actual)
 
     def test_translate_multiple_scope_histogram(self):
-        self.maxDiff = None
         expected = ExportMetricsServiceRequest(
             resource_metrics=[
                 pb2.ResourceMetrics(
