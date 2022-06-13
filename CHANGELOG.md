@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.12.0rc1-0.31b0...HEAD)
 
+- `opentelemetry-exporter-otlp-proto-http` Add support for OTLP/HTTP log exporter
+  ([#2462](https://github.com/open-telemetry/opentelemetry-python/pull/2462))
 - Fix yield of `None`-valued points
   ([#2745](https://github.com/open-telemetry/opentelemetry-python/pull/2745))
 - Add missing `to_json` methods
@@ -115,7 +117,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   pages that have moved, see
   [#2453](https://github.com/open-telemetry/opentelemetry-python/pull/2453), and
   [#2498](https://github.com/open-telemetry/opentelemetry-python/pull/2498).
-- `opentelemetry-exporter-otlp-grpc` update SDK dependency to ~1.9.
+- `opentelemetry-exporter-otlp-proto-grpc` update SDK dependency to ~1.9.
   ([#2442](https://github.com/open-telemetry/opentelemetry-python/pull/2442))
 - bugfix(auto-instrumentation): attach OTLPHandler to root logger
   ([#2450](https://github.com/open-telemetry/opentelemetry-python/pull/2450))
