@@ -5,7 +5,7 @@ import types as python_types
 import typing
 from collections import OrderedDict
 
-from opentelemetry.trace.status import Status
+from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
 
 # The key MUST begin with a lowercase letter or a digit,
@@ -137,7 +137,11 @@ class Span(abc.ABC):
         """
 
     @abc.abstractmethod
-    def set_status(self, status: Status) -> None:
+    def set_status(
+        self,
+        status: typing.Union[Status, StatusCode],
+        description: typing.Optional[str] = None,
+    ) -> None:
         """Sets the Status of the Span. If used, this will override the default
         Span status.
         """
@@ -524,7 +528,11 @@ class NonRecordingSpan(Span):
     def update_name(self, name: str) -> None:
         pass
 
-    def set_status(self, status: Status) -> None:
+    def set_status(
+        self,
+        status: typing.Union[Status, StatusCode],
+        description: typing.Optional[str] = None,
+    ) -> None:
         pass
 
     def record_exception(
