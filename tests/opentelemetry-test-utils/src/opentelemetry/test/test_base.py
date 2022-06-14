@@ -35,7 +35,10 @@ class TestBase(unittest.TestCase):
     # pylint: disable=C0103
 
     def setUp(self):
-        self.tracer_provider, self.memory_exporter = self.create_tracer_provider()
+        (
+            self.tracer_provider,
+            self.memory_exporter,
+        ) = self.create_tracer_provider()
         # This is done because set_tracer_provider cannot override the
         # current tracer provider.
         reset_trace_globals()
@@ -43,7 +46,10 @@ class TestBase(unittest.TestCase):
         # This is done because set_meter_provider cannot override the
         # current meter provider.
         reset_metrics_globals()
-        self.meter_provider, self.memory_metrics_reader = self.create_meter_provider()
+        (
+            self.meter_provider,
+            self.memory_metrics_reader,
+        ) = self.create_meter_provider()
         metrics_api.set_meter_provider(self.meter_provider)
 
     def get_finished_spans(self):
