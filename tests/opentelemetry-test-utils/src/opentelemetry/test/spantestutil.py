@@ -27,10 +27,6 @@ def new_tracer(span_limits=None, resource=None) -> trace_api.Tracer:
     return provider_factory(span_limits=span_limits).get_tracer(__name__)
 
 
-class SpanTestBase(TestBase):
-    pass
-
-
 def get_span_with_dropped_attributes_events_links():
     attributes = {}
     for index in range(130):
