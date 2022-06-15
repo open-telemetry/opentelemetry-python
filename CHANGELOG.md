@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Remove support for 3.6
+  ([#2763](https://github.com/open-telemetry/opentelemetry-python/pull/2763))
 - Update PeriodicExportingMetricReader to never call export() concurrently
   ([#2873](https://github.com/open-telemetry/opentelemetry-python/pull/2873))
 - Add param for `indent` size to `LogRecord.to_json()`
