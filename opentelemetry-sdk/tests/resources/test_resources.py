@@ -52,7 +52,7 @@ class TestResources(unittest.TestCase):
         resource = resources.Resource.create(attributes)
         self.assertIsInstance(resource, resources.Resource)
         self.assertEqual(resource.attributes, expected_attributes)
-        self.assertEqual(resource.schema_url, "")
+        self.assertIsNone(resource.schema_url)
 
         schema_url = "https://opentelemetry.io/schemas/1.3.0"
 
@@ -76,45 +76,37 @@ class TestResources(unittest.TestCase):
         self.assertEqual(
             resource,
             resources._DEFAULT_RESOURCE.merge(
-                resources.Resource(
-                    {resources.SERVICE_NAME: "unknown_service"}, ""
-                )
+                resources.Resource({resources.SERVICE_NAME: "unknown_service"})
             ),
         )
-        self.assertEqual(resource.schema_url, "")
+        self.assertIsNone(resource.schema_url)
 
         resource = resources.Resource.create(None, None)
         self.assertEqual(
             resource,
             resources._DEFAULT_RESOURCE.merge(
-                resources.Resource(
-                    {resources.SERVICE_NAME: "unknown_service"}, ""
-                )
+                resources.Resource({resources.SERVICE_NAME: "unknown_service"})
             ),
         )
-        self.assertEqual(resource.schema_url, "")
+        self.assertIsNone(resource.schema_url)
 
         resource = resources.Resource.create({})
         self.assertEqual(
             resource,
             resources._DEFAULT_RESOURCE.merge(
-                resources.Resource(
-                    {resources.SERVICE_NAME: "unknown_service"}, ""
-                )
+                resources.Resource({resources.SERVICE_NAME: "unknown_service"})
             ),
         )
-        self.assertEqual(resource.schema_url, "")
+        self.assertIsNone(resource.schema_url)
 
         resource = resources.Resource.create({}, None)
         self.assertEqual(
             resource,
             resources._DEFAULT_RESOURCE.merge(
-                resources.Resource(
-                    {resources.SERVICE_NAME: "unknown_service"}, ""
-                )
+                resources.Resource({resources.SERVICE_NAME: "unknown_service"})
             ),
         )
-        self.assertEqual(resource.schema_url, "")
+        self.assertIsNone(resource.schema_url)
 
     def test_resource_merge(self):
         left = resources.Resource({"service": "ui"})
@@ -130,7 +122,7 @@ class TestResources(unittest.TestCase):
 
         left = resources.Resource.create({}, None)
         right = resources.Resource.create({}, None)
-        self.assertEqual(left.merge(right).schema_url, "")
+        self.assertIsNone(left.merge(right).schema_url)
 
         left = resources.Resource.create({}, None)
         right = resources.Resource.create({}, schema_urls[0])
@@ -198,7 +190,7 @@ class TestResources(unittest.TestCase):
         with self.assertRaises(AttributeError):
             resource.schema_url = "bug"
 
-        self.assertEqual(resource.schema_url, "")
+        self.assertIsNone(resource.schema_url)
 
     def test_service_name_using_process_name(self):
         resource = resources.Resource.create(
@@ -233,9 +225,7 @@ class TestResources(unittest.TestCase):
         self.assertEqual(
             aggregated_resources,
             resources._DEFAULT_RESOURCE.merge(
-                resources.Resource(
-                    {resources.SERVICE_NAME: "unknown_service"}, ""
-                )
+                resources.Resource({resources.SERVICE_NAME: "unknown_service"})
             ),
         )
 
@@ -290,9 +280,7 @@ class TestResources(unittest.TestCase):
                 [resource_detector1, resource_detector2, resource_detector3]
             ),
             resources._DEFAULT_RESOURCE.merge(
-                resources.Resource(
-                    {resources.SERVICE_NAME: "unknown_service"}, ""
-                )
+                resources.Resource({resources.SERVICE_NAME: "unknown_service"})
             ).merge(
                 resources.Resource(
                     {
@@ -308,7 +296,7 @@ class TestResources(unittest.TestCase):
     def test_aggregated_resources_different_schema_urls(self):
         resource_detector1 = mock.Mock(spec=resources.ResourceDetector)
         resource_detector1.detect.return_value = resources.Resource(
-            {"key1": "value1"}, ""
+            {"key1": "value1"}
         )
         resource_detector2 = mock.Mock(spec=resources.ResourceDetector)
         resource_detector2.detect.return_value = resources.Resource(
@@ -337,9 +325,7 @@ class TestResources(unittest.TestCase):
                 [resource_detector1, resource_detector2]
             ),
             resources._DEFAULT_RESOURCE.merge(
-                resources.Resource(
-                    {resources.SERVICE_NAME: "unknown_service"}, ""
-                )
+                resources.Resource({resources.SERVICE_NAME: "unknown_service"})
             ).merge(
                 resources.Resource(
                     {"key1": "value1", "key2": "value2", "key3": "value3"},
@@ -354,7 +340,7 @@ class TestResources(unittest.TestCase):
                 ),
                 resources._DEFAULT_RESOURCE.merge(
                     resources.Resource(
-                        {resources.SERVICE_NAME: "unknown_service"}, ""
+                        {resources.SERVICE_NAME: "unknown_service"}
                     )
                 ).merge(
                     resources.Resource(
@@ -376,7 +362,7 @@ class TestResources(unittest.TestCase):
                 ),
                 resources._DEFAULT_RESOURCE.merge(
                     resources.Resource(
-                        {resources.SERVICE_NAME: "unknown_service"}, ""
+                        {resources.SERVICE_NAME: "unknown_service"}
                     )
                 ).merge(
                     resources.Resource(
@@ -400,9 +386,7 @@ class TestResources(unittest.TestCase):
         self.assertEqual(
             resources.get_aggregated_resources([resource_detector]),
             resources._DEFAULT_RESOURCE.merge(
-                resources.Resource(
-                    {resources.SERVICE_NAME: "unknown_service"}, ""
-                )
+                resources.Resource({resources.SERVICE_NAME: "unknown_service"})
             ),
         )
 

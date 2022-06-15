@@ -146,8 +146,6 @@ class Resource:
         self, attributes: Attributes, schema_url: typing.Optional[str] = None
     ):
         self._attributes = BoundedAttributes(attributes=attributes)
-        if schema_url is None:
-            schema_url = ""
         self._schema_url = schema_url
 
     @staticmethod
@@ -213,9 +211,9 @@ class Resource:
         merged_attributes = self.attributes.copy()
         merged_attributes.update(other.attributes)
 
-        if self.schema_url == "":
+        if self.schema_url is None:
             schema_url = other.schema_url
-        elif other.schema_url == "":
+        elif other.schema_url is None:
             schema_url = self.schema_url
         elif self.schema_url == other.schema_url:
             schema_url = other.schema_url
