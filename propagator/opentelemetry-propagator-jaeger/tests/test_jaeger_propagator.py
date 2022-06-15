@@ -239,4 +239,4 @@ class TestJaegerPropagator(unittest.TestCase):
             try:
                 FORMAT.inject({}, setter=mock_setter)
             except Exception as exc:  # pylint: disable=broad-except
-                self.fail(f'Injecting failed for NonRecordingSpan with {exc}')
+                self.fail(f"Injecting failed for NonRecordingSpan with {exc}")
