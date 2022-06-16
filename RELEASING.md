@@ -4,6 +4,9 @@
 
 * Run the [Prepare release branch workflow](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/prepare-release-branch.yml).
   * Press the "Run workflow" button, and leave the default branch `main` selected.
+    * If making a pre-release of stable components (e.g. release candidate),
+      enter the pre-release version number, e.g. `1.9.0-rc.2`.
+      (otherwise the workflow will pick up the version from `main` and just remove the `-dev` suffix).
   * Review and merge the two pull requests that it creates
     (one is targeted to the release branch and one is targeted to `main`).
 
@@ -34,15 +37,14 @@
 
 ## Notes about "pre-releases"
 
-* Pre-release versions (e.g. `1.12.0rc1-0.31b0`) are supported, and will cause a "short-term" release branch
+* Pre-release versions (e.g. `1.9.0rc1`) are supported, and will cause a "short-term" release branch
   to be created based on the full version name
-  (e.g. `release/v1.12.0rc1-0.31b0` instead of a "long-term" release branch name like `release/v1.9.x-0.31bx`).
+  (e.g. `release/v1.9.0rc1-0.21b0` instead of a "long-term" release branch name like `release/v1.9.x-0.21bx`).
 * Patch releases are not supported on short-term release branches.
-* The version in `main` in this case will be bumped to the release version (e.g. `1.12.0-dev/0.32b0-dev`).
-* To make a second pre-release version, manually update the version in `main`
-  (e.g. update it from `1.12.0-dev` to `1.12.0rc2-dev`)
-  before running the prepare release branch workflow for that release.
-* Note that pre-releases are not needed for unstable artifacts.
+* The stable version in `main` in this case will remain the same (e.g. `1.9.0-dev`), since the next release version
+  (that is not a prereleaes) is still `1.9.0`.
+* The unstable version in `main` will be bumped  (e.g. `0.22b0-dev`).
+* Note that the workflow does not support the concept of a pre-release for unstable artifacts.
 
 ## After the release
 
