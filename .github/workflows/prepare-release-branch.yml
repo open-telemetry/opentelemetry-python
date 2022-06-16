@@ -31,16 +31,16 @@ jobs:
           stable_version=$(./scripts/eachdist.py version --mode stable)
           stable_version=${stable_version//-dev/}
 
-          prerelease_version=$(./scripts/eachdist.py version --mode prerelease)
-          prerelease_version=${prerelease_version//-dev/}
+          unstable_version=$(./scripts/eachdist.py version --mode prerelease)
+          unstable_version=${unstable_version//-dev/}
 
           if [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
             stable_version_branch_part=$(echo $stable_version | sed -E 's/([0-9]+)\.([0-9]+)\.0/\1.\2.x/')
-            prerelease_version_branch_part=$(echo $prerelease_version | sed -E 's/0\.([0-9]+)b0/0.\1bx/')
-            release_branch_name="release/v${stable_version_branch_part}-${prerelease_version_branch_part}"
+            unstable_version_branch_part=$(echo $unstable_version | sed -E 's/0\.([0-9]+)b0/0.\1bx/')
+            release_branch_name="release/v${stable_version_branch_part}-${unstable_version_branch_part}"
           elif [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0 ]]; then
             # pre-release version, e.g. 1.9.0rc
-            release_branch_name="release/v$stable_version-$prerelease_version"
+            release_branch_name="release/v$stable_version-$unstable_version"
           else
             echo "unexpected version: $stable_version"
             exit 1
@@ -49,12 +49,12 @@ jobs:
           git push origin HEAD:$release_branch_name
 
           echo "STABLE_VERSION=$stable_version" >> $GITHUB_ENV
-          echo "PRERELEASE_VERSION=$prerelease_version" >> $GITHUB_ENV
-          echo "VERSION=${stable_version}/${prerelease_version}" >> $GITHUB_ENV
+          echo "UNSTABLE_VERSION=$unstable_version" >> $GITHUB_ENV
+          echo "VERSION=${stable_version}/${unstable_version}" >> $GITHUB_ENV
           echo "RELEASE_BRANCH_NAME=$release_branch_name" >> $GITHUB_ENV
 
       - name: Update version
-        run: .github/scripts/update-version.sh $STABLE_VERSION $PRERELEASE_VERSION
+        run: .github/scripts/update-version.sh $STABLE_VERSION $UNSTABLE_VERSION
 
       - name: Update the change log with the approximate release date
         run: |
@@ -88,10 +88,10 @@ jobs:
       - name: Set environment variables
         run: |
           stable_version=$(./scripts/eachdist.py version --mode stable)
-          prerelease_version=$(./scripts/eachdist.py version --mode prerelease)
+          unstable_version=$(./scripts/eachdist.py version --mode prerelease)
 
           stable_version=${stable_version//-dev/}
-          prerelease_version=${prerelease_version//-dev/}
+          unstable_version=${unstable_version//-dev/}
 
           if [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
             stable_major="${BASH_REMATCH[1]}"
@@ -107,22 +107,22 @@ jobs:
             exit 1
           fi
 
-          if [[ $prerelease_version =~ ^0\.([0-9]+)b[0-9]+$ ]]; then
-            prerelease_minor="${BASH_REMATCH[1]}"
+          if [[ $unstable_version =~ ^0\.([0-9]+)b[0-9]+$ ]]; then
+            unstable_minor="${BASH_REMATCH[1]}"
           else
-            echo "unexpected prerelease_version: $prerelease_version"
+            echo "unexpected unstable_version: $unstable_version"
             exit 1
           fi
 
-          prerelease_next_version="0.$((prerelease_minor + 1))b0"
+          unstable_next_version="0.$((unstable_minor + 1))b0"
 
           echo "STABLE_NEXT_VERSION=${stable_next_version}-dev" >> $GITHUB_ENV
-          echo "PRERELEASE_NEXT_VERSION=${prerelease_next_version}-dev" >> $GITHUB_ENV
-          echo "NEXT_VERSION=${stable_next_version}-dev/${prerelease_next_version}-dev" >> $GITHUB_ENV
-          echo "VERSION=${stable_version}/${prerelease_version}" >> $GITHUB_ENV
+          echo "UNSTABLE_NEXT_VERSION=${unstable_next_version}-dev" >> $GITHUB_ENV
+          echo "NEXT_VERSION=${stable_next_version}-dev/${unstable_next_version}-dev" >> $GITHUB_ENV
+          echo "VERSION=${stable_version}/${unstable_version}" >> $GITHUB_ENV
 
       - name: Update version
-        run: .github/scripts/update-version.sh $STABLE_NEXT_VERSION $PRERELEASE_NEXT_VERSION
+        run: .github/scripts/update-version.sh $STABLE_NEXT_VERSION $UNSTABLE_NEXT_VERSION
 
       - name: Update the change log on main
         run: |

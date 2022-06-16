@@ -22,7 +22,7 @@ jobs:
       - name: Set environment variables
         run: |
           stable_version=$(./scripts/eachdist.py version --mode stable)
-          prerelease_version=$(./scripts/eachdist.py version --mode prerelease)
+          unstable_version=$(./scripts/eachdist.py version --mode prerelease)
 
           if [[ $stable_version =~ ^([0-9]+\.[0-9]+)\.([0-9]+)$ ]]; then
             stable_major_minor="${BASH_REMATCH[1]}"
@@ -32,23 +32,23 @@ jobs:
             exit 1
           fi
 
-          if [[ $prerelease_version =~ ^0\.([0-9]+)b([0-9]+)$ ]]; then
-            prerelease_minor="${BASH_REMATCH[1]}"
-            prerelease_patch="${BASH_REMATCH[2]}"
+          if [[ $unstable_version =~ ^0\.([0-9]+)b([0-9]+)$ ]]; then
+            unstable_minor="${BASH_REMATCH[1]}"
+            unstable_patch="${BASH_REMATCH[2]}"
           else
-            echo "unexpected prerelease_version: $prerelease_version"
+            echo "unexpected unstable_version: $unstable_version"
             exit 1
           fi
 
           stable_version="$stable_major_minor.$((stable_patch + 1))"
-          prerelease_version="0.${prerelease_minor}b$((prerelease_patch + 1))"
+          unstable_version="0.${unstable_minor}b$((unstable_patch + 1))"
 
           echo "STABLE_VERSION=$stable_version" >> $GITHUB_ENV
-          echo "PRERELEASE_VERSION=$prerelease_version" >> $GITHUB_ENV
-          echo "VERSION=${stable_version}/${prerelease_version}" >> $GITHUB_ENV
+          echo "UNSTABLE_VERSION=$unstable_version" >> $GITHUB_ENV
+          echo "VERSION=${stable_version}/${unstable_version}" >> $GITHUB_ENV
 
       - name: Update version
-        run: .github/scripts/update-version.sh $STABLE_VERSION $PRERELEASE_VERSION
+        run: .github/scripts/update-version.sh $STABLE_VERSION $UNSTABLE_VERSION
 
       - name: Update the change log with the approximate release date
         run: |
