@@ -163,3 +163,6 @@ def detach(token: object) -> None:
 # Once the decision around how to suppress instrumentation is made in the
 # spec, this key should be moved accordingly.
 _SUPPRESS_INSTRUMENTATION_KEY = create_key("suppress_instrumentation")
+_SUPPRESS_HTTP_INSTRUMENTATION_KEY = create_key(
+    "suppress_http_instrumentation"
+)
