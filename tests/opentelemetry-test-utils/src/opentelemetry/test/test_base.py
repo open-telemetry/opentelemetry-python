@@ -34,15 +34,23 @@ from opentelemetry.test.globals_test import (
 class TestBase(unittest.TestCase):
     # pylint: disable=C0103
 
-    def setUp(self):
-        (
-            self.tracer_provider,
-            self.memory_exporter,
-        ) = self.create_tracer_provider()
+    @classmethod
+    def setUpClass(cls):
+        result = cls.create_tracer_provider()
+        cls.tracer_provider, cls.memory_exporter = result
         # This is done because set_tracer_provider cannot override the
         # current tracer provider.
         reset_trace_globals()
-        trace_api.set_tracer_provider(self.tracer_provider)
+        trace_api.set_tracer_provider(cls.tracer_provider)
+
+    @classmethod
+    def tearDownClass(cls):
+        # This is done because set_tracer_provider cannot override the
+        # current tracer provider.
+        reset_trace_globals()
+
+    def setUp(self):
+        self.memory_exporter.clear()
         # This is done because set_meter_provider cannot override the
         # current meter provider.
         reset_metrics_globals()
