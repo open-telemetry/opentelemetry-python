@@ -230,3 +230,13 @@ class TestJaegerPropagator(unittest.TestCase):
 
                 ctx = FORMAT.extract(carrier)
                 self.assertDictEqual(Context(), ctx)
+
+    def test_non_recording_span_does_not_crash(self):
+        """Make sure propagator does not crash when working with NonRecordingSpan"""
+        mock_setter = Mock()
+        span = trace_api.NonRecordingSpan(trace_api.SpanContext(1, 1, True))
+        with trace_api.use_span(span, end_on_exit=True):
+            try:
+                FORMAT.inject({}, setter=mock_setter)
+            except Exception as exc:  # pylint: disable=broad-except
+                self.fail(f"Injecting failed for NonRecordingSpan with {exc}")
