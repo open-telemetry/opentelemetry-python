@@ -16,7 +16,6 @@
 import logging
 import multiprocessing
 import os
-import sys
 import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
@@ -43,8 +42,6 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 from opentelemetry.trace import TraceFlags
 from opentelemetry.trace.span import INVALID_SPAN_CONTEXT
-
-supports_register_at_fork = hasattr(os, "fork") and sys.version_info >= (3, 7)
 
 
 class TestSimpleLogProcessor(unittest.TestCase):
@@ -274,9 +271,9 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 2415)
 
-    @unittest.skipIf(
-        not supports_register_at_fork,
-        "needs *nix and minor version 7 or later",
+    @unittest.skipUnless(
+        hasattr(os, "fork"),
+        "needs *nix",
     )
     def test_batch_log_processor_fork(self):
         # pylint: disable=invalid-name

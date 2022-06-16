@@ -105,8 +105,8 @@ class ConsoleMetricExporter(MetricExporter):
         self,
         out: IO = stdout,
         formatter: Callable[
-            ["opentelemetry.sdk.metrics.export.Metric"], str
-        ] = lambda metric: metric.to_json()
+            ["opentelemetry.sdk.metrics.export.MetricsData"], str
+        ] = lambda metrics_data: metrics_data.to_json()
         + linesep,
     ):
         self.out = out
