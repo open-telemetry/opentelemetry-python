@@ -35,16 +35,34 @@
     (note that if this is not a patch release then the change log on main may already be up-to-date,
     in which case no pull request will be created).
 
-## Notes about "pre-releases"
+## Notes about version numbering for stable components
 
-* Pre-release versions (e.g. `1.9.0rc2`) are supported, and will cause a "short-term" release branch
-  to be created based on the full version name
-  (e.g. `release/v1.9.0rc2-0.21b0` instead of a "long-term" release branch name like `release/v1.9.x-0.21bx`).
-* Patch releases are not supported on short-term release branches.
-* The stable version in `main` in this case will remain the same (e.g. `1.9.0.dev`), since the next release version
-  (that is not a prereleaes) is still `1.9.0`.
-* The unstable version in `main` will be bumped  (e.g. `0.22b0.dev`).
-* Note that the workflow does not support the concept of a pre-release for unstable artifacts.
+* The version number for stable components in the `main` branch is always `X.Y.0.dev`,
+  where `X.Y.0` represents the next minor release.
+* When the release branch is created, you can opt to make a "pre-release", e.g. `X.Y.0rc2`.
+* If you ARE NOT making a "pre-release":
+  * A "long-term" release branch will be created, e.g. `release/v1.9.x-0.21bx` (notice the wildcard x's),
+    and after the release you can backport PRs to the release branch and make patch releases from it.
+  * The version number for stable components in the release branch will be bumped to remove the `.dev`,
+    e.g. `X.Y.0`.
+  * The version number for stable components in the `main` branch will be bumped to the next version,
+    e.g. `X.{Y+1}.0.dev`.
+* If you ARE making a "pre-release":
+  * A "short-term" release branch will be created, e.g. `release/v1.9.0rc2-0.21b0` (notice the precise version with
+    no wildcard x's), which does not support backports or patch releases.
+  * The version number for stable components in the `main` branch will not be bumped e.g. it will remain `X.Y.0.dev`.
+
+## Notes about version numbering for unstable components
+
+* The version number for unstable components in the `main` branch is always `0.Yb0.dev`,
+  where `0.Yb0` represents the next minor release.
+  * _Question: Is "b" (beta) redundant on "0." releases, or is this a python thing? I'm wondering if we can change it to `0.Y.0` to match up with practice in js and go repos._
+* Unstable components do not need "pre-releases", and so whether or not you are making a "pre-release" of stable
+  components:
+  * The version number for unstable components in the release branch will be bumped to remove the `.dev`,
+    e.g. `0.Yb0`.
+  * The version number for unstable components in the `main` branch will be bumped to the next version,
+    e.g. `0.{Y+1}b0.dev`.
 
 ## After the release
 
