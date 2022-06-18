@@ -41,15 +41,16 @@
   where `X.Y.0` represents the next minor release.
 * When the release branch is created, you can opt to make a "pre-release", e.g. `X.Y.0rc2`.
 * If you ARE NOT making a "pre-release":
-  * A "long-term" release branch will be created, e.g. `release/v1.9.x-0.21bx` (notice the wildcard x's),
-    and after the release you can backport PRs to the release branch and make patch releases from it.
+  * A "long-term" release branch will be created, e.g. `release/v1.9.x-0.21bx` (notice the wildcard x's).
+    Later on, after the initial release, you can backport PRs to a "long-term" release branch and make patch releases
+    from it.
   * The version number for stable components in the release branch will be bumped to remove the `.dev`,
     e.g. `X.Y.0`.
   * The version number for stable components in the `main` branch will be bumped to the next version,
     e.g. `X.{Y+1}.0.dev`.
 * If you ARE making a "pre-release":
-  * A "short-term" release branch will be created, e.g. `release/v1.9.0rc2-0.21b0` (notice the precise version with
-    no wildcard x's), which does not support backports or patch releases.
+  * A "short-term" release branch will be created, e.g. `release/v1.9.0rc2-0.21b0` (notice the precise version with no
+    wildcard x's). "Short-term" release branches do not support backports or patch releases after the initial release.
   * The version number for stable components in the `main` branch will not be bumped e.g. it will remain `X.Y.0.dev`.
 
 ## Notes about version numbering for unstable components
