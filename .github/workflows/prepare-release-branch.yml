@@ -27,10 +27,10 @@ jobs:
           fi
 
           if [[ ! -z $PRERELEASE_VERSION ]]; then
-            version=$(.github/scripts/get-version.sh)
-            version=${version//.dev/}
-            if [[ $PRERELEASE_VERSION != ${version}* ]]; then
-              echo "$PRERELEASE_VERSION is not a prerelease for the version on main ($version)"
+            stable_version=$(./scripts/eachdist.py version --mode stable)
+            stable_version=${stable_version//.dev/}
+            if [[ $PRERELEASE_VERSION != ${stable_version}* ]]; then
+              echo "$PRERELEASE_VERSION is not a prerelease for the version on main ($stable_version)"
               exit 1
             fi
           fi
