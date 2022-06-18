@@ -3,7 +3,7 @@ on:
   workflow_dispatch:
     inputs:
       prerelease_version:
-        description: "Pre-release version number? (e.g. 1.9.0-rc.2)"
+        description: "Pre-release version number? (e.g. 1.9.0rc2)"
         required: false
 
 jobs:
