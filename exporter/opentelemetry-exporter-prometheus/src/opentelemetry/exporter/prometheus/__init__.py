@@ -77,6 +77,9 @@ from prometheus_client.core import (
 )
 from prometheus_client.core import Metric as PrometheusMetric
 
+from opentelemetry.sdk.metrics._internal.aggregation import (
+    AggregationTemporality,
+)
 from opentelemetry.sdk.metrics.export import (
     Gauge,
     Histogram,
@@ -85,6 +88,7 @@ from opentelemetry.sdk.metrics.export import (
     MetricsData,
     Sum,
 )
+from opentelemetry.sdk.metrics.view import Aggregation
 
 _logger = getLogger(__name__)
 
@@ -112,8 +116,16 @@ class PrometheusMetricReader(MetricReader):
             the metric belongs to.
     """
 
-    def __init__(self, prefix: str = "") -> None:
-        super().__init__()
+    def __init__(
+        self,
+        preferred_temporality: Dict[type, AggregationTemporality] = None,
+        preferred_aggregation: Dict[type, Aggregation] = None,
+        prefix: str = "",
+    ) -> None:
+        super().__init__(
+            preferred_temporality=preferred_temporality,
+            preferred_aggregation=preferred_aggregation,
+        )
         self._collector = _CustomCollector(prefix)
         REGISTRY.register(self._collector)
         self._collector._callback = self.collect
