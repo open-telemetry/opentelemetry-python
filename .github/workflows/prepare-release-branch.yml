@@ -83,7 +83,9 @@ jobs:
           sed -Ei "s/^## Unreleased$/## Version ${VERSION/\//\\\/} ($date)/" CHANGELOG.md
 
       - name: Set git user
-        run: .github/scripts/set-git-user.sh
+        run: |
+          git config user.name opentelemetrybot
+          git config user.email 107717825+opentelemetrybot@users.noreply.github.com
 
       - name: Create pull request against the release branch
         env:
@@ -158,7 +160,9 @@ jobs:
           sed -Ei "s/^## Unreleased$/## Unreleased\n\n## Version ${VERSION/\//\\\/} ($date)/" CHANGELOG.md
 
       - name: Set git user
-        run: .github/scripts/set-git-user.sh
+        run: |
+          git config user.name opentelemetrybot
+          git config user.email 107717825+opentelemetrybot@users.noreply.github.com
 
       - name: Create pull request against main
         env:

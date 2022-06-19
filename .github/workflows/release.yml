@@ -180,7 +180,9 @@ jobs:
           fi
 
       - name: Set git user
-        run: .github/scripts/set-git-user.sh
+        run: |
+          git config user.name opentelemetrybot
+          git config user.email 107717825+opentelemetrybot@users.noreply.github.com
 
       - name: Create pull request against main
         env:
