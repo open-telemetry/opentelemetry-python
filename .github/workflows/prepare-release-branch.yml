@@ -71,7 +71,6 @@ jobs:
 
           echo "STABLE_VERSION=$stable_version" >> $GITHUB_ENV
           echo "UNSTABLE_VERSION=$unstable_version" >> $GITHUB_ENV
-          echo "VERSION=${stable_version}/${unstable_version}" >> $GITHUB_ENV
           echo "RELEASE_BRANCH_NAME=$release_branch_name" >> $GITHUB_ENV
 
       - name: Update version
@@ -80,7 +79,7 @@ jobs:
       - name: Update the change log with the approximate release date
         run: |
           date=$(date "+%Y-%m-%d")
-          sed -Ei "s/^## Unreleased$/## Version ${VERSION/\//\\\/} ($date)/" CHANGELOG.md
+          sed -Ei "s/^## Unreleased$/## Version ${STABLE_VERSION}\/${UNSTABLE_VERSION} ($date)/" CHANGELOG.md
 
       - name: Set git user
         run: |
@@ -92,8 +91,8 @@ jobs:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
-          message="Prepare release ${VERSION}"
-          branch="prepare-release-${VERSION/\//-}"
+          message="Prepare release ${STABLE_VERSION}/${UNSTABLE_VERSION}"
+          branch="prepare-release-${STABLE_VERSION}-${UNSTABLE_VERSION}"
 
           git commit -a -m "$message"
           git push origin HEAD:$branch
@@ -145,10 +144,11 @@ jobs:
 
           unstable_next_version="0.$((unstable_minor + 1))b0"
 
+          echo "STABLE_VERSION=${stable_version}" >> $GITHUB_ENV
           echo "STABLE_NEXT_VERSION=${stable_next_version}.dev" >> $GITHUB_ENV
+
+          echo "UNSTABLE_VERSION=${unstable_version}" >> $GITHUB_ENV
           echo "UNSTABLE_NEXT_VERSION=${unstable_next_version}.dev" >> $GITHUB_ENV
-          echo "NEXT_VERSION=${stable_next_version}.dev/${unstable_next_version}.dev" >> $GITHUB_ENV
-          echo "VERSION=${stable_version}/${unstable_version}" >> $GITHUB_ENV
 
       - name: Update version
         run: .github/scripts/update-version.sh $STABLE_NEXT_VERSION $UNSTABLE_NEXT_VERSION
@@ -157,7 +157,7 @@ jobs:
         run: |
           # the actual release date on main will be updated at the end of the release workflow
           date=$(date "+%Y-%m-%d")
-          sed -Ei "s/^## Unreleased$/## Unreleased\n\n## Version ${VERSION/\//\\\/} ($date)/" CHANGELOG.md
+          sed -Ei "s/^## Unreleased$/## Unreleased\n\n## Version ${STABLE_VERSION}\/${UNSTABLE_VERSION} ($date)/" CHANGELOG.md
 
       - name: Set git user
         run: |
@@ -169,9 +169,9 @@ jobs:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
-          message="Update version to ${NEXT_VERSION}"
-          body="Update version to \`${NEXT_VERSION}\`."
-          branch="update-version-to-${NEXT_VERSION/\//-}"
+          message="Update version to ${STABLE_NEXT_VERSION}/${UNSTABLE_VERSION}"
+          body="Update version to \`${STABLE_NEXT_VERSION}/${UNSTABLE_VERSION}\`."
+          branch="update-version-to-${STABLE_NEXT_VERSION}-${UNSTABLE_VERSION}"
 
           git commit -a -m "$message"
           git push origin HEAD:$branch

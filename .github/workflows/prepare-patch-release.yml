@@ -45,7 +45,6 @@ jobs:
 
           echo "STABLE_VERSION=$stable_version" >> $GITHUB_ENV
           echo "UNSTABLE_VERSION=$unstable_version" >> $GITHUB_ENV
-          echo "VERSION=${stable_version}/${unstable_version}" >> $GITHUB_ENV
 
       - name: Update version
         run: .github/scripts/update-version.sh $STABLE_VERSION $UNSTABLE_VERSION
@@ -53,7 +52,7 @@ jobs:
       - name: Update the change log with the approximate release date
         run: |
           date=$(date "+%Y-%m-%d")
-          sed -Ei "s/^## Unreleased$/## Version ${VERSION/\//\\\/} ($date)/" CHANGELOG.md
+          sed -Ei "s/^## Unreleased$/## Version ${STABLE_VERSION}\/${UNSTABLE_VERSION} ($date)/" CHANGELOG.md
 
       - name: Set git user
         run: |
@@ -65,8 +64,8 @@ jobs:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
-          message="Prepare release ${VERSION}"
-          branch="prepare-release-${VERSION/\//-}"
+          message="Prepare release ${STABLE_VERSION}/${UNSTABLE_VERSION}"
+          branch="prepare-release-${STABLE_VERSION}-${UNSTABLE_VERSION}"
 
           git commit -a -m "$message"
           git push origin HEAD:$branch
