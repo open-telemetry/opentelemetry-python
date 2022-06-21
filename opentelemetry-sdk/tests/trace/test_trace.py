@@ -1190,7 +1190,9 @@ RuntimeError: example error"""
             if sys.version_info >= (3, 11):
                 # https://docs.python.org/3.11/whatsnew/3.11.html#enhanced-error-locations-in-tracebacks
                 tracelines = stacktrace.splitlines()
-                tracelines.insert(-1, "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^")
+                tracelines.insert(
+                    -1, "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+                )
                 stacktrace = "\n".join(tracelines)
             self.assertIn(stacktrace, event.attributes["exception.stacktrace"])
 
