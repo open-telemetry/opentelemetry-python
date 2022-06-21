@@ -15,6 +15,7 @@
 # pylint: disable=too-many-lines
 import shutil
 import subprocess
+import sys
 import unittest
 from importlib import reload
 from logging import ERROR, WARNING
@@ -1186,6 +1187,13 @@ class TestSpan(unittest.TestCase):
             stacktrace = """in test_record_exception_context_manager
     raise RuntimeError("example error")
 RuntimeError: example error"""
+            if sys.version_info >= (3, 11):
+                # https://docs.python.org/3.11/whatsnew/3.11.html#enhanced-error-locations-in-tracebacks
+                tracelines = stacktrace.splitlines()
+                tracelines.insert(
+                    -1, "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+                )
+                stacktrace = "\n".join(tracelines)
             self.assertIn(stacktrace, event.attributes["exception.stacktrace"])
 
         try:
