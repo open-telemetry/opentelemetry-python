@@ -271,7 +271,7 @@ class TestSpanCreation(unittest.TestCase):
         )
         span1 = tracer1.start_span("foo")
         self.assertTrue(span1.is_recording())
-        self.assertEqual(tracer1.instrumentation_info.schema_url, None)
+        self.assertEqual(tracer1.instrumentation_info.schema_url, "")
         self.assertEqual(tracer1.instrumentation_info.version, "")
         self.assertEqual(tracer1.instrumentation_info.name, "")
 
@@ -280,7 +280,7 @@ class TestSpanCreation(unittest.TestCase):
         )
         span2 = tracer2.start_span("bar")
         self.assertTrue(span2.is_recording())
-        self.assertEqual(tracer2.instrumentation_info.schema_url, None)
+        self.assertEqual(tracer2.instrumentation_info.schema_url, "")
         self.assertEqual(tracer2.instrumentation_info.version, "")
         self.assertEqual(tracer2.instrumentation_info.name, "")
 
