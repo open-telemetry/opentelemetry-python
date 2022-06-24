@@ -321,15 +321,17 @@ class OTLPExporterMixin(
                         )
 
                     logger.warning(
-                        "Transient error %s encountered while exporting span batch, retrying in %ss.",
+                        "Transient error %s encountered while exporting %s, retrying in %ss.",
                         error.code(),
+                        data.__class__.__name__,
                         delay,
                     )
                     sleep(delay)
                     continue
                 else:
                     logger.error(
-                        "Failed to export span batch, error code: %s",
+                        "Failed to export %s, error code: %s",
+                        data.__class__.__name__,
                         error.code(),
                     )
 
