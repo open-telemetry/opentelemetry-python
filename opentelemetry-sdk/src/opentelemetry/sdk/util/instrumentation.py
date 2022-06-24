@@ -35,6 +35,8 @@ class InstrumentationInfo:
     ):
         self._name = name
         self._version = version
+        if schema_url is None:
+            schema_url = ""
         self._schema_url = schema_url
 
     def __repr__(self):
@@ -90,6 +92,8 @@ class InstrumentationScope:
     ) -> None:
         self._name = name
         self._version = version
+        if schema_url is None:
+            schema_url = ""
         self._schema_url = schema_url
 
     def __repr__(self) -> str:
