@@ -156,7 +156,7 @@ def detach(token: object) -> None:
     try:
         _RUNTIME_CONTEXT.detach(token)  # type: ignore
     except Exception:  # pylint: disable=broad-except
-        logger.error("Failed to detach context")
+        logger.exception("Failed to detach context")
 
 
 # FIXME This is a temporary location for the suppress instrumentation key.
