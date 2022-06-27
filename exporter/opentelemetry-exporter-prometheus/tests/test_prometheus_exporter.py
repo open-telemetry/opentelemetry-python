@@ -288,7 +288,7 @@ class TestPrometheusMetricReader(TestCase):
         self.assertEqual(collector._check_value(False), "false")
         self.assertEqual(collector._check_value(None), "null")
 
-    def test_multiple_collection_calls_1(self):
+    def test_multiple_collection_calls(self):
 
         metric_reader = PrometheusMetricReader(
             prefix="prefix",
@@ -304,16 +304,9 @@ class TestPrometheusMetricReader(TestCase):
         self.assertEqual(result_0, result_1)
         self.assertEqual(result_1, result_2)
 
-        metric_reader = PrometheusMetricReader(
-            prefix="prefix",
-            preferred_temporality={Counter: AggregationTemporality.DELTA},
-        )
-        provider = MeterProvider(metric_readers=[metric_reader])
-        meter = provider.get_meter("getting-started", "0.1.2")
-        counter = meter.create_counter("counter")
-        counter.add(1)
-        result_0 = list(metric_reader._collector.collect())
-        result_1 = list(metric_reader._collector.collect())
-        result_2 = list(metric_reader._collector.collect())
-        self.assertNotEqual(result_0, result_1)
-        self.assertEqual(result_1, result_2)
+    def test_not_delta_temporality(self):
+        with self.assertRaises(Exception):
+            PrometheusMetricReader(
+                prefix="prefix",
+                preferred_temporality={Counter: AggregationTemporality.DELTA},
+            )

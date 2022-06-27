@@ -80,6 +80,16 @@ from prometheus_client.core import Metric as PrometheusMetric
 from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
 )
+from opentelemetry.sdk.metrics._internal.instrument import Counter
+from opentelemetry.sdk.metrics._internal.instrument import (  # noqa: F401
+    Histogram as HistogramInstrument,
+)
+from opentelemetry.sdk.metrics._internal.instrument import (
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
+)
 from opentelemetry.sdk.metrics.export import (
     Gauge,
     Histogram,
@@ -122,6 +132,26 @@ class PrometheusMetricReader(MetricReader):
         preferred_aggregation: Dict[type, Aggregation] = None,
         prefix: str = "",
     ) -> None:
+
+        if preferred_temporality is None:
+
+            preferred_temporality = {
+                Counter: AggregationTemporality.CUMULATIVE,
+                UpDownCounter: AggregationTemporality.CUMULATIVE,
+                HistogramInstrument: AggregationTemporality.CUMULATIVE,
+                ObservableCounter: AggregationTemporality.CUMULATIVE,
+                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+                ObservableGauge: AggregationTemporality.CUMULATIVE,
+            }
+
+        else:
+            for temporality in preferred_temporality.values():
+                if temporality != AggregationTemporality.CUMULATIVE:
+                    raise Exception(
+                        "PrometheusMetricReader must be configured with "
+                        "CUMULATIVE temporality only for all instrument types"
+                    )
+
         super().__init__(
             preferred_temporality=preferred_temporality,
             preferred_aggregation=preferred_aggregation,
