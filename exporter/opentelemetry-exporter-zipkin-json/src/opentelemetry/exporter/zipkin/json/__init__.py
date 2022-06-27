@@ -36,6 +36,8 @@ collector endpoint using JSON over HTTP and supports multiple versions (v1, v2).
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
 
+    import requests
+
     trace.set_tracer_provider(TracerProvider())
     tracer = trace.get_tracer(__name__)
 
@@ -49,6 +51,7 @@ collector endpoint using JSON over HTTP and supports multiple versions (v1, v2).
         # local_node_port=31313,
         # max_tag_value_length=256
         # timeout=5 (in seconds)
+        # session=requests.Session()
     )
 
     # Create a BatchSpanProcessor and add the exporter to it
@@ -103,6 +106,7 @@ class ZipkinExporter(SpanExporter):
         local_node_port: Optional[int] = None,
         max_tag_value_length: Optional[int] = None,
         timeout: Optional[int] = None,
+        session: Optional[requests.Session] = None,
     ):
         """Zipkin exporter.
 
@@ -116,6 +120,7 @@ class ZipkinExporter(SpanExporter):
             max_tag_value_length: Max length string attribute values can have.
             timeout: Maximum time the Zipkin exporter will wait for each batch export.
                 The default value is 10s.
+            session: Connection session to the Zipkin collector endpoint.
 
             The tuple (local_node_ipv4, local_node_ipv6, local_node_port) is used to represent
             the network context of a node in the service graph.
@@ -135,7 +140,7 @@ class ZipkinExporter(SpanExporter):
         elif version == Protocol.V2:
             self.encoder = JsonV2Encoder(max_tag_value_length)
 
-        self.session = requests.Session()
+        self.session = session or requests.Session()
         self.session.headers.update(
             {"Content-Type": self.encoder.content_type()}
         )
