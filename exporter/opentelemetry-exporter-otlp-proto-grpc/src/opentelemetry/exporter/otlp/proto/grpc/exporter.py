@@ -14,7 +14,7 @@
 
 """OTLP Exporter"""
 
-import logging
+from logging import getLogger
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from os import environ
@@ -23,6 +23,7 @@ from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, Union
 from typing import Sequence as TypingSequence
 from typing import TypeVar
 from urllib.parse import urlparse
+from opentelemetry.sdk.trace import ReadableSpan
 
 from backoff import expo
 from google.rpc.error_details_pb2 import RetryInfo
@@ -52,8 +53,9 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.util.re import parse_headers
+from opentelemetry.sdk.metrics.export import MetricsData
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 SDKDataT = TypeVar("SDKDataT")
 ResourceDataT = TypeVar("ResourceDataT")
 TypingResourceT = TypeVar("TypingResourceT")
@@ -277,7 +279,9 @@ class OTLPExporterMixin(
                     logger.exception(error)
         return output
 
-    def _export(self, data: TypingSequence[SDKDataT]) -> ExportResultT:
+    def _export(
+        self, data: Union[TypingSequence[ReadableSpan], MetricsData]
+    ) -> ExportResultT:
 
         max_value = 64
         # expo returns a generator that yields delay values which grow
