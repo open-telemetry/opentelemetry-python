@@ -31,12 +31,12 @@ collector endpoint using JSON over HTTP and supports multiple versions (v1, v2).
 
 .. code:: python
 
+    import requests
+
     from opentelemetry import trace
     from opentelemetry.exporter.zipkin.json import ZipkinExporter
     from opentelemetry.sdk.trace import TracerProvider
     from opentelemetry.sdk.trace.export import BatchSpanProcessor
-
-    import requests
 
     trace.set_tracer_provider(TracerProvider())
     tracer = trace.get_tracer(__name__)
@@ -49,9 +49,9 @@ collector endpoint using JSON over HTTP and supports multiple versions (v1, v2).
         # local_node_ipv4="192.168.0.1",
         # local_node_ipv6="2001:db8::c001",
         # local_node_port=31313,
-        # max_tag_value_length=256
-        # timeout=5 (in seconds)
-        # session=requests.Session()
+        # max_tag_value_length=256,
+        # timeout=5 (in seconds),
+        # session=requests.Session(),
     )
 
     # Create a BatchSpanProcessor and add the exporter to it
