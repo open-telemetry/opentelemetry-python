@@ -8,6 +8,7 @@ OpenTelemetry Python API
 
     baggage
     context
+    propagate
     trace
     metrics
     environment_variables
