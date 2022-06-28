@@ -18,6 +18,8 @@ import unittest
 from typing import List, Tuple
 from unittest.mock import patch
 
+import requests
+
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_COMPRESSION,
@@ -81,6 +83,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(exporter._timeout, DEFAULT_TIMEOUT)
         self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
         self.assertEqual(exporter._headers, {})
+        self.assertIsInstance(exporter._session, requests.Session)
 
     @patch.dict(
         "os.environ",
@@ -99,6 +102,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             headers={"testHeader1": "value1", "testHeader2": "value2"},
             timeout=70,
             compression=Compression.NoCompression,
+            session=requests.Session(),
         )
 
         self.assertEqual(exporter._endpoint, "endpoint.local:69/logs")
@@ -109,6 +113,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             exporter._headers,
             {"testHeader1": "value1", "testHeader2": "value2"},
         )
+        self.assertIsInstance(exporter._session, requests.Session)
 
     @patch.dict(
         "os.environ",
@@ -133,6 +138,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(
             exporter._headers, {"envheader1": "val1", "envheader2": "val2"}
         )
+        self.assertIsInstance(exporter._session, requests.Session)
 
     def test_encode(self):
         sdk_logs, expected_encoding = self.get_test_logs()
