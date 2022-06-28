@@ -19,7 +19,7 @@ from contextlib import contextmanager
 
 from opentelemetry import trace
 from opentelemetry.test.globals_test import TraceGlobalsTest
-from opentelemetry.trace.span import INVALID_SPAN_CONTEXT, NonRecordingSpan
+from opentelemetry.trace.span import INVALID_SPAN_CONTEXT, NonRecordingSpan, Span
 
 
 class TestProvider(trace.NoOpTracerProvider):
@@ -37,8 +37,8 @@ class TestTracer(trace.NoOpTracer):
         return TestSpan(INVALID_SPAN_CONTEXT)
 
     @contextmanager
-    def start_as_current_span(self, *args, **kwargs):
-        with trace.use_span(self.start_span(*args, **kwargs)) as span:
+    def start_as_current_span(self, *args, **kwargs):  # type: ignore
+        with trace.use_span(self.start_span(*args, **kwargs)) as span:  # type: ignore
             yield span
 
 
@@ -86,14 +86,14 @@ class TestProxy(TraceGlobalsTest, unittest.TestCase):
         tracer = trace.get_tracer("test")
 
         @tracer.start_as_current_span("span")
-        def my_function():
+        def my_function() -> Span:
             return trace.get_current_span()
 
-        # call function before configuring tracing, should return
-        # INVALID_SPAN from the NoOpTracer
+        # call function before configuring tracing provider, should
+        # return INVALID_SPAN from the NoOpTracer
         self.assertEqual(my_function(), trace.INVALID_SPAN)
 
-        # configure tracing
+        # configure tracing provider
         trace.set_tracer_provider(TestProvider())
         # call function again, we should now be getting a TestSpan
         self.assertIsInstance(my_function(), TestSpan)
