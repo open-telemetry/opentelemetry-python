@@ -1,7 +1,7 @@
-opentelemetry.propagators.textmap
+opentelemetry.propagators.composite
 ====================================================
 
 Module contents
 ---------------
 
-.. automodule:: opentelemetry.propagators.textmap
+.. automodule:: opentelemetry.propagators.composite
