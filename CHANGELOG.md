@@ -41,7 +41,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2748](https://github.com/open-telemetry/opentelemetry-python/pull/2748))
 - Fix Jaeger propagator usage with NonRecordingSpan
   ([#2762](https://github.com/open-telemetry/opentelemetry-python/pull/2762))
-- Add `opentelemetry.propagate` moddule to the API reference documentation
+- Add `opentelemetry.propagate` module and `opentelemetry.propagators` package
+  to the API reference documentation
   ([#2785](https://github.com/open-telemetry/opentelemetry-python/pull/2785))
 
 
