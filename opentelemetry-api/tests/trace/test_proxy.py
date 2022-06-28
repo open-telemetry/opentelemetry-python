@@ -19,7 +19,11 @@ from contextlib import contextmanager
 
 from opentelemetry import trace
 from opentelemetry.test.globals_test import TraceGlobalsTest
-from opentelemetry.trace.span import INVALID_SPAN_CONTEXT, NonRecordingSpan, Span
+from opentelemetry.trace.span import (
+    INVALID_SPAN_CONTEXT,
+    NonRecordingSpan,
+    Span,
+)
 
 
 class TestProvider(trace.NoOpTracerProvider):
