@@ -536,11 +536,7 @@ class ReadableSpan:
     @staticmethod
     def _format_resource(resource):
         resource_json_obj = json.loads(resource.to_json())
-        if not resource.attributes:
-            del resource_json_obj["attributes"]
-        if not resource.schema_url:
-            del resource_json_obj["schema_url"]
-        return resource_json_obj
+        return {k: v for k, v in resource_json_obj.items() if v}
 
 
 class SpanLimits:
