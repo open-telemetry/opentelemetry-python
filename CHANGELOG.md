@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.12.0rc1-0.31b0...HEAD)
 
+- Add optional sessions parameter to all Exporters leveraging requests.Session
+([#2783](https://github.com/open-telemetry/opentelemetry-python/pull/2783))
 - Add min/max fields to Histogram
   ([#2759](https://github.com/open-telemetry/opentelemetry-python/pull/2759))
 - `opentelemetry-exporter-otlp-proto-http` Add support for OTLP/HTTP log exporter
