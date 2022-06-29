@@ -95,14 +95,15 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             OTEL_EXPORTER_OTLP_TIMEOUT: ENV_TIMEOUT,
         },
     )
-    def test_exporter_constructor_take_priority(self):
+    @patch('requests.Session')
+    def test_exporter_constructor_take_priority(self, mocked_session):
         exporter = OTLPLogExporter(
             endpoint="endpoint.local:69/logs",
             certificate_file="/hello.crt",
             headers={"testHeader1": "value1", "testHeader2": "value2"},
             timeout=70,
             compression=Compression.NoCompression,
-            session=requests.Session(),
+            session=mocked_session(),
         )
 
         self.assertEqual(exporter._endpoint, "endpoint.local:69/logs")
@@ -113,7 +114,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             exporter._headers,
             {"testHeader1": "value1", "testHeader2": "value2"},
         )
-        self.assertIsInstance(exporter._session, requests.Session)
+        self.assertTrue(exporter._session.called)
 
     @patch.dict(
         "os.environ",
@@ -125,7 +126,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             OTEL_EXPORTER_OTLP_TIMEOUT: ENV_TIMEOUT,
         },
     )
-    def test_exporter_env(self):
+    @patch('requests.Session')
+    def test_exporter_env(self, mocked_session):
 
         exporter = OTLPLogExporter()
 
@@ -138,7 +140,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(
             exporter._headers, {"envheader1": "val1", "envheader2": "val2"}
         )
-        self.assertIsInstance(exporter._session, requests.Session)
+        self.assertTrue(exporter._session.called)
 
     def test_encode(self):
         sdk_logs, expected_encoding = self.get_test_logs()
