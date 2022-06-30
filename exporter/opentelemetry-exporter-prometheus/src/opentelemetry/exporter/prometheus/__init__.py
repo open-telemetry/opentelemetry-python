@@ -77,14 +77,14 @@ from prometheus_client.core import (
 )
 from prometheus_client.core import Metric as PrometheusMetric
 
-from opentelemetry.sdk.metrics._internal.aggregation import (
+from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
 )
-from opentelemetry.sdk.metrics._internal.instrument import Counter
-from opentelemetry.sdk.metrics._internal.instrument import (  # noqa: F401
+from opentelemetry.sdk.metrics import Counter
+from opentelemetry.sdk.metrics import (  # noqa: F401
     Histogram as HistogramInstrument,
 )
-from opentelemetry.sdk.metrics._internal.instrument import (
+from opentelemetry.sdk.metrics import (
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
