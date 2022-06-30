@@ -77,7 +77,16 @@ from prometheus_client.core import (
 )
 from prometheus_client.core import Metric as PrometheusMetric
 
+from opentelemetry.sdk.metrics import Counter
+from opentelemetry.sdk.metrics import Histogram as HistogramInstrument
+from opentelemetry.sdk.metrics import (
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
+)
 from opentelemetry.sdk.metrics.export import (
+    AggregationTemporality,
     Gauge,
     Histogram,
     HistogramDataPoint,
@@ -114,7 +123,16 @@ class PrometheusMetricReader(MetricReader):
 
     def __init__(self, prefix: str = "") -> None:
 
-        super().__init__()
+        super().__init__(
+            preferred_temporality={
+                Counter: AggregationTemporality.CUMULATIVE,
+                UpDownCounter: AggregationTemporality.CUMULATIVE,
+                HistogramInstrument: AggregationTemporality.CUMULATIVE,
+                ObservableCounter: AggregationTemporality.CUMULATIVE,
+                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+                ObservableGauge: AggregationTemporality.CUMULATIVE,
+            }
+        )
         self._collector = _CustomCollector(prefix)
         REGISTRY.register(self._collector)
         self._collector._callback = self.collect
