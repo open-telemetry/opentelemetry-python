@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from time import sleep
 from unittest import TestCase
 from unittest.mock import Mock
 
@@ -125,6 +126,9 @@ class TestInMemoryMetricReader(TestCase):
             .data.data_points
         )[0]
 
+        # Windows tests fail without this sleep because both time_unix_nano
+        # values are the same.
+        sleep(0.1)
         reader.collect()
 
         number_data_point_1 = list(
