@@ -12,11 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from time import sleep
 from unittest import TestCase
 from unittest.mock import Mock
 
 from opentelemetry.metrics import Observation
-from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     InMemoryMetricReader,
@@ -105,4 +106,51 @@ class TestInMemoryMetricReader(TestCase):
                 )
             ),
             1,
+        )
+
+    def test_cumulative_multiple_collect(self):
+
+        reader = InMemoryMetricReader(
+            preferred_temporality={Counter: AggregationTemporality.CUMULATIVE}
+        )
+        meter = MeterProvider(metric_readers=[reader]).get_meter("test_meter")
+        counter = meter.create_counter("counter1")
+        counter.add(1, attributes={"key": "value"})
+
+        reader.collect()
+
+        number_data_point_0 = list(
+            reader._metrics_data.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points
+        )[0]
+
+        # Windows tests fail without this sleep because both time_unix_nano
+        # values are the same.
+        sleep(0.1)
+        reader.collect()
+
+        number_data_point_1 = list(
+            reader._metrics_data.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points
+        )[0]
+
+        self.assertEqual(
+            number_data_point_0.attributes, number_data_point_1.attributes
+        )
+        self.assertEqual(
+            number_data_point_0.start_time_unix_nano,
+            number_data_point_1.start_time_unix_nano,
+        )
+        self.assertEqual(
+            number_data_point_0.start_time_unix_nano,
+            number_data_point_1.start_time_unix_nano,
+        )
+        self.assertEqual(number_data_point_0.value, number_data_point_1.value)
+        self.assertGreater(
+            number_data_point_1.time_unix_nano,
+            number_data_point_0.time_unix_nano,
         )
