@@ -97,6 +97,9 @@ nitpicky = True
 # https://github.com/sphinx-doc/sphinx/pull/3744
 nitpick_ignore = [
     ("py:class", "ValueT"),
+    ("py:class", "CarrierT"),
+    ("py:obj", "opentelemetry.propagators.textmap.CarrierT"),
+    ("py:obj", "Union"),
     (
         "py:class",
         "opentelemetry.sdk.metrics._internal.instrument._Synchronous",
@@ -111,23 +114,6 @@ nitpick_ignore = [
     (
         "py:class",
         "opentelemetry.trace._LinkBase",
-    ),
-    # TODO: Understand why sphinx is not able to find this local class
-    (
-        "py:class",
-        "opentelemetry.propagators.textmap.TextMapPropagator",
-    ),
-    (
-        "py:class",
-        "opentelemetry.propagators.textmap.DefaultGetter",
-    ),
-    (
-        "any",
-        "opentelemetry.propagators.textmap.TextMapPropagator.extract",
-    ),
-    (
-        "any",
-        "opentelemetry.propagators.textmap.TextMapPropagator.inject",
     ),
 ]
 
