@@ -283,6 +283,19 @@ class OTLPExporterMixin(
         self, data: Union[TypingSequence[ReadableSpan], MetricsData]
     ) -> ExportResultT:
 
+        # FIXME remove this check if the export type for traces
+        # gets updated to a class that represents the proto
+        # TracesData and use the code below instead.
+        # logger.warning(
+        #     "Transient error %s encountered while exporting %s, retrying in %ss.",
+        #     error.code(),
+        #     data.__class__.__name__,
+        #     delay,
+        # )
+        if isinstance(data, TypingSequence):
+            exporting = "traces"
+        else:
+            exporting = "metrics"
         max_value = 64
         # expo returns a generator that yields delay values which grow
         # exponentially. Once delay is greater than max_value, the yielded
@@ -325,9 +338,12 @@ class OTLPExporterMixin(
                         )
 
                     logger.warning(
-                        "Transient error %s encountered while exporting %s, retrying in %ss.",
+                        (
+                            "Transient error %s encountered while exporting "
+                            "%s, retrying in %ss."
+                        ),
                         error.code(),
-                        data.__class__.__name__,
+                        exporting,
                         delay,
                     )
                     sleep(delay)
@@ -335,7 +351,7 @@ class OTLPExporterMixin(
                 else:
                     logger.error(
                         "Failed to export %s, error code: %s",
-                        data.__class__.__name__,
+                        exporting,
                         error.code(),
                     )
 
