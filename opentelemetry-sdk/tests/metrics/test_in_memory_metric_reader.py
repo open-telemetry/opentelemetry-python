@@ -16,7 +16,7 @@ from unittest import TestCase
 from unittest.mock import Mock
 
 from opentelemetry.metrics import Observation
-from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     InMemoryMetricReader,
@@ -24,7 +24,6 @@ from opentelemetry.sdk.metrics.export import (
     NumberDataPoint,
     Sum,
 )
-from opentelemetry.sdk.metrics import Counter
 
 
 class TestInMemoryMetricReader(TestCase):
@@ -120,15 +119,19 @@ class TestInMemoryMetricReader(TestCase):
         reader.collect()
 
         number_data_point_0 = list(
-            reader._metrics_data.resource_metrics[0].
-            scope_metrics[0].metrics[0].data.data_points
+            reader._metrics_data.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points
         )[0]
 
         reader.collect()
 
         number_data_point_1 = list(
-            reader._metrics_data.resource_metrics[0].
-            scope_metrics[0].metrics[0].data.data_points
+            reader._metrics_data.resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points
         )[0]
 
         self.assertEqual(
@@ -136,17 +139,14 @@ class TestInMemoryMetricReader(TestCase):
         )
         self.assertEqual(
             number_data_point_0.start_time_unix_nano,
-            number_data_point_1.start_time_unix_nano
+            number_data_point_1.start_time_unix_nano,
         )
         self.assertEqual(
             number_data_point_0.start_time_unix_nano,
-            number_data_point_1.start_time_unix_nano
+            number_data_point_1.start_time_unix_nano,
         )
-        self.assertEqual(
-            number_data_point_0.value,
-            number_data_point_1.value
-        )
+        self.assertEqual(number_data_point_0.value, number_data_point_1.value)
         self.assertGreater(
             number_data_point_1.time_unix_nano,
-            number_data_point_0.time_unix_nano
+            number_data_point_0.time_unix_nano,
         )

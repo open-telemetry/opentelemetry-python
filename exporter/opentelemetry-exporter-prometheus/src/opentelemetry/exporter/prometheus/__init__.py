@@ -78,19 +78,6 @@ from prometheus_client.core import (
 from prometheus_client.core import Metric as PrometheusMetric
 
 from opentelemetry.sdk.metrics.export import (
-    AggregationTemporality,
-)
-from opentelemetry.sdk.metrics import Counter
-from opentelemetry.sdk.metrics import (  # noqa: F401
-    Histogram as HistogramInstrument,
-)
-from opentelemetry.sdk.metrics import (
-    ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
-    UpDownCounter,
-)
-from opentelemetry.sdk.metrics.export import (
     Gauge,
     Histogram,
     HistogramDataPoint,
@@ -98,7 +85,6 @@ from opentelemetry.sdk.metrics.export import (
     MetricsData,
     Sum,
 )
-from opentelemetry.sdk.metrics.view import Aggregation
 
 _logger = getLogger(__name__)
 
@@ -126,36 +112,9 @@ class PrometheusMetricReader(MetricReader):
             the metric belongs to.
     """
 
-    def __init__(
-        self,
-        preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[type, Aggregation] = None,
-        prefix: str = "",
-    ) -> None:
+    def __init__(self, prefix: str = "") -> None:
 
-        if preferred_temporality is None:
-
-            preferred_temporality = {
-                Counter: AggregationTemporality.CUMULATIVE,
-                UpDownCounter: AggregationTemporality.CUMULATIVE,
-                HistogramInstrument: AggregationTemporality.CUMULATIVE,
-                ObservableCounter: AggregationTemporality.CUMULATIVE,
-                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-                ObservableGauge: AggregationTemporality.CUMULATIVE,
-            }
-
-        else:
-            for temporality in preferred_temporality.values():
-                if temporality != AggregationTemporality.CUMULATIVE:
-                    raise Exception(
-                        "PrometheusMetricReader must be configured with "
-                        "CUMULATIVE temporality only for all instrument types"
-                    )
-
-        super().__init__(
-            preferred_temporality=preferred_temporality,
-            preferred_aggregation=preferred_aggregation,
-        )
+        super().__init__()
         self._collector = _CustomCollector(prefix)
         REGISTRY.register(self._collector)
         self._collector._callback = self.collect
