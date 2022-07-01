@@ -18,7 +18,6 @@
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from logging import getLogger
-from re import ASCII
 from re import compile as re_compile
 from typing import (
     Callable,
@@ -39,8 +38,8 @@ from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
 
-_name_regex = re_compile(r"[a-zA-Z][-.\w]{0,62}", ASCII)
-_unit_regex = re_compile(r"\w{0,63}", ASCII)
+_name_regex = re_compile(r"[a-zA-Z][-_.a-zA-Z0-9]{0,62}")
+_unit_regex = re_compile(r"[\x00-\x7F]{0,63}")
 
 
 @dataclass(frozen=True)
