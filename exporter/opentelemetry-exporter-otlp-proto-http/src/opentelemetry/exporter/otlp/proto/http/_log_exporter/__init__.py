@@ -62,6 +62,7 @@ class OTLPLogExporter(LogExporter):
         headers: Optional[Dict[str, str]] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
+        session: Optional[requests.Session] = None,
     ):
         self._endpoint = endpoint or _append_logs_path(
             environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
@@ -75,7 +76,7 @@ class OTLPLogExporter(LogExporter):
             environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT)
         )
         self._compression = compression or _compression_from_env()
-        self._session = requests.Session()
+        self._session = session or requests.Session()
         self._session.headers.update(self._headers)
         self._session.headers.update(
             {"Content-Type": _ProtobufEncoder._CONTENT_TYPE}
