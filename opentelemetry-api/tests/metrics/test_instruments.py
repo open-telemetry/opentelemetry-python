@@ -571,6 +571,7 @@ class TestObservableUpDownCounter(TestCase):
         self.assertTrue(instrument._check_name_and_unit("a.", "unit")[0])
         self.assertTrue(instrument._check_name_and_unit("a-", "unit")[0])
         self.assertTrue(instrument._check_name_and_unit("a_", "unit")[0])
+
         self.assertFalse(instrument._check_name_and_unit("a" * 64, "unit")[0])
         self.assertFalse(instrument._check_name_and_unit("Ñ", "unit")[0])
         self.assertFalse(instrument._check_name_and_unit("_a", "unit")[0])
@@ -582,5 +583,7 @@ class TestObservableUpDownCounter(TestCase):
         instrument = ChildInstrument("name")
 
         self.assertTrue(instrument._check_name_and_unit("name", "a" * 63)[1])
+        self.assertTrue(instrument._check_name_and_unit("name", "{a}")[1])
+
         self.assertFalse(instrument._check_name_and_unit("name", "a" * 64)[1])
         self.assertFalse(instrument._check_name_and_unit("name", "Ñ")[1])
