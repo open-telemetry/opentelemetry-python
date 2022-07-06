@@ -299,7 +299,7 @@ class TestOTLPMetricExporter(TestCase):
         self.server.stop(None)
 
     def test_exporting(self):
-        self.assertEqual(self.exporter.exporting, "metrics")
+        self.assertEqual(self.exporter._exporting, "metrics")
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
