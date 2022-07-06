@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.12.0rc2-0.32b0...HEAD)
 
+
+- Fix tracing decorator with late configuration
+  ([#2754](https://github.com/open-telemetry/opentelemetry-python/pull/2754))
+
+
 ## [1.12.0rc2-0.32b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0rc2-0.32b0) - 2022-07-04
 
 
@@ -14,7 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix instrument name and unit regexes
   ([#2796](https://github.com/open-telemetry/opentelemetry-python/pull/2796))
 - Add optional sessions parameter to all Exporters leveraging requests.Session
-  ([#2783](https://github.com/open-telemetry/opentelemetry-python/pull/2783))
+  ([#2783](https://github.com/open-telemetry/opentelemetry-python/pull/2783)
 - Add min/max fields to Histogram
   ([#2759](https://github.com/open-telemetry/opentelemetry-python/pull/2759))
 - `opentelemetry-exporter-otlp-proto-http` Add support for OTLP/HTTP log exporter
