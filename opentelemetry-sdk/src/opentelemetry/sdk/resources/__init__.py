@@ -72,7 +72,7 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.semconv.resource import ResourceAttributes
 
-LabelValue = typing.Union[str, bool, int, float]
+LabelValue = typing.Union[str, bool, int, float, list[str]]
 Attributes = typing.Dict[str, LabelValue]
 logger = logging.getLogger(__name__)
 
