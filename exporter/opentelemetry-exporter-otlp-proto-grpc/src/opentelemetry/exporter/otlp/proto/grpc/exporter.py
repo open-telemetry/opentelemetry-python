@@ -292,10 +292,6 @@ class OTLPExporterMixin(
         #     data.__class__.__name__,
         #     delay,
         # )
-        if isinstance(data, TypingSequence):
-            exporting = "traces"
-        else:
-            exporting = "metrics"
         max_value = 64
         # expo returns a generator that yields delay values which grow
         # exponentially. Once delay is greater than max_value, the yielded
@@ -343,7 +339,7 @@ class OTLPExporterMixin(
                             "%s, retrying in %ss."
                         ),
                         error.code(),
-                        exporting,
+                        self._exporting,
                         delay,
                     )
                     sleep(delay)
@@ -351,7 +347,7 @@ class OTLPExporterMixin(
                 else:
                     logger.error(
                         "Failed to export %s, error code: %s",
-                        exporting,
+                        self._exporting,
                         error.code(),
                     )
 
@@ -363,4 +359,13 @@ class OTLPExporterMixin(
         return self._result.FAILURE
 
     def shutdown(self) -> None:
+        pass
+
+    @property
+    @abstractmethod
+    def _exporting(self) -> str:
+        """
+        Returns a string that describes the overall exporter, to be used in
+        warning messages.
+        """
         pass

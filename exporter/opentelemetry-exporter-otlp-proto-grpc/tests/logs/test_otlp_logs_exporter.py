@@ -161,6 +161,9 @@ class TestOTLPLogExporter(TestCase):
     def tearDown(self):
         self.server.stop(None)
 
+    def test_exporting(self):
+        self.assertEqual(self.exporter._exporting, "logs")
+
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
     )

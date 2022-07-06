@@ -80,22 +80,18 @@ class TestOTLPExporterMixin(TestCase):
             ) -> ExportServiceRequestT:
                 pass
 
+            @property
+            def _exporting(self) -> str:
+                return "mock"
+
         otlp_mock_exporter = OTLPMockExporter()
 
         with self.assertLogs(level=WARNING) as warning:
             # pylint: disable=protected-access
-            otlp_mock_exporter._export([])
+            otlp_mock_exporter._export(Mock())
             self.assertEqual(
                 warning.records[0].message,
-                "Failed to export traces, error code: None",
-            )
-
-        with self.assertLogs(level=WARNING) as warning:
-            # pylint: disable=protected-access
-            otlp_mock_exporter._export(None)
-            self.assertEqual(
-                warning.records[0].message,
-                "Failed to export metrics, error code: None",
+                "Failed to export mock, error code: None",
             )
 
         def code(self):  # pylint: disable=function-redefined
@@ -114,17 +110,6 @@ class TestOTLPExporterMixin(TestCase):
                 warning.records[0].message,
                 (
                     "Transient error StatusCode.CANCELLED encountered "
-                    "while exporting traces, retrying in 0s."
-                ),
-            )
-
-        with self.assertLogs(level=WARNING) as warning:
-            # pylint: disable=protected-access
-            otlp_mock_exporter._export(None)
-            self.assertEqual(
-                warning.records[0].message,
-                (
-                    "Transient error StatusCode.CANCELLED encountered "
-                    "while exporting metrics, retrying in 0s."
+                    "while exporting mock, retrying in 0s."
                 ),
             )

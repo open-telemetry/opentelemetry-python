@@ -217,6 +217,9 @@ class TestOTLPSpanExporter(TestCase):
     def tearDown(self):
         self.server.stop(None)
 
+    def test_exporting(self):
+        self.assertEqual(self.exporter.exporting, "traces")
+
     @patch.dict(
         "os.environ",
         {

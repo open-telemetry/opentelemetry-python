@@ -298,6 +298,9 @@ class TestOTLPMetricExporter(TestCase):
     def tearDown(self):
         self.server.stop(None)
 
+    def test_exporting(self):
+        self.assertEqual(self.exporter.exporting, "metrics")
+
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
     )

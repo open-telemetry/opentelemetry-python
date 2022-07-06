@@ -206,3 +206,7 @@ class OTLPMetricExporter(
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass
+
+    @property
+    def _exporting(self) -> str:
+        return "metrics"
