@@ -299,6 +299,7 @@ class TestOTLPMetricExporter(TestCase):
         self.server.stop(None)
 
     def test_exporting(self):
+        # pylint: disable=protected-access
         self.assertEqual(self.exporter._exporting, "metrics")
 
     @patch(
