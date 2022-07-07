@@ -154,3 +154,7 @@ class OTLPLogExporter(
 
     def shutdown(self) -> None:
         pass
+
+    @property
+    def _exporting(self) -> str:
+        return "logs"
