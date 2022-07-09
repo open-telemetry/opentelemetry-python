@@ -2,17 +2,17 @@ import random
 import time
 
 from opentelemetry.metrics import get_meter_provider, set_meter_provider
-from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics import MeterProvider, Counter
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricExporter,
     PeriodicExportingMetricReader,
 )
-from opentelemetry.sdk.metrics.view import SumAggregation, View
+from opentelemetry.sdk.metrics.view import View
 
-# Create a view matching the histogram instrument name `http.client.request.latency`
-# and configure the `SumAggregation` for the result metrics stream
-hist_to_sum_view = View(
-    instrument_name="http.client.request.latency", aggregation=SumAggregation()
+# Create a view matching the counter instrument `my.counter`
+# and configure the new name `my.counter.total` for the result metrics stream
+change_metric_name_view = View(
+    instrument_type=Counter, instrument_name="my.counter", name="my.counter.total"
 )
 
 # Use console exporter for the example
@@ -25,15 +25,15 @@ provider = MeterProvider(
         reader,
     ],
     views=[
-        hist_to_sum_view,
+        change_metric_name_view,
     ],
 )
 set_meter_provider(provider)
 
-meter = get_meter_provider().get_meter("view-change-aggregation", "0.1.2")
+meter = get_meter_provider().get_meter("view-name-change", "0.1.2")
 
-histogram = meter.create_histogram("http.client.request.latency")
+my_counter = meter.create_counter("my.counter")
 
 while 1:
-    histogram.record(99.9)
+    my_counter.add(random.randint(1, 10))
     time.sleep(random.random())
