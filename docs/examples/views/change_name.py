@@ -2,7 +2,7 @@ import random
 import time
 
 from opentelemetry.metrics import get_meter_provider, set_meter_provider
-from opentelemetry.sdk.metrics import MeterProvider, Counter
+from opentelemetry.sdk.metrics import Counter, MeterProvider
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricExporter,
     PeriodicExportingMetricReader,
