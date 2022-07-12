@@ -17,6 +17,8 @@ import os
 import unittest
 from unittest.mock import patch
 
+import requests
+
 from opentelemetry import trace
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.exporter.zipkin.proto.http import (
@@ -57,6 +59,7 @@ class TestZipkinExporter(unittest.TestCase):
     def test_constructor_default(self):
         exporter = ZipkinExporter()
         self.assertIsInstance(exporter.encoder, ProtobufEncoder)
+        self.assertIsInstance(exporter.session, requests.Session)
         self.assertEqual(exporter.endpoint, DEFAULT_ENDPOINT)
         self.assertEqual(exporter.local_node.service_name, TEST_SERVICE_NAME)
         self.assertEqual(exporter.local_node.ipv4, None)
@@ -85,6 +88,7 @@ class TestZipkinExporter(unittest.TestCase):
         exporter = ZipkinExporter(endpoint)
 
         self.assertIsInstance(exporter.encoder, ProtobufEncoder)
+        self.assertIsInstance(exporter.session, requests.Session)
         self.assertEqual(exporter.endpoint, endpoint)
         self.assertEqual(exporter.local_node.service_name, TEST_SERVICE_NAME)
         self.assertEqual(exporter.local_node.ipv4, None)
@@ -105,6 +109,7 @@ class TestZipkinExporter(unittest.TestCase):
         local_node_port = 30301
         max_tag_value_length = 56
         timeout_param = 20
+        session_param = requests.Session()
 
         exporter = ZipkinExporter(
             constructor_param_endpoint,
@@ -113,9 +118,11 @@ class TestZipkinExporter(unittest.TestCase):
             local_node_port,
             max_tag_value_length,
             timeout_param,
+            session_param,
         )
 
         self.assertIsInstance(exporter.encoder, ProtobufEncoder)
+        self.assertIsInstance(exporter.session, requests.Session)
         self.assertEqual(exporter.endpoint, constructor_param_endpoint)
         self.assertEqual(exporter.local_node.service_name, TEST_SERVICE_NAME)
         self.assertEqual(

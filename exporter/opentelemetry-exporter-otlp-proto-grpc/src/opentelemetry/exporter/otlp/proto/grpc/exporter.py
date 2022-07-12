@@ -14,7 +14,7 @@
 
 """OTLP Exporter"""
 
-import logging
+from logging import getLogger
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from os import environ
@@ -23,6 +23,7 @@ from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, Union
 from typing import Sequence as TypingSequence
 from typing import TypeVar
 from urllib.parse import urlparse
+from opentelemetry.sdk.trace import ReadableSpan
 
 from backoff import expo
 from google.rpc.error_details_pb2 import RetryInfo
@@ -52,8 +53,9 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.util.re import parse_headers
+from opentelemetry.sdk.metrics.export import MetricsData
 
-logger = logging.getLogger(__name__)
+logger = getLogger(__name__)
 SDKDataT = TypeVar("SDKDataT")
 ResourceDataT = TypeVar("ResourceDataT")
 TypingResourceT = TypeVar("TypingResourceT")
@@ -277,8 +279,19 @@ class OTLPExporterMixin(
                     logger.exception(error)
         return output
 
-    def _export(self, data: TypingSequence[SDKDataT]) -> ExportResultT:
+    def _export(
+        self, data: Union[TypingSequence[ReadableSpan], MetricsData]
+    ) -> ExportResultT:
 
+        # FIXME remove this check if the export type for traces
+        # gets updated to a class that represents the proto
+        # TracesData and use the code below instead.
+        # logger.warning(
+        #     "Transient error %s encountered while exporting %s, retrying in %ss.",
+        #     error.code(),
+        #     data.__class__.__name__,
+        #     delay,
+        # )
         max_value = 64
         # expo returns a generator that yields delay values which grow
         # exponentially. Once delay is greater than max_value, the yielded
@@ -321,15 +334,20 @@ class OTLPExporterMixin(
                         )
 
                     logger.warning(
-                        "Transient error %s encountered while exporting span batch, retrying in %ss.",
+                        (
+                            "Transient error %s encountered while exporting "
+                            "%s, retrying in %ss."
+                        ),
                         error.code(),
+                        self._exporting,
                         delay,
                     )
                     sleep(delay)
                     continue
                 else:
                     logger.error(
-                        "Failed to export span batch, error code: %s",
+                        "Failed to export %s, error code: %s",
+                        self._exporting,
                         error.code(),
                     )
 
@@ -341,4 +359,13 @@ class OTLPExporterMixin(
         return self._result.FAILURE
 
     def shutdown(self) -> None:
+        pass
+
+    @property
+    @abstractmethod
+    def _exporting(self) -> str:
+        """
+        Returns a string that describes the overall exporter, to be used in
+        warning messages.
+        """
         pass
