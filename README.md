@@ -136,9 +136,16 @@ Meeting notes are available as a public [Google doc](https://docs.google.com/doc
 Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telemetry/teams/python-approvers)):
 
 - [Aaron Abbott](https://github.com/aabmass), Google
-- [Alex Boten](https://github.com/codeboten), Lightstep
 - [Owais Lone](https://github.com/owais), Splunk
 - [Nathaniel Ruiz Nowell](https://github.com/NathanielRN), AWS
+
+Emeritus Approvers
+
+- [Carlos Alberto Cortez](https://github.com/carlosalberto), Lightstep
+- [Christian Neumüller](https://github.com/Oberon00), Dynatrace
+- [Hector Hernandez](https://github.com/hectorhdzg), Microsoft
+- [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Kinvolk
+- [Tahir H. Butt](https://github.com/majorgreys) DataDog
 
 *For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver).*
 
@@ -147,6 +154,13 @@ Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-t
 - [Diego Hurtado](https://github.com/ocelotl), Lightstep
 - [Leighton Chen](https://github.com/lzchen), Microsoft
 - [Srikanth Chekuri](https://github.com/srikanthccv)
+
+Emeritus Maintainers:
+
+- [Alex Boten](https://github.com/codeboten), Lightstep
+- [Chris Kleinknecht](https://github.com/c24t), Google
+- [Reiley Yang](https://github.com/reyang), Microsoft
+- [Yusuke Tsutsumi](https://github.com/toumorokoshi), Google
 
 *For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer).*
 
