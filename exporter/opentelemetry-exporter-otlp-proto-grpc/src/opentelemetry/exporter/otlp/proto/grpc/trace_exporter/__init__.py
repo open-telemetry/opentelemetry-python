@@ -289,3 +289,7 @@ class OTLPSpanExporter(
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         return self._export(spans)
+
+    @property
+    def _exporting(self):
+        return "traces"
