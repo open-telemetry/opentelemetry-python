@@ -71,8 +71,9 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_SERVICE_NAME,
 )
 from opentelemetry.semconv.resource import ResourceAttributes
+from opentelemetry.util.types import AttributeValue
 
-LabelValue = typing.Union[str, bool, int, float, list[str]]
+LabelValue = AttributeValue
 Attributes = typing.Dict[str, LabelValue]
 logger = logging.getLogger(__name__)
 
