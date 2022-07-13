@@ -15,6 +15,8 @@
 import unittest
 from unittest.mock import patch
 
+import requests
+
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_COMPRESSION,
@@ -55,6 +57,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(exporter._timeout, DEFAULT_TIMEOUT)
         self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
         self.assertEqual(exporter._headers, {})
+        self.assertIsInstance(exporter._session, requests.Session)
 
     @patch.dict(
         "os.environ",
@@ -86,6 +89,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 "traceenv3": "==val3==",
             },
         )
+        self.assertIsInstance(exporter._session, requests.Session)
 
     @patch.dict(
         "os.environ",
@@ -105,6 +109,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             headers={"testHeader1": "value1", "testHeader2": "value2"},
             timeout=20,
             compression=Compression.NoCompression,
+            session=requests.Session(),
         )
 
         self.assertEqual(exporter._endpoint, "example.com/1234")
@@ -115,6 +120,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             exporter._headers,
             {"testHeader1": "value1", "testHeader2": "value2"},
         )
+        self.assertIsInstance(exporter._session, requests.Session)
 
     @patch.dict(
         "os.environ",

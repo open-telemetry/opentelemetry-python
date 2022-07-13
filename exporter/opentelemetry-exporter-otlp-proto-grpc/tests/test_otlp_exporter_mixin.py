@@ -12,13 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import WARNING
+from types import MethodType
+from typing import Sequence
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from grpc import Compression
 
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
+    ExportServiceRequestT,
     InvalidCompressionValueException,
+    OTLPExporterMixin,
+    RpcError,
+    SDKDataT,
+    StatusCode,
     environ_to_compression,
 )
 
@@ -47,3 +55,61 @@ class TestOTLPExporterMixin(TestCase):
             )
             with self.assertRaises(InvalidCompressionValueException):
                 environ_to_compression("test_invalid")
+
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.expo")
+    def test_export_warning(self, mock_expo):
+
+        mock_expo.configure_mock(**{"return_value": [0]})
+
+        rpc_error = RpcError()
+
+        def code(self):
+            return None
+
+        rpc_error.code = MethodType(code, rpc_error)
+
+        class OTLPMockExporter(OTLPExporterMixin):
+
+            _result = Mock()
+            _stub = Mock(
+                **{"return_value": Mock(**{"Export.side_effect": rpc_error})}
+            )
+
+            def _translate_data(
+                self, data: Sequence[SDKDataT]
+            ) -> ExportServiceRequestT:
+                pass
+
+            @property
+            def _exporting(self) -> str:
+                return "mock"
+
+        otlp_mock_exporter = OTLPMockExporter()
+
+        with self.assertLogs(level=WARNING) as warning:
+            # pylint: disable=protected-access
+            otlp_mock_exporter._export(Mock())
+            self.assertEqual(
+                warning.records[0].message,
+                "Failed to export mock, error code: None",
+            )
+
+        def code(self):  # pylint: disable=function-redefined
+            return StatusCode.CANCELLED
+
+        def trailing_metadata(self):
+            return {}
+
+        rpc_error.code = MethodType(code, rpc_error)
+        rpc_error.trailing_metadata = MethodType(trailing_metadata, rpc_error)
+
+        with self.assertLogs(level=WARNING) as warning:
+            # pylint: disable=protected-access
+            otlp_mock_exporter._export([])
+            self.assertEqual(
+                warning.records[0].message,
+                (
+                    "Transient error StatusCode.CANCELLED encountered "
+                    "while exporting mock, retrying in 0s."
+                ),
+            )
