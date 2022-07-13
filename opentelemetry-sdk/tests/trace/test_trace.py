@@ -15,6 +15,7 @@
 # pylint: disable=too-many-lines
 import shutil
 import subprocess
+import sys
 import unittest
 from importlib import reload
 from logging import ERROR, WARNING
@@ -45,7 +46,7 @@ from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
     new_tracer,
 )
-from opentelemetry.trace import StatusCode
+from opentelemetry.trace import Status, StatusCode
 from opentelemetry.util._time import _time_ns
 
 
@@ -270,7 +271,7 @@ class TestSpanCreation(unittest.TestCase):
         )
         span1 = tracer1.start_span("foo")
         self.assertTrue(span1.is_recording())
-        self.assertEqual(tracer1.instrumentation_info.schema_url, None)
+        self.assertEqual(tracer1.instrumentation_info.schema_url, "")
         self.assertEqual(tracer1.instrumentation_info.version, "")
         self.assertEqual(tracer1.instrumentation_info.name, "")
 
@@ -279,7 +280,7 @@ class TestSpanCreation(unittest.TestCase):
         )
         span2 = tracer2.start_span("bar")
         self.assertTrue(span2.is_recording())
-        self.assertEqual(tracer2.instrumentation_info.schema_url, None)
+        self.assertEqual(tracer2.instrumentation_info.schema_url, "")
         self.assertEqual(tracer2.instrumentation_info.version, "")
         self.assertEqual(tracer2.instrumentation_info.name, "")
 
@@ -903,6 +904,39 @@ class TestSpan(unittest.TestCase):
         span.end(end_time)
         self.assertEqual(end_time, span.end_time)
 
+    def test_span_set_status(self):
+
+        span1 = self.tracer.start_span("span1")
+        span1.set_status(Status(status_code=StatusCode.ERROR))
+        self.assertEqual(span1.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span1.status.description, None)
+
+        span2 = self.tracer.start_span("span2")
+        span2.set_status(
+            Status(status_code=StatusCode.ERROR, description="desc")
+        )
+        self.assertEqual(span2.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span2.status.description, "desc")
+
+        span3 = self.tracer.start_span("span3")
+        span3.set_status(StatusCode.ERROR)
+        self.assertEqual(span3.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span3.status.description, None)
+
+        span4 = self.tracer.start_span("span4")
+        span4.set_status(StatusCode.ERROR, "span4 desc")
+        self.assertEqual(span4.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span4.status.description, "span4 desc")
+
+        span5 = self.tracer.start_span("span5")
+        with self.assertLogs(level=WARNING):
+            span5.set_status(
+                Status(status_code=StatusCode.ERROR, description="desc"),
+                description="ignored",
+            )
+        self.assertEqual(span5.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span5.status.description, "desc")
+
     def test_ended_span(self):
         """Events, attributes are not allowed after span is ended"""
 
@@ -1153,6 +1187,13 @@ class TestSpan(unittest.TestCase):
             stacktrace = """in test_record_exception_context_manager
     raise RuntimeError("example error")
 RuntimeError: example error"""
+            if sys.version_info >= (3, 11):
+                # https://docs.python.org/3.11/whatsnew/3.11.html#enhanced-error-locations-in-tracebacks
+                tracelines = stacktrace.splitlines()
+                tracelines.insert(
+                    -1, "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
+                )
+                stacktrace = "\n".join(tracelines)
             self.assertIn(stacktrace, event.attributes["exception.stacktrace"])
 
         try:

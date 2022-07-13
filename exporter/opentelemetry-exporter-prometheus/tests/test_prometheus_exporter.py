@@ -23,6 +23,7 @@ from opentelemetry.exporter.prometheus import (
     PrometheusMetricReader,
     _CustomCollector,
 )
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Histogram,
@@ -51,7 +52,7 @@ class TestPrometheusMetricReader(TestCase):
     def test_constructor(self):
         """Test the constructor."""
         with self._registry_register_patch:
-            exporter = PrometheusMetricReader("testprefix")
+            exporter = PrometheusMetricReader(prefix="testprefix")
             self.assertEqual(exporter._collector._prefix, "testprefix")
             self.assertTrue(self._mock_registry_register.called)
 
@@ -286,3 +287,16 @@ class TestPrometheusMetricReader(TestCase):
         self.assertEqual(collector._check_value(True), "true")
         self.assertEqual(collector._check_value(False), "false")
         self.assertEqual(collector._check_value(None), "null")
+
+    def test_multiple_collection_calls(self):
+
+        metric_reader = PrometheusMetricReader(prefix="prefix")
+        provider = MeterProvider(metric_readers=[metric_reader])
+        meter = provider.get_meter("getting-started", "0.1.2")
+        counter = meter.create_counter("counter")
+        counter.add(1)
+        result_0 = list(metric_reader._collector.collect())
+        result_1 = list(metric_reader._collector.collect())
+        result_2 = list(metric_reader._collector.collect())
+        self.assertEqual(result_0, result_1)
+        self.assertEqual(result_1, result_2)

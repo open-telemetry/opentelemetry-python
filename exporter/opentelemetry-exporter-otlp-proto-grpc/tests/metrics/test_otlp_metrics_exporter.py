@@ -298,6 +298,10 @@ class TestOTLPMetricExporter(TestCase):
     def tearDown(self):
         self.server.stop(None)
 
+    def test_exporting(self):
+        # pylint: disable=protected-access
+        self.assertEqual(self.exporter._exporting, "metrics")
+
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
     )
@@ -720,6 +724,8 @@ class TestOTLPMetricExporter(TestCase):
                                                 explicit_bounds=[10.0, 20.0],
                                                 exemplars=[],
                                                 flags=pb2.DataPointFlags.FLAG_NONE,
+                                                max=18.0,
+                                                min=8.0,
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.DELTA,
@@ -782,6 +788,8 @@ class TestOTLPMetricExporter(TestCase):
                                                 explicit_bounds=[10.0, 20.0],
                                                 exemplars=[],
                                                 flags=pb2.DataPointFlags.FLAG_NONE,
+                                                max=18.0,
+                                                min=8.0,
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.DELTA,
@@ -816,6 +824,8 @@ class TestOTLPMetricExporter(TestCase):
                                                 explicit_bounds=[10.0, 20.0],
                                                 exemplars=[],
                                                 flags=pb2.DataPointFlags.FLAG_NONE,
+                                                max=18.0,
+                                                min=8.0,
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.DELTA,
@@ -857,6 +867,8 @@ class TestOTLPMetricExporter(TestCase):
                                                 explicit_bounds=[10.0, 20.0],
                                                 exemplars=[],
                                                 flags=pb2.DataPointFlags.FLAG_NONE,
+                                                max=18.0,
+                                                min=8.0,
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.DELTA,
@@ -898,6 +910,8 @@ class TestOTLPMetricExporter(TestCase):
                                                 explicit_bounds=[10.0, 20.0],
                                                 exemplars=[],
                                                 flags=pb2.DataPointFlags.FLAG_NONE,
+                                                max=18.0,
+                                                min=8.0,
                                             )
                                         ],
                                         aggregation_temporality=AggregationTemporality.DELTA,

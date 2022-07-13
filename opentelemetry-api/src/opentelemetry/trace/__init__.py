@@ -371,6 +371,14 @@ class Tracer(ABC):
             with opentelemetry.trace.use_span(span, end_on_exit=True):
                 do_work()
 
+        This can also be used as a decorator::
+
+            @tracer.start_as_current_span("name"):
+            def function():
+                ...
+
+            function()
+
         Args:
             name: The name of the span to be created.
             context: An optional Context containing the span's parent. Defaults to the
@@ -426,8 +434,10 @@ class ProxyTracer(Tracer):
     def start_span(self, *args, **kwargs) -> Span:  # type: ignore
         return self._tracer.start_span(*args, **kwargs)  # type: ignore
 
-    def start_as_current_span(self, *args, **kwargs) -> Span:  # type: ignore
-        return self._tracer.start_as_current_span(*args, **kwargs)  # type: ignore
+    @contextmanager  # type: ignore
+    def start_as_current_span(self, *args, **kwargs) -> Iterator[Span]:  # type: ignore
+        with self._tracer.start_as_current_span(*args, **kwargs) as span:  # type: ignore
+            yield span
 
 
 class NoOpTracer(Tracer):

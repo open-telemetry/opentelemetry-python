@@ -146,6 +146,8 @@ class OTLPMetricExporter(
                                 sum=data_point.sum,
                                 bucket_counts=data_point.bucket_counts,
                                 explicit_bounds=data_point.explicit_bounds,
+                                max=data_point.max,
+                                min=data_point.min,
                             )
                             pb2_metric.histogram.aggregation_temporality = (
                                 metric.data.aggregation_temporality
@@ -204,3 +206,7 @@ class OTLPMetricExporter(
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass
+
+    @property
+    def _exporting(self) -> str:
+        return "metrics"

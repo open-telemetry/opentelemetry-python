@@ -63,6 +63,7 @@ class OTLPSpanExporter(SpanExporter):
         headers: Optional[Dict[str, str]] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
+        session: Optional[requests.Session] = None,
     ):
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
@@ -86,7 +87,7 @@ class OTLPSpanExporter(SpanExporter):
             )
         )
         self._compression = compression or _compression_from_env()
-        self._session = requests.Session()
+        self._session = session or requests.Session()
         self._session.headers.update(self._headers)
         self._session.headers.update(
             {"Content-Type": _ProtobufEncoder._CONTENT_TYPE}

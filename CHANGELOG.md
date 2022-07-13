@@ -5,11 +5,59 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.12.0rc1-0.31b0...HEAD)
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.12.0rc2-0.32b0...HEAD)
+
+- Fix OTLP gRPC exporter warning message
+  ([#2781](https://github.com/open-telemetry/opentelemetry-python/pull/2781))
+- Fix tracing decorator with late configuration
+  ([#2754](https://github.com/open-telemetry/opentelemetry-python/pull/2754))
+
+## [1.12.0rc2-0.32b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0rc2-0.32b0) - 2022-07-04
+
+- Fix instrument name and unit regexes
+  ([#2796](https://github.com/open-telemetry/opentelemetry-python/pull/2796))
+- Add optional sessions parameter to all Exporters leveraging requests.Session
+  ([#2783](https://github.com/open-telemetry/opentelemetry-python/pull/2783)
+- Add min/max fields to Histogram
+  ([#2759](https://github.com/open-telemetry/opentelemetry-python/pull/2759))
+- `opentelemetry-exporter-otlp-proto-http` Add support for OTLP/HTTP log exporter
+  ([#2462](https://github.com/open-telemetry/opentelemetry-python/pull/2462))
+- Fix yield of `None`-valued points
+  ([#2745](https://github.com/open-telemetry/opentelemetry-python/pull/2745))
+- Add missing `to_json` methods
+  ([#2722](https://github.com/open-telemetry/opentelemetry-python/pull/2722)
+- Fix type hints for textmap `Getter` and `Setter`
+  ([#2657](https://github.com/open-telemetry/opentelemetry-python/pull/2657))
+- Fix LogEmitterProvider.force_flush hanging randomly
+  ([#2714](https://github.com/open-telemetry/opentelemetry-python/pull/2714))
+- narrow protobuf dependencies to exclude protobuf >= 4
+  ([#2720](https://github.com/open-telemetry/opentelemetry-python/pull/2720))
+- Specify worker thread names
+  ([#2724](https://github.com/open-telemetry/opentelemetry-python/pull/2724))
+- Loosen dependency on `backoff` for newer Python versions
+  ([#2726](https://github.com/open-telemetry/opentelemetry-python/pull/2726))
+- fix: frozenset object has no attribute items
+  ([#2727](https://github.com/open-telemetry/opentelemetry-python/pull/2727))
+- fix: create suppress HTTP instrumentation key in opentelemetry context 
+  ([#2729](https://github.com/open-telemetry/opentelemetry-python/pull/2729))
+- Support logs SDK auto instrumentation enable/disable with env
+  ([#2728](https://github.com/open-telemetry/opentelemetry-python/pull/2728))
+- fix: update entry point object references for metrics
+  ([#2731](https://github.com/open-telemetry/opentelemetry-python/pull/2731))
+- Allow set_status to accept the StatusCode and optional description
+  ([#2735](https://github.com/open-telemetry/opentelemetry-python/pull/2735))
+- Configure auto instrumentation to support metrics
+  ([#2705](https://github.com/open-telemetry/opentelemetry-python/pull/2705))
+- Add entrypoint for metrics exporter
+  ([#2748](https://github.com/open-telemetry/opentelemetry-python/pull/2748))
+- Fix Jaeger propagator usage with NonRecordingSpan
+  ([#2762](https://github.com/open-telemetry/opentelemetry-python/pull/2762))
+- Add `opentelemetry.propagate` module and `opentelemetry.propagators` package
+  to the API reference documentation
+  ([#2785](https://github.com/open-telemetry/opentelemetry-python/pull/2785))
+
 
 ## [1.12.0rc1-0.31b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0rc1-0.31b0) - 2022-05-17
-
-
 
 - Fix LoggingHandler to handle LogRecord with exc_info=False
   ([#2690](https://github.com/open-telemetry/opentelemetry-python/pull/2690))
@@ -90,7 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   pages that have moved, see
   [#2453](https://github.com/open-telemetry/opentelemetry-python/pull/2453), and
   [#2498](https://github.com/open-telemetry/opentelemetry-python/pull/2498).
-- `opentelemetry-exporter-otlp-grpc` update SDK dependency to ~1.9.
+- `opentelemetry-exporter-otlp-proto-grpc` update SDK dependency to ~1.9.
   ([#2442](https://github.com/open-telemetry/opentelemetry-python/pull/2442))
 - bugfix(auto-instrumentation): attach OTLPHandler to root logger
   ([#2450](https://github.com/open-telemetry/opentelemetry-python/pull/2450))
