@@ -7,14 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.12.0rc2-0.32b0...HEAD)
 
-
+- Fix OTLP gRPC exporter warning message
+  ([#2781](https://github.com/open-telemetry/opentelemetry-python/pull/2781))
 - Fix tracing decorator with late configuration
   ([#2754](https://github.com/open-telemetry/opentelemetry-python/pull/2754))
 
-
 ## [1.12.0rc2-0.32b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0rc2-0.32b0) - 2022-07-04
-
-
 
 - Fix instrument name and unit regexes
   ([#2796](https://github.com/open-telemetry/opentelemetry-python/pull/2796))
