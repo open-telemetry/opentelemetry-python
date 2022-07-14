@@ -492,7 +492,7 @@ class ReadableSpan:
         f_span["attributes"] = self._format_attributes(self._attributes)
         f_span["events"] = self._format_events(self._events)
         f_span["links"] = self._format_links(self._links)
-        f_span["resource"] = self._format_resource(self._resource)
+        f_span["resource"] = json.loads(self.resource.to_json())
 
         return json.dumps(f_span, indent=indent)
 
@@ -532,11 +532,6 @@ class ReadableSpan:
             f_link["attributes"] = Span._format_attributes(link.attributes)
             f_links.append(f_link)
         return f_links
-
-    @staticmethod
-    def _format_resource(resource):
-        resource_json_obj = json.loads(resource.to_json())
-        return {k: v for k, v in resource_json_obj.items() if v}
 
 
 class SpanLimits:
