@@ -123,8 +123,7 @@ class JaegerExporter(SpanExporter):
         self.collector_endpoint = collector_endpoint or environ.get(
             OTEL_EXPORTER_JAEGER_ENDPOINT, DEFAULT_GRPC_COLLECTOR_ENDPOINT
         )
-        self.insecure = insecure or environ.get(OTEL_EXPORTER_JAEGER_GRPC_INSECURE,
-                                                "").strip().lower() == "true"
+        self.insecure = insecure or environ.get(OTEL_EXPORTER_JAEGER_GRPC_INSECURE, "").strip().lower() == "true"
         self._timeout = timeout or int(
             environ.get(OTEL_EXPORTER_JAEGER_TIMEOUT, DEFAULT_EXPORT_TIMEOUT)
         )
