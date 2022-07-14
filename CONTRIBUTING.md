@@ -45,15 +45,7 @@ during their normal contribution hours.
 
 ## Development
 
-To quickly get up and running, you can use the `scripts/eachdist.py` tool that
-ships with this project. First create a virtualenv and activate it.
-Then run `python scripts/eachdist.py develop` to install all required packages
-as well as the project's packages themselves (in `--editable` mode).
-
-You can then run `scripts/eachdist.py test` to test everything or
-`scripts/eachdist.py lint` to lint everything (fixing anything that is auto-fixable).
-
-Additionally, this project uses [tox](https://tox.readthedocs.io) to automate
+This project uses [tox](https://tox.readthedocs.io) to automate
 some aspects of development, including testing against multiple Python versions.
 To install `tox`, run:
 
@@ -103,8 +95,6 @@ The continuation integration overrides that environment variable with as per the
 [here](https://github.com/open-telemetry/opentelemetry-python/blob/9020b0baaeb41b7137badca988bb5c2d562cddee/.github/workflows/test.yml#L13).
 
 ### Benchmarks
-
-Performance progression of benchmarks for packages distributed by OpenTelemetry Python can be viewed as a [graph of throughput vs commit history](https://opentelemetry-python.readthedocs.io/en/latest/performance/benchmarks.html). From the linked page, you can download a JSON file with the performance results.
 
 Running the `tox` tests also runs the performance tests if any are available. Benchmarking tests are done with `pytest-benchmark` and they output a table with results to the console.
 
