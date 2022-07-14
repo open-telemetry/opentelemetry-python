@@ -194,6 +194,14 @@ class TestZipkinExporter(unittest.TestCase):
 
 
 class TestZipkinNodeEndpoint(unittest.TestCase):
+    @classmethod
+    def setUpClass(cls):
+        trace.set_tracer_provider(
+            TracerProvider(
+                resource=Resource({SERVICE_NAME: TEST_SERVICE_NAME})
+            )
+        )
+
     def test_constructor_default(self):
         node_endpoint = NodeEndpoint()
         self.assertEqual(node_endpoint.ipv4, None)

@@ -23,6 +23,7 @@ from opentelemetry.exporter.zipkin.encoder import (
 from opentelemetry.exporter.zipkin.json.v2 import JsonV2Encoder
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk import trace
+from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
 )
@@ -33,6 +34,14 @@ from .common_tests import TEST_SERVICE_NAME, CommonEncoderTestCases
 
 # pylint: disable=protected-access
 class TestV2JsonEncoder(CommonEncoderTestCases.CommonJsonEncoderTest):
+    @classmethod
+    def setUpClass(cls):
+        trace_api.set_tracer_provider(
+            trace.TracerProvider(
+                resource=Resource({SERVICE_NAME: TEST_SERVICE_NAME})
+            )
+        )
+
     @staticmethod
     def get_encoder(*args, **kwargs) -> JsonV2Encoder:
         return JsonV2Encoder(*args, **kwargs)
