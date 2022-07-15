@@ -28,7 +28,7 @@ from opentelemetry.sdk.metrics.view import View, DropAggregation
 drop_aggregation_view = View(
     instrument_type=Counter,
     instrument_name="my.counter",
-    aggregation=DropAggregation()
+    aggregation=DropAggregation(),
 )
 
 exporter = ConsoleMetricExporter()
