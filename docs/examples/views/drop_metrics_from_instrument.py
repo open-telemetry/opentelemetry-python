@@ -21,7 +21,7 @@ from opentelemetry.sdk.metrics.export import (
     ConsoleMetricExporter,
     PeriodicExportingMetricReader,
 )
-from opentelemetry.sdk.metrics.view import View, DropAggregation
+from opentelemetry.sdk.metrics.view import DropAggregation, View
 
 # Create a view matching the counter instrument `my.counter`
 # and configure the view to drop the aggregation.
