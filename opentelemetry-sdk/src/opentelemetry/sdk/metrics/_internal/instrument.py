@@ -14,7 +14,9 @@
 
 # pylint: disable=too-many-ancestors, unused-import
 
+from contextlib import contextmanager
 from logging import getLogger
+from timeit import default_timer
 from typing import Dict, Generator, Iterable, List, Optional, Union
 
 # This kind of import is needed to avoid Sphinx errors.
@@ -31,6 +33,7 @@ from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.metrics._internal.instrument import CallbackOptions
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
+from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
 
@@ -175,6 +178,20 @@ class Histogram(_Synchronous, APIHistogram):
         self._measurement_consumer.consume_measurement(
             Measurement(amount, self, attributes)
         )
+
+    @contextmanager
+    def time(self, attributes: Attributes = None):
+        if attributes is None:
+            attributes = {}
+        start_time = default_timer()
+        try:
+            yield attributes
+        except Exception:
+            # add the error to the attributes?
+            raise
+        finally:
+            elapsed_time = max(round((default_timer() - start_time) * 1000), 0)
+            self.record(elapsed_time, attributes)
 
 
 class ObservableGauge(_Asynchronous, APIObservableGauge):
