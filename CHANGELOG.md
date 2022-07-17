@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2781](https://github.com/open-telemetry/opentelemetry-python/pull/2781))
 - Fix tracing decorator with late configuration
   ([#2754](https://github.com/open-telemetry/opentelemetry-python/pull/2754))
+- Add timer context manager for histogram
+  ([#2827](https://github.com/open-telemetry/opentelemetry-python/pull/2827))
 
 ## [1.12.0rc2-0.32b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0rc2) - 2022-07-04
 
