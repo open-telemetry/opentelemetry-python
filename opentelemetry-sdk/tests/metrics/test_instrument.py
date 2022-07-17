@@ -16,8 +16,6 @@ import time
 from unittest import TestCase
 from unittest.mock import Mock
 
-from attr import attributes
-
 from opentelemetry.metrics import Observation
 from opentelemetry.metrics._internal.instrument import CallbackOptions
 from opentelemetry.sdk.metrics import (
@@ -333,38 +331,23 @@ class TestHistogram(TestCase):
 
         @hist.time()
         def foo():
-            time.sleep(2)
+            time.sleep(0.5)
             pass
 
         foo()
         measurement = mc.consume_measurement.call_args[0][0]
         mc.consume_measurement.assert_called_once()
-        self.assertGreaterEqual(measurement.value, 2000)
-
-    def test_time_default_attrs(self):
-        mc = Mock()
-        hist = Histogram("name", Mock(), mc)
-
-        @hist.time(attributes={"foo": "bar"})
-        def foo():
-            time.sleep(2)
-            pass
-
-        foo()
-        measurement = mc.consume_measurement.call_args[0][0]
-        mc.consume_measurement.assert_called_once()
-        self.assertGreaterEqual(measurement.value, 2000)
-        self.assertEqual(measurement.attributes, {"foo": "bar"})
+        self.assertGreaterEqual(measurement.value, 500)
 
     def test_time_attributes_update(self):
         mc = Mock()
         hist = Histogram("name", Mock(), mc)
-        with hist.time() as attrs:
-            time.sleep(5)
-            attrs.update({"k": "v"})
+        with hist.time() as measurer:
+            time.sleep(0.2)
+            measurer.set_attributes({"k": "v"})
         measurement = mc.consume_measurement.call_args[0][0]
         mc.consume_measurement.assert_called_once()
-        self.assertGreaterEqual(measurement.value, 5000)
+        self.assertGreaterEqual(measurement.value, 200)
         self.assertEqual(measurement.attributes, {"k": "v"})
 
     def test_record_non_monotonic(self):
