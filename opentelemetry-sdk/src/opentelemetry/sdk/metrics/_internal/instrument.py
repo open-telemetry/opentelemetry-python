@@ -193,6 +193,7 @@ class _Timer:
         return self.__class__(self._instrument)
 
     def __enter__(self):
+        # pylint: disable=attribute-defined-outside-init
         self._start = default_timer()
         return self
 
@@ -212,11 +213,11 @@ class _Timer:
         if attributes is not None:
             self._attributes.update(attributes)
 
-    def __call__(self, f):
-        @wraps(f)
+    def __call__(self, func):
+        @wraps(func)
         def wrapped(*args, **kwargs):
             with self._new_timer():
-                return f(*args, **kwargs)
+                return func(*args, **kwargs)
 
         return wrapped
 
