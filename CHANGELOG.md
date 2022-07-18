@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Change tracing to use `Resource.to_json()`
+  ([#2784](https://github.com/open-telemetry/opentelemetry-python/pull/2784))
 - Fix get_log_emitter instrumenting_module_version args typo
   ([#2830](https://github.com/open-telemetry/opentelemetry-python/pull/2830))
 - Fix OTLP gRPC exporter warning message
