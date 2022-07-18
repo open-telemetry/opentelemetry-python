@@ -6,7 +6,7 @@ These examples show how to customize the metrics that are output by the SDK usin
 * change_aggregation: Shows how to configure to change the default aggregation for an instrument.
 * change_name: Shows how to change the name of a metric.
 * limit_num_of_attrs: Shows how to limit the number of attributes that are output for a metric.
-* temporality_cumulative: 
+* drop_metrics_from_instrument: Shows how to drop measurements from an instrument.
 
 The source files of these examples are available :scm_web:`here <docs/examples/metrics/views/>`.
 
