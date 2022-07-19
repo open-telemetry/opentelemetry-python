@@ -41,6 +41,10 @@ meter = get_meter_provider().get_meter("preferred-aggregation", "0.1.2")
 
 counter = meter.create_counter("my-counter")
 
+# A counter normally would have an aggregation type of SumAggregation,
+# in which it's value would be determined by a cumulative sum.
+# In this example, the counter is configured with the LastValueAggregation,
+# which will only hold the most recent value.
 for x in range(10):
     counter.add(x)
     time.sleep(5.0)

@@ -31,6 +31,6 @@ Useful links
 ------------
 
 - OpenTelemetry_
-- :doc:`../../api/metrics`
+- :doc:`../../../api/metrics`
 
 .. _OpenTelemetry: https://github.com/open-telemetry/opentelemetry-python/

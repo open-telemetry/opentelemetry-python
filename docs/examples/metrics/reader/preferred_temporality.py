@@ -28,12 +28,14 @@ exporter = ConsoleMetricExporter()
 temporality_cumulative = {Counter: AggregationTemporality.CUMULATIVE}
 temporality_delta = {Counter: AggregationTemporality.DELTA}
 # Create a metric reader with cumulative preferred temporality
+# The metrics that are exported using this reader will represent a cumulative value
 reader = PeriodicExportingMetricReader(
     exporter,
     preferred_temporality=temporality_cumulative,
     export_interval_millis=5_000,
 )
 # Create a metric reader with delta preferred temporality
+# The metrics that are exported using this reader will represent a delta value
 reader2 = PeriodicExportingMetricReader(
     exporter,
     preferred_temporality=temporality_delta,
@@ -46,6 +48,11 @@ meter = get_meter_provider().get_meter("preferred-temporality", "0.1.2")
 
 counter = meter.create_counter("my-counter")
 
+# Two metrics are expected to be printed to the console per export interval.
+# The metric originating from the metric reader with a preferred temporality
+# of cumulative will keep a running sum of all values added.
+# The metric originating from the metric reader with a preferred temporality
+# of delta will have the sum value reset each export interval.
 for x in range(10):
     counter.add(x)
     time.sleep(5.0)
