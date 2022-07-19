@@ -47,4 +47,4 @@ counter = meter.create_counter("my-counter")
 # which will only hold the most recent value.
 for x in range(10):
     counter.add(x)
-    time.sleep(5.0)
+    time.sleep(2.0)

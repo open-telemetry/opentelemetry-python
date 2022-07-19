@@ -55,4 +55,4 @@ counter = meter.create_counter("my-counter")
 # of delta will have the sum value reset each export interval.
 for x in range(10):
     counter.add(x)
-    time.sleep(5.0)
+    time.sleep(2.0)
