@@ -10,3 +10,8 @@ OpenTelemetry OTLP Exporters
     :members:
     :undoc-members:
     :show-inheritance:
+
+.. automodule:: opentelemetry.exporter.otlp.proto.grpc.trace_exporter
+    :members:
+    :undoc-members:
+    :show-inheritance:
