@@ -12,14 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import environ
 from typing import Dict, Iterable
 from unittest import TestCase
-from unittest.mock import patch
 
-from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
-)
 from opentelemetry.sdk.metrics import (
     Counter,
     Histogram,
