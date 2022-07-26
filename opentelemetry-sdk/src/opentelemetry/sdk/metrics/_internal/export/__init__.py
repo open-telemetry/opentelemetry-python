@@ -161,9 +161,6 @@ class MetricReader(ABC):
     .. automethod:: _receive_metrics
     """
 
-    # FIXME add :std:envvar:`OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE`
-    # to the end of the documentation paragraph above.
-
     def __init__(
         self,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
@@ -179,33 +176,14 @@ class MetricReader(ABC):
             Iterable["opentelemetry.sdk.metrics.export.Metric"],
         ] = None
 
-        if (
-            environ.get(
-                OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
-                "CUMULATIVE",
-            )
-            .upper()
-            .strip()
-            == "DELTA"
-        ):
-            self._instrument_class_temporality = {
-                Counter: AggregationTemporality.DELTA,
-                UpDownCounter: AggregationTemporality.CUMULATIVE,
-                Histogram: AggregationTemporality.DELTA,
-                ObservableCounter: AggregationTemporality.DELTA,
-                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-                ObservableGauge: AggregationTemporality.CUMULATIVE,
-            }
-
-        else:
-            self._instrument_class_temporality = {
-                Counter: AggregationTemporality.CUMULATIVE,
-                UpDownCounter: AggregationTemporality.CUMULATIVE,
-                Histogram: AggregationTemporality.CUMULATIVE,
-                ObservableCounter: AggregationTemporality.CUMULATIVE,
-                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-                ObservableGauge: AggregationTemporality.CUMULATIVE,
-            }
+        self._instrument_class_temporality = {
+            Counter: AggregationTemporality.CUMULATIVE,
+            UpDownCounter: AggregationTemporality.CUMULATIVE,
+            Histogram: AggregationTemporality.CUMULATIVE,
+            ObservableCounter: AggregationTemporality.CUMULATIVE,
+            ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+            ObservableGauge: AggregationTemporality.CUMULATIVE,
+        }
 
         if preferred_temporality is not None:
             for temporality in preferred_temporality.values():
@@ -343,8 +321,29 @@ class PeriodicExportingMetricReader(MetricReader):
         export_interval_millis: Optional[float] = None,
         export_timeout_millis: Optional[float] = None,
     ) -> None:
+        _instrument_class_temporality = {}
+        # Exporter-specific logic for otlp
+        if exporter.__class__.__name__.lower().__contains__("otlp"):
+            if (
+                environ.get(
+                    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
+                    "CUMULATIVE",
+                )
+                .upper()
+                .strip()
+                == "DELTA"
+            ):
+                _instrument_class_temporality = {
+                    Counter: AggregationTemporality.DELTA,
+                    UpDownCounter: AggregationTemporality.CUMULATIVE,
+                    Histogram: AggregationTemporality.DELTA,
+                    ObservableCounter: AggregationTemporality.DELTA,
+                    ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+                    ObservableGauge: AggregationTemporality.CUMULATIVE,
+                }
+        _instrument_class_temporality.update(preferred_temporality or {})
         super().__init__(
-            preferred_temporality=preferred_temporality,
+            preferred_temporality=_instrument_class_temporality,
             preferred_aggregation=preferred_aggregation,
         )
         self._exporter = exporter

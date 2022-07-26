@@ -13,12 +13,25 @@
 # limitations under the License.
 
 import time
+from os import environ
 from typing import Sequence
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from flaky import flaky
 
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
+)
+from opentelemetry.sdk.metrics import (
+    Counter,
+    Histogram,
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
+)
 from opentelemetry.sdk.metrics.export import (
+    AggregationTemporality,
     Gauge,
     Metric,
     MetricExporter,
@@ -49,6 +62,19 @@ class FakeMetricsExporter(MetricExporter):
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         self._shutdown = True
+
+
+class FakeOTLPMetricsExporter(MetricExporter):
+    def export(
+        self,
+        metrics: Sequence[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> MetricExportResult:
+        pass
+
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+        pass
 
 
 metrics_list = [
@@ -143,3 +169,107 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             self.run_with_many_threads(pmr.shutdown)
             self.assertTrue("Can't shutdown multiple times", w.output[0])
         pmr.shutdown()
+
+    @patch.dict(
+        environ,
+        {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "DELTA"},
+    )
+    def test_non_otlp_temporality_preference(self):
+        exporter = FakeMetricsExporter()
+
+        pmr = self._create_periodic_reader([], exporter)
+        for (
+            value
+        ) in pmr._instrument_class_temporality.values():
+            self.assertEqual(value, AggregationTemporality.CUMULATIVE)
+
+    @patch.dict(
+        environ,
+        {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "CUMULATIVE"},
+    )
+    def test_otlp_temporality_preference_cumulative(self):
+        exporter = FakeOTLPMetricsExporter()
+
+        pmr = self._create_periodic_reader([], exporter)
+        for (
+            value
+        ) in pmr._instrument_class_temporality.values():
+            self.assertEqual(value, AggregationTemporality.CUMULATIVE)
+
+    @patch.dict(
+        environ,
+        {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "DELTA"},
+    )
+    def test_otlp_temporality_preference_delta(self):
+        exporter = FakeOTLPMetricsExporter()
+
+        pmr = self._create_periodic_reader([], exporter)
+        self.assertEqual(
+            pmr._instrument_class_temporality[Counter],
+            AggregationTemporality.DELTA,
+        )
+        self.assertEqual(
+            pmr._instrument_class_temporality[UpDownCounter],
+            AggregationTemporality.CUMULATIVE,
+        )
+        self.assertEqual(
+            pmr._instrument_class_temporality[Histogram],
+            AggregationTemporality.DELTA,
+        )
+        self.assertEqual(
+            pmr._instrument_class_temporality[
+                ObservableCounter
+            ],
+            AggregationTemporality.DELTA,
+        )
+        self.assertEqual(
+            pmr._instrument_class_temporality[
+                ObservableUpDownCounter
+            ],
+            AggregationTemporality.CUMULATIVE,
+        )
+        self.assertEqual(
+            pmr._instrument_class_temporality[ObservableGauge],
+            AggregationTemporality.CUMULATIVE,
+        )
+
+    @patch.dict(
+        environ,
+        {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "DELTA"},
+    )
+    def test_otlp_temporality_preference_combination(self):
+        exporter = FakeOTLPMetricsExporter()
+
+        pmr = PeriodicExportingMetricReader(
+            exporter, preferred_temporality={
+                Counter:AggregationTemporality.CUMULATIVE,
+            }
+        )
+        self.assertEqual(
+            pmr._instrument_class_temporality[Counter],
+            AggregationTemporality.CUMULATIVE,
+        )
+        self.assertEqual(
+            pmr._instrument_class_temporality[UpDownCounter],
+            AggregationTemporality.CUMULATIVE,
+        )
+        self.assertEqual(
+            pmr._instrument_class_temporality[Histogram],
+            AggregationTemporality.DELTA,
+        )
+        self.assertEqual(
+            pmr._instrument_class_temporality[
+                ObservableCounter
+            ],
+            AggregationTemporality.DELTA,
+        )
+        self.assertEqual(
+            pmr._instrument_class_temporality[
+                ObservableUpDownCounter
+            ],
+            AggregationTemporality.CUMULATIVE,
+        )
+        self.assertEqual(
+            pmr._instrument_class_temporality[ObservableGauge],
+            AggregationTemporality.CUMULATIVE,
+        )
