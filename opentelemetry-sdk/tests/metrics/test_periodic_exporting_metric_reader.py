@@ -178,9 +178,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         exporter = FakeMetricsExporter()
 
         pmr = self._create_periodic_reader([], exporter)
-        for (
-            value
-        ) in pmr._instrument_class_temporality.values():
+        for value in pmr._instrument_class_temporality.values():
             self.assertEqual(value, AggregationTemporality.CUMULATIVE)
 
     @patch.dict(
@@ -191,9 +189,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         exporter = FakeOTLPMetricsExporter()
 
         pmr = self._create_periodic_reader([], exporter)
-        for (
-            value
-        ) in pmr._instrument_class_temporality.values():
+        for value in pmr._instrument_class_temporality.values():
             self.assertEqual(value, AggregationTemporality.CUMULATIVE)
 
     @patch.dict(
@@ -217,15 +213,11 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             AggregationTemporality.DELTA,
         )
         self.assertEqual(
-            pmr._instrument_class_temporality[
-                ObservableCounter
-            ],
+            pmr._instrument_class_temporality[ObservableCounter],
             AggregationTemporality.DELTA,
         )
         self.assertEqual(
-            pmr._instrument_class_temporality[
-                ObservableUpDownCounter
-            ],
+            pmr._instrument_class_temporality[ObservableUpDownCounter],
             AggregationTemporality.CUMULATIVE,
         )
         self.assertEqual(
@@ -241,9 +233,10 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         exporter = FakeOTLPMetricsExporter()
 
         pmr = PeriodicExportingMetricReader(
-            exporter, preferred_temporality={
-                Counter:AggregationTemporality.CUMULATIVE,
-            }
+            exporter,
+            preferred_temporality={
+                Counter: AggregationTemporality.CUMULATIVE,
+            },
         )
         self.assertEqual(
             pmr._instrument_class_temporality[Counter],
@@ -258,15 +251,11 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             AggregationTemporality.DELTA,
         )
         self.assertEqual(
-            pmr._instrument_class_temporality[
-                ObservableCounter
-            ],
+            pmr._instrument_class_temporality[ObservableCounter],
             AggregationTemporality.DELTA,
         )
         self.assertEqual(
-            pmr._instrument_class_temporality[
-                ObservableUpDownCounter
-            ],
+            pmr._instrument_class_temporality[ObservableUpDownCounter],
             AggregationTemporality.CUMULATIVE,
         )
         self.assertEqual(

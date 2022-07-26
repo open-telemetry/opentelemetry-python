@@ -18,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fix --insecure of CLI argument
   ([#2696](https://github.com/open-telemetry/opentelemetry-python/pull/2696))
 - Use `OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE` only for OTLP metrics exporter
-  ([#2696](https://github.com/open-telemetry/opentelemetry-python/pull/2696))
+  ([#2843](https://github.com/open-telemetry/opentelemetry-python/pull/2843))
 
 ## [1.12.0rc2-0.32b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0rc2) - 2022-07-04
 

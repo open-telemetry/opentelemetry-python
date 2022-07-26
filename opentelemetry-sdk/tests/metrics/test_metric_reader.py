@@ -64,7 +64,6 @@ class DummyMetricReader(MetricReader):
 
 
 class TestMetricReader(TestCase):
-
     def test_configure_temporality(self):
 
         dummy_metric_reader = DummyMetricReader(
