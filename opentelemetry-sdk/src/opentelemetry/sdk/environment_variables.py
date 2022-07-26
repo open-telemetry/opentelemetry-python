@@ -436,9 +436,7 @@ on the basis of instrument kind. The valid (case-insensitive) values are:
 Choose ``CUMULATIVE`` aggregation temporality for ``UpDownCounter`` and ``Asynchronous UpDownCounter``.
 """
 
-OTEL_EXPORTER_JAEGER_GRPC_INSECURE = (
-    "OTEL_EXPORTER_JAEGER_GRPC_INSECURE"
-)
+OTEL_EXPORTER_JAEGER_GRPC_INSECURE = "OTEL_EXPORTER_JAEGER_GRPC_INSECURE"
 """
 .. envvar:: OTEL_EXPORTER_JAEGER_GRPC_INSECURE
 

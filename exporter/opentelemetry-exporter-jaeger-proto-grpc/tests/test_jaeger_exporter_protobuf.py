@@ -35,9 +35,9 @@ from opentelemetry.sdk import trace
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_CERTIFICATE,
     OTEL_EXPORTER_JAEGER_ENDPOINT,
+    OTEL_EXPORTER_JAEGER_GRPC_INSECURE,
     OTEL_EXPORTER_JAEGER_TIMEOUT,
     OTEL_RESOURCE_ATTRIBUTES,
-    OTEL_EXPORTER_JAEGER_GRPC_INSECURE,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider

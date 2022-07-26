@@ -111,19 +111,25 @@ class JaegerExporter(SpanExporter):
     """
 
     def __init__(
-            self,
-            collector_endpoint: Optional[str] = None,
-            insecure: Optional[bool] = None,
-            credentials: Optional[ChannelCredentials] = None,
-            max_tag_value_length: Optional[int] = None,
-            timeout: Optional[int] = None,
+        self,
+        collector_endpoint: Optional[str] = None,
+        insecure: Optional[bool] = None,
+        credentials: Optional[ChannelCredentials] = None,
+        max_tag_value_length: Optional[int] = None,
+        timeout: Optional[int] = None,
     ):
         self._max_tag_value_length = max_tag_value_length
 
         self.collector_endpoint = collector_endpoint or environ.get(
             OTEL_EXPORTER_JAEGER_ENDPOINT, DEFAULT_GRPC_COLLECTOR_ENDPOINT
         )
-        self.insecure = insecure or environ.get(OTEL_EXPORTER_JAEGER_GRPC_INSECURE, "").strip().lower() == "true"
+        self.insecure = (
+            insecure
+            or environ.get(OTEL_EXPORTER_JAEGER_GRPC_INSECURE, "")
+            .strip()
+            .lower()
+            == "true"
+        )
         self._timeout = timeout or int(
             environ.get(OTEL_EXPORTER_JAEGER_TIMEOUT, DEFAULT_EXPORT_TIMEOUT)
         )
