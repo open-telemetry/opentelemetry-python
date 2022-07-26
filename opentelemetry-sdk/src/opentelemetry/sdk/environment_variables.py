@@ -435,3 +435,10 @@ on the basis of instrument kind. The valid (case-insensitive) values are:
 ``DELTA``: Choose ``DELTA`` aggregation temporality for ``Counter``, ``Asynchronous Counter`` and ``Histogram``.
 Choose ``CUMULATIVE`` aggregation temporality for ``UpDownCounter`` and ``Asynchronous UpDownCounter``.
 """
+
+OTEL_EXPORTER_JAEGER_GRPC_INSECURE = "OTEL_EXPORTER_JAEGER_GRPC_INSECURE"
+"""
+.. envvar:: OTEL_EXPORTER_JAEGER_GRPC_INSECURE
+
+The :envvar:`OTEL_EXPORTER_JAEGER_GRPC_INSECURE` is a boolean flag to True if collector has no encryption or authentication.
+"""

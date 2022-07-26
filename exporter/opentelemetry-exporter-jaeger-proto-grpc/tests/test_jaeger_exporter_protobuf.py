@@ -35,6 +35,7 @@ from opentelemetry.sdk import trace
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_CERTIFICATE,
     OTEL_EXPORTER_JAEGER_ENDPOINT,
+    OTEL_EXPORTER_JAEGER_GRPC_INSECURE,
     OTEL_EXPORTER_JAEGER_TIMEOUT,
     OTEL_RESOURCE_ATTRIBUTES,
 )
@@ -87,6 +88,7 @@ class TestJaegerExporter(unittest.TestCase):
                 + "/certs/cred.cert",
                 OTEL_RESOURCE_ATTRIBUTES: "service.name=my-opentelemetry-jaeger",
                 OTEL_EXPORTER_JAEGER_TIMEOUT: "5",
+                OTEL_EXPORTER_JAEGER_GRPC_INSECURE: "False",
             },
         )
 
@@ -99,6 +101,7 @@ class TestJaegerExporter(unittest.TestCase):
         self.assertEqual(exporter.collector_endpoint, collector_endpoint)
         self.assertEqual(exporter._timeout, 5)
         self.assertIsNotNone(exporter.credentials)
+        self.assertEqual(exporter.insecure, False)
         env_patch.stop()
 
     # pylint: disable=too-many-locals,too-many-statements
