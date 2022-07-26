@@ -21,7 +21,7 @@ Usage
 The **OTLP Span Exporter** allows to export `OpenTelemetry`_ traces to the
 `OTLP`_ collector.
 
-You can configure the exporter with the following environment variables:
+You can configure the exporter with the following additional environment variables:
 
 - :envvar:`OTEL_EXPORTER_OTLP_TRACES_TIMEOUT`
 - :envvar:`OTEL_EXPORTER_OTLP_TRACES_PROTOCOL`

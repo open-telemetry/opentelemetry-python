@@ -16,4 +16,13 @@
 """
 OTLP Exporters - Proto gRPC
 ---------------------------
+
+You can configure all protobuf gRPC exporters, with the following environment variables:
+- :envvar:`OTEL_EXPORTER_OTLP_TIMEOUT`
+- :envvar:`OTEL_EXPORTER_OTLP_PROTOCOL`
+- :envvar:`OTEL_EXPORTER_OTLP_HEADERS`
+- :envvar:`OTEL_EXPORTER_OTLP_ENDPOINT`
+- :envvar:`OTEL_EXPORTER_OTLP_COMPRESSION`
+- :envvar:`OTEL_EXPORTER_OTLP_CERTIFICATE`
+
 """
