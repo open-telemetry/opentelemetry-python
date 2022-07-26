@@ -87,6 +87,7 @@ from opentelemetry.exporter.jaeger.proto.grpc.translate import (
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_ENDPOINT,
     OTEL_EXPORTER_JAEGER_TIMEOUT,
+    OTEL_EXPORTER_JAEGER_GRPC_INSECURE,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
@@ -122,11 +123,17 @@ class JaegerExporter(SpanExporter):
         self.collector_endpoint = collector_endpoint or environ.get(
             OTEL_EXPORTER_JAEGER_ENDPOINT, DEFAULT_GRPC_COLLECTOR_ENDPOINT
         )
+        self.insecure = (
+            insecure
+            or environ.get(OTEL_EXPORTER_JAEGER_GRPC_INSECURE, "")
+            .strip()
+            .lower()
+            == "true"
+        )
         self._timeout = timeout or int(
             environ.get(OTEL_EXPORTER_JAEGER_TIMEOUT, DEFAULT_EXPORT_TIMEOUT)
         )
         self._grpc_client = None
-        self.insecure = insecure
         self.credentials = util._get_credentials(credentials)
         tracer_provider = trace.get_tracer_provider()
         self.service_name = (
