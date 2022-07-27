@@ -15,7 +15,6 @@
 # pylint: disable=too-many-lines
 import shutil
 import subprocess
-import sys
 import unittest
 from importlib import reload
 from logging import ERROR, WARNING
@@ -1187,13 +1186,6 @@ class TestSpan(unittest.TestCase):
             stacktrace = """in test_record_exception_context_manager
     raise RuntimeError("example error")
 RuntimeError: example error"""
-            if sys.version_info >= (3, 11):
-                # https://docs.python.org/3.11/whatsnew/3.11.html#enhanced-error-locations-in-tracebacks
-                tracelines = stacktrace.splitlines()
-                tracelines.insert(
-                    -1, "    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^"
-                )
-                stacktrace = "\n".join(tracelines)
             self.assertIn(stacktrace, event.attributes["exception.stacktrace"])
 
         try:
@@ -1354,12 +1346,15 @@ class TestSpanProcessor(unittest.TestCase):
     "attributes": {},
     "events": [],
     "links": [],
-    "resource": {}
+    "resource": {
+        "attributes": {},
+        "schema_url": ""
+    }
 }""",
         )
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "[]"}, "kind": "SpanKind.INTERNAL", "parent_id": "0x00000000deadbef0", "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {}, "events": [], "links": [], "resource": {}}',
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "[]"}, "kind": "SpanKind.INTERNAL", "parent_id": "0x00000000deadbef0", "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {}, "events": [], "links": [], "resource": {"attributes": {}, "schema_url": ""}}',
         )
 
     def test_attributes_to_json(self):
@@ -1377,7 +1372,7 @@ class TestSpanProcessor(unittest.TestCase):
             span.to_json(indent=None),
             '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "[]"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {"key": "value"}, "events": [{"name": "event", "timestamp": "'
             + date_str
-            + '", "attributes": {"key2": "value2"}}], "links": [], "resource": {}}',
+            + '", "attributes": {"key2": "value2"}}], "links": [], "resource": {"attributes": {}, "schema_url": ""}}',
         )
 
 
