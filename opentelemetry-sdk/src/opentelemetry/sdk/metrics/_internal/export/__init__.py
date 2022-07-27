@@ -323,6 +323,9 @@ class PeriodicExportingMetricReader(MetricReader):
     ) -> None:
         _instrument_class_temporality = {}
         # Exporter-specific logic for otlp
+        # This approach is considered "hacky" and is unavoidable for this feature
+        # It is not recommended to have exporter specific logic and string comparison
+        # in any of the metric reader classes
         if exporter.__class__.__name__.lower().__contains__("otlp"):
             if (
                 environ.get(
