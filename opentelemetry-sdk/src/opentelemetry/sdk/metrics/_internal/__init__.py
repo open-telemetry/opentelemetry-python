@@ -31,12 +31,12 @@ from opentelemetry.metrics import (
 )
 from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.sdk.metrics._internal.instrument import (
-    Counter,
-    Histogram,
-    ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
-    UpDownCounter,
+    _Counter,
+    _Histogram,
+    _ObservableCounter,
+    _ObservableGauge,
+    _ObservableUpDownCounter,
+    _UpDownCounter,
 )
 from opentelemetry.sdk.metrics._internal.measurement_consumer import (
     MeasurementConsumer,
@@ -72,7 +72,7 @@ class Meter(APIMeter):
         (
             is_instrument_registered,
             instrument_id,
-        ) = self._is_instrument_registered(name, Counter, unit, description)
+        ) = self._is_instrument_registered(name, _Counter, unit, description)
 
         if is_instrument_registered:
             # FIXME #2558 go through all views here and check if this
@@ -89,7 +89,7 @@ class Meter(APIMeter):
             with self._instrument_id_instrument_lock:
                 return self._instrument_id_instrument[instrument_id]
 
-        instrument = Counter(
+        instrument = _Counter(
             name,
             self._instrumentation_scope,
             self._measurement_consumer,
@@ -109,7 +109,7 @@ class Meter(APIMeter):
             is_instrument_registered,
             instrument_id,
         ) = self._is_instrument_registered(
-            name, UpDownCounter, unit, description
+            name, _UpDownCounter, unit, description
         )
 
         if is_instrument_registered:
@@ -127,7 +127,7 @@ class Meter(APIMeter):
             with self._instrument_id_instrument_lock:
                 return self._instrument_id_instrument[instrument_id]
 
-        instrument = UpDownCounter(
+        instrument = _UpDownCounter(
             name,
             self._instrumentation_scope,
             self._measurement_consumer,
@@ -147,7 +147,7 @@ class Meter(APIMeter):
             is_instrument_registered,
             instrument_id,
         ) = self._is_instrument_registered(
-            name, ObservableCounter, unit, description
+            name, _ObservableCounter, unit, description
         )
 
         if is_instrument_registered:
@@ -165,7 +165,7 @@ class Meter(APIMeter):
             with self._instrument_id_instrument_lock:
                 return self._instrument_id_instrument[instrument_id]
 
-        instrument = ObservableCounter(
+        instrument = _ObservableCounter(
             name,
             self._instrumentation_scope,
             self._measurement_consumer,
@@ -185,7 +185,7 @@ class Meter(APIMeter):
         (
             is_instrument_registered,
             instrument_id,
-        ) = self._is_instrument_registered(name, Histogram, unit, description)
+        ) = self._is_instrument_registered(name, _Histogram, unit, description)
 
         if is_instrument_registered:
             # FIXME #2558 go through all views here and check if this
@@ -202,7 +202,7 @@ class Meter(APIMeter):
             with self._instrument_id_instrument_lock:
                 return self._instrument_id_instrument[instrument_id]
 
-        instrument = Histogram(
+        instrument = _Histogram(
             name,
             self._instrumentation_scope,
             self._measurement_consumer,
@@ -221,7 +221,7 @@ class Meter(APIMeter):
             is_instrument_registered,
             instrument_id,
         ) = self._is_instrument_registered(
-            name, ObservableGauge, unit, description
+            name, _ObservableGauge, unit, description
         )
 
         if is_instrument_registered:
@@ -239,7 +239,7 @@ class Meter(APIMeter):
             with self._instrument_id_instrument_lock:
                 return self._instrument_id_instrument[instrument_id]
 
-        instrument = ObservableGauge(
+        instrument = _ObservableGauge(
             name,
             self._instrumentation_scope,
             self._measurement_consumer,
@@ -261,7 +261,9 @@ class Meter(APIMeter):
         (
             is_instrument_registered,
             instrument_id,
-        ) = self._is_instrument_registered(name, Counter, unit, description)
+        ) = self._is_instrument_registered(
+            name, _ObservableUpDownCounter, unit, description
+        )
 
         if is_instrument_registered:
             # FIXME #2558 go through all views here and check if this
@@ -278,7 +280,7 @@ class Meter(APIMeter):
             with self._instrument_id_instrument_lock:
                 return self._instrument_id_instrument[instrument_id]
 
-        instrument = ObservableUpDownCounter(
+        instrument = _ObservableUpDownCounter(
             name,
             self._instrumentation_scope,
             self._measurement_consumer,
