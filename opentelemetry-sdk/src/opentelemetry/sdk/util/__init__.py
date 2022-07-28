@@ -16,7 +16,10 @@ import datetime
 import threading
 from collections import OrderedDict, deque
 from collections.abc import MutableMapping, Sequence
-from typing import Optional
+from functools import wraps
+from timeit import default_timer
+from types import TracebackType
+from typing import Optional, Type
 
 from deprecated import deprecated
 
@@ -148,3 +151,46 @@ class BoundedDict(MutableMapping):
         for key, value in mapping.items():
             bounded_dict[key] = value
         return bounded_dict
+
+
+class _Timer:
+    def __init__(self, histogram):
+        super().__init__()
+        self._start = None
+        self._attributes = None
+        self._histogram = histogram
+
+    def __enter__(self):
+        self._start = default_timer()
+        return self
+
+    def __exit__(
+        self,
+        exc_type: Optional[Type[BaseException]],
+        exc_val: Optional[BaseException],
+        exc_tb: Optional[TracebackType],
+    ) -> None:
+        duration = max(round((default_timer() - self._start) * 1000), 0)
+        self._histogram.record(duration, self._attributes)
+
+    def time(self, attributes=None):
+        self._attributes = attributes
+        return self
+
+    def set_attributes(self, attributes):
+        if self._attributes is None:
+            self._attributes = attributes
+        else:
+            self._attributes.update(attributes)
+
+    def __call__(self, func):
+        @wraps(func)
+        def wrapped(*args, **kwargs):
+            with self.time(attributes=self._attributes):
+                return func(*args, **kwargs)
+
+        return wrapped
+
+
+def get_timer(histogram):
+    return _Timer(histogram)

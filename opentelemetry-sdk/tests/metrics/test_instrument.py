@@ -27,6 +27,7 @@ from opentelemetry.sdk.metrics import (
     UpDownCounter,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.sdk.util import get_timer
 
 
 class TestCounter(TestCase):
@@ -328,8 +329,9 @@ class TestHistogram(TestCase):
     def test_time(self):
         mc = Mock()
         hist = Histogram("name", Mock(), mc)
+        timer = get_timer(hist)
 
-        @hist.time()
+        @timer.time({"a": "b"})
         def foo():
             time.sleep(0.5)
             pass
@@ -338,11 +340,13 @@ class TestHistogram(TestCase):
         measurement = mc.consume_measurement.call_args[0][0]
         mc.consume_measurement.assert_called_once()
         self.assertGreaterEqual(measurement.value, 500)
+        self.assertEqual(measurement.attributes, {"a": "b"})
 
     def test_time_attributes_update(self):
         mc = Mock()
         hist = Histogram("name", Mock(), mc)
-        with hist.time() as measurer:
+        timer = get_timer(hist)
+        with timer.time() as measurer:
             time.sleep(0.2)
             measurer.set_attributes({"k": "v"})
         measurement = mc.consume_measurement.call_args[0][0]

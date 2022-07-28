@@ -14,11 +14,8 @@
 
 # pylint: disable=too-many-ancestors, unused-import
 
-from functools import wraps
 from logging import getLogger
-from timeit import default_timer
-from types import TracebackType
-from typing import Dict, Generator, Iterable, List, Optional, Type, Union
+from typing import Dict, Generator, Iterable, List, Optional, Union
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
@@ -34,7 +31,6 @@ from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
 from opentelemetry.metrics._internal.instrument import CallbackOptions
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.util.types import Attributes, AttributeValue
 
 _logger = getLogger(__name__)
 
@@ -179,47 +175,6 @@ class Histogram(_Synchronous, APIHistogram):
         self._measurement_consumer.consume_measurement(
             Measurement(amount, self, attributes)
         )
-
-    def time(self):
-        return _Timer(self)
-
-
-class _Timer:
-    def __init__(self, instrument: Histogram):
-        self._instrument = instrument
-        self._attributes: Attributes = {}
-
-    def _new_timer(self):
-        return self.__class__(self._instrument)
-
-    def __enter__(self):
-        # pylint: disable=attribute-defined-outside-init
-        self._start = default_timer()
-        return self
-
-    def __exit__(
-        self,
-        exc_type: Optional[Type[BaseException]],
-        exc_val: Optional[BaseException],
-        exc_tb: Optional[TracebackType],
-    ) -> None:
-        duration = max(round((default_timer() - self._start) * 1000), 0)
-        self._instrument.record(duration, self._attributes)
-
-    def set_attribute(self, key: str, value: AttributeValue):
-        self._attributes[key] = value
-
-    def set_attributes(self, attributes: Attributes):
-        if attributes is not None:
-            self._attributes.update(attributes)
-
-    def __call__(self, func):
-        @wraps(func)
-        def wrapped(*args, **kwargs):
-            with self._new_timer():
-                return func(*args, **kwargs)
-
-        return wrapped
 
 
 class ObservableGauge(_Asynchronous, APIObservableGauge):
