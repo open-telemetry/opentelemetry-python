@@ -334,7 +334,6 @@ class TestHistogram(TestCase):
         @timer.time({"a": "b"})
         def foo():
             time.sleep(0.5)
-            pass
 
         foo()
         measurement = mc.consume_measurement.call_args[0][0]
