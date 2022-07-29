@@ -19,7 +19,7 @@ from logging import getLogger
 from os import environ, linesep
 from sys import stdout
 from threading import Event, RLock, Thread
-from typing import IO, Callable, Counter, Dict, Iterable, Optional
+from typing import IO, Callable, Dict, Iterable, Optional
 
 from typing_extensions import final
 
