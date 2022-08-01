@@ -67,7 +67,24 @@ class MetricExporter(ABC):
 
     Interface to be implemented by services that want to export metrics received
     in their own format.
+
+    Args:
+        preferred_temporality: Used by `opentelemetry.sdk.metrics.export.PeriodicExportingMetricReader` to
+            configure exporter level preferred temporality. See `opentelemetry.sdk.metrics.export.MetricReader` for
+            more details on what preferred temporality is.
+        preferred_aggregation: Used by `opentelemetry.sdk.metrics.export.PeriodicExportingMetricReader` to
+            configure exporter level preferred aggregation. See `opentelemetry.sdk.metrics.export.MetricReader` for
+            more details on what preferred aggregation is.
     """
+    def __init__(
+        self,
+        preferred_temporality: Dict[type, AggregationTemporality] = None,
+        preferred_aggregation: Dict[
+            type, "opentelemetry.sdk.metrics.view.Aggregation"
+        ] = None,
+    ) -> None:
+        self._preferred_temporality = preferred_temporality
+        self._preferred_aggregation = preferred_aggregation
 
     @abstractmethod
     def export(
@@ -196,7 +213,7 @@ class MetricReader(ABC):
                     )
 
         self._instrument_class_temporality.update(preferred_temporality or {})
-        self._preferred_temporality = preferred_temporality
+
         self._instrument_class_aggregation = {
             Counter: DefaultAggregation(),
             UpDownCounter: DefaultAggregation(),
@@ -321,32 +338,19 @@ class PeriodicExportingMetricReader(MetricReader):
         export_interval_millis: Optional[float] = None,
         export_timeout_millis: Optional[float] = None,
     ) -> None:
-        _instrument_class_temporality = {}
-        # Exporter-specific logic for otlp
-        # This approach is considered "hacky" and is unavoidable for this feature
-        # It is not recommended to have exporter specific logic and string comparison
-        # in any of the metric reader classes
-        if exporter.__class__.__name__.lower().__contains__("otlp"):
-            if (
-                environ.get(
-                    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
-                    "CUMULATIVE",
-                )
-                .upper()
-                .strip()
-                == "DELTA"
-            ):
-                _instrument_class_temporality = {
-                    Counter: AggregationTemporality.DELTA,
-                    UpDownCounter: AggregationTemporality.CUMULATIVE,
-                    Histogram: AggregationTemporality.DELTA,
-                    ObservableCounter: AggregationTemporality.DELTA,
-                    ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-                    ObservableGauge: AggregationTemporality.CUMULATIVE,
-                }
-        _instrument_class_temporality.update(preferred_temporality or {})
+        # Prioritize exporter level configuration
+        if hasattr(exporter, "_preferred_temporality") and exporter._preferred_temporality is not None:
+            if preferred_temporality is not None:
+                preferred_temporality.update(exporter._preferred_temporality)
+            else:
+                preferred_temporality = exporter._preferred_temporality
+        if hasattr(exporter, "_preferred_aggregation") and exporter._preferred_aggregation is not None:
+            if preferred_aggregation is not None:
+                preferred_aggregation.update(exporter._preferred_aggregation)
+            else:
+                preferred_aggregation = exporter._preferred_aggregation
         super().__init__(
-            preferred_temporality=_instrument_class_temporality,
+            preferred_temporality=preferred_temporality,
             preferred_aggregation=preferred_aggregation,
         )
         self._exporter = exporter

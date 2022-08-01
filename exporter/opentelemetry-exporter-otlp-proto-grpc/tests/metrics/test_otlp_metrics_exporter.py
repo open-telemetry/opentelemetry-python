@@ -42,7 +42,9 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
+    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
 )
+from opentelemetry.sdk.metrics import Counter
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Histogram,
@@ -301,6 +303,49 @@ class TestOTLPMetricExporter(TestCase):
     def test_exporting(self):
         # pylint: disable=protected-access
         self.assertEqual(self.exporter._exporting, "metrics")
+
+    # @patch.dict(
+    #     "os.environ",
+    #     {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "DELTA"},
+    # )
+    # def test_preferred_temporality(self):
+    #     exporter = OTLPMetricExporter(
+    #         preferred_temporality={Counter: AggregationTemporality.CUMULATIVE}
+    #     )
+    #     self.assertEqual(
+    #         exporter._preferred_temporality.keys(),
+    #         set(_expected_keys),
+    #     )
+    #     self.assertEqual(
+    #         dummy_metric_reader._instrument_class_temporality[_Counter],
+    #         AggregationTemporality.DELTA,
+    #     )
+    #     self.assertEqual(
+    #         dummy_metric_reader._instrument_class_temporality[_UpDownCounter],
+    #         AggregationTemporality.CUMULATIVE,
+    #     )
+    #     self.assertEqual(
+    #         dummy_metric_reader._instrument_class_temporality[_Histogram],
+    #         AggregationTemporality.DELTA,
+    #     )
+    #     self.assertEqual(
+    #         dummy_metric_reader._instrument_class_temporality[
+    #             _ObservableCounter
+    #         ],
+    #         AggregationTemporality.DELTA,
+    #     )
+    #     self.assertEqual(
+    #         dummy_metric_reader._instrument_class_temporality[
+    #             _ObservableUpDownCounter
+    #         ],
+    #         AggregationTemporality.CUMULATIVE,
+    #     )
+    #     self.assertEqual(
+    #         dummy_metric_reader._instrument_class_temporality[
+    #             _ObservableGauge
+    #         ],
+    #         AggregationTemporality.CUMULATIVE,
+    #     )
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
