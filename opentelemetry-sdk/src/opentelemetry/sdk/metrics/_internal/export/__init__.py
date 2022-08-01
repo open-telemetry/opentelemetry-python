@@ -130,6 +130,7 @@ class ConsoleMetricExporter(MetricExporter):
         ] = lambda metrics_data: metrics_data.to_json()
         + linesep,
     ):
+        super().__init__()
         self.out = out
         self.formatter = formatter
 
@@ -148,6 +149,7 @@ class ConsoleMetricExporter(MetricExporter):
 
 
 class MetricReader(ABC):
+    # pylint: disable=too-many-branches
     """
     Base class for all metric readers
 

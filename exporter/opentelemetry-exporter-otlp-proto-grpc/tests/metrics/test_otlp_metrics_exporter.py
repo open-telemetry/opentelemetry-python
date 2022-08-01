@@ -316,6 +316,7 @@ class TestOTLPMetricExporter(TestCase):
         {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "DELTA"},
     )
     def test_preferred_temporality(self):
+        # pylint: disable=protected-access
         exporter = OTLPMetricExporter(
             preferred_temporality={Counter: AggregationTemporality.CUMULATIVE}
         )
