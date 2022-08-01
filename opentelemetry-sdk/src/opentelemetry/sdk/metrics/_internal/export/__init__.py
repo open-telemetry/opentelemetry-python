@@ -170,6 +170,7 @@ class MetricReader(ABC):
     # FIXME add :std:envvar:`OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE`
     # to the end of the documentation paragraph above.
 
+    # pylint: disable=too-many-branches
     def __init__(
         self,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
