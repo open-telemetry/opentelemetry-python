@@ -25,39 +25,57 @@ from opentelemetry.sdk.metrics import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk.metrics._internal.instrument import (
+    _Counter,
+    _Histogram,
+    _ObservableCounter,
+    _ObservableGauge,
+    _ObservableUpDownCounter,
+    _UpDownCounter,
+)
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 
 
 class TestCounter(TestCase):
     def testname(self):
-        self.assertEqual(Counter("name", Mock(), Mock()).name, "name")
-        self.assertEqual(Counter("Name", Mock(), Mock()).name, "name")
+        self.assertEqual(_Counter("name", Mock(), Mock()).name, "name")
+        self.assertEqual(_Counter("Name", Mock(), Mock()).name, "name")
 
     def test_add(self):
         mc = Mock()
-        counter = Counter("name", Mock(), mc)
+        counter = _Counter("name", Mock(), mc)
         counter.add(1.0)
         mc.consume_measurement.assert_called_once()
 
     def test_add_non_monotonic(self):
         mc = Mock()
-        counter = Counter("name", Mock(), mc)
+        counter = _Counter("name", Mock(), mc)
         counter.add(-1.0)
         mc.consume_measurement.assert_not_called()
+
+    def test_disallow_direct_counter_creation(self):
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            Counter("name", Mock(), Mock())
 
 
 class TestUpDownCounter(TestCase):
     def test_add(self):
         mc = Mock()
-        counter = UpDownCounter("name", Mock(), mc)
+        counter = _UpDownCounter("name", Mock(), mc)
         counter.add(1.0)
         mc.consume_measurement.assert_called_once()
 
     def test_add_non_monotonic(self):
         mc = Mock()
-        counter = UpDownCounter("name", Mock(), mc)
+        counter = _UpDownCounter("name", Mock(), mc)
         counter.add(-1.0)
         mc.consume_measurement.assert_called_once()
+
+    def test_disallow_direct_up_down_counter_creation(self):
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            UpDownCounter("name", Mock(), Mock())
 
 
 TEST_ATTRIBUTES = {"foo": "bar"}
@@ -103,11 +121,11 @@ def generator_callback_1():
 
 class TestObservableGauge(TestCase):
     def testname(self):
-        self.assertEqual(ObservableGauge("name", Mock(), Mock()).name, "name")
-        self.assertEqual(ObservableGauge("Name", Mock(), Mock()).name, "name")
+        self.assertEqual(_ObservableGauge("name", Mock(), Mock()).name, "name")
+        self.assertEqual(_ObservableGauge("Name", Mock(), Mock()).name, "name")
 
     def test_callable_callback_0(self):
-        observable_gauge = ObservableGauge(
+        observable_gauge = _ObservableGauge(
             "name", Mock(), Mock(), [callable_callback_0]
         )
 
@@ -127,7 +145,7 @@ class TestObservableGauge(TestCase):
         )
 
     def test_callable_multiple_callable_callback(self):
-        observable_gauge = ObservableGauge(
+        observable_gauge = _ObservableGauge(
             "name", Mock(), Mock(), [callable_callback_0, callable_callback_1]
         )
 
@@ -156,7 +174,7 @@ class TestObservableGauge(TestCase):
         )
 
     def test_generator_callback_0(self):
-        observable_gauge = ObservableGauge(
+        observable_gauge = _ObservableGauge(
             "name", Mock(), Mock(), [generator_callback_0()]
         )
 
@@ -177,7 +195,7 @@ class TestObservableGauge(TestCase):
 
     def test_generator_multiple_generator_callback(self):
         self.maxDiff = None
-        observable_gauge = ObservableGauge(
+        observable_gauge = _ObservableGauge(
             "name",
             Mock(),
             Mock(),
@@ -208,10 +226,15 @@ class TestObservableGauge(TestCase):
             ],
         )
 
+    def test_disallow_direct_observable_gauge_creation(self):
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            ObservableGauge("name", Mock(), Mock())
+
 
 class TestObservableCounter(TestCase):
     def test_callable_callback_0(self):
-        observable_counter = ObservableCounter(
+        observable_counter = _ObservableCounter(
             "name", Mock(), Mock(), [callable_callback_0]
         )
 
@@ -237,7 +260,7 @@ class TestObservableCounter(TestCase):
         )
 
     def test_generator_callback_0(self):
-        observable_counter = ObservableCounter(
+        observable_counter = _ObservableCounter(
             "name", Mock(), Mock(), [generator_callback_0()]
         )
 
@@ -261,11 +284,16 @@ class TestObservableCounter(TestCase):
                 ),
             ],
         )
+
+    def test_disallow_direct_observable_counter_creation(self):
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            ObservableCounter("name", Mock(), Mock())
 
 
 class TestObservableUpDownCounter(TestCase):
     def test_callable_callback_0(self):
-        observable_up_down_counter = ObservableUpDownCounter(
+        observable_up_down_counter = _ObservableUpDownCounter(
             "name", Mock(), Mock(), [callable_callback_0]
         )
 
@@ -291,7 +319,7 @@ class TestObservableUpDownCounter(TestCase):
         )
 
     def test_generator_callback_0(self):
-        observable_up_down_counter = ObservableUpDownCounter(
+        observable_up_down_counter = _ObservableUpDownCounter(
             "name", Mock(), Mock(), [generator_callback_0()]
         )
 
@@ -315,17 +343,27 @@ class TestObservableUpDownCounter(TestCase):
                 ),
             ],
         )
+
+    def test_disallow_direct_observable_up_down_counter_creation(self):
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            ObservableUpDownCounter("name", Mock(), Mock())
 
 
 class TestHistogram(TestCase):
     def test_record(self):
         mc = Mock()
-        hist = Histogram("name", Mock(), mc)
+        hist = _Histogram("name", Mock(), mc)
         hist.record(1.0)
         mc.consume_measurement.assert_called_once()
 
     def test_record_non_monotonic(self):
         mc = Mock()
-        hist = Histogram("name", Mock(), mc)
+        hist = _Histogram("name", Mock(), mc)
         hist.record(-1.0)
         mc.consume_measurement.assert_not_called()
+
+    def test_disallow_direct_histogram_creation(self):
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            Histogram("name", Mock(), Mock())

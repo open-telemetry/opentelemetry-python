@@ -45,6 +45,12 @@ from opentelemetry.sdk.metrics._internal.instrument import (
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
+    _Counter,
+    _Histogram,
+    _ObservableCounter,
+    _ObservableGauge,
+    _ObservableUpDownCounter,
+    _UpDownCounter,
 )
 from opentelemetry.sdk.metrics._internal.point import MetricsData
 from opentelemetry.util._once import Once
@@ -164,6 +170,7 @@ class MetricReader(ABC):
     # FIXME add :std:envvar:`OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE`
     # to the end of the documentation paragraph above.
 
+    # pylint: disable=too-many-branches
     def __init__(
         self,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
@@ -189,22 +196,22 @@ class MetricReader(ABC):
             == "DELTA"
         ):
             self._instrument_class_temporality = {
-                Counter: AggregationTemporality.DELTA,
-                UpDownCounter: AggregationTemporality.CUMULATIVE,
-                Histogram: AggregationTemporality.DELTA,
-                ObservableCounter: AggregationTemporality.DELTA,
-                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-                ObservableGauge: AggregationTemporality.CUMULATIVE,
+                _Counter: AggregationTemporality.DELTA,
+                _UpDownCounter: AggregationTemporality.CUMULATIVE,
+                _Histogram: AggregationTemporality.DELTA,
+                _ObservableCounter: AggregationTemporality.DELTA,
+                _ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+                _ObservableGauge: AggregationTemporality.CUMULATIVE,
             }
 
         else:
             self._instrument_class_temporality = {
-                Counter: AggregationTemporality.CUMULATIVE,
-                UpDownCounter: AggregationTemporality.CUMULATIVE,
-                Histogram: AggregationTemporality.CUMULATIVE,
-                ObservableCounter: AggregationTemporality.CUMULATIVE,
-                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-                ObservableGauge: AggregationTemporality.CUMULATIVE,
+                _Counter: AggregationTemporality.CUMULATIVE,
+                _UpDownCounter: AggregationTemporality.CUMULATIVE,
+                _Histogram: AggregationTemporality.CUMULATIVE,
+                _ObservableCounter: AggregationTemporality.CUMULATIVE,
+                _ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+                _ObservableGauge: AggregationTemporality.CUMULATIVE,
             }
 
         if preferred_temporality is not None:
@@ -217,18 +224,69 @@ class MetricReader(ABC):
                         f"Invalid temporality value found {temporality}"
                     )
 
-        self._instrument_class_temporality.update(preferred_temporality or {})
+        if preferred_temporality is not None:
+            for typ, temporality in preferred_temporality.items():
+                if typ is Counter:
+                    self._instrument_class_temporality[_Counter] = temporality
+                elif typ is UpDownCounter:
+                    self._instrument_class_temporality[
+                        _UpDownCounter
+                    ] = temporality
+                elif typ is Histogram:
+                    self._instrument_class_temporality[
+                        _Histogram
+                    ] = temporality
+                elif typ is ObservableCounter:
+                    self._instrument_class_temporality[
+                        _ObservableCounter
+                    ] = temporality
+                elif typ is ObservableUpDownCounter:
+                    self._instrument_class_temporality[
+                        _ObservableUpDownCounter
+                    ] = temporality
+                elif typ is ObservableGauge:
+                    self._instrument_class_temporality[
+                        _ObservableGauge
+                    ] = temporality
+                else:
+                    raise Exception(f"Invalid instrument class found {typ}")
+
         self._preferred_temporality = preferred_temporality
         self._instrument_class_aggregation = {
-            Counter: DefaultAggregation(),
-            UpDownCounter: DefaultAggregation(),
-            Histogram: DefaultAggregation(),
-            ObservableCounter: DefaultAggregation(),
-            ObservableUpDownCounter: DefaultAggregation(),
-            ObservableGauge: DefaultAggregation(),
+            _Counter: DefaultAggregation(),
+            _UpDownCounter: DefaultAggregation(),
+            _Histogram: DefaultAggregation(),
+            _ObservableCounter: DefaultAggregation(),
+            _ObservableUpDownCounter: DefaultAggregation(),
+            _ObservableGauge: DefaultAggregation(),
         }
 
-        self._instrument_class_aggregation.update(preferred_aggregation or {})
+        if preferred_aggregation is not None:
+            for typ, aggregation in preferred_aggregation.items():
+                if typ is Counter:
+                    self._instrument_class_aggregation[_Counter] = aggregation
+                elif typ is UpDownCounter:
+                    self._instrument_class_aggregation[
+                        _UpDownCounter
+                    ] = aggregation
+                elif typ is Histogram:
+                    self._instrument_class_aggregation[
+                        _Histogram
+                    ] = aggregation
+                elif typ is ObservableCounter:
+                    self._instrument_class_aggregation[
+                        _ObservableCounter
+                    ] = aggregation
+                elif typ is ObservableUpDownCounter:
+                    self._instrument_class_aggregation[
+                        _ObservableUpDownCounter
+                    ] = aggregation
+                elif typ is ObservableGauge:
+                    self._instrument_class_aggregation[
+                        _ObservableGauge
+                    ] = aggregation
+                else:
+                    raise Exception(f"Invalid instrument class found {typ}")
 
     @final
     def collect(self, timeout_millis: float = 10_000) -> None:
