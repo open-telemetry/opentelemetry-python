@@ -18,12 +18,7 @@ from unittest.mock import Mock
 
 from flaky import flaky
 
-from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
-)
-from opentelemetry.sdk.metrics import (
-    Counter,
-)
+from opentelemetry.sdk.metrics import Counter
 from opentelemetry.sdk.metrics._internal import _Counter
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
