@@ -50,13 +50,18 @@ class _Synchronous:
         description: str = "",
     ):
         # pylint: disable=no-member
-        is_name_valid, is_unit_valid = self._check_name_and_unit(name, unit)
+        result = self._check_name_unit_description(name, unit, description)
 
-        if not is_name_valid:
+        if result["name"] is None:
             raise Exception(_ERROR_MESSAGE.format(name))
 
-        if not is_unit_valid:
+        if result["unit"] is None:
             raise Exception(_ERROR_MESSAGE.format(unit))
+
+        name = result["name"]
+        unit = result["unit"]
+        description = result["description"]
+
         self.name = name.lower()
         self.unit = unit
         self.description = description
@@ -76,13 +81,18 @@ class _Asynchronous:
         description: str = "",
     ):
         # pylint: disable=no-member
-        is_name_valid, is_unit_valid = self._check_name_and_unit(name, unit)
+        result = self._check_name_unit_description(name, unit, description)
 
-        if not is_name_valid:
+        if result["name"] is None:
             raise Exception(_ERROR_MESSAGE.format(name))
 
-        if not is_unit_valid:
+        if result["unit"] is None:
             raise Exception(_ERROR_MESSAGE.format(unit))
+
+        name = result["name"]
+        unit = result["unit"]
+        description = result["description"]
+
         self.name = name.lower()
         self.unit = unit
         self.description = description
