@@ -328,6 +328,11 @@ class MetricReader(ABC):
     ) -> None:
         """Called by `MetricReader.collect` when it receives a batch of metrics"""
 
+    @final
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        self.collect(timeout_millis=timeout_millis)
+        return True
+
     @abstractmethod
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         """Shuts down the MetricReader. This method provides a way

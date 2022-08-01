@@ -135,3 +135,9 @@ class TestMetricReader(TestCase):
             dummy_metric_reader._instrument_class_aggregation[_Counter],
             LastValueAggregation,
         )
+
+    def test_force_flush(self):
+
+        with patch.object(DummyMetricReader, "collect") as mock_collect:
+            DummyMetricReader().force_flush(timeout_millis=10)
+            mock_collect.assert_called_with(timeout_millis=10)
