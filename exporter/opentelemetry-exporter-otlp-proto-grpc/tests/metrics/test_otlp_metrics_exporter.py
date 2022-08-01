@@ -52,9 +52,9 @@ from opentelemetry.sdk.metrics import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk.metrics.export import AggregationTemporality
+from opentelemetry.sdk.metrics.export import Histogram as HistogramType
 from opentelemetry.sdk.metrics.export import (
-    AggregationTemporality,
-    Histogram as HistogramType,
     HistogramDataPoint,
     Metric,
     MetricExportResult,
