@@ -44,7 +44,7 @@ from opentelemetry.sdk.metrics.export import (
 from opentelemetry.sdk.metrics.view import (
     DefaultAggregation,
     DropAggregation,
-    LastValueAggregation
+    LastValueAggregation,
 )
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 from opentelemetry.util._time import _time_ns
@@ -52,10 +52,7 @@ from opentelemetry.util._time import _time_ns
 
 class FakeMetricsExporter(MetricExporter):
     def __init__(
-        self,
-        wait=0,
-        preferred_temporality=None,
-        preferred_aggregation=None
+        self, wait=0, preferred_temporality=None, preferred_aggregation=None
     ):
         self.wait = wait
         self.metrics = []
@@ -191,7 +188,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
                 self.assertEqual(value, AggregationTemporality.CUMULATIVE)
             else:
                 self.assertEqual(value, AggregationTemporality.DELTA)
-        
+
     def test_exporter_aggregation_preference(self):
         exporter = FakeMetricsExporter(
             preferred_aggregation={

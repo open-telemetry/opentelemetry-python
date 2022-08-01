@@ -122,7 +122,7 @@ class OTLPMetricExporter(
             credentials=credentials,
             headers=headers,
             timeout=timeout,
-            compression=compression
+            compression=compression,
         )
 
     def _translate_data(

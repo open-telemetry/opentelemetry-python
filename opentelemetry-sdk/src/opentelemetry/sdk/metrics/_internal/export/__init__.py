@@ -82,6 +82,7 @@ class MetricExporter(ABC):
             configure exporter level preferred aggregation. See `opentelemetry.sdk.metrics.export.MetricReader` for
             more details on what preferred aggregation is.
     """
+
     def __init__(
         self,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
@@ -396,12 +397,18 @@ class PeriodicExportingMetricReader(MetricReader):
         export_timeout_millis: Optional[float] = None,
     ) -> None:
         # Prioritize exporter level configuration
-        if hasattr(exporter, "_preferred_temporality") and exporter._preferred_temporality is not None:
+        if (
+            hasattr(exporter, "_preferred_temporality")
+            and exporter._preferred_temporality is not None
+        ):
             if preferred_temporality is not None:
                 preferred_temporality.update(exporter._preferred_temporality)
             else:
                 preferred_temporality = exporter._preferred_temporality
-        if hasattr(exporter, "_preferred_aggregation") and exporter._preferred_aggregation is not None:
+        if (
+            hasattr(exporter, "_preferred_aggregation")
+            and exporter._preferred_aggregation is not None
+        ):
             if preferred_aggregation is not None:
                 preferred_aggregation.update(exporter._preferred_aggregation)
             else:

@@ -332,21 +332,15 @@ class TestOTLPMetricExporter(TestCase):
             AggregationTemporality.DELTA,
         )
         self.assertEqual(
-            exporter._preferred_temporality[
-                ObservableCounter
-            ],
+            exporter._preferred_temporality[ObservableCounter],
             AggregationTemporality.DELTA,
         )
         self.assertEqual(
-            exporter._preferred_temporality[
-                ObservableUpDownCounter
-            ],
+            exporter._preferred_temporality[ObservableUpDownCounter],
             AggregationTemporality.CUMULATIVE,
         )
         self.assertEqual(
-            exporter._preferred_temporality[
-                ObservableGauge
-            ],
+            exporter._preferred_temporality[ObservableGauge],
             AggregationTemporality.CUMULATIVE,
         )
 
