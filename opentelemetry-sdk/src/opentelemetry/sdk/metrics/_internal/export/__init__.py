@@ -31,9 +31,6 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
-)
 from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
     DefaultAggregation,

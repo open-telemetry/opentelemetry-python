@@ -51,9 +51,6 @@ from opentelemetry.sdk.metrics.export import (
     Sum,
 )
 
-
-from opentelemetry.sdk.metrics.view import Aggregation
-
 _logger = getLogger(__name__)
 
 

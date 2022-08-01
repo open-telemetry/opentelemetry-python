@@ -13,9 +13,8 @@
 # limitations under the License.
 
 import time
-from os import environ
 from typing import Sequence
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
 from flaky import flaky
 
@@ -24,11 +23,6 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.metrics import (
     Counter,
-    Histogram,
-    ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
-    UpDownCounter,
 )
 from opentelemetry.sdk.metrics._internal import _Counter
 from opentelemetry.sdk.metrics.export import (
