@@ -15,13 +15,14 @@
 from typing import Dict, Iterable
 from unittest import TestCase
 
-from opentelemetry.sdk.metrics import (
-    Counter,
-    Histogram,
-    ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
-    UpDownCounter,
+from opentelemetry.sdk.metrics import Counter, Histogram, ObservableGauge
+from opentelemetry.sdk.metrics._internal.instrument import (
+    _Counter,
+    _Histogram,
+    _ObservableCounter,
+    _ObservableGauge,
+    _ObservableUpDownCounter,
+    _UpDownCounter,
 )
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -33,6 +34,15 @@ from opentelemetry.sdk.metrics.view import (
     DefaultAggregation,
     LastValueAggregation,
 )
+
+_expected_keys = [
+    _Counter,
+    _UpDownCounter,
+    _Histogram,
+    _ObservableCounter,
+    _ObservableUpDownCounter,
+    _ObservableGauge,
+]
 
 
 class DummyMetricReader(MetricReader):
@@ -70,43 +80,36 @@ class TestMetricReader(TestCase):
 
         self.assertEqual(
             dummy_metric_reader._instrument_class_temporality.keys(),
-            set(
-                [
-                    Counter,
-                    UpDownCounter,
-                    Histogram,
-                    ObservableCounter,
-                    ObservableUpDownCounter,
-                    ObservableGauge,
-                ]
-            ),
+            set(_expected_keys),
         )
         self.assertEqual(
-            dummy_metric_reader._instrument_class_temporality[Counter],
+            dummy_metric_reader._instrument_class_temporality[_Counter],
             AggregationTemporality.CUMULATIVE,
         )
         self.assertEqual(
-            dummy_metric_reader._instrument_class_temporality[UpDownCounter],
+            dummy_metric_reader._instrument_class_temporality[_UpDownCounter],
             AggregationTemporality.CUMULATIVE,
         )
         self.assertEqual(
-            dummy_metric_reader._instrument_class_temporality[Histogram],
+            dummy_metric_reader._instrument_class_temporality[_Histogram],
             AggregationTemporality.DELTA,
         )
         self.assertEqual(
             dummy_metric_reader._instrument_class_temporality[
-                ObservableCounter
+                _ObservableCounter
             ],
             AggregationTemporality.CUMULATIVE,
         )
         self.assertEqual(
             dummy_metric_reader._instrument_class_temporality[
-                ObservableUpDownCounter
+                _ObservableUpDownCounter
             ],
             AggregationTemporality.CUMULATIVE,
         )
         self.assertEqual(
-            dummy_metric_reader._instrument_class_temporality[ObservableGauge],
+            dummy_metric_reader._instrument_class_temporality[
+                _ObservableGauge
+            ],
             AggregationTemporality.DELTA,
         )
 
@@ -114,16 +117,7 @@ class TestMetricReader(TestCase):
         dummy_metric_reader = DummyMetricReader()
         self.assertEqual(
             dummy_metric_reader._instrument_class_aggregation.keys(),
-            set(
-                [
-                    Counter,
-                    UpDownCounter,
-                    Histogram,
-                    ObservableCounter,
-                    ObservableUpDownCounter,
-                    ObservableGauge,
-                ]
-            ),
+            set(_expected_keys),
         )
         for (
             value
@@ -135,18 +129,9 @@ class TestMetricReader(TestCase):
         )
         self.assertEqual(
             dummy_metric_reader._instrument_class_aggregation.keys(),
-            set(
-                [
-                    Counter,
-                    UpDownCounter,
-                    Histogram,
-                    ObservableCounter,
-                    ObservableUpDownCounter,
-                    ObservableGauge,
-                ]
-            ),
+            set(_expected_keys),
         )
         self.assertIsInstance(
-            dummy_metric_reader._instrument_class_aggregation[Counter],
+            dummy_metric_reader._instrument_class_aggregation[_Counter],
             LastValueAggregation,
         )

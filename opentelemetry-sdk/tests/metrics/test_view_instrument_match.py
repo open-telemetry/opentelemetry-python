@@ -15,7 +15,6 @@
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock
 
-from opentelemetry.sdk.metrics import Counter
 from opentelemetry.sdk.metrics._internal._view_instrument_match import (
     _ViewInstrumentMatch,
 )
@@ -23,6 +22,7 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     _DropAggregation,
     _LastValueAggregation,
 )
+from opentelemetry.sdk.metrics._internal.instrument import _Counter
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
@@ -172,7 +172,7 @@ class Test_ViewInstrumentMatch(TestCase):
         )
 
     def test_collect(self):
-        instrument1 = Counter(
+        instrument1 = _Counter(
             "instrument1",
             Mock(),
             Mock(),
@@ -213,7 +213,7 @@ class Test_ViewInstrumentMatch(TestCase):
         self.assertEqual(number_data_point.value, 0)
 
     def test_data_point_check(self):
-        instrument1 = Counter(
+        instrument1 = _Counter(
             "instrument1",
             Mock(),
             Mock(),
@@ -285,7 +285,7 @@ class Test_ViewInstrumentMatch(TestCase):
         self.assertEqual(len(list(result)), 3)
 
     def test_setting_aggregation(self):
-        instrument1 = Counter(
+        instrument1 = _Counter(
             name="instrument1",
             instrumentation_scope=Mock(),
             measurement_consumer=Mock(),
@@ -301,7 +301,7 @@ class Test_ViewInstrumentMatch(TestCase):
                 attribute_keys={"a", "c"},
             ),
             instrument=instrument1,
-            instrument_class_aggregation={Counter: LastValueAggregation()},
+            instrument_class_aggregation={_Counter: LastValueAggregation()},
         )
 
         view_instrument_match.consume_measurement(
