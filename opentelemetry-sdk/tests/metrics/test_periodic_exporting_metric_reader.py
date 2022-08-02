@@ -32,7 +32,6 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.sdk.metrics.view import (
     DefaultAggregation,
-    DropAggregation,
     LastValueAggregation,
 )
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase
