@@ -142,6 +142,11 @@ class _Asynchronous:
 
 
 class Counter(_Synchronous, APICounter):
+    def __new__(cls, *args, **kwargs):
+        if cls is Counter:
+            raise TypeError("Counter must be instantiated via a meter.")
+        return super().__new__(cls)
+
     def add(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
@@ -156,6 +161,11 @@ class Counter(_Synchronous, APICounter):
 
 
 class UpDownCounter(_Synchronous, APIUpDownCounter):
+    def __new__(cls, *args, **kwargs):
+        if cls is UpDownCounter:
+            raise TypeError("UpDownCounter must be instantiated via a meter.")
+        return super().__new__(cls)
+
     def add(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
@@ -165,14 +175,29 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 
 
 class ObservableCounter(_Asynchronous, APIObservableCounter):
-    pass
+    def __new__(cls, *args, **kwargs):
+        if cls is ObservableCounter:
+            raise TypeError(
+                "ObservableCounter must be instantiated via a meter."
+            )
+        return super().__new__(cls)
 
 
 class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
-    pass
+    def __new__(cls, *args, **kwargs):
+        if cls is ObservableUpDownCounter:
+            raise TypeError(
+                "ObservableUpDownCounter must be instantiated via a meter."
+            )
+        return super().__new__(cls)
 
 
 class Histogram(_Synchronous, APIHistogram):
+    def __new__(cls, *args, **kwargs):
+        if cls is Histogram:
+            raise TypeError("Histogram must be instantiated via a meter.")
+        return super().__new__(cls)
+
     def record(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
@@ -188,4 +213,34 @@ class Histogram(_Synchronous, APIHistogram):
 
 
 class ObservableGauge(_Asynchronous, APIObservableGauge):
+    def __new__(cls, *args, **kwargs):
+        if cls is ObservableGauge:
+            raise TypeError(
+                "ObservableGauge must be instantiated via a meter."
+            )
+        return super().__new__(cls)
+
+
+# Below classes exist to prevent the direct instantiation
+class _Counter(Counter):
+    pass
+
+
+class _UpDownCounter(UpDownCounter):
+    pass
+
+
+class _ObservableCounter(ObservableCounter):
+    pass
+
+
+class _ObservableUpDownCounter(ObservableUpDownCounter):
+    pass
+
+
+class _Histogram(Histogram):
+    pass
+
+
+class _ObservableGauge(ObservableGauge):
     pass

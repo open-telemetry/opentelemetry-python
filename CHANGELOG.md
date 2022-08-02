@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2754](https://github.com/open-telemetry/opentelemetry-python/pull/2754))
 - Fix --insecure of CLI argument
   ([#2696](https://github.com/open-telemetry/opentelemetry-python/pull/2696))
+-  Instrument instances are always created through a Meter
+  ([#2844](https://github.com/open-telemetry/opentelemetry-python/pull/2844))
 
 ## [1.12.0rc2-0.32b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0rc2) - 2022-07-04
 

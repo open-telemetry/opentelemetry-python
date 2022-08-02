@@ -18,18 +18,18 @@ from typing import Union
 from unittest import TestCase
 from unittest.mock import Mock
 
-from opentelemetry.sdk.metrics import (
-    Counter,
-    Histogram,
-    ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
-    UpDownCounter,
-)
 from opentelemetry.sdk.metrics._internal.aggregation import (
     _ExplicitBucketHistogramAggregation,
     _LastValueAggregation,
     _SumAggregation,
+)
+from opentelemetry.sdk.metrics._internal.instrument import (
+    _Counter,
+    _Histogram,
+    _ObservableCounter,
+    _ObservableGauge,
+    _ObservableUpDownCounter,
+    _UpDownCounter,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics.export import (
@@ -381,7 +381,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
 class TestAggregationFactory(TestCase):
     def test_sum_factory(self):
-        counter = Counter("name", Mock(), Mock())
+        counter = _Counter("name", Mock(), Mock())
         factory = SumAggregation()
         aggregation = factory._create_aggregation(counter, Mock(), 0)
         self.assertIsInstance(aggregation, _SumAggregation)
@@ -392,7 +392,7 @@ class TestAggregationFactory(TestCase):
         aggregation2 = factory._create_aggregation(counter, Mock(), 0)
         self.assertNotEqual(aggregation, aggregation2)
 
-        counter = UpDownCounter("name", Mock(), Mock())
+        counter = _UpDownCounter("name", Mock(), Mock())
         factory = SumAggregation()
         aggregation = factory._create_aggregation(counter, Mock(), 0)
         self.assertIsInstance(aggregation, _SumAggregation)
@@ -401,7 +401,7 @@ class TestAggregationFactory(TestCase):
             aggregation._instrument_temporality, AggregationTemporality.DELTA
         )
 
-        counter = ObservableCounter("name", Mock(), Mock(), None)
+        counter = _ObservableCounter("name", Mock(), Mock(), None)
         factory = SumAggregation()
         aggregation = factory._create_aggregation(counter, Mock(), 0)
         self.assertIsInstance(aggregation, _SumAggregation)
@@ -412,7 +412,7 @@ class TestAggregationFactory(TestCase):
         )
 
     def test_explicit_bucket_histogram_factory(self):
-        histo = Histogram("name", Mock(), Mock())
+        histo = _Histogram("name", Mock(), Mock())
         factory = ExplicitBucketHistogramAggregation(
             boundaries=(
                 0.0,
@@ -428,7 +428,7 @@ class TestAggregationFactory(TestCase):
         self.assertNotEqual(aggregation, aggregation2)
 
     def test_last_value_factory(self):
-        counter = Counter("name", Mock(), Mock())
+        counter = _Counter("name", Mock(), Mock())
         factory = LastValueAggregation()
         aggregation = factory._create_aggregation(counter, Mock(), 0)
         self.assertIsInstance(aggregation, _LastValueAggregation)
@@ -444,7 +444,7 @@ class TestDefaultAggregation(TestCase):
     def test_counter(self):
 
         aggregation = self.default_aggregation._create_aggregation(
-            Counter("name", Mock(), Mock()), Mock(), 0
+            _Counter("name", Mock(), Mock()), Mock(), 0
         )
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertTrue(aggregation._instrument_is_monotonic)
@@ -455,7 +455,7 @@ class TestDefaultAggregation(TestCase):
     def test_up_down_counter(self):
 
         aggregation = self.default_aggregation._create_aggregation(
-            UpDownCounter("name", Mock(), Mock()), Mock(), 0
+            _UpDownCounter("name", Mock(), Mock()), Mock(), 0
         )
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertFalse(aggregation._instrument_is_monotonic)
@@ -466,7 +466,7 @@ class TestDefaultAggregation(TestCase):
     def test_observable_counter(self):
 
         aggregation = self.default_aggregation._create_aggregation(
-            ObservableCounter("name", Mock(), Mock(), callbacks=[Mock()]),
+            _ObservableCounter("name", Mock(), Mock(), callbacks=[Mock()]),
             Mock(),
             0,
         )
@@ -480,7 +480,7 @@ class TestDefaultAggregation(TestCase):
     def test_observable_up_down_counter(self):
 
         aggregation = self.default_aggregation._create_aggregation(
-            ObservableUpDownCounter(
+            _ObservableUpDownCounter(
                 "name", Mock(), Mock(), callbacks=[Mock()]
             ),
             Mock(),
@@ -496,7 +496,7 @@ class TestDefaultAggregation(TestCase):
     def test_histogram(self):
 
         aggregation = self.default_aggregation._create_aggregation(
-            Histogram(
+            _Histogram(
                 "name",
                 Mock(),
                 Mock(),
@@ -509,7 +509,7 @@ class TestDefaultAggregation(TestCase):
     def test_observable_gauge(self):
 
         aggregation = self.default_aggregation._create_aggregation(
-            ObservableGauge(
+            _ObservableGauge(
                 "name",
                 Mock(),
                 Mock(),
