@@ -166,12 +166,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
                 Counter: AggregationTemporality.DELTA,
             },
         )
-        pmr = PeriodicExportingMetricReader(
-            exporter,
-            preferred_temporality={
-                Counter: AggregationTemporality.CUMULATIVE,
-            },
-        )
+        pmr = PeriodicExportingMetricReader(exporter)
         for key, value in pmr._instrument_class_temporality.items():
             if key is not _Counter:
                 self.assertEqual(value, AggregationTemporality.CUMULATIVE)
@@ -184,12 +179,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
                 Counter: LastValueAggregation(),
             },
         )
-        pmr = PeriodicExportingMetricReader(
-            exporter,
-            preferred_aggregation={
-                Counter: DropAggregation(),
-            },
-        )
+        pmr = PeriodicExportingMetricReader(exporter)
         for key, value in pmr._instrument_class_aggregation.items():
             if key is not _Counter:
                 self.assertTrue(isinstance(value, DefaultAggregation))

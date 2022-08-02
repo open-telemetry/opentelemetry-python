@@ -164,8 +164,6 @@ class MetricReader(ABC):
             temporalities of the classes that the user wants to change, not all of
             them. The classes not included in the passed dictionary will retain
             their association to their default aggregation temporalities.
-            The value passed here will override the corresponding values set
-            via the environment variable
         preferred_aggregation: A mapping between instrument classes and
             aggregation instances. By default maps all instrument classes to an
             instance of `DefaultAggregation`. This mapping will be used to
@@ -388,33 +386,13 @@ class PeriodicExportingMetricReader(MetricReader):
     def __init__(
         self,
         exporter: MetricExporter,
-        preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
-        ] = None,
         export_interval_millis: Optional[float] = None,
         export_timeout_millis: Optional[float] = None,
     ) -> None:
-        # Prioritize exporter level configuration
-        if (
-            hasattr(exporter, "_preferred_temporality")
-            and exporter._preferred_temporality is not None
-        ):
-            if preferred_temporality is not None:
-                preferred_temporality.update(exporter._preferred_temporality)
-            else:
-                preferred_temporality = exporter._preferred_temporality
-        if (
-            hasattr(exporter, "_preferred_aggregation")
-            and exporter._preferred_aggregation is not None
-        ):
-            if preferred_aggregation is not None:
-                preferred_aggregation.update(exporter._preferred_aggregation)
-            else:
-                preferred_aggregation = exporter._preferred_aggregation
+        # PeriodicExportingMetricReader defers to exporter for configuration
         super().__init__(
-            preferred_temporality=preferred_temporality,
-            preferred_aggregation=preferred_aggregation,
+            preferred_temporality=exporter._preferred_temporality,
+            preferred_aggregation=exporter._preferred_aggregation,
         )
         self._exporter = exporter
         if export_interval_millis is None:

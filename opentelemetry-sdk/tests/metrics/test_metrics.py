@@ -431,6 +431,7 @@ class TestMeter(TestCase):
 
 class InMemoryMetricExporter(MetricExporter):
     def __init__(self):
+        super().__init__()
         self.metrics = {}
         self._counter = 0
 
