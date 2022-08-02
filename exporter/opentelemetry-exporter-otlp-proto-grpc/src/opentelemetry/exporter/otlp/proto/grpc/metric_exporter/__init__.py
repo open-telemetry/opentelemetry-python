@@ -253,3 +253,6 @@ class OTLPMetricExporter(
     @property
     def _exporting(self) -> str:
         return "metrics"
+
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        return True
