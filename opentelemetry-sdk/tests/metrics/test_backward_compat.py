@@ -53,6 +53,9 @@ class OrigMetricExporter(MetricExporter):
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass
 
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        return True
+
 
 class OrigMetricReader(MetricReader):
     def _receive_metrics(
