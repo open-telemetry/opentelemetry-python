@@ -445,6 +445,9 @@ class InMemoryMetricExporter(MetricExporter):
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass
 
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        return True
+
 
 class TestDuplicateInstrumentAggregateData(TestCase):
     def test_duplicate_instrument_aggregate_data(self):

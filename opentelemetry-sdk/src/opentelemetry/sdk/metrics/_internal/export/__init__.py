@@ -92,6 +92,13 @@ class MetricExporter(ABC):
         """
 
     @abstractmethod
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        """
+        Ensure that export of any metrics currently received by the exporter
+        are completed as soon as possible.
+        """
+
+    @abstractmethod
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         """Shuts down the exporter.
 
@@ -130,6 +137,9 @@ class ConsoleMetricExporter(MetricExporter):
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass
+
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        return True
 
 
 class MetricReader(ABC):

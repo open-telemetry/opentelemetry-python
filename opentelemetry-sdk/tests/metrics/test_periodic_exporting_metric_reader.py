@@ -50,6 +50,9 @@ class FakeMetricsExporter(MetricExporter):
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         self._shutdown = True
 
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        return True
+
 
 metrics_list = [
     Metric(

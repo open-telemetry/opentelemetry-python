@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add `force_flush` method to metrics exporter
+  ([#2852](https://github.com/open-telemetry/opentelemetry-python/pull/2852))
 - Change tracing to use `Resource.to_json()`
   ([#2784](https://github.com/open-telemetry/opentelemetry-python/pull/2784))
 - Fix get_log_emitter instrumenting_module_version args typo
