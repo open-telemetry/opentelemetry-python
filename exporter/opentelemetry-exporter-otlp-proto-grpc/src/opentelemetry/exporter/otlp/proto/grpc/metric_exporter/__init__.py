@@ -13,8 +13,9 @@
 
 from logging import getLogger
 from os import environ
-from typing import Optional, Sequence
+from typing import Dict, Optional, Sequence
 from grpc import ChannelCredentials, Compression
+from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     OTLPExporterMixin,
     get_resource_data,
@@ -29,18 +30,25 @@ from opentelemetry.proto.common.v1.common_pb2 import InstrumentationScope
 from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
+    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
 )
-from opentelemetry.sdk.metrics.export import (
-    Gauge,
+from opentelemetry.sdk.metrics import (
+    Counter,
     Histogram,
-    Metric,
-    Sum,
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
 )
-
 from opentelemetry.sdk.metrics.export import (
+    AggregationTemporality,
+    Gauge,
+    Histogram as HistogramType,
+    Metric,
     MetricExporter,
     MetricExportResult,
     MetricsData,
+    Sum,
 )
 
 _logger = getLogger(__name__)
@@ -61,6 +69,8 @@ class OTLPMetricExporter(
         headers: Optional[Sequence] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
+        preferred_temporality: Dict[type, AggregationTemporality] = None,
+        preferred_aggregation: Dict[type, Aggregation] = None,
     ):
 
         if insecure is None:
@@ -68,15 +78,48 @@ class OTLPMetricExporter(
             if insecure is not None:
                 insecure = insecure.lower() == "true"
 
-        super().__init__(
-            **{
-                "endpoint": endpoint,
-                "insecure": insecure,
-                "credentials": credentials,
-                "headers": headers,
-                "timeout": timeout,
-                "compression": compression,
+        instrument_class_temporality = {}
+        if (
+            environ.get(
+                OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
+                "CUMULATIVE",
+            )
+            .upper()
+            .strip()
+            == "DELTA"
+        ):
+            instrument_class_temporality = {
+                Counter: AggregationTemporality.DELTA,
+                UpDownCounter: AggregationTemporality.CUMULATIVE,
+                Histogram: AggregationTemporality.DELTA,
+                ObservableCounter: AggregationTemporality.DELTA,
+                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+                ObservableGauge: AggregationTemporality.CUMULATIVE,
             }
+        else:
+            instrument_class_temporality = {
+                Counter: AggregationTemporality.CUMULATIVE,
+                UpDownCounter: AggregationTemporality.CUMULATIVE,
+                Histogram: AggregationTemporality.CUMULATIVE,
+                ObservableCounter: AggregationTemporality.CUMULATIVE,
+                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+                ObservableGauge: AggregationTemporality.CUMULATIVE,
+            }
+        instrument_class_temporality.update(preferred_temporality or {})
+
+        MetricExporter.__init__(
+            self,
+            preferred_temporality=instrument_class_temporality,
+            preferred_aggregation=preferred_aggregation,
+        )
+        OTLPExporterMixin.__init__(
+            self,
+            endpoint=endpoint,
+            insecure=insecure,
+            credentials=credentials,
+            headers=headers,
+            timeout=timeout,
+            compression=compression,
         )
 
     def _translate_data(
@@ -132,7 +175,7 @@ class OTLPMetricExporter(
                                 pt.as_double = data_point.value
                             pb2_metric.gauge.data_points.append(pt)
 
-                    elif isinstance(metric.data, Histogram):
+                    elif isinstance(metric.data, HistogramType):
                         for data_point in metric.data.data_points:
                             pt = pb2.HistogramDataPoint(
                                 attributes=self._translate_attributes(

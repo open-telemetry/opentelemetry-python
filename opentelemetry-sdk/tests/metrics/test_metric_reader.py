@@ -12,14 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import environ
 from typing import Dict, Iterable
 from unittest import TestCase
-from unittest.mock import patch
 
-from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
-)
 from opentelemetry.sdk.metrics import Counter, Histogram, ObservableGauge
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
@@ -74,66 +69,7 @@ class DummyMetricReader(MetricReader):
 
 
 class TestMetricReader(TestCase):
-    @patch.dict(
-        environ,
-        {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "CUMULATIVE"},
-    )
-    def test_configure_temporality_cumulative(self):
-
-        dummy_metric_reader = DummyMetricReader()
-
-        self.assertEqual(
-            dummy_metric_reader._instrument_class_temporality.keys(),
-            set(_expected_keys),
-        )
-        for (
-            value
-        ) in dummy_metric_reader._instrument_class_temporality.values():
-            self.assertEqual(value, AggregationTemporality.CUMULATIVE)
-
-    @patch.dict(
-        environ, {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "DELTA"}
-    )
-    def test_configure_temporality_delta(self):
-
-        dummy_metric_reader = DummyMetricReader()
-
-        self.assertEqual(
-            dummy_metric_reader._instrument_class_temporality.keys(),
-            set(_expected_keys),
-        )
-        self.assertEqual(
-            dummy_metric_reader._instrument_class_temporality[_Counter],
-            AggregationTemporality.DELTA,
-        )
-        self.assertEqual(
-            dummy_metric_reader._instrument_class_temporality[_UpDownCounter],
-            AggregationTemporality.CUMULATIVE,
-        )
-        self.assertEqual(
-            dummy_metric_reader._instrument_class_temporality[_Histogram],
-            AggregationTemporality.DELTA,
-        )
-        self.assertEqual(
-            dummy_metric_reader._instrument_class_temporality[
-                _ObservableCounter
-            ],
-            AggregationTemporality.DELTA,
-        )
-        self.assertEqual(
-            dummy_metric_reader._instrument_class_temporality[
-                _ObservableUpDownCounter
-            ],
-            AggregationTemporality.CUMULATIVE,
-        )
-        self.assertEqual(
-            dummy_metric_reader._instrument_class_temporality[
-                _ObservableGauge
-            ],
-            AggregationTemporality.CUMULATIVE,
-        )
-
-    def test_configure_temporality_parameter(self):
+    def test_configure_temporality(self):
 
         dummy_metric_reader = DummyMetricReader(
             preferred_temporality={
@@ -177,7 +113,7 @@ class TestMetricReader(TestCase):
             AggregationTemporality.DELTA,
         )
 
-    def test_default_temporality(self):
+    def test_configure_aggregation(self):
         dummy_metric_reader = DummyMetricReader()
         self.assertEqual(
             dummy_metric_reader._instrument_class_aggregation.keys(),
