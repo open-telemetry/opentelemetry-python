@@ -18,7 +18,10 @@ from unittest.mock import Mock
 
 from flaky import flaky
 
+from opentelemetry.sdk.metrics import Counter
+from opentelemetry.sdk.metrics._internal import _Counter
 from opentelemetry.sdk.metrics.export import (
+    AggregationTemporality,
     Gauge,
     Metric,
     MetricExporter,
@@ -27,15 +30,25 @@ from opentelemetry.sdk.metrics.export import (
     PeriodicExportingMetricReader,
     Sum,
 )
+from opentelemetry.sdk.metrics.view import (
+    DefaultAggregation,
+    LastValueAggregation,
+)
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase
 from opentelemetry.util._time import _time_ns
 
 
 class FakeMetricsExporter(MetricExporter):
-    def __init__(self, wait=0):
+    def __init__(
+        self, wait=0, preferred_temporality=None, preferred_aggregation=None
+    ):
         self.wait = wait
         self.metrics = []
         self._shutdown = False
+        super().__init__(
+            preferred_temporality=preferred_temporality,
+            preferred_aggregation=preferred_aggregation,
+        )
 
     def export(
         self,
@@ -114,7 +127,9 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
 
     def test_ticker_called(self):
         collect_mock = Mock()
-        pmr = PeriodicExportingMetricReader(Mock(), export_interval_millis=1)
+        exporter = FakeMetricsExporter()
+        exporter.export = Mock()
+        pmr = PeriodicExportingMetricReader(exporter, export_interval_millis=1)
         pmr._set_collect_callback(collect_mock)
         time.sleep(0.1)
         self.assertTrue(collect_mock.assert_called_once)
@@ -141,8 +156,34 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         self.assertTrue(exporter._shutdown)
 
     def test_shutdown_multiple_times(self):
-        pmr = self._create_periodic_reader([], Mock())
+        pmr = self._create_periodic_reader([], FakeMetricsExporter())
         with self.assertLogs(level="WARNING") as w:
             self.run_with_many_threads(pmr.shutdown)
             self.assertTrue("Can't shutdown multiple times", w.output[0])
         pmr.shutdown()
+
+    def test_exporter_temporality_preference(self):
+        exporter = FakeMetricsExporter(
+            preferred_temporality={
+                Counter: AggregationTemporality.DELTA,
+            },
+        )
+        pmr = PeriodicExportingMetricReader(exporter)
+        for key, value in pmr._instrument_class_temporality.items():
+            if key is not _Counter:
+                self.assertEqual(value, AggregationTemporality.CUMULATIVE)
+            else:
+                self.assertEqual(value, AggregationTemporality.DELTA)
+
+    def test_exporter_aggregation_preference(self):
+        exporter = FakeMetricsExporter(
+            preferred_aggregation={
+                Counter: LastValueAggregation(),
+            },
+        )
+        pmr = PeriodicExportingMetricReader(exporter)
+        for key, value in pmr._instrument_class_aggregation.items():
+            if key is not _Counter:
+                self.assertTrue(isinstance(value, DefaultAggregation))
+            else:
+                self.assertTrue(isinstance(value, LastValueAggregation))

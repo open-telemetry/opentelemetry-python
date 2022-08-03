@@ -42,10 +42,19 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
+    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
 )
-from opentelemetry.sdk.metrics.export import (
-    AggregationTemporality,
+from opentelemetry.sdk.metrics import (
+    Counter,
     Histogram,
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
+)
+from opentelemetry.sdk.metrics.export import AggregationTemporality
+from opentelemetry.sdk.metrics.export import Histogram as HistogramType
+from opentelemetry.sdk.metrics.export import (
     HistogramDataPoint,
     Metric,
     MetricExportResult,
@@ -121,7 +130,7 @@ class TestOTLPMetricExporter(TestCase):
             name="histogram",
             description="foo",
             unit="s",
-            data=Histogram(
+            data=HistogramType(
                 data_points=[
                     HistogramDataPoint(
                         attributes={"a": 1, "b": True},
@@ -301,6 +310,40 @@ class TestOTLPMetricExporter(TestCase):
     def test_exporting(self):
         # pylint: disable=protected-access
         self.assertEqual(self.exporter._exporting, "metrics")
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "DELTA"},
+    )
+    def test_preferred_temporality(self):
+        # pylint: disable=protected-access
+        exporter = OTLPMetricExporter(
+            preferred_temporality={Counter: AggregationTemporality.CUMULATIVE}
+        )
+        self.assertEqual(
+            exporter._preferred_temporality[Counter],
+            AggregationTemporality.CUMULATIVE,
+        )
+        self.assertEqual(
+            exporter._preferred_temporality[UpDownCounter],
+            AggregationTemporality.CUMULATIVE,
+        )
+        self.assertEqual(
+            exporter._preferred_temporality[Histogram],
+            AggregationTemporality.DELTA,
+        )
+        self.assertEqual(
+            exporter._preferred_temporality[ObservableCounter],
+            AggregationTemporality.DELTA,
+        )
+        self.assertEqual(
+            exporter._preferred_temporality[ObservableUpDownCounter],
+            AggregationTemporality.CUMULATIVE,
+        )
+        self.assertEqual(
+            exporter._preferred_temporality[ObservableGauge],
+            AggregationTemporality.CUMULATIVE,
+        )
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
