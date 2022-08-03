@@ -31,9 +31,6 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
-)
 from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
     DefaultAggregation,
@@ -73,7 +70,25 @@ class MetricExporter(ABC):
 
     Interface to be implemented by services that want to export metrics received
     in their own format.
+
+    Args:
+        preferred_temporality: Used by `opentelemetry.sdk.metrics.export.PeriodicExportingMetricReader` to
+            configure exporter level preferred temporality. See `opentelemetry.sdk.metrics.export.MetricReader` for
+            more details on what preferred temporality is.
+        preferred_aggregation: Used by `opentelemetry.sdk.metrics.export.PeriodicExportingMetricReader` to
+            configure exporter level preferred aggregation. See `opentelemetry.sdk.metrics.export.MetricReader` for
+            more details on what preferred aggregation is.
     """
+
+    def __init__(
+        self,
+        preferred_temporality: Dict[type, AggregationTemporality] = None,
+        preferred_aggregation: Dict[
+            type, "opentelemetry.sdk.metrics.view.Aggregation"
+        ] = None,
+    ) -> None:
+        self._preferred_temporality = preferred_temporality
+        self._preferred_aggregation = preferred_aggregation
 
     @abstractmethod
     def export(
@@ -122,6 +137,7 @@ class ConsoleMetricExporter(MetricExporter):
         ] = lambda metrics_data: metrics_data.to_json()
         + linesep,
     ):
+        super().__init__()
         self.out = out
         self.formatter = formatter
 
@@ -143,6 +159,7 @@ class ConsoleMetricExporter(MetricExporter):
 
 
 class MetricReader(ABC):
+    # pylint: disable=too-many-branches
     """
     Base class for all metric readers
 
@@ -157,8 +174,6 @@ class MetricReader(ABC):
             temporalities of the classes that the user wants to change, not all of
             them. The classes not included in the passed dictionary will retain
             their association to their default aggregation temporalities.
-            The value passed here will override the corresponding values set
-            via the environment variable
         preferred_aggregation: A mapping between instrument classes and
             aggregation instances. By default maps all instrument classes to an
             instance of `DefaultAggregation`. This mapping will be used to
@@ -177,10 +192,6 @@ class MetricReader(ABC):
     .. automethod:: _receive_metrics
     """
 
-    # FIXME add :std:envvar:`OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE`
-    # to the end of the documentation paragraph above.
-
-    # pylint: disable=too-many-branches
     def __init__(
         self,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
@@ -196,33 +207,14 @@ class MetricReader(ABC):
             Iterable["opentelemetry.sdk.metrics.export.Metric"],
         ] = None
 
-        if (
-            environ.get(
-                OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
-                "CUMULATIVE",
-            )
-            .upper()
-            .strip()
-            == "DELTA"
-        ):
-            self._instrument_class_temporality = {
-                _Counter: AggregationTemporality.DELTA,
-                _UpDownCounter: AggregationTemporality.CUMULATIVE,
-                _Histogram: AggregationTemporality.DELTA,
-                _ObservableCounter: AggregationTemporality.DELTA,
-                _ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-                _ObservableGauge: AggregationTemporality.CUMULATIVE,
-            }
-
-        else:
-            self._instrument_class_temporality = {
-                _Counter: AggregationTemporality.CUMULATIVE,
-                _UpDownCounter: AggregationTemporality.CUMULATIVE,
-                _Histogram: AggregationTemporality.CUMULATIVE,
-                _ObservableCounter: AggregationTemporality.CUMULATIVE,
-                _ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-                _ObservableGauge: AggregationTemporality.CUMULATIVE,
-            }
+        self._instrument_class_temporality = {
+            _Counter: AggregationTemporality.CUMULATIVE,
+            _UpDownCounter: AggregationTemporality.CUMULATIVE,
+            _Histogram: AggregationTemporality.CUMULATIVE,
+            _ObservableCounter: AggregationTemporality.CUMULATIVE,
+            _ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+            _ObservableGauge: AggregationTemporality.CUMULATIVE,
+        }
 
         if preferred_temporality is not None:
             for temporality in preferred_temporality.values():
@@ -404,16 +396,13 @@ class PeriodicExportingMetricReader(MetricReader):
     def __init__(
         self,
         exporter: MetricExporter,
-        preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
-        ] = None,
         export_interval_millis: Optional[float] = None,
         export_timeout_millis: Optional[float] = None,
     ) -> None:
+        # PeriodicExportingMetricReader defers to exporter for configuration
         super().__init__(
-            preferred_temporality=preferred_temporality,
-            preferred_aggregation=preferred_aggregation,
+            preferred_temporality=exporter._preferred_temporality,
+            preferred_aggregation=exporter._preferred_aggregation,
         )
         self._exporter = exporter
         if export_interval_millis is None:
