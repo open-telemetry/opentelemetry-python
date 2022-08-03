@@ -117,7 +117,7 @@ class MetricReaderStorage:
         ):
             view_instrument_match.consume_measurement(measurement)
 
-    def collect(self) -> MetricsData:
+    def collect(self, timeout_millis: float = 10_000) -> None:
         # Use a list instead of yielding to prevent a slow reader from holding
         # SDK locks
 
@@ -132,7 +132,11 @@ class MetricReaderStorage:
 
         collection_start_nanos = _time_ns()
 
+        deadline_ns = _time_ns() + timeout_millis * 10**6
         with self._lock:
+
+            view_instrument_match_error = {}
+            current_ts = _time_ns()
 
             instrumentation_scope_scope_metrics: (
                 Dict[InstrumentationScope, ScopeMetrics]
@@ -153,44 +157,53 @@ class MetricReaderStorage:
                     if isinstance(
                         # pylint: disable=protected-access
                         view_instrument_match._aggregation,
+                        _DropAggregation,
+                    ):
+                        continue
+
+                    try:
+
+                        if current_ts >= deadline_ns:
+                            raise Exception("Timed out while collecting")
+
+                        data_points = view_instrument_match.collect(
+                            aggregation_temporality, collection_start_nanos
+                        )
+
+                    except Exception as error:
+                        view_instrument_match_error[
+                            view_instrument_match
+                        ] = error
+
+                    if isinstance(
+                        # pylint: disable=protected-access
+                        view_instrument_match._aggregation,
                         _SumAggregation,
                     ):
                         data = Sum(
                             aggregation_temporality=aggregation_temporality,
-                            data_points=view_instrument_match.collect(
-                                aggregation_temporality, collection_start_nanos
-                            ),
+                            data_points=data_points,
                             is_monotonic=isinstance(
                                 instrument, (Counter, ObservableCounter)
                             ),
                         )
+
                     elif isinstance(
                         # pylint: disable=protected-access
                         view_instrument_match._aggregation,
                         _LastValueAggregation,
                     ):
-                        data = Gauge(
-                            data_points=view_instrument_match.collect(
-                                aggregation_temporality, collection_start_nanos
-                            )
-                        )
+                        data = Gauge(data_points=data_points)
+
                     elif isinstance(
                         # pylint: disable=protected-access
                         view_instrument_match._aggregation,
                         _ExplicitBucketHistogramAggregation,
                     ):
                         data = Histogram(
-                            data_points=view_instrument_match.collect(
-                                aggregation_temporality, collection_start_nanos
-                            ),
+                            data_points=data_points,
                             aggregation_temporality=aggregation_temporality,
                         )
-                    elif isinstance(
-                        # pylint: disable=protected-access
-                        view_instrument_match._aggregation,
-                        _DropAggregation,
-                    ):
-                        continue
 
                     metrics.append(
                         Metric(
@@ -216,6 +229,20 @@ class MetricReaderStorage:
                     instrumentation_scope_scope_metrics[
                         instrument.instrumentation_scope
                     ].metrics.extend(metrics)
+
+        if view_instrument_match_error:
+
+            error_string = "\n".join(
+                [
+                    f"{repr(error)}"
+                    for error in view_instrument_match_error.values()
+                ]
+            )
+
+            raise Exception(
+                "MetricReader.collect failed because of the following errors\n"
+                f"{error_string}"
+            )
 
         return MetricsData(
             resource_metrics=[
