@@ -919,8 +919,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             with self.assertRaises(Exception) as error:
                 metric_reader_storage.collect(timeout_millis=10)
 
-            self.assertEqual(
-                error.exception.args[0],
+            self.assertIn(
                 "MetricReader.collect failed because of the following "
-                "errors\nException('Timed out while collecting')",
+                "errors\nException('Timed out while collecting",
+                error.exception.args[0],
             )

@@ -297,7 +297,7 @@ class MetricReader(ABC):
 
         Args:
             timeout_millis: Amount of time in milliseconds before this function
-            raises a timeout error.
+              raises a timeout error.
 
         If any of the underlying ``collect`` methods called by this method
         fails by any reason (including timeout) an exception will be raised
