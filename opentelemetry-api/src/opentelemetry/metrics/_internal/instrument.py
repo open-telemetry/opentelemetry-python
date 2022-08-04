@@ -21,12 +21,12 @@ from logging import getLogger
 from re import compile as re_compile
 from typing import (
     Callable,
+    Dict,
     Generator,
     Generic,
     Iterable,
     Optional,
     Sequence,
-    Tuple,
     TypeVar,
     Union,
 )
@@ -74,20 +74,39 @@ class Instrument(ABC):
         pass
 
     @staticmethod
-    def _check_name_and_unit(name: str, unit: str) -> Tuple[bool, bool]:
+    def _check_name_unit_description(
+        name: str, unit: str, description: str
+    ) -> Dict[str, Optional[str]]:
         """
-        Checks the following instrument name and unit for compliance with the
-        spec.
+        Checks the following instrument name, unit and description for
+        compliance with the spec.
 
-        Returns a tuple of boolean value, the first one will be `True` if the
-        name is valid, `False` otherwise. The second value will be `True` if
-        the unit is valid, `False` otherwise.
+        Returns a dict with keys "name", "unit" and "description", the
+        corresponding values will be the checked strings or `None` if the value
+        is invalid. If valid, the checked strings should be used instead of the
+        original values.
         """
 
-        return (
-            _name_regex.fullmatch(name) is not None,
-            _unit_regex.fullmatch(unit) is not None,
-        )
+        result: Dict[str, Optional[str]] = {}
+
+        if _name_regex.fullmatch(name) is not None:
+            result["name"] = name
+        else:
+            result["name"] = None
+
+        if unit is None:
+            unit = ""
+        if _unit_regex.fullmatch(unit) is not None:
+            result["unit"] = unit
+        else:
+            result["unit"] = None
+
+        if description is None:
+            result["description"] = ""
+        else:
+            result["description"] = description
+
+        return result
 
 
 class _ProxyInstrument(ABC, Generic[InstrumentT]):
