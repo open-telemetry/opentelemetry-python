@@ -14,6 +14,7 @@
 
 from typing import Dict, Iterable
 from unittest import TestCase
+from unittest.mock import patch
 
 from opentelemetry.sdk.metrics import Counter, Histogram, ObservableGauge
 from opentelemetry.sdk.metrics._internal.instrument import (

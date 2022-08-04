@@ -130,6 +130,8 @@ class MetricReaderStorage:
         # streams produced by the SDK, but we still align the output timestamps
         # for a single instrument.
 
+        # pylint: disable=too-many-locals
+
         collection_start_nanos = _time_ns()
 
         deadline_ns = _time_ns() + timeout_millis * 10**6
@@ -170,6 +172,7 @@ class MetricReaderStorage:
                             aggregation_temporality, collection_start_nanos
                         )
 
+                    # pylint: disable=broad-except
                     except Exception as error:
                         view_instrument_match_error[
                             view_instrument_match
