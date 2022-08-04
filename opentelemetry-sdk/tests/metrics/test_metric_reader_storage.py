@@ -229,7 +229,9 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         mock_view_instrument_match_ctor = MockFunc()
         MockViewInstrumentMatch.side_effect = mock_view_instrument_match_ctor
 
-        instrument1 = Mock(name="instrument1")
+        instrument1 = Mock(
+            name="instrument1", instrumentation_scope="instrumentation_scope"
+        )
         view1 = mock_view_matching(instrument1)
         storage = MetricReaderStorage(
             SdkConfiguration(
@@ -397,28 +399,36 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             )
 
         self.assertIs(
-            metric_reader_storage._instrument_view_instrument_matches[
+            metric_reader_storage._instrumentation_scope_instrument_view_instrument_matches[
+                observable_counter.instrumentation_scope
+            ][
                 observable_counter
-            ][0]._view,
+            ][
+                0
+            ]._view,
             _DEFAULT_VIEW,
         )
 
     def test_view_instrument_match_conflict_0(self):
         # There is a conflict between views and instruments.
 
+        instrumentation_scope = Mock()
+
         observable_counter_0 = _ObservableCounter(
             "observable_counter_0",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
+            callbacks=[Mock()],
             unit="unit",
-            description="description",
+            description="description_0",
         )
         observable_counter_1 = _ObservableCounter(
             "observable_counter_1",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
+            callbacks=[Mock()],
             unit="unit",
-            description="description",
+            description="description_1",
         )
         metric_reader_storage = MetricReaderStorage(
             SdkConfiguration(
@@ -456,26 +466,31 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
     def test_view_instrument_match_conflict_1(self):
         # There is a conflict between views and instruments.
 
+        instrumentation_scope = Mock()
+
         observable_counter_foo = _ObservableCounter(
             "foo",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
+            callbacks=[Mock()],
             unit="unit",
-            description="description",
+            description="description_foo",
         )
         observable_counter_bar = _ObservableCounter(
             "bar",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
+            callbacks=[Mock()],
             unit="unit",
-            description="description",
+            description="description_bar",
         )
         observable_counter_baz = _ObservableCounter(
             "baz",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
+            callbacks=[Mock()],
             unit="unit",
-            description="description",
+            description="description_baz",
         )
         metric_reader_storage = MetricReaderStorage(
             SdkConfiguration(
@@ -521,26 +536,33 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         )
 
         for (
-            view_instrument_matches
+            instrument_view_instrument_matches
         ) in (
-            metric_reader_storage._instrument_view_instrument_matches.values()
+            metric_reader_storage._instrumentation_scope_instrument_view_instrument_matches.values()
         ):
-            for view_instrument_match in view_instrument_matches:
-                self.assertEqual(view_instrument_match._name, "foo")
+            for (
+                view_instrument_matches
+            ) in instrument_view_instrument_matches.values():
+                for view_instrument_match in view_instrument_matches:
+                    self.assertEqual(view_instrument_match._name, "foo")
 
     def test_view_instrument_match_conflict_2(self):
+        instrumentation_scope = Mock()
+
         # There is no conflict because the metric streams names are different.
         observable_counter_foo = _ObservableCounter(
             "foo",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
+            callbacks=[Mock()],
             unit="unit",
             description="description",
         )
         observable_counter_bar = _ObservableCounter(
             "bar",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
+            callbacks=[Mock()],
             unit="unit",
             description="description",
         )
@@ -578,19 +600,22 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # There is no conflict because the aggregation temporality of the
         # instruments is different.
 
+        instrumentation_scope = Mock()
+
         counter_bar = _Counter(
             "bar",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
             unit="unit",
-            description="description",
+            description="description_bar",
         )
         observable_counter_baz = _ObservableCounter(
             "baz",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
+            callbacks=[Mock()],
             unit="unit",
-            description="description",
+            description="description_baz",
         )
 
         metric_reader_storage = MetricReaderStorage(
@@ -616,29 +641,30 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     Measurement(1, counter_bar)
                 )
 
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(1, observable_counter_baz)
-                )
+        with self.assertLogs(level=WARNING):
+            metric_reader_storage.consume_measurement(
+                Measurement(1, observable_counter_baz)
+            )
 
     def test_view_instrument_match_conflict_4(self):
         # There is no conflict because the monotonicity of the instruments is
         # different.
 
+        instrumentation_scope = Mock()
+
         counter_bar = _Counter(
             "bar",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
             unit="unit",
-            description="description",
+            description="description_bar",
         )
         up_down_counter_baz = _UpDownCounter(
             "baz",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
             unit="unit",
-            description="description",
+            description="description_baz",
         )
 
         metric_reader_storage = MetricReaderStorage(
@@ -664,26 +690,29 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     Measurement(1, counter_bar)
                 )
 
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(1, up_down_counter_baz)
-                )
+        with self.assertLogs(level=WARNING):
+            metric_reader_storage.consume_measurement(
+                Measurement(1, up_down_counter_baz)
+            )
 
     def test_view_instrument_match_conflict_5(self):
         # There is no conflict because the instrument units are different.
 
+        instrumentation_scope = Mock()
+
         observable_counter_0 = _ObservableCounter(
             "observable_counter_0",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
+            callbacks=[Mock()],
             unit="unit_0",
             description="description",
         )
         observable_counter_1 = _ObservableCounter(
             "observable_counter_1",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
+            callbacks=[Mock()],
             unit="unit_1",
             description="description",
         )
@@ -720,19 +749,22 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # There is no conflict because the instrument data points are
         # different.
 
+        instrumentation_scope = Mock()
+
         observable_counter = _ObservableCounter(
             "observable_counter",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
+            callbacks=[Mock()],
             unit="unit",
-            description="description",
+            description="description_observable_counter",
         )
         histogram = _Histogram(
             "histogram",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
             unit="unit",
-            description="description",
+            description="description_histogram",
         )
         metric_reader_storage = MetricReaderStorage(
             SdkConfiguration(
@@ -757,27 +789,30 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
                     Measurement(1, observable_counter)
                 )
 
-        with self.assertRaises(AssertionError):
-            with self.assertLogs(level=WARNING):
-                metric_reader_storage.consume_measurement(
-                    Measurement(1, histogram)
-                )
+        with self.assertLogs(level=WARNING):
+            metric_reader_storage.consume_measurement(
+                Measurement(1, histogram)
+            )
 
     def test_view_instrument_match_conflict_7(self):
         # There is a conflict between views and instruments because the
         # description being different does not avoid a conflict.
 
+        instrumentation_scope = Mock()
+
         observable_counter_0 = _ObservableCounter(
             "observable_counter_0",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
+            callbacks=[Mock()],
             unit="unit",
             description="description_0",
         )
         observable_counter_1 = _ObservableCounter(
             "observable_counter_1",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
+            callbacks=[Mock()],
             unit="unit",
             description="description_1",
         )
@@ -821,19 +856,21 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # and also the temporality and monotonicity of the up down counter and
         # the histogram are the same.
 
+        instrumentation_scope = Mock()
+
         observable_counter = _UpDownCounter(
             "up_down_counter",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
             unit="unit",
-            description="description",
+            description="description_up_down_counter",
         )
         histogram = _Histogram(
             "histogram",
+            instrumentation_scope,
             Mock(),
-            [Mock()],
             unit="unit",
-            description="description",
+            description="description_histogram",
         )
         metric_reader_storage = MetricReaderStorage(
             SdkConfiguration(
