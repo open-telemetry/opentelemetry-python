@@ -138,7 +138,6 @@ class MetricReaderStorage:
         with self._lock:
 
             view_instrument_match_error = {}
-            current_ts = _time_ns()
 
             instrumentation_scope_scope_metrics: (
                 Dict[InstrumentationScope, ScopeMetrics]
@@ -165,12 +164,12 @@ class MetricReaderStorage:
 
                     try:
 
-                        if current_ts >= deadline_ns:
-                            raise Exception("Timed out while collecting")
-
                         data_points = view_instrument_match.collect(
                             aggregation_temporality, collection_start_nanos
                         )
+
+                        if _time_ns() >= deadline_ns:
+                            raise Exception("Timed out while collecting")
 
                     # pylint: disable=broad-except
                     except Exception as error:

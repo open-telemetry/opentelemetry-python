@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from logging import WARNING
+from time import sleep
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -28,6 +29,7 @@ from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.metric_reader_storage import (
     _DEFAULT_VIEW,
     MetricReaderStorage,
+    _ViewInstrumentMatch,
 )
 from opentelemetry.sdk.metrics._internal.sdk_configuration import (
     SdkConfiguration,
@@ -821,7 +823,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # and also the temporality and monotonicity of the up down counter and
         # the histogram are the same.
 
-        observable_counter = _UpDownCounter(
+        up_down_counter = _UpDownCounter(
             "up_down_counter",
             Mock(),
             [Mock()],
@@ -859,7 +861,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
                 metric_reader_storage.consume_measurement(
-                    Measurement(1, observable_counter)
+                    Measurement(1, up_down_counter)
                 )
 
         with self.assertLogs(level=WARNING) as log:
@@ -871,3 +873,54 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             "will cause conflicting metrics",
             log.records[0].message,
         )
+
+    def test_collect_timeout(self):
+        def sleep_1(*args, **kwargs):
+            sleep(1)
+
+        with patch.object(
+            _ViewInstrumentMatch, "collect", Mock(**{"side_effect": sleep_1})
+        ):
+
+            metric_reader_storage = MetricReaderStorage(
+                SdkConfiguration(
+                    resource=Mock(),
+                    metric_readers=(),
+                    views=(
+                        View(instrument_name="up_down_counter", name="foo"),
+                        View(
+                            instrument_name="histogram",
+                            name="foo",
+                            aggregation=SumAggregation(),
+                        ),
+                    ),
+                ),
+                MagicMock(
+                    **{
+                        "__getitem__.return_value": AggregationTemporality.CUMULATIVE
+                    }
+                ),
+                MagicMock(
+                    **{"__getitem__.return_value": DefaultAggregation()}
+                ),
+            )
+
+            up_down_counter = _UpDownCounter(
+                "up_down_counter",
+                Mock(),
+                [Mock()],
+                unit="unit",
+                description="description",
+            )
+
+            metric_reader_storage.consume_measurement(
+                Measurement(1, up_down_counter)
+            )
+            with self.assertRaises(Exception) as error:
+                metric_reader_storage.collect(timeout_millis=10)
+
+            self.assertEqual(
+                error.exception.args[0],
+                "MetricReader.collect failed because of the following "
+                "errors\nException('Timed out while collecting')",
+            )
