@@ -336,7 +336,6 @@ class MetricReader(ABC):
     ) -> None:
         """Called by `MetricReader.collect` when it receives a batch of metrics"""
 
-    @final
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         self.collect(timeout_millis=timeout_millis)
         return True
