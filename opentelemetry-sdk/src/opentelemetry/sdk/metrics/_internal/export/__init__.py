@@ -294,6 +294,14 @@ class MetricReader(ABC):
     def collect(self, timeout_millis: float = 10_000) -> None:
         """Collects the metrics from the internal SDK state and
         invokes the `_receive_metrics` with the collection.
+
+        Args:
+            timeout_millis: Amount of time in milliseconds before this function
+            raises a timeout error.
+
+        If any of the underlying ``collect`` methods called by this method
+        fails by any reason (including timeout) an exception will be raised
+        detailing the individual errors that caused this function to fail.
         """
         if self._collect is None:
             _logger.warning(
