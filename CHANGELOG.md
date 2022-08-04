@@ -19,6 +19,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2754](https://github.com/open-telemetry/opentelemetry-python/pull/2754))
 - Fix --insecure of CLI argument
   ([#2696](https://github.com/open-telemetry/opentelemetry-python/pull/2696))
+- Add temporality and aggregation configuration for metrics exporters,
+  use `OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE` only for OTLP metrics exporter
+  ([#2843](https://github.com/open-telemetry/opentelemetry-python/pull/2843))
 -  Instrument instances are always created through a Meter
   ([#2844](https://github.com/open-telemetry/opentelemetry-python/pull/2844))
 
