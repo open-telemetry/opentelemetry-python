@@ -563,27 +563,108 @@ class TestObservableUpDownCounter(TestCase):
             Signature.empty,
         )
 
-    def test_name_regex(self):
+    def test_name_check(self):
 
         instrument = ChildInstrument("name")
 
-        self.assertTrue(instrument._check_name_and_unit("a" * 63, "unit")[0])
-        self.assertTrue(instrument._check_name_and_unit("a.", "unit")[0])
-        self.assertTrue(instrument._check_name_and_unit("a-", "unit")[0])
-        self.assertTrue(instrument._check_name_and_unit("a_", "unit")[0])
+        self.assertEqual(
+            instrument._check_name_unit_description(
+                "a" * 63, "unit", "description"
+            )["name"],
+            "a" * 63,
+        )
+        self.assertEqual(
+            instrument._check_name_unit_description(
+                "a.", "unit", "description"
+            )["name"],
+            "a.",
+        )
+        self.assertEqual(
+            instrument._check_name_unit_description(
+                "a-", "unit", "description"
+            )["name"],
+            "a-",
+        )
+        self.assertEqual(
+            instrument._check_name_unit_description(
+                "a_", "unit", "description"
+            )["name"],
+            "a_",
+        )
 
-        self.assertFalse(instrument._check_name_and_unit("a" * 64, "unit")[0])
-        self.assertFalse(instrument._check_name_and_unit("Ñ", "unit")[0])
-        self.assertFalse(instrument._check_name_and_unit("_a", "unit")[0])
-        self.assertFalse(instrument._check_name_and_unit("1a", "unit")[0])
-        self.assertFalse(instrument._check_name_and_unit("", "unit")[0])
+        self.assertIsNone(
+            instrument._check_name_unit_description(
+                "a" * 64, "unit", "description"
+            )["name"]
+        )
+        self.assertIsNone(
+            instrument._check_name_unit_description(
+                "Ñ", "unit", "description"
+            )["name"]
+        )
+        self.assertIsNone(
+            instrument._check_name_unit_description(
+                "_a", "unit", "description"
+            )["name"]
+        )
+        self.assertIsNone(
+            instrument._check_name_unit_description(
+                "1a", "unit", "description"
+            )["name"]
+        )
+        self.assertIsNone(
+            instrument._check_name_unit_description("", "unit", "description")[
+                "name"
+            ]
+        )
 
-    def test_unit_regex(self):
+    def test_unit_check(self):
 
         instrument = ChildInstrument("name")
 
-        self.assertTrue(instrument._check_name_and_unit("name", "a" * 63)[1])
-        self.assertTrue(instrument._check_name_and_unit("name", "{a}")[1])
+        self.assertEqual(
+            instrument._check_name_unit_description(
+                "name", "a" * 63, "description"
+            )["unit"],
+            "a" * 63,
+        )
+        self.assertEqual(
+            instrument._check_name_unit_description(
+                "name", "{a}", "description"
+            )["unit"],
+            "{a}",
+        )
 
-        self.assertFalse(instrument._check_name_and_unit("name", "a" * 64)[1])
-        self.assertFalse(instrument._check_name_and_unit("name", "Ñ")[1])
+        self.assertIsNone(
+            instrument._check_name_unit_description(
+                "name", "a" * 64, "description"
+            )["unit"]
+        )
+        self.assertIsNone(
+            instrument._check_name_unit_description(
+                "name", "Ñ", "description"
+            )["unit"]
+        )
+        self.assertEqual(
+            instrument._check_name_unit_description(
+                "name", None, "description"
+            )["unit"],
+            "",
+        )
+
+    def test_description_check(self):
+
+        instrument = ChildInstrument("name")
+
+        self.assertEqual(
+            instrument._check_name_unit_description(
+                "name", "unit", "description"
+            )["description"],
+            "description",
+        )
+        self.assertEqual(
+            instrument._check_name_unit_description("name", "unit", None)[
+                "description"
+            ],
+            "",
+        )
