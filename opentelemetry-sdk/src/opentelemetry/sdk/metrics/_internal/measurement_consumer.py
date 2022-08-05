@@ -95,35 +95,29 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         timeout_millis: float = 10_000,
     ) -> Iterable[Metric]:
 
-        errors = []
-
         with self._lock:
             metric_reader_storage = self._reader_storages[metric_reader]
             # for now, just use the defaults
             callback_options = CallbackOptions()
             deadline_ns = _time_ns() + timeout_millis * 10**6
+
+            default_timeout_millis = 10000 * 10**6
+
             for async_instrument in self._async_instruments:
-                try:
-                    measurements = async_instrument.callback(callback_options)
-                    if _time_ns() >= deadline_ns:
-                        raise TimeoutError(
-                            "Timed out while executing callback"
-                        )
 
-                    for measurement in measurements:
-                        metric_reader_storage.consume_measurement(measurement)
+                remaining_time = deadline_ns - _time_ns()
 
-                # pylint: disable=broad-except
-                except Exception as error:
-                    errors.append(repr(error))
+                if remaining_time < default_timeout_millis:
 
-        if errors:
+                    callback_options = CallbackOptions(
+                        timeout_millis=remaining_time
+                    )
 
-            error_string = "\n".join(errors)
+                measurements = async_instrument.callback(callback_options)
+                if _time_ns() >= deadline_ns:
+                    raise TimeoutError("Timed out while executing callback")
 
-            raise Exception(
-                "MetricReader.collect failed because of the following errors\n"
-                f"{error_string}"
-            )
+                for measurement in measurements:
+                    metric_reader_storage.consume_measurement(measurement)
 
         return self._reader_storages[metric_reader].collect()

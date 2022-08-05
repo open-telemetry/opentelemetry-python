@@ -142,3 +142,35 @@ class TestSynchronousMeasurementConsumer(TestCase):
         self.assertIn(
             "Timed out while executing callback", error.exception.args[0]
         )
+
+    @patch(
+        "opentelemetry.sdk.metrics._internal."
+        "measurement_consumer.CallbackOptions"
+    )
+    def test_collect_deadline(
+        self, mock_callback_options, MockMetricReaderStorage
+    ):
+        reader_mock = Mock()
+        reader_storage_mock = Mock()
+        MockMetricReaderStorage.return_value = reader_storage_mock
+        consumer = SynchronousMeasurementConsumer(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=[reader_mock],
+                views=Mock(),
+            )
+        )
+
+        def pass_(*args, **kwargs):
+            return []
+
+        consumer.register_asynchronous_instrument(
+            Mock(**{"callback.side_effect": pass_})
+        )
+
+        consumer.collect(reader_mock)
+
+        self.assertLess(
+            mock_callback_options.mock_calls[1].kwargs["timeout_millis"],
+            10000 * 10**6,
+        )
