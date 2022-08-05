@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from sys import version_info
 from time import sleep
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
@@ -161,16 +162,29 @@ class TestSynchronousMeasurementConsumer(TestCase):
             )
         )
 
-        def pass_(*args, **kwargs):
+        def sleep_1(*args, **kwargs):
+            sleep(1)
             return []
 
         consumer.register_asynchronous_instrument(
-            Mock(**{"callback.side_effect": pass_})
+            Mock(**{"callback.side_effect": sleep_1})
+        )
+        consumer.register_asynchronous_instrument(
+            Mock(**{"callback.side_effect": sleep_1})
         )
 
         consumer.collect(reader_mock)
 
+        if version_info < (3, 8):
+            callback_options_time_call = mock_callback_options.mock_calls[-1][
+                2
+            ]["timeout_millis"]
+        else:
+            callback_options_time_call = mock_callback_options.mock_calls[
+                -1
+            ].kwargs["timeout_millis"]
+
         self.assertLess(
-            mock_callback_options.mock_calls[1].kwargs["timeout_millis"],
+            callback_options_time_call,
             10000 * 10**6,
         )
