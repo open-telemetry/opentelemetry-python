@@ -30,6 +30,7 @@ from opentelemetry.metrics import (
     ObservableUpDownCounter as APIObservableUpDownCounter,
 )
 from opentelemetry.metrics import UpDownCounter as APIUpDownCounter
+from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
     _Histogram,
@@ -384,7 +385,7 @@ class MeterProvider(APIMeterProvider):
             current_ts = _time_ns()
             try:
                 if current_ts >= deadline_ns:
-                    raise TimeoutError(
+                    raise MetricsTimeoutError(
                         "Timed out while flushing metric readers"
                     )
                 metric_reader.force_flush(

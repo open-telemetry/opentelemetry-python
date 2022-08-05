@@ -12,26 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=unused-import
 
-from opentelemetry.sdk.metrics._internal import (  # noqa: F401
-    Meter,
-    MeterProvider,
-)
-from opentelemetry.sdk.metrics._internal.exceptions import (  # noqa: F401
-    MetricsTimeoutError,
-)
-from opentelemetry.sdk.metrics._internal.instrument import (  # noqa: F401
-    Counter,
-    Histogram,
-    ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
-    UpDownCounter,
-)
-
-__all__ = []
-for key, value in globals().copy().items():
-    if not key.startswith("_"):
-        value.__module__ = __name__
-        __all__.append(key)
+class MetricsTimeoutError(Exception):
+    """Raised when a metrics function times out"""

@@ -23,6 +23,7 @@ import opentelemetry.sdk.metrics
 import opentelemetry.sdk.metrics._internal.instrument
 import opentelemetry.sdk.metrics._internal.sdk_configuration
 from opentelemetry.metrics._internal.instrument import CallbackOptions
+from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
@@ -115,7 +116,9 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
 
                 measurements = async_instrument.callback(callback_options)
                 if _time_ns() >= deadline_ns:
-                    raise TimeoutError("Timed out while executing callback")
+                    raise MetricsTimeoutError(
+                        "Timed out while executing callback"
+                    )
 
                 for measurement in measurements:
                     metric_reader_storage.consume_measurement(measurement)
