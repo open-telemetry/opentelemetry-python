@@ -294,14 +294,23 @@ class MetricReader(ABC):
     def collect(self, timeout_millis: float = 10_000) -> None:
         """Collects the metrics from the internal SDK state and
         invokes the `_receive_metrics` with the collection.
+
+        Args:
+            timeout_millis: Amount of time in milliseconds before this function
+              raises a timeout error.
+
+        If any of the underlying ``collect`` methods called by this method
+        fails by any reason (including timeout) an exception will be raised
+        detailing the individual errors that caused this function to fail.
         """
         if self._collect is None:
             _logger.warning(
                 "Cannot call collect on a MetricReader until it is registered on a MeterProvider"
             )
             return
+
         self._receive_metrics(
-            self._collect(self),
+            self._collect(self, timeout_millis=timeout_millis),
             timeout_millis=timeout_millis,
         )
 
@@ -327,6 +336,10 @@ class MetricReader(ABC):
         **kwargs,
     ) -> None:
         """Called by `MetricReader.collect` when it receives a batch of metrics"""
+
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        self.collect(timeout_millis=timeout_millis)
+        return True
 
     @abstractmethod
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
@@ -485,3 +498,8 @@ class PeriodicExportingMetricReader(MetricReader):
         self._shutdown_event.set()
         self._daemon_thread.join(timeout=(deadline_ns - _time_ns()) / 10**9)
         self._exporter.shutdown(timeout=(deadline_ns - _time_ns()) / 10**6)
+
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        super().force_flush(timeout_millis=timeout_millis)
+        self._exporter.force_flush(timeout_millis=timeout_millis)
+        return True

@@ -14,6 +14,7 @@
 
 from typing import Dict, Iterable
 from unittest import TestCase
+from unittest.mock import patch
 
 from opentelemetry.sdk.metrics import Counter, Histogram, ObservableGauge
 from opentelemetry.sdk.metrics._internal.instrument import (
@@ -135,3 +136,9 @@ class TestMetricReader(TestCase):
             dummy_metric_reader._instrument_class_aggregation[_Counter],
             LastValueAggregation,
         )
+
+    def test_force_flush(self):
+
+        with patch.object(DummyMetricReader, "collect") as mock_collect:
+            DummyMetricReader().force_flush(timeout_millis=10)
+            mock_collect.assert_called_with(timeout_millis=10)
