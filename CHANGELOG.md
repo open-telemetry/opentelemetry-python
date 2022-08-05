@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+## [1.13.0-0.33b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.13.0) - 2022-08-05
+
+
+
 - Add `force_flush` method to metrics exporter
   ([#2852](https://github.com/open-telemetry/opentelemetry-python/pull/2852))
 - Change tracing to use `Resource.to_json()`
