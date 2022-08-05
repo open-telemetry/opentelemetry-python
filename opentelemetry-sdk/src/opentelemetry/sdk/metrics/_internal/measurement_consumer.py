@@ -49,6 +49,7 @@ class MeasurementConsumer(ABC):
     def collect(
         self,
         metric_reader: "opentelemetry.sdk.metrics.MetricReader",
+        timeout_millis: float = 10_000,
     ) -> Iterable[Metric]:
         pass
 
@@ -112,6 +113,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
                     for measurement in measurements:
                         metric_reader_storage.consume_measurement(measurement)
 
+                # pylint: disable=broad-except
                 except Exception as error:
                     errors.append(repr(error))
 
