@@ -498,3 +498,8 @@ class PeriodicExportingMetricReader(MetricReader):
         self._shutdown_event.set()
         self._daemon_thread.join(timeout=(deadline_ns - _time_ns()) / 10**9)
         self._exporter.shutdown(timeout=(deadline_ns - _time_ns()) / 10**6)
+
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        super().force_flush(timeou_millis=timeout_millis)
+        self._exporter.force_flush(timeout_millis=timeout_millis)
+        return True
