@@ -821,7 +821,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # and also the temporality and monotonicity of the up down counter and
         # the histogram are the same.
 
-        observable_counter = _UpDownCounter(
+        up_down_counter = _UpDownCounter(
             "up_down_counter",
             Mock(),
             [Mock()],
@@ -859,7 +859,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
                 metric_reader_storage.consume_measurement(
-                    Measurement(1, observable_counter)
+                    Measurement(1, up_down_counter)
                 )
 
         with self.assertLogs(level=WARNING) as log:
