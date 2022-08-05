@@ -384,7 +384,9 @@ class MeterProvider(APIMeterProvider):
             current_ts = _time_ns()
             try:
                 if current_ts >= deadline_ns:
-                    raise Exception("Timed out while flushing metric readers")
+                    raise TimeoutError(
+                        "Timed out while flushing metric readers"
+                    )
                 metric_reader.force_flush(
                     timeout_millis=(deadline_ns - current_ts) / 10**6
                 )
