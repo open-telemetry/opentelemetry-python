@@ -28,6 +28,7 @@ from opentelemetry.sdk.metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
 )
 from opentelemetry.sdk.metrics._internal.point import Metric
+from opentelemetry.util._time import _time_ns
 
 
 class MeasurementConsumer(ABC):
@@ -90,12 +91,35 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
     def collect(
         self,
         metric_reader: "opentelemetry.sdk.metrics.MetricReader",
+        timeout_millis: float = 10_000,
     ) -> Iterable[Metric]:
+
+        errors = []
+
         with self._lock:
             metric_reader_storage = self._reader_storages[metric_reader]
             # for now, just use the defaults
             callback_options = CallbackOptions()
+            deadline_ns = _time_ns() + timeout_millis * 10**6
             for async_instrument in self._async_instruments:
-                for measurement in async_instrument.callback(callback_options):
-                    metric_reader_storage.consume_measurement(measurement)
+                try:
+                    measurements = async_instrument.callback(callback_options)
+                    if _time_ns() >= deadline_ns:
+                        raise Exception("Timed out while executing callback")
+
+                    for measurement in measurements:
+                        metric_reader_storage.consume_measurement(measurement)
+
+                except Exception as error:
+                    errors.append(repr(error))
+
+        if errors:
+
+            error_string = "\n".join(errors)
+
+            raise Exception(
+                "MetricReader.collect failed because of the following errors\n"
+                f"{error_string}"
+            )
+
         return self._reader_storages[metric_reader].collect()

@@ -118,9 +118,9 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             exporter, export_interval_millis=interval
         )
 
-        def _collect(reader):
+        def _collect(reader, timeout_millis):
             time.sleep(collect_wait)
-            pmr._receive_metrics(metrics)
+            pmr._receive_metrics(metrics, timeout_millis)
 
         pmr._set_collect_callback(_collect)
         return pmr

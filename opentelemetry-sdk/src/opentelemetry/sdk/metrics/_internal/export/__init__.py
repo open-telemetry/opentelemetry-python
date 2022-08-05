@@ -308,8 +308,9 @@ class MetricReader(ABC):
                 "Cannot call collect on a MetricReader until it is registered on a MeterProvider"
             )
             return
+
         self._receive_metrics(
-            self._collect(self),
+            self._collect(self, timeout_millis=timeout_millis),
             timeout_millis=timeout_millis,
         )
 

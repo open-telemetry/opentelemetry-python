@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from time import sleep
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
@@ -114,4 +115,30 @@ class TestSynchronousMeasurementConsumer(TestCase):
         # it should pass measurements to reader storage
         self.assertEqual(
             len(reader_storage_mock.consume_measurement.mock_calls), 5
+        )
+
+    def test_collect_timeout(self, MockMetricReaderStorage):
+        reader_mock = Mock()
+        reader_storage_mock = Mock()
+        MockMetricReaderStorage.return_value = reader_storage_mock
+        consumer = SynchronousMeasurementConsumer(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=[reader_mock],
+                views=Mock(),
+            )
+        )
+
+        def sleep_1(*args, **kwargs):
+            sleep(1)
+
+        consumer.register_asynchronous_instrument(
+            Mock(**{"callback.side_effect": sleep_1})
+        )
+
+        with self.assertRaises(Exception) as error:
+            consumer.collect(reader_mock, timeout_millis=10)
+
+        self.assertIn(
+            "Timed out while executing callback", error.exception.args[0]
         )
