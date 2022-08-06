@@ -68,7 +68,7 @@ class DummyLogEmitterProvider:
     def add_log_processor(self, processor):
         self.processor = processor
 
-    def get_log_emitter(self, name):
+    def get_log_emitter(self, name, *args, **kwargs):
         return DummyLogEmitter(name, self.resource, self.processor)
 
     def force_flush(self, *args, **kwargs):
