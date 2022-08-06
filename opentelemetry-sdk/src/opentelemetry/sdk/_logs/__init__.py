@@ -370,7 +370,7 @@ class LoggingHandler(logging.Handler):
         """
         Flushes the logging output.
         """
-        self._log_emitter.flush()
+        self._log_emitter_provider.force_flush()
 
 
 class LogEmitter:
