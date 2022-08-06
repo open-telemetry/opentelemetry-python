@@ -88,9 +88,6 @@ class DummyLogEmitter:
     def emit(self, record):
         self.processor.emit(record)
 
-    def flush(self):
-        pass
-
 
 class DummyLogProcessor:
     def __init__(self, exporter):
