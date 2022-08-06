@@ -16,23 +16,24 @@ import unittest
 from unittest.mock import Mock
 
 from opentelemetry.sdk import trace
-from opentelemetry.sdk._logs import LogEmitter, LoggingHandler
+from opentelemetry.sdk._logs import get_log_emitter, LogEmitterProvider, LoggingHandler
 from opentelemetry.sdk._logs.severity import SeverityNumber
 from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import INVALID_SPAN_CONTEXT
 
 
-def get_logger(level=logging.NOTSET, log_emitter=None):
+def get_logger(level=logging.NOTSET, log_emitter_provider=None):
     logger = logging.getLogger(__name__)
-    handler = LoggingHandler(level=level, log_emitter=log_emitter)
+    handler = LoggingHandler(level=level, log_emitter_provider=log_emitter_provider)
     logger.addHandler(handler)
     return logger
 
 
 class TestLoggingHandler(unittest.TestCase):
     def test_handler_default_log_level(self):
-        emitter_mock = Mock(spec=LogEmitter)
-        logger = get_logger(log_emitter=emitter_mock)
+        emitter_provider_mock = Mock(spec=LogEmitterProvider)
+        emitter_mock = get_log_emitter(__name__, log_emitter_provider=emitter_provider_mock)
+        logger = get_logger(log_emitter_provider=emitter_provider_mock)
         # Make sure debug messages are ignored by default
         logger.debug("Debug message")
         self.assertEqual(emitter_mock.emit.call_count, 0)
@@ -41,8 +42,9 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertEqual(emitter_mock.emit.call_count, 1)
 
     def test_handler_custom_log_level(self):
-        emitter_mock = Mock(spec=LogEmitter)
-        logger = get_logger(level=logging.ERROR, log_emitter=emitter_mock)
+        emitter_provider_mock = Mock(spec=LogEmitterProvider)
+        emitter_mock = get_log_emitter(__name__, log_emitter_provider=emitter_provider_mock)
+        logger = get_logger(level=logging.ERROR, log_emitter_provider=emitter_provider_mock)
         logger.warning("Warning message test custom log level")
         # Make sure any log with level < ERROR is ignored
         self.assertEqual(emitter_mock.emit.call_count, 0)
@@ -51,8 +53,9 @@ class TestLoggingHandler(unittest.TestCase):
         self.assertEqual(emitter_mock.emit.call_count, 2)
 
     def test_log_record_no_span_context(self):
-        emitter_mock = Mock(spec=LogEmitter)
-        logger = get_logger(log_emitter=emitter_mock)
+        emitter_provider_mock = Mock(spec=LogEmitterProvider)
+        emitter_mock = get_log_emitter(__name__, log_emitter_provider=emitter_provider_mock)
+        logger = get_logger(log_emitter_provider=emitter_provider_mock)
         # Assert emit gets called for warning message
         logger.warning("Warning message")
         args, _ = emitter_mock.emit.call_args_list[0]
@@ -67,8 +70,9 @@ class TestLoggingHandler(unittest.TestCase):
 
     def test_log_record_user_attributes(self):
         """Attributes can be injected into logs by adding them to the LogRecord"""
-        emitter_mock = Mock(spec=LogEmitter)
-        logger = get_logger(log_emitter=emitter_mock)
+        emitter_provider_mock = Mock(spec=LogEmitterProvider)
+        emitter_mock = get_log_emitter(__name__, log_emitter_provider=emitter_provider_mock)
+        logger = get_logger(log_emitter_provider=emitter_provider_mock)
         # Assert emit gets called for warning message
         logger.warning("Warning message", extra={"http.status_code": 200})
         args, _ = emitter_mock.emit.call_args_list[0]
@@ -79,8 +83,9 @@ class TestLoggingHandler(unittest.TestCase):
 
     def test_log_record_exception(self):
         """Exception information will be included in attributes"""
-        emitter_mock = Mock(spec=LogEmitter)
-        logger = get_logger(log_emitter=emitter_mock)
+        emitter_provider_mock = Mock(spec=LogEmitterProvider)
+        emitter_mock = get_log_emitter(__name__, log_emitter_provider=emitter_provider_mock)
+        logger = get_logger(log_emitter_provider=emitter_provider_mock)
         try:
             raise ZeroDivisionError("division by zero")
         except ZeroDivisionError:
@@ -109,8 +114,9 @@ class TestLoggingHandler(unittest.TestCase):
 
     def test_log_exc_info_false(self):
         """Exception information will be included in attributes"""
-        emitter_mock = Mock(spec=LogEmitter)
-        logger = get_logger(log_emitter=emitter_mock)
+        emitter_provider_mock = Mock(spec=LogEmitterProvider)
+        emitter_mock = get_log_emitter(__name__, log_emitter_provider=emitter_provider_mock)
+        logger = get_logger(log_emitter_provider=emitter_provider_mock)
         try:
             raise ZeroDivisionError("division by zero")
         except ZeroDivisionError:
@@ -129,8 +135,9 @@ class TestLoggingHandler(unittest.TestCase):
         )
 
     def test_log_record_trace_correlation(self):
-        emitter_mock = Mock(spec=LogEmitter)
-        logger = get_logger(log_emitter=emitter_mock)
+        emitter_provider_mock = Mock(spec=LogEmitterProvider)
+        emitter_mock = get_log_emitter(__name__, log_emitter_provider=emitter_provider_mock)
+        logger = get_logger(log_emitter_provider=emitter_provider_mock)
 
         tracer = trace.TracerProvider().get_tracer(__name__)
         with tracer.start_as_current_span("test") as span:

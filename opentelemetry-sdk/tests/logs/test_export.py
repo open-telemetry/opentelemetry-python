@@ -48,12 +48,11 @@ class TestSimpleLogProcessor(unittest.TestCase):
     def test_simple_log_processor_default_level(self):
         exporter = InMemoryLogExporter()
         log_emitter_provider = LogEmitterProvider()
-        log_emitter = log_emitter_provider.get_log_emitter(__name__)
 
         log_emitter_provider.add_log_processor(SimpleLogProcessor(exporter))
 
         logger = logging.getLogger("default_level")
-        logger.addHandler(LoggingHandler(log_emitter=log_emitter))
+        logger.addHandler(LoggingHandler(log_emitter_provider=log_emitter_provider))
 
         logger.warning("Something is wrong")
         finished_logs = exporter.get_finished_logs()
@@ -68,13 +67,12 @@ class TestSimpleLogProcessor(unittest.TestCase):
     def test_simple_log_processor_custom_level(self):
         exporter = InMemoryLogExporter()
         log_emitter_provider = LogEmitterProvider()
-        log_emitter = log_emitter_provider.get_log_emitter(__name__)
 
         log_emitter_provider.add_log_processor(SimpleLogProcessor(exporter))
 
         logger = logging.getLogger("custom_level")
         logger.setLevel(logging.ERROR)
-        logger.addHandler(LoggingHandler(log_emitter=log_emitter))
+        logger.addHandler(LoggingHandler(log_emitter_provider=log_emitter_provider))
 
         logger.warning("Warning message")
         logger.debug("Debug message")
@@ -99,12 +97,11 @@ class TestSimpleLogProcessor(unittest.TestCase):
     def test_simple_log_processor_trace_correlation(self):
         exporter = InMemoryLogExporter()
         log_emitter_provider = LogEmitterProvider()
-        log_emitter = log_emitter_provider.get_log_emitter("name", "version")
 
         log_emitter_provider.add_log_processor(SimpleLogProcessor(exporter))
 
         logger = logging.getLogger("trace_correlation")
-        logger.addHandler(LoggingHandler(log_emitter=log_emitter))
+        logger.addHandler(LoggingHandler(log_emitter_provider=log_emitter_provider))
 
         logger.warning("Warning message")
         finished_logs = exporter.get_finished_logs()
@@ -137,12 +134,11 @@ class TestSimpleLogProcessor(unittest.TestCase):
     def test_simple_log_processor_shutdown(self):
         exporter = InMemoryLogExporter()
         log_emitter_provider = LogEmitterProvider()
-        log_emitter = log_emitter_provider.get_log_emitter(__name__)
 
         log_emitter_provider.add_log_processor(SimpleLogProcessor(exporter))
 
         logger = logging.getLogger("shutdown")
-        logger.addHandler(LoggingHandler(log_emitter=log_emitter))
+        logger.addHandler(LoggingHandler(log_emitter_provider=log_emitter_provider))
 
         logger.warning("Something is wrong")
         finished_logs = exporter.get_finished_logs()
@@ -167,9 +163,8 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
         provider = LogEmitterProvider()
         provider.add_log_processor(log_processor)
 
-        emitter = provider.get_log_emitter(__name__)
         logger = logging.getLogger("emit_call")
-        logger.addHandler(LoggingHandler(log_emitter=emitter))
+        logger.addHandler(LoggingHandler(log_emitter_provider=provider))
 
         logger.error("error")
         self.assertEqual(log_processor.emit.call_count, 1)
@@ -181,9 +176,8 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
         provider = LogEmitterProvider()
         provider.add_log_processor(log_processor)
 
-        emitter = provider.get_log_emitter(__name__)
         logger = logging.getLogger("shutdown")
-        logger.addHandler(LoggingHandler(log_emitter=emitter))
+        logger.addHandler(LoggingHandler(log_emitter_provider=provider))
 
         logger.warning("warning message: %s", "possible upcoming heatwave")
         logger.error("Very high rise in temperatures across the globe")
@@ -214,9 +208,8 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
         provider = LogEmitterProvider()
         provider.add_log_processor(log_processor)
 
-        emitter = provider.get_log_emitter(__name__)
         logger = logging.getLogger("force_flush")
-        logger.addHandler(LoggingHandler(log_emitter=emitter))
+        logger.addHandler(LoggingHandler(log_emitter_provider=provider))
 
         logger.critical("Earth is burning")
         log_processor.force_flush()
@@ -233,9 +226,8 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
         provider = LogEmitterProvider()
         provider.add_log_processor(log_processor)
 
-        emitter = provider.get_log_emitter(__name__)
         logger = logging.getLogger("many_logs")
-        logger.addHandler(LoggingHandler(log_emitter=emitter))
+        logger.addHandler(LoggingHandler(log_emitter_provider=provider))
 
         for log_no in range(1000):
             logger.critical("Log no: %s", log_no)
@@ -251,9 +243,8 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
         provider = LogEmitterProvider()
         provider.add_log_processor(log_processor)
 
-        emitter = provider.get_log_emitter(__name__)
         logger = logging.getLogger("threads")
-        logger.addHandler(LoggingHandler(log_emitter=emitter))
+        logger.addHandler(LoggingHandler(log_emitter_provider=provider))
 
         def bulk_log_and_flush(num_logs):
             for _ in range(num_logs):
@@ -286,9 +277,8 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
         provider = LogEmitterProvider()
         provider.add_log_processor(log_processor)
 
-        emitter = provider.get_log_emitter(__name__)
         logger = logging.getLogger("test-fork")
-        logger.addHandler(LoggingHandler(log_emitter=emitter))
+        logger.addHandler(LoggingHandler(log_emitter_provider=provider))
 
         logger.critical("yolo")
         time.sleep(0.5)  # give some time for the exporter to upload
