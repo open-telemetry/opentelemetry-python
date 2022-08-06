@@ -71,6 +71,9 @@ class DummyLogEmitterProvider:
     def get_log_emitter(self, name):
         return DummyLogEmitter(name, self.resource, self.processor)
 
+    def force_flush(self, *args, **kwargs):
+        pass
+
 
 class DummyMeterProvider(MeterProvider):
     pass
