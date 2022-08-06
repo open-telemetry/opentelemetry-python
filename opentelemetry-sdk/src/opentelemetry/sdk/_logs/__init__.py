@@ -396,12 +396,6 @@ class LogEmitter:
         log_data = LogData(record, self._instrumentation_scope)
         self._multi_log_processor.emit(log_data)
 
-    # TODO: Should this flush everything in pipeline?
-    # Prior discussion https://github.com/open-telemetry/opentelemetry-python/pull/1916#discussion_r659945290
-    def flush(self):
-        """Ensure all logging output has been flushed."""
-        self._multi_log_processor.force_flush()
-
 
 class LogEmitterProvider:
     def __init__(
