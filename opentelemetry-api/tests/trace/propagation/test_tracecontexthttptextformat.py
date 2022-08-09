@@ -45,7 +45,7 @@ class TestTraceContextFormat(unittest.TestCase):
 
     def test_headers_with_tracestate(self):
         """When there is a traceparent and tracestate header, data from
-        both should be addded to the SpanContext.
+        both should be added to the SpanContext.
         """
         traceparent_value = "00-{trace_id}-{span_id}-00".format(
             trace_id=format(self.TRACE_ID, "032x"),

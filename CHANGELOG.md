@@ -373,7 +373,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Allow span limits to be set programatically via TracerProvider.
+- Allow span limits to be set programmatically via TracerProvider.
   ([#1877](https://github.com/open-telemetry/opentelemetry-python/pull/1877))
 - Added support for CreateKey functionality.
   ([#1853](https://github.com/open-telemetry/opentelemetry-python/pull/1853))
@@ -803,7 +803,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1194](https://github.com/open-telemetry/opentelemetry-python/pull/1194))
 - Make instances of SpanContext immutable
   ([#1134](https://github.com/open-telemetry/opentelemetry-python/pull/1134))
-- Parent is now always passed in via Context, intead of Span or SpanContext
+- Parent is now always passed in via Context, instead of Span or SpanContext
   ([#1146](https://github.com/open-telemetry/opentelemetry-python/pull/1146))
 - Update OpenTelemetry protos to v0.5.0
   ([#1143](https://github.com/open-telemetry/opentelemetry-python/pull/1143))

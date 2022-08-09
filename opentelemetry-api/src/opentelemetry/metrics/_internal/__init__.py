@@ -749,7 +749,7 @@ def _set_meter_provider(meter_provider: MeterProvider, log: bool) -> None:
 def set_meter_provider(meter_provider: MeterProvider) -> None:
     """Sets the current global :class:`~.MeterProvider` object.
 
-    This can only be done once, a warning will be logged if any furter attempt
+    This can only be done once, a warning will be logged if any further attempt
     is made.
     """
     _set_meter_provider(meter_provider, log=True)

@@ -185,10 +185,10 @@ class MetricReader(ABC):
             to change, not necessarily all of them. The classes not included in
             the passed dictionary will retain their association to their
             default aggregations. The aggregation defined here will be
-            overriden by an aggregation defined by a view that is not
+            overridden by an aggregation defined by a view that is not
             `DefaultAggregation`.
 
-    .. document protected _receive_metrics which is a intended to be overriden by subclass
+    .. document protected _receive_metrics which is a intended to be overridden by subclass
     .. automethod:: _receive_metrics
     """
 
@@ -325,7 +325,7 @@ class MetricReader(ABC):
             Iterable["opentelemetry.sdk.metrics.export.Metric"],
         ],
     ) -> None:
-        """This function is internal to the SDK. It should not be called or overriden by users"""
+        """This function is internal to the SDK. It should not be called or overridden by users"""
         self._collect = func
 
     @abstractmethod

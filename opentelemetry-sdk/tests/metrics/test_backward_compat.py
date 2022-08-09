@@ -18,7 +18,7 @@ interfaces as they were originally defined. For example, changes to the MetricEx
 be made in such a way that existing implementations (outside of this repo) continue to work
 when *called* by the SDK.
 
-This does not apply to classes which are not intended to be overriden by the user e.g.  Meter
+This does not apply to classes which are not intended to be overridden by the user e.g.  Meter
 and PeriodicExportingMetricReader concrete class. Those may freely be modified in a
 backward-compatible way for *callers*.
 
