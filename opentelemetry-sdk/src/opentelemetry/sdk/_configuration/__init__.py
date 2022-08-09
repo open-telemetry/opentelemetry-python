@@ -151,7 +151,9 @@ def _init_logging(
             BatchLogProcessor(exporter_class(**exporter_args))
         )
 
-    handler = LoggingHandler(level=logging.NOTSET, log_emitter_provider=provider)
+    handler = LoggingHandler(
+        level=logging.NOTSET, log_emitter_provider=provider
+    )
 
     logging.getLogger().addHandler(handler)
 

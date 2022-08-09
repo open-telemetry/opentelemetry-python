@@ -314,8 +314,12 @@ class LoggingHandler(logging.Handler):
         log_emitter_provider=None,
     ) -> None:
         super().__init__(level=level)
-        self._log_emitter_provider = log_emitter_provider or get_log_emitter_provider()
-        self._log_emitter = get_log_emitter(__name__, log_emitter_provider=self._log_emitter_provider)
+        self._log_emitter_provider = (
+            log_emitter_provider or get_log_emitter_provider()
+        )
+        self._log_emitter = get_log_emitter(
+            __name__, log_emitter_provider=self._log_emitter_provider
+        )
 
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> Attributes:

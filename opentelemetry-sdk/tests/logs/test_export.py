@@ -52,7 +52,9 @@ class TestSimpleLogProcessor(unittest.TestCase):
         log_emitter_provider.add_log_processor(SimpleLogProcessor(exporter))
 
         logger = logging.getLogger("default_level")
-        logger.addHandler(LoggingHandler(log_emitter_provider=log_emitter_provider))
+        logger.addHandler(
+            LoggingHandler(log_emitter_provider=log_emitter_provider)
+        )
 
         logger.warning("Something is wrong")
         finished_logs = exporter.get_finished_logs()
@@ -72,7 +74,9 @@ class TestSimpleLogProcessor(unittest.TestCase):
 
         logger = logging.getLogger("custom_level")
         logger.setLevel(logging.ERROR)
-        logger.addHandler(LoggingHandler(log_emitter_provider=log_emitter_provider))
+        logger.addHandler(
+            LoggingHandler(log_emitter_provider=log_emitter_provider)
+        )
 
         logger.warning("Warning message")
         logger.debug("Debug message")
@@ -101,7 +105,9 @@ class TestSimpleLogProcessor(unittest.TestCase):
         log_emitter_provider.add_log_processor(SimpleLogProcessor(exporter))
 
         logger = logging.getLogger("trace_correlation")
-        logger.addHandler(LoggingHandler(log_emitter_provider=log_emitter_provider))
+        logger.addHandler(
+            LoggingHandler(log_emitter_provider=log_emitter_provider)
+        )
 
         logger.warning("Warning message")
         finished_logs = exporter.get_finished_logs()
@@ -138,7 +144,9 @@ class TestSimpleLogProcessor(unittest.TestCase):
         log_emitter_provider.add_log_processor(SimpleLogProcessor(exporter))
 
         logger = logging.getLogger("shutdown")
-        logger.addHandler(LoggingHandler(log_emitter_provider=log_emitter_provider))
+        logger.addHandler(
+            LoggingHandler(log_emitter_provider=log_emitter_provider)
+        )
 
         logger.warning("Something is wrong")
         finished_logs = exporter.get_finished_logs()
