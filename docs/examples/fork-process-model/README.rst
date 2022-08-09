@@ -1,7 +1,7 @@
 Working With Fork Process Models
 ================================
 
-The `BatchSpanProcessor` is not fork-safe and doesn't work well with application servers
+`In python versions 3.6 and older <https://github.com/open-telemetry/opentelemetry-python/pull/2242>`_, the `BatchSpanProcessor` is not fork-safe and doesn't work well with application servers
 (Gunicorn, uWSGI) which are based on the pre-fork web server model. The `BatchSpanProcessor`
 spawns a thread to run in the background to export spans to the telemetry backend. During the fork, the child
 process inherits the lock which is held by the parent process and deadlock occurs. We can use fork hooks to
