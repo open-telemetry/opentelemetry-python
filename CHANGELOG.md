@@ -24,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2843](https://github.com/open-telemetry/opentelemetry-python/pull/2843))
 -  Instrument instances are always created through a Meter
   ([#2844](https://github.com/open-telemetry/opentelemetry-python/pull/2844))
+-  Fix documentation on BatchSpanProcessor's fork-safety
+  ([#2689](https://github.com/open-telemetry/opentelemetry-python/pull/2869))
 
 ## [1.12.0rc2-0.32b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0rc2) - 2022-07-04
 
