@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add param for `indent` size to `LogRecord.to_json()`
+  ([#2870](https://github.com/open-telemetry/opentelemetry-python/pull/2870))
 - Add `force_flush` method to metrics exporter
   ([#2852](https://github.com/open-telemetry/opentelemetry-python/pull/2852))
 - Change tracing to use `Resource.to_json()`
