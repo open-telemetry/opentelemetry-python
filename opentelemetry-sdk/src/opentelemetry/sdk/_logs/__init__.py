@@ -78,7 +78,7 @@ class LogRecord:
             return NotImplemented
         return self.__dict__ == other.__dict__
 
-    def to_json(self) -> str:
+    def to_json(self, indent=4) -> str:
         return json.dumps(
             {
                 "body": self.body,
@@ -97,7 +97,7 @@ class LogRecord:
                 if self.resource
                 else "",
             },
-            indent=4,
+            indent=indent,
         )
 
 
