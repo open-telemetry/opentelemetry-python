@@ -357,6 +357,8 @@ class MeterProvider(APIMeterProvider):
             self._atexit_handler = register(self.shutdown)
 
         self._meters = {}
+        self._shutdown_once = Once()
+        self._shutdown = False
 
         for metric_reader in self._sdk_config.metric_readers:
 
@@ -372,9 +374,6 @@ class MeterProvider(APIMeterProvider):
             metric_reader._set_collect_callback(
                 self._measurement_consumer.collect
             )
-
-        self._shutdown_once = Once()
-        self._shutdown = False
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         deadline_ns = _time_ns() + timeout_millis * 10**6

@@ -18,7 +18,7 @@ from enum import Enum
 from logging import getLogger
 from os import environ, linesep
 from sys import stdout
-from threading import Event, RLock, Thread
+from threading import Event, Lock, RLock, Thread
 from typing import IO, Callable, Dict, Iterable, Optional
 
 from typing_extensions import final
@@ -404,6 +404,9 @@ class PeriodicExportingMetricReader(MetricReader):
     """`PeriodicExportingMetricReader` is an implementation of `MetricReader`
     that collects metrics based on a user-configurable time interval, and passes the
     metrics to the configured exporter.
+
+    The configured exporter's :py:meth:`~MetricExporter.export` method will not be called
+    concurrently.
     """
 
     def __init__(
@@ -417,6 +420,12 @@ class PeriodicExportingMetricReader(MetricReader):
             preferred_temporality=exporter._preferred_temporality,
             preferred_aggregation=exporter._preferred_aggregation,
         )
+
+        # This lock is held whenever calling self._exporter.export() to prevent concurrent
+        # execution of MetricExporter.export()
+        # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#exportbatch
+        self._export_lock = Lock()
+
         self._exporter = exporter
         if export_interval_millis is None:
             try:
@@ -479,7 +488,10 @@ class PeriodicExportingMetricReader(MetricReader):
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
-            self._exporter.export(metrics_data, timeout_millis=timeout_millis)
+            with self._export_lock:
+                self._exporter.export(
+                    metrics_data, timeout_millis=timeout_millis
+                )
         except Exception as e:  # pylint: disable=broad-except,invalid-name
             _logger.exception("Exception while exporting metrics %s", str(e))
         detach(token)
