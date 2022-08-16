@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from unittest import TestCase
+from os import devnull
 
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider
@@ -23,10 +24,11 @@ from opentelemetry.sdk.metrics.export import (
 
 
 class TestConsoleExporter(TestCase):
+
     def test_console_exporter(self):
 
         try:
-            exporter = ConsoleMetricExporter()
+            exporter = ConsoleMetricExporter(out=open(devnull, "w"))
             reader = PeriodicExportingMetricReader(exporter)
             provider = MeterProvider(metric_readers=[reader])
             metrics.set_meter_provider(provider)
