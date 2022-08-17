@@ -15,14 +15,14 @@
 from logging import WARNING
 from unittest.mock import MagicMock, Mock, patch
 
-from opentelemetry.sdk.metrics import (
-    Counter,
-    Histogram,
-    ObservableCounter,
-    UpDownCounter,
-)
 from opentelemetry.sdk.metrics._internal.aggregation import (
     _LastValueAggregation,
+)
+from opentelemetry.sdk.metrics._internal.instrument import (
+    _Counter,
+    _Histogram,
+    _ObservableCounter,
+    _UpDownCounter,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.metric_reader_storage import (
@@ -292,7 +292,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
 
     def test_drop_aggregation(self):
 
-        counter = Counter("name", Mock(), Mock())
+        counter = _Counter("name", Mock(), Mock())
         metric_reader_storage = MetricReaderStorage(
             SdkConfiguration(
                 resource=Mock(),
@@ -324,8 +324,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
 
     def test_same_collection_start(self):
 
-        counter = Counter("name", Mock(), Mock())
-        up_down_counter = UpDownCounter("name", Mock(), Mock())
+        counter = _Counter("name", Mock(), Mock())
+        up_down_counter = _UpDownCounter("name", Mock(), Mock())
 
         metric_reader_storage = MetricReaderStorage(
             SdkConfiguration(
@@ -365,7 +365,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
 
     def test_conflicting_view_configuration(self):
 
-        observable_counter = ObservableCounter(
+        observable_counter = _ObservableCounter(
             "observable_counter",
             Mock(),
             [Mock()],
@@ -406,14 +406,14 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
     def test_view_instrument_match_conflict_0(self):
         # There is a conflict between views and instruments.
 
-        observable_counter_0 = ObservableCounter(
+        observable_counter_0 = _ObservableCounter(
             "observable_counter_0",
             Mock(),
             [Mock()],
             unit="unit",
             description="description",
         )
-        observable_counter_1 = ObservableCounter(
+        observable_counter_1 = _ObservableCounter(
             "observable_counter_1",
             Mock(),
             [Mock()],
@@ -456,21 +456,21 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
     def test_view_instrument_match_conflict_1(self):
         # There is a conflict between views and instruments.
 
-        observable_counter_foo = ObservableCounter(
+        observable_counter_foo = _ObservableCounter(
             "foo",
             Mock(),
             [Mock()],
             unit="unit",
             description="description",
         )
-        observable_counter_bar = ObservableCounter(
+        observable_counter_bar = _ObservableCounter(
             "bar",
             Mock(),
             [Mock()],
             unit="unit",
             description="description",
         )
-        observable_counter_baz = ObservableCounter(
+        observable_counter_baz = _ObservableCounter(
             "baz",
             Mock(),
             [Mock()],
@@ -530,14 +530,14 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
 
     def test_view_instrument_match_conflict_2(self):
         # There is no conflict because the metric streams names are different.
-        observable_counter_foo = ObservableCounter(
+        observable_counter_foo = _ObservableCounter(
             "foo",
             Mock(),
             [Mock()],
             unit="unit",
             description="description",
         )
-        observable_counter_bar = ObservableCounter(
+        observable_counter_bar = _ObservableCounter(
             "bar",
             Mock(),
             [Mock()],
@@ -578,14 +578,14 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # There is no conflict because the aggregation temporality of the
         # instruments is different.
 
-        counter_bar = Counter(
+        counter_bar = _Counter(
             "bar",
             Mock(),
             [Mock()],
             unit="unit",
             description="description",
         )
-        observable_counter_baz = ObservableCounter(
+        observable_counter_baz = _ObservableCounter(
             "baz",
             Mock(),
             [Mock()],
@@ -626,14 +626,14 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # There is no conflict because the monotonicity of the instruments is
         # different.
 
-        counter_bar = Counter(
+        counter_bar = _Counter(
             "bar",
             Mock(),
             [Mock()],
             unit="unit",
             description="description",
         )
-        up_down_counter_baz = UpDownCounter(
+        up_down_counter_baz = _UpDownCounter(
             "baz",
             Mock(),
             [Mock()],
@@ -673,14 +673,14 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
     def test_view_instrument_match_conflict_5(self):
         # There is no conflict because the instrument units are different.
 
-        observable_counter_0 = ObservableCounter(
+        observable_counter_0 = _ObservableCounter(
             "observable_counter_0",
             Mock(),
             [Mock()],
             unit="unit_0",
             description="description",
         )
-        observable_counter_1 = ObservableCounter(
+        observable_counter_1 = _ObservableCounter(
             "observable_counter_1",
             Mock(),
             [Mock()],
@@ -720,14 +720,14 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # There is no conflict because the instrument data points are
         # different.
 
-        observable_counter = ObservableCounter(
+        observable_counter = _ObservableCounter(
             "observable_counter",
             Mock(),
             [Mock()],
             unit="unit",
             description="description",
         )
-        histogram = Histogram(
+        histogram = _Histogram(
             "histogram",
             Mock(),
             [Mock()],
@@ -767,14 +767,14 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # There is a conflict between views and instruments because the
         # description being different does not avoid a conflict.
 
-        observable_counter_0 = ObservableCounter(
+        observable_counter_0 = _ObservableCounter(
             "observable_counter_0",
             Mock(),
             [Mock()],
             unit="unit",
             description="description_0",
         )
-        observable_counter_1 = ObservableCounter(
+        observable_counter_1 = _ObservableCounter(
             "observable_counter_1",
             Mock(),
             [Mock()],
@@ -821,14 +821,14 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # and also the temporality and monotonicity of the up down counter and
         # the histogram are the same.
 
-        observable_counter = UpDownCounter(
+        up_down_counter = _UpDownCounter(
             "up_down_counter",
             Mock(),
             [Mock()],
             unit="unit",
             description="description",
         )
-        histogram = Histogram(
+        histogram = _Histogram(
             "histogram",
             Mock(),
             [Mock()],
@@ -859,7 +859,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         with self.assertRaises(AssertionError):
             with self.assertLogs(level=WARNING):
                 metric_reader_storage.consume_measurement(
-                    Measurement(1, observable_counter)
+                    Measurement(1, up_down_counter)
                 )
 
         with self.assertLogs(level=WARNING) as log:

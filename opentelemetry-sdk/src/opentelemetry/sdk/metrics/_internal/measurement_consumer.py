@@ -23,11 +23,13 @@ import opentelemetry.sdk.metrics
 import opentelemetry.sdk.metrics._internal.instrument
 import opentelemetry.sdk.metrics._internal.sdk_configuration
 from opentelemetry.metrics._internal.instrument import CallbackOptions
+from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
 )
 from opentelemetry.sdk.metrics._internal.point import Metric
+from opentelemetry.util._time import _time_ns
 
 
 class MeasurementConsumer(ABC):
@@ -48,6 +50,7 @@ class MeasurementConsumer(ABC):
     def collect(
         self,
         metric_reader: "opentelemetry.sdk.metrics.MetricReader",
+        timeout_millis: float = 10_000,
     ) -> Iterable[Metric]:
         pass
 
@@ -90,12 +93,34 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
     def collect(
         self,
         metric_reader: "opentelemetry.sdk.metrics.MetricReader",
+        timeout_millis: float = 10_000,
     ) -> Iterable[Metric]:
+
         with self._lock:
             metric_reader_storage = self._reader_storages[metric_reader]
             # for now, just use the defaults
             callback_options = CallbackOptions()
+            deadline_ns = _time_ns() + timeout_millis * 10**6
+
+            default_timeout_millis = 10000 * 10**6
+
             for async_instrument in self._async_instruments:
-                for measurement in async_instrument.callback(callback_options):
+
+                remaining_time = deadline_ns - _time_ns()
+
+                if remaining_time < default_timeout_millis:
+
+                    callback_options = CallbackOptions(
+                        timeout_millis=remaining_time
+                    )
+
+                measurements = async_instrument.callback(callback_options)
+                if _time_ns() >= deadline_ns:
+                    raise MetricsTimeoutError(
+                        "Timed out while executing callback"
+                    )
+
+                for measurement in measurements:
                     metric_reader_storage.consume_measurement(measurement)
+
         return self._reader_storages[metric_reader].collect()

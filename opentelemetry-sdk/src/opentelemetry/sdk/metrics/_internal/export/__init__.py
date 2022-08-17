@@ -18,7 +18,7 @@ from enum import Enum
 from logging import getLogger
 from os import environ, linesep
 from sys import stdout
-from threading import Event, RLock, Thread
+from threading import Event, Lock, RLock, Thread
 from typing import IO, Callable, Dict, Iterable, Optional
 
 from typing_extensions import final
@@ -31,9 +31,6 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
-from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
-)
 from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
     DefaultAggregation,
@@ -45,6 +42,12 @@ from opentelemetry.sdk.metrics._internal.instrument import (
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
+    _Counter,
+    _Histogram,
+    _ObservableCounter,
+    _ObservableGauge,
+    _ObservableUpDownCounter,
+    _UpDownCounter,
 )
 from opentelemetry.sdk.metrics._internal.point import MetricsData
 from opentelemetry.util._once import Once
@@ -67,7 +70,25 @@ class MetricExporter(ABC):
 
     Interface to be implemented by services that want to export metrics received
     in their own format.
+
+    Args:
+        preferred_temporality: Used by `opentelemetry.sdk.metrics.export.PeriodicExportingMetricReader` to
+            configure exporter level preferred temporality. See `opentelemetry.sdk.metrics.export.MetricReader` for
+            more details on what preferred temporality is.
+        preferred_aggregation: Used by `opentelemetry.sdk.metrics.export.PeriodicExportingMetricReader` to
+            configure exporter level preferred aggregation. See `opentelemetry.sdk.metrics.export.MetricReader` for
+            more details on what preferred aggregation is.
     """
+
+    def __init__(
+        self,
+        preferred_temporality: Dict[type, AggregationTemporality] = None,
+        preferred_aggregation: Dict[
+            type, "opentelemetry.sdk.metrics.view.Aggregation"
+        ] = None,
+    ) -> None:
+        self._preferred_temporality = preferred_temporality
+        self._preferred_aggregation = preferred_aggregation
 
     @abstractmethod
     def export(
@@ -83,6 +104,13 @@ class MetricExporter(ABC):
 
         Returns:
             The result of the export
+        """
+
+    @abstractmethod
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        """
+        Ensure that export of any metrics currently received by the exporter
+        are completed as soon as possible.
         """
 
     @abstractmethod
@@ -109,6 +137,7 @@ class ConsoleMetricExporter(MetricExporter):
         ] = lambda metrics_data: metrics_data.to_json()
         + linesep,
     ):
+        super().__init__()
         self.out = out
         self.formatter = formatter
 
@@ -125,8 +154,12 @@ class ConsoleMetricExporter(MetricExporter):
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass
 
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        return True
+
 
 class MetricReader(ABC):
+    # pylint: disable=too-many-branches
     """
     Base class for all metric readers
 
@@ -141,8 +174,6 @@ class MetricReader(ABC):
             temporalities of the classes that the user wants to change, not all of
             them. The classes not included in the passed dictionary will retain
             their association to their default aggregation temporalities.
-            The value passed here will override the corresponding values set
-            via the environment variable
         preferred_aggregation: A mapping between instrument classes and
             aggregation instances. By default maps all instrument classes to an
             instance of `DefaultAggregation`. This mapping will be used to
@@ -161,9 +192,6 @@ class MetricReader(ABC):
     .. automethod:: _receive_metrics
     """
 
-    # FIXME add :std:envvar:`OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE`
-    # to the end of the documentation paragraph above.
-
     def __init__(
         self,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
@@ -179,33 +207,14 @@ class MetricReader(ABC):
             Iterable["opentelemetry.sdk.metrics.export.Metric"],
         ] = None
 
-        if (
-            environ.get(
-                OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
-                "CUMULATIVE",
-            )
-            .upper()
-            .strip()
-            == "DELTA"
-        ):
-            self._instrument_class_temporality = {
-                Counter: AggregationTemporality.DELTA,
-                UpDownCounter: AggregationTemporality.CUMULATIVE,
-                Histogram: AggregationTemporality.DELTA,
-                ObservableCounter: AggregationTemporality.DELTA,
-                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-                ObservableGauge: AggregationTemporality.CUMULATIVE,
-            }
-
-        else:
-            self._instrument_class_temporality = {
-                Counter: AggregationTemporality.CUMULATIVE,
-                UpDownCounter: AggregationTemporality.CUMULATIVE,
-                Histogram: AggregationTemporality.CUMULATIVE,
-                ObservableCounter: AggregationTemporality.CUMULATIVE,
-                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-                ObservableGauge: AggregationTemporality.CUMULATIVE,
-            }
+        self._instrument_class_temporality = {
+            _Counter: AggregationTemporality.CUMULATIVE,
+            _UpDownCounter: AggregationTemporality.CUMULATIVE,
+            _Histogram: AggregationTemporality.CUMULATIVE,
+            _ObservableCounter: AggregationTemporality.CUMULATIVE,
+            _ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+            _ObservableGauge: AggregationTemporality.CUMULATIVE,
+        }
 
         if preferred_temporality is not None:
             for temporality in preferred_temporality.values():
@@ -217,31 +226,91 @@ class MetricReader(ABC):
                         f"Invalid temporality value found {temporality}"
                     )
 
-        self._instrument_class_temporality.update(preferred_temporality or {})
+        if preferred_temporality is not None:
+            for typ, temporality in preferred_temporality.items():
+                if typ is Counter:
+                    self._instrument_class_temporality[_Counter] = temporality
+                elif typ is UpDownCounter:
+                    self._instrument_class_temporality[
+                        _UpDownCounter
+                    ] = temporality
+                elif typ is Histogram:
+                    self._instrument_class_temporality[
+                        _Histogram
+                    ] = temporality
+                elif typ is ObservableCounter:
+                    self._instrument_class_temporality[
+                        _ObservableCounter
+                    ] = temporality
+                elif typ is ObservableUpDownCounter:
+                    self._instrument_class_temporality[
+                        _ObservableUpDownCounter
+                    ] = temporality
+                elif typ is ObservableGauge:
+                    self._instrument_class_temporality[
+                        _ObservableGauge
+                    ] = temporality
+                else:
+                    raise Exception(f"Invalid instrument class found {typ}")
+
         self._preferred_temporality = preferred_temporality
         self._instrument_class_aggregation = {
-            Counter: DefaultAggregation(),
-            UpDownCounter: DefaultAggregation(),
-            Histogram: DefaultAggregation(),
-            ObservableCounter: DefaultAggregation(),
-            ObservableUpDownCounter: DefaultAggregation(),
-            ObservableGauge: DefaultAggregation(),
+            _Counter: DefaultAggregation(),
+            _UpDownCounter: DefaultAggregation(),
+            _Histogram: DefaultAggregation(),
+            _ObservableCounter: DefaultAggregation(),
+            _ObservableUpDownCounter: DefaultAggregation(),
+            _ObservableGauge: DefaultAggregation(),
         }
 
-        self._instrument_class_aggregation.update(preferred_aggregation or {})
+        if preferred_aggregation is not None:
+            for typ, aggregation in preferred_aggregation.items():
+                if typ is Counter:
+                    self._instrument_class_aggregation[_Counter] = aggregation
+                elif typ is UpDownCounter:
+                    self._instrument_class_aggregation[
+                        _UpDownCounter
+                    ] = aggregation
+                elif typ is Histogram:
+                    self._instrument_class_aggregation[
+                        _Histogram
+                    ] = aggregation
+                elif typ is ObservableCounter:
+                    self._instrument_class_aggregation[
+                        _ObservableCounter
+                    ] = aggregation
+                elif typ is ObservableUpDownCounter:
+                    self._instrument_class_aggregation[
+                        _ObservableUpDownCounter
+                    ] = aggregation
+                elif typ is ObservableGauge:
+                    self._instrument_class_aggregation[
+                        _ObservableGauge
+                    ] = aggregation
+                else:
+                    raise Exception(f"Invalid instrument class found {typ}")
 
     @final
     def collect(self, timeout_millis: float = 10_000) -> None:
         """Collects the metrics from the internal SDK state and
         invokes the `_receive_metrics` with the collection.
+
+        Args:
+            timeout_millis: Amount of time in milliseconds before this function
+              raises a timeout error.
+
+        If any of the underlying ``collect`` methods called by this method
+        fails by any reason (including timeout) an exception will be raised
+        detailing the individual errors that caused this function to fail.
         """
         if self._collect is None:
             _logger.warning(
                 "Cannot call collect on a MetricReader until it is registered on a MeterProvider"
             )
             return
+
         self._receive_metrics(
-            self._collect(self),
+            self._collect(self, timeout_millis=timeout_millis),
             timeout_millis=timeout_millis,
         )
 
@@ -267,6 +336,10 @@ class MetricReader(ABC):
         **kwargs,
     ) -> None:
         """Called by `MetricReader.collect` when it receives a batch of metrics"""
+
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        self.collect(timeout_millis=timeout_millis)
+        return True
 
     @abstractmethod
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
@@ -331,22 +404,28 @@ class PeriodicExportingMetricReader(MetricReader):
     """`PeriodicExportingMetricReader` is an implementation of `MetricReader`
     that collects metrics based on a user-configurable time interval, and passes the
     metrics to the configured exporter.
+
+    The configured exporter's :py:meth:`~MetricExporter.export` method will not be called
+    concurrently.
     """
 
     def __init__(
         self,
         exporter: MetricExporter,
-        preferred_temporality: Dict[type, AggregationTemporality] = None,
-        preferred_aggregation: Dict[
-            type, "opentelemetry.sdk.metrics.view.Aggregation"
-        ] = None,
         export_interval_millis: Optional[float] = None,
         export_timeout_millis: Optional[float] = None,
     ) -> None:
+        # PeriodicExportingMetricReader defers to exporter for configuration
         super().__init__(
-            preferred_temporality=preferred_temporality,
-            preferred_aggregation=preferred_aggregation,
+            preferred_temporality=exporter._preferred_temporality,
+            preferred_aggregation=exporter._preferred_aggregation,
         )
+
+        # This lock is held whenever calling self._exporter.export() to prevent concurrent
+        # execution of MetricExporter.export()
+        # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#exportbatch
+        self._export_lock = Lock()
+
         self._exporter = exporter
         if export_interval_millis is None:
             try:
@@ -409,7 +488,10 @@ class PeriodicExportingMetricReader(MetricReader):
             return
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
-            self._exporter.export(metrics_data, timeout_millis=timeout_millis)
+            with self._export_lock:
+                self._exporter.export(
+                    metrics_data, timeout_millis=timeout_millis
+                )
         except Exception as e:  # pylint: disable=broad-except,invalid-name
             _logger.exception("Exception while exporting metrics %s", str(e))
         detach(token)
@@ -428,3 +510,8 @@ class PeriodicExportingMetricReader(MetricReader):
         self._shutdown_event.set()
         self._daemon_thread.join(timeout=(deadline_ns - _time_ns()) / 10**9)
         self._exporter.shutdown(timeout=(deadline_ns - _time_ns()) / 10**6)
+
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        super().force_flush(timeout_millis=timeout_millis)
+        self._exporter.force_flush(timeout_millis=timeout_millis)
+        return True

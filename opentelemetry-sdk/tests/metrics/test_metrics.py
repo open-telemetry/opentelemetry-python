@@ -64,9 +64,11 @@ class TestMeterProvider(ConcurrencyTestBase):
         MeterProvider._all_metric_readers = set()
 
     def test_register_metric_readers(self):
-
-        metric_reader_0 = PeriodicExportingMetricReader(Mock())
-        metric_reader_1 = PeriodicExportingMetricReader(Mock())
+        mock_exporter = Mock()
+        mock_exporter._preferred_temporality = None
+        mock_exporter._preferred_aggregation = None
+        metric_reader_0 = PeriodicExportingMetricReader(mock_exporter)
+        metric_reader_1 = PeriodicExportingMetricReader(mock_exporter)
 
         try:
             MeterProvider(metric_readers=(metric_reader_0,))
@@ -429,6 +431,7 @@ class TestMeter(TestCase):
 
 class InMemoryMetricExporter(MetricExporter):
     def __init__(self):
+        super().__init__()
         self.metrics = {}
         self._counter = 0
 
@@ -444,6 +447,9 @@ class InMemoryMetricExporter(MetricExporter):
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass
+
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        return True
 
 
 class TestDuplicateInstrumentAggregateData(TestCase):
