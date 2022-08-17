@@ -27,7 +27,7 @@ opentracing_tracer = opentracing_shim.create_tracer(tracer_provider)
 # Our example caching library expects an OpenTracing-compliant tracer.
 redis_cache = RedisCache(opentracing_tracer)
 
-# Appication code uses an OpenTelemetry Tracer as usual.
+# Application code uses an OpenTelemetry Tracer as usual.
 tracer = trace.get_tracer(__name__)
 
 

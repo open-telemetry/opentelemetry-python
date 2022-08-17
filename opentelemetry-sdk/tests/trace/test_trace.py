@@ -118,7 +118,7 @@ tracer_provider.add_span_processor(mock_processor)
         self.assertTrue(out.startswith(b"1"))
 
         # test that shutdown is called only once even if Tracer.shutdown is
-        # called explicitely
+        # called explicitly
         out = run_general_code(True, True)
         self.assertTrue(out.startswith(b"1"))
 
