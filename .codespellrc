@@ -1,4 +1,4 @@
 [codespell]
-# skipping the .tox directory as it is auto generated
-skip = ./.tox
+# skipping auto generated folders
+skip = ./.tox,./.mypy_cache,./docs/_build,./target
 ignore-words-list = ans,ue,ot,hist
