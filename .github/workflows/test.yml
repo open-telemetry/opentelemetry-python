@@ -92,7 +92,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tox-environment: [ "docker-tests", "lint", "docs", "mypy", "mypyinstalled", "tracecontext" ]
+        tox-environment: [ "docker-tests", "lint", "spellcheck", "docs", "mypy", "mypyinstalled", "tracecontext" ]
     name: ${{ matrix.tox-environment }}
     runs-on: ubuntu-20.04
     steps:
