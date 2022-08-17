@@ -77,7 +77,7 @@ class TestGlobalsConcurrency(TraceGlobalsTest, ConcurrencyTestBase):
             mock_tps_with_any_call[0].get_tracer.call_count, num_threads
         )
 
-        # should have warned everytime except for the successful set
+        # should have warned every time except for the successful set
         self.assertEqual(mock_logger.warning.call_count, num_threads - 1)
 
 

@@ -187,7 +187,7 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
 
         logger.warning("warning message: %s", "possible upcoming heatwave")
         logger.error("Very high rise in temperatures across the globe")
-        logger.critical("Temparature hits high 420 C in Hyderabad")
+        logger.critical("Temperature hits high 420 C in Hyderabad")
 
         log_processor.shutdown()
         self.assertTrue(exporter._stopped)
@@ -197,7 +197,7 @@ class TestBatchLogProcessor(ConcurrencyTestBase):
             ("warning message: possible upcoming heatwave", "WARNING"),
             ("Very high rise in temperatures across the globe", "ERROR"),
             (
-                "Temparature hits high 420 C in Hyderabad",
+                "Temperature hits high 420 C in Hyderabad",
                 "CRITICAL",
             ),
         ]

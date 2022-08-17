@@ -7,8 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Update PeriodicExportingMetricReader to never call export() concurrently
+  ([#2873](https://github.com/open-telemetry/opentelemetry-python/pull/2873))
 - Add param for `indent` size to `LogRecord.to_json()`
   ([#2870](https://github.com/open-telemetry/opentelemetry-python/pull/2870))
+
+## [1.12.0-0.33b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0-0.33b0) - 2022-08-08
+
 - Add `force_flush` method to metrics exporter
   ([#2852](https://github.com/open-telemetry/opentelemetry-python/pull/2852))
 - Change tracing to use `Resource.to_json()`
@@ -375,7 +380,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Allow span limits to be set programatically via TracerProvider.
+- Allow span limits to be set programmatically via TracerProvider.
   ([#1877](https://github.com/open-telemetry/opentelemetry-python/pull/1877))
 - Added support for CreateKey functionality.
   ([#1853](https://github.com/open-telemetry/opentelemetry-python/pull/1853))
@@ -805,7 +810,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1194](https://github.com/open-telemetry/opentelemetry-python/pull/1194))
 - Make instances of SpanContext immutable
   ([#1134](https://github.com/open-telemetry/opentelemetry-python/pull/1134))
-- Parent is now always passed in via Context, intead of Span or SpanContext
+- Parent is now always passed in via Context, instead of Span or SpanContext
   ([#1146](https://github.com/open-telemetry/opentelemetry-python/pull/1146))
 - Update OpenTelemetry protos to v0.5.0
   ([#1143](https://github.com/open-telemetry/opentelemetry-python/pull/1143))

@@ -489,7 +489,7 @@ def get_log_emitter_provider() -> LogEmitterProvider:
 def set_log_emitter_provider(log_emitter_provider: LogEmitterProvider) -> None:
     """Sets the current global :class:`~.LogEmitterProvider` object.
 
-    This can only be done once, a warning will be logged if any furter attempt
+    This can only be done once, a warning will be logged if any further attempt
     is made.
     """
     global _LOG_EMITTER_PROVIDER  # pylint: disable=global-statement

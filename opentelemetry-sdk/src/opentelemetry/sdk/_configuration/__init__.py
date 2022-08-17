@@ -274,7 +274,7 @@ class _BaseConfigurator(ABC):
 
 
 class _OTelSDKConfigurator(_BaseConfigurator):
-    """A basic Configurator by OTel Python for initalizing OTel SDK components
+    """A basic Configurator by OTel Python for initializing OTel SDK components
 
     Initializes several crucial OTel SDK components (i.e. TracerProvider,
     MeterProvider, Processors...) according to a default implementation. Other
