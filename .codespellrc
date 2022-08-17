@@ -1,0 +1,4 @@
+[codespell]
+# skipping the .tox directory as it is auto generated
+skip = ./.tox
+ignore-words-list = ans,ue,ot,hist
