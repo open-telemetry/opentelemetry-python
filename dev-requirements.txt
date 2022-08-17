@@ -18,3 +18,4 @@ protobuf~=3.18.1
 # breaking change introduced in markupsafe causes jinja, flask to break
 markupsafe==2.0.1
 bleach==4.1.0 # This dependency was updated to a breaking version.
+codespell==2.1.0
