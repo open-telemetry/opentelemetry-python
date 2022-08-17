@@ -109,7 +109,7 @@ which just logs the exception to standard logging, as seen here:
     AssertionError
 
 When no exception is raised, the code inside the scope of
-``GlobalErrorHandler`` is exectued normally:
+``GlobalErrorHandler`` is executed normally:
 
 .. code::
 
