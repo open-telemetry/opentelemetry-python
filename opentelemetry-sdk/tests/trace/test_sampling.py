@@ -311,7 +311,7 @@ class TestSampler(unittest.TestCase):
                 None, 0xFFFFFFFFFFFFFFFF, "span name"
             ).decision.is_sampled()
         )
-        # Check that the higest effective sampling rate is actually lower than
+        # Check that the highest effective sampling rate is actually lower than
         # the highest theoretical sampling rate. If this test fails the test
         # above is wrong.
         self.assertLess(

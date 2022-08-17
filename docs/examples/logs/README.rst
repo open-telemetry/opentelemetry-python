@@ -4,7 +4,7 @@ OpenTelemetry Logs SDK
 .. warning::
    OpenTelemetry Python logs are in an experimental state. The APIs within
    :mod:`opentelemetry.sdk._logs` are subject to change in minor/patch releases and make no
-   backward compatability guarantees at this time.
+   backward compatibility guarantees at this time.
 
 Start the Collector locally to see data being exported. Write the following file:
 

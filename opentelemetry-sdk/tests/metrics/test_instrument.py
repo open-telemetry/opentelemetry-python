@@ -359,7 +359,7 @@ class TestHistogram(TestCase):
 
     def test_record_non_monotonic(self):
         mc = Mock()
-        hist = _Histogram("name", Mock(), mc)
+        heist = _Histogram("name", Mock(), mc)
         hist.record(-1.0)
         mc.consume_measurement.assert_not_called()
 

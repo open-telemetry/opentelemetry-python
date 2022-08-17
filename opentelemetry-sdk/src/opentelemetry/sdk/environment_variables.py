@@ -103,7 +103,7 @@ OTEL_ATTRIBUTE_COUNT_LIMIT = "OTEL_ATTRIBUTE_COUNT_LIMIT"
 .. envvar:: OTEL_ATTRIBUTE_COUNT_LIMIT
 
 The :envvar:`OTEL_ATTRIBUTE_COUNT_LIMIT` represents the maximum allowed attribute count for spans, events and links.
-This limit is overriden by model specific limits such as OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT.
+This limit is overridden by model specific limits such as OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT.
 Default: 128
 """
 
@@ -343,7 +343,7 @@ OTEL_EXPORTER_OTLP_TRACES_COMPRESSION = "OTEL_EXPORTER_OTLP_TRACES_COMPRESSION"
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_COMPRESSION
 
 Same as :envvar:`OTEL_EXPORTER_OTLP_COMPRESSION` but only for the span
-exporter. If both are present, this takes higher precendence.
+exporter. If both are present, this takes higher precedence.
 """
 
 OTEL_EXPORTER_OTLP_TRACES_TIMEOUT = "OTEL_EXPORTER_OTLP_TRACES_TIMEOUT"
@@ -414,7 +414,7 @@ _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED = (
 .. envvar:: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
 
 The :envvar:`OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED` environment variable allows users to
-enable/disabe the logging SDK auto instrumentation.
+enable/disable the logging SDK auto instrumentation.
 Default: False
 
 Note: Logs SDK and its related settings are experimental.
