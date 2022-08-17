@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest import TestCase
 from os import devnull
+from unittest import TestCase
 
 from opentelemetry import metrics
 from opentelemetry.sdk.metrics import MeterProvider
@@ -24,7 +24,6 @@ from opentelemetry.sdk.metrics.export import (
 
 
 class TestConsoleExporter(TestCase):
-
     def test_console_exporter(self):
 
         try:
