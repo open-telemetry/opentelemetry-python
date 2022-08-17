@@ -24,7 +24,7 @@ if version_info < (3, 7):
 
 class ContextVarsRuntimeContext(_RuntimeContext):
     """An implementation of the RuntimeContext interface which wraps ContextVar under
-    the hood. This is the prefered implementation for usage with Python 3.5+
+    the hood. This is the preferred implementation for usage with Python 3.5+
     """
 
     _CONTEXT_KEY = "current_context"

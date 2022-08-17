@@ -730,7 +730,7 @@ class TracerShim(Tracer):
         """
 
         # pylint: disable=redefined-builtin
-        # This implementation does not perform the extracing by itself but
+        # This implementation does not perform the extracting by itself but
         # uses the configured propagators in opentelemetry.propagators.
         # TODO: Support Format.BINARY once it is supported in
         # opentelemetry-python.
