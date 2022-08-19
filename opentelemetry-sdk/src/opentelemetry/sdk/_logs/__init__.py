@@ -82,7 +82,7 @@ class LogRecord:
         return json.dumps(
             {
                 "body": self.body,
-                "severity_number": repr(self.severity_number),
+                "severity_number": self.severity_number.value,
                 "severity_text": self.severity_text,
                 "attributes": self.attributes,
                 "timestamp": ns_to_iso_str(self.timestamp),
