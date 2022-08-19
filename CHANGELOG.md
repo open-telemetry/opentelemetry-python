@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Emit `SeverityNumber` as an integer number
+  ([#2881](https://github.com/open-telemetry/opentelemetry-python/pull/2881))
 - Update PeriodicExportingMetricReader to never call export() concurrently
   ([#2873](https://github.com/open-telemetry/opentelemetry-python/pull/2873))
 
