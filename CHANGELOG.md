@@ -29,9 +29,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add temporality and aggregation configuration for metrics exporters,
   use `OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE` only for OTLP metrics exporter
   ([#2843](https://github.com/open-telemetry/opentelemetry-python/pull/2843))
--  Instrument instances are always created through a Meter
+- Instrument instances are always created through a Meter
   ([#2844](https://github.com/open-telemetry/opentelemetry-python/pull/2844))
--  Fix: Remove LogEmitter.flush() to align with OTel Log spec
+- Fix: Remove LogEmitter.flush() to align with OTel Log spec
   ([#2863](https://github.com/open-telemetry/opentelemetry-python/pull/2863))
 
 ## [1.12.0rc2-0.32b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0rc2) - 2022-07-04
