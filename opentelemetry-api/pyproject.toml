@@ -62,7 +62,6 @@ path = "src/opentelemetry/version.py"
 include = [
     "/src",
     "/tests",
-    "/CHANGELOG.md",
 ]
 
 [tool.hatch.build.targets.wheel]
