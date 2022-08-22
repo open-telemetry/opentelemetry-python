@@ -57,8 +57,7 @@ class AnotherLogProcessor(LogProcessor):
 class TestLogProcessor(unittest.TestCase):
     def test_log_processor(self):
         provider = LogEmitterProvider()
-        log_emitter = provider.get_log_emitter(__name__)
-        handler = LoggingHandler(log_emitter=log_emitter)
+        handler = LoggingHandler(log_emitter_provider=provider)
 
         logs_list_1 = []
         processor1 = AnotherLogProcessor(Mock(), logs_list_1)
