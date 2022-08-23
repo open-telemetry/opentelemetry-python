@@ -21,6 +21,8 @@ from concurrent.futures import ThreadPoolExecutor
 from logging import WARNING
 from unittest import mock
 
+from flaky import flaky
+
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
 from opentelemetry.sdk import trace
@@ -439,6 +441,7 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
 
         span_processor.shutdown()
 
+    @flaky(max_runs=3, min_passes=1)
     def test_batch_span_processor_reset_timeout(self):
         """Test that the scheduled timeout is reset on cycles without spans"""
         spans_names_list = []
