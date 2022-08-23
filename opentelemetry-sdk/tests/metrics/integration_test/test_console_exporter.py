@@ -12,7 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from os import devnull
+from io import StringIO
+from json import loads
+from time import sleep
 from unittest import TestCase
 
 from opentelemetry import metrics
@@ -26,13 +28,75 @@ from opentelemetry.sdk.metrics.export import (
 class TestConsoleExporter(TestCase):
     def test_console_exporter(self):
 
-        try:
-            exporter = ConsoleMetricExporter(out=open(devnull, "w"))
-            reader = PeriodicExportingMetricReader(exporter)
-            provider = MeterProvider(metric_readers=[reader])
-            metrics.set_meter_provider(provider)
-            meter = metrics.get_meter(__name__)
-            counter = meter.create_counter("test")
-            counter.add(1)
-        except Exception as error:
-            self.fail(f"Unexpected exception {error} raised")
+        output = StringIO()
+        exporter = ConsoleMetricExporter(out=output)
+        reader = PeriodicExportingMetricReader(
+            exporter, export_interval_millis=100
+        )
+        provider = MeterProvider(metric_readers=[reader])
+        metrics.set_meter_provider(provider)
+        meter = metrics.get_meter(__name__)
+        counter = meter.create_counter(
+            "name", description="description", unit="unit"
+        )
+        counter.add(1, attributes={"a": "b"})
+        provider.shutdown()
+
+        for _ in range(10):
+            sleep(0.1)
+            output.seek(0)
+            result = output.readlines()
+            if result:
+                break
+        else:
+            raise Exception("No output found after 1 second")
+
+        result_0 = loads(result[0])
+
+        self.assertEqual(
+            result_0["resource_metrics"][0]["scope_metrics"][0]["scope"][
+                "name"
+            ],
+            "test_console_exporter",
+        )
+        self.assertEqual(
+            result_0["resource_metrics"][0]["scope_metrics"][0]["metrics"][0][
+                "name"
+            ],
+            "name",
+        )
+        self.assertEqual(
+            result_0["resource_metrics"][0]["scope_metrics"][0]["metrics"][0][
+                "description"
+            ],
+            "description",
+        )
+        self.assertEqual(
+            result_0["resource_metrics"][0]["scope_metrics"][0]["metrics"][0][
+                "unit"
+            ],
+            "unit",
+        )
+        self.assertEqual(
+            result_0["resource_metrics"][0]["scope_metrics"][0]["metrics"][0][
+                "data"
+            ]["data_points"][0]["attributes"],
+            {"a": "b"},
+        )
+        self.assertEqual(
+            result_0["resource_metrics"][0]["scope_metrics"][0]["metrics"][0][
+                "data"
+            ]["data_points"][0]["value"],
+            1,
+        )
+        self.assertEqual(
+            result_0["resource_metrics"][0]["scope_metrics"][0]["metrics"][0][
+                "data"
+            ]["aggregation_temporality"],
+            2,
+        )
+        self.assertTrue(
+            result_0["resource_metrics"][0]["scope_metrics"][0]["metrics"][0][
+                "data"
+            ]["is_monotonic"]
+        )
