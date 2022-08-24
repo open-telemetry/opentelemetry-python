@@ -13,7 +13,7 @@
 # limitations under the License.
 
 from io import StringIO
-from json import loads
+from json import loads, dumps
 from time import sleep
 from unittest import TestCase
 
@@ -52,6 +52,8 @@ class TestConsoleExporter(TestCase):
             raise Exception("No output found after 1 second")
 
         result_0 = loads(result[0])
+
+        raise Exception(dumps(result_0, indent=4))
 
         self.assertEqual(
             result_0["resource_metrics"][0]["scope_metrics"][0]["scope"][
