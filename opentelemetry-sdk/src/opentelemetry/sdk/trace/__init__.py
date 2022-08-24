@@ -24,6 +24,7 @@ import typing
 from collections import OrderedDict
 from contextlib import contextmanager
 from os import environ
+from time import time_ns
 from types import MappingProxyType, TracebackType
 from typing import (
     Any,
@@ -64,7 +65,6 @@ from opentelemetry.sdk.util.instrumentation import (
 from opentelemetry.trace import SpanContext
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
-from opentelemetry.util._time import _time_ns
 
 logger = logging.getLogger(__name__)
 
@@ -184,9 +184,9 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
             True if all span processors flushed their spans within the
             given timeout, False otherwise.
         """
-        deadline_ns = _time_ns() + timeout_millis * 1000000
+        deadline_ns = time_ns() + timeout_millis * 1000000
         for sp in self._span_processors:
-            current_time_ns = _time_ns()
+            current_time_ns = time_ns()
             if current_time_ns >= deadline_ns:
                 return False
 
@@ -286,7 +286,7 @@ class EventBase(abc.ABC):
     def __init__(self, name: str, timestamp: Optional[int] = None) -> None:
         self._name = name
         if timestamp is None:
-            self._timestamp = _time_ns()
+            self._timestamp = time_ns()
         else:
             self._timestamp = timestamp
 
@@ -864,7 +864,7 @@ class Span(trace_api.Span, ReadableSpan):
                 logger.warning("Calling start() on a started span.")
                 return
             self._start_time = (
-                start_time if start_time is not None else _time_ns()
+                start_time if start_time is not None else time_ns()
             )
 
         self._span_processor.on_start(self, parent_context=parent_context)
@@ -877,7 +877,7 @@ class Span(trace_api.Span, ReadableSpan):
                 logger.warning("Calling end() on an ended span.")
                 return
 
-            self._end_time = end_time if end_time is not None else _time_ns()
+            self._end_time = end_time if end_time is not None else time_ns()
 
         self._span_processor.on_end(self._readable_span())
 

@@ -20,6 +20,7 @@ import logging
 import os
 import threading
 import traceback
+from time import time_ns
 from typing import Any, Callable, Optional, Tuple, Union, cast
 
 from opentelemetry.sdk._logs.severity import SeverityNumber, std_to_otlp
@@ -37,7 +38,6 @@ from opentelemetry.trace import (
 )
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._providers import _load_provider
-from opentelemetry.util._time import _time_ns
 from opentelemetry.util.types import Attributes
 
 _logger = logging.getLogger(__name__)
@@ -185,9 +185,9 @@ class SynchronousMultiLogProcessor(LogProcessor):
             True if all the log processors flushes the logs within timeout,
             False otherwise.
         """
-        deadline_ns = _time_ns() + timeout_millis * 1000000
+        deadline_ns = time_ns() + timeout_millis * 1000000
         for lp in self._log_processors:
-            current_ts = _time_ns()
+            current_ts = time_ns()
             if current_ts >= deadline_ns:
                 return False
 
