@@ -13,8 +13,7 @@
 # limitations under the License.
 
 from io import StringIO
-from json import loads, dumps
-from time import sleep
+from json import loads
 from unittest import TestCase
 
 from opentelemetry import metrics
@@ -23,10 +22,13 @@ from opentelemetry.sdk.metrics.export import (
     ConsoleMetricExporter,
     PeriodicExportingMetricReader,
 )
+from opentelemetry.test.globals_test import reset_metrics_globals
 
 
 class TestConsoleExporter(TestCase):
     def test_console_exporter(self):
+
+        reset_metrics_globals()
 
         output = StringIO()
         exporter = ConsoleMetricExporter(out=output)
@@ -42,19 +44,10 @@ class TestConsoleExporter(TestCase):
         counter.add(1, attributes={"a": "b"})
         provider.shutdown()
 
-        for _ in range(10):
-            sleep(0.1)
-            output.seek(0)
-            result = output.readlines()
-            if result:
-                break
-        else:
-            raise Exception("No output found after 1 second")
+        output.seek(0)
+        result_0 = loads(output.readlines()[0])
 
-        result_0 = loads(result[0])
-
-        raise Exception(dumps(result_0, indent=4))
-
+        self.assertGreater(len(result_0), 0)
         self.assertEqual(
             result_0["resource_metrics"][0]["scope_metrics"][0]["scope"][
                 "name"
