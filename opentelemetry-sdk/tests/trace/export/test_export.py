@@ -19,6 +19,7 @@ import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 from logging import WARNING
+from platform import python_implementation
 from unittest import mock
 
 from flaky import flaky
@@ -441,7 +442,6 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
 
         span_processor.shutdown()
 
-    @flaky(max_runs=3, min_passes=1)
     def test_batch_span_processor_reset_timeout(self):
         """Test that the scheduled timeout is reset on cycles without spans"""
         spans_names_list = []
@@ -479,6 +479,11 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
             )
 
         span_processor.shutdown()
+
+    if python_implementation() == "PyPy":
+        test_batch_span_processor_reset_timeout = flaky(
+            max_runs=2, min_passes=1
+        )(test_batch_span_processor_reset_timeout)
 
     def test_batch_span_processor_parameters(self):
         # zero max_queue_size
