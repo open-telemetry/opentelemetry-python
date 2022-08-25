@@ -58,7 +58,6 @@ from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     Gauge,
     Histogram as HistogramType,
-    Metric,
     MetricExporter,
     MetricExportResult,
     MetricsData,
