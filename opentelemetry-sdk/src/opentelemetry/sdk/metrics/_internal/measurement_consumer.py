@@ -16,6 +16,7 @@
 
 from abc import ABC, abstractmethod
 from threading import Lock
+from time import time_ns
 from typing import Iterable, List, Mapping
 
 # This kind of import is needed to avoid Sphinx errors.
@@ -29,7 +30,6 @@ from opentelemetry.sdk.metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
 )
 from opentelemetry.sdk.metrics._internal.point import Metric
-from opentelemetry.util._time import _time_ns
 
 
 class MeasurementConsumer(ABC):
@@ -100,13 +100,13 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
             metric_reader_storage = self._reader_storages[metric_reader]
             # for now, just use the defaults
             callback_options = CallbackOptions()
-            deadline_ns = _time_ns() + timeout_millis * 10**6
+            deadline_ns = time_ns() + timeout_millis * 10**6
 
             default_timeout_millis = 10000 * 10**6
 
             for async_instrument in self._async_instruments:
 
-                remaining_time = deadline_ns - _time_ns()
+                remaining_time = deadline_ns - time_ns()
 
                 if remaining_time < default_timeout_millis:
 
@@ -115,7 +115,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
                     )
 
                 measurements = async_instrument.callback(callback_options)
-                if _time_ns() >= deadline_ns:
+                if time_ns() >= deadline_ns:
                     raise MetricsTimeoutError(
                         "Timed out while executing callback"
                     )

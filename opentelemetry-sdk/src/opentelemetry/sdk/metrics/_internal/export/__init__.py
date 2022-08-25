@@ -19,6 +19,7 @@ from logging import getLogger
 from os import environ, linesep
 from sys import stdout
 from threading import Event, Lock, RLock, Thread
+from time import time_ns
 from typing import IO, Callable, Dict, Iterable, Optional
 
 from typing_extensions import final
@@ -51,7 +52,6 @@ from opentelemetry.sdk.metrics._internal.instrument import (
 )
 from opentelemetry.sdk.metrics._internal.point import MetricsData
 from opentelemetry.util._once import Once
-from opentelemetry.util._time import _time_ns
 
 _logger = getLogger(__name__)
 
@@ -497,7 +497,7 @@ class PeriodicExportingMetricReader(MetricReader):
         detach(token)
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
-        deadline_ns = _time_ns() + timeout_millis * 10**6
+        deadline_ns = time_ns() + timeout_millis * 10**6
 
         def _shutdown():
             self._shutdown = True
@@ -508,8 +508,8 @@ class PeriodicExportingMetricReader(MetricReader):
             return
 
         self._shutdown_event.set()
-        self._daemon_thread.join(timeout=(deadline_ns - _time_ns()) / 10**9)
-        self._exporter.shutdown(timeout=(deadline_ns - _time_ns()) / 10**6)
+        self._daemon_thread.join(timeout=(deadline_ns - time_ns()) / 10**9)
+        self._exporter.shutdown(timeout=(deadline_ns - time_ns()) / 10**6)
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         super().force_flush(timeout_millis=timeout_millis)
