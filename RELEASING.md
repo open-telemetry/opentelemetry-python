@@ -2,16 +2,17 @@
 This document explains how to publish all OT modules at version x.y.z. Ensure that you’re following semver when choosing a version number.
 
 Release Process:
-* [Checkout a clean repo](#checkout-a-clean-repo)
-* [Update versions](#update-versions)
-* [Create a new branch](#create-a-new-branch)
-* [Open a Pull Request](#open-a-pull-request)
-* [Create a Release](#Create-a-Release)
-* [Move stable tag](#Move-stable-tag)
-* [Update main](#Update-main)
-* [Update docs](#Update-docs)
-* [Check PyPI](#Check-PyPI)
-* [Troubleshooting](#troubleshooting)
+- [Checkout a clean repo](#checkout-a-clean-repo)
+- [Update versions](#update-versions)
+- [Create a new branch](#create-a-new-branch)
+- [Open a Pull Request](#open-a-pull-request)
+- [Create a Release](#create-a-release)
+- [Check PyPI](#check-pypi)
+- [Move stable tag](#move-stable-tag)
+- [Update main](#update-main)
+- [Hotfix procedure](#hotfix-procedure)
+- [Troubleshooting](#troubleshooting)
+  - [Publish failed](#publish-failed)
 
 ## Checkout a clean repo
 To avoid pushing untracked changes, check out the repo in a new dir
@@ -81,11 +82,13 @@ A `hotfix` is defined as a small change developed to correct a bug that should b
 2. On your local machine, remove the `dev0` tags from the version number and increment the patch version number.
 3. On your local machine, update `CHANGELOG.md` with the date of the hotfix change.
 4. With administrator privileges for PyPi, manually publish the affected packages.
-    a. Install [twine](https://pypi.org/project/twine/)
-    b. Navigate to where the `setup.py` file exists for the package you want to publish.
-    c. Run `python setup.py sdist bdist_wheel`. You may have to install [wheel](https://pypi.org/project/wheel/) as well.
-    d. Validate your built distributions by running `twine check dist/*`.
-    e. Upload distributions to PyPi by running `twine upload dist/*`.
+    1. Install [twine](https://pypi.org/project/twine/) and [build](https://pypi.org/project/build/)
+    2. Navigate to where the `setup.py` or `pyproject.toml` file exists for the package you want to publish.
+    3. To build the package:
+       - If a `setup.py` file exists, run `python setup.py sdist bdist_wheel`. You may have to install [wheel](https://pypi.org/project/wheel/) as well.
+       - Otherwise, run `python -m build`.
+    4. Validate your built distributions by running `twine check dist/*`.
+    5. Upload distributions to PyPi by running `twine upload dist/*`.
 5. Note that since hotfixes are manually published, the build scripts for publish after creating a release are not run.
 
 ## Troubleshooting
