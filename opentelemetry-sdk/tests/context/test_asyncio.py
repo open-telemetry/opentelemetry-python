@@ -14,21 +14,14 @@
 
 import asyncio
 import unittest
-from sys import version_info
 from unittest.mock import patch
 
 from opentelemetry import context
+from opentelemetry.context.contextvars_context import ContextVarsRuntimeContext
 from opentelemetry.sdk import trace
 from opentelemetry.sdk.trace import export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
-)
-
-if version_info.minor < 7:
-    raise unittest.SkipTest("contextvars not available")
-
-from opentelemetry.context.contextvars_context import (  # pylint:disable=wrong-import-position
-    ContextVarsRuntimeContext,
 )
 
 _SPAN_NAMES = [
