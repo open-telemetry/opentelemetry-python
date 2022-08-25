@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: 1e7ea92f2e4df1ee8cd4b24ce4fa1dcefa20347a
+  CONTRIB_REPO_SHA: 23bfe9fcadc1e205fbce1b6cf58fc3004eecace3
   # This is needed because we do not clone the core repo in contrib builds anymore.
   # When running contrib builds as part of core builds, we use actions/checkout@v2 which
   # does not set an environment variable (simply just runs tox), which is different when
@@ -55,7 +55,7 @@ jobs:
             ~/.cache/pip
           key: v3-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
       - name: Windows does not let git check out files with long names
-        if: ${{ matrix.os == 'windows-2019'}}
+        if: ${{ matrix.os == 'windows-2019'}} 
         run: git config --system core.longpaths true
       - name: run tox
         run: tox -f ${{ matrix.python-version }}-${{ matrix.package }} -- --benchmark-json=${{ env.RUN_MATRIX_COMBINATION }}-benchmark.json
@@ -112,7 +112,7 @@ jobs:
 
   # Contrib unit test suite in order to ensure changes in core do not break anything in contrib.
   # We only run contrib unit tests on the oldest supported Python version (3.7) as running the same tests
-  # on all versions is somewhat redundant.
+  # on all versions is somewhat redundant. 
   contrib-build:
     env:
       # We use these variables to convert between tox and GHA version literals
