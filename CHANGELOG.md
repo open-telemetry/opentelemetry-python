@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update PeriodicExportingMetricReader to never call export() concurrently
   ([#2873](https://github.com/open-telemetry/opentelemetry-python/pull/2873))
+- [exporter/opentelemetry-exporter-otlp-proto-http] Add OTLPMetricExporter
+  ([#2891](https://github.com/open-telemetry/opentelemetry-python/pull/2891))
 
 ## [1.12.0-0.33b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0-0.33b0) - 2022-08-08
 
