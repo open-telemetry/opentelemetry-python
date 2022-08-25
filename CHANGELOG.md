@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Update PeriodicExportingMetricReader to never call export() concurrently
   ([#2873](https://github.com/open-telemetry/opentelemetry-python/pull/2873))
+- Add param for `indent` size to `LogRecord.to_json()`
+  ([#2870](https://github.com/open-telemetry/opentelemetry-python/pull/2870))
+- Fix: Remove `LogEmitter.flush()` to align with OTel Log spec
+  ([#2863](https://github.com/open-telemetry/opentelemetry-python/pull/2863))
 - [exporter/opentelemetry-exporter-otlp-proto-http] Add OTLPMetricExporter
   ([#2891](https://github.com/open-telemetry/opentelemetry-python/pull/2891))
 
@@ -29,7 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add temporality and aggregation configuration for metrics exporters,
   use `OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE` only for OTLP metrics exporter
   ([#2843](https://github.com/open-telemetry/opentelemetry-python/pull/2843))
--  Instrument instances are always created through a Meter
+- Instrument instances are always created through a Meter
   ([#2844](https://github.com/open-telemetry/opentelemetry-python/pull/2844))
 
 ## [1.12.0rc2-0.32b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0rc2) - 2022-07-04

@@ -78,7 +78,7 @@ class LogRecord:
             return NotImplemented
         return self.__dict__ == other.__dict__
 
-    def to_json(self) -> str:
+    def to_json(self, indent=4) -> str:
         return json.dumps(
             {
                 "body": self.body,
@@ -97,7 +97,7 @@ class LogRecord:
                 if self.resource
                 else "",
             },
-            indent=4,
+            indent=indent,
         )
 
 
@@ -311,10 +311,15 @@ class LoggingHandler(logging.Handler):
     def __init__(
         self,
         level=logging.NOTSET,
-        log_emitter=None,
+        log_emitter_provider=None,
     ) -> None:
         super().__init__(level=level)
-        self._log_emitter = log_emitter or get_log_emitter(__name__)
+        self._log_emitter_provider = (
+            log_emitter_provider or get_log_emitter_provider()
+        )
+        self._log_emitter = get_log_emitter(
+            __name__, log_emitter_provider=self._log_emitter_provider
+        )
 
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> Attributes:
@@ -369,7 +374,7 @@ class LoggingHandler(logging.Handler):
         """
         Flushes the logging output.
         """
-        self._log_emitter.flush()
+        self._log_emitter_provider.force_flush()
 
 
 class LogEmitter:
@@ -395,12 +400,6 @@ class LogEmitter:
         """
         log_data = LogData(record, self._instrumentation_scope)
         self._multi_log_processor.emit(log_data)
-
-    # TODO: Should this flush everything in pipeline?
-    # Prior discussion https://github.com/open-telemetry/opentelemetry-python/pull/1916#discussion_r659945290
-    def flush(self):
-        """Ensure all logging output has been flushed."""
-        self._multi_log_processor.force_flush()
 
 
 class LogEmitterProvider:
