@@ -20,12 +20,12 @@ import os
 import sys
 import threading
 from os import linesep
+from time import time_ns
 from typing import IO, Callable, Deque, List, Optional, Sequence
 
 from opentelemetry.context import attach, detach, set_value
 from opentelemetry.sdk._logs import LogData, LogProcessor, LogRecord
 from opentelemetry.util._once import Once
-from opentelemetry.util._time import _time_ns
 
 _logger = logging.getLogger(__name__)
 
@@ -205,9 +205,9 @@ class BatchLogProcessor(LogProcessor):
                     if self._shutdown:
                         break
 
-            start_ns = _time_ns()
+            start_ns = time_ns()
             self._export(flush_request)
-            end_ns = _time_ns()
+            end_ns = time_ns()
             # subtract the duration of this export call to the next timeout
             timeout = self._schedule_delay_millis / 1e3 - (
                 (end_ns - start_ns) / 1e9
