@@ -26,9 +26,14 @@ from opentelemetry.test.globals_test import reset_metrics_globals
 
 
 class TestConsoleExporter(TestCase):
-    def test_console_exporter(self):
 
+    def setUp(self):
         reset_metrics_globals()
+
+    def tearDown(self):
+        reset_metrics_globals()
+
+    def test_console_exporter(self):
 
         output = StringIO()
         exporter = ConsoleMetricExporter(out=output)
