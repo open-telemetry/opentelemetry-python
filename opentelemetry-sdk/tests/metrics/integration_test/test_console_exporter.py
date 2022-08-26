@@ -12,26 +12,63 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from io import StringIO
+from json import loads
 from unittest import TestCase
 
-from opentelemetry import metrics
+from opentelemetry.metrics import get_meter, set_meter_provider
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricExporter,
     PeriodicExportingMetricReader,
 )
+from opentelemetry.test.globals_test import reset_metrics_globals
 
 
 class TestConsoleExporter(TestCase):
+    def setUp(self):
+        reset_metrics_globals()
+
+    def tearDown(self):
+        reset_metrics_globals()
+
     def test_console_exporter(self):
 
-        try:
-            exporter = ConsoleMetricExporter()
-            reader = PeriodicExportingMetricReader(exporter)
-            provider = MeterProvider(metric_readers=[reader])
-            metrics.set_meter_provider(provider)
-            meter = metrics.get_meter(__name__)
-            counter = meter.create_counter("test")
-            counter.add(1)
-        except Exception as error:
-            self.fail(f"Unexpected exception {error} raised")
+        output = StringIO()
+        exporter = ConsoleMetricExporter(out=output)
+        reader = PeriodicExportingMetricReader(
+            exporter, export_interval_millis=100
+        )
+        provider = MeterProvider(metric_readers=[reader])
+        set_meter_provider(provider)
+        meter = get_meter(__name__)
+        counter = meter.create_counter(
+            "name", description="description", unit="unit"
+        )
+        counter.add(1, attributes={"a": "b"})
+        provider.shutdown()
+
+        output.seek(0)
+        result_0 = loads(output.readlines()[0])
+
+        self.assertGreater(len(result_0), 0)
+
+        metrics = result_0["resource_metrics"][0]["scope_metrics"][0]
+
+        self.assertEqual(metrics["scope"]["name"], "test_console_exporter")
+
+        metrics = metrics["metrics"][0]
+
+        self.assertEqual(metrics["name"], "name")
+        self.assertEqual(metrics["description"], "description")
+        self.assertEqual(metrics["unit"], "unit")
+
+        metrics = metrics["data"]
+
+        self.assertEqual(metrics["aggregation_temporality"], 2)
+        self.assertTrue(metrics["is_monotonic"])
+
+        metrics = metrics["data_points"][0]
+
+        self.assertEqual(metrics["attributes"], {"a": "b"})
+        self.assertEqual(metrics["value"], 1)
