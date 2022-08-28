@@ -22,15 +22,11 @@ import os
 from abc import ABC, abstractmethod
 from os import environ
 from typing import Dict, Optional, Sequence, Tuple, Type
+from typing_extensions import Literal
 
 from pkg_resources import iter_entry_points
 
-from opentelemetry.environment_variables import (
-    OTEL_LOGS_EXPORTER,
-    OTEL_METRICS_EXPORTER,
-    OTEL_PYTHON_ID_GENERATOR,
-    OTEL_TRACES_EXPORTER,
-)
+from opentelemetry.environment_variables import OTEL_PYTHON_ID_GENERATOR
 from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk._logs import (
     LogEmitterProvider,
@@ -40,6 +36,7 @@ from opentelemetry.sdk._logs import (
 from opentelemetry.sdk._logs.export import BatchLogProcessor, LogExporter
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
+    OTEL_EXPORTER_OTLP_PROTOCOL,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
@@ -55,26 +52,66 @@ from opentelemetry.trace import set_tracer_provider
 
 _EXPORTER_OTLP = "otlp"
 _EXPORTER_OTLP_PROTO_GRPC = "otlp_proto_grpc"
+_EXPORTER_OTLP_PROTO_HTTP = "otlp_proto_http"
 
 _RANDOM_ID_GENERATOR = "random"
 _DEFAULT_ID_GENERATOR = _RANDOM_ID_GENERATOR
+
+_logger = logging.getLogger(__name__)
 
 
 def _get_id_generator() -> str:
     return environ.get(OTEL_PYTHON_ID_GENERATOR, _DEFAULT_ID_GENERATOR)
 
 
-def _get_exporter_names(names: str) -> Sequence[str]:
-    exporters = set()
+def _get_otlp_exporter_entry_point(otlp_protocol: Optional[str]) -> Literal[
+    _EXPORTER_OTLP_PROTO_GRPC,
+    _EXPORTER_OTLP_PROTO_HTTP
+]:
+    if otlp_protocol == "grpc":
+        return _EXPORTER_OTLP_PROTO_GRPC
+    elif otlp_protocol == "http/protobuf":
+        return _EXPORTER_OTLP_PROTO_HTTP
 
-    if names and names.lower().strip() != "none":
-        exporters.update({_exporter.strip() for _exporter in names.split(",")})
+    raise RuntimeError(f"Unsupported OTLP protocol '{otlp_protocol}' is configured")
 
-    if _EXPORTER_OTLP in exporters:
-        exporters.remove(_EXPORTER_OTLP)
-        exporters.add(_EXPORTER_OTLP_PROTO_GRPC)
 
-    return list(exporters)
+def _get_exporter_entry_point(exporter_name: str, telemetry_type: Literal["traces", "metrics", "logs"]):
+    if exporter_name not in (_EXPORTER_OTLP, _EXPORTER_OTLP_PROTO_GRPC, _EXPORTER_OTLP_PROTO_HTTP):
+        return exporter_name
+
+    exporter_entry_point = None
+
+    # Check the specific env var
+    otlp_protocol_var = environ.get(f"OTEL_EXPORTER_OTLP_{telemetry_type.upper()}_PROTOCOL")
+    if otlp_protocol_var:
+        exporter_entry_point = _get_otlp_exporter_entry_point(otlp_protocol_var)
+    else:
+        # Check the general env var
+        otlp_protocol_var = environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
+        if otlp_protocol_var:
+            exporter_entry_point = _get_otlp_exporter_entry_point(otlp_protocol_var)
+
+    if exporter_name == _EXPORTER_OTLP:
+        return exporter_entry_point if exporter_entry_point else _EXPORTER_OTLP_PROTO_GRPC
+
+    if exporter_name != exporter_entry_point:
+        # Env vars conflict
+        _logger.warning(
+            f"Conflicting values for {telemetry_type.lower()} OTLP exporter protocol, using {exporter_name}"
+        )
+
+    return exporter_name
+
+
+def _get_exporter_names(telemetry_type: Literal["traces", "metrics", "logs"]) -> Sequence[str]:
+    names = environ.get(f"OTEL_{telemetry_type.upper()}_EXPORTER")
+    if not names or names.lower().strip() == "none":
+        return []
+
+    return [
+        _get_exporter_entry_point(_exporter.strip(), telemetry_type) for _exporter in names.split(",")
+    ]
 
 
 def _init_tracing(
@@ -232,9 +269,9 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
 
 def _initialize_components(auto_instrumentation_version):
     trace_exporters, metric_exporters, log_exporters = _import_exporters(
-        _get_exporter_names(environ.get(OTEL_TRACES_EXPORTER)),
-        _get_exporter_names(environ.get(OTEL_METRICS_EXPORTER)),
-        _get_exporter_names(environ.get(OTEL_LOGS_EXPORTER)),
+        _get_exporter_names("traces"),
+        _get_exporter_names("metrics"),
+        _get_exporter_names("logs"),
     )
     id_generator_name = _get_id_generator()
     id_generator = _import_id_generator(id_generator_name)

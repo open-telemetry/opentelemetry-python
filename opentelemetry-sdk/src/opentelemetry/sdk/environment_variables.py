@@ -234,6 +234,27 @@ The :envvar:`OTEL_EXPORTER_OTLP_PROTOCOL` represents the the transport protocol 
 OTLP exporter.
 """
 
+OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
+
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` represents the the transport protocol for spans.
+"""
+
+OTEL_EXPORTER_OTLP_METRICS_PROTOCOL = "OTEL_EXPORTER_OTLP_METRICS_PROTOCOL"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
+
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` represents the the transport protocol for metrics.
+"""
+
+OTEL_EXPORTER_OTLP_LOGS_PROTOCOL = "OTEL_EXPORTER_OTLP_LOGS_PROTOCOL"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
+
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` represents the the transport protocol for logs.
+"""
+
 OTEL_EXPORTER_OTLP_CERTIFICATE = "OTEL_EXPORTER_OTLP_CERTIFICATE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_CERTIFICATE
@@ -312,13 +333,6 @@ OTEL_EXPORTER_OTLP_TRACES_ENDPOINT = "OTEL_EXPORTER_OTLP_TRACES_ENDPOINT"
 The :envvar:`OTEL_EXPORTER_OTLP_TRACES_ENDPOINT` target to which the span exporter is going to send spans.
 The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https), port and path.
 A scheme of https indicates a secure connection and takes precedence over this configuration setting.
-"""
-
-OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"
-"""
-.. envvar:: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
-
-The :envvar:`OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` represents the the transport protocol for spans.
 """
 
 OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE = "OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE"

@@ -413,25 +413,34 @@ class TestMetricsInit(TestCase):
 
 
 class TestExporterNames(TestCase):
-    def test_otlp_exporter_overwrite(self):
-        for exporter in [_EXPORTER_OTLP, _EXPORTER_OTLP_PROTO_GRPC]:
-            self.assertEqual(
-                _get_exporter_names(exporter), [_EXPORTER_OTLP_PROTO_GRPC]
-            )
-
-    def test_multiple_exporters(self):
+    @patch.dict(environ, {"OTEL_TRACES_EXPORTER": _EXPORTER_OTLP})
+    def test_otlp_exporter(self):
         self.assertEqual(
-            sorted(_get_exporter_names("jaeger,zipkin")), ["jaeger", "zipkin"]
+            sorted(_get_exporter_names("traces")), [_EXPORTER_OTLP_PROTO_GRPC]
         )
 
+    @patch.dict(environ, {"OTEL_TRACES_EXPORTER": _EXPORTER_OTLP_PROTO_GRPC})
+    def test_otlp_grpc_exporter(self):
+        self.assertEqual(
+            sorted(_get_exporter_names("traces")), [_EXPORTER_OTLP_PROTO_GRPC]
+        )
+
+    @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "jaeger,zipkin"})
+    def test_multiple_exporters(self):
+        self.assertEqual(
+            sorted(_get_exporter_names("traces")), ["jaeger", "zipkin"]
+        )
+
+    @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "none"})
     def test_none_exporters(self):
-        self.assertEqual(sorted(_get_exporter_names("none")), [])
+        self.assertEqual(sorted(_get_exporter_names("traces")), [])
 
     def test_no_exporters(self):
-        self.assertEqual(sorted(_get_exporter_names(None)), [])
+        self.assertEqual(sorted(_get_exporter_names("traces")), [])
 
+    @patch.dict(environ, {"OTEL_TRACES_EXPORTER": ""})
     def test_empty_exporters(self):
-        self.assertEqual(sorted(_get_exporter_names("")), [])
+        self.assertEqual(sorted(_get_exporter_names("traces")), [])
 
 
 class TestImportExporters(TestCase):
