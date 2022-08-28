@@ -22,9 +22,9 @@ import os
 from abc import ABC, abstractmethod
 from os import environ
 from typing import Dict, Optional, Sequence, Tuple, Type
-from typing_extensions import Literal
 
 from pkg_resources import iter_entry_points
+from typing_extensions import Literal
 
 from opentelemetry.environment_variables import OTEL_PYTHON_ID_GENERATOR
 from opentelemetry.metrics import set_meter_provider
@@ -64,36 +64,53 @@ def _get_id_generator() -> str:
     return environ.get(OTEL_PYTHON_ID_GENERATOR, _DEFAULT_ID_GENERATOR)
 
 
-def _get_otlp_exporter_entry_point(otlp_protocol: Optional[str]) -> Literal[
-    _EXPORTER_OTLP_PROTO_GRPC,
-    _EXPORTER_OTLP_PROTO_HTTP
-]:
+def _get_otlp_exporter_entry_point(
+    otlp_protocol: Optional[str],
+) -> Literal[_EXPORTER_OTLP_PROTO_GRPC, _EXPORTER_OTLP_PROTO_HTTP]:
     if otlp_protocol == "grpc":
         return _EXPORTER_OTLP_PROTO_GRPC
     elif otlp_protocol == "http/protobuf":
         return _EXPORTER_OTLP_PROTO_HTTP
 
-    raise RuntimeError(f"Unsupported OTLP protocol '{otlp_protocol}' is configured")
+    raise RuntimeError(
+        f"Unsupported OTLP protocol '{otlp_protocol}' is configured"
+    )
 
 
-def _get_exporter_entry_point(exporter_name: str, telemetry_type: Literal["traces", "metrics", "logs"]):
-    if exporter_name not in (_EXPORTER_OTLP, _EXPORTER_OTLP_PROTO_GRPC, _EXPORTER_OTLP_PROTO_HTTP):
+def _get_exporter_entry_point(
+    exporter_name: str, telemetry_type: Literal["traces", "metrics", "logs"]
+):
+    if exporter_name not in (
+        _EXPORTER_OTLP,
+        _EXPORTER_OTLP_PROTO_GRPC,
+        _EXPORTER_OTLP_PROTO_HTTP,
+    ):
         return exporter_name
 
     exporter_entry_point = None
 
     # Check the specific env var
-    otlp_protocol_var = environ.get(f"OTEL_EXPORTER_OTLP_{telemetry_type.upper()}_PROTOCOL")
+    otlp_protocol_var = environ.get(
+        f"OTEL_EXPORTER_OTLP_{telemetry_type.upper()}_PROTOCOL"
+    )
     if otlp_protocol_var:
-        exporter_entry_point = _get_otlp_exporter_entry_point(otlp_protocol_var)
+        exporter_entry_point = _get_otlp_exporter_entry_point(
+            otlp_protocol_var
+        )
     else:
         # Check the general env var
         otlp_protocol_var = environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
         if otlp_protocol_var:
-            exporter_entry_point = _get_otlp_exporter_entry_point(otlp_protocol_var)
+            exporter_entry_point = _get_otlp_exporter_entry_point(
+                otlp_protocol_var
+            )
 
     if exporter_name == _EXPORTER_OTLP:
-        return exporter_entry_point if exporter_entry_point else _EXPORTER_OTLP_PROTO_GRPC
+        return (
+            exporter_entry_point
+            if exporter_entry_point
+            else _EXPORTER_OTLP_PROTO_GRPC
+        )
 
     if exporter_name != exporter_entry_point:
         # Env vars conflict
@@ -104,13 +121,16 @@ def _get_exporter_entry_point(exporter_name: str, telemetry_type: Literal["trace
     return exporter_name
 
 
-def _get_exporter_names(telemetry_type: Literal["traces", "metrics", "logs"]) -> Sequence[str]:
+def _get_exporter_names(
+    telemetry_type: Literal["traces", "metrics", "logs"]
+) -> Sequence[str]:
     names = environ.get(f"OTEL_{telemetry_type.upper()}_EXPORTER")
     if not names or names.lower().strip() == "none":
         return []
 
     return [
-        _get_exporter_entry_point(_exporter.strip(), telemetry_type) for _exporter in names.split(",")
+        _get_exporter_entry_point(_exporter.strip(), telemetry_type)
+        for _exporter in names.split(",")
     ]
 
 
