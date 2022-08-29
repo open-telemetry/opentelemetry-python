@@ -69,9 +69,8 @@ def _get_otlp_exporter_entry_point(
 ) -> Literal[_EXPORTER_OTLP_PROTO_GRPC, _EXPORTER_OTLP_PROTO_HTTP]:
     if otlp_protocol == "grpc":
         return _EXPORTER_OTLP_PROTO_GRPC
-    elif otlp_protocol == "http/protobuf":
+    if otlp_protocol == "http/protobuf":
         return _EXPORTER_OTLP_PROTO_HTTP
-
     raise RuntimeError(
         f"Unsupported OTLP protocol '{otlp_protocol}' is configured"
     )
@@ -115,7 +114,9 @@ def _get_exporter_entry_point(
     if exporter_name != exporter_entry_point:
         # Env vars conflict
         _logger.warning(
-            f"Conflicting values for {telemetry_type.lower()} OTLP exporter protocol, using {exporter_name}"
+            "Conflicting values for %s OTLP exporter protocol, using '%s'",
+            telemetry_type.lower(),
+            exporter_name,
         )
 
     return exporter_name

@@ -15,6 +15,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2870](https://github.com/open-telemetry/opentelemetry-python/pull/2870))
 - Fix: Remove `LogEmitter.flush()` to align with OTel Log spec
   ([#2863](https://github.com/open-telemetry/opentelemetry-python/pull/2863))
+- Add support for setting OTLP export protocol with env vars, as defined in the
+  [specifications](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md#specify-protocol)
+  ([#2893](https://github.com/open-telemetry/opentelemetry-python/pull/2893))
 
 ## [1.12.0-0.33b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0) - 2022-08-08
 
