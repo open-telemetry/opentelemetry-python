@@ -88,7 +88,9 @@ def _get_exporter_entry_point(
 
     exporter_entry_point = None
 
-    # Check the specific env var
+    # Checking env vars for OTLP protocol (grpc/http).
+    # If grpc/http already specified by exporter_name, will only log a warning
+    # in case of a conflict.
     otlp_protocol_var = environ.get(
         f"OTEL_EXPORTER_OTLP_{telemetry_type.upper()}_PROTOCOL"
     )
@@ -111,8 +113,7 @@ def _get_exporter_entry_point(
             else _EXPORTER_OTLP_PROTO_GRPC
         )
 
-    if exporter_name != exporter_entry_point:
-        # Env vars conflict
+    if exporter_entry_point and exporter_name != exporter_entry_point:
         _logger.warning(
             "Conflicting values for %s OTLP exporter protocol, using '%s'",
             telemetry_type.lower(),
