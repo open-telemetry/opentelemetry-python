@@ -13,12 +13,14 @@
 # limitations under the License.
 
 # pylint: disable=too-many-lines
+
 import shutil
 import subprocess
 import unittest
 from importlib import reload
 from logging import ERROR, WARNING
 from random import randint
+from time import time_ns
 from typing import Optional
 from unittest import mock
 
@@ -46,7 +48,6 @@ from opentelemetry.test.spantestutil import (
     new_tracer,
 )
 from opentelemetry.trace import Status, StatusCode
-from opentelemetry.util._time import _time_ns
 
 
 class TestTracer(unittest.TestCase):
@@ -740,7 +741,7 @@ class TestSpan(unittest.TestCase):
             )
 
             # event name, attributes and timestamp
-            now = _time_ns()
+            now = time_ns()
             root.add_event("event2", {"name": ["birthday"]}, now)
 
             mutable_list = ["original_contents"]

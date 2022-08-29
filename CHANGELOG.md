@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Remove support for 3.6
+  ([#2763](https://github.com/open-telemetry/opentelemetry-python/pull/2763))
 - Update PeriodicExportingMetricReader to never call export() concurrently
   ([#2873](https://github.com/open-telemetry/opentelemetry-python/pull/2873))
 - Add param for `indent` size to `LogRecord.to_json()`
@@ -16,7 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - [exporter/opentelemetry-exporter-otlp-proto-http] Add OTLPMetricExporter
   ([#2891](https://github.com/open-telemetry/opentelemetry-python/pull/2891))
 
-## [1.12.0-0.33b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0-0.33b0) - 2022-08-08
+## [1.12.0-0.33b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0) - 2022-08-08
 
 - Add `force_flush` method to metrics exporter
   ([#2852](https://github.com/open-telemetry/opentelemetry-python/pull/2852))

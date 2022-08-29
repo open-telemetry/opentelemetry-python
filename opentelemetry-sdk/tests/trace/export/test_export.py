@@ -19,7 +19,10 @@ import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 from logging import WARNING
+from platform import python_implementation
 from unittest import mock
+
+from flaky import flaky
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
@@ -476,6 +479,11 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
             )
 
         span_processor.shutdown()
+
+    if python_implementation() == "PyPy":
+        test_batch_span_processor_reset_timeout = flaky(
+            max_runs=2, min_passes=1
+        )(test_batch_span_processor_reset_timeout)
 
     def test_batch_span_processor_parameters(self):
         # zero max_queue_size

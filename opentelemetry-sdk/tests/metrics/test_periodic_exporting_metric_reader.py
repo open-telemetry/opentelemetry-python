@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
+from time import sleep, time_ns
 from typing import Sequence
 from unittest.mock import Mock
 
@@ -35,7 +35,6 @@ from opentelemetry.sdk.metrics.view import (
     LastValueAggregation,
 )
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase
-from opentelemetry.util._time import _time_ns
 
 
 class FakeMetricsExporter(MetricExporter):
@@ -56,7 +55,7 @@ class FakeMetricsExporter(MetricExporter):
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
-        time.sleep(self.wait)
+        sleep(self.wait)
         self.metrics.extend(metrics)
         return True
 
@@ -76,8 +75,8 @@ metrics_list = [
             data_points=[
                 NumberDataPoint(
                     attributes={},
-                    start_time_unix_nano=_time_ns(),
-                    time_unix_nano=_time_ns(),
+                    start_time_unix_nano=time_ns(),
+                    time_unix_nano=time_ns(),
                     value=2,
                 )
             ],
@@ -93,8 +92,8 @@ metrics_list = [
             data_points=[
                 NumberDataPoint(
                     attributes={},
-                    start_time_unix_nano=_time_ns(),
-                    time_unix_nano=_time_ns(),
+                    start_time_unix_nano=time_ns(),
+                    time_unix_nano=time_ns(),
                     value=2,
                 )
             ]
@@ -119,7 +118,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         )
 
         def _collect(reader, timeout_millis):
-            time.sleep(collect_wait)
+            sleep(collect_wait)
             pmr._receive_metrics(metrics, timeout_millis)
 
         pmr._set_collect_callback(_collect)
@@ -131,7 +130,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         exporter.export = Mock()
         pmr = PeriodicExportingMetricReader(exporter, export_interval_millis=1)
         pmr._set_collect_callback(collect_mock)
-        time.sleep(0.1)
+        sleep(0.1)
         self.assertTrue(collect_mock.assert_called_once)
         pmr.shutdown()
 
@@ -142,7 +141,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         pmr = self._create_periodic_reader(
             metrics_list, exporter, interval=100
         )
-        time.sleep(0.15)
+        sleep(0.15)
         self.assertEqual(exporter.metrics, metrics_list)
         pmr.shutdown()
 
