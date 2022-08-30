@@ -25,7 +25,6 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "dataclasses == 0.8; python_version < '3.7'",
   "opentelemetry-api == 1.12.0",
   "opentelemetry-semantic-conventions == 0.33b0",
   "setuptools >= 16.0",
