@@ -19,8 +19,10 @@ from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
     ConsoleSpanExporter,
 )
+from opentelemetry.sdk.trace.sampling import TraceIdRatioBased
 
-provider = TracerProvider()
+sampler = TraceIdRatioBased(0)
+provider = TracerProvider(sampler=sampler)
 processor = BatchSpanProcessor(ConsoleSpanExporter())
 provider.add_span_processor(processor)
 trace.set_tracer_provider(provider)
@@ -29,6 +31,6 @@ trace.set_tracer_provider(provider)
 tracer = trace.get_tracer(__name__)
 
 with tracer.start_as_current_span("foo"):
-    with tracer.start_as_current_span("bar"):
-        with tracer.start_as_current_span("baz"):
-            print("Hello world from OpenTelemetry Python!")
+    print("hi")
+
+input(...)
