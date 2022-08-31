@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2863](https://github.com/open-telemetry/opentelemetry-python/pull/2863))
 - Fix metric reader examples + added `preferred_temporality` and `preferred_aggregation`
   for `ConsoleMetricExporter`
-  ([#2863](https://github.com/open-telemetry/opentelemetry-python/pull/2863))
+  ([#2911](https://github.com/open-telemetry/opentelemetry-python/pull/2911))
 
 ## [1.12.0-0.33b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0) - 2022-08-08
 
