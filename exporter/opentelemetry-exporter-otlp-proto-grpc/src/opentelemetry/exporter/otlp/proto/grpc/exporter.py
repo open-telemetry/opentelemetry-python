@@ -24,8 +24,9 @@ from typing import Sequence as TypingSequence
 from typing import TypeVar
 from urllib.parse import urlparse
 from opentelemetry.sdk.trace import ReadableSpan
+import sys
 
-from backoff import expo
+import backoff
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import (
     ChannelCredentials,
@@ -282,81 +283,74 @@ class OTLPExporterMixin(
     def _export(
         self, data: Union[TypingSequence[ReadableSpan], MetricsData]
     ) -> ExportResultT:
+        try:
+            self._export_backoff(data)
+        except RpcError:
+            return self._result.FAILURE
 
-        # FIXME remove this check if the export type for traces
-        # gets updated to a class that represents the proto
-        # TracesData and use the code below instead.
-        # logger.warning(
-        #     "Transient error %s encountered while exporting %s, retrying in %ss.",
-        #     error.code(),
-        #     data.__class__.__name__,
-        #     delay,
-        # )
-        max_value = 64
-        # expo returns a generator that yields delay values which grow
-        # exponentially. Once delay is greater than max_value, the yielded
-        # value will remain constant.
-        for delay in expo(max_value=max_value):
+    @staticmethod
+    def _on_backoff(details):
+        this = details["args"][0]
+        _, error, _ = sys.exc_info()
+        assert isinstance(error, RpcError)
+        wait_delay = details["wait"]
+        logger.warning(
+            (
+                "Transient error %s encountered while exporting "
+                "%s, retrying in %ss."
+            ),
+            error.code(),
+            this._exporting,
+            round(wait_delay, 1),
+        )
 
-            if delay == max_value:
-                return self._result.FAILURE
+    @backoff.on_exception( backoff.expo, RpcError, max_time=60, on_backoff=_on_backoff)
+    def _export_backoff(
+        self, data: Union[TypingSequence[ReadableSpan], MetricsData]
+    ) -> ExportResultT:
+        try:
+            self._client.Export(
+                request=self._translate_data(data),
+                metadata=self._headers,
+                timeout=self._timeout,
+            )
 
-            try:
-                self._client.Export(
-                    request=self._translate_data(data),
-                    metadata=self._headers,
-                    timeout=self._timeout,
+            return self._result.SUCCESS
+
+        except RpcError as error:
+
+            if error.code() in [
+                StatusCode.CANCELLED,
+                StatusCode.DEADLINE_EXCEEDED,
+                StatusCode.RESOURCE_EXHAUSTED,
+                StatusCode.ABORTED,
+                StatusCode.OUT_OF_RANGE,
+                StatusCode.UNAVAILABLE,
+                StatusCode.DATA_LOSS,
+            ]:
+
+                retry_info_bin = dict(error.trailing_metadata()).get(
+                    "google.rpc.retryinfo-bin"
+                )
+                if retry_info_bin is not None:
+                    retry_info = RetryInfo()
+                    retry_info.ParseFromString(retry_info_bin)
+                    delay = (
+                        retry_info.retry_delay.seconds
+                        + retry_info.retry_delay.nanos / 1.0e9
+                    )
+                raise
+            else:
+                logger.error(
+                    "Failed to export %s, error code: %s",
+                    self._exporting,
+                    error.code(),
                 )
 
+            if error.code() == StatusCode.OK:
                 return self._result.SUCCESS
 
-            except RpcError as error:
-
-                if error.code() in [
-                    StatusCode.CANCELLED,
-                    StatusCode.DEADLINE_EXCEEDED,
-                    StatusCode.RESOURCE_EXHAUSTED,
-                    StatusCode.ABORTED,
-                    StatusCode.OUT_OF_RANGE,
-                    StatusCode.UNAVAILABLE,
-                    StatusCode.DATA_LOSS,
-                ]:
-
-                    retry_info_bin = dict(error.trailing_metadata()).get(
-                        "google.rpc.retryinfo-bin"
-                    )
-                    if retry_info_bin is not None:
-                        retry_info = RetryInfo()
-                        retry_info.ParseFromString(retry_info_bin)
-                        delay = (
-                            retry_info.retry_delay.seconds
-                            + retry_info.retry_delay.nanos / 1.0e9
-                        )
-
-                    logger.warning(
-                        (
-                            "Transient error %s encountered while exporting "
-                            "%s, retrying in %ss."
-                        ),
-                        error.code(),
-                        self._exporting,
-                        delay,
-                    )
-                    sleep(delay)
-                    continue
-                else:
-                    logger.error(
-                        "Failed to export %s, error code: %s",
-                        self._exporting,
-                        error.code(),
-                    )
-
-                if error.code() == StatusCode.OK:
-                    return self._result.SUCCESS
-
-                return self._result.FAILURE
-
-        return self._result.FAILURE
+            return self._result.FAILURE
 
     def shutdown(self) -> None:
         pass
