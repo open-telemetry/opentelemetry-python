@@ -36,7 +36,7 @@ test = []
 Homepage = "https://github.com/open-telemetry/opentelemetry-python/tests/opentelemetry-test-utils"
 
 [tool.hatch.version]
-path = "src/opentelemetry/test/utils/version.py"
+path = "src/opentelemetry/test/version.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
