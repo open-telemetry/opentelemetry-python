@@ -75,6 +75,11 @@ class SpanExporter:
         Called when the SDK is shut down.
         """
 
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        """Hint to ensure that the export of any spans the exporter has received
+        prior to the call to ForceFlush SHOULD be completed as soon as possible, preferably
+        before returning from this method.
+        """
 
 class SimpleSpanProcessor(SpanProcessor):
     """Simple SpanProcessor implementation.
@@ -438,3 +443,6 @@ class ConsoleSpanExporter(SpanExporter):
             self.out.write(self.formatter(span))
         self.out.flush()
         return SpanExportResult.SUCCESS
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True
