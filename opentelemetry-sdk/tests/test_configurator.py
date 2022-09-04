@@ -460,13 +460,18 @@ class TestExporterNames(TestCase):
         },
     )
     def test_otlp_exporter_conflict(self):
-        # Verify that OTEL_*_EXPORTER is used
-        self.assertEqual(
-            _get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_HTTP]
-        )
-        self.assertEqual(
-            _get_exporter_names("metrics"), [_EXPORTER_OTLP_PROTO_GRPC]
-        )
+        # Verify that OTEL_*_EXPORTER is used, and a warning is logged
+        with self.assertLogs(level="WARNING") as logs_context:
+            self.assertEqual(
+                _get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_HTTP]
+            )
+        assert len(logs_context.output) == 1
+
+        with self.assertLogs(level="WARNING") as logs_context:
+            self.assertEqual(
+                _get_exporter_names("metrics"), [_EXPORTER_OTLP_PROTO_GRPC]
+            )
+        assert len(logs_context.output) == 1
 
     @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "jaeger,zipkin"})
     def test_multiple_exporters(self):
