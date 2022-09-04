@@ -100,10 +100,10 @@ def _get_exporter_entry_point(
         return exporter_name
 
     # Checking env vars for OTLP protocol (grpc/http).
-    otlp_protocol = (
-        environ.get(_PROTOCOL_ENV_BY_SIGNAL_TYPE[signal_type]) or
-        environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
-    )
+    otlp_protocol = environ.get(
+        _PROTOCOL_ENV_BY_SIGNAL_TYPE[signal_type]
+    ) or environ.get(OTEL_EXPORTER_OTLP_PROTOCOL)
+
     if not otlp_protocol:
         if exporter_name == _EXPORTER_OTLP:
             return _EXPORTER_OTLP_PROTO_GRPC
