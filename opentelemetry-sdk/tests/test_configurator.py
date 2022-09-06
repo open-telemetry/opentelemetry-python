@@ -25,6 +25,7 @@ from opentelemetry.environment_variables import OTEL_PYTHON_ID_GENERATOR
 from opentelemetry.sdk._configuration import (
     _EXPORTER_OTLP,
     _EXPORTER_OTLP_PROTO_GRPC,
+    _EXPORTER_OTLP_PROTO_HTTP,
     _get_exporter_names,
     _get_id_generator,
     _import_exporters,
@@ -413,25 +414,81 @@ class TestMetricsInit(TestCase):
 
 
 class TestExporterNames(TestCase):
-    def test_otlp_exporter_overwrite(self):
-        for exporter in [_EXPORTER_OTLP, _EXPORTER_OTLP_PROTO_GRPC]:
-            self.assertEqual(
-                _get_exporter_names(exporter), [_EXPORTER_OTLP_PROTO_GRPC]
-            )
-
-    def test_multiple_exporters(self):
+    @patch.dict(
+        environ,
+        {
+            "OTEL_TRACES_EXPORTER": _EXPORTER_OTLP,
+            "OTEL_METRICS_EXPORTER": _EXPORTER_OTLP_PROTO_GRPC,
+            "OTEL_LOGS_EXPORTER": _EXPORTER_OTLP_PROTO_HTTP,
+        },
+    )
+    def test_otlp_exporter(self):
         self.assertEqual(
-            sorted(_get_exporter_names("jaeger,zipkin")), ["jaeger", "zipkin"]
+            _get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_GRPC]
+        )
+        self.assertEqual(
+            _get_exporter_names("metrics"), [_EXPORTER_OTLP_PROTO_GRPC]
+        )
+        self.assertEqual(
+            _get_exporter_names("logs"), [_EXPORTER_OTLP_PROTO_HTTP]
         )
 
+    @patch.dict(
+        environ,
+        {
+            "OTEL_TRACES_EXPORTER": _EXPORTER_OTLP,
+            "OTEL_METRICS_EXPORTER": _EXPORTER_OTLP,
+            "OTEL_EXPORTER_OTLP_PROTOCOL": "http/protobuf",
+            "OTEL_EXPORTER_OTLP_METRICS_PROTOCOL": "grpc",
+        },
+    )
+    def test_otlp_custom_exporter(self):
+        self.assertEqual(
+            _get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_HTTP]
+        )
+        self.assertEqual(
+            _get_exporter_names("metrics"), [_EXPORTER_OTLP_PROTO_GRPC]
+        )
+
+    @patch.dict(
+        environ,
+        {
+            "OTEL_TRACES_EXPORTER": _EXPORTER_OTLP_PROTO_HTTP,
+            "OTEL_METRICS_EXPORTER": _EXPORTER_OTLP_PROTO_GRPC,
+            "OTEL_EXPORTER_OTLP_PROTOCOL": "grpc",
+            "OTEL_EXPORTER_OTLP_METRICS_PROTOCOL": "http/protobuf",
+        },
+    )
+    def test_otlp_exporter_conflict(self):
+        # Verify that OTEL_*_EXPORTER is used, and a warning is logged
+        with self.assertLogs(level="WARNING") as logs_context:
+            self.assertEqual(
+                _get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_HTTP]
+            )
+        assert len(logs_context.output) == 1
+
+        with self.assertLogs(level="WARNING") as logs_context:
+            self.assertEqual(
+                _get_exporter_names("metrics"), [_EXPORTER_OTLP_PROTO_GRPC]
+            )
+        assert len(logs_context.output) == 1
+
+    @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "jaeger,zipkin"})
+    def test_multiple_exporters(self):
+        self.assertEqual(
+            sorted(_get_exporter_names("traces")), ["jaeger", "zipkin"]
+        )
+
+    @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "none"})
     def test_none_exporters(self):
-        self.assertEqual(sorted(_get_exporter_names("none")), [])
+        self.assertEqual(sorted(_get_exporter_names("traces")), [])
 
     def test_no_exporters(self):
-        self.assertEqual(sorted(_get_exporter_names(None)), [])
+        self.assertEqual(sorted(_get_exporter_names("traces")), [])
 
+    @patch.dict(environ, {"OTEL_TRACES_EXPORTER": ""})
     def test_empty_exporters(self):
-        self.assertEqual(sorted(_get_exporter_names("")), [])
+        self.assertEqual(sorted(_get_exporter_names("traces")), [])
 
 
 class TestImportExporters(TestCase):
