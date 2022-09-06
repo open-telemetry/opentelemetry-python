@@ -136,8 +136,15 @@ class ConsoleMetricExporter(MetricExporter):
             ["opentelemetry.sdk.metrics.export.MetricsData"], str
         ] = lambda metrics_data: metrics_data.to_json()
         + linesep,
+        preferred_temporality: Dict[type, AggregationTemporality] = None,
+        preferred_aggregation: Dict[
+            type, "opentelemetry.sdk.metrics.view.Aggregation"
+        ] = None,
     ):
-        super().__init__()
+        super().__init__(
+            preferred_temporality=preferred_temporality,
+            preferred_aggregation=preferred_aggregation,
+        )
         self.out = out
         self.formatter = formatter
 

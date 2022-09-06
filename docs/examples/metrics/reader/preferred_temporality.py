@@ -22,25 +22,35 @@ from opentelemetry.sdk.metrics.export import (
     PeriodicExportingMetricReader,
 )
 
-# Use console exporter for the example
-exporter = ConsoleMetricExporter()
-
 temporality_cumulative = {Counter: AggregationTemporality.CUMULATIVE}
 temporality_delta = {Counter: AggregationTemporality.DELTA}
-# Create a metric reader with cumulative preferred temporality
-# The metrics that are exported using this reader will represent a cumulative value
+
+# Use console exporters for the example
+
+# The metrics that are exported using this exporter will represent a cumulative value
+exporter = ConsoleMetricExporter(
+    preferred_temporality=temporality_cumulative,
+)
+
+# The metrics that are exported using this exporter will represent a delta value
+exporter2 = ConsoleMetricExporter(
+    preferred_temporality=temporality_delta,
+)
+
+# The PeriodicExportingMetricReader takes the preferred aggregation
+# from the passed in exporter
 reader = PeriodicExportingMetricReader(
     exporter,
-    preferred_temporality=temporality_cumulative,
     export_interval_millis=5_000,
 )
-# Create a metric reader with delta preferred temporality
-# The metrics that are exported using this reader will represent a delta value
+
+# The PeriodicExportingMetricReader takes the preferred aggregation
+# from the passed in exporter
 reader2 = PeriodicExportingMetricReader(
-    exporter,
-    preferred_temporality=temporality_delta,
+    exporter2,
     export_interval_millis=5_000,
 )
+
 provider = MeterProvider(metric_readers=[reader, reader2])
 set_meter_provider(provider)
 
@@ -49,10 +59,10 @@ meter = get_meter_provider().get_meter("preferred-temporality", "0.1.2")
 counter = meter.create_counter("my-counter")
 
 # Two metrics are expected to be printed to the console per export interval.
-# The metric originating from the metric reader with a preferred temporality
+# The metric originating from the metric exporter with a preferred temporality
 # of cumulative will keep a running sum of all values added.
-# The metric originating from the metric reader with a preferred temporality
+# The metric originating from the metric exporter with a preferred temporality
 # of delta will have the sum value reset each export interval.
-for x in range(10):
-    counter.add(x)
-    time.sleep(2.0)
+counter.add(5)
+time.sleep(10)
+counter.add(20)
