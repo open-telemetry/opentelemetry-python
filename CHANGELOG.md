@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Enable misspell workflow
+  ([#2923](https://github.com/open-telemetry/opentelemetry-python/pull/2923))
 - Remove support for 3.6
   ([#2763](https://github.com/open-telemetry/opentelemetry-python/pull/2763))
 - Update PeriodicExportingMetricReader to never call export() concurrently

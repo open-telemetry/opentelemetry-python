@@ -415,7 +415,7 @@ class TestOTLPSpanExporter(TestCase):
         "os.environ",
         {OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip"},
     )
-    def test_otlp_exporter_otlp_compression_precendence(
+    def test_otlp_exporter_otlp_compression_precenence(
         self, mock_insecure_channel
     ):
         """OTEL_EXPORTER_OTLP_TRACES_COMPRESSION as higher priority than
