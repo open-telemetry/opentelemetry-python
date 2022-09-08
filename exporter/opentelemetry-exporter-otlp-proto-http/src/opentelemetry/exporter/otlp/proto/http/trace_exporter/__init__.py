@@ -168,6 +168,7 @@ class OTLPSpanExporter(SpanExporter):
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         return True
 
+
 def _compression_from_env() -> Compression:
     compression = (
         environ.get(

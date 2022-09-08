@@ -81,6 +81,7 @@ class SpanExporter:
         before returning from this method.
         """
 
+
 class SimpleSpanProcessor(SpanProcessor):
     """Simple SpanProcessor implementation.
 
