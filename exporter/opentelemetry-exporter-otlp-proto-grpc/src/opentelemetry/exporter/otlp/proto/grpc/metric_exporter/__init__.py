@@ -11,6 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import dataclasses
 from logging import getLogger
 from os import environ
 from typing import Dict, Iterable, List, Optional, Sequence
@@ -61,6 +62,13 @@ class OTLPMetricExporter(
     MetricExporter,
     OTLPExporterMixin[Metric, ExportMetricsServiceRequest, MetricExportResult],
 ):
+    """OTLP metric exporter
+
+    Args:
+        max_export_batch_size: Maximum number of data points to export in a single request. This is to deal with
+            gRPC's 4MB message size limit. If not set there is no limit to the number of data points in a request.
+            If it is set and the number of data points exceeds the max, the request will be split.
+    """
     _result = MetricExportResult
     _stub = MetricsServiceStub
 
@@ -275,27 +283,28 @@ class OTLPMetricExporter(
         for resource_metrics in metrics_data.resource_metrics:
             split_scope_metrics: List[ScopeMetrics] = []
             split_resource_metrics.append(
-                ResourceMetrics(
-                    resource=resource_metrics.resource,
-                    schema_url=resource_metrics.schema_url,
+                dataclasses.replace(
+                    resource_metrics,
                     scope_metrics=split_scope_metrics,
                 )
             )
             for scope_metrics in resource_metrics.scope_metrics:
                 split_metrics: List[Metric] = []
                 split_scope_metrics.append(
-                    ScopeMetrics(
-                        scope=scope_metrics.scope,
-                        schema_url=scope_metrics.schema_url,
+                    dataclasses.replace(
+                        scope_metrics,
                         metrics=split_metrics,
                     )
                 )
                 for metric in scope_metrics.metrics:
                     split_data_points: List[DataPointT] = []
                     split_metrics.append(
-                        self._create_metric_copy(
-                            metric=metric,
-                            data_points=split_data_points,
+                        dataclasses.replace(
+                            metric,
+                            data=dataclasses.replace(
+                                metric.data,
+                                data_points=split_data_points,
+                            ),
                         )
                     )
 
@@ -311,22 +320,23 @@ class OTLPMetricExporter(
                             batch_size = 0
                             split_data_points = []
                             split_metrics = [
-                                self._create_metric_copy(
-                                    metric=metric,
-                                    data_points=split_data_points,
-                                ),
+                                dataclasses.replace(
+                                    metric,
+                                    data=dataclasses.replace(
+                                        metric.data,
+                                        data_points=split_data_points,
+                                    ),
+                                )
                             ]
                             split_scope_metrics = [
-                                ScopeMetrics(
-                                    scope=scope_metrics.scope,
-                                    schema_url=scope_metrics.schema_url,
+                                dataclasses.replace(
+                                    scope_metrics,
                                     metrics=split_metrics,
                                 )
                             ]
                             split_resource_metrics = [
-                                ResourceMetrics(
-                                    resource=resource_metrics.resource,
-                                    schema_url=resource_metrics.schema_url,
+                                dataclasses.replace(
+                                    resource_metrics,
                                     scope_metrics=split_scope_metrics,
                                 )
                             ]
@@ -345,39 +355,6 @@ class OTLPMetricExporter(
 
         if batch_size > 0:
             yield MetricsData(resource_metrics=split_resource_metrics)
-
-    @staticmethod
-    def _create_metric_copy(
-        metric: Metric,
-        data_points: List[DataPointT],
-    ) -> Metric:
-        if isinstance(metric.data, Sum):
-            empty_data = Sum(
-                aggregation_temporality=metric.data.aggregation_temporality,
-                is_monotonic=metric.data.is_monotonic,
-                data_points=data_points,
-            )
-        elif isinstance(metric.data, Gauge):
-            empty_data = Gauge(
-                data_points=data_points,
-            )
-        elif isinstance(metric.data, HistogramType):
-            empty_data = HistogramType(
-                aggregation_temporality=metric.data.aggregation_temporality,
-                data_points=data_points,
-            )
-        else:
-            _logger.warning(
-                "unsupported data type %s", metric.data.__class__.__name__
-            )
-            empty_data = None
-
-        return Metric(
-            name=metric.name,
-            description=metric.description,
-            unit=metric.unit,
-            data=empty_data,
-        )
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         pass
