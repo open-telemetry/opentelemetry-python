@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: 23bfe9fcadc1e205fbce1b6cf58fc3004eecace3
+  CONTRIB_REPO_SHA: b00701df86eb7cd99a8a27ba2003602bd8fd4bee
   # This is needed because we do not clone the core repo in contrib builds anymore.
   # When running contrib builds as part of core builds, we use actions/checkout@v2 which
   # does not set an environment variable (simply just runs tox), which is different when
