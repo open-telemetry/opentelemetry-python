@@ -69,6 +69,7 @@ class OTLPMetricExporter(
             gRPC's 4MB message size limit. If not set there is no limit to the number of data points in a request.
             If it is set and the number of data points exceeds the max, the request will be split.
     """
+
     _result = MetricExportResult
     _stub = MetricsServiceStub
 
