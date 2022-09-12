@@ -694,19 +694,19 @@ def test_args(args):
 
 
 def format_args(args):
-    format_dir = str(find_projectroot())
+    root_dir = format_dir = str(find_projectroot())
     if args.path:
         format_dir = os.path.join(format_dir, args.path)
 
     runsubprocess(
         args.dry_run,
-        ("black", "--config", "pyproject.toml", "."),
+        ("black", "--config", f"{root_dir}/pyproject.toml", "."),
         cwd=format_dir,
         check=True,
     )
     runsubprocess(
         args.dry_run,
-        ("isort", "--settings-path", ".isort.cfg", "--profile", "black", "."),
+        ("isort", "--settings-path", f"{root_dir}/.isort.cfg", "--profile", "black", "."),
         cwd=format_dir,
         check=True,
     )
