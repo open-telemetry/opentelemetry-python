@@ -23,7 +23,7 @@ DISTDIR=dist
      # Some ext directories (such as docker tests) are not intended to be
      # packaged. Verify the intent by looking for a pyproject.toml.
      if [ -f pyproject.toml ]; then
-      HATCH_BUILD_CLEAN=1 python3 -m build --outdir "$BASEDIR/dist/"
+      python3 -m build --outdir "$BASEDIR/dist/"
      fi
    )
  done
