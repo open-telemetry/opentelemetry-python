@@ -24,7 +24,7 @@ DISTDIR=dist
      # packaged. Verify the intent by looking for a setup.py.
      if [ -f setup.py ]; then
       python3 setup.py sdist --dist-dir "$BASEDIR/dist/" clean --all
-     else if [ -f pyproject.toml ]; then
+     elif [ -f pyproject.toml ]; then
       HATCH_BUILD_CLEAN=1 python3 -m build --outdir "$BASEDIR/dist/"
      fi
    )
