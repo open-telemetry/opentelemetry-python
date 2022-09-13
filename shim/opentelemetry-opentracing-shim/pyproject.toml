@@ -3,9 +3,9 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "opentelemetry-exporter-prometheus"
+name = "opentelemetry-opentracing-shim"
 dynamic = ["version"]
-description = "Prometheus Metric Exporter for OpenTelemetry"
+description = "OpenTracing Shim for OpenTelemetry"
 readme = "README.rst"
 license = "Apache-2.0"
 requires-python = ">=3.7"
@@ -22,24 +22,25 @@ classifiers = [
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
+  "Typing :: Typed",
 ]
 dependencies = [
-  "opentelemetry-api ~= 1.12",
-  "opentelemetry-sdk ~= 1.12",
-  "prometheus_client >= 0.5.0, < 1.0.0",
+  "Deprecated >= 1.2.6",
+  "opentelemetry-api ~= 1.3",
+  "opentracing ~= 2.0",
 ]
 
 [project.optional-dependencies]
-test = []
-
-[project.entry-points.opentelemetry_metric_reader]
-prometheus = "opentelemetry.exporter.prometheus:PrometheusMetricReader"
+test = [
+  "opentelemetry-test-utils == 0.33b0",
+  "opentracing ~= 2.2.0",
+]
 
 [project.urls]
-Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/exporter/opentelemetry-exporter-prometheus"
+Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/shim/opentelemetry-opentracing-shim"
 
 [tool.hatch.version]
-path = "src/opentelemetry/exporter/prometheus/version.py"
+path = "src/opentelemetry/shim/opentracing_shim/version.py"
 
 [tool.hatch.build.targets.sdist]
 include = [
