@@ -81,7 +81,7 @@ def parse_args(args=None):
         commands according to `format` and `--all`.
 
         Target paths are initially all Python distribution root paths
-        (as determined by the existence of setup.py, etc. files).
+        (as determined by the existence of pyproject.toml, etc. files).
         They are then augmented according to the section of the
         `PROJECT_ROOT/eachdist.ini` config file specified by the `--mode` option.
 
@@ -518,18 +518,18 @@ def lint_args(args):
 
     runsubprocess(
         args.dry_run,
-        ("black", ".") + (("--diff", "--check") if args.check_only else ()),
+        ("black", "--config", "pyproject.toml", ".") + (("--diff", "--check") if args.check_only else ()),
         cwd=rootdir,
         check=True,
     )
     runsubprocess(
         args.dry_run,
-        ("isort", ".")
+        ("isort", "--settings-path", ".isort.cfg", ".")
         + (("--diff", "--check-only") if args.check_only else ()),
         cwd=rootdir,
         check=True,
     )
-    runsubprocess(args.dry_run, ("flake8", rootdir), check=True)
+    runsubprocess(args.dry_run, ("flake8", "--config", ".flake8", rootdir), check=True)
     execute_args(
         parse_subargs(
             args, ("exec", "pylint {}", "--all", "--mode", "lintroots")
@@ -629,7 +629,7 @@ def update_dependencies(targets, version, packages):
     for pkg in packages:
         update_files(
             targets,
-            "setup.cfg",
+            "pyproject.toml",
             rf"({basename(pkg)}.*)==(.*)",
             r"\1== " + version,
         )
@@ -694,19 +694,19 @@ def test_args(args):
 
 
 def format_args(args):
-    format_dir = str(find_projectroot())
+    root_dir = format_dir = str(find_projectroot())
     if args.path:
         format_dir = os.path.join(format_dir, args.path)
 
     runsubprocess(
         args.dry_run,
-        ("black", "."),
+        ("black", "--config", f"{root_dir}/pyproject.toml", "."),
         cwd=format_dir,
         check=True,
     )
     runsubprocess(
         args.dry_run,
-        ("isort", "--profile", "black", "."),
+        ("isort", "--settings-path", f"{root_dir}/.isort.cfg", "--profile", "black", "."),
         cwd=format_dir,
         check=True,
     )
