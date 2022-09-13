@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+- Add a configurable max_export_batch_size to the gRPC metrics exporter
+  ([#2809](https://github.com/open-telemetry/opentelemetry-python/pull/2809))
 - Remove support for 3.6
   ([#2763](https://github.com/open-telemetry/opentelemetry-python/pull/2763))
 - Update PeriodicExportingMetricReader to never call export() concurrently
@@ -15,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2870](https://github.com/open-telemetry/opentelemetry-python/pull/2870))
 - Fix: Remove `LogEmitter.flush()` to align with OTel Log spec
   ([#2863](https://github.com/open-telemetry/opentelemetry-python/pull/2863))
+- Bump minimum required API/SDK version for exporters that support metrics
+  ([#2918](https://github.com/open-telemetry/opentelemetry-python/pull/2918))
 - Fix metric reader examples + added `preferred_temporality` and `preferred_aggregation`
   for `ConsoleMetricExporter`
   ([#2911](https://github.com/open-telemetry/opentelemetry-python/pull/2911))
