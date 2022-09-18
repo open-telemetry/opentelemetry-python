@@ -78,13 +78,9 @@ class OTLPLogExporter(LogExporter):
         self._compression = compression or _compression_from_env()
         self._session = session or requests.Session()
         self._session.headers.update(self._headers)
-        self._session.headers.update(
-            {"Content-Type": _ProtobufEncoder._CONTENT_TYPE}
-        )
+        self._session.headers.update({"Content-Type": _ProtobufEncoder._CONTENT_TYPE})
         if self._compression is not Compression.NoCompression:
-            self._session.headers.update(
-                {"Content-Encoding": self._compression.value}
-            )
+            self._session.headers.update({"Content-Encoding": self._compression.value})
         self._shutdown = False
 
     def _export(self, serialized_data: str):
@@ -130,7 +126,9 @@ class OTLPLogExporter(LogExporter):
             round(details["wait"], 1),
         )
 
-    @backoff.on_predicate(backoff.expo, lambda result: result is None, max_time=60, on_backoff=_on_backoff)
+    @backoff.on_predicate(
+        backoff.expo, lambda result: result is None, max_time=60, on_backoff=_on_backoff
+    )
     def _export_backoff(self, serialized_data) -> LogExportResult:
         try:
             resp = self._export(serialized_data)
@@ -158,9 +156,7 @@ class OTLPLogExporter(LogExporter):
 
 
 def _compression_from_env() -> Compression:
-    compression = (
-        environ.get(OTEL_EXPORTER_OTLP_COMPRESSION, "none").lower().strip()
-    )
+    compression = environ.get(OTEL_EXPORTER_OTLP_COMPRESSION, "none").lower().strip()
     return Compression(compression)
 
 

@@ -80,9 +80,7 @@ class InvalidCompressionValueException(Exception):
 
 def environ_to_compression(environ_key: str) -> Optional[Compression]:
     environ_value = (
-        environ[environ_key].lower().strip()
-        if environ_key in environ
-        else None
+        environ[environ_key].lower().strip() if environ_key in environ else None
     )
     if environ_value not in _ENVIRON_TO_COMPRESSION:
         raise InvalidCompressionValueException(environ_key, environ_value)
@@ -147,9 +145,7 @@ def get_resource_data(
 
             try:
                 # pylint: disable=no-member
-                collector_resource.attributes.append(
-                    _translate_key_values(key, value)
-                )
+                collector_resource.attributes.append(_translate_key_values(key, value))
             except Exception as error:  # pylint: disable=broad-except
                 logger.exception(error)
 
@@ -185,9 +181,7 @@ def _get_credentials(creds, environ_key):
 
 
 # pylint: disable=no-member
-class OTLPExporterMixin(
-    ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT]
-):
+class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT]):
     """OTLP span exporter
 
     Args:
@@ -240,9 +234,7 @@ class OTLPExporterMixin(
         elif isinstance(self._headers, dict):
             self._headers = tuple(self._headers.items())
 
-        self._timeout = timeout or int(
-            environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10)
-        )
+        self._timeout = timeout or int(environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10))
         self._collector_kwargs = None
 
         compression = (
@@ -256,17 +248,13 @@ class OTLPExporterMixin(
                 insecure_channel(endpoint, compression=compression)
             )
         else:
-            credentials = _get_credentials(
-                credentials, OTEL_EXPORTER_OTLP_CERTIFICATE
-            )
+            credentials = _get_credentials(credentials, OTEL_EXPORTER_OTLP_CERTIFICATE)
             self._client = self._stub(
                 secure_channel(endpoint, credentials, compression=compression)
             )
 
     @abstractmethod
-    def _translate_data(
-        self, data: TypingSequence[SDKDataT]
-    ) -> ExportServiceRequestT:
+    def _translate_data(self, data: TypingSequence[SDKDataT]) -> ExportServiceRequestT:
         pass
 
     def _translate_attributes(self, attributes) -> TypingSequence[KeyValue]:
@@ -295,16 +283,13 @@ class OTLPExporterMixin(
         assert isinstance(error, RpcError)
         wait_delay = details["wait"]
         logger.warning(
-            (
-                "Transient error %s encountered while exporting "
-                "%s, retrying in %ss."
-            ),
+            ("Transient error %s encountered while exporting " "%s, retrying in %ss."),
             error.code(),
             this._exporting,
             round(wait_delay, 1),
         )
 
-    @backoff.on_exception( backoff.expo, RpcError, max_time=60, on_backoff=_on_backoff)
+    @backoff.on_exception(backoff.expo, RpcError, max_time=60, on_backoff=_on_backoff)
     def _export_backoff(
         self, data: Union[TypingSequence[ReadableSpan], MetricsData]
     ) -> ExportResultT:
