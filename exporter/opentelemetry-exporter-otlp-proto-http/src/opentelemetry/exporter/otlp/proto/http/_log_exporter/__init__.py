@@ -21,7 +21,7 @@ from typing import Dict, Optional, Sequence
 from time import sleep
 
 import requests
-from backoff import expo
+import backoff
 
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
@@ -112,40 +112,42 @@ class OTLPLogExporter(LogExporter):
             return True
         return False
 
-    def export(self, batch: Sequence[LogData]) -> LogExportResult:
+    def export(self, logs) -> LogExportResult:
         # After the call to Shutdown subsequent calls to Export are
         # not allowed and should return a Failure result.
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring batch")
             return LogExportResult.FAILURE
 
-        serialized_data = _ProtobufEncoder.serialize(batch)
+        serialized_data = _ProtobufEncoder.serialize(logs)
 
-        for delay in expo(max_value=self._MAX_RETRY_TIMEOUT):
+        return self._export_backoff(serialized_data)
 
-            if delay == self._MAX_RETRY_TIMEOUT:
-                return LogExportResult.FAILURE
+    @staticmethod
+    def _on_backoff(details):
+        _logger.warning(
+            "Transient error encountered while exporting log batch, retrying in %ss.",
+            round(details["wait"], 1),
+        )
 
+    @backoff.on_predicate(backoff.expo, lambda result: result is None, max_time=60, on_backoff=_on_backoff)
+    def _export_backoff(self, serialized_data) -> LogExportResult:
+        try:
             resp = self._export(serialized_data)
-            # pylint: disable=no-else-return
-            if resp.status_code in (200, 202):
-                return LogExportResult.SUCCESS
-            elif self._retryable(resp):
-                _logger.warning(
-                    "Transient error %s encountered while exporting logs batch, retrying in %ss.",
-                    resp.reason,
-                    delay,
-                )
-                sleep(delay)
-                continue
-            else:
-                _logger.error(
-                    "Failed to export logs batch code: %s, reason: %s",
-                    resp.status_code,
-                    resp.text,
-                )
-                return LogExportResult.FAILURE
-        return LogExportResult.FAILURE
+        except requests.exceptions.ConnectionError:
+            return None
+
+        if resp.status_code in (200, 202):
+            return LogExportResult.SUCCESS
+        elif self._retryable(resp):
+            return None
+        else:
+            _logger.error(
+                "Failed to export batch code: %s, reason: %s",
+                resp.status_code,
+                resp.text,
+            )
+            return LogExportResult.FAILURE
 
     def shutdown(self):
         if self._shutdown:
