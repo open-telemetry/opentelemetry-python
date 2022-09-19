@@ -12,10 +12,31 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-many-lines
+
 from enum import Enum
 
 
 class ResourceAttributes:
+    BROWSER_BRANDS = "browser.brands"
+    """
+    Array of brand name and version separated by a space.
+    Note: This value is intended to be taken from the [UA client hints API](https://wicg.github.io/ua-client-hints/#interface) (navigator.userAgentData.brands).
+    """
+
+    BROWSER_PLATFORM = "browser.platform"
+    """
+    The platform on which the browser is running.
+    Note: This value is intended to be taken from the [UA client hints API](https://wicg.github.io/ua-client-hints/#interface) (navigator.userAgentData.platform). If unavailable, the legacy `navigator.platform` API SHOULD NOT be used instead and this attribute SHOULD be left unset in order for the values to be consistent.
+The list of possible values is defined in the [W3C User-Agent Client Hints specification](https://wicg.github.io/ua-client-hints/#sec-ch-ua-platform). Note that some (but not all) of these values can overlap with values in the [os.type and os.name attributes](./os.md). However, for consistency, the values in the `browser.platform` attribute should capture the exact value that the user agent provides.
+    """
+
+    BROWSER_USER_AGENT = "browser.user_agent"
+    """
+    Full user-agent string provided by the browser.
+    Note: The user-agent value SHOULD be provided only from browsers that do not have a mechanism to retrieve brands and platform individually from the User-Agent Client Hints API. To retrieve the value, the legacy `navigator.userAgent` API can be used.
+    """
+
     CLOUD_PROVIDER = "cloud.provider"
     """
     Name of the cloud provider.
@@ -159,26 +180,43 @@ class ResourceAttributes:
     FAAS_NAME = "faas.name"
     """
     The name of the single function that this runtime instance executes.
-    Note: This is the name of the function as configured/deployed on the FaaS platform and is usually different from the name of the callback function (which may be stored in the [`code.namespace`/`code.function`](../../trace/semantic_conventions/span-general.md#source-code-attributes) span attributes).
+    Note: This is the name of the function as configured/deployed on the FaaS
+platform and is usually different from the name of the callback
+function (which may be stored in the
+[`code.namespace`/`code.function`](../../trace/semantic_conventions/span-general.md#source-code-attributes)
+span attributes).
+
+For some cloud providers, the above definition is ambiguous. The following
+definition of function name MUST be used for this attribute
+(and consequently the span name) for the listed cloud providers/products:
+
+* **Azure:**  The full name `<FUNCAPP>/<FUNC>`, i.e., function app name
+  followed by a forward slash followed by the function name (this form
+  can also be seen in the resource JSON for the function).
+  This means that a span attribute MUST be used, as an Azure function
+  app can host multiple functions that would usually share
+  a TracerProvider (see also the `faas.id` attribute).
     """
 
     FAAS_ID = "faas.id"
     """
     The unique ID of the single function that this runtime instance executes.
-    Note: Depending on the cloud provider, use:
+    Note: On some cloud providers, it may not be possible to determine the full ID at startup,
+so consider setting `faas.id` as a span attribute instead.
+
+The exact value to use for `faas.id` depends on the cloud provider:
 
 * **AWS Lambda:** The function [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html).
-Take care not to use the "invoked ARN" directly but replace any
-[alias suffix](https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html) with the resolved function version, as the same runtime instance may be invocable with multiple
-different aliases.
+  Take care not to use the "invoked ARN" directly but replace any
+  [alias suffix](https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html)
+  with the resolved function version, as the same runtime instance may be invokable with
+  multiple different aliases.
 * **GCP:** The [URI of the resource](https://cloud.google.com/iam/docs/full-resource-names)
-* **Azure:** The [Fully Qualified Resource ID](https://docs.microsoft.com/en-us/rest/api/resources/resources/get-by-id).
-
-On some providers, it may not be possible to determine the full ID at startup,
-which is why this field cannot be made required. For example, on AWS the account ID
-part of the ARN is not available without calling another AWS API
-which may be deemed too slow for a short-running lambda function.
-As an alternative, consider setting `faas.id` as a span attribute instead.
+* **Azure:** The [Fully Qualified Resource ID](https://docs.microsoft.com/en-us/rest/api/resources/resources/get-by-id) of the invoked function,
+  *not* the function app, having the form
+  `/subscriptions/<SUBSCIPTION_GUID>/resourceGroups/<RG>/providers/Microsoft.Web/sites/<FUNCAPP>/functions/<FUNC>`.
+  This means that a span attribute MUST be used, as an Azure function app can host multiple functions that would usually share
+  a TracerProvider.
     """
 
     FAAS_VERSION = "faas.version"
@@ -365,6 +403,11 @@ As an alternative, consider setting `faas.id` as a span attribute instead.
     PROCESS_PID = "process.pid"
     """
     Process identifier (PID).
+    """
+
+    PROCESS_PARENT_PID = "process.parent_pid"
+    """
+    Parent Process identifier (PID).
     """
 
     PROCESS_EXECUTABLE_NAME = "process.executable.name"

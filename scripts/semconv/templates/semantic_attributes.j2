@@ -18,6 +18,8 @@
     {{ "\"" if type == "string"}}{{value}}{{ "\"" if type == "string"}}
 {%- endmacro %}
 
+# pylint: disable=too-many-lines
+
 from enum import Enum
 
 class {{class}}:

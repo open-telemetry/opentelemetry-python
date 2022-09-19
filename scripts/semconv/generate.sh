@@ -4,8 +4,8 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOT_DIR="${SCRIPT_DIR}/../../"
 
 # freeze the spec version to make SemanticAttributes generation reproducible
-SPEC_VERSION=v1.11.0
-OTEL_SEMCONV_GEN_IMG_VERSION=0.11.1
+SPEC_VERSION=v1.13.0
+OTEL_SEMCONV_GEN_IMG_VERSION=0.14.0
 
 cd ${SCRIPT_DIR}
 
@@ -40,3 +40,5 @@ docker run --rm \
   -Dclass=ResourceAttributes
 
 cd "$ROOT_DIR"
+
+black --config ${ROOT_DIR}/pyproject.toml opentelemetry-semantic-conventions/src/opentelemetry/semconv
