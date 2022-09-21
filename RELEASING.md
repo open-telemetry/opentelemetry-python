@@ -83,10 +83,8 @@ A `hotfix` is defined as a small change developed to correct a bug that should b
 3. On your local machine, update `CHANGELOG.md` with the date of the hotfix change.
 4. With administrator privileges for PyPi, manually publish the affected packages.
     1. Install [twine](https://pypi.org/project/twine/) and [build](https://pypi.org/project/build/)
-    2. Navigate to where the `setup.py` or `pyproject.toml` file exists for the package you want to publish.
-    3. To build the package:
-       - If a `setup.py` file exists, run `python setup.py sdist bdist_wheel`. You may have to install [wheel](https://pypi.org/project/wheel/) as well.
-       - Otherwise, run `python -m build`.
+    2. Navigate to where the `pyproject.toml` file exists for the package you want to publish.
+    3. To build the package: run `python -m build`.
     4. Validate your built distributions by running `twine check dist/*`.
     5. Upload distributions to PyPi by running `twine upload dist/*`.
 5. Note that since hotfixes are manually published, the build scripts for publish after creating a release are not run.
