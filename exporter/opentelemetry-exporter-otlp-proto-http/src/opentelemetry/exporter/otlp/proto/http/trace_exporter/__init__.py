@@ -165,6 +165,9 @@ class OTLPSpanExporter(SpanExporter):
         self._session.close()
         self._shutdown = True
 
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True
+
 
 def _compression_from_env() -> Compression:
     compression = (
