@@ -436,11 +436,8 @@ class TestOTLPSpanExporter(TestCase):
         # pylint: disable=protected-access
         self.assertIsNone(exporter._headers, None)
 
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.expo")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
-    def test_unavailable(self, mock_sleep, mock_expo):
-
-        mock_expo.configure_mock(**{"return_value": [1]})
+    def test_unavailable(self, mock_sleep):
 
         add_TraceServiceServicer_to_server(
             TraceServiceServicerUNAVAILABLE(), self.server
@@ -448,7 +445,10 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(
             self.exporter.export([self.span]), SpanExportResult.FAILURE
         )
-        mock_sleep.assert_called_with(1)
+        self.assertEqual(
+            mock_sleep.call_args_list,
+            [((1,),), ((2,),), ((4,),), ((8,),), ((16,),), ((32,),)],
+        )
 
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.expo")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")

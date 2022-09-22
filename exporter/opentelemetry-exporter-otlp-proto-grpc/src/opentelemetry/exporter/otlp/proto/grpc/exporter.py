@@ -19,13 +19,23 @@ from abc import ABC, abstractmethod
 from collections.abc import Sequence
 from os import environ
 from time import sleep
-from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Tuple,
+    Union,
+    Iterator,
+)
 from typing import Sequence as TypingSequence
 from typing import TypeVar
 from urllib.parse import urlparse
 from opentelemetry.sdk.trace import ReadableSpan
 
-from backoff import expo
+import backoff
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import (
     ChannelCredentials,
@@ -66,6 +76,12 @@ _ENVIRON_TO_COMPRESSION = {
     None: None,
     "gzip": Compression.Gzip,
 }
+
+
+def _expo(*, max_value: int) -> Iterator[int]:
+    gen = backoff.expo()
+    gen.send(None)
+    return gen
 
 
 class InvalidCompressionValueException(Exception):
@@ -293,11 +309,10 @@ class OTLPExporterMixin(
         #     delay,
         # )
         max_value = 64
-        # expo returns a generator that yields delay values which grow
+        # _expo returns a generator that yields delay values which grow
         # exponentially. Once delay is greater than max_value, the yielded
         # value will remain constant.
-        for delay in expo(max_value=max_value):
-
+        for delay in _expo(max_value=max_value):
             if delay == max_value:
                 return self._result.FAILURE
 
@@ -311,7 +326,6 @@ class OTLPExporterMixin(
                 return self._result.SUCCESS
 
             except RpcError as error:
-
                 if error.code() in [
                     StatusCode.CANCELLED,
                     StatusCode.DEADLINE_EXCEEDED,
