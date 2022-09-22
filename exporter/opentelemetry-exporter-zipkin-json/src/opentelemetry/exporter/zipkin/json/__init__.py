@@ -186,3 +186,6 @@ class ZipkinExporter(SpanExporter):
             return
         self.session.close()
         self._closed = True
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True
