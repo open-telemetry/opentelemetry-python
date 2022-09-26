@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 
 
+- Update log symbol names
+  ([#2943](https://github.com/open-telemetry/opentelemetry-python/pull/2943))
 - Add a configurable max_export_batch_size to the gRPC metrics exporter
   ([#2809](https://github.com/open-telemetry/opentelemetry-python/pull/2809))
 - Remove support for 3.6
