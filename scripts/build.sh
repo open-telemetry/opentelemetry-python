@@ -27,11 +27,4 @@ DISTDIR=dist
      fi
    )
  done
- # Build a wheel for each source distribution
- (
-   cd $DISTDIR
-   for x in *.tar.gz ; do
-     pip wheel --no-deps $x
-   done
- )
 )

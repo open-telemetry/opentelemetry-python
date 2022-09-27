@@ -5,7 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.13.0-0.34b0...HEAD)
+
+## [1.13.0-0.34b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.13.0-0.34b0) - 2022-09-26
+
+
 
 - Add a configurable max_export_batch_size to the gRPC metrics exporter
   ([#2809](https://github.com/open-telemetry/opentelemetry-python/pull/2809))
@@ -27,6 +31,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add support for setting OTLP export protocol with env vars, as defined in the
   [specifications](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md#specify-protocol)
   ([#2893](https://github.com/open-telemetry/opentelemetry-python/pull/2893))
+- Add force_flush to span exporters
+  ([#2919](https://github.com/open-telemetry/opentelemetry-python/pull/2919))
 
 ## [1.12.0-0.33b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0) - 2022-08-08
 
