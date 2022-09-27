@@ -378,6 +378,28 @@ class TestExplicitBucketHistogramAggregation(TestCase):
             second_histogram.time_unix_nano, first_histogram.time_unix_nano
         )
 
+    def test_boundaries(self):
+        self.assertEqual(
+            _ExplicitBucketHistogramAggregation(Mock(), 0)._boundaries,
+            (
+                0.0,
+                5.0,
+                10.0,
+                25.0,
+                50.0,
+                75.0,
+                100.0,
+                250.0,
+                500.0,
+                750.0,
+                1000.0,
+                2500.0,
+                5000.0,
+                7500.0,
+                10000.0,
+            ),
+        )
+
 
 class TestAggregationFactory(TestCase):
     def test_sum_factory(self):
