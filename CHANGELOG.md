@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.13.0-0.34b0...HEAD)
 
+- Compatible workaround to support both protobuf <=3.20 and >=4.21
+  ([#2954](https://github.com/open-telemetry/opentelemetry-python/pull/2947))
 - Update explicit histogram bucket boundaries
   ([#2947](https://github.com/open-telemetry/opentelemetry-python/pull/2947))
 

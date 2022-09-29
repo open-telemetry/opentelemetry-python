@@ -20,20 +20,19 @@ PROTO_REPO_DIR=${PROTO_REPO_DIR:-"/tmp/opentelemetry-proto"}
 # root of opentelemetry-python repo
 repo_root="$(git rev-parse --show-toplevel)"
 venv_dir="/tmp/proto_codegen_venv"
-
+generated_code_tmp_dir_1="/tmp/opentelemetry-proto-gen-1"
+generated_code_tmp_dir_2="/tmp/opentelemetry-proto-gen-2"
+mkdir -p $generated_code_tmp_dir_1 $generated_code_tmp_dir_2
 # run on exit even if crash
 cleanup() {
-    echo "Deleting $venv_dir"
-    rm -rf $venv_dir
+    echo "Deleting $venv_dir $generated_code_tmp_dir_1 $generated_code_tmp_dir_2"
+    rm -rf $venv_dir $generated_code_tmp_dir_1 $generated_code_tmp_dir_2
 }
 trap cleanup EXIT
 
 echo "Creating temporary virtualenv at $venv_dir using $(python3 --version)"
 python3 -m venv $venv_dir
 source $venv_dir/bin/activate
-python -m pip install \
-    -c $repo_root/dev-requirements.txt \
-    grpcio-tools mypy-protobuf
 
 # Clone the proto repo if it doesn't exist
 if [ ! -d "$PROTO_REPO_DIR" ]; then
@@ -54,21 +53,64 @@ cd $repo_root/opentelemetry-proto/src
 # clean up old generated code
 find opentelemetry/ -regex ".*_pb2.*\.pyi?" -exec rm {} +
 
-# generate proto code for all protos
 all_protos=$(find $PROTO_REPO_DIR/ -iname "*.proto")
+service_protos=$(grep -REl "service \w+ {" $PROTO_REPO_DIR/opentelemetry/)
+
+# First pass: generate protobuf with older version
+python -m pip install grpcio-tools~=1.41.0 mypy-protobuf~=3.0.0
+
+# generate mypy and grpc stubs
 python -m grpc_tools.protoc \
     -I $PROTO_REPO_DIR \
-    --python_out=. \
     --mypy_out=. \
     $all_protos
 
 # generate grpc output only for protos with service definitions
-service_protos=$(grep -REl "service \w+ {" $PROTO_REPO_DIR/opentelemetry/)
 python -m grpc_tools.protoc \
     -I $PROTO_REPO_DIR \
-    --python_out=. \
     --mypy_out=. \
     --grpc_python_out=. \
     $service_protos
+
+# generate proto code for all protos
+python -m grpc_tools.protoc \
+    -I $PROTO_REPO_DIR \
+    --python_out=$generated_code_tmp_dir_1 \
+    $all_protos
+
+# generate grpc output only for protos with service definitions
+python -m grpc_tools.protoc \
+    -I $PROTO_REPO_DIR \
+    --python_out=$generated_code_tmp_dir_1 \
+    $service_protos
+
+# Second pass: generate protobuf with newer version
+python -m pip install "grpcio-tools>=1.49.0"
+# generate proto code for all protos
+python -m grpc_tools.protoc \
+    -I $PROTO_REPO_DIR \
+    --python_out=$generated_code_tmp_dir_2 \
+    $all_protos
+
+# generate grpc output only for protos with service definitions
+python -m grpc_tools.protoc \
+    -I $PROTO_REPO_DIR \
+    --python_out=$generated_code_tmp_dir_2 \
+    $service_protos
+
+# Combine both version of protobuf
+find $generated_code_tmp_dir_1/ -iname "*_pb2.py" |
+while read -r old_proto_file; do 
+    target=${PWD}/${old_proto_file/$generated_code_tmp_dir_1\/}
+    new_proto_file=${old_proto_file/$generated_code_tmp_dir_1/$generated_code_tmp_dir_2}
+    mkdir -p "$(dirname "$target")"
+    {
+        echo "from google.protobuf.internal.api_implementation import Type as _Type";
+        echo "if _Type() == \"upb\":";
+        sed 's/^/  /' "$new_proto_file";
+        echo "else:";
+        sed 's/^/  /' "$old_proto_file";
+    } > "$target"
+done
 
 echo "Please update ./opentelemetry-proto/README.rst to include the updated version."
