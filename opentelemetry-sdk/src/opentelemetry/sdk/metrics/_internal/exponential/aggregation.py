@@ -337,21 +337,11 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         change = 0
 
-        # FIXME this slightly different from the Go implementation. It should
-        # be functionally equal but avoids an infinite loop in certain
-        # circumstances (high == 0, low == -1, size == 1).
-        while high - low > size:
+        while high - low >= size:
             high = high >> 1
             low = low >> 1
 
             change += 1
-
-        if high - low == size:
-            high = high >> 1
-            low = low >> 1
-
-            change += 1
-
         return change
 
     def _update(self, buckets: Buckets, value: float, incr: int) -> None:
