@@ -35,7 +35,7 @@ class BucketsBacking(ABC):
     @abstractmethod
     def reverse(self, start: int, end: int) -> None:
         """
-        Reverses the items in the backing array from [start, end[.
+        Reverses the items in the backing array from [start, end).
         """
 
     @abstractmethod
