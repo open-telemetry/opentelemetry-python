@@ -36,7 +36,10 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
-from opentelemetry.exporter.otlp.proto.http import _OTLP_HTTP_HEADERS, Compression
+from opentelemetry.exporter.otlp.proto.http import (
+    _OTLP_HTTP_HEADERS,
+    Compression,
+)
 from opentelemetry.exporter.otlp.proto.http.trace_exporter.encoder import (
     _ProtobufEncoder,
 )

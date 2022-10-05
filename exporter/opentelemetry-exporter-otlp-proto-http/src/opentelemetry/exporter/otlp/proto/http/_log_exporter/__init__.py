@@ -35,7 +35,10 @@ from opentelemetry.sdk._logs.export import (
     LogExportResult,
     LogData,
 )
-from opentelemetry.exporter.otlp.proto.http import _OTLP_HTTP_HEADERS, Compression
+from opentelemetry.exporter.otlp.proto.http import (
+    _OTLP_HTTP_HEADERS,
+    Compression,
+)
 from opentelemetry.exporter.otlp.proto.http._log_exporter.encoder import (
     _ProtobufEncoder,
 )
