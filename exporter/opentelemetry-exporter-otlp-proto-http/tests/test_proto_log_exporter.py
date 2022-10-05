@@ -84,6 +84,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
         self.assertEqual(exporter._headers, {})
         self.assertIsInstance(exporter._session, requests.Session)
+        self.assertIn("User-Agent", exporter._session.headers)
+        self.assertEqual(exporter._session.headers.get("Content-Type"), "application/x-protobuf")
 
     @patch.dict(
         "os.environ",
@@ -152,11 +154,6 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(
             _ProtobufEncoder().serialize(sdk_logs),
             expected_encoding.SerializeToString(),
-        )
-
-    def test_content_type(self):
-        self.assertEqual(
-            _ProtobufEncoder._CONTENT_TYPE, "application/x-protobuf"
         )
 
     @staticmethod

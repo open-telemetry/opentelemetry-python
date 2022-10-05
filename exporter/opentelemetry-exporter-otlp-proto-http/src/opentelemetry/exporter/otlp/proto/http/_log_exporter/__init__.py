@@ -35,7 +35,7 @@ from opentelemetry.sdk._logs.export import (
     LogExportResult,
     LogData,
 )
-from opentelemetry.exporter.otlp.proto.http import Compression
+from opentelemetry.exporter.otlp.proto.http import _OTLP_HTTP_HEADERS, Compression
 from opentelemetry.exporter.otlp.proto.http._log_exporter.encoder import (
     _ProtobufEncoder,
 )
@@ -78,9 +78,7 @@ class OTLPLogExporter(LogExporter):
         self._compression = compression or _compression_from_env()
         self._session = session or requests.Session()
         self._session.headers.update(self._headers)
-        self._session.headers.update(
-            {"Content-Type": _ProtobufEncoder._CONTENT_TYPE}
-        )
+        self._session.headers.update(_OTLP_HTTP_HEADERS)
         if self._compression is not Compression.NoCompression:
             self._session.headers.update(
                 {"Content-Encoding": self._compression.value}
