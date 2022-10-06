@@ -675,7 +675,7 @@ def release_args(args):
         update_dependencies(targets, version, packages)
         update_version_files(targets, version, packages)
 
-    update_changelogs("-".join(updated_versions))
+    update_changelogs(updated_versions[0])
 
 
 def test_args(args):
