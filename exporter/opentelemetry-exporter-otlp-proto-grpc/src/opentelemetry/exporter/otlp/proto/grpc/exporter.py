@@ -298,6 +298,10 @@ class OTLPExporterMixin(
         # value will remain constant.
         for delay in expo(max_value=max_value):
 
+            # expo returns None on the first iteration
+            if delay is None:
+                delay = 1
+
             if delay == max_value:
                 return self._result.FAILURE
 
