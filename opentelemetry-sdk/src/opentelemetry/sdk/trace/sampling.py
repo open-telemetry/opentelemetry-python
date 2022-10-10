@@ -370,7 +370,6 @@ _KNOWN_SAMPLERS = {
     "parentbased_traceidratio": ParentBasedTraceIdRatio,
 }
 
-
 def _get_from_env_or_default() -> Sampler:
     trace_sampler = os.getenv(
         OTEL_TRACES_SAMPLER, "parentbased_always_on"
