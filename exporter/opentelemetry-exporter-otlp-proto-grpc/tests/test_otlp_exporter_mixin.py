@@ -119,6 +119,7 @@ class TestOTLPExporterMixin(TestCase):
 
         def trailing_metadata(self):
             return {}
+
         rpc_error.code = MethodType(code, rpc_error)
         rpc_error.trailing_metadata = MethodType(trailing_metadata, rpc_error)
 
