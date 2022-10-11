@@ -298,7 +298,7 @@ class OTLPExporterMixin(
         # value will remain constant.
         for delay in expo(max_value=max_value):
 
-            # expo returns None on the first iteration
+            # expo() returns None on the first iteration
             if delay is None:
                 delay = 1
 

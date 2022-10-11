@@ -440,7 +440,7 @@ class TestOTLPSpanExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
-        mock_expo.configure_mock(**{"return_value": [1]})
+        mock_expo.configure_mock(**{"return_value": [None]})
 
         add_TraceServiceServicer_to_server(
             TraceServiceServicerUNAVAILABLE(), self.server
@@ -454,7 +454,7 @@ class TestOTLPSpanExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable_delay(self, mock_sleep, mock_expo):
 
-        mock_expo.configure_mock(**{"return_value": [1]})
+        mock_expo.configure_mock(**{"return_value": [None]})
 
         add_TraceServiceServicer_to_server(
             TraceServiceServicerUNAVAILABLEDelay(), self.server

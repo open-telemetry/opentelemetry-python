@@ -24,8 +24,7 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
 ]
 dependencies = [
-  "backoff >= 1.10.0, < 2.0.0; python_version<'3.7'",
-  "backoff >= 1.10.0, < 3.0.0; python_version>='3.7'",
+  "backoff ~= 2.0",
   "googleapis-common-protos ~= 1.52",
   "opentelemetry-api ~= 1.12",
   "opentelemetry-proto == 1.13.0",

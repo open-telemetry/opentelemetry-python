@@ -453,7 +453,7 @@ class TestOTLPMetricExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
-        mock_expo.configure_mock(**{"return_value": [1]})
+        mock_expo.configure_mock(**{"return_value": [None]})
 
         add_MetricsServiceServicer_to_server(
             MetricsServiceServicerUNAVAILABLE(), self.server
@@ -468,7 +468,7 @@ class TestOTLPMetricExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable_delay(self, mock_sleep, mock_expo):
 
-        mock_expo.configure_mock(**{"return_value": [1]})
+        mock_expo.configure_mock(**{"return_value": [None]})
 
         add_MetricsServiceServicer_to_server(
             MetricsServiceServicerUNAVAILABLEDelay(), self.server

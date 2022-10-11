@@ -135,6 +135,10 @@ class OTLPSpanExporter(SpanExporter):
 
         for delay in expo(max_value=self._MAX_RETRY_TIMEOUT):
 
+            # expo() returns None on the first iteration
+            if delay is None:
+                delay = 1
+
             if delay == self._MAX_RETRY_TIMEOUT:
                 return SpanExportResult.FAILURE
 
