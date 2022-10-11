@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.13.0...HEAD)
 
+- Enabled custom samplers via entry points
+  ([#2972](https://github.com/open-telemetry/opentelemetry-python/pull/2972))
 - Update explicit histogram bucket boundaries
   ([#2947](https://github.com/open-telemetry/opentelemetry-python/pull/2947))
 
