@@ -95,30 +95,13 @@ class TestOTLPExporterMixin(TestCase):
             )
 
         def code(self):  # pylint: disable=function-redefined
-            return StatusCode.UNAVAILABLE
+            return StatusCode.CANCELLED
 
         def trailing_metadata(self):
             return {}
 
         rpc_error.code = MethodType(code, rpc_error)
         rpc_error.trailing_metadata = MethodType(trailing_metadata, {})
-
-        with self.assertLogs(level=WARNING) as warning:
-            # pylint: disable=protected-access
-            otlp_mock_exporter._export([])
-            self.assertEqual(
-                warning.records[0].message,
-                (
-                    "Transient error StatusCode.UNAVAILABLE encountered "
-                    "while exporting mock, retrying in 1s."
-                ),
-            )
-
-        def code(self):  # pylint: disable=function-redefined
-            return StatusCode.CANCELLED
-
-        def trailing_metadata(self):
-            return {}
 
         rpc_error.code = MethodType(code, rpc_error)
         rpc_error.trailing_metadata = MethodType(trailing_metadata, rpc_error)
