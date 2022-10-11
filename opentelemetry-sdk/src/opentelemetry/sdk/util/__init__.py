@@ -15,10 +15,11 @@
 import datetime
 import threading
 from collections import OrderedDict, deque
-from collections.abc import MutableMapping, Sequence
-from typing import Optional
+from collections import abc
+from typing import Optional, Sequence, Tuple
 
 from deprecated import deprecated
+from pkg_resources import iter_entry_points
 
 
 def ns_to_iso_str(nanoseconds):
@@ -41,7 +42,27 @@ def get_dict_as_key(labels):
     )
 
 
-class BoundedList(Sequence):
+def _import_config_components(
+    selected_components, entry_point_name
+) -> Sequence[Tuple[str, object]]:
+    component_entry_points = {
+        ep.name: ep for ep in iter_entry_points(entry_point_name)
+    }
+    component_impls = []
+    for selected_component in selected_components:
+        entry_point = component_entry_points.get(selected_component, None)
+        if not entry_point:
+            raise RuntimeError(
+                f"Requested component '{selected_component}' not found in entry points for '{entry_point_name}'"
+            )
+
+        component_impl = entry_point.load()
+        component_impls.append((selected_component, component_impl))
+
+    return component_impls
+
+
+class BoundedList(abc.Sequence):
     """An append only list with a fixed max size.
 
     Calls to `append` and `extend` will drop the oldest elements if there is
@@ -92,7 +113,7 @@ class BoundedList(Sequence):
 
 
 @deprecated(version="1.4.0")  # type: ignore
-class BoundedDict(MutableMapping):
+class BoundedDict(abc.MutableMapping):
     """An ordered dict with a fixed max capacity.
 
     Oldest elements are dropped when the dict is full and a new element is
