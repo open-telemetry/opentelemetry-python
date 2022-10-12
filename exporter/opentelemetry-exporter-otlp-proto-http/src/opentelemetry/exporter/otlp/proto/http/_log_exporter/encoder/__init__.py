@@ -36,8 +36,6 @@ from opentelemetry.sdk._logs.export import LogData
 
 
 class _ProtobufEncoder:
-    _CONTENT_TYPE = "application/x-protobuf"
-
     @classmethod
     def serialize(cls, batch: Sequence[LogData]) -> str:
         return cls.encode(batch).SerializeToString()

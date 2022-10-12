@@ -58,6 +58,11 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
         self.assertEqual(exporter._headers, {})
         self.assertIsInstance(exporter._session, requests.Session)
+        self.assertIn("User-Agent", exporter._session.headers)
+        self.assertEqual(
+            exporter._session.headers.get("Content-Type"),
+            "application/x-protobuf",
+        )
 
     @patch.dict(
         "os.environ",
