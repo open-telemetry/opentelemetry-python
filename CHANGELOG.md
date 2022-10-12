@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2947](https://github.com/open-telemetry/opentelemetry-python/pull/2947))
 - `exporter-otlp-proto-http`: add user agent string
   ([#2959](https://github.com/open-telemetry/opentelemetry-python/pull/2959))
+- Fix: Handle breaking change in `backoff` dependency version 2.0
+  ([#2970](https://github.com/open-telemetry/opentelemetry-python/pull/2970))
 
 ## [1.13.0-0.34b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.13.0) - 2022-09-26
 
@@ -83,7 +85,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2726](https://github.com/open-telemetry/opentelemetry-python/pull/2726))
 - fix: frozenset object has no attribute items
   ([#2727](https://github.com/open-telemetry/opentelemetry-python/pull/2727))
-- fix: create suppress HTTP instrumentation key in opentelemetry context 
+- fix: create suppress HTTP instrumentation key in opentelemetry context
   ([#2729](https://github.com/open-telemetry/opentelemetry-python/pull/2729))
 - Support logs SDK auto instrumentation enable/disable with env
   ([#2728](https://github.com/open-telemetry/opentelemetry-python/pull/2728))
