@@ -14,8 +14,9 @@
 
 # pylint: disable=too-many-lines
 
+
 class MetricInstruments:
-    
+
     HTTP_SERVER_DURATION = "http.server.duration"
 
     HTTP_SERVER_REQUEST_SIZE = "http.server.request.size"
