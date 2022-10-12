@@ -69,11 +69,6 @@ class TestProtobufEncoder(unittest.TestCase):
             expected_encoding.SerializeToString(),
         )
 
-    def test_content_type(self):
-        self.assertEqual(
-            _ProtobufEncoder._CONTENT_TYPE, "application/x-protobuf"
-        )
-
     @staticmethod
     def get_exhaustive_otel_span_list() -> List[SDKSpan]:
         trace_id = 0x3E0C63257DE34C926F9EFCD03927272E
