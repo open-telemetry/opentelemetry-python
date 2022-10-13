@@ -73,7 +73,10 @@ The list of built-in values for ``OTEL_TRACES_SAMPLER`` are:
     * parentbased_always_off - Sampler that respects its parent span's sampling decision, but otherwise never samples.
     * parentbased_traceidratio - Sampler that respects its parent span's sampling decision, but otherwise samples probabalistically based on rate.
 
-In order to configure a custom sampler via environment variables, create an entry point for the custom sampler class under the entry point group, ``opentelemtry_traces_sampler``. Then, set the ``OTEL_TRACES_SAMPLER`` environment variable to the key name of the entry point. For example, set ``OTEL_TRACES_SAMPLER=custom_sampler_name`` and ``OTEL_TRACES_SAMPLER_ARG=0.5`` after creating the following entry point:
+In order to configure a custom sampler via environment variables, create an entry point for the custom sampler factory method under the entry point group, ``opentelemtry_traces_sampler``. Then, set
+the ``OTEL_TRACES_SAMPLER`` environment variable to the key name of the entry point. The custom sampler factory method must take a single string argument. This input will come from
+``OTEL_TRACES_SAMPLER_ARG``. If ``OTEL_TRACES_SAMPLER_ARG`` is not configured, the input will be an empty string. For example, set ``OTEL_TRACES_SAMPLER=custom_sampler_name`` and
+``OTEL_TRACES_SAMPLER_ARG=0.5`` after creating the following entry point:
 
 .. code:: python
 
@@ -82,15 +85,22 @@ In order to configure a custom sampler via environment variables, create an entr
         entry_points={
             ...
             "opentelemtry_traces_sampler": [
-                "custom_sampler_name = path.to.sampler.module:CustomSampler"
+                "custom_sampler_name = path.to.sampler.factory.method:CustomSamplerFactory.get_sampler"
             ]
         }
     )
     ...
-    class CustomSampler(TraceIdRatioBased):
-        ...
+    class CustomRatioSampler(Sampler):
+        def __init__(rate):
+            ...
+    ...
+    class CustomSamplerFactory:
+        get_sampler(sampler_argument_str):
+            rate = float(sampler_argument_str)
+            return CustomSampler(rate)
 
-Sampling probability can be set with ``OTEL_TRACES_SAMPLER_ARG`` if the sampler is a ``TraceIdRatioBased`` Sampler, such as ``traceidratio`` and ``parentbased_traceidratio``. When not provided rate will be set to 1.0 (maximum rate possible).
+Sampling probability can be set with ``OTEL_TRACES_SAMPLER_ARG`` if the sampler is a ``TraceIdRatioBased`` Sampler, such as ``traceidratio`` and ``parentbased_traceidratio``. When not provided rate
+will be set to 1.0 (maximum rate possible).
 
 
 Prev example but with environment variables. Please make sure to set the env ``OTEL_TRACES_SAMPLER=traceidratio`` and ``OTEL_TRACES_SAMPLER_ARG=0.001``.
@@ -372,29 +382,44 @@ DEFAULT_ON = ParentBased(ALWAYS_ON)
 """Sampler that respects its parent span's sampling decision, but otherwise always samples."""
 
 
-class ParentBasedTraceIdRatio(ParentBased, TraceIdRatioBased):
+class ParentBasedTraceIdRatio(ParentBased):
     """
     Sampler that respects its parent span's sampling decision, but otherwise
     samples probabalistically based on `rate`.
     """
 
     def __init__(self, rate: float):
-        # TODO: If TraceIdRatioBased inheritance is kept, change this
         root = TraceIdRatioBased(rate=rate)
         super().__init__(root=root)
 
 
-_KNOWN_INITIALIZED_SAMPLERS = {
+_KNOWN_SAMPLERS = {
     "always_on": ALWAYS_ON,
     "always_off": ALWAYS_OFF,
     "parentbased_always_on": DEFAULT_ON,
     "parentbased_always_off": DEFAULT_OFF,
-}
-
-_KNOWN_SAMPLER_CLASSES = {
     "traceidratio": TraceIdRatioBased,
     "parentbased_traceidratio": ParentBasedTraceIdRatio,
 }
+
+
+def _get_from_env_or_default() -> Sampler:
+    trace_sampler = os.getenv(
+        OTEL_TRACES_SAMPLER, "parentbased_always_on"
+    ).lower()
+    if trace_sampler not in _KNOWN_SAMPLERS:
+        _logger.warning("Couldn't recognize sampler %s.", trace_sampler)
+        trace_sampler = "parentbased_always_on"
+
+    if trace_sampler in ("traceidratio", "parentbased_traceidratio"):
+        try:
+            rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG))
+        except ValueError:
+            _logger.warning("Could not convert TRACES_SAMPLER_ARG to float.")
+            rate = 1.0
+        return _KNOWN_SAMPLERS[trace_sampler](rate)
+
+    return _KNOWN_SAMPLERS[trace_sampler]
 
 
 def _get_from_env_or_default() -> Sampler:
@@ -402,30 +427,31 @@ def _get_from_env_or_default() -> Sampler:
         OTEL_TRACES_SAMPLER, "parentbased_always_on"
     ).lower()
 
-    if trace_sampler_name in _KNOWN_INITIALIZED_SAMPLERS:
-        return _KNOWN_INITIALIZED_SAMPLERS[trace_sampler_name]
-
-    trace_sampler_impl = None
-    if trace_sampler_name in _KNOWN_SAMPLER_CLASSES:
-        trace_sampler_impl = _KNOWN_SAMPLER_CLASSES[trace_sampler_name]
+    if trace_sampler_name in _KNOWN_SAMPLERS:
+        if trace_sampler_name in ("traceidratio", "parentbased_traceidratio"):
+            try:
+                rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG))
+            except ValueError:
+                _logger.warning("Could not convert TRACES_SAMPLER_ARG to float.")
+                rate = 1.0
+            return _KNOWN_SAMPLERS[trace_sampler_name](rate)
+        return _KNOWN_SAMPLERS[trace_sampler_name]
     else:
         try:
-            trace_sampler_impl = _import_sampler(trace_sampler_name)
-        except RuntimeError as err:
+            trace_sampler_factory = _import_sampler_factory(trace_sampler_name)
+            sampler_arg = os.getenv(OTEL_TRACES_SAMPLER_ARG, "")
+            trace_sampler = trace_sampler_factory(sampler_arg)
+            _logger.warning("JEREVOSS: trace_sampler: %s" % trace_sampler)
+            if not issubclass(type(trace_sampler), Sampler):
+                message = "Output of traces sampler factory, %s, was not a Sampler object." % trace_sampler_factory
+                _logger.warning(message)
+                raise ValueError(message)
+            return trace_sampler
+        except Exception as exc:
             _logger.warning(
-                "Unable to recognize sampler %s: %s", trace_sampler_name, err
+                "Failed to initialize custom sampler, %s: %s", trace_sampler_name, exc
             )
-            return _KNOWN_INITIALIZED_SAMPLERS["parentbased_always_on"]
-
-    if issubclass(trace_sampler_impl, TraceIdRatioBased):
-        try:
-            rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG))
-        except ValueError:
-            _logger.warning("Could not convert TRACES_SAMPLER_ARG to float.")
-            rate = 1.0
-        return trace_sampler_impl(rate)
-
-    return trace_sampler_impl()
+            return _KNOWN_SAMPLERS["parentbased_always_on"]
 
 
 def _get_parent_trace_state(parent_context) -> Optional["TraceState"]:
@@ -435,13 +461,9 @@ def _get_parent_trace_state(parent_context) -> Optional["TraceState"]:
     return parent_span_context.trace_state
 
 
-def _import_sampler(sampler_name: str) -> Sampler:
+def _import_sampler_factory(sampler_name: str) -> Sampler:
     # pylint: disable=unbalanced-tuple-unpacking
     [(sampler_name, sampler_impl)] = _import_config_components(
         [sampler_name.strip()], _OTEL_SAMPLER_ENTRY_POINT_GROUP
     )
-
-    if issubclass(sampler_impl, Sampler):
-        return sampler_impl
-
-    raise RuntimeError(f"{sampler_name} is not an Sampler")
+    return sampler_impl
