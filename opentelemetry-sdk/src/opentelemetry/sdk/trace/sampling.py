@@ -143,7 +143,6 @@ from opentelemetry.trace import Link, SpanKind, get_current_span
 from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
 
-
 _logger = getLogger(__name__)
 
 
@@ -432,7 +431,9 @@ def _get_from_env_or_default() -> Sampler:
             try:
                 rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG))
             except ValueError:
-                _logger.warning("Could not convert TRACES_SAMPLER_ARG to float.")
+                _logger.warning(
+                    "Could not convert TRACES_SAMPLER_ARG to float."
+                )
                 rate = 1.0
             return _KNOWN_SAMPLERS[trace_sampler_name](rate)
         return _KNOWN_SAMPLERS[trace_sampler_name]
@@ -443,13 +444,18 @@ def _get_from_env_or_default() -> Sampler:
             trace_sampler = trace_sampler_factory(sampler_arg)
             _logger.warning("JEREVOSS: trace_sampler: %s" % trace_sampler)
             if not issubclass(type(trace_sampler), Sampler):
-                message = "Output of traces sampler factory, %s, was not a Sampler object." % trace_sampler_factory
+                message = (
+                    "Output of traces sampler factory, %s, was not a Sampler object."
+                    % trace_sampler_factory
+                )
                 _logger.warning(message)
                 raise ValueError(message)
             return trace_sampler
         except Exception as exc:
             _logger.warning(
-                "Failed to initialize custom sampler, %s: %s", trace_sampler_name, exc
+                "Failed to initialize custom sampler, %s: %s",
+                trace_sampler_name,
+                exc,
             )
             return _KNOWN_SAMPLERS["parentbased_always_on"]
 
