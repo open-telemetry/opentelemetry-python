@@ -58,7 +58,7 @@ class ExponentMapping(Mapping):
         if -self._scale < 2:
             # For scales -1 and 0, the maximum value 2 ** -1022 is a
             # power-of-two multiple, meaning base ** index == MIN_NORMAL_VALUE.
-            # Substracting 1 so that base ** (index + 1) == MIN_NORMAL_VALUE.
+            # Subtracting 1 so that base ** (index + 1) == MIN_NORMAL_VALUE.
             index -= 1
 
         self._min_normal_lower_boundary_index = index

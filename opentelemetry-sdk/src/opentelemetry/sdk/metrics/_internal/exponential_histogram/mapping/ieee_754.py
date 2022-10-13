@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from ctypes import c_double, c_uint64
-from decimal import Decimal
 from sys import float_info
 
 # An IEEE 754 double-precision (64 bit) floating point number is represented
