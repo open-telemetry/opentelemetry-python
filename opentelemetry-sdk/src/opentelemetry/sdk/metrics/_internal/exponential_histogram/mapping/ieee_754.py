@@ -62,62 +62,6 @@ MIN_NORMAL_VALUE = float_info.min
 MAX_NORMAL_VALUE = float_info.max
 
 
-def get_ieee_754_64_binary(value: float):
-    """
-    The purpose of this function is to illustrate the IEEE 754 64-bit float
-    representation.
-    """
-    result = bin(c_uint64.from_buffer(c_double(value)).value)[2:]
-
-    if result == "0":
-        result = result * 64
-
-    if value > 0:
-        result = f"0{result}"
-
-    decimal_exponent = 0
-
-    exponent = result[1:12]
-
-    for index, bit in enumerate(reversed(exponent)):
-        if int(bit):
-            decimal_exponent += 2**index
-
-    # 0 has a special representation in IEE 574, all exponent and mantissa bits
-    # are 0. The sign bit still represents its sign, so there is 0 (all bits
-    # are set to 0) and -0 (the first bit is 1, the rest are 0).
-    if value == 0:
-        implicit_bit = 0
-    else:
-        implicit_bit = 1
-
-    decimal_exponent -= 1023 * implicit_bit
-
-    decimal_mantissa = Decimal(implicit_bit)
-
-    mantissa = result[12:]
-
-    for index, bit in enumerate(mantissa):
-        if int(bit):
-            decimal_mantissa += Decimal(1) / Decimal(2 ** (index + 1))
-
-    sign = result[0]
-
-    return {
-        "sign": sign,
-        "exponent": exponent,
-        "mantissa": mantissa,
-        # IEEE 754 can only exactly represent a discrete series of numbers, the
-        # intention of this field is to show the actual decimal value that is
-        # represented.
-        "decimal": str(
-            Decimal(-1 if int(sign) else 1)
-            * Decimal(2**decimal_exponent)
-            * decimal_mantissa
-        ),
-    }
-
-
 def get_ieee_754_exponent(value: float) -> int:
     """
     Gets the exponent of the IEEE 754 representation of a float.
