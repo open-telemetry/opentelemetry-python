@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2947](https://github.com/open-telemetry/opentelemetry-python/pull/2947))
 - `exporter-otlp-proto-http`: add user agent string
   ([#2959](https://github.com/open-telemetry/opentelemetry-python/pull/2959))
+- Add http-metric instrument names to semantic conventions
+  ([#2976](https://github.com/open-telemetry/opentelemetry-python/pull/2976))
 
 ## [1.13.0-0.34b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.13.0) - 2022-09-26
 
