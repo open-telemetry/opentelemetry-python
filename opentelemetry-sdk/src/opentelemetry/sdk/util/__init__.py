@@ -14,8 +14,7 @@
 
 import datetime
 import threading
-from collections import OrderedDict, deque
-from collections import abc
+from collections import OrderedDict, abc, deque
 from typing import Optional, Sequence, Tuple
 
 from deprecated import deprecated

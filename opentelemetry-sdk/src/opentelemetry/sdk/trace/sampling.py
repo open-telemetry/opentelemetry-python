@@ -133,7 +133,6 @@ from opentelemetry.trace import Link, SpanKind, get_current_span
 from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
 
-# from opentelemetry.sdk._configuration import _import_config_components
 
 _logger = getLogger(__name__)
 
@@ -380,6 +379,7 @@ class ParentBasedTraceIdRatio(ParentBased, TraceIdRatioBased):
     """
 
     def __init__(self, rate: float):
+        # TODO: If TraceIdRatioBased inheritance is kept, change this
         root = TraceIdRatioBased(rate=rate)
         super().__init__(root=root)
 
