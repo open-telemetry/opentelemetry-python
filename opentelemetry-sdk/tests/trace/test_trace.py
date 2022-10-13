@@ -304,15 +304,18 @@ class TestTracerSampling(unittest.TestCase):
         self.verify_default_sampler(tracer_provider)
 
     @mock.patch("opentelemetry.sdk.trace.util.iter_entry_points")
-    @mock.patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"})
-    def test_custom_sampler_with_env(
-        self, mock_iter_entry_points
-    ):
+    @mock.patch.dict(
+        "os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"}
+    )
+    def test_custom_sampler_with_env(self, mock_iter_entry_points):
         # mock_iter_entry_points.return_value = [
         #     ("custom_sampler_factory", CustomSamplerFactory.get_custom_sampler)
         # ]
-        mock_iter_entry_points.return_value=[
-            IterEntryPoint("custom_sampler_factory", CustomSamplerFactory.get_custom_sampler)
+        mock_iter_entry_points.return_value = [
+            IterEntryPoint(
+                "custom_sampler_factory",
+                CustomSamplerFactory.get_custom_sampler,
+            )
         ]
         # pylint: disable=protected-access
         reload(trace)
@@ -320,12 +323,15 @@ class TestTracerSampling(unittest.TestCase):
         self.assertIsInstance(tracer_provider.sampler, CustomSampler)
 
     @mock.patch("opentelemetry.sdk.trace.util.iter_entry_points")
-    @mock.patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"})
-    def test_custom_sampler_with_env_bad_factory(
-        self, mock_iter_entry_points
-    ):
+    @mock.patch.dict(
+        "os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"}
+    )
+    def test_custom_sampler_with_env_bad_factory(self, mock_iter_entry_points):
         mock_iter_entry_points.return_value = [
-            IterEntryPoint("custom_sampler_factory", CustomSamplerFactory.empty_get_custom_sampler)
+            IterEntryPoint(
+                "custom_sampler_factory",
+                CustomSamplerFactory.empty_get_custom_sampler,
+            )
         ]
         # pylint: disable=protected-access
         reload(trace)
@@ -340,11 +346,12 @@ class TestTracerSampling(unittest.TestCase):
             OTEL_TRACES_SAMPLER_ARG: "0.5",
         },
     )
-    def test_custom_sampler_with_env_unused_arg(
-        self, mock_iter_entry_points
-    ):
+    def test_custom_sampler_with_env_unused_arg(self, mock_iter_entry_points):
         mock_iter_entry_points.return_value = [
-            IterEntryPoint("custom_sampler_factory", CustomSamplerFactory.get_custom_sampler)
+            IterEntryPoint(
+                "custom_sampler_factory",
+                CustomSamplerFactory.get_custom_sampler,
+            )
         ]
         # pylint: disable=protected-access
         reload(trace)
@@ -359,11 +366,12 @@ class TestTracerSampling(unittest.TestCase):
             OTEL_TRACES_SAMPLER_ARG: "0.5",
         },
     )
-    def test_custom_ratio_sampler_with_env(
-        self, mock_iter_entry_points
-    ):
+    def test_custom_ratio_sampler_with_env(self, mock_iter_entry_points):
         mock_iter_entry_points.return_value = [
-            IterEntryPoint("custom_ratio_sampler_factory", CustomSamplerFactory.get_custom_ratio_sampler)
+            IterEntryPoint(
+                "custom_ratio_sampler_factory",
+                CustomSamplerFactory.get_custom_ratio_sampler,
+            )
         ]
         # pylint: disable=protected-access
         reload(trace)
@@ -383,7 +391,10 @@ class TestTracerSampling(unittest.TestCase):
         self, mock_iter_entry_points
     ):
         mock_iter_entry_points.return_value = [
-            IterEntryPoint("custom_ratio_sampler_factory", CustomSamplerFactory.get_custom_ratio_sampler)
+            IterEntryPoint(
+                "custom_ratio_sampler_factory",
+                CustomSamplerFactory.get_custom_ratio_sampler,
+            )
         ]
         # pylint: disable=protected-access
         reload(trace)
@@ -401,7 +412,10 @@ class TestTracerSampling(unittest.TestCase):
         self, mock_iter_entry_points
     ):
         mock_iter_entry_points.return_value = [
-            IterEntryPoint("custom_ratio_sampler_factory", CustomSamplerFactory.get_custom_ratio_sampler)
+            IterEntryPoint(
+                "custom_ratio_sampler_factory",
+                CustomSamplerFactory.get_custom_ratio_sampler,
+            )
         ]
         # pylint: disable=protected-access
         reload(trace)
@@ -420,9 +434,18 @@ class TestTracerSampling(unittest.TestCase):
         self, mock_iter_entry_points
     ):
         mock_iter_entry_points.return_value = [
-            IterEntryPoint("custom_ratio_sampler_factory", CustomSamplerFactory.get_custom_ratio_sampler),
-            IterEntryPoint("custom_sampler_factory", CustomSamplerFactory.get_custom_sampler),
-            IterEntryPoint("custom_z_sampler_factory", CustomSamplerFactory.empty_get_custom_sampler)
+            IterEntryPoint(
+                "custom_ratio_sampler_factory",
+                CustomSamplerFactory.get_custom_ratio_sampler,
+            ),
+            IterEntryPoint(
+                "custom_sampler_factory",
+                CustomSamplerFactory.get_custom_sampler,
+            ),
+            IterEntryPoint(
+                "custom_z_sampler_factory",
+                CustomSamplerFactory.empty_get_custom_sampler,
+            ),
         ]
         # pylint: disable=protected-access
         reload(trace)
