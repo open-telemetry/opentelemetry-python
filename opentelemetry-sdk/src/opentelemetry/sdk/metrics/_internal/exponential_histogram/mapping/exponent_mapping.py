@@ -47,13 +47,18 @@ class ExponentMapping(Mapping):
     def __init__(self, scale: int):
         super().__init__(scale)
 
-        # self._min_normal_lower_boundary_index is the index such that
-        # base ** index <= MIN_NORMAL_VALUE. An exponential histogram bucket
-        # with this index covers the range (base ** index, base (index + 1)],
-        # including MIN_NORMAL_VALUE.
+        # self._min_normal_lower_boundary_index is the largest index such that
+        # base ** index < MIN_NORMAL_VALUE and
+        # base ** (index + 1) >= MIN_NORMAL_VALUE. An exponential histogram
+        # bucket with this index covers the range
+        # (base ** index, base (index + 1)], including MIN_NORMAL_VALUE. This
+        # is the smallest valid index that contains at least one normal value.
         index = MIN_NORMAL_EXPONENT >> -self._scale
 
         if -self._scale < 2:
+            # For scales -1 and 0, the maximum value 2 ** -1022 is a
+            # power-of-two multiple, meaning base ** index == MIN_NORMAL_VALUE.
+            # Substracting 1 so that base ** (index + 1) == MIN_NORMAL_VALUE.
             index -= 1
 
         self._min_normal_lower_boundary_index = index
