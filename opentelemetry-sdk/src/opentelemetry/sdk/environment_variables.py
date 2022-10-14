@@ -545,3 +545,49 @@ OTEL_EXPORTER_JAEGER_GRPC_INSECURE = "OTEL_EXPORTER_JAEGER_GRPC_INSECURE"
 
 The :envvar:`OTEL_EXPORTER_JAEGER_GRPC_INSECURE` is a boolean flag to True if collector has no encryption or authentication.
 """
+
+OTEL_METRIC_EXPORT_INTERVAL = "OTEL_METRIC_EXPORT_INTERVAL"
+"""
+.. envvar:: OTEL_METRIC_EXPORT_INTERVAL
+
+The :envvar:`OTEL_METRIC_EXPORT_INTERVAL` is the time interval (in milliseconds) between the start of two export attempts.
+"""
+
+OTEL_METRIC_EXPORT_TIMEOUT = "OTEL_METRIC_EXPORT_TIMEOUT"
+"""
+.. envvar:: OTEL_METRIC_EXPORT_TIMEOUT
+
+The :envvar:`OTEL_METRIC_EXPORT_TIMEOUT` is the maximum allowed time (in milliseconds) to export data.
+"""
+
+OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY = "OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY` is the clients private key to use in mTLS communication in PEM format.
+"""
+
+OTEL_METRICS_EXEMPLAR_FILTER = "OTEL_METRICS_EXEMPLAR_FILTER"
+"""
+.. envvar:: OTEL_METRICS_EXEMPLAR_FILTER
+
+The :envvar:`OTEL_METRICS_EXEMPLAR_FILTER` is the filter for which measurements can become Exemplars.
+"""
+
+_OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION = (
+    "OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION"
+)
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION` is the default aggregation to use for histogram instruments.
+"""
+
+OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE = (
+    "OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE"
+)
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE` is the client certificate/chain trust for clients private key to use in mTLS communication in PEM format.
+"""
