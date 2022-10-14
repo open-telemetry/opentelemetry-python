@@ -38,8 +38,9 @@ class Mapping(ABC):
         # parameter known as scale, larger values of scale will produce smaller
         # buckets. Bucket boundaries of the exponential histogram are located
         # at integer powers of the base, where:
-
+        #
         # base = 2 ** (2 ** (-scale))
+        # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/data-model.md#all-scales-use-the-logarithm-function
         self._scale = scale
 
     @property
