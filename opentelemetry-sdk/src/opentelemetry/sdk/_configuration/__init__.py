@@ -269,10 +269,9 @@ def _import_exporters(
 
 
 def _import_id_generator(id_generator_name: str) -> IdGenerator:
-    # pylint: disable=unbalanced-tuple-unpacking
-    [(id_generator_name, id_generator_impl)] = _import_config_components(
+    id_generator_name, id_generator_impl = _import_config_components(
         [id_generator_name.strip()], "opentelemetry_id_generator"
-    )
+    )[0]
 
     if issubclass(id_generator_impl, IdGenerator):
         return id_generator_impl

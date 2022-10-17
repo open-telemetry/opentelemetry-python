@@ -197,12 +197,15 @@ class CustomRatioSampler(sampling.TraceIdRatioBased):
 
 
 class CustomSamplerFactory:
+    @staticmethod
     def get_custom_sampler(unused_sampler_arg):
         return CustomSampler()
 
+    @staticmethod
     def get_custom_ratio_sampler(sampler_arg):
         return CustomRatioSampler(float(sampler_arg))
 
+    @staticmethod
     def empty_get_custom_sampler(sampler_arg):
         return
 
@@ -308,9 +311,6 @@ class TestTracerSampling(unittest.TestCase):
         "os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"}
     )
     def test_custom_sampler_with_env(self, mock_iter_entry_points):
-        # mock_iter_entry_points.return_value = [
-        #     ("custom_sampler_factory", CustomSamplerFactory.get_custom_sampler)
-        # ]
         mock_iter_entry_points.return_value = [
             IterEntryPoint(
                 "custom_sampler_factory",
