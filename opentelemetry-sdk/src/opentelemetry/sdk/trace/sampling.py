@@ -75,37 +75,6 @@ The list of built-in values for ``OTEL_TRACES_SAMPLER`` are:
 
 Sampling probability can be set with ``OTEL_TRACES_SAMPLER_ARG`` if the sampler is traceidratio or parentbased_traceidratio, when not provided rate will be set to 1.0 (maximum rate possible).
 
-In order to create a configurable custom sampler, create an entry point for the custom sampler factory method under the entry point group, ``opentelemtry_traces_sampler``. The custom sampler factory method must be of type ``Callable[[str], Sampler]``, taking a single string argument and returning a Sampler object. The single input will come from the string value of
-the ``OTEL_TRACES_SAMPLER_ARG`` environment variable. If ``OTEL_TRACES_SAMPLER_ARG`` is not configured, the input will be an empty string. For example:
-
-.. code:: python
-
-    setup(
-        ...
-        entry_points={
-            ...
-            "opentelemtry_traces_sampler": [
-                "custom_sampler_name = path.to.sampler.factory.method:CustomSamplerFactory.get_sampler"
-            ]
-        }
-    )
-    ...
-    class CustomRatioSampler(Sampler):
-        def __init__(rate):
-            ...
-    ...
-    class CustomSamplerFactory:
-        @staticmethod
-        get_sampler(sampler_argument_str):
-            try:
-                rate = float(sampler_argument_str)
-                return CustomSampler(rate)
-            except ValueError: # In case argument is empty string.
-                return CustomSampler(0.5)
-
-In order to configure you application with a custom sampler's entry point, set the ``OTEL_TRACES_SAMPLER`` environment variable to the key name of the entry point. For example, to configured the above sampler, set ``OTEL_TRACES_SAMPLER=custom_sampler_name`` and ``OTEL_TRACES_SAMPLER_ARG=0.5``.
-
-
 Prev example but with environment variables. Please make sure to set the env ``OTEL_TRACES_SAMPLER=traceidratio`` and ``OTEL_TRACES_SAMPLER_ARG=0.001``.
 
 .. code:: python
@@ -127,6 +96,38 @@ Prev example but with environment variables. Please make sure to set the env ``O
     # created spans will now be sampled by the TraceIdRatioBased sampler with rate 1/1000.
     with trace.get_tracer(__name__).start_as_current_span("Test Span"):
         ...
+
+In order to create a configurable custom sampler, create an entry point for the custom sampler factory method under the entry point group, ``opentelemetry_traces_sampler``. The custom sampler factory
+method must be of type ``Callable[[str], Sampler]``, taking a single string argument and returning a Sampler object. The single input will come from the string value of the
+``OTEL_TRACES_SAMPLER_ARG`` environment variable. If ``OTEL_TRACES_SAMPLER_ARG`` is not configured, the input will be an empty string. For example:
+
+.. code:: python
+
+    setup(
+        ...
+        entry_points={
+            ...
+            "opentelemetry_traces_sampler": [
+                "custom_sampler_name = path.to.sampler.factory.method:CustomSamplerFactory.get_sampler"
+            ]
+        }
+    )
+    ...
+    class CustomRatioSampler(Sampler):
+        def __init__(rate):
+            ...
+    ...
+    class CustomSamplerFactory:
+        @staticmethod
+        get_sampler(sampler_argument_str):
+            try:
+                rate = float(sampler_argument_str)
+                return CustomSampler(rate)
+            except ValueError: # In case argument is empty string.
+                return CustomSampler(0.5)
+
+In order to configure you application with a custom sampler's entry point, set the ``OTEL_TRACES_SAMPLER`` environment variable to the key name of the entry point. For example, to configured the
+above sampler, set ``OTEL_TRACES_SAMPLER=custom_sampler_name`` and ``OTEL_TRACES_SAMPLER_ARG=0.5``.
 """
 import abc
 import enum
@@ -426,8 +427,7 @@ def _get_from_env_or_default() -> Sampler:
             trace_sampler_factory = _import_sampler_factory(trace_sampler_name)
             sampler_arg = os.getenv(OTEL_TRACES_SAMPLER_ARG, "")
             trace_sampler = trace_sampler_factory(sampler_arg)
-            _logger.warning("JEREVOSS: trace_sampler: %s" % trace_sampler)
-            if not issubclass(type(trace_sampler), Sampler):
+            if not isinstance(trace_sampler, Sampler):
                 message = (
                     "Output of traces sampler factory, %s, was not a Sampler object."
                     % trace_sampler_factory
