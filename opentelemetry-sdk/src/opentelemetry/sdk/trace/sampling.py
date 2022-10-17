@@ -73,10 +73,10 @@ The list of built-in values for ``OTEL_TRACES_SAMPLER`` are:
     * parentbased_always_off - Sampler that respects its parent span's sampling decision, but otherwise never samples.
     * parentbased_traceidratio - Sampler that respects its parent span's sampling decision, but otherwise samples probabalistically based on rate.
 
-In order to configure a custom sampler via environment variables, create an entry point for the custom sampler factory method under the entry point group, ``opentelemtry_traces_sampler``. Then, set
-the ``OTEL_TRACES_SAMPLER`` environment variable to the key name of the entry point. The custom sampler factory method must take a single string argument. This input will come from
-``OTEL_TRACES_SAMPLER_ARG``. If ``OTEL_TRACES_SAMPLER_ARG`` is not configured, the input will be an empty string. For example, set ``OTEL_TRACES_SAMPLER=custom_sampler_name`` and
-``OTEL_TRACES_SAMPLER_ARG=0.5`` after creating the following entry point:
+Sampling probability can be set with ``OTEL_TRACES_SAMPLER_ARG`` if the sampler is traceidratio or parentbased_traceidratio, when not provided rate will be set to 1.0 (maximum rate possible).
+
+In order to create a configurable custom sampler, create an entry point for the custom sampler factory method under the entry point group, ``opentelemtry_traces_sampler``. The custom sampler factory method must be of type ``Callable[[str], Sampler]``, taking a single string argument and returning a Sampler object. The single input will come from the string value of
+the ``OTEL_TRACES_SAMPLER_ARG`` environment variable. If ``OTEL_TRACES_SAMPLER_ARG`` is not configured, the input will be an empty string. For example:
 
 .. code:: python
 
@@ -95,12 +95,15 @@ the ``OTEL_TRACES_SAMPLER`` environment variable to the key name of the entry po
             ...
     ...
     class CustomSamplerFactory:
+        @staticmethod
         get_sampler(sampler_argument_str):
-            rate = float(sampler_argument_str)
-            return CustomSampler(rate)
+            try:
+                rate = float(sampler_argument_str)
+                return CustomSampler(rate)
+            except ValueError: # In case argument is empty string.
+                return CustomSampler(0.5)
 
-Sampling probability can be set with ``OTEL_TRACES_SAMPLER_ARG`` if the sampler is a ``TraceIdRatioBased`` Sampler, such as ``traceidratio`` and ``parentbased_traceidratio``. When not provided rate
-will be set to 1.0 (maximum rate possible).
+In order to configure you application with a custom sampler's entry point, set the ``OTEL_TRACES_SAMPLER`` environment variable to the key name of the entry point. For example, to configured the above sampler, set ``OTEL_TRACES_SAMPLER=custom_sampler_name`` and ``OTEL_TRACES_SAMPLER_ARG=0.5``.
 
 
 Prev example but with environment variables. Please make sure to set the env ``OTEL_TRACES_SAMPLER=traceidratio`` and ``OTEL_TRACES_SAMPLER_ARG=0.001``.
@@ -130,7 +133,7 @@ import enum
 import os
 from logging import getLogger
 from types import MappingProxyType
-from typing import Optional, Sequence
+from typing import Callable, Optional, Sequence
 
 # pylint: disable=unused-import
 from opentelemetry.context import Context
@@ -189,7 +192,7 @@ class SamplingResult:
         self.trace_state = trace_state
 
 
-_OTEL_SAMPLER_ENTRY_POINT_GROUP = "opentelemtry_traces_sampler"
+_OTEL_SAMPLER_ENTRY_POINT_GROUP = "opentelemetry_traces_sampler"
 
 
 class Sampler(abc.ABC):
@@ -403,25 +406,6 @@ _KNOWN_SAMPLERS = {
 
 
 def _get_from_env_or_default() -> Sampler:
-    trace_sampler = os.getenv(
-        OTEL_TRACES_SAMPLER, "parentbased_always_on"
-    ).lower()
-    if trace_sampler not in _KNOWN_SAMPLERS:
-        _logger.warning("Couldn't recognize sampler %s.", trace_sampler)
-        trace_sampler = "parentbased_always_on"
-
-    if trace_sampler in ("traceidratio", "parentbased_traceidratio"):
-        try:
-            rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG))
-        except ValueError:
-            _logger.warning("Could not convert TRACES_SAMPLER_ARG to float.")
-            rate = 1.0
-        return _KNOWN_SAMPLERS[trace_sampler](rate)
-
-    return _KNOWN_SAMPLERS[trace_sampler]
-
-
-def _get_from_env_or_default() -> Sampler:
     trace_sampler_name = os.getenv(
         OTEL_TRACES_SAMPLER, "parentbased_always_on"
     ).lower()
@@ -467,9 +451,8 @@ def _get_parent_trace_state(parent_context) -> Optional["TraceState"]:
     return parent_span_context.trace_state
 
 
-def _import_sampler_factory(sampler_name: str) -> Sampler:
-    # pylint: disable=unbalanced-tuple-unpacking
-    [(sampler_name, sampler_impl)] = _import_config_components(
+def _import_sampler_factory(sampler_name: str) -> Callable[[str], Sampler]:
+    _, sampler_impl = _import_config_components(
         [sampler_name.strip()], _OTEL_SAMPLER_ENTRY_POINT_GROUP
-    )
+    )[0]
     return sampler_impl

@@ -15,7 +15,7 @@
 import datetime
 import threading
 from collections import OrderedDict, abc, deque
-from typing import Optional, Sequence, Tuple
+from typing import List, Optional, Sequence, Tuple
 
 from deprecated import deprecated
 from pkg_resources import iter_entry_points
@@ -42,7 +42,7 @@ def get_dict_as_key(labels):
 
 
 def _import_config_components(
-    selected_components, entry_point_name
+    selected_components: List[str], entry_point_name: str
 ) -> Sequence[Tuple[str, object]]:
     component_entry_points = {
         ep.name: ep for ep in iter_entry_points(entry_point_name)
