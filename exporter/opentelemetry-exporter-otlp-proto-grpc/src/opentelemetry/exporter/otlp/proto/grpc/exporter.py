@@ -300,7 +300,7 @@ class OTLPExporterMixin(
 
             # expo() returns None on the first iteration
             if delay is None:
-                delay = 1
+                continue
 
             if delay == max_value:
                 return self._result.FAILURE
