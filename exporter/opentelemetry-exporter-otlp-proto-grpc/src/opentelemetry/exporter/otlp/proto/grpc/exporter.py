@@ -25,7 +25,7 @@ from typing import TypeVar
 from urllib.parse import urlparse
 from opentelemetry.sdk.trace import ReadableSpan
 
-from backoff import expo
+import backoff
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import (
     ChannelCredentials,
@@ -183,6 +183,19 @@ def _get_credentials(creds, environ_key):
     return ssl_channel_credentials()
 
 
+# Work around API change between backoff 1.x and 2.x. Since 2.0.0 the backoff
+# wait generator API requires a first .send(None) before reading the backoff
+# values from the generator.
+_is_backoff_v2 = next(backoff.expo()) is None
+
+
+def _expo(*args, **kwargs):
+    gen = backoff.expo(*args, **kwargs)
+    if _is_backoff_v2:
+        gen.send(None)
+    return gen
+
+
 # pylint: disable=no-member
 class OTLPExporterMixin(
     ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT]
@@ -296,7 +309,7 @@ class OTLPExporterMixin(
         # expo returns a generator that yields delay values which grow
         # exponentially. Once delay is greater than max_value, the yielded
         # value will remain constant.
-        for delay in expo(max_value=max_value):
+        for delay in _expo(max_value=max_value):
 
             if delay == max_value:
                 return self._result.FAILURE

@@ -436,7 +436,23 @@ class TestOTLPSpanExporter(TestCase):
         # pylint: disable=protected-access
         self.assertIsNone(exporter._headers, None)
 
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.expo")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.backoff")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
+    def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
+        # In backoff ~= 2.0.0 the first value yielded from expo is None.
+        def generate_delays(*args, **kwargs):
+            yield None
+            yield 1
+
+        mock_backoff.expo.configure_mock(**{"side_effect": generate_delays})
+
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerUNAVAILABLE(), self.server
+        )
+        self.exporter.export([self.span])
+        mock_sleep.assert_called_once_with(1)
+
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
@@ -450,7 +466,7 @@ class TestOTLPSpanExporter(TestCase):
         )
         mock_sleep.assert_called_with(1)
 
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.expo")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable_delay(self, mock_sleep, mock_expo):
 

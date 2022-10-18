@@ -20,8 +20,8 @@ from os import environ
 from typing import Dict, Optional, Sequence
 from time import sleep
 
+import backoff
 import requests
-from backoff import expo
 
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
@@ -52,6 +52,18 @@ DEFAULT_COMPRESSION = Compression.NoCompression
 DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_LOGS_EXPORT_PATH = "v1/logs"
 DEFAULT_TIMEOUT = 10  # in seconds
+
+# Work around API change between backoff 1.x and 2.x. Since 2.0.0 the backoff
+# wait generator API requires a first .send(None) before reading the backoff
+# values from the generator.
+_is_backoff_v2 = next(backoff.expo()) is None
+
+
+def _expo(*args, **kwargs):
+    gen = backoff.expo(*args, **kwargs)
+    if _is_backoff_v2:
+        gen.send(None)
+    return gen
 
 
 class OTLPLogExporter(LogExporter):
@@ -122,7 +134,7 @@ class OTLPLogExporter(LogExporter):
 
         serialized_data = _ProtobufEncoder.serialize(batch)
 
-        for delay in expo(max_value=self._MAX_RETRY_TIMEOUT):
+        for delay in _expo(max_value=self._MAX_RETRY_TIMEOUT):
 
             if delay == self._MAX_RETRY_TIMEOUT:
                 return LogExportResult.FAILURE
