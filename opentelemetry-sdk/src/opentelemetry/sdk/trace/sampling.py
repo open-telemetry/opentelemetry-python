@@ -73,7 +73,7 @@ The list of built-in values for ``OTEL_TRACES_SAMPLER`` are:
     * parentbased_always_off - Sampler that respects its parent span's sampling decision, but otherwise never samples.
     * parentbased_traceidratio - Sampler that respects its parent span's sampling decision, but otherwise samples probabalistically based on rate.
 
-Sampling probability can be set with ``OTEL_TRACES_SAMPLER_ARG`` if the sampler is traceidratio or parentbased_traceidratio, when not provided rate will be set to 1.0 (maximum rate possible).
+Sampling probability can be set with ``OTEL_TRACES_SAMPLER_ARG`` if the sampler is traceidratio or parentbased_traceidratio. Rate must be in the range [0.0,1.0]. When not provided rate will be set to 1.0 (maximum rate possible).
 
 Prev example but with environment variables. Please make sure to set the env ``OTEL_TRACES_SAMPLER=traceidratio`` and ``OTEL_TRACES_SAMPLER_ARG=0.001``.
 
@@ -112,16 +112,16 @@ method must be of type ``Callable[[str], Sampler]``, taking a single string argu
             ]
         }
     )
-    ...
+    # ...
     class CustomRatioSampler(Sampler):
         def __init__(rate):
-            ...
-    ...
+            # ...
+    # ...
     class CustomSamplerFactory:
         @staticmethod
-        get_sampler(sampler_argument_str):
+        get_sampler(sampler_argument):
             try:
-                rate = float(sampler_argument_str)
+                rate = float(sampler_argument)
                 return CustomSampler(rate)
             except ValueError: # In case argument is empty string.
                 return CustomSampler(0.5)
@@ -437,7 +437,7 @@ def _get_from_env_or_default() -> Sampler:
             return trace_sampler
         except Exception as exc:
             _logger.warning(
-                "Failed to initialize custom sampler, %s: %s",
+                "Using default sampler. Failed to initialize custom sampler, %s: %s",
                 trace_sampler_name,
                 exc,
             )
