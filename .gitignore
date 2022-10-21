@@ -24,7 +24,7 @@ lib64
 __pycache__
 venv*/
 .venv*/
-
+project_venv
 # Installer logs
 pip-log.txt
 
