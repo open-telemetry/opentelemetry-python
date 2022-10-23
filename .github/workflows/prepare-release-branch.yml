@@ -165,9 +165,9 @@ jobs:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
-          message="Update version to ${STABLE_NEXT_VERSION}/${UNSTABLE_VERSION}"
-          body="Update version to \`${STABLE_NEXT_VERSION}/${UNSTABLE_VERSION}\`."
-          branch="update-version-to-${STABLE_NEXT_VERSION}-${UNSTABLE_VERSION}"
+          message="Update version to ${STABLE_NEXT_VERSION}/${UNSTABLE_NEXT_VERSION}"
+          body="Update version to \`${STABLE_NEXT_VERSION}/${UNSTABLE_NEXT_VERSION}\`."
+          branch="update-version-to-${STABLE_NEXT_VERSION}-${UNSTABLE_NEXT_VERSION}"
 
           git commit -a -m "$message"
           git push origin HEAD:$branch
