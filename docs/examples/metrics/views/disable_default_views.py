@@ -48,3 +48,4 @@ my_counter = meter.create_counter("mycounter")
 while 1:
     my_counter.add(random.randint(1, 10))
     time.sleep(random.random())
+    
