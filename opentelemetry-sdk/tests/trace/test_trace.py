@@ -21,7 +21,7 @@ from importlib import reload
 from logging import ERROR, WARNING
 from random import randint
 from time import time_ns
-from typing import Optional
+from typing import Optional, Sequence
 from unittest import mock
 
 from opentelemetry import trace as trace_api
@@ -39,15 +39,27 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
-from opentelemetry.sdk.trace import Resource, sampling
+from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
+from opentelemetry.sdk.trace.sampling import (
+    ALWAYS_OFF,
+    ALWAYS_ON,
+    Decision,
+    ParentBased,
+    Sampler,
+    SamplingResult,
+    StaticSampler,
+    TraceIdRatioBased,
+)
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
     new_tracer,
 )
-from opentelemetry.trace import Status, StatusCode
+from opentelemetry.trace import Link, SpanKind, Status, StatusCode
+from opentelemetry.trace.span import TraceState
+from opentelemetry.util.types import Attributes
 
 
 class TestTracer(unittest.TestCase):
@@ -139,60 +151,52 @@ tracer_provider.add_span_processor(mock_processor)
         )
 
 
-class CustomSampler(sampling.Sampler):
+class CustomSampler(Sampler):
     def __init__(self) -> None:
-        super().__init__()
+        pass
 
     def get_description(self) -> str:
-        return super().get_description()
+        return "CustomSampler"
 
     def should_sample(
         self,
-        parent_context,
-        trace_id,
-        name,
-        kind,
-        attributes,
-        links,
-        trace_state,
-    ):
-        return super().should_sample(
-            parent_context,
-            trace_id,
-            name,
-            kind,
-            attributes,
-            links,
-            trace_state,
+        parent_context: Optional["Context"],
+        trace_id: int,
+        name: str,
+        kind: SpanKind = None,
+        attributes: Attributes = None,
+        links: Sequence[Link] = None,
+        trace_state: TraceState = None,
+    ) -> "SamplingResult":
+        return SamplingResult(
+            Decision.RECORD_AND_SAMPLE,
+            None,
+            None,
         )
 
 
-class CustomRatioSampler(sampling.TraceIdRatioBased):
+class CustomRatioSampler(TraceIdRatioBased):
     def __init__(self, ratio):
         self.ratio = ratio
         super().__init__(ratio)
 
     def get_description(self) -> str:
-        return super().get_description()
+        return "CustomSampler"
 
     def should_sample(
         self,
-        parent_context,
-        trace_id,
-        name,
-        kind,
-        attributes,
-        links,
-        trace_state,
-    ):
-        return super().should_sample(
-            parent_context,
-            trace_id,
-            name,
-            kind,
-            attributes,
-            links,
-            trace_state,
+        parent_context: Optional["Context"],
+        trace_id: int,
+        name: str,
+        kind: SpanKind = None,
+        attributes: Attributes = None,
+        links: Sequence[Link] = None,
+        trace_state: TraceState = None,
+    ) -> "SamplingResult":
+        return SamplingResult(
+            Decision.RECORD_AND_SAMPLE,
+            None,
+            None,
         )
 
 
@@ -248,7 +252,7 @@ class TestTracerSampling(unittest.TestCase):
         self.verify_default_sampler(tracer_provider)
 
     def test_sampler_no_sampling(self):
-        tracer_provider = trace.TracerProvider(sampling.ALWAYS_OFF)
+        tracer_provider = trace.TracerProvider(ALWAYS_OFF)
         tracer = tracer_provider.get_tracer(__name__)
 
         # Check that the default tracer creates no-op spans if the sampler
@@ -272,10 +276,8 @@ class TestTracerSampling(unittest.TestCase):
         # pylint: disable=protected-access
         reload(trace)
         tracer_provider = trace.TracerProvider()
-        self.assertIsInstance(tracer_provider.sampler, sampling.StaticSampler)
-        self.assertEqual(
-            tracer_provider.sampler._decision, sampling.Decision.DROP
-        )
+        self.assertIsInstance(tracer_provider.sampler, StaticSampler)
+        self.assertEqual(tracer_provider.sampler._decision, Decision.DROP)
 
         tracer = tracer_provider.get_tracer(__name__)
 
@@ -294,7 +296,7 @@ class TestTracerSampling(unittest.TestCase):
         # pylint: disable=protected-access
         reload(trace)
         tracer_provider = trace.TracerProvider()
-        self.assertIsInstance(tracer_provider.sampler, sampling.ParentBased)
+        self.assertIsInstance(tracer_provider.sampler, ParentBased)
         self.assertEqual(tracer_provider.sampler._root.rate, 0.25)
 
     @mock.patch.dict(
@@ -453,9 +455,9 @@ class TestTracerSampling(unittest.TestCase):
         self.assertIsInstance(tracer_provider.sampler, CustomSampler)
 
     def verify_default_sampler(self, tracer_provider):
-        self.assertIsInstance(tracer_provider.sampler, sampling.ParentBased)
+        self.assertIsInstance(tracer_provider.sampler, ParentBased)
         # pylint: disable=protected-access
-        self.assertEqual(tracer_provider.sampler._root, sampling.ALWAYS_ON)
+        self.assertEqual(tracer_provider.sampler._root, ALWAYS_ON)
 
 
 class TestSpanCreation(unittest.TestCase):
@@ -950,7 +952,7 @@ class TestSpan(unittest.TestCase):
             "attr-in-both": "decision-attr",
         }
         tracer_provider = trace.TracerProvider(
-            sampling.StaticSampler(sampling.Decision.RECORD_AND_SAMPLE)
+            StaticSampler(Decision.RECORD_AND_SAMPLE)
         )
 
         self.tracer = tracer_provider.get_tracer(__name__)
