@@ -33,7 +33,7 @@ jobs:
           commit=$(gh pr view $NUMBER --json mergeCommit --jq .mergeCommit.oid)
           title=$(gh pr view $NUMBER --json title --jq .title)
 
-          branch="backport-${NUMBER}-to-${GITHUB_REF_NAME//\//-}"
+          branch="opentelemetrybot/backport-${NUMBER}-to-${GITHUB_REF_NAME//\//-}"
 
           git cherry-pick $commit
           git push origin HEAD:$branch

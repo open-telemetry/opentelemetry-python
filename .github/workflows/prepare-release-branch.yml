@@ -90,7 +90,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
         run: |
           message="Prepare release ${STABLE_VERSION}/${UNSTABLE_VERSION}"
-          branch="prepare-release-${STABLE_VERSION}-${UNSTABLE_VERSION}"
+          branch="opentelemetrybot/prepare-release-${STABLE_VERSION}-${UNSTABLE_VERSION}"
 
           git commit -a -m "$message"
           git push origin HEAD:$branch
@@ -167,7 +167,7 @@ jobs:
         run: |
           message="Update version to ${STABLE_NEXT_VERSION}/${UNSTABLE_NEXT_VERSION}"
           body="Update version to \`${STABLE_NEXT_VERSION}/${UNSTABLE_NEXT_VERSION}\`."
-          branch="update-version-to-${STABLE_NEXT_VERSION}-${UNSTABLE_NEXT_VERSION}"
+          branch="opentelemetrybot/update-version-to-${STABLE_NEXT_VERSION}-${UNSTABLE_NEXT_VERSION}"
 
           git commit -a -m "$message"
           git push origin HEAD:$branch
