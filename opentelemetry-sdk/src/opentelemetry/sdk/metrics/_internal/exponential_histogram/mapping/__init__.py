@@ -72,9 +72,11 @@ class Mapping(ABC):
         expected to map onto a range that is at least partially inside the
         range of normalized floating point values.  If the corresponding
         bucket's upper boundary is less than or equal to 2 ** -1022,
-        `UnderflowError` will be raised. If the corresponding bucket's lower
-        boundary is greater than `sys.float_info.max`, `OverflowError` will be
-        raised.
+        :class:`~opentelemetry.sdk.metrics.MappingUnderflowError`
+        will be raised. If the corresponding bucket's lower boundary is greater
+        than ``sys.float_info.max``,
+        :class:`~opentelemetry.sdk.metrics.MappingOverflowError`
+        will be raised.
         """
 
     @property

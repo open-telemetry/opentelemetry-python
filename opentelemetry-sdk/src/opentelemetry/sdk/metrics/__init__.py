@@ -30,6 +30,12 @@ from opentelemetry.sdk.metrics._internal.instrument import (  # noqa: F401
     UpDownCounter,
 )
 
+from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.errors import (  # noqa: F401
+    MappingUnderflowError,
+    MappingOverflowError,
+)
+
+
 __all__ = []
 for key, value in globals().copy().items():
     if not key.startswith("_"):
