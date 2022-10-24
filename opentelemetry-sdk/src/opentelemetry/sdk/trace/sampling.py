@@ -407,12 +407,12 @@ _KNOWN_SAMPLERS = {
 
 
 def _get_from_env_or_default() -> Sampler:
-    trace_sampler_name = os.getenv(
+    traces_sampler_name = os.getenv(
         OTEL_TRACES_SAMPLER, "parentbased_always_on"
     ).lower()
 
-    if trace_sampler_name in _KNOWN_SAMPLERS:
-        if trace_sampler_name in ("traceidratio", "parentbased_traceidratio"):
+    if traces_sampler_name in _KNOWN_SAMPLERS:
+        if traces_sampler_name in ("traceidratio", "parentbased_traceidratio"):
             try:
                 rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG))
             except ValueError:
@@ -420,21 +420,21 @@ def _get_from_env_or_default() -> Sampler:
                     "Could not convert TRACES_SAMPLER_ARG to float."
                 )
                 rate = 1.0
-            return _KNOWN_SAMPLERS[trace_sampler_name](rate)
-        return _KNOWN_SAMPLERS[trace_sampler_name]
+            return _KNOWN_SAMPLERS[traces_sampler_name](rate)
+        return _KNOWN_SAMPLERS[traces_sampler_name]
     try:
-        trace_sampler_factory = _import_sampler_factory(trace_sampler_name)
+        traces_sampler_factory = _import_sampler_factory(traces_sampler_name)
         sampler_arg = os.getenv(OTEL_TRACES_SAMPLER_ARG, "")
-        trace_sampler = trace_sampler_factory(sampler_arg)
-        if not isinstance(trace_sampler, Sampler):
-            message = f"Output of traces sampler factory, {trace_sampler_factory}, was not a Sampler object."
+        traces_sampler = traces_sampler_factory(sampler_arg)
+        if not isinstance(traces_sampler, Sampler):
+            message = f"Traces sampler factory, {traces_sampler_factory}, produced output, {traces_sampler}, which is not a Sampler object."
             _logger.warning(message)
             raise ValueError(message)
-        return trace_sampler
+        return traces_sampler
     except Exception as exc:  # pylint: disable=broad-except
         _logger.warning(
             "Using default sampler. Failed to initialize custom sampler, %s: %s",
-            trace_sampler_name,
+            traces_sampler_name,
             exc,
         )
         return _KNOWN_SAMPLERS["parentbased_always_on"]
