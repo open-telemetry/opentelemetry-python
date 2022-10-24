@@ -422,26 +422,22 @@ def _get_from_env_or_default() -> Sampler:
                 rate = 1.0
             return _KNOWN_SAMPLERS[trace_sampler_name](rate)
         return _KNOWN_SAMPLERS[trace_sampler_name]
-    else:
-        try:
-            trace_sampler_factory = _import_sampler_factory(trace_sampler_name)
-            sampler_arg = os.getenv(OTEL_TRACES_SAMPLER_ARG, "")
-            trace_sampler = trace_sampler_factory(sampler_arg)
-            if not isinstance(trace_sampler, Sampler):
-                message = (
-                    "Output of traces sampler factory, %s, was not a Sampler object."
-                    % trace_sampler_factory
-                )
-                _logger.warning(message)
-                raise ValueError(message)
-            return trace_sampler
-        except Exception as exc:
-            _logger.warning(
-                "Using default sampler. Failed to initialize custom sampler, %s: %s",
-                trace_sampler_name,
-                exc,
-            )
-            return _KNOWN_SAMPLERS["parentbased_always_on"]
+    try:
+        trace_sampler_factory = _import_sampler_factory(trace_sampler_name)
+        sampler_arg = os.getenv(OTEL_TRACES_SAMPLER_ARG, "")
+        trace_sampler = trace_sampler_factory(sampler_arg)
+        if not isinstance(trace_sampler, Sampler):
+            message = f"Output of traces sampler factory, {trace_sampler_factory}, was not a Sampler object."
+            _logger.warning(message)
+            raise ValueError(message)
+        return trace_sampler
+    except Exception as exc:  # pylint: disable=broad-except
+        _logger.warning(
+            "Using default sampler. Failed to initialize custom sampler, %s: %s",
+            trace_sampler_name,
+            exc,
+        )
+        return _KNOWN_SAMPLERS["parentbased_always_on"]
 
 
 def _get_parent_trace_state(parent_context) -> Optional["TraceState"]:
