@@ -37,6 +37,18 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
 )
+from opentelemetry.sdk.metrics.export import (
+    MetricExportResult,
+    MetricsData,
+    ResourceMetrics,
+    ScopeMetrics,
+)
+from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.util.instrumentation import (
+    InstrumentationScope as SDKInstrumentationScope,
+)
+from opentelemetry.test.metrictestutil import _generate_sum
+
 
 OS_ENV_ENDPOINT = "os.env.base"
 OS_ENV_CERTIFICATE = "os/env/base.crt"
@@ -46,6 +58,33 @@ OS_ENV_TIMEOUT = "30"
 
 # pylint: disable=protected-access
 class TestOTLPMetricExporter(unittest.TestCase):
+    def setUp(self):
+
+        self.metrics = {
+            "sum_int": MetricsData(
+                resource_metrics=[
+                    ResourceMetrics(
+                        resource=Resource(
+                            attributes={"a": 1, "b": False},
+                            schema_url="resource_schema_url",
+                        ),
+                        scope_metrics=[
+                            ScopeMetrics(
+                                scope=SDKInstrumentationScope(
+                                    name="first_name",
+                                    version="first_version",
+                                    schema_url="insrumentation_scope_schema_url",
+                                ),
+                                metrics=[_generate_sum("sum_int", 33)],
+                                schema_url="instrumentation_scope_schema_url",
+                            )
+                        ],
+                        schema_url="resource_schema_url",
+                    )
+                ]
+            ),
+        }
+
     def test_constructor_default(self):
 
         exporter = OTLPMetricExporter()
@@ -183,3 +222,51 @@ class TestOTLPMetricExporter(unittest.TestCase):
                 cm.records[0].message,
                 "Header doesn't match the format: missingValue.",
             )
+
+    @patch.object(requests.Session, 'post')
+    def test_success(self, mock_post):
+        resp = requests.models.Response()
+        resp.status_code = 200
+        mock_post.return_value = resp
+
+        exporter = OTLPMetricExporter()
+
+        self.assertEqual(
+            exporter.export(self.metrics["sum_int"]),
+            MetricExportResult.SUCCESS,
+        )
+
+    @patch.object(requests.Session, 'post')
+    def test_failure(self, mock_post):
+        resp = requests.models.Response()
+        resp.status_code = 401
+        mock_post.return_value = resp
+
+        exporter = OTLPMetricExporter()
+
+        self.assertEqual(
+            exporter.export(self.metrics["sum_int"]),
+            MetricExportResult.FAILURE,
+        )
+
+    @patch.object(requests.Session, 'post')
+    def test_serialization(self, mock_post):
+
+        resp = requests.models.Response()
+        resp.status_code = 200
+        mock_post.return_value = resp
+
+        exporter = OTLPMetricExporter()
+
+        self.assertEqual(
+            exporter.export(self.metrics["sum_int"]),
+            MetricExportResult.SUCCESS,
+        )
+
+        serialized_data = exporter._translate_data(self.metrics["sum_int"])
+        mock_post.assert_called_once_with(
+            url=exporter._endpoint,
+            data=serialized_data.SerializeToString(),
+            verify=exporter._certificate_file,
+            timeout=exporter._timeout,
+        )
