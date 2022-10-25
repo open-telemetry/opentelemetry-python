@@ -60,8 +60,6 @@ _logger = logging.getLogger(__name__)
 
 
 class _ProtobufEncoder:
-    _CONTENT_TYPE = "application/x-protobuf"
-
     @classmethod
     def serialize(cls, sdk_spans: Sequence[SDKSpan]) -> str:
         return cls.encode(sdk_spans).SerializeToString()
