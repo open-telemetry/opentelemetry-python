@@ -330,7 +330,7 @@ class OTLPMetricExporter(MetricExporter):
                 return MetricExportResult.SUCCESS
             elif self._retryable(resp):
                 _logger.warning(
-                    "Transient error %s encountered while exporting span batch, retrying in %ss.",
+                    "Transient error %s encountered while exporting metric batch, retrying in %ss.",
                     resp.reason,
                     delay,
                 )
