@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2959](https://github.com/open-telemetry/opentelemetry-python/pull/2959))
 - Add http-metric instrument names to semantic conventions
   ([#2976](https://github.com/open-telemetry/opentelemetry-python/pull/2976))
+- [exporter/opentelemetry-exporter-otlp-proto-http] Add OTLPMetricExporter
+  ([#2891](https://github.com/open-telemetry/opentelemetry-python/pull/2891))
 
 ## [1.13.0-0.34b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.13.0) - 2022-09-26
 
@@ -28,8 +30,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2870](https://github.com/open-telemetry/opentelemetry-python/pull/2870))
 - Fix: Remove `LogEmitter.flush()` to align with OTel Log spec
   ([#2863](https://github.com/open-telemetry/opentelemetry-python/pull/2863))
-- [exporter/opentelemetry-exporter-otlp-proto-http] Add OTLPMetricExporter
-  ([#2891](https://github.com/open-telemetry/opentelemetry-python/pull/2891))
 - Bump minimum required API/SDK version for exporters that support metrics
   ([#2918](https://github.com/open-telemetry/opentelemetry-python/pull/2918))
 - Fix metric reader examples + added `preferred_temporality` and `preferred_aggregation`
