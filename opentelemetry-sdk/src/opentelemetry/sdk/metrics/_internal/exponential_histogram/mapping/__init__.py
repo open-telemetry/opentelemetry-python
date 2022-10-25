@@ -78,9 +78,9 @@ class Mapping(ABC):
         """
 
     @property
-    @abstractmethod
     def scale(self) -> int:
         """
         Returns the parameter that controls the resolution of this mapping.
         See: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/datamodel.md#exponential-scale
         """
+        return self._scale
