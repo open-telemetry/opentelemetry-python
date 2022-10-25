@@ -35,14 +35,21 @@ class LogarithmMapping(Mapping):
 
     _mappings = {}
     _mappings_lock = Lock()
-    # _min_scale ensures that ExponentMapping is used for zero and negative
-    # scale values.
+
     _min_scale = 1
-    # FIXME Go implementation uses a value of 20 here, find out the right
-    # value for this implementation, more information here:
-    # https://github.com/lightstep/otel-launcher-go/blob/c9ca8483be067a39ab306b09060446e7fda65f35/lightstep/sdk/metric/aggregator/histogram/structure/README.md#mapping-function
-    # https://github.com/open-telemetry/opentelemetry-go/blob/0e6f9c29c10d6078e8131418e1d1d166c7195d61/sdk/metric/aggregator/exponential/mapping/logarithm/logarithm.go#L32-L45
     _max_scale = 20
+
+    def _get_min_scale(self):
+        # _min_scale ensures that ExponentMapping is used for zero and negative
+        # scale values.
+        return self._min_scale
+
+    def _get_max_scale(self):
+        # FIXME The Go implementation uses a value of 20 here, find out the
+        # right value for this implementation, more information here:
+        # https://github.com/lightstep/otel-launcher-go/blob/c9ca8483be067a39ab306b09060446e7fda65f35/lightstep/sdk/metric/aggregator/histogram/structure/README.md#mapping-function
+        # https://github.com/open-telemetry/opentelemetry-go/blob/0e6f9c29c10d6078e8131418e1d1d166c7195d61/sdk/metric/aggregator/exponential/mapping/logarithm/logarithm.go#L32-L45
+        return self._max_scale
 
     def __init__(self, scale: int):
 

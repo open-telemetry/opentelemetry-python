@@ -39,7 +39,6 @@ from opentelemetry.sdk.metrics._internal.point import (  # noqa: F401
     Sum,
 )
 
-
 __all__ = []
 for key, value in globals().copy().items():
     if not key.startswith("_"):

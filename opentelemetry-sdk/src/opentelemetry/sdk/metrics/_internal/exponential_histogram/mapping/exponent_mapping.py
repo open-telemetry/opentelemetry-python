@@ -36,13 +36,20 @@ class ExponentMapping(Mapping):
 
     _mappings = {}
     _mappings_lock = Lock()
-    # _min_scale defines the point at which the exponential mapping function
-    # becomes useless for 64-bit floats. With scale -10, ignoring subnormal
-    # values, bucket indices range from -1 to 1.
+
     _min_scale = -10
-    # _max_scale is the largest scale supported by exponential mapping. Use
-    # a logarithm mapping for larger scales.
     _max_scale = 0
+
+    def _get_min_scale(self):
+        # _min_scale defines the point at which the exponential mapping
+        # function becomes useless for 64-bit floats. With scale -10, ignoring
+        # subnormal values, bucket indices range from -1 to 1.
+        return -10
+
+    def _get_max_scale(self):
+        # _max_scale is the largest scale supported by exponential mapping. Use
+        # a logarithm mapping for larger scales.
+        return 0
 
     def __init__(self, scale: int):
         super().__init__(scale)

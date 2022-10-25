@@ -28,10 +28,10 @@ class Mapping(ABC):
 
     def __init__(self, scale: int) -> None:
 
-        if scale > self._max_scale:
+        if scale > self._get_max_scale():
             raise Exception(f"scale is larger than {self._max_scale}")
 
-        if scale < self._min_scale:
+        if scale < self._get_min_scale():
             raise Exception(f"scale is smaller than {self._min_scale}")
 
         # The size of the exponential histogram buckets is determined by a
@@ -43,16 +43,14 @@ class Mapping(ABC):
         # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/data-model.md#all-scales-use-the-logarithm-function
         self._scale = scale
 
-    @property
     @abstractmethod
-    def _min_scale(self) -> int:
+    def _get_min_scale(self) -> int:
         """
         Return the smallest possible value for the mapping scale
         """
 
-    @property
     @abstractmethod
-    def _max_scale(self) -> int:
+    def _get_max_scale(self) -> int:
         """
         Return the largest possible value for the mapping scale
         """

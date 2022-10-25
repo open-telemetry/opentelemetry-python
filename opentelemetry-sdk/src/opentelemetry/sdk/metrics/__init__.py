@@ -21,6 +21,10 @@ from opentelemetry.sdk.metrics._internal import (  # noqa: F401
 from opentelemetry.sdk.metrics._internal.exceptions import (  # noqa: F401
     MetricsTimeoutError,
 )
+from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.errors import (  # noqa: F401
+    MappingOverflowError,
+    MappingUnderflowError,
+)
 from opentelemetry.sdk.metrics._internal.instrument import (  # noqa: F401
     Counter,
     Histogram,
@@ -29,12 +33,6 @@ from opentelemetry.sdk.metrics._internal.instrument import (  # noqa: F401
     ObservableUpDownCounter,
     UpDownCounter,
 )
-
-from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.errors import (  # noqa: F401
-    MappingUnderflowError,
-    MappingOverflowError,
-)
-
 
 __all__ = []
 for key, value in globals().copy().items():
