@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.13.0...HEAD)
 
+- Update log symbol names
+  ([#2943](https://github.com/open-telemetry/opentelemetry-python/pull/2943))
 - Update explicit histogram bucket boundaries
   ([#2947](https://github.com/open-telemetry/opentelemetry-python/pull/2947))
 - `exporter-otlp-proto-http`: add user agent string
@@ -17,7 +19,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2891](https://github.com/open-telemetry/opentelemetry-python/pull/2891))
 
 ## [1.13.0-0.34b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.13.0) - 2022-09-26
-
 
 
 - Add a configurable max_export_batch_size to the gRPC metrics exporter
