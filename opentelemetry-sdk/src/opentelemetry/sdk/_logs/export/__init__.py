@@ -24,7 +24,7 @@ from time import time_ns
 from typing import IO, Callable, Deque, List, Optional, Sequence
 
 from opentelemetry.context import attach, detach, set_value
-from opentelemetry.sdk._logs import LogData, LogProcessor, LogRecord
+from opentelemetry.sdk._logs import LogData, LogRecord, LogRecordProcessor
 from opentelemetry.util._once import Once
 
 _logger = logging.getLogger(__name__)
@@ -41,7 +41,7 @@ class LogExporter(abc.ABC):
     Interface to be implemented by services that want to export logs received
     in their own format.
 
-    To export data this MUST be registered to the :class`opentelemetry.sdk._logs.LogEmitter` using a
+    To export data this MUST be registered to the :class`opentelemetry.sdk._logs.Logger` using a
     log processor.
     """
 
@@ -91,8 +91,8 @@ class ConsoleLogExporter(LogExporter):
         pass
 
 
-class SimpleLogProcessor(LogProcessor):
-    """This is an implementation of LogProcessor which passes
+class SimpleLogRecordProcessor(LogRecordProcessor):
+    """This is an implementation of LogRecordProcessor which passes
     received logs in the export-friendly LogData representation to the
     configured LogExporter, as soon as they are emitted.
     """
@@ -133,8 +133,8 @@ class _FlushRequest:
 _BSP_RESET_ONCE = Once()
 
 
-class BatchLogProcessor(LogProcessor):
-    """This is an implementation of LogProcessor which creates batches of
+class BatchLogRecordProcessor(LogRecordProcessor):
+    """This is an implementation of LogRecordProcessor which creates batches of
     received logs in the export-friendly LogData representation and
     send to the configured LogExporter, as soon as they are emitted.
     """
@@ -152,7 +152,7 @@ class BatchLogProcessor(LogProcessor):
         self._export_timeout_millis = export_timeout_millis
         self._queue = collections.deque()  # type: Deque[LogData]
         self._worker_thread = threading.Thread(
-            name="OtelBatchLogProcessor",
+            name="OtelBatchLogRecordProcessor",
             target=self.worker,
             daemon=True,
         )
@@ -174,7 +174,7 @@ class BatchLogProcessor(LogProcessor):
         self._condition = threading.Condition(threading.Lock())
         self._queue.clear()
         self._worker_thread = threading.Thread(
-            name="OtelBatchLogProcessor",
+            name="OtelBatchLogRecordProcessor",
             target=self.worker,
             daemon=True,
         )
