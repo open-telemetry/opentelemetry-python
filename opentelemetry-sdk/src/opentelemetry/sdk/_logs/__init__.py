@@ -25,7 +25,7 @@ from typing import Any, Callable, Optional, Tuple, Union, cast
 
 from opentelemetry.sdk._logs.severity import SeverityNumber, std_to_otlp
 from opentelemetry.sdk.environment_variables import (
-    _OTEL_PYTHON_LOG_EMITTER_PROVIDER,
+    _OTEL_PYTHON_LOGGER_PROVIDER,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str
@@ -46,7 +46,7 @@ _logger = logging.getLogger(__name__)
 class LogRecord:
     """A LogRecord instance represents an event being logged.
 
-    LogRecord instances are created and emitted via `LogEmitter`
+    LogRecord instances are created and emitted via `Logger`
     every time something is logged. They contain all the information
     pertinent to the event being logged.
     """
@@ -113,11 +113,11 @@ class LogData:
         self.instrumentation_scope = instrumentation_scope
 
 
-class LogProcessor(abc.ABC):
+class LogRecordProcessor(abc.ABC):
     """Interface to hook the log record emitting action.
 
     Log processors can be registered directly using
-    :func:`LogEmitterProvider.add_log_processor` and they are invoked
+    :func:`LoggerProvider.add_log_record_processor` and they are invoked
     in the same order as they were registered.
     """
 
@@ -127,7 +127,7 @@ class LogProcessor(abc.ABC):
 
     @abc.abstractmethod
     def shutdown(self):
-        """Called when a :class:`opentelemetry.sdk._logs.LogEmitter` is shutdown"""
+        """Called when a :class:`opentelemetry.sdk._logs.Logger` is shutdown"""
 
     @abc.abstractmethod
     def force_flush(self, timeout_millis: int = 30000):
@@ -145,8 +145,8 @@ class LogProcessor(abc.ABC):
 
 # Temporary fix until https://github.com/PyCQA/pylint/issues/4098 is resolved
 # pylint:disable=no-member
-class SynchronousMultiLogProcessor(LogProcessor):
-    """Implementation of class:`LogProcessor` that forwards all received
+class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
+    """Implementation of class:`LogRecordProcessor` that forwards all received
     events to a list of log processors sequentially.
 
     The underlying log processors are called in sequential order as they were
@@ -156,21 +156,23 @@ class SynchronousMultiLogProcessor(LogProcessor):
     def __init__(self):
         # use a tuple to avoid race conditions when adding a new log and
         # iterating through it on "emit".
-        self._log_processors = ()  # type: Tuple[LogProcessor, ...]
+        self._log_record_processors = ()  # type: Tuple[LogRecordProcessor, ...]
         self._lock = threading.Lock()
 
-    def add_log_processor(self, log_processor: LogProcessor) -> None:
+    def add_log_record_processor(
+        self, log_record_processor: LogRecordProcessor
+    ) -> None:
         """Adds a Logprocessor to the list of log processors handled by this instance"""
         with self._lock:
-            self._log_processors += (log_processor,)
+            self._log_record_processors += (log_record_processor,)
 
     def emit(self, log_data: LogData) -> None:
-        for lp in self._log_processors:
+        for lp in self._log_record_processors:
             lp.emit(log_data)
 
     def shutdown(self) -> None:
         """Shutdown the log processors one by one"""
-        for lp in self._log_processors:
+        for lp in self._log_record_processors:
             lp.shutdown()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
@@ -186,7 +188,7 @@ class SynchronousMultiLogProcessor(LogProcessor):
             False otherwise.
         """
         deadline_ns = time_ns() + timeout_millis * 1000000
-        for lp in self._log_processors:
+        for lp in self._log_record_processors:
             current_ts = time_ns()
             if current_ts >= deadline_ns:
                 return False
@@ -197,8 +199,8 @@ class SynchronousMultiLogProcessor(LogProcessor):
         return True
 
 
-class ConcurrentMultiLogProcessor(LogProcessor):
-    """Implementation of :class:`LogProcessor` that forwards all received
+class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
+    """Implementation of :class:`LogRecordProcessor` that forwards all received
     events to a list of log processors in parallel.
 
     Calls to the underlying log processors are forwarded in parallel by
@@ -213,24 +215,26 @@ class ConcurrentMultiLogProcessor(LogProcessor):
     def __init__(self, max_workers: int = 2):
         # use a tuple to avoid race conditions when adding a new log and
         # iterating through it on "emit".
-        self._log_processors = ()  # type: Tuple[LogProcessor, ...]
+        self._log_record_processors = ()  # type: Tuple[LogRecordProcessor, ...]
         self._lock = threading.Lock()
         self._executor = concurrent.futures.ThreadPoolExecutor(
             max_workers=max_workers
         )
 
-    def add_log_processor(self, log_processor: LogProcessor):
+    def add_log_record_processor(
+        self, log_record_processor: LogRecordProcessor
+    ):
         with self._lock:
-            self._log_processors += (log_processor,)
+            self._log_record_processors += (log_record_processor,)
 
     def _submit_and_wait(
         self,
-        func: Callable[[LogProcessor], Callable[..., None]],
+        func: Callable[[LogRecordProcessor], Callable[..., None]],
         *args: Any,
         **kwargs: Any,
     ):
         futures = []
-        for lp in self._log_processors:
+        for lp in self._log_record_processors:
             future = self._executor.submit(func(lp), *args, **kwargs)
             futures.append(future)
         for future in futures:
@@ -254,7 +258,7 @@ class ConcurrentMultiLogProcessor(LogProcessor):
             False otherwise.
         """
         futures = []
-        for lp in self._log_processors:
+        for lp in self._log_record_processors:
             future = self._executor.submit(lp.force_flush, timeout_millis)
             futures.append(future)
 
@@ -311,14 +315,12 @@ class LoggingHandler(logging.Handler):
     def __init__(
         self,
         level=logging.NOTSET,
-        log_emitter_provider=None,
+        logger_provider=None,
     ) -> None:
         super().__init__(level=level)
-        self._log_emitter_provider = (
-            log_emitter_provider or get_log_emitter_provider()
-        )
-        self._log_emitter = get_log_emitter(
-            __name__, log_emitter_provider=self._log_emitter_provider
+        self._logger_provider = logger_provider or get_logger_provider()
+        self._logger = get_logger(
+            __name__, logger_provider=self._logger_provider
         )
 
     @staticmethod
@@ -358,7 +360,7 @@ class LoggingHandler(logging.Handler):
             severity_text=record.levelname,
             severity_number=severity_number,
             body=record.getMessage(),
-            resource=self._log_emitter.resource,
+            resource=self._logger.resource,
             attributes=attributes,
         )
 
@@ -368,26 +370,27 @@ class LoggingHandler(logging.Handler):
 
         The record is translated to OTLP format, and then sent across the pipeline.
         """
-        self._log_emitter.emit(self._translate(record))
+        self._logger.emit(self._translate(record))
 
     def flush(self) -> None:
         """
         Flushes the logging output.
         """
-        self._log_emitter_provider.force_flush()
+        self._logger_provider.force_flush()
 
 
-class LogEmitter:
+class Logger:
     def __init__(
         self,
         resource: Resource,
-        multi_log_processor: Union[
-            SynchronousMultiLogProcessor, ConcurrentMultiLogProcessor
+        multi_log_record_processor: Union[
+            SynchronousMultiLogRecordProcessor,
+            ConcurrentMultiLogRecordProcessor,
         ],
         instrumentation_scope: InstrumentationScope,
     ):
         self._resource = resource
-        self._multi_log_processor = multi_log_processor
+        self._multi_log_record_processor = multi_log_record_processor
         self._instrumentation_scope = instrumentation_scope
 
     @property
@@ -399,21 +402,22 @@ class LogEmitter:
         and instrumentation info.
         """
         log_data = LogData(record, self._instrumentation_scope)
-        self._multi_log_processor.emit(log_data)
+        self._multi_log_record_processor.emit(log_data)
 
 
-class LogEmitterProvider:
+class LoggerProvider:
     def __init__(
         self,
         resource: Resource = Resource.create(),
         shutdown_on_exit: bool = True,
-        multi_log_processor: Union[
-            SynchronousMultiLogProcessor, ConcurrentMultiLogProcessor
+        multi_log_record_processor: Union[
+            SynchronousMultiLogRecordProcessor,
+            ConcurrentMultiLogRecordProcessor,
         ] = None,
     ):
         self._resource = resource
-        self._multi_log_processor = (
-            multi_log_processor or SynchronousMultiLogProcessor()
+        self._multi_log_record_processor = (
+            multi_log_record_processor or SynchronousMultiLogRecordProcessor()
         )
         self._at_exit_handler = None
         if shutdown_on_exit:
@@ -423,29 +427,33 @@ class LogEmitterProvider:
     def resource(self):
         return self._resource
 
-    def get_log_emitter(
+    def get_logger(
         self,
         instrumenting_module_name: str,
         instrumenting_module_version: str = "",
-    ) -> LogEmitter:
-        return LogEmitter(
+    ) -> Logger:
+        return Logger(
             self._resource,
-            self._multi_log_processor,
+            self._multi_log_record_processor,
             InstrumentationScope(
                 instrumenting_module_name, instrumenting_module_version
             ),
         )
 
-    def add_log_processor(self, log_processor: LogProcessor):
-        """Registers a new :class:`LogProcessor` for this `LogEmitterProvider` instance.
+    def add_log_record_processor(
+        self, log_record_processor: LogRecordProcessor
+    ):
+        """Registers a new :class:`LogRecordProcessor` for this `LoggerProvider` instance.
 
         The log processors are invoked in the same order they are registered.
         """
-        self._multi_log_processor.add_log_processor(log_processor)
+        self._multi_log_record_processor.add_log_record_processor(
+            log_record_processor
+        )
 
     def shutdown(self):
         """Shuts down the log processors."""
-        self._multi_log_processor.shutdown()
+        self._multi_log_record_processor.shutdown()
         if self._at_exit_handler is not None:
             atexit.unregister(self._at_exit_handler)
             self._at_exit_handler = None
@@ -461,61 +469,57 @@ class LogEmitterProvider:
             True if all the log processors flushes the logs within timeout,
             False otherwise.
         """
-        return self._multi_log_processor.force_flush(timeout_millis)
+        return self._multi_log_record_processor.force_flush(timeout_millis)
 
 
-_LOG_EMITTER_PROVIDER = None
+_LOGGER_PROVIDER = None
 
 
-def get_log_emitter_provider() -> LogEmitterProvider:
-    """Gets the current global :class:`~.LogEmitterProvider` object."""
-    global _LOG_EMITTER_PROVIDER  # pylint: disable=global-statement
-    if _LOG_EMITTER_PROVIDER is None:
-        if _OTEL_PYTHON_LOG_EMITTER_PROVIDER not in os.environ:
-            _LOG_EMITTER_PROVIDER = LogEmitterProvider()
-            return _LOG_EMITTER_PROVIDER
+def get_logger_provider() -> LoggerProvider:
+    """Gets the current global :class:`~.LoggerProvider` object."""
+    global _LOGGER_PROVIDER  # pylint: disable=global-statement
+    if _LOGGER_PROVIDER is None:
+        if _OTEL_PYTHON_LOGGER_PROVIDER not in os.environ:
+            _LOGGER_PROVIDER = LoggerProvider()
+            return _LOGGER_PROVIDER
 
-        _LOG_EMITTER_PROVIDER = cast(
-            "LogEmitterProvider",
-            _load_provider(
-                _OTEL_PYTHON_LOG_EMITTER_PROVIDER, "log_emitter_provider"
-            ),
+        _LOGGER_PROVIDER = cast(
+            "LoggerProvider",
+            _load_provider(_OTEL_PYTHON_LOGGER_PROVIDER, "logger_provider"),
         )
 
-    return _LOG_EMITTER_PROVIDER
+    return _LOGGER_PROVIDER
 
 
-def set_log_emitter_provider(log_emitter_provider: LogEmitterProvider) -> None:
-    """Sets the current global :class:`~.LogEmitterProvider` object.
+def set_logger_provider(logger_provider: LoggerProvider) -> None:
+    """Sets the current global :class:`~.LoggerProvider` object.
 
     This can only be done once, a warning will be logged if any further attempt
     is made.
     """
-    global _LOG_EMITTER_PROVIDER  # pylint: disable=global-statement
+    global _LOGGER_PROVIDER  # pylint: disable=global-statement
 
-    if _LOG_EMITTER_PROVIDER is not None:
-        _logger.warning(
-            "Overriding of current LogEmitterProvider is not allowed"
-        )
+    if _LOGGER_PROVIDER is not None:
+        _logger.warning("Overriding of current LoggerProvider is not allowed")
         return
 
-    _LOG_EMITTER_PROVIDER = log_emitter_provider
+    _LOGGER_PROVIDER = logger_provider
 
 
-def get_log_emitter(
+def get_logger(
     instrumenting_module_name: str,
     instrumenting_library_version: str = "",
-    log_emitter_provider: Optional[LogEmitterProvider] = None,
-) -> LogEmitter:
-    """Returns a `LogEmitter` for use within a python process.
+    logger_provider: Optional[LoggerProvider] = None,
+) -> Logger:
+    """Returns a `Logger` for use within a python process.
 
     This function is a convenience wrapper for
-    opentelemetry.sdk._logs.LogEmitterProvider.get_log_emitter.
+    opentelemetry.sdk._logs.LoggerProvider.get_logger.
 
-    If log_emitter_provider param is omitted the current configured one is used.
+    If logger_provider param is omitted the current configured one is used.
     """
-    if log_emitter_provider is None:
-        log_emitter_provider = get_log_emitter_provider()
-    return log_emitter_provider.get_log_emitter(
+    if logger_provider is None:
+        logger_provider = get_logger_provider()
+    return logger_provider.get_logger(
         instrumenting_module_name, instrumenting_library_version
     )
