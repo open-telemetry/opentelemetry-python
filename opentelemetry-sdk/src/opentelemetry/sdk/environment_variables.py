@@ -419,7 +419,7 @@ OTEL_EXPORTER_OTLP_METRICS_COMPRESSION = (
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_COMPRESSION
 
 Same as :envvar:`OTEL_EXPORTER_OTLP_COMPRESSION` but only for the metric
-exporter. If both are present, this takes higher precendence.
+exporter. If both are present, this takes higher precedence.
 """
 
 OTEL_EXPORTER_JAEGER_CERTIFICATE = "OTEL_EXPORTER_JAEGER_CERTIFICATE"
