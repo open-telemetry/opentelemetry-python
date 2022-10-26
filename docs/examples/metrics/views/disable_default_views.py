@@ -16,16 +16,15 @@ import random
 import time
 
 from opentelemetry.metrics import get_meter_provider, set_meter_provider
-from opentelemetry.sdk.metrics import Counter, MeterProvider
+from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricExporter,
     PeriodicExportingMetricReader,
 )
 from opentelemetry.sdk.metrics.view import DropAggregation, SumAggregation, View
-
-# disable default views 
+# disable default views
 # Create a view matching the counter instrument `mycounter`
-disable_default_views= View(instrument_name="*", aggregation=DropAggregation())
+disable_default_views = View(instrument_name="*", aggregation=DropAggregation())
 
 exporter = ConsoleMetricExporter()
 
@@ -48,4 +47,3 @@ my_counter = meter.create_counter("mycounter")
 while 1:
     my_counter.add(random.randint(1, 10))
     time.sleep(random.random())
-    
