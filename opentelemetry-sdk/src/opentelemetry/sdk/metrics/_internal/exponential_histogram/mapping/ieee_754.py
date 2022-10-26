@@ -15,6 +15,37 @@
 from ctypes import c_double, c_uint64
 from sys import float_info
 
+# IEEE 754 is a standard that defines a way to represent floating point numbers
+# (normalized and denormalized), and also special numbers like zero, infinite
+# and NaN using 64-bit binary numbers. First we'll explain how floating point
+# numbers are represented and special numbers will be explained later.
+#
+# IEEE 754 represents floating point numbers using an exponential notation with
+# 4 components: sign, mantissa, base and exponent:
+#
+# floating_point_number = sign * mantissa * (base ** exponent)
+#
+# Here:
+# 1. sign can be 1 or -1.
+# 2. mantissa is a positive fractional number whose integer part is 1 for
+#    normalized floating point numbers and 0 for denormalized floating point
+#    numbers.
+# 3. base is always 2.
+# 4. exponent is an integer in the range [-1022, 1023] for normalized floating
+#    point numbers and -1022 for denormalized floating point numbers.
+#
+# The smallest value a normalized floating point number can have is
+# -1 * 1.0 * (2 ** -1022) == 2.2250738585072014e-308.
+# As mentioned before, IEEE 754 defines how floating point numbers are
+# represented using a 64-bit binary number, for this number:
+#
+# 1. The first bit represents the sign.
+# 2. The next 11 bits represent the exponent.
+# 3. The next 52 bits represent the mantissa.
+#
+# The sign is positive if the sign bit is 0 and negative if the sign bit is 1.
+#
+# There are 11 bits for the exponent
 # An IEEE 754 double-precision (64 bit) floating point number is represented
 # as: 1 bit for sign, 11 bits for exponent and 52 bits for significand. Since
 # these numbers are in a normalized form (in scientific notation), the first
@@ -66,58 +97,53 @@ def get_ieee_754_exponent(value: float) -> int:
     Gets the exponent of the IEEE 754 representation of a float.
     """
 
-    # 0000 -> 0
-    # 0001 -> 1
-    # 0010 -> 2
-    # 0011 -> 3
-
-    # 0100 -> 4
-    # 0101 -> 5
-    # 0110 -> 6
-    # 0111 -> 7
-
-    # 1000 -> 8
-    # 1001 -> 9
-    # 1010 -> 10
-    # 1011 -> 11
-
-    # 1100 -> 12
-    # 1101 -> 13
-    # 1110 -> 14
-    # 1111 -> 15
-
-    # 0 & 10 == 0
-    # 1 & 10 == 0
-    # 2 & 10 == 2
-    # 3 & 10 == 2
-    # 4 & 10 == 0
-    # 6 & 10 == 2
-
-    # 12 >> 2 == 3
-    # 1 >> 2 == 0
-
     return (
         (
             # This step gives the integer that corresponds to the IEEE 754
-            # representation of a float.
-            c_uint64.from_buffer(c_double(value)).value
-            # This step isolates the exponent bits, turning every bit
-            # outside of the exponent field to 0.
+            # representation of a float. For example, consider
+            # -MAX_NORMAL_VALUE for an example. We choose this value because
+            # of its binary representation which makes easy to understand the
+            # subsequent operations.
+            #
+            # c_uint64.from_buffer(c_double(-MAX_NORMAL_VALUE)).value == 18442240474082181119
+            # bin(18442240474082181119) == '0b1111111111101111111111111111111111111111111111111111111111111111'
+            #
+            # The first bit of the previous binary number is the sign bit: 1 (1 means negative, 0 means positive)
+            # The next 11 bits are the exponent bits: 11111111110
+            # The next 52 bits are the significand bits: 1111111111111111111111111111111111111111111111111111
+            #
+            # This step isolates the exponent bits, turning every bit outside
+            # of the exponent field (sign and significand bits) to 0.
+            c_uint64.from_buffer(c_double(-MAX_NORMAL_VALUE)).value
             & EXPONENT_MASK
+            # For the example this means:
+            # 18442240474082181119 & EXPONENT_MASK == 9214364837600034816
+            # bin(9214364837600034816) == '0b111111111100000000000000000000000000000000000000000000000000000'
+            # Notice that the previous binary representation does not include
+            # leading zeroes, so the sign bit is not included since it is a
+            # zero.
         )
         # This step moves the exponent bits to the right, removing the
-        # mantissa bits that were set to 0 by the previous step. This
+        # significand bits that were set to 0 by the previous step. This
         # leaves the IEEE 754 exponent value, ready for the next step.
         >> SIGNIFICAND_WIDTH
+        # For the example this means:
+        # 9214364837600034816 >> SIGNIFICAND_WIDTH == 2046
+        # bin(2046) == '0b11111111110'
+        # As shown above, these are the original 11 bits that correspond to the
+        # exponent.
         # This step subtracts the exponent bias from the IEEE 754 value,
         # leaving the actual exponent value.
     ) - EXPONENT_BIAS
+    # For the example this means:
+    # 2046 - EXPONENT_BIAS == 1023
+    # As mentioned in a comment above, the largest value for the exponent is
 
 
 def get_ieee_754_significand(value: float) -> int:
     return (
         c_uint64.from_buffer(c_double(value)).value
-        # This stepe isolates the significand bits. There is no need to do any
+        # This step isolates the significand bits. There is no need to do any
         # bit shifting as the significand bits are already the rightmost field
         # in an IEEE 754 representation.
         & SIGNIFICAND_MASK
