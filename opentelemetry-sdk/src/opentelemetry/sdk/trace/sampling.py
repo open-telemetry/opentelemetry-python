@@ -13,7 +13,7 @@
 # limitations under the License.
 
 """
-For general information about sampling, see `the specification <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#sampling>`_.
+Form general information about sampling, see `the specification <https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/trace/sdk.md#sampling>`_.
 
 OpenTelemetry provides two types of samplers:
 
