@@ -386,7 +386,9 @@ The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https),
 A scheme of https indicates a secure connection and takes precedence over this configuration setting.
 """
 
-OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE = "OTEL_EXPORTER_OTLP_METRRICS_CERTIFICATE"
+OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE = (
+    "OTEL_EXPORTER_OTLP_METRRICS_CERTIFICATE"
+)
 """
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE
 
@@ -410,7 +412,9 @@ The :envvar:`OTEL_EXPORTER_OTLP_METRICS_TIMEOUT` is the maximum time the OTLP ex
 wait for each batch export for metrics.
 """
 
-OTEL_EXPORTER_OTLP_METRICS_COMPRESSION = "OTEL_EXPORTER_OTLP_METRICS_COMPRESSION"
+OTEL_EXPORTER_OTLP_METRICS_COMPRESSION = (
+    "OTEL_EXPORTER_OTLP_METRICS_COMPRESSION"
+)
 """
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_COMPRESSION
 

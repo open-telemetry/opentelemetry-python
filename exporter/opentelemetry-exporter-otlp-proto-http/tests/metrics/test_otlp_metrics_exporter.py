@@ -21,8 +21,8 @@ from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
-    DEFAULT_TIMEOUT,
     DEFAULT_METRICS_EXPORT_PATH,
+    DEFAULT_TIMEOUT,
     OTLPMetricExporter,
 )
 from opentelemetry.sdk.environment_variables import (
@@ -30,12 +30,12 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
-    OTEL_EXPORTER_OTLP_TIMEOUT,
     OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_METRICS_COMPRESSION,
     OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
+    OTEL_EXPORTER_OTLP_TIMEOUT,
 )
 from opentelemetry.sdk.metrics.export import (
     MetricExportResult,
@@ -48,7 +48,6 @@ from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope as SDKInstrumentationScope,
 )
 from opentelemetry.test.metrictestutil import _generate_sum
-
 
 OS_ENV_ENDPOINT = "os.env.base"
 OS_ENV_CERTIFICATE = "os/env/base.crt"
@@ -223,7 +222,7 @@ class TestOTLPMetricExporter(unittest.TestCase):
                 "Header doesn't match the format: missingValue.",
             )
 
-    @patch.object(requests.Session, 'post')
+    @patch.object(requests.Session, "post")
     def test_success(self, mock_post):
         resp = requests.models.Response()
         resp.status_code = 200
@@ -236,7 +235,7 @@ class TestOTLPMetricExporter(unittest.TestCase):
             MetricExportResult.SUCCESS,
         )
 
-    @patch.object(requests.Session, 'post')
+    @patch.object(requests.Session, "post")
     def test_failure(self, mock_post):
         resp = requests.models.Response()
         resp.status_code = 401
@@ -249,7 +248,7 @@ class TestOTLPMetricExporter(unittest.TestCase):
             MetricExportResult.FAILURE,
         )
 
-    @patch.object(requests.Session, 'post')
+    @patch.object(requests.Session, "post")
     def test_serialization(self, mock_post):
 
         resp = requests.models.Response()

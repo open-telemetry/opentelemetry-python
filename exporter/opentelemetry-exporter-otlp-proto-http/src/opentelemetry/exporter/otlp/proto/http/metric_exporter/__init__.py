@@ -83,15 +83,15 @@ class OTLPMetricExporter(MetricExporter):
     _MAX_RETRY_TIMEOUT = 64
 
     def __init__(
-            self,
-            endpoint: Optional[str] = None,
-            certificate_file: Optional[str] = None,
-            headers: Optional[Dict[str, str]] = None,
-            timeout: Optional[int] = None,
-            compression: Optional[Compression] = None,
-            session: Optional[requests.Session] = None,
-            preferred_temporality: Dict[type, AggregationTemporality] = None,
-            preferred_aggregation: Dict[type, Aggregation] = None,
+        self,
+        endpoint: Optional[str] = None,
+        certificate_file: Optional[str] = None,
+        headers: Optional[Dict[str, str]] = None,
+        timeout: Optional[int] = None,
+        compression: Optional[Compression] = None,
+        session: Optional[requests.Session] = None,
+        preferred_temporality: Dict[type, AggregationTemporality] = None,
+        preferred_aggregation: Dict[type, Aggregation] = None,
     ):
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
@@ -127,13 +127,13 @@ class OTLPMetricExporter(MetricExporter):
 
         instrument_class_temporality = {}
         if (
-                environ.get(
-                    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
-                    "CUMULATIVE",
-                )
-                        .upper()
-                        .strip()
-                == "DELTA"
+            environ.get(
+                OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
+                "CUMULATIVE",
+            )
+            .upper()
+            .strip()
+            == "DELTA"
         ):
             instrument_class_temporality = {
                 Counter: AggregationTemporality.DELTA,
@@ -186,7 +186,7 @@ class OTLPMetricExporter(MetricExporter):
         return False
 
     def _translate_data(
-            self, data: MetricsData
+        self, data: MetricsData
     ) -> ExportMetricsServiceRequest:
 
         resource_metrics_dict = {}
@@ -313,10 +313,10 @@ class OTLPMetricExporter(MetricExporter):
         return output
 
     def export(
-            self,
-            metrics_data: MetricsData,
-            timeout_millis: float = 10_000,
-            **kwargs,
+        self,
+        metrics_data: MetricsData,
+        timeout_millis: float = 10_000,
+        **kwargs,
     ) -> MetricExportResult:
         serialized_data = self._translate_data(metrics_data)
         for delay in expo(max_value=self._MAX_RETRY_TIMEOUT):
@@ -395,16 +395,16 @@ def _translate_key_values(key: str, value: Any) -> KeyValue:
 
 
 def get_resource_data(
-        sdk_resource_scope_data: Dict[SDKResource, Any],  # ResourceDataT?
-        resource_class: Callable[..., Resource],
-        name: str,
+    sdk_resource_scope_data: Dict[SDKResource, Any],  # ResourceDataT?
+    resource_class: Callable[..., Resource],
+    name: str,
 ) -> List[Resource]:
 
     resource_data = []
 
     for (
-            sdk_resource,
-            scope_data,
+        sdk_resource,
+        scope_data,
     ) in sdk_resource_scope_data.items():
 
         collector_resource = Resource()
