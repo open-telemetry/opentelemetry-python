@@ -20,12 +20,12 @@ from unittest.mock import patch
 
 from opentelemetry.sdk import _logs
 from opentelemetry.sdk._logs import (
-    LogEmitterProvider,
-    get_log_emitter_provider,
-    set_log_emitter_provider,
+    LoggerProvider,
+    get_logger_provider,
+    set_logger_provider,
 )
 from opentelemetry.sdk.environment_variables import (
-    _OTEL_PYTHON_LOG_EMITTER_PROVIDER,
+    _OTEL_PYTHON_LOGGER_PROVIDER,
 )
 
 
@@ -34,26 +34,26 @@ class TestGlobals(unittest.TestCase):
         reload(_logs)
 
     def check_override_not_allowed(self):
-        """set_log_emitter_provider should throw a warning when overridden"""
-        provider = get_log_emitter_provider()
+        """set_logger_provider should throw a warning when overridden"""
+        provider = get_logger_provider()
         with self.assertLogs(level=WARNING) as test:
-            set_log_emitter_provider(LogEmitterProvider())
+            set_logger_provider(LoggerProvider())
             self.assertEqual(
                 test.output,
                 [
                     (
                         "WARNING:opentelemetry.sdk._logs:Overriding of current "
-                        "LogEmitterProvider is not allowed"
+                        "LoggerProvider is not allowed"
                     )
                 ],
             )
-        self.assertIs(provider, get_log_emitter_provider())
+        self.assertIs(provider, get_logger_provider())
 
     def test_set_tracer_provider(self):
         reload(_logs)
-        provider = LogEmitterProvider()
-        set_log_emitter_provider(provider)
-        retrieved_provider = get_log_emitter_provider()
+        provider = LoggerProvider()
+        set_logger_provider(provider)
+        retrieved_provider = get_logger_provider()
         self.assertEqual(provider, retrieved_provider)
 
     def test_tracer_provider_override_warning(self):
@@ -62,14 +62,14 @@ class TestGlobals(unittest.TestCase):
 
     @patch.dict(
         "os.environ",
-        {_OTEL_PYTHON_LOG_EMITTER_PROVIDER: "sdk_log_emitter_provider"},
+        {_OTEL_PYTHON_LOGGER_PROVIDER: "sdk_logger_provider"},
     )
-    def test_sdk_log_emitter_provider(self):
+    def test_sdk_logger_provider(self):
         reload(_logs)
         self.check_override_not_allowed()
 
-    @patch.dict("os.environ", {_OTEL_PYTHON_LOG_EMITTER_PROVIDER: "unknown"})
-    def test_unknown_log_emitter_provider(self):
+    @patch.dict("os.environ", {_OTEL_PYTHON_LOGGER_PROVIDER: "unknown"})
+    def test_unknown_logger_provider(self):
         reload(_logs)
         with self.assertRaises(Exception):
-            get_log_emitter_provider()
+            get_logger_provider()
