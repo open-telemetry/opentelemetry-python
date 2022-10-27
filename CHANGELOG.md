@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2976](https://github.com/open-telemetry/opentelemetry-python/pull/2976))
 - [exporter/opentelemetry-exporter-otlp-proto-http] Add OTLPMetricExporter
   ([#2891](https://github.com/open-telemetry/opentelemetry-python/pull/2891))
+- Add support for py3.11
+  ([#2997](https://github.com/open-telemetry/opentelemetry-python/pull/2997))
 
 ## [1.13.0-0.34b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.13.0) - 2022-09-26
 
