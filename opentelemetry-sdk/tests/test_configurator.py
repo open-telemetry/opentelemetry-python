@@ -61,16 +61,16 @@ class Provider:
         self.processor = processor
 
 
-class DummyLogEmitterProvider:
+class DummyLoggerProvider:
     def __init__(self, resource=None):
         self.resource = resource
-        self.processor = DummyLogProcessor(DummyOTLPLogExporter())
+        self.processor = DummyLogRecordProcessor(DummyOTLPLogExporter())
 
-    def add_log_processor(self, processor):
+    def add_log_record_processor(self, processor):
         self.processor = processor
 
-    def get_log_emitter(self, name, *args, **kwargs):
-        return DummyLogEmitter(name, self.resource, self.processor)
+    def get_logger(self, name, *args, **kwargs):
+        return DummyLogger(name, self.resource, self.processor)
 
     def force_flush(self, *args, **kwargs):
         pass
@@ -80,7 +80,7 @@ class DummyMeterProvider(MeterProvider):
     pass
 
 
-class DummyLogEmitter:
+class DummyLogger:
     def __init__(self, name, resource, processor):
         self.name = name
         self.resource = resource
@@ -90,7 +90,7 @@ class DummyLogEmitter:
         self.processor.emit(record)
 
 
-class DummyLogProcessor:
+class DummyLogRecordProcessor:
     def __init__(self, exporter):
         self.exporter = exporter
 
@@ -274,15 +274,15 @@ class TestTraceInit(TestCase):
 class TestLoggingInit(TestCase):
     def setUp(self):
         self.processor_patch = patch(
-            "opentelemetry.sdk._configuration.BatchLogProcessor",
-            DummyLogProcessor,
+            "opentelemetry.sdk._configuration.BatchLogRecordProcessor",
+            DummyLogRecordProcessor,
         )
         self.provider_patch = patch(
-            "opentelemetry.sdk._configuration.LogEmitterProvider",
-            DummyLogEmitterProvider,
+            "opentelemetry.sdk._configuration.LoggerProvider",
+            DummyLoggerProvider,
         )
         self.set_provider_patch = patch(
-            "opentelemetry.sdk._configuration.set_log_emitter_provider"
+            "opentelemetry.sdk._configuration.set_logger_provider"
         )
 
         self.processor_mock = self.processor_patch.start()
@@ -304,7 +304,7 @@ class TestLoggingInit(TestCase):
         _init_logging({}, "auto-version")
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
-        self.assertIsInstance(provider, DummyLogEmitterProvider)
+        self.assertIsInstance(provider, DummyLoggerProvider)
         self.assertIsInstance(provider.resource, Resource)
         self.assertEqual(
             provider.resource.attributes.get("telemetry.auto.version"),
@@ -319,13 +319,13 @@ class TestLoggingInit(TestCase):
         _init_logging({"otlp": DummyOTLPLogExporter})
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
-        self.assertIsInstance(provider, DummyLogEmitterProvider)
+        self.assertIsInstance(provider, DummyLoggerProvider)
         self.assertIsInstance(provider.resource, Resource)
         self.assertEqual(
             provider.resource.attributes.get("service.name"),
             "otlp-service",
         )
-        self.assertIsInstance(provider.processor, DummyLogProcessor)
+        self.assertIsInstance(provider.processor, DummyLogRecordProcessor)
         self.assertIsInstance(
             provider.processor.exporter, DummyOTLPLogExporter
         )
