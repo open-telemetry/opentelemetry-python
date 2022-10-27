@@ -23,12 +23,12 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.errors im
     MappingUnderflowError,
 )
 from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.ieee_754 import (
+    MANTISSA_WIDTH,
     MAX_NORMAL_EXPONENT,
     MIN_NORMAL_EXPONENT,
     MIN_NORMAL_VALUE,
-    SIGNIFICAND_WIDTH,
     get_ieee_754_exponent,
-    get_ieee_754_significand,
+    get_ieee_754_mantissa,
 )
 
 
@@ -96,30 +96,30 @@ class ExponentMapping(Mapping):
         # == 3. 3 is represented as ...00011. Its compliment is ...11100, the
         # binary representation of -4.
 
-        # get_ieee_754_significand(value) gets the positive integer made up
-        # from the rightmost SIGNIFICAND_WIDTH bits (the mantissa) of the IEEE
+        # get_ieee_754_mantissa(value) gets the positive integer made up
+        # from the rightmost MANTISSA_WIDTH bits (the mantissa) of the IEEE
         # 754 representation of value. If value is an exact power of 2, all
-        # these SIGNIFICAND_WIDTH bits would be all zeroes, and when 1 is
+        # these MANTISSA_WIDTH bits would be all zeroes, and when 1 is
         # subtracted the resulting value is -1. The binary representation of
-        # -1 is ...111, so when these bits are right shifted SIGNIFICAND_WIDTH
+        # -1 is ...111, so when these bits are right shifted MANTISSA_WIDTH
         # places, the resulting value for correction is -1. If value is not an
-        # exact power of 2, at least one of the rightmost SIGNIFICAND_WIDTH
+        # exact power of 2, at least one of the rightmost MANTISSA_WIDTH
         # bits would be 1 (even for values whose decimal part is 0, like 5.0
         # since the IEEE 754 of such number is too the product of a power of 2
         # (defined in the exponent part of the IEEE 754 representation) and the
         # value defined in the mantissa). Having at least one of the rightmost
-        # SIGNIFICAND_WIDTH bit being 1 means that get_ieee_754(value) will
+        # MANTISSA_WIDTH bit being 1 means that get_ieee_754(value) will
         # always be greater or equal to 1, and when 1 is subtracted, the
         # result will be greater or equal to 0, whose representation in binary
-        # will be of at most SIGNIFICAND_WIDTH ones that have an infinite
-        # amount of leading zeroes. When those SIGNIFICAND_WIDTH bits are
-        # shifted to the right SIGNIFICAND_WIDTH places, the resulting value
+        # will be of at most MANTISSA_WIDTH ones that have an infinite
+        # amount of leading zeroes. When those MANTISSA_WIDTH bits are
+        # shifted to the right MANTISSA_WIDTH places, the resulting value
         # will be 0.
 
         # In summary, correction will be -1 if value is a power of 2, 0 if not.
 
         # FIXME Document why we can assume value will not be 0, inf, or NaN.
-        correction = (get_ieee_754_significand(value) - 1) >> SIGNIFICAND_WIDTH
+        correction = (get_ieee_754_mantissa(value) - 1) >> MANTISSA_WIDTH
 
         return (exponent + correction) >> -self._scale
 

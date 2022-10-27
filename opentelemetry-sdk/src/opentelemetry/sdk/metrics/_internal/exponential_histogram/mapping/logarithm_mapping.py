@@ -27,7 +27,7 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.ieee_754 
     MIN_NORMAL_EXPONENT,
     MIN_NORMAL_VALUE,
     get_ieee_754_exponent,
-    get_ieee_754_significand,
+    get_ieee_754_mantissa,
 )
 
 
@@ -104,7 +104,7 @@ class LogarithmMapping(Mapping):
             return self._min_normal_lower_boundary_index - 1
 
         # Exact power-of-two correctness: an optional special case.
-        if get_ieee_754_significand(value) == 0:
+        if get_ieee_754_mantissa(value) == 0:
             exponent = get_ieee_754_exponent(value)
             return (exponent << self._scale) - 1
 

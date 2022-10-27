@@ -89,7 +89,7 @@ where $v$ is the value of the binary number in the exponent bits and $bias$ is $
 Considering the restrictions above, the respective minimum and maximum values for the
 exponent are:
 
-1. `00000000001` = $1$, $1 - 1023 = 1022$
+1. `00000000001` = $1$, $1 - 1023 = -1022$
 2. `11111111110` = $2046$, $2046 - 1023 = 1023$
 
 So, $exponent$ is an integer in the range $\left[-1022, 1023\right]$.
