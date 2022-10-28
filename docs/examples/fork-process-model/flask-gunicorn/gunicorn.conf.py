@@ -12,10 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from opentelemetry import trace
+from opentelemetry import metrics, trace
+from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
+    OTLPMetricExporter,
+)
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
+from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics.export import PeriodicExportingMetricReader
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
@@ -41,7 +46,19 @@ access_log_format = (
 def post_fork(server, worker):
     server.log.info("Worker spawned (pid: %s)", worker.pid)
 
-    resource = Resource.create(attributes={"service.name": "api-service"})
+    resource = Resource.create(
+        attributes={
+            "service.name": "api-service",
+            # If workers are not distinguished within attributes, traces and
+            # metrics exported from each worker will be indistinguishable. While
+            # not necessarily an issue for traces, it is confusing for almost
+            # all metric types. A built-in way to identify a worker is by PID
+            # but this may lead to high label cardinality. An alternative
+            # workaround and additional discussion are available here:
+            # https://github.com/benoitc/gunicorn/issues/1352
+            "worker": worker.pid,
+        }
+    )
 
     trace.set_tracer_provider(TracerProvider(resource=resource))
     # This uses insecure connection for the purpose of example. Please see the
@@ -50,3 +67,13 @@ def post_fork(server, worker):
         OTLPSpanExporter(endpoint="http://localhost:4317", insecure=True)
     )
     trace.get_tracer_provider().add_span_processor(span_processor)
+
+    reader = PeriodicExportingMetricReader(
+        OTLPMetricExporter(endpoint="http://localhost:4317", insecure=True)
+    )
+    metrics.set_meter_provider(
+        MeterProvider(
+            resource=resource,
+            metric_readers=[reader],
+        )
+    )
