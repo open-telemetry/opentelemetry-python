@@ -8,4 +8,4 @@ Run application
 ---------------
 .. code-block:: sh
 
-    gunicorn app
+    gunicorn app -c gunicorn.conf.py
