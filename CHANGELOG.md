@@ -5,8 +5,49 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.13.0...HEAD)
 
+- Enabled custom samplers via entry points
+  ([#2972](https://github.com/open-telemetry/opentelemetry-python/pull/2972))
+- Update log symbol names
+  ([#2943](https://github.com/open-telemetry/opentelemetry-python/pull/2943))
+- Update explicit histogram bucket boundaries
+  ([#2947](https://github.com/open-telemetry/opentelemetry-python/pull/2947))
+- `exporter-otlp-proto-http`: add user agent string
+  ([#2959](https://github.com/open-telemetry/opentelemetry-python/pull/2959))
+- Add http-metric instrument names to semantic conventions
+  ([#2976](https://github.com/open-telemetry/opentelemetry-python/pull/2976))
+- [exporter/opentelemetry-exporter-otlp-proto-http] Add OTLPMetricExporter
+  ([#2891](https://github.com/open-telemetry/opentelemetry-python/pull/2891))
+
+## [1.13.0-0.34b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.13.0) - 2022-09-26
+
+
+- Add a configurable max_export_batch_size to the gRPC metrics exporter
+  ([#2809](https://github.com/open-telemetry/opentelemetry-python/pull/2809))
+- Remove support for 3.6
+  ([#2763](https://github.com/open-telemetry/opentelemetry-python/pull/2763))
+- Update PeriodicExportingMetricReader to never call export() concurrently
+  ([#2873](https://github.com/open-telemetry/opentelemetry-python/pull/2873))
+- Add param for `indent` size to `LogRecord.to_json()`
+  ([#2870](https://github.com/open-telemetry/opentelemetry-python/pull/2870))
+- Fix: Remove `LogEmitter.flush()` to align with OTel Log spec
+  ([#2863](https://github.com/open-telemetry/opentelemetry-python/pull/2863))
+- Bump minimum required API/SDK version for exporters that support metrics
+  ([#2918](https://github.com/open-telemetry/opentelemetry-python/pull/2918))
+- Fix metric reader examples + added `preferred_temporality` and `preferred_aggregation`
+  for `ConsoleMetricExporter`
+  ([#2911](https://github.com/open-telemetry/opentelemetry-python/pull/2911))
+- Add support for setting OTLP export protocol with env vars, as defined in the
+  [specifications](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/protocol/exporter.md#specify-protocol)
+  ([#2893](https://github.com/open-telemetry/opentelemetry-python/pull/2893))
+- Add force_flush to span exporters
+  ([#2919](https://github.com/open-telemetry/opentelemetry-python/pull/2919))
+
+## [1.12.0-0.33b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0) - 2022-08-08
+
+- Add `force_flush` method to metrics exporter
+  ([#2852](https://github.com/open-telemetry/opentelemetry-python/pull/2852))
 - Change tracing to use `Resource.to_json()`
   ([#2784](https://github.com/open-telemetry/opentelemetry-python/pull/2784))
 - Fix get_log_emitter instrumenting_module_version args typo
@@ -17,6 +58,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2754](https://github.com/open-telemetry/opentelemetry-python/pull/2754))
 - Fix --insecure of CLI argument
   ([#2696](https://github.com/open-telemetry/opentelemetry-python/pull/2696))
+- Add temporality and aggregation configuration for metrics exporters,
+  use `OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE` only for OTLP metrics exporter
+  ([#2843](https://github.com/open-telemetry/opentelemetry-python/pull/2843))
+- Instrument instances are always created through a Meter
+  ([#2844](https://github.com/open-telemetry/opentelemetry-python/pull/2844))
 
 ## [1.12.0rc2-0.32b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.12.0rc2) - 2022-07-04
 
@@ -366,7 +412,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Allow span limits to be set programatically via TracerProvider.
+- Allow span limits to be set programmatically via TracerProvider.
   ([#1877](https://github.com/open-telemetry/opentelemetry-python/pull/1877))
 - Added support for CreateKey functionality.
   ([#1853](https://github.com/open-telemetry/opentelemetry-python/pull/1853))
@@ -796,7 +842,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1194](https://github.com/open-telemetry/opentelemetry-python/pull/1194))
 - Make instances of SpanContext immutable
   ([#1134](https://github.com/open-telemetry/opentelemetry-python/pull/1134))
-- Parent is now always passed in via Context, intead of Span or SpanContext
+- Parent is now always passed in via Context, instead of Span or SpanContext
   ([#1146](https://github.com/open-telemetry/opentelemetry-python/pull/1146))
 - Update OpenTelemetry protos to v0.5.0
   ([#1143](https://github.com/open-telemetry/opentelemetry-python/pull/1143))

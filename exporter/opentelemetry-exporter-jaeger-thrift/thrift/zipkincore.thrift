@@ -292,7 +292,7 @@ struct Span {
   3: string name,
   4: i64 id,                       # unique span id, only used for this span
   5: optional i64 parent_id,       # parent span id
-  6: list<Annotation> annotations, # all annotations/events that occured, sorted by timestamp
+  6: list<Annotation> annotations, # all annotations/events that occurred, sorted by timestamp
   8: list<BinaryAnnotation> binary_annotations # any binary annotations
   9: optional bool debug = 0       # if true, we DEMAND that this span passes all samplers
   /**
@@ -302,7 +302,7 @@ struct Span {
    * precise value possible. For example, gettimeofday or syncing nanoTime
    * against a tick of currentTimeMillis.
    *
-   * For compatibilty with instrumentation that precede this field, collectors
+   * For compatibility with instrumentation that precede this field, collectors
    * or span stores can derive this via Annotation.timestamp.
    * For example, SERVER_RECV.timestamp or CLIENT_SEND.timestamp.
    *
@@ -317,7 +317,7 @@ struct Span {
    * precise measurement decoupled from problems of clocks, such as skew or NTP
    * updates causing time to move backwards.
    *
-   * For compatibilty with instrumentation that precede this field, collectors
+   * For compatibility with instrumentation that precede this field, collectors
    * or span stores can derive this by subtracting Annotation.timestamp.
    * For example, SERVER_SEND.timestamp - SERVER_RECV.timestamp.
    *

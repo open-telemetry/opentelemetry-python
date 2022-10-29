@@ -14,6 +14,7 @@
 
 from logging import getLogger
 from threading import RLock
+from time import time_ns
 from typing import Dict, List
 
 from opentelemetry.metrics import (
@@ -49,7 +50,6 @@ from opentelemetry.sdk.metrics._internal.sdk_configuration import (
 )
 from opentelemetry.sdk.metrics._internal.view import View
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.util._time import _time_ns
 
 _logger = getLogger(__name__)
 
@@ -130,7 +130,7 @@ class MetricReaderStorage:
         # streams produced by the SDK, but we still align the output timestamps
         # for a single instrument.
 
-        collection_start_nanos = _time_ns()
+        collection_start_nanos = time_ns()
 
         with self._lock:
 

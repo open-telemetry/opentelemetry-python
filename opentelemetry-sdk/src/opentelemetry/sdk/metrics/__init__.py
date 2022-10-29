@@ -18,6 +18,9 @@ from opentelemetry.sdk.metrics._internal import (  # noqa: F401
     Meter,
     MeterProvider,
 )
+from opentelemetry.sdk.metrics._internal.exceptions import (  # noqa: F401
+    MetricsTimeoutError,
+)
 from opentelemetry.sdk.metrics._internal.instrument import (  # noqa: F401
     Counter,
     Histogram,

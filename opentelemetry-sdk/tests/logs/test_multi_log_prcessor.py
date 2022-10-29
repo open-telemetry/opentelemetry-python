@@ -22,17 +22,17 @@ from abc import ABC, abstractmethod
 from unittest.mock import Mock
 
 from opentelemetry.sdk._logs import (
-    ConcurrentMultiLogProcessor,
-    LogEmitterProvider,
+    ConcurrentMultiLogRecordProcessor,
+    LoggerProvider,
     LoggingHandler,
-    LogProcessor,
     LogRecord,
-    SynchronousMultiLogProcessor,
+    LogRecordProcessor,
+    SynchronousMultiLogRecordProcessor,
 )
 from opentelemetry.sdk._logs.severity import SeverityNumber
 
 
-class AnotherLogProcessor(LogProcessor):
+class AnotherLogRecordProcessor(LogRecordProcessor):
     def __init__(self, exporter, logs_list):
         self._exporter = exporter
         self._log_list = logs_list
@@ -54,16 +54,15 @@ class AnotherLogProcessor(LogProcessor):
         return True
 
 
-class TestLogProcessor(unittest.TestCase):
-    def test_log_processor(self):
-        provider = LogEmitterProvider()
-        log_emitter = provider.get_log_emitter(__name__)
-        handler = LoggingHandler(log_emitter=log_emitter)
+class TestLogRecordProcessor(unittest.TestCase):
+    def test_log_record_processor(self):
+        provider = LoggerProvider()
+        handler = LoggingHandler(logger_provider=provider)
 
         logs_list_1 = []
-        processor1 = AnotherLogProcessor(Mock(), logs_list_1)
+        processor1 = AnotherLogRecordProcessor(Mock(), logs_list_1)
         logs_list_2 = []
-        processor2 = AnotherLogProcessor(Mock(), logs_list_2)
+        processor2 = AnotherLogRecordProcessor(Mock(), logs_list_2)
 
         logger = logging.getLogger("test.span.processor")
         logger.addHandler(handler)
@@ -75,7 +74,7 @@ class TestLogProcessor(unittest.TestCase):
         self.assertEqual(len(logs_list_2), 0)
 
         # Add one processor
-        provider.add_log_processor(processor1)
+        provider.add_log_record_processor(processor1)
         logger.warning("Brace yourself")
         logger.error("Some error message")
 
@@ -86,7 +85,7 @@ class TestLogProcessor(unittest.TestCase):
         self.assertEqual(logs_list_1, expected_list_1)
 
         # Add another processor
-        provider.add_log_processor(processor2)
+        provider.add_log_record_processor(processor2)
         logger.critical("Something disastrous")
         expected_list_1.append(("Something disastrous", "CRITICAL"))
 
@@ -96,9 +95,9 @@ class TestLogProcessor(unittest.TestCase):
         self.assertEqual(logs_list_2, expected_list_2)
 
 
-class MultiLogProcessorTestBase(ABC):
+class MultiLogRecordProcessorTestBase(ABC):
     @abstractmethod
-    def _get_multi_log_processor(self):
+    def _get_multi_log_record_processor(self):
         pass
 
     def make_record(self):
@@ -110,85 +109,85 @@ class MultiLogProcessorTestBase(ABC):
         )
 
     def test_on_emit(self):
-        multi_log_processor = self._get_multi_log_processor()
-        mocks = [Mock(spec=LogProcessor) for _ in range(5)]
+        multi_log_record_processor = self._get_multi_log_record_processor()
+        mocks = [Mock(spec=LogRecordProcessor) for _ in range(5)]
         for mock in mocks:
-            multi_log_processor.add_log_processor(mock)
+            multi_log_record_processor.add_log_record_processor(mock)
         record = self.make_record()
-        multi_log_processor.emit(record)
+        multi_log_record_processor.emit(record)
         for mock in mocks:
             mock.emit.assert_called_with(record)
-        multi_log_processor.shutdown()
+        multi_log_record_processor.shutdown()
 
     def test_on_shutdown(self):
-        multi_log_processor = self._get_multi_log_processor()
-        mocks = [Mock(spec=LogProcessor) for _ in range(5)]
+        multi_log_record_processor = self._get_multi_log_record_processor()
+        mocks = [Mock(spec=LogRecordProcessor) for _ in range(5)]
         for mock in mocks:
-            multi_log_processor.add_log_processor(mock)
-        multi_log_processor.shutdown()
+            multi_log_record_processor.add_log_record_processor(mock)
+        multi_log_record_processor.shutdown()
         for mock in mocks:
             mock.shutdown.assert_called_once_with()
 
     def test_on_force_flush(self):
-        multi_log_processor = self._get_multi_log_processor()
-        mocks = [Mock(spec=LogProcessor) for _ in range(5)]
+        multi_log_record_processor = self._get_multi_log_record_processor()
+        mocks = [Mock(spec=LogRecordProcessor) for _ in range(5)]
         for mock in mocks:
-            multi_log_processor.add_log_processor(mock)
-        ret_value = multi_log_processor.force_flush(100)
+            multi_log_record_processor.add_log_record_processor(mock)
+        ret_value = multi_log_record_processor.force_flush(100)
 
         self.assertTrue(ret_value)
         for mock_processor in mocks:
             self.assertEqual(1, mock_processor.force_flush.call_count)
 
 
-class TestSynchronousMultiLogProcessor(
-    MultiLogProcessorTestBase, unittest.TestCase
+class TestSynchronousMultiLogRecordProcessor(
+    MultiLogRecordProcessorTestBase, unittest.TestCase
 ):
-    def _get_multi_log_processor(self):
-        return SynchronousMultiLogProcessor()
+    def _get_multi_log_record_processor(self):
+        return SynchronousMultiLogRecordProcessor()
 
     def test_force_flush_delayed(self):
-        multi_log_processor = SynchronousMultiLogProcessor()
+        multi_log_record_processor = SynchronousMultiLogRecordProcessor()
 
         def delay(_):
             time.sleep(0.09)
 
-        mock_processor1 = Mock(spec=LogProcessor)
+        mock_processor1 = Mock(spec=LogRecordProcessor)
         mock_processor1.force_flush = Mock(side_effect=delay)
-        multi_log_processor.add_log_processor(mock_processor1)
-        mock_processor2 = Mock(spec=LogProcessor)
-        multi_log_processor.add_log_processor(mock_processor2)
+        multi_log_record_processor.add_log_record_processor(mock_processor1)
+        mock_processor2 = Mock(spec=LogRecordProcessor)
+        multi_log_record_processor.add_log_record_processor(mock_processor2)
 
-        ret_value = multi_log_processor.force_flush(50)
+        ret_value = multi_log_record_processor.force_flush(50)
         self.assertFalse(ret_value)
         self.assertEqual(mock_processor1.force_flush.call_count, 1)
         self.assertEqual(mock_processor2.force_flush.call_count, 0)
 
 
-class TestConcurrentMultiLogProcessor(
-    MultiLogProcessorTestBase, unittest.TestCase
+class TestConcurrentMultiLogRecordProcessor(
+    MultiLogRecordProcessorTestBase, unittest.TestCase
 ):
-    def _get_multi_log_processor(self):
-        return ConcurrentMultiLogProcessor()
+    def _get_multi_log_record_processor(self):
+        return ConcurrentMultiLogRecordProcessor()
 
     def test_force_flush_delayed(self):
-        multi_log_processor = ConcurrentMultiLogProcessor()
+        multi_log_record_processor = ConcurrentMultiLogRecordProcessor()
         wait_event = threading.Event()
 
         def delay(_):
             wait_event.wait()
 
-        mock1 = Mock(spec=LogProcessor)
+        mock1 = Mock(spec=LogRecordProcessor)
         mock1.force_flush = Mock(side_effect=delay)
-        mocks = [Mock(LogProcessor) for _ in range(5)]
+        mocks = [Mock(LogRecordProcessor) for _ in range(5)]
         mocks = [mock1] + mocks
         for mock_processor in mocks:
-            multi_log_processor.add_log_processor(mock_processor)
+            multi_log_record_processor.add_log_record_processor(mock_processor)
 
-        ret_value = multi_log_processor.force_flush(50)
+        ret_value = multi_log_record_processor.force_flush(50)
         wait_event.set()
 
         self.assertFalse(ret_value)
         for mock in mocks:
             self.assertEqual(1, mock.force_flush.call_count)
-        multi_log_processor.shutdown()
+        multi_log_record_processor.shutdown()

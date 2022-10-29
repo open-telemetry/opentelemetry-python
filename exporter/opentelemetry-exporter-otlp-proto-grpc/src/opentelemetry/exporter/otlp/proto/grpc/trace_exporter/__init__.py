@@ -340,6 +340,9 @@ class OTLPSpanExporter(
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         return self._export(spans)
 
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True
+
     @property
     def _exporting(self):
         return "traces"

@@ -20,6 +20,7 @@ import threading
 import typing
 from enum import Enum
 from os import environ, linesep
+from time import time_ns
 from typing import Optional
 
 from opentelemetry.context import (
@@ -37,7 +38,6 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
 from opentelemetry.util._once import Once
-from opentelemetry.util._time import _time_ns
 
 logger = logging.getLogger(__name__)
 
@@ -73,6 +73,12 @@ class SpanExporter:
         """Shuts down the exporter.
 
         Called when the SDK is shut down.
+        """
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        """Hint to ensure that the export of any spans the exporter has received
+        prior to the call to ForceFlush SHOULD be completed as soon as possible, preferably
+        before returning from this method.
         """
 
 
@@ -273,9 +279,9 @@ class BatchSpanProcessor(SpanProcessor):
                         break
 
             # subtract the duration of this export call to the next timeout
-            start = _time_ns()
+            start = time_ns()
             self._export(flush_request)
-            end = _time_ns()
+            end = time_ns()
             duration = (end - start) / 1e9
             timeout = self.schedule_delay_millis / 1e3 - duration
 
@@ -438,3 +444,6 @@ class ConsoleSpanExporter(SpanExporter):
             self.out.write(self.formatter(span))
         self.out.flush()
         return SpanExportResult.SUCCESS
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True

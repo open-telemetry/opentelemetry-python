@@ -40,7 +40,7 @@
 This page describes the Python [OpenTelemetry](https://opentelemetry.io/) implementation. OpenTelemetry is an observability framework for cloud-native software.
 
 ## Requirements
-Unless otherwise noted, all published artifacts support Python 3.6 or higher. See CONTRIBUTING.md for additional instructions for building this project for development.
+Unless otherwise noted, all published artifacts support Python 3.7 or higher. See CONTRIBUTING.md for additional instructions for building this project for development.
 
 ## Getting started
 
@@ -153,7 +153,7 @@ Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-t
 
 - [Diego Hurtado](https://github.com/ocelotl), Lightstep
 - [Leighton Chen](https://github.com/lzchen), Microsoft
-- [Srikanth Chekuri](https://github.com/srikanthccv)
+- [Srikanth Chekuri](https://github.com/srikanthccv), signoz.io
 
 Emeritus Maintainers:
 

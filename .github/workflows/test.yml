@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: c37a77e2efa9b67d4b017a3aa6d5e5f0bc5433c9
+  CONTRIB_REPO_SHA: a47c45e61b4a7906f826b203f15f0dcf646ee185
   # This is needed because we do not clone the core repo in contrib builds anymore.
   # When running contrib builds as part of core builds, we use actions/checkout@v2 which
   # does not set an environment variable (simply just runs tox), which is different when
@@ -23,7 +23,6 @@ jobs:
   build:
     env:
       # We use these variables to convert between tox and GHA version literals
-      py36: 3.6
       py37: 3.7
       py38: 3.8
       py39: 3.9
@@ -34,7 +33,7 @@ jobs:
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
-        python-version: [ py36, py37, py38, py39, py310, pypy3 ]
+        python-version: [ py37, py38, py39, py310, pypy3 ]
         package: ["api", "sdk", "semantic", "getting", "shim", "exporter", "protobuf", "propagator"]
         os: [ ubuntu-20.04, windows-2019 ]
     steps:
@@ -55,11 +54,6 @@ jobs:
             .tox
             ~/.cache/pip
           key: v3-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
-      # tox fails on windows and Python3.6 when tox dir is reused between builds so we remove it
-      - name: fix for windows + py3.6
-        if: ${{ matrix.os == 'windows-2019' && matrix.python-version == 'py36' }} 
-        shell: pwsh
-        run: Remove-Item .\.tox\ -Force -Recurse -ErrorAction Ignore
       - name: Windows does not let git check out files with long names
         if: ${{ matrix.os == 'windows-2019'}} 
         run: git config --system core.longpaths true
@@ -92,7 +86,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tox-environment: [ "docker-tests", "lint", "docs", "mypy", "mypyinstalled", "tracecontext" ]
+        tox-environment: [ "docker-tests", "lint", "spellcheck", "docs", "mypy", "mypyinstalled", "tracecontext" ]
     name: ${{ matrix.tox-environment }}
     runs-on: ubuntu-20.04
     steps:
@@ -117,17 +111,17 @@ jobs:
         run: tox -e ${{ matrix.tox-environment }}
 
   # Contrib unit test suite in order to ensure changes in core do not break anything in contrib.
-  # We only run contrib unit tests on the oldest supported Python version (3.6) as running the same tests
+  # We only run contrib unit tests on the oldest supported Python version (3.7) as running the same tests
   # on all versions is somewhat redundant. 
   contrib-build:
     env:
       # We use these variables to convert between tox and GHA version literals
-      py36: 3.6
+      py37: 3.7
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
-        python-version: [ py36 ]
+        python-version: [ py37 ]
         package: ["instrumentation", "exporter"]
         os: [ ubuntu-20.04]
     steps:

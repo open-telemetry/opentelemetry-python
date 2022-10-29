@@ -50,13 +50,18 @@ class _Synchronous:
         description: str = "",
     ):
         # pylint: disable=no-member
-        is_name_valid, is_unit_valid = self._check_name_and_unit(name, unit)
+        result = self._check_name_unit_description(name, unit, description)
 
-        if not is_name_valid:
+        if result["name"] is None:
             raise Exception(_ERROR_MESSAGE.format(name))
 
-        if not is_unit_valid:
+        if result["unit"] is None:
             raise Exception(_ERROR_MESSAGE.format(unit))
+
+        name = result["name"]
+        unit = result["unit"]
+        description = result["description"]
+
         self.name = name.lower()
         self.unit = unit
         self.description = description
@@ -76,13 +81,18 @@ class _Asynchronous:
         description: str = "",
     ):
         # pylint: disable=no-member
-        is_name_valid, is_unit_valid = self._check_name_and_unit(name, unit)
+        result = self._check_name_unit_description(name, unit, description)
 
-        if not is_name_valid:
+        if result["name"] is None:
             raise Exception(_ERROR_MESSAGE.format(name))
 
-        if not is_unit_valid:
+        if result["unit"] is None:
             raise Exception(_ERROR_MESSAGE.format(unit))
+
+        name = result["name"]
+        unit = result["unit"]
+        description = result["description"]
+
         self.name = name.lower()
         self.unit = unit
         self.description = description
@@ -132,6 +142,11 @@ class _Asynchronous:
 
 
 class Counter(_Synchronous, APICounter):
+    def __new__(cls, *args, **kwargs):
+        if cls is Counter:
+            raise TypeError("Counter must be instantiated via a meter.")
+        return super().__new__(cls)
+
     def add(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
@@ -146,6 +161,11 @@ class Counter(_Synchronous, APICounter):
 
 
 class UpDownCounter(_Synchronous, APIUpDownCounter):
+    def __new__(cls, *args, **kwargs):
+        if cls is UpDownCounter:
+            raise TypeError("UpDownCounter must be instantiated via a meter.")
+        return super().__new__(cls)
+
     def add(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
@@ -155,14 +175,29 @@ class UpDownCounter(_Synchronous, APIUpDownCounter):
 
 
 class ObservableCounter(_Asynchronous, APIObservableCounter):
-    pass
+    def __new__(cls, *args, **kwargs):
+        if cls is ObservableCounter:
+            raise TypeError(
+                "ObservableCounter must be instantiated via a meter."
+            )
+        return super().__new__(cls)
 
 
 class ObservableUpDownCounter(_Asynchronous, APIObservableUpDownCounter):
-    pass
+    def __new__(cls, *args, **kwargs):
+        if cls is ObservableUpDownCounter:
+            raise TypeError(
+                "ObservableUpDownCounter must be instantiated via a meter."
+            )
+        return super().__new__(cls)
 
 
 class Histogram(_Synchronous, APIHistogram):
+    def __new__(cls, *args, **kwargs):
+        if cls is Histogram:
+            raise TypeError("Histogram must be instantiated via a meter.")
+        return super().__new__(cls)
+
     def record(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
@@ -178,4 +213,34 @@ class Histogram(_Synchronous, APIHistogram):
 
 
 class ObservableGauge(_Asynchronous, APIObservableGauge):
+    def __new__(cls, *args, **kwargs):
+        if cls is ObservableGauge:
+            raise TypeError(
+                "ObservableGauge must be instantiated via a meter."
+            )
+        return super().__new__(cls)
+
+
+# Below classes exist to prevent the direct instantiation
+class _Counter(Counter):
+    pass
+
+
+class _UpDownCounter(UpDownCounter):
+    pass
+
+
+class _ObservableCounter(ObservableCounter):
+    pass
+
+
+class _ObservableUpDownCounter(ObservableUpDownCounter):
+    pass
+
+
+class _Histogram(Histogram):
+    pass
+
+
+class _ObservableGauge(ObservableGauge):
     pass

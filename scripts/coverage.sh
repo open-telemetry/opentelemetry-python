@@ -6,7 +6,6 @@ function cov {
     if [ ${TOX_ENV_NAME:0:4} == "py34" ]
     then
         pytest \
-            --ignore-glob=*/setup.py \
             --ignore-glob=instrumentation/opentelemetry-instrumentation-opentracing-shim/tests/testbed/* \
             --cov ${1} \
             --cov-append \
@@ -15,7 +14,6 @@ function cov {
             ${1}
     else
         pytest \
-            --ignore-glob=*/setup.py \
             --cov ${1} \
             --cov-append \
             --cov-branch \

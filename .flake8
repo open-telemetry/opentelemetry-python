@@ -24,3 +24,4 @@ exclude =
   docs/examples/opentelemetry-example-app/build/*
   opentelemetry-proto/build/*
   opentelemetry-proto/src/opentelemetry/proto/
+  */build/lib/*

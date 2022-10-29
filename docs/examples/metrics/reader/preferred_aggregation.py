@@ -22,15 +22,17 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.sdk.metrics.view import LastValueAggregation
 
-# Use console exporter for the example
-exporter = ConsoleMetricExporter()
-
 aggregation_last_value = {Counter: LastValueAggregation()}
 
-# Create a metric reader with custom preferred aggregation
+# Use console exporter for the example
+exporter = ConsoleMetricExporter(
+    preferred_aggregation=aggregation_last_value,
+)
+
+# The PeriodicExportingMetricReader takes the preferred aggregation
+# from the passed in exporter
 reader = PeriodicExportingMetricReader(
     exporter,
-    preferred_aggregation=aggregation_last_value,
     export_interval_millis=5_000,
 )
 

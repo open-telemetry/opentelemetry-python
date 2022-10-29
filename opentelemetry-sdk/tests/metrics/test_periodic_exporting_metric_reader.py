@@ -12,13 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import time
+from time import sleep, time_ns
 from typing import Sequence
 from unittest.mock import Mock
 
 from flaky import flaky
 
+from opentelemetry.sdk.metrics import Counter
+from opentelemetry.sdk.metrics._internal import _Counter
 from opentelemetry.sdk.metrics.export import (
+    AggregationTemporality,
     Gauge,
     Metric,
     MetricExporter,
@@ -27,15 +30,24 @@ from opentelemetry.sdk.metrics.export import (
     PeriodicExportingMetricReader,
     Sum,
 )
+from opentelemetry.sdk.metrics.view import (
+    DefaultAggregation,
+    LastValueAggregation,
+)
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase
-from opentelemetry.util._time import _time_ns
 
 
 class FakeMetricsExporter(MetricExporter):
-    def __init__(self, wait=0):
+    def __init__(
+        self, wait=0, preferred_temporality=None, preferred_aggregation=None
+    ):
         self.wait = wait
         self.metrics = []
         self._shutdown = False
+        super().__init__(
+            preferred_temporality=preferred_temporality,
+            preferred_aggregation=preferred_aggregation,
+        )
 
     def export(
         self,
@@ -43,12 +55,15 @@ class FakeMetricsExporter(MetricExporter):
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
-        time.sleep(self.wait)
+        sleep(self.wait)
         self.metrics.extend(metrics)
         return True
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
         self._shutdown = True
+
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        return True
 
 
 metrics_list = [
@@ -60,8 +75,8 @@ metrics_list = [
             data_points=[
                 NumberDataPoint(
                     attributes={},
-                    start_time_unix_nano=_time_ns(),
-                    time_unix_nano=_time_ns(),
+                    start_time_unix_nano=time_ns(),
+                    time_unix_nano=time_ns(),
                     value=2,
                 )
             ],
@@ -77,8 +92,8 @@ metrics_list = [
             data_points=[
                 NumberDataPoint(
                     attributes={},
-                    start_time_unix_nano=_time_ns(),
-                    time_unix_nano=_time_ns(),
+                    start_time_unix_nano=time_ns(),
+                    time_unix_nano=time_ns(),
                     value=2,
                 )
             ]
@@ -102,18 +117,20 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
             exporter, export_interval_millis=interval
         )
 
-        def _collect(reader):
-            time.sleep(collect_wait)
-            pmr._receive_metrics(metrics)
+        def _collect(reader, timeout_millis):
+            sleep(collect_wait)
+            pmr._receive_metrics(metrics, timeout_millis)
 
         pmr._set_collect_callback(_collect)
         return pmr
 
     def test_ticker_called(self):
         collect_mock = Mock()
-        pmr = PeriodicExportingMetricReader(Mock(), export_interval_millis=1)
+        exporter = FakeMetricsExporter()
+        exporter.export = Mock()
+        pmr = PeriodicExportingMetricReader(exporter, export_interval_millis=1)
         pmr._set_collect_callback(collect_mock)
-        time.sleep(0.1)
+        sleep(0.1)
         self.assertTrue(collect_mock.assert_called_once)
         pmr.shutdown()
 
@@ -124,7 +141,7 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         pmr = self._create_periodic_reader(
             metrics_list, exporter, interval=100
         )
-        time.sleep(0.15)
+        sleep(0.15)
         self.assertEqual(exporter.metrics, metrics_list)
         pmr.shutdown()
 
@@ -138,8 +155,34 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         self.assertTrue(exporter._shutdown)
 
     def test_shutdown_multiple_times(self):
-        pmr = self._create_periodic_reader([], Mock())
+        pmr = self._create_periodic_reader([], FakeMetricsExporter())
         with self.assertLogs(level="WARNING") as w:
             self.run_with_many_threads(pmr.shutdown)
             self.assertTrue("Can't shutdown multiple times", w.output[0])
         pmr.shutdown()
+
+    def test_exporter_temporality_preference(self):
+        exporter = FakeMetricsExporter(
+            preferred_temporality={
+                Counter: AggregationTemporality.DELTA,
+            },
+        )
+        pmr = PeriodicExportingMetricReader(exporter)
+        for key, value in pmr._instrument_class_temporality.items():
+            if key is not _Counter:
+                self.assertEqual(value, AggregationTemporality.CUMULATIVE)
+            else:
+                self.assertEqual(value, AggregationTemporality.DELTA)
+
+    def test_exporter_aggregation_preference(self):
+        exporter = FakeMetricsExporter(
+            preferred_aggregation={
+                Counter: LastValueAggregation(),
+            },
+        )
+        pmr = PeriodicExportingMetricReader(exporter)
+        for key, value in pmr._instrument_class_aggregation.items():
+            if key is not _Counter:
+                self.assertTrue(isinstance(value, DefaultAggregation))
+            else:
+                self.assertTrue(isinstance(value, LastValueAggregation))
