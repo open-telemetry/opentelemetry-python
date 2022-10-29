@@ -23,7 +23,6 @@ from abc import ABC, abstractmethod
 from os import environ
 from typing import Dict, Optional, Sequence, Tuple, Type
 
-from pkg_resources import iter_entry_points
 from typing_extensions import Literal
 
 from opentelemetry.environment_variables import (
@@ -34,11 +33,11 @@ from opentelemetry.environment_variables import (
 )
 from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk._logs import (
-    LogEmitterProvider,
+    LoggerProvider,
     LoggingHandler,
-    set_log_emitter_provider,
+    set_logger_provider,
 )
-from opentelemetry.sdk._logs.export import BatchLogProcessor, LogExporter
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, LogExporter
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
     OTEL_EXPORTER_OTLP_LOGS_PROTOCOL,
@@ -55,6 +54,7 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
+from opentelemetry.sdk.util import _import_config_components
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.trace import set_tracer_provider
 
@@ -212,40 +212,18 @@ def _init_logging(
         auto_resource[
             ResourceAttributes.TELEMETRY_AUTO_VERSION
         ] = auto_instrumentation_version
-    provider = LogEmitterProvider(resource=Resource.create(auto_resource))
-    set_log_emitter_provider(provider)
+    provider = LoggerProvider(resource=Resource.create(auto_resource))
+    set_logger_provider(provider)
 
     for _, exporter_class in exporters.items():
         exporter_args = {}
-        provider.add_log_processor(
-            BatchLogProcessor(exporter_class(**exporter_args))
+        provider.add_log_record_processor(
+            BatchLogRecordProcessor(exporter_class(**exporter_args))
         )
 
-    handler = LoggingHandler(
-        level=logging.NOTSET, log_emitter_provider=provider
-    )
+    handler = LoggingHandler(level=logging.NOTSET, logger_provider=provider)
 
     logging.getLogger().addHandler(handler)
-
-
-def _import_config_components(
-    selected_components, entry_point_name
-) -> Sequence[Tuple[str, object]]:
-    component_entry_points = {
-        ep.name: ep for ep in iter_entry_points(entry_point_name)
-    }
-    component_impls = []
-    for selected_component in selected_components:
-        entry_point = component_entry_points.get(selected_component, None)
-        if not entry_point:
-            raise RuntimeError(
-                f"Requested component '{selected_component}' not found in entry points for '{entry_point_name}'"
-            )
-
-        component_impl = entry_point.load()
-        component_impls.append((selected_component, component_impl))
-
-    return component_impls
 
 
 def _import_exporters(
@@ -289,10 +267,9 @@ def _import_exporters(
 
 
 def _import_id_generator(id_generator_name: str) -> IdGenerator:
-    # pylint: disable=unbalanced-tuple-unpacking
-    [(id_generator_name, id_generator_impl)] = _import_config_components(
+    id_generator_name, id_generator_impl = _import_config_components(
         [id_generator_name.strip()], "opentelemetry_id_generator"
-    )
+    )[0]
 
     if issubclass(id_generator_impl, IdGenerator):
         return id_generator_impl
