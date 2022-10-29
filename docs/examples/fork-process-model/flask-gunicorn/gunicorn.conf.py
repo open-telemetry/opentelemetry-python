@@ -69,7 +69,7 @@ def post_fork(server, worker):
     trace.get_tracer_provider().add_span_processor(span_processor)
 
     reader = PeriodicExportingMetricReader(
-        OTLPMetricExporter(endpoint="http://localhost:4317", insecure=True)
+        OTLPMetricExporter(endpoint="http://localhost:4317")
     )
     metrics.set_meter_provider(
         MeterProvider(
