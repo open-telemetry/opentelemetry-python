@@ -257,7 +257,7 @@ class TestTraceInit(TestCase):
 
     @patch.dict(environ, {OTEL_PYTHON_ID_GENERATOR: "custom_id_generator"})
     @patch("opentelemetry.sdk._configuration.IdGenerator", new=IdGenerator)
-    @patch("opentelemetry.sdk._configuration.iter_entry_points")
+    @patch("opentelemetry.sdk.util.iter_entry_points")
     def test_trace_init_custom_id_generator(self, mock_iter_entry_points):
         mock_iter_entry_points.configure_mock(
             return_value=[
