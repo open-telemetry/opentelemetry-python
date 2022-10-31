@@ -8,7 +8,6 @@ import shutil
 import subprocess
 import sys
 from configparser import ConfigParser
-from datetime import datetime
 from inspect import cleandoc
 from itertools import chain
 from os.path import basename
@@ -625,6 +624,7 @@ def release_args(args):
         print(f"update {group} packages to {version}")
         update_dependencies(targets, version, packages)
         update_version_files(targets, version, packages)
+
 
 def test_args(args):
     clean_remainder_args(args.pytestargs)
