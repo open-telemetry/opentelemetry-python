@@ -32,6 +32,8 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.ieee_754 
 
 
 class LogarithmMapping(Mapping):
+    # Reference implementation here:
+    # https://github.com/open-telemetry/opentelemetry-go/blob/0e6f9c29c10d6078e8131418e1d1d166c7195d61/sdk/metric/aggregator/exponential/mapping/logarithm/logarithm.go
 
     _mappings = {}
     _mappings_lock = Lock()
