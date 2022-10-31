@@ -16,6 +16,7 @@ import unittest
 from unittest.mock import patch
 
 import requests
+import responses
 
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
@@ -269,3 +270,30 @@ class TestOTLPMetricExporter(unittest.TestCase):
             verify=exporter._certificate_file,
             timeout=exporter._timeout,
         )
+
+    @responses.activate
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.backoff")
+    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.sleep")
+    def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
+        # In backoff ~= 2.0.0 the first value yielded from expo is None.
+        def generate_delays(*args, **kwargs):
+            yield None
+            yield 1
+
+        mock_backoff.expo.configure_mock(**{"side_effect": generate_delays})
+
+        # return a retryable error
+        responses.add(
+            responses.POST,
+            "http://metrics.example.com/export",
+            json={"error": "something exploded"},
+            status=500,
+        )
+
+        exporter = OTLPMetricExporter(
+            endpoint="http://metrics.example.com/export"
+        )
+        metrics_data = self.metrics["sum_int"]
+
+        exporter.export(metrics_data)
+        mock_sleep.assert_called_once_with(1)
