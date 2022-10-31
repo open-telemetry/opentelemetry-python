@@ -12,8 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest import TestCase
 from math import inf
+from unittest import TestCase
 
 from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping import (
     Mapping,
@@ -21,9 +21,7 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping import (
 
 
 class TestMapping(TestCase):
-
     def test_lock(self):
-
         class Child0(Mapping):
             def _get_max_scale(self) -> int:
                 return inf

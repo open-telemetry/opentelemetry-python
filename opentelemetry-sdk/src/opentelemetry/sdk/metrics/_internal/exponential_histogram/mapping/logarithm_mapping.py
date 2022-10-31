@@ -81,7 +81,7 @@ class LogarithmMapping(Mapping):
         )
 
         # self._max_normal_lower_boundary_index is the index such that
-        # base**index equals the greatest representable lower boundary. An
+        # base ** index equals the greatest representable lower boundary. An
         # exponential histogram bucket with this index covers the range
         # ((2 ** 1024) / base, 2 ** 1024], which includes opentelemetry.sdk.
         # metrics._internal.exponential_histogram.ieee_754.MAX_NORMAL_VALUE.
@@ -94,33 +94,22 @@ class LogarithmMapping(Mapping):
 
     def map_to_index(self, value: float) -> int:
         """
-        MapToIndex maps positive floating point values to indexes
-        corresponding to Scale().  Implementations are not expected
-        to handle zeros, +Inf, NaN, or negative values.
+        Maps positive floating point values to indexes corresponding to scale.
         """
 
-        # Note: we can assume not a 0, Inf, or NaN; positive sign bit.
+        # value is subnormal
         if value <= MIN_NORMAL_VALUE:
             return self._min_normal_lower_boundary_index - 1
 
-        # Exact power-of-two correctness: an optional special case.
+        # value is an exact power of two.
         if get_ieee_754_mantissa(value) == 0:
             exponent = get_ieee_754_exponent(value)
             return (exponent << self._scale) - 1
 
-        # Non-power of two cases.  Use Floor(x) to round the scaled
-        # logarithm.  We could use Ceil(x)-1 to achieve the same
-        # result, though Ceil() is typically defined as -Floor(-x)
-        # and typically not performed in hardware, so this is likely
-        # less code.
-        index = floor(log(value) * self._scale_factor)
-
-        max_ = self._max_normal_lower_boundary_index
-
-        if index >= max_:
-            return max_
-
-        return index
+        return min(
+            floor(log(value) * self._scale_factor),
+            self._max_normal_lower_boundary_index,
+        )
 
     def get_lower_boundary(self, index: int) -> float:
 
