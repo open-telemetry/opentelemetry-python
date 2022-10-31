@@ -422,13 +422,6 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(
             exporter._headers, (("key3", "value3"), ("key4", "value4"))
         )
-        exporter = OTLPMetricExporter(
-            headers={"key5": "value5", "key6": "value6"}
-        )
-        # pylint: disable=protected-access
-        self.assertEqual(
-            exporter._headers, (("key5", "value5"), ("key6", "value6"))
-        )
 
     @patch.dict(
         "os.environ",
