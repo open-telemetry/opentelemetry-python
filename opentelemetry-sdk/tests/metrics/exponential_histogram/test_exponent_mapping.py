@@ -291,7 +291,7 @@ class TestExponentMapping(TestCase):
         self.assertEqual(exponent_mapping.map_to_index(2**-976), -62)
         self.assertEqual(exponent_mapping.map_to_index(2**-975), -61)
 
-    def test_exponent_index_mat(self):
+    def test_exponent_index_max(self):
 
         for scale in range(
             ExponentMapping._min_scale, ExponentMapping._max_scale
