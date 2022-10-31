@@ -315,7 +315,7 @@ class TestExponentMapping(TestCase):
         version_info < (3, 9),
         reason="math.nextafter is only available for Python >= 3.9",
     )
-    def test_exponent_index_mint(self):
+    def test_exponent_index_min(self):
         for scale in range(
             ExponentMapping._min_scale, ExponentMapping._max_scale + 1
         ):
