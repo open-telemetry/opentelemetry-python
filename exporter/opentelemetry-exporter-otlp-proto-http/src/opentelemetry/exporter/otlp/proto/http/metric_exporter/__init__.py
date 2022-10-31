@@ -66,8 +66,8 @@ from opentelemetry.sdk.metrics.export import (
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.util.re import parse_headers
 
+import backoff
 import requests
-from backoff import expo
 
 _logger = logging.getLogger(__name__)
 
@@ -76,6 +76,18 @@ DEFAULT_COMPRESSION = Compression.NoCompression
 DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_METRICS_EXPORT_PATH = "v1/metrics"
 DEFAULT_TIMEOUT = 10  # in seconds
+
+# Work around API change between backoff 1.x and 2.x. Since 2.0.0 the backoff
+# wait generator API requires a first .send(None) before reading the backoff
+# values from the generator.
+_is_backoff_v2 = next(backoff.expo()) is None
+
+
+def _expo(*args, **kwargs):
+    gen = backoff.expo(*args, **kwargs)
+    if _is_backoff_v2:
+        gen.send(None)
+    return gen
 
 
 class OTLPMetricExporter(MetricExporter):
@@ -319,7 +331,7 @@ class OTLPMetricExporter(MetricExporter):
         **kwargs,
     ) -> MetricExportResult:
         serialized_data = self._translate_data(metrics_data)
-        for delay in expo(max_value=self._MAX_RETRY_TIMEOUT):
+        for delay in _expo(max_value=self._MAX_RETRY_TIMEOUT):
 
             if delay == self._MAX_RETRY_TIMEOUT:
                 return MetricExportResult.FAILURE

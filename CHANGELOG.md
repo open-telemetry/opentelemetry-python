@@ -21,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2891](https://github.com/open-telemetry/opentelemetry-python/pull/2891))
 - Add support for py3.11
   ([#2997](https://github.com/open-telemetry/opentelemetry-python/pull/2997))
+- Fix a bug with exporter retries for with newer versions of the backoff library
+  ([#2980](https://github.com/open-telemetry/opentelemetry-python/pull/2980))
 
 ## [1.13.0-0.34b0](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v1.13.0) - 2022-09-26
 
@@ -92,7 +94,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2726](https://github.com/open-telemetry/opentelemetry-python/pull/2726))
 - fix: frozenset object has no attribute items
   ([#2727](https://github.com/open-telemetry/opentelemetry-python/pull/2727))
-- fix: create suppress HTTP instrumentation key in opentelemetry context 
+- fix: create suppress HTTP instrumentation key in opentelemetry context
   ([#2729](https://github.com/open-telemetry/opentelemetry-python/pull/2729))
 - Support logs SDK auto instrumentation enable/disable with env
   ([#2728](https://github.com/open-telemetry/opentelemetry-python/pull/2728))
