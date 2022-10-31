@@ -1341,6 +1341,11 @@ class TestOTLPMetricExporter(TestCase):
             split_metrics_data,
         )
 
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
+    def test_insecure_https_endpoint(self, mock_secure_channel):
+        OTLPMetricExporter(endpoint="https://ab.c:123", insecure=True)
+        mock_secure_channel.assert_called()
+
 
 def _resource_metrics(
     index: int, scope_metrics: List[ScopeMetrics]
