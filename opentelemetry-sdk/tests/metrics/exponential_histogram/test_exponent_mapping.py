@@ -35,7 +35,7 @@ if version_info >= (3, 9):
     from math import nextafter
 
 
-def rounded_boundary(scale: int, index: int) -> float:
+def right_boundary(scale: int, index: int) -> float:
     result = 2 ** index
 
     for _ in range(scale, 0):
@@ -306,7 +306,7 @@ class TestExponentMapping(TestCase):
 
             boundary = exponent_mapping.get_lower_boundary(index)
 
-            self.assertEqual(boundary, rounded_boundary(scale, max_index))
+            self.assertEqual(boundary, right_boundary(scale, max_index))
 
             with self.assertRaises(Exception):
                 exponent_mapping.get_lower_boundary(index + 1)
@@ -334,11 +334,11 @@ class TestExponentMapping(TestCase):
 
             self.assertEqual(correct_min_index, min_index)
 
-            correct_boundary = rounded_boundary(scale, correct_min_index)
+            correct_boundary = right_boundary(scale, correct_min_index)
 
             self.assertEqual(correct_boundary, boundary)
             self.assertGreater(
-                rounded_boundary(scale, correct_min_index + 1), boundary
+                right_boundary(scale, correct_min_index + 1), boundary
             )
 
             self.assertEqual(

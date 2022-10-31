@@ -30,12 +30,12 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.logarithm
 )
 
 
-def rounded_boundary(scale: int, index: int) -> float:
+def left_boundary(scale: int, index: int) -> float:
 
     # This is implemented in this way to avoid using a third-party bigfloat
     # package. The Go implementation uses a bigfloat package that is part of
     # their standard library. The assumption here is that the smallest float
-    # available in Python is 2 ** -1022 (from sys.float_info.min).
+    # available in Python is 2  **  -1022 (from sys.float_info.min).
     while scale > 0:
         if index < -1022:
             index /= 2
@@ -43,7 +43,7 @@ def rounded_boundary(scale: int, index: int) -> float:
         else:
             break
 
-    result = 2**index
+    result = 2 ** index
 
     for _ in range(scale, 0, -1):
         result = sqrt(result)
@@ -135,7 +135,7 @@ class TestLogarithmMapping(TestCase):
                 self.assertGreaterEqual(index, mapped_index)
 
                 self.assertInEpsilon(
-                    lower_boundary, rounded_boundary(scale, index), 1e-9
+                    lower_boundary, left_boundary(scale, index), 1e-9
                 )
 
     def test_logarithm_index_max(self):
@@ -181,10 +181,10 @@ class TestLogarithmMapping(TestCase):
             correct_min_index = (MIN_NORMAL_EXPONENT << scale) - 1
             self.assertEqual(min_index, correct_min_index)
 
-            correct_mapped = rounded_boundary(scale, correct_min_index)
+            correct_mapped = left_boundary(scale, correct_min_index)
             self.assertLess(correct_mapped, MIN_NORMAL_VALUE)
 
-            correct_mapped_upper = rounded_boundary(
+            correct_mapped_upper = left_boundary(
                 scale, correct_min_index + 1
             )
             self.assertEqual(correct_mapped_upper, MIN_NORMAL_VALUE)
@@ -206,17 +206,17 @@ class TestLogarithmMapping(TestCase):
                 correct_min_index,
             )
             self.assertEqual(
-                logarithm_mapping.map_to_index(2**-1050), correct_min_index
+                logarithm_mapping.map_to_index(2 ** -1050), correct_min_index
             )
             self.assertEqual(
-                logarithm_mapping.map_to_index(2**-1073), correct_min_index
+                logarithm_mapping.map_to_index(2 ** -1073), correct_min_index
             )
             self.assertEqual(
-                logarithm_mapping.map_to_index(1.1 * 2**-1073),
+                logarithm_mapping.map_to_index(1.1 * 2 ** -1073),
                 correct_min_index,
             )
             self.assertEqual(
-                logarithm_mapping.map_to_index(2**-1074), correct_min_index
+                logarithm_mapping.map_to_index(2 ** -1074), correct_min_index
             )
 
             mapped_lower = logarithm_mapping.get_lower_boundary(min_index)
