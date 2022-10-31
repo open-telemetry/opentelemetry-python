@@ -19,6 +19,7 @@ from typing import List, Tuple
 from unittest.mock import MagicMock, patch
 
 import requests
+import responses
 
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
@@ -158,6 +159,31 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             _ProtobufEncoder().serialize(sdk_logs),
             expected_encoding.SerializeToString(),
         )
+
+    @responses.activate
+    @patch("opentelemetry.exporter.otlp.proto.http._log_exporter.backoff")
+    @patch("opentelemetry.exporter.otlp.proto.http._log_exporter.sleep")
+    def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
+        # In backoff ~= 2.0.0 the first value yielded from expo is None.
+        def generate_delays(*args, **kwargs):
+            yield None
+            yield 1
+
+        mock_backoff.expo.configure_mock(**{"side_effect": generate_delays})
+
+        # return a retryable error
+        responses.add(
+            responses.POST,
+            "http://logs.example.com/export",
+            json={"error": "something exploded"},
+            status=500,
+        )
+
+        exporter = OTLPLogExporter(endpoint="http://logs.example.com/export")
+        logs = self._get_sdk_log_data()
+
+        exporter.export(logs)
+        mock_sleep.assert_called_once_with(1)
 
     @staticmethod
     def _get_sdk_log_data() -> List[LogData]:
