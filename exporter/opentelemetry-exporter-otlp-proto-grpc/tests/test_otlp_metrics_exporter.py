@@ -515,7 +515,7 @@ class TestOTLPMetricExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
     def test_otlp_exporter_otlp_compression_envvar(
-        self, mock_insecure_channel
+        self, mock_insecure_channel, mock_expo
     ):
         """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
         OTLPMetricExporter(insecure=True)
@@ -547,7 +547,7 @@ class TestOTLPMetricExporter(TestCase):
             "localhost:4317", compression=Compression.NoCompression
         )
 
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.expo")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
