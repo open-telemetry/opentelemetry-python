@@ -82,7 +82,7 @@ def get_ieee_754_exponent(value: float) -> int:
             #
             # This step isolates the exponent bits, turning every bit outside
             # of the exponent field (sign and mantissa bits) to 0.
-            c_uint64.from_buffer(c_double(-MAX_NORMAL_VALUE)).value
+            c_uint64.from_buffer(c_double(value)).value
             & EXPONENT_MASK
             # For the example this means:
             # 18442240474082181119 & EXPONENT_MASK == 9214364837600034816
