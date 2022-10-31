@@ -13,12 +13,19 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
+from threading import Lock
 
 
 class Mapping(ABC):
 
     # pylint: disable=no-member
     def __new__(cls, scale: int):
+
+        if not hasattr(cls, "_mappings"):
+            cls._mappings = {}
+
+        if not hasattr(cls, "_mappings_lock"):
+            cls._mappings_lock = Lock()
 
         with cls._mappings_lock:
             if scale not in cls._mappings:

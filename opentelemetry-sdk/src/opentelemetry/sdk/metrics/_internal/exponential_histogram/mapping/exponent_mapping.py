@@ -34,9 +34,6 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.ieee_754 
 
 class ExponentMapping(Mapping):
 
-    _mappings = {}
-    _mappings_lock = Lock()
-
     _min_scale = -10
     _max_scale = 0
 
