@@ -19,7 +19,7 @@ from opentelemetry.metrics import get_meter_provider, set_meter_provider
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
     ConsoleMetricExporter,
-    PeriodicExportingMetricReaders,
+    PeriodicExportingMetricReader,
 )
 
 from opentelemetry.sdk.metrics.view import DropAggregation, SumAggregation, View
