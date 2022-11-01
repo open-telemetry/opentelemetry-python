@@ -51,7 +51,7 @@ $sign$ can have 2 values:
 ##### Normalized Floating Point Numbers
 
 $mantissa$ is a positive fractional number whose integer part is $1$, for example
-$1.2345...$. The `mantissa` bits represent only the fractional part and the
+$1.2345 \dots$. The `mantissa` bits represent only the fractional part and the
 $mantissa$ value can be calculated as:
 
 $$mantissa = 1 + \sum_{i=1}^{52} b_{i} \times 2^{-i} = 1 + \frac{b_{1}}{2^{1}} + \frac{b_{2}}{2^{2}} + \dots + \frac{b_{63}}{2^{63}} + \frac{b_{52}}{2^{52}}$$
@@ -64,7 +64,7 @@ Where $b_{i}$ is:
 ##### Denormalized Floating Point Numbers
 
 $mantissa$ is a positive fractional number whose integer part is $0$, for example
-$0.12345...$. The `mantissa` bits represent only the fractional part and the
+$0.12345 \dots$. The `mantissa` bits represent only the fractional part and the
 $mantissa$ value can be calculated as:
 
 $$mantissa = \sum_{i=1}^{52} b_{i} \times 2^{-i} = \frac{b_{1}}{2^{1}} + \frac{b_{2}}{2^{2}} + \dots + \frac{b_{63}}{2^{63}} + \frac{b_{52}}{2^{52}}$$
@@ -108,7 +108,7 @@ $$1 \times 1.0\dots0 \times 2^{-1022} = 2.2250738585072014 \times 10^{-308}$$
 
 Since normalized floating point numbers always have a $1$ as the integer part of the
 $mantissa$, then smaller values can be achieved by using the smallest possible exponent
-($-1022$) and a $0$ in the integer part of the $mantissa$, but significant digits are lost.
+( $-1022$ ) and a $0$ in the integer part of the $mantissa$, but significant digits are lost.
 
 The smallest absolute value a denormalized floating point number can have is calculated
 like this:
