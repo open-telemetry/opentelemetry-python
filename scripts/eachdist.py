@@ -8,7 +8,6 @@ import shutil
 import subprocess
 import sys
 from configparser import ConfigParser
-from datetime import datetime
 from inspect import cleandoc
 from itertools import chain
 from os.path import basename
@@ -547,55 +546,6 @@ def lint_args(args):
     )
 
 
-def update_changelog(path, version, new_entry):
-    unreleased_changes = False
-    try:
-        with open(path, encoding="utf-8") as changelog:
-            text = changelog.read()
-            if f"## [{version}]" in text:
-                raise AttributeError(
-                    f"{path} already contains version {version}"
-                )
-        with open(path, encoding="utf-8") as changelog:
-            for line in changelog:
-                if line.startswith("## [Unreleased]"):
-                    unreleased_changes = False
-                elif line.startswith("## "):
-                    break
-                elif len(line.strip()) > 0:
-                    unreleased_changes = True
-
-    except FileNotFoundError:
-        print(f"file missing: {path}")
-        return
-
-    if unreleased_changes:
-        print(f"updating: {path}")
-        text = re.sub(r"## \[Unreleased\].*", new_entry, text)
-        with open(path, "w", encoding="utf-8") as changelog:
-            changelog.write(text)
-
-
-def update_changelogs(version):
-    today = datetime.now().strftime("%Y-%m-%d")
-    new_entry = """## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v{version}...HEAD)
-
-## [{version}](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v{version}) - {today}
-
-""".format(
-        version=version, today=today
-    )
-    errors = False
-    try:
-        update_changelog("./CHANGELOG.md", version, new_entry)
-    except Exception as err:  # pylint: disable=broad-except
-        print(str(err))
-        errors = True
-
-    if errors:
-        sys.exit(1)
-
-
 def find(name, path):
     for root, _, files in os.walk(path):
         if name in files:
@@ -674,8 +624,6 @@ def release_args(args):
         print(f"update {group} packages to {version}")
         update_dependencies(targets, version, packages)
         update_version_files(targets, version, packages)
-
-    update_changelogs(updated_versions[0])
 
 
 def test_args(args):
