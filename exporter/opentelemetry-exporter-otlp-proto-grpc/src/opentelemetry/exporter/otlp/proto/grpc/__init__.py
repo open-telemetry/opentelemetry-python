@@ -69,3 +69,7 @@ You can configure the exporter with the following environment variables:
 API
 ---
 """
+from .version import __version__
+
+otel_string = "OTel OTLP Exporter Python/" + __version__
+_OTLP_GRPC_HEADERS = [("user-agent", otel_string)]

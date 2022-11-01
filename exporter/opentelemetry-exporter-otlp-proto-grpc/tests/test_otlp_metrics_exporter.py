@@ -78,6 +78,9 @@ from opentelemetry.sdk.util.instrumentation import (
 )
 from opentelemetry.test.metrictestutil import _generate_gauge, _generate_sum
 
+from opentelemetry.exporter.otlp.proto.grpc.version import __version__
+
+
 THIS_DIR = dirname(__file__)
 
 
@@ -413,14 +416,14 @@ class TestOTLPMetricExporter(TestCase):
         exporter = OTLPMetricExporter()
         # pylint: disable=protected-access
         self.assertEqual(
-            exporter._headers, (("key1", "value1"), ("key2", "VALUE=2"))
+            exporter._headers, (("key1", "value1"), ("key2", "VALUE=2"),("user-agent", "OTel OTLP Exporter Python/" + __version__))
         )
         exporter = OTLPMetricExporter(
             headers=(("key3", "value3"), ("key4", "value4"))
         )
         # pylint: disable=protected-access
         self.assertEqual(
-            exporter._headers, (("key3", "value3"), ("key4", "value4"))
+            exporter._headers, (("key3", "value3"), ("key4", "value4"),("user-agent", "OTel OTLP Exporter Python/" + __version__))
         )
 
     @patch.dict(
