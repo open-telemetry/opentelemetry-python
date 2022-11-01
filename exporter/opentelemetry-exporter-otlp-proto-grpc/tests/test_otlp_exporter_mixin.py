@@ -113,3 +113,8 @@ class TestOTLPExporterMixin(TestCase):
                     "while exporting mock, retrying in 0s."
                 ),
             )
+
+    def test_backoff_version_checking(self):
+        import pkg_resources
+        backoff_version = pkg.get_distribution('backoff').version
+        self.assertEqual(backoff_version, '2.0.0')
