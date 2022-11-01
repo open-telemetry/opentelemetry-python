@@ -24,7 +24,6 @@ from opentelemetry.sdk.metrics.export import (
 
 from opentelemetry.sdk.metrics.view import DropAggregation, SumAggregation, View
 # disable_default_aggregation.
-# Create a view to disable the default aggregation for all instruments.
 disable_default_views = View(instrument_name="*", aggregation=DropAggregation())
 
 exporter = ConsoleMetricExporter()
