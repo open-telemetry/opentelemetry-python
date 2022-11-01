@@ -13,7 +13,9 @@ on:
 jobs:
   changelog:
     runs-on: ubuntu-latest
-    if: "!contains(github.event.pull_request.labels.*.name, 'Skip Changelog')"
+    if: |
+      !contains(github.event.pull_request.labels.*.name, 'Skip Changelog')
+      && github.actor != 'opentelemetrybot'
 
     steps:
       - uses: actions/checkout@v2
