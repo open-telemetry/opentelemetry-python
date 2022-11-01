@@ -53,8 +53,10 @@ class ExponentMapping(Mapping):
         # a logarithm mapping for larger scales.
         return 0
 
-    def __init__(self, scale: int):
-        super().__init__(scale)
+    def _init(self, scale: int):
+        # pylint: disable=attribute-defined-outside-init
+
+        super()._init(scale)
 
         # self._min_normal_lower_boundary_index is the largest index such that
         # base ** index < MIN_NORMAL_VALUE and

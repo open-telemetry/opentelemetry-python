@@ -31,10 +31,13 @@ class Mapping(ABC):
             # cls._mappings_lock.
             if scale not in cls._mappings:
                 cls._mappings[scale] = super().__new__(cls)
+                cls._mappings[scale]._init(scale)
 
         return cls._mappings[scale]
 
-    def __init__(self, scale: int) -> None:
+    @abstractmethod
+    def _init(self, scale: int) -> None:
+        # pylint: disable=attribute-defined-outside-init
 
         if scale > self._get_max_scale():
             raise Exception(f"scale is larger than {self._max_scale}")

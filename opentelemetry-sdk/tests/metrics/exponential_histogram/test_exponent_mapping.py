@@ -15,6 +15,7 @@
 from math import inf
 from sys import float_info, version_info
 from unittest import TestCase
+from unittest.mock import patch
 
 from pytest import mark
 
@@ -49,6 +50,22 @@ class TestExponentMapping(TestCase):
 
         self.assertIs(ExponentMapping(-3), ExponentMapping(-3))
         self.assertIsNot(ExponentMapping(-3), ExponentMapping(-5))
+
+    @patch(
+        "opentelemetry.sdk.metrics._internal.exponential_histogram.mapping."
+        "exponent_mapping.ExponentMapping._mappings",
+        new={},
+    )
+    @patch(
+        "opentelemetry.sdk.metrics._internal.exponential_histogram.mapping."
+        "exponent_mapping.ExponentMapping._init"
+    )
+    def test_init_called_once(self, mock_init):
+
+        ExponentMapping(-3)
+        ExponentMapping(-3)
+
+        mock_init.assert_called_once()
 
     def test_exponent_mapping_0(self):
 

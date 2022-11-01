@@ -14,6 +14,7 @@
 
 from math import sqrt
 from unittest import TestCase
+from unittest.mock import patch
 
 from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.errors import (
     MappingOverflowError,
@@ -55,6 +56,22 @@ class TestLogarithmMapping(TestCase):
     def assertInEpsilon(self, first, second, epsilon):
         self.assertLessEqual(first, (second * (1 + epsilon)))
         self.assertGreaterEqual(first, (second * (1 - epsilon)))
+
+    @patch(
+        "opentelemetry.sdk.metrics._internal.exponential_histogram.mapping."
+        "logarithm_mapping.LogarithmMapping._mappings",
+        new={},
+    )
+    @patch(
+        "opentelemetry.sdk.metrics._internal.exponential_histogram.mapping."
+        "logarithm_mapping.LogarithmMapping._init"
+    )
+    def test_init_called_once(self, mock_init):
+
+        LogarithmMapping(3)
+        LogarithmMapping(3)
+
+        mock_init.assert_called_once()
 
     def test_invalid_scale(self):
         with self.assertRaises(Exception):

@@ -53,9 +53,10 @@ class LogarithmMapping(Mapping):
         # https://github.com/open-telemetry/opentelemetry-go/blob/0e6f9c29c10d6078e8131418e1d1d166c7195d61/sdk/metric/aggregator/exponential/mapping/logarithm/logarithm.go#L32-L45
         return self._max_scale
 
-    def __init__(self, scale: int):
+    def _init(self, scale: int):
+        # pylint: disable=attribute-defined-outside-init
 
-        super().__init__(scale)
+        super()._init(scale)
 
         # self._scale_factor is defined as a multiplier because multiplication
         # is faster than division. self._scale_factor is defined as:
