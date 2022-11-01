@@ -43,7 +43,7 @@ def left_boundary(scale: int, index: int) -> float:
         else:
             break
 
-    result = 2 ** index
+    result = 2**index
 
     for _ in range(scale, 0, -1):
         result = sqrt(result)
@@ -184,9 +184,7 @@ class TestLogarithmMapping(TestCase):
             correct_mapped = left_boundary(scale, correct_min_index)
             self.assertLess(correct_mapped, MIN_NORMAL_VALUE)
 
-            correct_mapped_upper = left_boundary(
-                scale, correct_min_index + 1
-            )
+            correct_mapped_upper = left_boundary(scale, correct_min_index + 1)
             self.assertEqual(correct_mapped_upper, MIN_NORMAL_VALUE)
 
             mapped = logarithm_mapping.get_lower_boundary(min_index + 1)
@@ -206,17 +204,17 @@ class TestLogarithmMapping(TestCase):
                 correct_min_index,
             )
             self.assertEqual(
-                logarithm_mapping.map_to_index(2 ** -1050), correct_min_index
+                logarithm_mapping.map_to_index(2**-1050), correct_min_index
             )
             self.assertEqual(
-                logarithm_mapping.map_to_index(2 ** -1073), correct_min_index
+                logarithm_mapping.map_to_index(2**-1073), correct_min_index
             )
             self.assertEqual(
-                logarithm_mapping.map_to_index(1.1 * 2 ** -1073),
+                logarithm_mapping.map_to_index(1.1 * 2**-1073),
                 correct_min_index,
             )
             self.assertEqual(
-                logarithm_mapping.map_to_index(2 ** -1074), correct_min_index
+                logarithm_mapping.map_to_index(2**-1074), correct_min_index
             )
 
             mapped_lower = logarithm_mapping.get_lower_boundary(min_index)

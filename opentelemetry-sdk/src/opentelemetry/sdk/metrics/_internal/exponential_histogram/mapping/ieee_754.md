@@ -5,7 +5,7 @@ objects using binary numbers.
 
 ## Binary Number Fields
 
-The binary numbers used in IEEE 754 can have different lenghts, the length that
+The binary numbers used in IEEE 754 can have different lengths, the length that
 is interesting for the purposes of this project is 64 bits. These binary
 numbers are made up of 3 contiguous fields of bits, from left to right:
 
