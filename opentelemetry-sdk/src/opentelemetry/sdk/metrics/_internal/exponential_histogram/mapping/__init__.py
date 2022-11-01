@@ -13,21 +13,22 @@
 # limitations under the License.
 
 from abc import ABC, abstractmethod
-from threading import Lock
 
 
 class Mapping(ABC):
+    """
+    Parent class for `LogarithmMapping` and `ExponentialMapping`.
+    """
 
     # pylint: disable=no-member
     def __new__(cls, scale: int):
 
-        if not hasattr(cls, "_mappings"):
-            cls._mappings = {}
-
-        if not hasattr(cls, "_mappings_lock"):
-            cls._mappings_lock = Lock()
-
         with cls._mappings_lock:
+            # cls._mappings and cls._mappings_lock are implemented in each of
+            # the child classes as a dictionary and a lock, respectively. They
+            # are not instantiated here because that would lead to both child
+            # classes having the same instance of cls._mappings and
+            # cls._mappings_lock.
             if scale not in cls._mappings:
                 cls._mappings[scale] = super().__new__(cls)
 
