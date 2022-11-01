@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v1.13.0...HEAD)
 
+- Add and use missing metrics environment variables
+  ([#2968](https://github.com/open-telemetry/opentelemetry-python/pull/2968))
 - Enabled custom samplers via entry points
   ([#2972](https://github.com/open-telemetry/opentelemetry-python/pull/2972))
 - Update log symbol names
@@ -19,6 +21,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2976](https://github.com/open-telemetry/opentelemetry-python/pull/2976))
 - [exporter/opentelemetry-exporter-otlp-proto-http] Add OTLPMetricExporter
   ([#2891](https://github.com/open-telemetry/opentelemetry-python/pull/2891))
+- Add support for py3.11
+  ([#2997](https://github.com/open-telemetry/opentelemetry-python/pull/2997))
 - Fix a bug with exporter retries for with newer versions of the backoff library
   ([#2980](https://github.com/open-telemetry/opentelemetry-python/pull/2980))
 

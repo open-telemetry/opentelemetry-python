@@ -32,6 +32,10 @@ from opentelemetry.context import (
     detach,
     set_value,
 )
+from opentelemetry.sdk.environment_variables import (
+    OTEL_METRIC_EXPORT_INTERVAL,
+    OTEL_METRIC_EXPORT_TIMEOUT,
+)
 from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
     DefaultAggregation,
@@ -437,7 +441,7 @@ class PeriodicExportingMetricReader(MetricReader):
         if export_interval_millis is None:
             try:
                 export_interval_millis = float(
-                    environ.get("OTEL_METRIC_EXPORT_INTERVAL", 60000)
+                    environ.get(OTEL_METRIC_EXPORT_INTERVAL, 60000)
                 )
             except ValueError:
                 _logger.warning(
@@ -447,7 +451,7 @@ class PeriodicExportingMetricReader(MetricReader):
         if export_timeout_millis is None:
             try:
                 export_timeout_millis = float(
-                    environ.get("OTEL_METRIC_EXPORT_TIMEOUT", 30000)
+                    environ.get(OTEL_METRIC_EXPORT_TIMEOUT, 30000)
                 )
             except ValueError:
                 _logger.warning(
