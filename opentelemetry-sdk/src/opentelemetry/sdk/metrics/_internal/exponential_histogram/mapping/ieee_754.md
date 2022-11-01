@@ -29,7 +29,7 @@ notation with 4 components: $sign$, $mantissa$, $base$ and $exponent$:
 $$f = sign \times mantissa \times base ^ {exponent}$$
 
 There are two possible representations of floating point numbers:
-_normalized_ and _denormalized_, which have different valid values for
+_normal_ and _denormal_, which have different valid values for
 their $mantissa$ and $exponent$ fields.
 
 ### Binary Representation
@@ -48,7 +48,7 @@ $sign$ can have 2 values:
 
 #### Mantissa
 
-##### Normalized Floating Point Numbers
+##### Normal Floating Point Numbers
 
 $mantissa$ is a positive fractional number whose integer part is $1$, for example
 $1.2345 \dots$. The `mantissa` bits represent only the fractional part and the
@@ -61,7 +61,7 @@ Where $b_{i}$ is:
 1. $0$ if the bit at the position `i - 1` is `0`.
 2. $1$ if the bit at the position `i - 1` is `1`.
 
-##### Denormalized Floating Point Numbers
+##### Denormal Floating Point Numbers
 
 $mantissa$ is a positive fractional number whose integer part is $0$, for example
 $0.12345 \dots$. The `mantissa` bits represent only the fractional part and the
@@ -76,7 +76,7 @@ Where $b_{i}$ is:
 
 #### Exponent
 
-##### Normalized Floating Point Numbers
+##### Normal Floating Point Numbers
 
 Only the following bit sequences are allowed: `00000000001` to `11111111110`.
 That is, there must be at least one `0` and one `1` in the exponent bits.
@@ -95,22 +95,22 @@ exponent are:
 So, $exponent$ is an integer in the range $\left[-1022, 1023\right]$.
 
 
-##### Denormalized Floating Point Numbers
+##### Denormal Floating Point Numbers
 
 $exponent$ is always $-1022$. Nevertheless, it is always represented as `00000000000`.
 
-### Normalized and Denormalized Floating Point Numbers
+### Normal and Denormal Floating Point Numbers
 
-The smallest absolute value a normalized floating point number can have is calculated
+The smallest absolute value a normal floating point number can have is calculated
 like this:
 
 $$1 \times 1.0\dots0 \times 2^{-1022} = 2.2250738585072014 \times 10^{-308}$$
 
-Since normalized floating point numbers always have a $1$ as the integer part of the
+Since normal floating point numbers always have a $1$ as the integer part of the
 $mantissa$, then smaller values can be achieved by using the smallest possible exponent
 ( $-1022$ ) and a $0$ in the integer part of the $mantissa$, but significant digits are lost.
 
-The smallest absolute value a denormalized floating point number can have is calculated
+The smallest absolute value a denormal floating point number can have is calculated
 like this:
 
 $$1 \times 2^{-52} \times 2^{-1022} = 5 \times 10^{-324}$$

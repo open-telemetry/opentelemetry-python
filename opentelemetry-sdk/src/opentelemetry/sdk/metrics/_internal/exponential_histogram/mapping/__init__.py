@@ -79,7 +79,7 @@ class Mapping(ABC):
         """
         Returns the lower boundary of a given bucket index. The index is
         expected to map onto a range that is at least partially inside the
-        range of normalized floating point values.  If the corresponding
+        range of normal floating point values.  If the corresponding
         bucket's upper boundary is less than or equal to 2 ** -1022,
         :class:`~opentelemetry.sdk.metrics.MappingUnderflowError`
         will be raised. If the corresponding bucket's lower boundary is greater

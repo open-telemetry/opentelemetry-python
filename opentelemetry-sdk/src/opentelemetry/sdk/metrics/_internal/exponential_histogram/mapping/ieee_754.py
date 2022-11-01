@@ -37,7 +37,7 @@ EXPONENT_MASK = ((1 << EXPONENT_WIDTH) - 1) << MANTISSA_WIDTH
 # The sign mask has the first bit set to 1 and the rest to 0.
 SIGN_MASK = 1 << (EXPONENT_WIDTH + MANTISSA_WIDTH)
 
-# For normalized floating point numbers, the exponent can have a value in the
+# For normal floating point numbers, the exponent can have a value in the
 # range [-1022, 1023].
 MIN_NORMAL_EXPONENT = -EXPONENT_BIAS + 1
 MAX_NORMAL_EXPONENT = EXPONENT_BIAS

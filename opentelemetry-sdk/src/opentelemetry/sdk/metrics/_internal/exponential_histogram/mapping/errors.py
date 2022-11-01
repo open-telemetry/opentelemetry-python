@@ -16,7 +16,7 @@
 class MappingUnderflowError(Exception):
     """
     Raised when computing the lower boundary of an index that maps into a
-    denormalized floating point value.
+    denormal floating point value.
     """
 
 
