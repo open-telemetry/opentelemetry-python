@@ -12,4 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "0.35b0.dev"
+
+class MappingUnderflowError(Exception):
+    """
+    Raised when computing the lower boundary of an index that maps into a
+    denormal floating point value.
+    """
+
+
+class MappingOverflowError(Exception):
+    """
+    Raised when computing the lower boundary of an index that maps into +inf.
+    """
