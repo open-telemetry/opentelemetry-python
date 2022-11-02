@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Reverting custom sampler feature until circular dependency issue is fixed.
+  ([#3017](https://github.com/open-telemetry/opentelemetry-python/pull/3017))
 - Add logarithm and exponent mappings
   ([#2960](https://github.com/open-telemetry/opentelemetry-python/pull/2960))
 - Add and use missing metrics environment variables
