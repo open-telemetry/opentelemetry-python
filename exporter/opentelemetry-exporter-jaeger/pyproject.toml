@@ -22,11 +22,12 @@ classifiers = [
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
   "Typing :: Typed",
 ]
 dependencies = [
-  "opentelemetry-exporter-jaeger-proto-grpc == 1.13.0",
-  "opentelemetry-exporter-jaeger-thrift == 1.13.0",
+  "opentelemetry-exporter-jaeger-proto-grpc == 1.15.0.dev",
+  "opentelemetry-exporter-jaeger-thrift == 1.15.0.dev",
 ]
 
 [project.optional-dependencies]

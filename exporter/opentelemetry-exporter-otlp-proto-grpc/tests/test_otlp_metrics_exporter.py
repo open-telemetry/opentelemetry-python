@@ -14,13 +14,14 @@
 
 # pylint: disable=too-many-lines
 from concurrent.futures import ThreadPoolExecutor
+from os.path import dirname
 from typing import List
 from unittest import TestCase
 from unittest.mock import patch
 
 from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
-from grpc import StatusCode, server
+from grpc import ChannelCredentials, Compression, StatusCode, server
 
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
     OTLPMetricExporter,
@@ -43,8 +44,14 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
 from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_COMPRESSION,
+    OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_METRICS_COMPRESSION,
+    OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
+    OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
     OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
+    OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
 )
 from opentelemetry.sdk.metrics import (
     Counter,
@@ -70,6 +77,8 @@ from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope as SDKInstrumentationScope,
 )
 from opentelemetry.test.metrictestutil import _generate_gauge, _generate_sum
+
+THIS_DIR = dirname(__file__)
 
 
 class MetricsServiceServicerUNAVAILABLEDelay(MetricsServiceServicer):
@@ -119,6 +128,8 @@ class MetricsServiceServicerALREADY_EXISTS(MetricsServiceServicer):
 
 
 class TestOTLPMetricExporter(TestCase):
+    # pylint: disable=too-many-public-methods
+
     def setUp(self):
 
         self.exporter = OTLPMetricExporter()
@@ -348,6 +359,33 @@ class TestOTLPMetricExporter(TestCase):
             AggregationTemporality.CUMULATIVE,
         )
 
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "collector:4317",
+            OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE: THIS_DIR
+            + "/fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_METRICS_HEADERS: " key1=value1,KEY2 = value=2",
+            OTEL_EXPORTER_OTLP_METRICS_TIMEOUT: "10",
+            OTEL_EXPORTER_OTLP_METRICS_COMPRESSION: "gzip",
+        },
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
+    )
+    def test_env_variables(self, mock_exporter_mixin):
+        OTLPMetricExporter()
+
+        self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
+        _, kwargs = mock_exporter_mixin.call_args_list[0]
+
+        self.assertEqual(kwargs["endpoint"], "collector:4317")
+        self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = value=2")
+        self.assertEqual(kwargs["timeout"], 10)
+        self.assertEqual(kwargs["compression"], Compression.Gzip)
+        self.assertIsNotNone(kwargs["credentials"])
+        self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
     )
@@ -361,6 +399,29 @@ class TestOTLPMetricExporter(TestCase):
     ):
         OTLPMetricExporter(insecure=False)
         self.assertTrue(mock_ssl_channel.called)
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_METRICS_HEADERS: " key1=value1,KEY2 = VALUE=2 "},
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
+    # pylint: disable=unused-argument
+    def test_otlp_headers_from_env(self, mock_ssl_channel, mock_secure):
+        exporter = OTLPMetricExporter()
+        # pylint: disable=protected-access
+        self.assertEqual(
+            exporter._headers, (("key1", "value1"), ("key2", "VALUE=2"))
+        )
+        exporter = OTLPMetricExporter(
+            headers=(("key3", "value3"), ("key4", "value4"))
+        )
+        # pylint: disable=protected-access
+        self.assertEqual(
+            exporter._headers, (("key3", "value3"), ("key4", "value4"))
+        )
 
     @patch.dict(
         "os.environ",
@@ -449,7 +510,44 @@ class TestOTLPMetricExporter(TestCase):
             )
             mock_method.reset_mock()
 
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.expo")
+    # pylint: disable=no-self-use
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
+    def test_otlp_exporter_otlp_compression_envvar(
+        self, mock_insecure_channel, mock_expo
+    ):
+        """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
+        OTLPMetricExporter(insecure=True)
+        mock_insecure_channel.assert_called_once_with(
+            "localhost:4317", compression=Compression.Gzip
+        )
+
+    # pylint: disable=no-self-use
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
+    def test_otlp_exporter_otlp_compression_kwarg(self, mock_insecure_channel):
+        """Specifying kwarg should take precedence over env"""
+        OTLPMetricExporter(
+            insecure=True, compression=Compression.NoCompression
+        )
+        mock_insecure_channel.assert_called_once_with(
+            "localhost:4317", compression=Compression.NoCompression
+        )
+
+    # pylint: disable=no-self-use
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    @patch.dict("os.environ", {})
+    def test_otlp_exporter_otlp_compression_unspecified(
+        self, mock_insecure_channel
+    ):
+        """No env or kwarg should be NoCompression"""
+        OTLPMetricExporter(insecure=True)
+        mock_insecure_channel.assert_called_once_with(
+            "localhost:4317", compression=Compression.NoCompression
+        )
+
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
@@ -464,7 +562,7 @@ class TestOTLPMetricExporter(TestCase):
         )
         mock_sleep.assert_called_with(1)
 
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.expo")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable_delay(self, mock_sleep, mock_expo):
 
@@ -1242,6 +1340,11 @@ class TestOTLPMetricExporter(TestCase):
             ],
             split_metrics_data,
         )
+
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
+    def test_insecure_https_endpoint(self, mock_secure_channel):
+        OTLPMetricExporter(endpoint="https://ab.c:123", insecure=True)
+        mock_secure_channel.assert_called()
 
 
 def _resource_metrics(

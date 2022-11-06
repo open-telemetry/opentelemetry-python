@@ -13,9 +13,11 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import patch
+from collections import OrderedDict
+from unittest.mock import Mock, patch
 
 import requests
+import responses
 
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
@@ -37,6 +39,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
 )
+from opentelemetry.sdk.trace import _Span
 
 OS_ENV_ENDPOINT = "os.env.base"
 OS_ENV_CERTIFICATE = "os/env/base.crt"
@@ -188,3 +191,40 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 cm.records[0].message,
                 "Header doesn't match the format: missingValue.",
             )
+
+    # pylint: disable=no-self-use
+    @responses.activate
+    @patch("opentelemetry.exporter.otlp.proto.http.trace_exporter.backoff")
+    @patch("opentelemetry.exporter.otlp.proto.http.trace_exporter.sleep")
+    def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
+        # In backoff ~= 2.0.0 the first value yielded from expo is None.
+        def generate_delays(*args, **kwargs):
+            yield None
+            yield 1
+
+        mock_backoff.expo.configure_mock(**{"side_effect": generate_delays})
+
+        # return a retryable error
+        responses.add(
+            responses.POST,
+            "http://traces.example.com/export",
+            json={"error": "something exploded"},
+            status=500,
+        )
+
+        exporter = OTLPSpanExporter(
+            endpoint="http://traces.example.com/export"
+        )
+        span = _Span(
+            "abc",
+            context=Mock(
+                **{
+                    "trace_state": OrderedDict([("a", "b"), ("c", "d")]),
+                    "span_id": 10217189687419569865,
+                    "trace_id": 67545097771067222548457157018666467027,
+                }
+            ),
+        )
+
+        exporter.export([span])
+        mock_sleep.assert_called_once_with(1)
