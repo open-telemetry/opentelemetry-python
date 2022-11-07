@@ -21,6 +21,7 @@ from unittest import TestCase
 from unittest.mock import patch
 
 from opentelemetry import trace
+from opentelemetry.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_ID_GENERATOR
 from opentelemetry.sdk._configuration import (
     _EXPORTER_OTLP,
@@ -56,13 +57,11 @@ from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
-    ALWAYS_OFF,
     ALWAYS_ON,
     Decision,
     ParentBased,
     Sampler,
     SamplingResult,
-    StaticSampler,
     TraceIdRatioBased,
 )
 from opentelemetry.trace import Link, SpanKind
