@@ -222,7 +222,9 @@ class CustomSampler(Sampler):
 class CustomRatioSampler(TraceIdRatioBased):
     def __init__(self, ratio):
         if not isinstance(ratio, float):
-            raise ValueError("CustomRatioSampler ratio argument is not a float.")
+            raise ValueError(
+                "CustomRatioSampler ratio argument is not a float."
+            )
         self.ratio = ratio
         super().__init__(ratio)
 
@@ -305,7 +307,11 @@ class TestTraceInit(TestCase):
         environ, {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-test-service"}
     )
     def test_trace_init_default(self):
-        _init_tracing({"zipkin": Exporter}, id_generator=RandomIdGenerator(), auto_instrumentation_version="test-version")
+        _init_tracing(
+            {"zipkin": Exporter},
+            id_generator=RandomIdGenerator(),
+            auto_instrumentation_version="test-version",
+        )
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
@@ -326,7 +332,9 @@ class TestTraceInit(TestCase):
         {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-otlp-test-service"},
     )
     def test_trace_init_otlp(self):
-        _init_tracing({"otlp": OTLPSpanExporter}, id_generator=RandomIdGenerator())
+        _init_tracing(
+            {"otlp": OTLPSpanExporter}, id_generator=RandomIdGenerator()
+        )
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
@@ -355,7 +363,6 @@ class TestTraceInit(TestCase):
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider.id_generator, CustomIdGenerator)
 
-
     @patch.dict(
         "os.environ", {OTEL_TRACES_SAMPLER: "non_existent_entry_point"}
     )
@@ -366,15 +373,15 @@ class TestTraceInit(TestCase):
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsNone(provider.sampler)
 
-
     @patch("opentelemetry.sdk._configuration.iter_entry_points")
-    @patch.dict(
-        "os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"}
-    )
+    @patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"})
     def test_trace_init_custom_sampler_with_env(self, mock_iter_entry_points):
         mock_iter_entry_points.configure_mock(
             return_value=[
-                IterEntryPoint("custom_sampler_factory", CustomSamplerFactory.get_custom_sampler)
+                IterEntryPoint(
+                    "custom_sampler_factory",
+                    CustomSamplerFactory.get_custom_sampler,
+                )
             ]
         )
         sampler_name = _get_sampler()
@@ -384,13 +391,16 @@ class TestTraceInit(TestCase):
         self.assertIsInstance(provider.sampler, CustomSampler)
 
     @patch("opentelemetry.sdk._configuration.iter_entry_points")
-    @patch.dict(
-        "os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"}
-    )
-    def test_trace_init_custom_sampler_with_env_bad_factory(self, mock_iter_entry_points):
+    @patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"})
+    def test_trace_init_custom_sampler_with_env_bad_factory(
+        self, mock_iter_entry_points
+    ):
         mock_iter_entry_points.configure_mock(
             return_value=[
-                IterEntryPoint("custom_sampler_factory", CustomSamplerFactory.empty_get_custom_sampler)
+                IterEntryPoint(
+                    "custom_sampler_factory",
+                    CustomSamplerFactory.empty_get_custom_sampler,
+                )
             ]
         )
         sampler_name = _get_sampler()
@@ -407,10 +417,15 @@ class TestTraceInit(TestCase):
             OTEL_TRACES_SAMPLER_ARG: "0.5",
         },
     )
-    def test_trace_init_custom_sampler_with_env_unused_arg(self, mock_iter_entry_points):
+    def test_trace_init_custom_sampler_with_env_unused_arg(
+        self, mock_iter_entry_points
+    ):
         mock_iter_entry_points.configure_mock(
             return_value=[
-                IterEntryPoint("custom_sampler_factory", CustomSamplerFactory.get_custom_sampler)
+                IterEntryPoint(
+                    "custom_sampler_factory",
+                    CustomSamplerFactory.get_custom_sampler,
+                )
             ]
         )
         sampler_name = _get_sampler()
@@ -427,10 +442,15 @@ class TestTraceInit(TestCase):
             OTEL_TRACES_SAMPLER_ARG: "0.5",
         },
     )
-    def test_trace_init_custom_ratio_sampler_with_env(self, mock_iter_entry_points):
+    def test_trace_init_custom_ratio_sampler_with_env(
+        self, mock_iter_entry_points
+    ):
         mock_iter_entry_points.configure_mock(
             return_value=[
-                IterEntryPoint("custom_ratio_sampler_factory", CustomSamplerFactory.get_custom_ratio_sampler)
+                IterEntryPoint(
+                    "custom_ratio_sampler_factory",
+                    CustomSamplerFactory.get_custom_ratio_sampler,
+                )
             ]
         )
         sampler_name = _get_sampler()
@@ -453,7 +473,10 @@ class TestTraceInit(TestCase):
     ):
         mock_iter_entry_points.configure_mock(
             return_value=[
-                IterEntryPoint("custom_ratio_sampler_factory", CustomSamplerFactory.get_custom_ratio_sampler)
+                IterEntryPoint(
+                    "custom_ratio_sampler_factory",
+                    CustomSamplerFactory.get_custom_ratio_sampler,
+                )
             ]
         )
         sampler_name = _get_sampler()
@@ -474,7 +497,10 @@ class TestTraceInit(TestCase):
     ):
         mock_iter_entry_points.configure_mock(
             return_value=[
-                IterEntryPoint("custom_ratio_sampler_factory", CustomSamplerFactory.get_custom_ratio_sampler)
+                IterEntryPoint(
+                    "custom_ratio_sampler_factory",
+                    CustomSamplerFactory.get_custom_ratio_sampler,
+                )
             ]
         )
         sampler_name = _get_sampler()
