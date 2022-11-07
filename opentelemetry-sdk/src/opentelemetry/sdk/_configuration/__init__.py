@@ -299,9 +299,6 @@ def _import_exporters(
     return trace_exporters, metric_exporters, log_exporters
 
 
-
-
-
 def _import_sampler_factory(sampler_name: str) -> Callable[[str], Sampler]:
     _, sampler_impl = _import_config_components(
         [sampler_name.strip()], _OTEL_SAMPLER_ENTRY_POINT_GROUP
@@ -329,6 +326,7 @@ def _import_sampler(sampler_name: str) -> Sampler:
         )
         return None
 
+
 def _import_id_generator(id_generator_name: str) -> IdGenerator:
     id_generator_name, id_generator_impl = _import_config_components(
         [id_generator_name.strip()], "opentelemetry_id_generator"
@@ -350,7 +348,12 @@ def _initialize_components(auto_instrumentation_version):
     sampler = _import_sampler(sampler_name) if sampler_name else None
     id_generator_name = _get_id_generator()
     id_generator = _import_id_generator(id_generator_name)
-    _init_tracing(exporters=trace_exporters, id_generator=id_generator, sampler=sampler, auto_instrumentation_version=auto_instrumentation_version)
+    _init_tracing(
+        exporters=trace_exporters,
+        id_generator=id_generator,
+        sampler=sampler,
+        auto_instrumentation_version=auto_instrumentation_version,
+    )
     _init_metrics(metric_exporters, auto_instrumentation_version)
     logging_enabled = os.getenv(
         _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, "false"
