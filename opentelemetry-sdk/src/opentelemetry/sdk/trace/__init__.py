@@ -78,9 +78,6 @@ _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT = 128
 
 _ENV_VALUE_UNSET = ""
 
-# pylint: disable=protected-access
-_TRACE_SAMPLER = sampling._get_from_env_or_default()
-
 
 class SpanProcessor:
     """Interface which allows hooks for SDK's `Span` start and end method
@@ -1115,7 +1112,7 @@ class TracerProvider(trace_api.TracerProvider):
 
     def __init__(
         self,
-        sampler: sampling.Sampler = _TRACE_SAMPLER,
+        sampler: sampling.Sampler = None,
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
         active_span_processor: Union[
@@ -1132,6 +1129,8 @@ class TracerProvider(trace_api.TracerProvider):
         else:
             self.id_generator = id_generator
         self._resource = resource
+        if not sampler:
+            sampler = sampling._get_from_env_or_default()
         self.sampler = sampler
         self._span_limits = span_limits or SpanLimits()
         self._atexit_handler = None

@@ -151,76 +151,13 @@ tracer_provider.add_span_processor(mock_processor)
         )
 
 
-class CustomSampler(Sampler):
-    def __init__(self) -> None:
-        pass
+# class IterEntryPoint:
+#     def __init__(self, name, class_type):
+#         self.name = name
+#         self.class_type = class_type
 
-    def get_description(self) -> str:
-        return "CustomSampler"
-
-    def should_sample(
-        self,
-        parent_context: Optional["Context"],
-        trace_id: int,
-        name: str,
-        kind: SpanKind = None,
-        attributes: Attributes = None,
-        links: Sequence[Link] = None,
-        trace_state: TraceState = None,
-    ) -> "SamplingResult":
-        return SamplingResult(
-            Decision.RECORD_AND_SAMPLE,
-            None,
-            None,
-        )
-
-
-class CustomRatioSampler(TraceIdRatioBased):
-    def __init__(self, ratio):
-        self.ratio = ratio
-        super().__init__(ratio)
-
-    def get_description(self) -> str:
-        return "CustomSampler"
-
-    def should_sample(
-        self,
-        parent_context: Optional["Context"],
-        trace_id: int,
-        name: str,
-        kind: SpanKind = None,
-        attributes: Attributes = None,
-        links: Sequence[Link] = None,
-        trace_state: TraceState = None,
-    ) -> "SamplingResult":
-        return SamplingResult(
-            Decision.RECORD_AND_SAMPLE,
-            None,
-            None,
-        )
-
-
-class CustomSamplerFactory:
-    @staticmethod
-    def get_custom_sampler(unused_sampler_arg):
-        return CustomSampler()
-
-    @staticmethod
-    def get_custom_ratio_sampler(sampler_arg):
-        return CustomRatioSampler(float(sampler_arg))
-
-    @staticmethod
-    def empty_get_custom_sampler(sampler_arg):
-        return
-
-
-class IterEntryPoint:
-    def __init__(self, name, class_type):
-        self.name = name
-        self.class_type = class_type
-
-    def load(self):
-        return self.class_type
+#     def load(self):
+#         return self.class_type
 
 
 class TestTracerSampling(unittest.TestCase):
@@ -251,7 +188,8 @@ class TestTracerSampling(unittest.TestCase):
         tracer_provider = trace.TracerProvider()
         self.verify_default_sampler(tracer_provider)
 
-    def test_sampler_no_sampling(self):
+    @mock.patch("opentelemetry.sdk.trace.sampling._get_from_env_or_default")
+    def test_sampler_no_sampling(self, _get_from_env_or_default):
         tracer_provider = trace.TracerProvider(ALWAYS_OFF)
         tracer = tracer_provider.get_tracer(__name__)
 
@@ -270,6 +208,7 @@ class TestTracerSampling(unittest.TestCase):
             child_span.get_span_context().trace_flags,
             trace_api.TraceFlags.DEFAULT,
         )
+        self.assertFalse(_get_from_env_or_default.called)
 
     @mock.patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "always_off"})
     def test_sampler_with_env(self):
@@ -299,160 +238,160 @@ class TestTracerSampling(unittest.TestCase):
         self.assertIsInstance(tracer_provider.sampler, ParentBased)
         self.assertEqual(tracer_provider.sampler._root.rate, 0.25)
 
-    @mock.patch.dict(
-        "os.environ", {OTEL_TRACES_SAMPLER: "non_existent_entry_point"}
-    )
-    def test_sampler_with_env_non_existent_entry_point(self):
-        # pylint: disable=protected-access
-        reload(trace)
-        tracer_provider = trace.TracerProvider()
-        self.verify_default_sampler(tracer_provider)
+    # @mock.patch.dict(
+    #     "os.environ", {OTEL_TRACES_SAMPLER: "non_existent_entry_point"}
+    # )
+    # def test_sampler_with_env_non_existent_entry_point(self):
+    #     # pylint: disable=protected-access
+    #     reload(trace)
+    #     tracer_provider = trace.TracerProvider()
+    #     self.verify_default_sampler(tracer_provider)
 
-    @mock.patch("opentelemetry.sdk.trace.util.iter_entry_points")
-    @mock.patch.dict(
-        "os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"}
-    )
-    def test_custom_sampler_with_env(self, mock_iter_entry_points):
-        mock_iter_entry_points.return_value = [
-            IterEntryPoint(
-                "custom_sampler_factory",
-                CustomSamplerFactory.get_custom_sampler,
-            )
-        ]
-        # pylint: disable=protected-access
-        reload(trace)
-        tracer_provider = trace.TracerProvider()
-        self.assertIsInstance(tracer_provider.sampler, CustomSampler)
+    # @mock.patch("opentelemetry.sdk.trace.util.iter_entry_points")
+    # @mock.patch.dict(
+    #     "os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"}
+    # )
+    # def test_custom_sampler_with_env(self, mock_iter_entry_points):
+    #     mock_iter_entry_points.return_value = [
+    #         IterEntryPoint(
+    #             "custom_sampler_factory",
+    #             CustomSamplerFactory.get_custom_sampler,
+    #         )
+    #     ]
+    #     # pylint: disable=protected-access
+    #     reload(trace)
+    #     tracer_provider = trace.TracerProvider()
+    #     self.assertIsInstance(tracer_provider.sampler, CustomSampler)
 
-    @mock.patch("opentelemetry.sdk.trace.util.iter_entry_points")
-    @mock.patch.dict(
-        "os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"}
-    )
-    def test_custom_sampler_with_env_bad_factory(self, mock_iter_entry_points):
-        mock_iter_entry_points.return_value = [
-            IterEntryPoint(
-                "custom_sampler_factory",
-                CustomSamplerFactory.empty_get_custom_sampler,
-            )
-        ]
-        # pylint: disable=protected-access
-        reload(trace)
-        tracer_provider = trace.TracerProvider()
-        self.verify_default_sampler(tracer_provider)
+    # @mock.patch("opentelemetry.sdk.trace.util.iter_entry_points")
+    # @mock.patch.dict(
+    #     "os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"}
+    # )
+    # def test_custom_sampler_with_env_bad_factory(self, mock_iter_entry_points):
+    #     mock_iter_entry_points.return_value = [
+    #         IterEntryPoint(
+    #             "custom_sampler_factory",
+    #             CustomSamplerFactory.empty_get_custom_sampler,
+    #         )
+    #     ]
+    #     # pylint: disable=protected-access
+    #     reload(trace)
+    #     tracer_provider = trace.TracerProvider()
+    #     self.verify_default_sampler(tracer_provider)
 
-    @mock.patch("opentelemetry.sdk.trace.util.iter_entry_points")
-    @mock.patch.dict(
-        "os.environ",
-        {
-            OTEL_TRACES_SAMPLER: "custom_sampler_factory",
-            OTEL_TRACES_SAMPLER_ARG: "0.5",
-        },
-    )
-    def test_custom_sampler_with_env_unused_arg(self, mock_iter_entry_points):
-        mock_iter_entry_points.return_value = [
-            IterEntryPoint(
-                "custom_sampler_factory",
-                CustomSamplerFactory.get_custom_sampler,
-            )
-        ]
-        # pylint: disable=protected-access
-        reload(trace)
-        tracer_provider = trace.TracerProvider()
-        self.assertIsInstance(tracer_provider.sampler, CustomSampler)
+    # @mock.patch("opentelemetry.sdk.trace.util.iter_entry_points")
+    # @mock.patch.dict(
+    #     "os.environ",
+    #     {
+    #         OTEL_TRACES_SAMPLER: "custom_sampler_factory",
+    #         OTEL_TRACES_SAMPLER_ARG: "0.5",
+    #     },
+    # )
+    # def test_custom_sampler_with_env_unused_arg(self, mock_iter_entry_points):
+    #     mock_iter_entry_points.return_value = [
+    #         IterEntryPoint(
+    #             "custom_sampler_factory",
+    #             CustomSamplerFactory.get_custom_sampler,
+    #         )
+    #     ]
+    #     # pylint: disable=protected-access
+    #     reload(trace)
+    #     tracer_provider = trace.TracerProvider()
+    #     self.assertIsInstance(tracer_provider.sampler, CustomSampler)
 
-    @mock.patch("opentelemetry.sdk.trace.util.iter_entry_points")
-    @mock.patch.dict(
-        "os.environ",
-        {
-            OTEL_TRACES_SAMPLER: "custom_ratio_sampler_factory",
-            OTEL_TRACES_SAMPLER_ARG: "0.5",
-        },
-    )
-    def test_custom_ratio_sampler_with_env(self, mock_iter_entry_points):
-        mock_iter_entry_points.return_value = [
-            IterEntryPoint(
-                "custom_ratio_sampler_factory",
-                CustomSamplerFactory.get_custom_ratio_sampler,
-            )
-        ]
-        # pylint: disable=protected-access
-        reload(trace)
-        tracer_provider = trace.TracerProvider()
-        self.assertIsInstance(tracer_provider.sampler, CustomRatioSampler)
-        self.assertEqual(tracer_provider.sampler.ratio, 0.5)
+    # @mock.patch("opentelemetry.sdk.trace.util.iter_entry_points")
+    # @mock.patch.dict(
+    #     "os.environ",
+    #     {
+    #         OTEL_TRACES_SAMPLER: "custom_ratio_sampler_factory",
+    #         OTEL_TRACES_SAMPLER_ARG: "0.5",
+    #     },
+    # )
+    # def test_custom_ratio_sampler_with_env(self, mock_iter_entry_points):
+    #     mock_iter_entry_points.return_value = [
+    #         IterEntryPoint(
+    #             "custom_ratio_sampler_factory",
+    #             CustomSamplerFactory.get_custom_ratio_sampler,
+    #         )
+    #     ]
+    #     # pylint: disable=protected-access
+    #     reload(trace)
+    #     tracer_provider = trace.TracerProvider()
+    #     self.assertIsInstance(tracer_provider.sampler, CustomRatioSampler)
+    #     self.assertEqual(tracer_provider.sampler.ratio, 0.5)
 
-    @mock.patch("opentelemetry.sdk.trace.util.iter_entry_points")
-    @mock.patch.dict(
-        "os.environ",
-        {
-            OTEL_TRACES_SAMPLER: "custom_ratio_sampler_factory",
-            OTEL_TRACES_SAMPLER_ARG: "foobar",
-        },
-    )
-    def test_custom_ratio_sampler_with_env_bad_arg(
-        self, mock_iter_entry_points
-    ):
-        mock_iter_entry_points.return_value = [
-            IterEntryPoint(
-                "custom_ratio_sampler_factory",
-                CustomSamplerFactory.get_custom_ratio_sampler,
-            )
-        ]
-        # pylint: disable=protected-access
-        reload(trace)
-        tracer_provider = trace.TracerProvider()
-        self.verify_default_sampler(tracer_provider)
+    # @mock.patch("opentelemetry.sdk.trace.util.iter_entry_points")
+    # @mock.patch.dict(
+    #     "os.environ",
+    #     {
+    #         OTEL_TRACES_SAMPLER: "custom_ratio_sampler_factory",
+    #         OTEL_TRACES_SAMPLER_ARG: "foobar",
+    #     },
+    # )
+    # def test_custom_ratio_sampler_with_env_bad_arg(
+    #     self, mock_iter_entry_points
+    # ):
+    #     mock_iter_entry_points.return_value = [
+    #         IterEntryPoint(
+    #             "custom_ratio_sampler_factory",
+    #             CustomSamplerFactory.get_custom_ratio_sampler,
+    #         )
+    #     ]
+    #     # pylint: disable=protected-access
+    #     reload(trace)
+    #     tracer_provider = trace.TracerProvider()
+    #     self.verify_default_sampler(tracer_provider)
 
-    @mock.patch("opentelemetry.sdk.trace.util.iter_entry_points")
-    @mock.patch.dict(
-        "os.environ",
-        {
-            OTEL_TRACES_SAMPLER: "custom_ratio_sampler_factory",
-        },
-    )
-    def test_custom_ratio_sampler_with_env_no_arg(
-        self, mock_iter_entry_points
-    ):
-        mock_iter_entry_points.return_value = [
-            IterEntryPoint(
-                "custom_ratio_sampler_factory",
-                CustomSamplerFactory.get_custom_ratio_sampler,
-            )
-        ]
-        # pylint: disable=protected-access
-        reload(trace)
-        tracer_provider = trace.TracerProvider()
-        self.verify_default_sampler(tracer_provider)
+    # @mock.patch("opentelemetry.sdk.trace.util.iter_entry_points")
+    # @mock.patch.dict(
+    #     "os.environ",
+    #     {
+    #         OTEL_TRACES_SAMPLER: "custom_ratio_sampler_factory",
+    #     },
+    # )
+    # def test_custom_ratio_sampler_with_env_no_arg(
+    #     self, mock_iter_entry_points
+    # ):
+    #     mock_iter_entry_points.return_value = [
+    #         IterEntryPoint(
+    #             "custom_ratio_sampler_factory",
+    #             CustomSamplerFactory.get_custom_ratio_sampler,
+    #         )
+    #     ]
+    #     # pylint: disable=protected-access
+    #     reload(trace)
+    #     tracer_provider = trace.TracerProvider()
+    #     self.verify_default_sampler(tracer_provider)
 
-    @mock.patch("opentelemetry.sdk.trace.util.iter_entry_points")
-    @mock.patch.dict(
-        "os.environ",
-        {
-            OTEL_TRACES_SAMPLER: "custom_sampler_factory",
-            OTEL_TRACES_SAMPLER_ARG: "0.5",
-        },
-    )
-    def test_custom_ratio_sampler_with_env_multiple_entry_points(
-        self, mock_iter_entry_points
-    ):
-        mock_iter_entry_points.return_value = [
-            IterEntryPoint(
-                "custom_ratio_sampler_factory",
-                CustomSamplerFactory.get_custom_ratio_sampler,
-            ),
-            IterEntryPoint(
-                "custom_sampler_factory",
-                CustomSamplerFactory.get_custom_sampler,
-            ),
-            IterEntryPoint(
-                "custom_z_sampler_factory",
-                CustomSamplerFactory.empty_get_custom_sampler,
-            ),
-        ]
-        # pylint: disable=protected-access
-        reload(trace)
-        tracer_provider = trace.TracerProvider()
-        self.assertIsInstance(tracer_provider.sampler, CustomSampler)
+    # @mock.patch("opentelemetry.sdk.trace.util.iter_entry_points")
+    # @mock.patch.dict(
+    #     "os.environ",
+    #     {
+    #         OTEL_TRACES_SAMPLER: "custom_sampler_factory",
+    #         OTEL_TRACES_SAMPLER_ARG: "0.5",
+    #     },
+    # )
+    # def test_custom_ratio_sampler_with_env_multiple_entry_points(
+    #     self, mock_iter_entry_points
+    # ):
+    #     mock_iter_entry_points.return_value = [
+    #         IterEntryPoint(
+    #             "custom_ratio_sampler_factory",
+    #             CustomSamplerFactory.get_custom_ratio_sampler,
+    #         ),
+    #         IterEntryPoint(
+    #             "custom_sampler_factory",
+    #             CustomSamplerFactory.get_custom_sampler,
+    #         ),
+    #         IterEntryPoint(
+    #             "custom_z_sampler_factory",
+    #             CustomSamplerFactory.empty_get_custom_sampler,
+    #         ),
+    #     ]
+    #     # pylint: disable=protected-access
+    #     reload(trace)
+    #     tracer_provider = trace.TracerProvider()
+    #     self.assertIsInstance(tracer_provider.sampler, CustomSampler)
 
     def verify_default_sampler(self, tracer_provider):
         self.assertIsInstance(tracer_provider.sampler, ParentBased)
