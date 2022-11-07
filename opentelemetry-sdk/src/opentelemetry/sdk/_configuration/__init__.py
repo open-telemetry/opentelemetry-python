@@ -21,7 +21,7 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from os import environ
-from typing import Dict, Optional, Sequence, Tuple, Type, Callable
+from typing import Callable, Dict, Optional, Sequence, Tuple, Type
 
 from pkg_resources import iter_entry_points
 from typing_extensions import Literal
@@ -31,10 +31,6 @@ from opentelemetry.environment_variables import (
     OTEL_METRICS_EXPORTER,
     OTEL_PYTHON_ID_GENERATOR,
     OTEL_TRACES_EXPORTER,
-)
-from opentelemetry.sdk.environment_variables import (
-    OTEL_TRACES_SAMPLER,
-    OTEL_TRACES_SAMPLER_ARG,
 )
 from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk._logs import (
@@ -49,6 +45,8 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_PROTOCOL,
     OTEL_EXPORTER_OTLP_PROTOCOL,
     OTEL_EXPORTER_OTLP_TRACES_PROTOCOL,
+    OTEL_TRACES_SAMPLER,
+    OTEL_TRACES_SAMPLER_ARG,
 )
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
@@ -59,9 +57,9 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator
+from opentelemetry.sdk.trace.sampling import Sampler
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.trace import set_tracer_provider
-from opentelemetry.sdk.trace.sampling import Sampler
 
 _EXPORTER_OTLP = "otlp"
 _EXPORTER_OTLP_PROTO_GRPC = "otlp_proto_grpc"

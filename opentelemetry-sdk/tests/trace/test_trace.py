@@ -21,7 +21,7 @@ from importlib import reload
 from logging import ERROR, WARNING
 from random import randint
 from time import time_ns
-from typing import Optional, Sequence
+from typing import Optional
 from unittest import mock
 
 from opentelemetry import trace as trace_api
@@ -46,10 +46,7 @@ from opentelemetry.sdk.trace.sampling import (
     ALWAYS_ON,
     Decision,
     ParentBased,
-    Sampler,
-    SamplingResult,
     StaticSampler,
-    TraceIdRatioBased,
 )
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
@@ -57,9 +54,7 @@ from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
     new_tracer,
 )
-from opentelemetry.trace import Link, SpanKind, Status, StatusCode
-from opentelemetry.trace.span import TraceState
-from opentelemetry.util.types import Attributes
+from opentelemetry.trace import Status, StatusCode
 
 
 class TestTracer(unittest.TestCase):

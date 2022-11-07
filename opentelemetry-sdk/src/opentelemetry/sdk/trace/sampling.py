@@ -147,7 +147,6 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.trace import Link, SpanKind, get_current_span
 from opentelemetry.trace.span import TraceState
 from opentelemetry.util.types import Attributes
-import traceback
 
 _logger = getLogger(__name__)
 
