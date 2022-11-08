@@ -516,7 +516,9 @@ class ReadableSpan:
             f_event = OrderedDict()
             f_event["name"] = event.name
             f_event["timestamp"] = util.ns_to_iso_str(event.timestamp)
-            f_event["attributes"] = Span._format_attributes(event.attributes)  # pylint: disable=protected-access
+            f_event["attributes"] = Span._format_attributes(
+                event.attributes
+            )  # pylint: disable=protected-access
             f_events.append(f_event)
         return f_events
 
@@ -525,8 +527,12 @@ class ReadableSpan:
         f_links = []
         for link in links:
             f_link = OrderedDict()
-            f_link["context"] = Span._format_context(link.context)  # pylint: disable=protected-access
-            f_link["attributes"] = Span._format_attributes(link.attributes)  # pylint: disable=protected-access
+            f_link["context"] = Span._format_context(
+                link.context
+            )  # pylint: disable=protected-access
+            f_link["attributes"] = Span._format_attributes(
+                link.attributes
+            )  # pylint: disable=protected-access
             f_links.append(f_link)
         return f_links
 
@@ -688,10 +694,12 @@ _UnsetLimits = SpanLimits(
 )
 
 # not removed for backward compat. please use SpanLimits instead.
-SPAN_ATTRIBUTE_COUNT_LIMIT = SpanLimits._from_env_if_absent(  # pylint: disable=protected-access
-    None,
-    OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
-    _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+SPAN_ATTRIBUTE_COUNT_LIMIT = (
+    SpanLimits._from_env_if_absent(  # pylint: disable=protected-access
+        None,
+        OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+        _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+    )
 )
 
 
