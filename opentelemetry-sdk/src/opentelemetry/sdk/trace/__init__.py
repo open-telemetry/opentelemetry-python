@@ -516,9 +516,9 @@ class ReadableSpan:
             f_event = OrderedDict()
             f_event["name"] = event.name
             f_event["timestamp"] = util.ns_to_iso_str(event.timestamp)
-            f_event["attributes"] = Span._format_attributes(
+            f_event["attributes"] = Span._format_attributes(  # pylint: disable=protected-access
                 event.attributes
-            )  # pylint: disable=protected-access
+            )
             f_events.append(f_event)
         return f_events
 
@@ -527,12 +527,12 @@ class ReadableSpan:
         f_links = []
         for link in links:
             f_link = OrderedDict()
-            f_link["context"] = Span._format_context(
+            f_link["context"] = Span._format_context(  # pylint: disable=protected-access
                 link.context
-            )  # pylint: disable=protected-access
-            f_link["attributes"] = Span._format_attributes(
+            )
+            f_link["attributes"] = Span._format_attributes(  # pylint: disable=protected-access
                 link.attributes
-            )  # pylint: disable=protected-access
+            )
             f_links.append(f_link)
         return f_links
 
