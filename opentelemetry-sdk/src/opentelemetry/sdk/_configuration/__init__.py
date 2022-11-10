@@ -343,7 +343,7 @@ def _initialize_components(auto_instrumentation_version):
         _get_exporter_names("logs"),
     )
     sampler_name = _get_sampler()
-    sampler = _import_sampler(sampler_name) if sampler_name else None
+    sampler = _import_sampler(sampler_name)
     id_generator_name = _get_id_generator()
     id_generator = _import_id_generator(id_generator_name)
     _init_tracing(
