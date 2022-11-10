@@ -312,7 +312,7 @@ def _import_sampler(sampler_name: str) -> Sampler:
         sampler_arg = os.getenv(OTEL_TRACES_SAMPLER_ARG, "")
         sampler = sampler_factory(sampler_arg)
         if not isinstance(sampler, Sampler):
-            message = f"Traces sampler factory, {sampler_factory}, produced output, {sampler}, which is not a Sampler object."
+            message = f"Sampler factory, {sampler_factory}, produced output, {sampler}, which is not a Sampler."
             _logger.warning(message)
             raise ValueError(message)
         return sampler
