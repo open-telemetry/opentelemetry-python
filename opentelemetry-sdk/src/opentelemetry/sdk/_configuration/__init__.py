@@ -21,7 +21,7 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from os import environ
-from typing import Callable, Dict, Optional, Sequence, Tuple, Type
+from typing import Callable, Dict, List, Optional, Sequence, Tuple, Type
 
 from pkg_resources import iter_entry_points
 from typing_extensions import Literal
@@ -91,7 +91,7 @@ _logger = logging.getLogger(__name__)
 
 
 def _import_config_components(
-    selected_components, entry_point_name
+    selected_components: List[str], entry_point_name: str
 ) -> Sequence[Tuple[str, object]]:
     component_entry_points = {
         ep.name: ep for ep in iter_entry_points(entry_point_name)
