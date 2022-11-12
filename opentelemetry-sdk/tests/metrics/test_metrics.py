@@ -514,11 +514,11 @@ class TestDuplicateInstrumentAggregateData(TestCase):
         self.assertEqual(metric_0.name, "counter")
         self.assertEqual(metric_0.unit, "unit")
         self.assertEqual(metric_0.description, "description")
-        self.assertEqual(next(metric_0.data.data_points).value, 3)
+        self.assertEqual(next(iter(metric_0.data.data_points)).value, 3)
 
         metric_1 = scope_metrics[1].metrics[0]
 
         self.assertEqual(metric_1.name, "counter")
         self.assertEqual(metric_1.unit, "unit")
         self.assertEqual(metric_1.description, "description")
-        self.assertEqual(next(metric_1.data.data_points).value, 7)
+        self.assertEqual(next(iter(metric_1.data.data_points)).value, 7)
