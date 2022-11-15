@@ -39,7 +39,7 @@ from abc import ABC, abstractmethod
 from logging import getLogger
 from typing import Any, Optional, cast
 
-from opentelemetry._logs._internal.severity import SeverityNumber
+from opentelemetry._logs.severity import SeverityNumber
 from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util._once import Once

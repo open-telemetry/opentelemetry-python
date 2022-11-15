@@ -27,9 +27,9 @@ from opentelemetry._logs import LoggerProvider as APILoggerProvider
 from opentelemetry._logs import LogRecord as APILogRecord
 from opentelemetry._logs import (
     SeverityNumber,
-    std_to_otel,
     get_logger,
     get_logger_provider,
+    std_to_otel,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str

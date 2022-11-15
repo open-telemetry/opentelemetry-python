@@ -1,5 +1,5 @@
 opentelemetry._logs package
-=============================
+===========================
 
 .. warning::
    OpenTelemetry Python logs are in an experimental state. The APIs within
