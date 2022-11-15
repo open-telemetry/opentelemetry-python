@@ -18,8 +18,8 @@ from logging import WARNING
 from unittest.mock import Mock, patch
 
 import opentelemetry._logs._internal as logs_internal
-from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry._logs import get_logger_provider, set_logger_provider
+from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry.test.globals_test import reset_logging_globals
 
 

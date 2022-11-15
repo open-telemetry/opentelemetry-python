@@ -14,7 +14,6 @@ Submodules
 .. toctree::
 
    logs.export
-   logs.severity
 
 .. automodule:: opentelemetry.sdk._logs
     :members:

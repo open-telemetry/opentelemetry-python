@@ -15,8 +15,8 @@ import logging
 import unittest
 from unittest.mock import Mock
 
-from opentelemetry._logs import get_logger as APIGetLogger
 from opentelemetry._logs import SeverityNumber
+from opentelemetry._logs import get_logger as APIGetLogger
 from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import INVALID_SPAN_CONTEXT
 from opentelemetry.sdk import trace

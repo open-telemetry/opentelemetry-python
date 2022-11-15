@@ -34,17 +34,17 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 .. versionadded:: 1.15.0
 """
 
+import os
 from abc import ABC, abstractmethod
 from logging import getLogger
-import os
 from typing import Any, Optional, cast
 
-from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry._logs._internal.severity import SeverityNumber
+from opentelemetry.environment_variables import _OTEL_PYTHON_LOGGER_PROVIDER
 from opentelemetry.trace.span import TraceFlags
-from opentelemetry.util.types import Attributes
 from opentelemetry.util._once import Once
 from opentelemetry.util._providers import _load_provider
+from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
 
@@ -109,12 +109,23 @@ class NoOpLoggerProvider(LoggerProvider):
 class Logger(ABC):
     """Handles emitting events and logs via `LogRecord`."""
 
+    def __init__(
+        self,
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
+    ) -> None:
+        super().__init__()
+        self._name = name
+        self._version = version
+        self._schema_url = schema_url
+
     @abstractmethod
-    def emit_event(self, record: "LogRecord"):
+    def emit_event(self, record: "LogRecord") -> None:
         """Emits a :class:`LogRecord` representing an Event to the processing pipeline."""
 
     @abstractmethod
-    def emit(self, record: "LogRecord"):
+    def emit(self, record: "LogRecord") -> None:
         """Emits a :class:`LogRecord` representing a log to the processing pipeline."""
 
 
@@ -124,10 +135,10 @@ class NoOpLogger(Logger):
     All operations are no-op.
     """
 
-    def emit_event(self, record: "LogRecord"):
+    def emit_event(self, record: "LogRecord") -> None:
         pass
 
-    def emit(self, record: "LogRecord"):
+    def emit(self, record: "LogRecord") -> None:
         pass
 
 

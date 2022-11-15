@@ -8,7 +8,12 @@ opentelemetry._logs package
 
    Once logs become stable, this package will be be renamed to ``opentelemetry.logs``.
 
+Submodules
+----------
+
 .. toctree::
+
+   logs.severity
 
 
 Module contents

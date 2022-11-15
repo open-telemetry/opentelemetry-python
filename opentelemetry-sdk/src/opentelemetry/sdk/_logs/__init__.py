@@ -22,10 +22,10 @@ import traceback
 from time import time_ns
 from typing import Any, Callable, Optional, Tuple, Union
 
+from opentelemetry._logs import Logger as APILogger
+from opentelemetry._logs import LoggerProvider as APILoggerProvider
+from opentelemetry._logs import LogRecord as APILogRecord
 from opentelemetry._logs import (
-    Logger as APILogger,
-    LoggerProvider as APILoggerProvider,
-    LogRecord as APILogRecord,
     SeverityNumber,
     std_to_otel,
     get_logger,
