@@ -102,23 +102,20 @@ class NoOpLoggerProvider(LoggerProvider):
         super().get_logger(name, version=version, schema_url=schema_url)
         return NoOpLogger(name, version=version, schema_url=schema_url)
 
+
 # TODO: ProxyLoggerProvider
 
 
 class Logger(ABC):
-    """Handles emitting events and logs via `LogRecord`.
-    
-    """
+    """Handles emitting events and logs via `LogRecord`."""
 
     @abstractmethod
     def emit_event(self, record: "LogRecord"):
-        """Emits a :class:`LogRecord` representing an Event to the processing pipeline.
-        """
+        """Emits a :class:`LogRecord` representing an Event to the processing pipeline."""
 
     @abstractmethod
     def emit(self, record: "LogRecord"):
-        """Emits a :class:`LogRecord` representing a log to the processing pipeline.
-        """
+        """Emits a :class:`LogRecord` representing a log to the processing pipeline."""
 
 
 class NoOpLogger(Logger):

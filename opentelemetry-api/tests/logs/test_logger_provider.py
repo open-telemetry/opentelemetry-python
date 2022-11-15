@@ -23,7 +23,6 @@ from opentelemetry._logs import get_logger_provider, set_logger_provider
 from opentelemetry.test.globals_test import reset_logging_globals
 
 
-
 class TestGlobals(unittest.TestCase):
     def setUp(self):
         super().tearDown()
@@ -33,22 +32,6 @@ class TestGlobals(unittest.TestCase):
         super().tearDown()
         reset_logging_globals()
 
-    def check_override_not_allowed(self):
-        """set_logger_provider should throw a warning when overridden"""
-        provider = get_logger_provider()
-        with self.assertLogs(level=WARNING) as test:
-            set_logger_provider(Mock())
-            self.assertEqual(
-                test.output,
-                [
-                    (
-                        "WARNING:opentelemetry.sdk._logs:Overriding of current "
-                        "LoggerProvider is not allowed"
-                    )
-                ],
-            )
-        self.assertIs(provider, get_logger_provider())
-
     def test_set_logger_provider(self):
         lp_mock = Mock()
         # pylint: disable=protected-access
@@ -57,17 +40,19 @@ class TestGlobals(unittest.TestCase):
         assert logs_internal._LOGGER_PROVIDER is lp_mock
         assert get_logger_provider() is lp_mock
 
-
     def test_get_logger_provider(self):
         # pylint: disable=protected-access
         assert logs_internal._LOGGER_PROVIDER is None
 
-        assert isinstance(get_logger_provider(), logs_internal.NoOpLoggerProvider)
+        assert isinstance(
+            get_logger_provider(), logs_internal.NoOpLoggerProvider
+        )
 
         logs_internal._LOGGER_PROVIDER = None
 
         with patch.dict(
-            "os.environ", {_OTEL_PYTHON_LOGGER_PROVIDER: "test_logger_provider"}
+            "os.environ",
+            {_OTEL_PYTHON_LOGGER_PROVIDER: "test_logger_provider"},
         ):
 
             with patch("opentelemetry._logs._internal._load_provider", Mock()):

@@ -31,12 +31,9 @@ from opentelemetry.environment_variables import (
     OTEL_PYTHON_ID_GENERATOR,
     OTEL_TRACES_EXPORTER,
 )
+from opentelemetry._logs import set_logger_provider
 from opentelemetry.metrics import set_meter_provider
-from opentelemetry.sdk._logs import (
-    LoggerProvider,
-    LoggingHandler,
-    set_logger_provider,
-)
+from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, LogExporter
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,
