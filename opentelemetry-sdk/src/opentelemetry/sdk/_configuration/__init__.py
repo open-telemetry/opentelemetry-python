@@ -110,7 +110,7 @@ def _import_config_components(
     return component_impls
 
 
-def _get_sampler() -> str:
+def _get_sampler() -> Optional[str]:
     return environ.get(OTEL_TRACES_SAMPLER, None)
 
 
