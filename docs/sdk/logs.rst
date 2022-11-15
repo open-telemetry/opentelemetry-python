@@ -15,6 +15,9 @@ Submodules
 
    logs.export
 
+Module contents
+---------------
+
 .. automodule:: opentelemetry.sdk._logs
     :members:
     :undoc-members:
