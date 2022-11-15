@@ -49,5 +49,8 @@ __all__ = [
     "LoggerProvider",
     "LogRecord",
     "SeverityNumber",
+    "get_logger",
+    "get_logger_provider",
+    "set_logger_provider",
     "std_to_otel",
 ]
