@@ -169,7 +169,7 @@ class LogRecord(ABC):
         self.trace_flags = trace_flags
         self.severity_text = severity_text
         self.severity_number = severity_number
-        self.body = body
+        self.body = body  # type: ignore
         self.attributes = attributes
 
 
@@ -198,7 +198,7 @@ def get_logger_provider() -> LoggerProvider:
 def _set_logger_provider(logger_provider: LoggerProvider, log: bool) -> None:
     def set_lp() -> None:
         global _LOGGER_PROVIDER  # pylint: disable=global-statement
-        _LOGGER_PROVIDER = logger_provider
+        _LOGGER_PROVIDER = logger_provider  # type: ignore
 
     did_set = _LOGGER_PROVIDER_SET_ONCE.do_once(set_lp)
 
