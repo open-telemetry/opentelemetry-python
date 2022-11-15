@@ -54,7 +54,7 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
 )
 from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
-from opentelemetry.sdk._logs.severity import SeverityNumber
+from opentelemetry._logs import SeverityNumber
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_COMPRESSION,

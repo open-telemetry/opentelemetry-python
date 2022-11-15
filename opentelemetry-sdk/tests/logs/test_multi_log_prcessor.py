@@ -29,7 +29,7 @@ from opentelemetry.sdk._logs import (
     LogRecordProcessor,
     SynchronousMultiLogRecordProcessor,
 )
-from opentelemetry.sdk._logs.severity import SeverityNumber
+from opentelemetry._logs import SeverityNumber
 
 
 class AnotherLogRecordProcessor(LogRecordProcessor):
