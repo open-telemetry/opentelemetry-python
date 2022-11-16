@@ -108,28 +108,6 @@ class KeyValue(google.protobuf.message.Message):
     def ClearField(self, field_name: typing_extensions.Literal["key",b"key","value",b"value"]) -> None: ...
 global___KeyValue = KeyValue
 
-class InstrumentationLibrary(google.protobuf.message.Message):
-    """InstrumentationLibrary is a message representing the instrumentation library information
-    such as the fully qualified name and version.
-    InstrumentationLibrary is wire-compatible with InstrumentationScope for binary
-    Protobuf format.
-    This message is deprecated and will be removed on June 15, 2022.
-    """
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    NAME_FIELD_NUMBER: builtins.int
-    VERSION_FIELD_NUMBER: builtins.int
-    name: typing.Text = ...
-    """An empty instrumentation library name means the name is unknown."""
-
-    version: typing.Text = ...
-    def __init__(self,
-        *,
-        name : typing.Text = ...,
-        version : typing.Text = ...,
-        ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["name",b"name","version",b"version"]) -> None: ...
-global___InstrumentationLibrary = InstrumentationLibrary
-
 class InstrumentationScope(google.protobuf.message.Message):
     """InstrumentationScope is a message representing the instrumentation scope information
     such as the fully qualified name and version.
@@ -137,14 +115,21 @@ class InstrumentationScope(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     NAME_FIELD_NUMBER: builtins.int
     VERSION_FIELD_NUMBER: builtins.int
+    ATTRIBUTES_FIELD_NUMBER: builtins.int
+    DROPPED_ATTRIBUTES_COUNT_FIELD_NUMBER: builtins.int
     name: typing.Text = ...
     """An empty instrumentation scope name means the name is unknown."""
 
     version: typing.Text = ...
+    @property
+    def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___KeyValue]: ...
+    dropped_attributes_count: builtins.int = ...
     def __init__(self,
         *,
         name : typing.Text = ...,
         version : typing.Text = ...,
+        attributes : typing.Optional[typing.Iterable[global___KeyValue]] = ...,
+        dropped_attributes_count : builtins.int = ...,
         ) -> None: ...
-    def ClearField(self, field_name: typing_extensions.Literal["name",b"name","version",b"version"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["attributes",b"attributes","dropped_attributes_count",b"dropped_attributes_count","name",b"name","version",b"version"]) -> None: ...
 global___InstrumentationScope = InstrumentationScope
