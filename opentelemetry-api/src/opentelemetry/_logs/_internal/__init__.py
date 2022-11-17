@@ -51,7 +51,7 @@ _logger = getLogger(__name__)
 
 class LoggerProvider(ABC):
     """
-    LoggerProvider is the entry point of the API. It provides access to `Logger` instances.
+    LoggerProvider is the entry point of the API. It provides access to Logger instances.
     """
 
     @abstractmethod

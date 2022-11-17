@@ -455,7 +455,9 @@ class LoggerProvider(APILoggerProvider):
             self._resource,
             self._multi_log_record_processor,
             InstrumentationScope(
-                name, version, schema_url,
+                name,
+                version,
+                schema_url,
             ),
         )
 
