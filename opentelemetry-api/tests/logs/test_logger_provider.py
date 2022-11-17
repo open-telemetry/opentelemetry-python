@@ -14,7 +14,6 @@
 
 # type:ignore
 import unittest
-from logging import WARNING
 from unittest.mock import Mock, patch
 
 import opentelemetry._logs._internal as logs_internal
