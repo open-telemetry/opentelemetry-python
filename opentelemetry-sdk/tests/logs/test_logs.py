@@ -54,6 +54,9 @@ class TestLoggerProvider(unittest.TestCase):
             schema_url="schema_url",
         )
 
-        self.assertEqual(logger._instrumentation_scope.name, "name")
-        self.assertEqual(logger._instrumentation_scope.version, "version")
-        self.assertEqual(logger._instrumentation_scope.schema_url, "schema_url")
+        self.assertEqual(
+            logger._instrumentation_scope.name, "name")
+        self.assertEqual(
+            logger._instrumentation_scope.version, "version")
+        self.assertEqual(
+            logger._instrumentation_scope.schema_url, "schema_url")
