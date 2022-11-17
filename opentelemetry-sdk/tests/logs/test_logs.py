@@ -16,9 +16,9 @@
 
 import unittest
 
-from opentelemetry._logs import NoOpLogger
 from opentelemetry.sdk._logs import LoggerProvider
 from opentelemetry.sdk.resources import Resource
+
 
 class TestLoggerProvider(unittest.TestCase):
 
@@ -30,10 +30,7 @@ class TestLoggerProvider(unittest.TestCase):
         logger_provider_0 = LoggerProvider()
         logger_provider_1 = LoggerProvider()
 
-        self.assertIs(
-            logger_provider_0.resource,
-            logger_provider_1.resource,
-        )
+        self.assertIs(logger_provider_0.resource, logger_provider_1.resource,)
         self.assertIsInstance(logger_provider_0.resource, Resource)
         self.assertIsInstance(logger_provider_1.resource, Resource)
 
@@ -54,9 +51,8 @@ class TestLoggerProvider(unittest.TestCase):
             schema_url="schema_url",
         )
 
+        self.assertEqual(logger._instrumentation_scope.name, "name")
+        self.assertEqual(logger._instrumentation_scope.version, "version")
         self.assertEqual(
-            logger._instrumentation_scope.name, "name")
-        self.assertEqual(
-            logger._instrumentation_scope.version, "version")
-        self.assertEqual(
-            logger._instrumentation_scope.schema_url, "schema_url")
+            logger._instrumentation_scope.schema_url, "schema_url"
+        )
