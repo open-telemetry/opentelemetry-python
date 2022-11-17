@@ -50,6 +50,8 @@ __all__ = [
     "Logger",
     "LoggerProvider",
     "LogRecord",
+    "NoOpLogger",
+    "NoOpLoggerProvider",
     "SeverityNumber",
     "get_logger",
     "get_logger_provider",
