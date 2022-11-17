@@ -60,7 +60,7 @@ class LoggerProvider(ABC):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-    ) -> "Logger":
+    ):
         """Returns a Logger for use by the given instrumentation library.
 
         For any two calls it is undefined whether the same or different
@@ -97,7 +97,7 @@ class NoOpLoggerProvider(LoggerProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-    ) -> "Logger":
+    ):
         """Returns a NoOpLogger."""
         super().get_logger(name, version=version, schema_url=schema_url)
         return NoOpLogger(name, version=version, schema_url=schema_url)
