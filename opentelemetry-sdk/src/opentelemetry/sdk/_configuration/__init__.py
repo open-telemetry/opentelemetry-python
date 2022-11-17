@@ -110,7 +110,7 @@ def _import_config_components(
     return component_impls
 
 
-def _get_sampler() -> str:
+def _get_sampler() -> Optional[str]:
     return environ.get(OTEL_TRACES_SAMPLER, None)
 
 
@@ -304,7 +304,7 @@ def _import_sampler_factory(sampler_name: str) -> Callable[[str], Sampler]:
     return sampler_impl
 
 
-def _import_sampler(sampler_name: str) -> Sampler:
+def _import_sampler(sampler_name: str) -> Optional[Sampler]:
     if not sampler_name:
         return None
     try:
