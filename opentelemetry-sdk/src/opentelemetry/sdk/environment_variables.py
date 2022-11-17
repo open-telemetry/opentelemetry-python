@@ -431,7 +431,7 @@ A scheme of https indicates a secure connection and takes precedence over this c
 """
 
 OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE = (
-    "OTEL_EXPORTER_OTLP_METRRICS_CERTIFICATE"
+    "OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE"
 )
 """
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE
