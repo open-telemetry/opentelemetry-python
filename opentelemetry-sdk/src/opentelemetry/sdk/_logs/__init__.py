@@ -398,6 +398,11 @@ class Logger(APILogger):
         ],
         instrumentation_scope: InstrumentationScope,
     ):
+        super().__init__(
+            instrumentation_scope.name,
+            instrumentation_scope.version,
+            instrumentation_scope.schema_url,
+        )
         self._resource = resource
         self._multi_log_record_processor = multi_log_record_processor
         self._instrumentation_scope = instrumentation_scope
@@ -442,14 +447,15 @@ class LoggerProvider(APILoggerProvider):
 
     def get_logger(
         self,
-        instrumenting_module_name: str,
-        instrumenting_module_version: str = "",
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
     ) -> Logger:
         return Logger(
             self._resource,
             self._multi_log_record_processor,
             InstrumentationScope(
-                instrumenting_module_name, instrumenting_module_version
+                name, version, schema_url,
             ),
         )
 

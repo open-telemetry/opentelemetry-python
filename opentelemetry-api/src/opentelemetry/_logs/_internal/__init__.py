@@ -61,12 +61,12 @@ class LoggerProvider(ABC):
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
     ) -> "Logger":
-        """Returns a `Logger` for use by the given instrumentation library.
+        """Returns a Logger for use by the given instrumentation library.
 
         For any two calls it is undefined whether the same or different
-        `Logger` instances are returned, even for different library names.
+        Logger instances are returned, even for different library names.
 
-        This function may return different `Logger` types (e.g. a no-op logger
+        This function may return different Logger types (e.g. a no-op logger
         vs. a functional logger).
 
         Args:
