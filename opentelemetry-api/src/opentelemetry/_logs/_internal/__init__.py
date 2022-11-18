@@ -66,7 +66,7 @@ class LogRecord(ABC):
         trace_flags: Optional["TraceFlags"] = None,
         severity_text: Optional[str] = None,
         severity_number: Optional[SeverityNumber] = None,
-        body: Optional[Any] = None,
+        body: Optional[Any] = None,  # type: ignore
         attributes: Optional["Attributes"] = None,
     ):
         self.timestamp = timestamp

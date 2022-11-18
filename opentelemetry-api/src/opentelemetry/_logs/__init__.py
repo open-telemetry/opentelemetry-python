@@ -34,6 +34,8 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 .. versionadded:: 1.15.0
 """
 
+# pylint: disable=unused-import
+
 from opentelemetry._logs._internal import (
     Logger,
     LoggerProvider,
