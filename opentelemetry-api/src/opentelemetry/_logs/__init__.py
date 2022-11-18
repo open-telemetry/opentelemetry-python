@@ -49,10 +49,10 @@ from opentelemetry._logs._internal import (  # noqa: F401
 from opentelemetry._logs.severity import (
     SeverityNumber,
     std_to_otel,
-  )  # noqa: F401
+)  # noqa: F401
 
 __all__ = []
 for key, value in globals().copy().items():  # type: ignore
     if not key.startswith("_"):
-        value.__module__ = __name__
+        value.__module__ = __name__  # type: ignore
         __all__.append(key)
