@@ -1,7 +1,7 @@
-opentelemetry._logs.severity
-============================
+.. opentelemetry._logs.severity
+.. ============================
 
-.. automodule:: opentelemetry._logs.severity
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. .. automodule:: opentelemetry._logs.severity
+..     :members:
+..     :undoc-members:
+..     :show-inheritance:

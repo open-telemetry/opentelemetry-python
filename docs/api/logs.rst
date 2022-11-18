@@ -1,22 +1,22 @@
-opentelemetry._logs package
-===========================
+.. opentelemetry._logs package
+.. ===========================
 
-.. warning::
-   OpenTelemetry Python logs are in an experimental state. The APIs within
-   :mod:`opentelemetry._logs` are subject to change in minor/patch releases and make no
-   backward compatibility guarantees at this time.
+.. .. warning::
+..    OpenTelemetry Python logs are in an experimental state. The APIs within
+..    :mod:`opentelemetry._logs` are subject to change in minor/patch releases and make no
+..    backward compatibility guarantees at this time.
 
-   Once logs become stable, this package will be be renamed to ``opentelemetry.logs``.
+..    Once logs become stable, this package will be be renamed to ``opentelemetry.logs``.
 
-Submodules
-----------
+.. Submodules
+.. ----------
 
-.. toctree::
+.. .. toctree::
 
-   logs.severity
+..    logs.severity
 
 
-Module contents
----------------
+.. Module contents
+.. ---------------
 
-.. automodule:: opentelemetry._logs
+.. .. automodule:: opentelemetry._logs
