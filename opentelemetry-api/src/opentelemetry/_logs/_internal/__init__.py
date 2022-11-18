@@ -127,13 +127,13 @@ class LoggerProvider(ABC):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-    ) -> "Logger":
-        """Returns a  for use by the given instrumentation library.
+    ) -> Logger:
+        """Returns a `Logger` for use by the given instrumentation library.
 
         For any two calls it is undefined whether the same or different
-         instances are returned, even for different library names.
+        `Logger` instances are returned, even for different library names.
 
-        This function may return different  types (e.g. a no-op logger
+        This function may return different `Logger` types (e.g. a no-op logger
         vs. a functional logger).
 
         Args:
@@ -164,7 +164,7 @@ class NoOpLoggerProvider(LoggerProvider):
         name: str,
         version: Optional[str] = None,
         schema_url: Optional[str] = None,
-    ) -> "Logger":
+    ) -> Logger:
         """Returns a NoOpLogger."""
         super().get_logger(name, version=version, schema_url=schema_url)
         return NoOpLogger(name, version=version, schema_url=schema_url)
