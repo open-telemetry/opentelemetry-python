@@ -21,7 +21,6 @@ from opentelemetry.sdk.resources import Resource
 
 
 class TestLoggerProvider(unittest.TestCase):
-
     def test_resource(self):
         """
         `LoggerProvider` provides a way to allow a `Resource` to be specified.
@@ -30,14 +29,15 @@ class TestLoggerProvider(unittest.TestCase):
         logger_provider_0 = LoggerProvider()
         logger_provider_1 = LoggerProvider()
 
-        self.assertIs(logger_provider_0.resource, logger_provider_1.resource,)
+        self.assertIs(
+            logger_provider_0.resource,
+            logger_provider_1.resource,
+        )
         self.assertIsInstance(logger_provider_0.resource, Resource)
         self.assertIsInstance(logger_provider_1.resource, Resource)
 
         resource = Resource({"key": "value"})
-        self.assertIs(
-            LoggerProvider(resource=resource).resource, resource
-        )
+        self.assertIs(LoggerProvider(resource=resource).resource, resource)
 
     def test_get_logger(self):
         """
