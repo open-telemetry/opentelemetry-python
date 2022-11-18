@@ -35,7 +35,6 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 """
 
 # pylint: disable=unused-import
-# type: ignore
 
 from opentelemetry._logs._internal import (  # noqa: F401
     Logger,
@@ -47,10 +46,13 @@ from opentelemetry._logs._internal import (  # noqa: F401
     get_logger_provider,
     set_logger_provider,
 )
-from opentelemetry._logs.severity import SeverityNumber, std_to_otel  # noqa: F401
+from opentelemetry._logs.severity import (
+    SeverityNumber,
+    std_to_otel,
+  )  # noqa: F401
 
 __all__ = []
-for key, value in globals().copy().items():
+for key, value in globals().copy().items():  # type: ignore
     if not key.startswith("_"):
         value.__module__ = __name__
         __all__.append(key)
