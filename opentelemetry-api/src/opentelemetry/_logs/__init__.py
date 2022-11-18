@@ -46,10 +46,10 @@ from opentelemetry._logs._internal import (  # noqa: F401
     get_logger_provider,
     set_logger_provider,
 )
-from opentelemetry._logs.severity import (
+from opentelemetry._logs.severity import (  # noqa: F401
     SeverityNumber,
     std_to_otel,
-)  # noqa: F401
+)
 
 __all__ = []
 for key, value in globals().copy().items():  # type: ignore
