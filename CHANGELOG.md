@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Rename parse_headers to parse_env_headers and improve error message
+  ([#2376](https://github.com/open-telemetry/opentelemetry-python/pull/2376))
 - Add url decode values from OTEL_RESOURCE_ATTRIBUTES
   ([#3046](https://github.com/open-telemetry/opentelemetry-python/pull/3046))
 - Fixed circular dependency issue with custom samplers
