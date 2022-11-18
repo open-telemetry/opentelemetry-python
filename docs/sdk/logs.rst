@@ -1,24 +1,24 @@
-opentelemetry.sdk._logs package
-===============================
+.. opentelemetry.sdk._logs package
+.. ===============================
 
-.. warning::
-   OpenTelemetry Python logs are in an experimental state. The APIs within
-   :mod:`opentelemetry.sdk._logs` are subject to change in minor/patch releases and make no
-   backward compatibility guarantees at this time.
+.. .. warning::
+..    OpenTelemetry Python logs are in an experimental state. The APIs within
+..    :mod:`opentelemetry.sdk._logs` are subject to change in minor/patch releases and make no
+..    backward compatibility guarantees at this time.
 
-   Once logs become stable, this package will be be renamed to ``opentelemetry.sdk.logs``.
+..    Once logs become stable, this package will be be renamed to ``opentelemetry.sdk.logs``.
 
-Submodules
-----------
+.. Submodules
+.. ----------
 
-.. toctree::
+.. .. toctree::
 
-   logs.export
+..    logs.export
 
-Module contents
----------------
+.. Module contents
+.. ---------------
 
-.. automodule:: opentelemetry.sdk._logs
-    :members:
-    :undoc-members:
-    :show-inheritance:
+.. .. automodule:: opentelemetry.sdk._logs
+..     :members:
+..     :undoc-members:
+..     :show-inheritance:

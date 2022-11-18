@@ -46,15 +46,8 @@ from opentelemetry._logs._internal import (
 )
 from opentelemetry._logs.severity import SeverityNumber, std_to_otel
 
-__all__ = [
-    "Logger",
-    "LoggerProvider",
-    "LogRecord",
-    "NoOpLogger",
-    "NoOpLoggerProvider",
-    "SeverityNumber",
-    "get_logger",
-    "get_logger_provider",
-    "set_logger_provider",
-    "std_to_otel",
-]
+__all__ = []
+for key, value in globals().copy().items():
+    if not key.startswith("_"):
+        value.__module__ = __name__
+        __all__.append(key)

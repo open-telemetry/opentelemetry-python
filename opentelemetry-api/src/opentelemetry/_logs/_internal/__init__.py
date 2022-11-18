@@ -34,9 +34,9 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 .. versionadded:: 1.15.0
 """
 
-import os
 from abc import ABC, abstractmethod
 from logging import getLogger
+from os import environ
 from typing import Any, Optional, cast
 
 from opentelemetry._logs.severity import SeverityNumber
@@ -99,7 +99,7 @@ class Logger(ABC):
         """Emits a :class:`LogRecord` representing an Event to the processing pipeline."""
 
     @abstractmethod
-    def emit(self, record: "LogRecord") -> None:
+    def emit_log(self, record: "LogRecord") -> None:
         """Emits a :class:`LogRecord` representing a log to the processing pipeline."""
 
 
@@ -112,7 +112,7 @@ class NoOpLogger(Logger):
     def emit_event(self, record: "LogRecord") -> None:
         pass
 
-    def emit(self, record: "LogRecord") -> None:
+    def emit_log(self, record: "LogRecord") -> None:
         pass
 
 
@@ -181,7 +181,7 @@ def get_logger_provider() -> LoggerProvider:
     """Gets the current global :class:`~.LoggerProvider` object."""
     global _LOGGER_PROVIDER  # pylint: disable=global-statement
     if _LOGGER_PROVIDER is None:
-        if _OTEL_PYTHON_LOGGER_PROVIDER not in os.environ.keys():
+        if _OTEL_PYTHON_LOGGER_PROVIDER not in environ.keys():
             # TODO: return proxy
             _LOGGER_PROVIDER = NoOpLoggerProvider()
             return _LOGGER_PROVIDER
