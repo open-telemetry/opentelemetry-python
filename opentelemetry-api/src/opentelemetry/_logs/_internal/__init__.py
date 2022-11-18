@@ -49,61 +49,35 @@ from opentelemetry.util.types import Attributes
 _logger = getLogger(__name__)
 
 
-class LoggerProvider(ABC):
+class LogRecord(ABC):
+    """A LogRecord instance represents an event being logged.
+
+    LogRecord instances are created and emitted via `Logger`
+    every time something is logged. They contain all the information
+    pertinent to the event being logged.
     """
-    LoggerProvider is the entry point of the API. It provides access to Logger instances.
-    """
 
-    @abstractmethod
-    def get_logger(
+    def __init__(
         self,
-        name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
+        timestamp: Optional[int] = None,
+        observed_timestamp: Optional[int] = None,
+        trace_id: Optional[int] = None,
+        span_id: Optional[int] = None,
+        trace_flags: Optional["TraceFlags"] = None,
+        severity_text: Optional[str] = None,
+        severity_number: Optional[SeverityNumber] = None,
+        body: Optional[Any] = None,
+        attributes: Optional["Attributes"] = None,
     ):
-        """Returns a Logger for use by the given instrumentation library.
-
-        For any two calls it is undefined whether the same or different
-        Logger instances are returned, even for different library names.
-
-        This function may return different Logger types (e.g. a no-op logger
-        vs. a functional logger).
-
-        Args:
-            name: The name of the instrumenting module.
-                ``__name__`` may not be used as this can result in
-                different logger names if the loggers are in different files.
-                It is better to use a fixed string that can be imported where
-                needed and used consistently as the name of the logger.
-
-                This should *not* be the name of the module that is
-                instrumented but the name of the module doing the instrumentation.
-                E.g., instead of ``"requests"``, use
-                ``"opentelemetry.instrumentation.requests"``.
-
-            version: Optional. The version string of the
-                instrumenting library.  Usually this should be the same as
-                ``pkg_resources.get_distribution(instrumenting_library_name).version``.
-
-            schema_url: Optional. Specifies the Schema URL of the emitted telemetry.
-        """
-
-
-class NoOpLoggerProvider(LoggerProvider):
-    """The default LoggerProvider used when no LoggerProvider implementation is available."""
-
-    def get_logger(
-        self,
-        name: str,
-        version: Optional[str] = None,
-        schema_url: Optional[str] = None,
-    ):
-        """Returns a NoOpLogger."""
-        super().get_logger(name, version=version, schema_url=schema_url)
-        return NoOpLogger(name, version=version, schema_url=schema_url)
-
-
-# TODO: ProxyLoggerProvider
+        self.timestamp = timestamp
+        self.observed_timestamp = observed_timestamp
+        self.trace_id = trace_id
+        self.span_id = span_id
+        self.trace_flags = trace_flags
+        self.severity_text = severity_text
+        self.severity_number = severity_number
+        self.body = body  # type: ignore
+        self.attributes = attributes
 
 
 class Logger(ABC):
@@ -142,35 +116,61 @@ class NoOpLogger(Logger):
         pass
 
 
-class LogRecord(ABC):
-    """A LogRecord instance represents an event being logged.
-
-    LogRecord instances are created and emitted via `Logger`
-    every time something is logged. They contain all the information
-    pertinent to the event being logged.
+class LoggerProvider(ABC):
+    """
+    LoggerProvider is the entry point of the API. It provides access to Logger instances.
     """
 
-    def __init__(
+    @abstractmethod
+    def get_logger(
         self,
-        timestamp: Optional[int] = None,
-        observed_timestamp: Optional[int] = None,
-        trace_id: Optional[int] = None,
-        span_id: Optional[int] = None,
-        trace_flags: Optional["TraceFlags"] = None,
-        severity_text: Optional[str] = None,
-        severity_number: Optional[SeverityNumber] = None,
-        body: Optional[Any] = None,
-        attributes: Optional["Attributes"] = None,
-    ):
-        self.timestamp = timestamp
-        self.observed_timestamp = observed_timestamp
-        self.trace_id = trace_id
-        self.span_id = span_id
-        self.trace_flags = trace_flags
-        self.severity_text = severity_text
-        self.severity_number = severity_number
-        self.body = body  # type: ignore
-        self.attributes = attributes
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
+    ) -> "Logger":
+        """Returns a `Logger` for use by the given instrumentation library.
+
+        For any two calls it is undefined whether the same or different
+        `Logger` instances are returned, even for different library names.
+
+        This function may return different `Logger` types (e.g. a no-op logger
+        vs. a functional logger).
+
+        Args:
+            name: The name of the instrumenting module.
+                ``__name__`` may not be used as this can result in
+                different logger names if the loggers are in different files.
+                It is better to use a fixed string that can be imported where
+                needed and used consistently as the name of the logger.
+
+                This should *not* be the name of the module that is
+                instrumented but the name of the module doing the instrumentation.
+                E.g., instead of ``"requests"``, use
+                ``"opentelemetry.instrumentation.requests"``.
+
+            version: Optional. The version string of the
+                instrumenting library.  Usually this should be the same as
+                ``pkg_resources.get_distribution(instrumenting_library_name).version``.
+
+            schema_url: Optional. Specifies the Schema URL of the emitted telemetry.
+        """
+
+
+class NoOpLoggerProvider(LoggerProvider):
+    """The default LoggerProvider used when no LoggerProvider implementation is available."""
+
+    def get_logger(
+        self,
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
+    ) -> "Logger":
+        """Returns a NoOpLogger."""
+        super().get_logger(name, version=version, schema_url=schema_url)
+        return NoOpLogger(name, version=version, schema_url=schema_url)
+
+
+# TODO: ProxyLoggerProvider
 
 
 _LOGGER_PROVIDER_SET_ONCE = Once()
@@ -219,7 +219,7 @@ def get_logger(
     instrumenting_module_name: str,
     instrumenting_library_version: str = "",
     logger_provider: Optional[LoggerProvider] = None,
-) -> Logger:
+) -> "Logger":
     """Returns a `Logger` for use within a python process.
 
     This function is a convenience wrapper for
