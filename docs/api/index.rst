@@ -8,7 +8,6 @@ OpenTelemetry Python API
 
     baggage
     context
-    .. logs
     propagate
     propagators
     trace

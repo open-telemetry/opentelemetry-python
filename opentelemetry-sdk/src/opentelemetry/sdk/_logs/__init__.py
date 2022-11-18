@@ -377,9 +377,9 @@ class LoggingHandler(logging.Handler):
         """
         Emit a record.
 
-        The record is translated to OTLP format, and then sent across the pipeline.
+        The record is translated to OTel format, and then sent across the pipeline.
         """
-        self._logger.emit_log(self._translate(record))
+        self._logger.emit(self._translate(record))
 
     def flush(self) -> None:
         """
@@ -411,7 +411,7 @@ class Logger(APILogger):
     def resource(self):
         return self._resource
 
-    def emit_log(self, record: LogRecord):
+    def emit(self, record: LogRecord):
         """Emits the :class:`LogData` by associating :class:`LogRecord`
         and instrumentation info.
         """

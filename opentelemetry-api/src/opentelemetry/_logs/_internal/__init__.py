@@ -99,7 +99,7 @@ class Logger(ABC):
         """Emits a :class:`LogRecord` representing an Event to the processing pipeline."""
 
     @abstractmethod
-    def emit_log(self, record: "LogRecord") -> None:
+    def emit(self, record: "LogRecord") -> None:
         """Emits a :class:`LogRecord` representing a log to the processing pipeline."""
 
 
@@ -112,7 +112,7 @@ class NoOpLogger(Logger):
     def emit_event(self, record: "LogRecord") -> None:
         pass
 
-    def emit_log(self, record: "LogRecord") -> None:
+    def emit(self, record: "LogRecord") -> None:
         pass
 
 
