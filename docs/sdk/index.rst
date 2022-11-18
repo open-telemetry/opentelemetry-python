@@ -6,6 +6,7 @@ OpenTelemetry Python SDK
 .. toctree::
     :maxdepth: 1
 
+    _logs
     resources
     trace
     metrics
