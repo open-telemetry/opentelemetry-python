@@ -14,9 +14,15 @@
 
 from logging import getLogger
 from os import environ
+from sys import version_info
 from typing import TYPE_CHECKING, TypeVar, cast
 
-from pkg_resources import iter_entry_points
+# FIXME remove when support for 3.7 is dropped.
+if version_info.minor == 7:
+    # pylint: disable=import-error
+    from importlib_metadata import entry_points  # type: ignore
+else:
+    from importlib.metadata import entry_points
 
 if TYPE_CHECKING:
     from opentelemetry.metrics import MeterProvider
@@ -30,10 +36,27 @@ logger = getLogger(__name__)
 def _load_provider(
     provider_environment_variable: str, provider: str
 ) -> Provider:
+
     try:
-        entry_point = next(
-            iter_entry_points(
-                f"opentelemetry_{provider}",
+
+        if version_info.minor <= 9:
+
+            provider_name = cast(
+                str,
+                environ.get(
+                    provider_environment_variable, f"default_{provider}"
+                ),
+            )
+
+            for entry_point in entry_points()[f"opentelemetry_{provider}"]:  # type: ignore
+                if entry_point.name == provider_name:  # type: ignore
+                    return cast(Provider, entry_point.load()())  # type: ignore
+            raise Exception(f"Provider {provider_name} not found")
+
+        return cast(
+            Provider,
+            entry_points(  # type: ignore
+                group=f"opentelemetry_{provider}",
                 name=cast(
                     str,
                     environ.get(
@@ -41,12 +64,8 @@ def _load_provider(
                         f"default_{provider}",
                     ),
                 ),
-            )
-        )
-        return cast(
-            Provider,
-            entry_point.load()(),
+            )[0].load()(),
         )
     except Exception:  # pylint: disable=broad-except
-        logger.error("Failed to load configured provider %s", provider)
+        logger.exception("Failed to load configured provider %s", provider)
         raise

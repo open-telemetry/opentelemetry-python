@@ -15,8 +15,16 @@
 import os
 import socket
 import time
+from sys import version_info
 
-import pkg_resources
+# FIXME remove when support for 3.7 is dropped.
+if version_info.minor == 7:
+    # pylint: disable=import-error
+    from importlib_metadata import version
+else:
+    from importlib.metadata import version
+
+# pylint: disable=wrong-import-position
 from google.protobuf.timestamp_pb2 import Timestamp
 from opencensus.proto.agent.common.v1 import common_pb2
 from opencensus.proto.trace.v1 import trace_pb2
@@ -26,9 +34,7 @@ from opentelemetry.exporter.opencensus.version import (
 )
 from opentelemetry.trace import SpanKind
 
-OPENTELEMETRY_VERSION = pkg_resources.get_distribution(
-    "opentelemetry-api"
-).version
+OPENTELEMETRY_VERSION = version("opentelemetry-api")
 
 
 def proto_timestamp_from_time_ns(time_ns):

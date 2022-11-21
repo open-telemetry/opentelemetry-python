@@ -18,9 +18,16 @@ import typing
 from functools import wraps
 from os import environ
 from uuid import uuid4
+from sys import version_info
 
-from pkg_resources import iter_entry_points
+# FIXME remove when support for 3.7 is dropped.
+if version_info.minor == 7:
+    # pylint: disable=import-error
+    from importlib_metadata import entry_points  # type: ignore
+else:
+    from importlib.metadata import entry_points
 
+# pylint: disable=wrong-import-position
 from opentelemetry.context.context import Context, _RuntimeContext
 from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
 
@@ -41,25 +48,38 @@ def _load_runtime_context(func: _F) -> _F:
     @wraps(func)  # type: ignore[misc]
     def wrapper(  # type: ignore[misc]
         *args: typing.Tuple[typing.Any, typing.Any],
-        **kwargs: typing.Dict[typing.Any, typing.Any]
+        **kwargs: typing.Dict[typing.Any, typing.Any],
     ) -> typing.Optional[typing.Any]:
         global _RUNTIME_CONTEXT  # pylint: disable=global-statement
 
         with _RUNTIME_CONTEXT_LOCK:
             if _RUNTIME_CONTEXT is None:
-                # FIXME use a better implementation of a configuration manager to avoid having
-                # to get configuration values straight from environment variables
+                # FIXME use a better implementation of a configuration manager
+                # to avoid having to get configuration values straight from
+                # environment variables
                 default_context = "contextvars_context"
 
                 configured_context = environ.get(
                     OTEL_PYTHON_CONTEXT, default_context
                 )  # type: str
                 try:
-                    _RUNTIME_CONTEXT = next(
-                        iter_entry_points(
-                            "opentelemetry_context", configured_context
-                        )
-                    ).load()()
+                    if version_info.minor <= 9:
+                        for entry_point in entry_points()[  # type: ignore
+                            "opentelemetry_context"
+                        ]:
+                            if entry_point.name == configured_context:  # type: ignore
+                                _RUNTIME_CONTEXT = entry_point.load()()  # type: ignore
+                                break
+                        else:
+                            raise Exception(
+                                f"No entry point found for configured_context:"
+                                f" {configured_context}"
+                            )
+                    else:
+                        _RUNTIME_CONTEXT = entry_points(  # type: ignore
+                            group="opentelemetry_context",
+                            name=configured_context,
+                        )[0].load()()
                 except Exception:  # pylint: disable=broad-except
                     logger.error(
                         "Failed to load context: %s", configured_context

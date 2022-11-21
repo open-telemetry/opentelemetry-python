@@ -13,15 +13,12 @@
 # limitations under the License.
 # type: ignore
 
+from importlib.util import find_spec
 from unittest import TestCase
-
-from pkg_resources import DistributionNotFound, require
 
 
 class TestSemanticConventions(TestCase):
     def test_semantic_conventions(self):
 
-        try:
-            require(["opentelemetry-semantic-conventions"])
-        except DistributionNotFound:
+        if find_spec("opentelemetry.semconv") is None:
             self.fail("opentelemetry-semantic-conventions not installed")

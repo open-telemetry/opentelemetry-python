@@ -21,9 +21,9 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from os import environ
+from sys import version_info
 from typing import Callable, Dict, List, Optional, Sequence, Tuple, Type
 
-from pkg_resources import iter_entry_points
 from typing_extensions import Literal
 
 from opentelemetry._logs import set_logger_provider
@@ -58,6 +58,13 @@ from opentelemetry.sdk.trace.sampling import Sampler
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.trace import set_tracer_provider
 
+# FIXME remove when support for 3.7 is dropped.
+if version_info.minor == 7:
+    # pylint: disable=import-error
+    from importlib_metadata import entry_points
+else:
+    from importlib.metadata import entry_points
+
 _EXPORTER_OTLP = "otlp"
 _EXPORTER_OTLP_PROTO_GRPC = "otlp_proto_grpc"
 _EXPORTER_OTLP_PROTO_HTTP = "otlp_proto_http"
@@ -90,21 +97,30 @@ _logger = logging.getLogger(__name__)
 def _import_config_components(
     selected_components: List[str], entry_point_name: str
 ) -> Sequence[Tuple[str, object]]:
-    component_entry_points = {
-        ep.name: ep for ep in iter_entry_points(entry_point_name)
-    }
-    component_impls = []
-    for selected_component in selected_components:
-        entry_point = component_entry_points.get(selected_component, None)
-        if not entry_point:
-            raise RuntimeError(
-                f"Requested component '{selected_component}' not found in entry points for '{entry_point_name}'"
+
+    component_implementations = []
+
+    if version_info.minor <= 9:
+
+        for entry_point in entry_points()[entry_point_name]:
+            for selected_component in selected_components:
+                if entry_point.name == selected_component:
+                    component_implementations.append(
+                        (selected_component, entry_point.load())
+                    )
+    else:
+
+        for selected_component in selected_components:
+            component_implementations.append(
+                (
+                    selected_component,
+                    entry_points(
+                        group=entry_point_name, name=selected_component
+                    )[0].load(),
+                )
             )
 
-        component_impl = entry_point.load()
-        component_impls.append((selected_component, component_impl))
-
-    return component_impls
+    return component_implementations
 
 
 def _get_sampler() -> Optional[str]:

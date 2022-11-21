@@ -71,12 +71,18 @@ Example::
 import typing
 from logging import getLogger
 from os import environ
-
-from pkg_resources import iter_entry_points
+from sys import version_info
 
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.propagators import composite, textmap
+
+# FIXME remove when support for 3.7 is dropped.
+if version_info.minor == 7:
+    # pylint: disable=import-error
+    from importlib_metadata import entry_points  # type: ignore
+else:
+    from importlib.metadata import entry_points
 
 logger = getLogger(__name__)
 
@@ -129,14 +135,26 @@ environ_propagators = environ.get(
     "tracecontext,baggage",
 )
 
+
 for propagator in environ_propagators.split(","):
     propagator = propagator.strip()
     try:
-        propagators.append(  # type: ignore
-            next(  # type: ignore
-                iter_entry_points("opentelemetry_propagator", propagator)
-            ).load()()
-        )
+
+        if version_info.minor <= 9:
+
+            for entry_point in entry_points().get(  # type: ignore
+                "opentelemetry_propagator", []
+            ):
+                if entry_point.name == propagator:  # type: ignore
+                    propagators.append(entry_point.load()())  # type: ignore
+        else:
+
+            propagators.append(  # type: ignore
+                entry_points(  # type: ignore
+                    group="opentelemetry_propagator", name=propagator
+                )[0].load()()
+            )
+
     except Exception:  # pylint: disable=broad-except
         logger.exception(
             "Failed to load configured propagator `%s`", propagator
