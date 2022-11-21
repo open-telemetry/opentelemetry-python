@@ -17,7 +17,7 @@ import logging
 import zlib
 from io import BytesIO
 from os import environ
-from typing import Dict, Optional
+from typing import Dict, Optional, Sequence
 from time import sleep
 
 import backoff
@@ -35,11 +35,14 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
+from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
 )
+from opentelemetry.exporter.otlp.proto.http.exporter import OTLPExporterMixin
+
 from opentelemetry.exporter.otlp.proto.http.trace_exporter.encoder import (
     _ProtobufEncoder,
 )
@@ -67,7 +70,9 @@ def _expo(*args, **kwargs):
     return gen
 
 
-class OTLPSpanExporter(SpanExporter):
+class OTLPSpanExporter(
+    SpanExporter, OTLPExporterMixin[ReadableSpan, SpanExportResult]
+):
 
     _MAX_RETRY_TIMEOUT = 64
 
@@ -110,33 +115,19 @@ class OTLPSpanExporter(SpanExporter):
                 {"Content-Encoding": self._compression.value}
             )
         self._shutdown = False
+        self._result = SpanExportResult
 
-    def _export(self, serialized_data: str):
-        data = serialized_data
-        if self._compression == Compression.Gzip:
-            gzip_data = BytesIO()
-            with gzip.GzipFile(fileobj=gzip_data, mode="w") as gzip_stream:
-                gzip_stream.write(serialized_data)
-            data = gzip_data.getvalue()
-        elif self._compression == Compression.Deflate:
-            data = zlib.compress(bytes(serialized_data))
-
-        return self._session.post(
-            url=self._endpoint,
-            data=data,
-            verify=self._certificate_file,
-            timeout=self._timeout,
+        OTLPExporterMixin.__init__(
+            self,
+            self._endpoint,
+            self._certificate_file,
+            self._headers,
+            self._timeout,
+            self._compression,
+            self._session,
         )
 
-    @staticmethod
-    def _retryable(resp: requests.Response) -> bool:
-        if resp.status_code == 408:
-            return True
-        if resp.status_code >= 500 and resp.status_code <= 599:
-            return True
-        return False
-
-    def export(self, spans) -> SpanExportResult:
+    def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         # After the call to Shutdown subsequent calls to Export are
         # not allowed and should return a Failure result.
         if self._shutdown:

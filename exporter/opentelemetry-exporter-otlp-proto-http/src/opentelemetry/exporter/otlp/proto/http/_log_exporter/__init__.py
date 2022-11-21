@@ -39,6 +39,8 @@ from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
 )
+from opentelemetry.exporter.otlp.proto.http.exporter import OTLPExporterMixin
+
 from opentelemetry.exporter.otlp.proto.http._log_exporter.encoder import (
     _ProtobufEncoder,
 )
@@ -66,7 +68,9 @@ def _expo(*args, **kwargs):
     return gen
 
 
-class OTLPLogExporter(LogExporter):
+class OTLPLogExporter(
+    LogExporter, OTLPExporterMixin[LogData, LogExportResult]
+):
 
     _MAX_RETRY_TIMEOUT = 64
 
@@ -99,31 +103,16 @@ class OTLPLogExporter(LogExporter):
                 {"Content-Encoding": self._compression.value}
             )
         self._shutdown = False
-
-    def _export(self, serialized_data: str):
-        data = serialized_data
-        if self._compression == Compression.Gzip:
-            gzip_data = BytesIO()
-            with gzip.GzipFile(fileobj=gzip_data, mode="w") as gzip_stream:
-                gzip_stream.write(serialized_data)
-            data = gzip_data.getvalue()
-        elif self._compression == Compression.Deflate:
-            data = zlib.compress(bytes(serialized_data))
-
-        return self._session.post(
-            url=self._endpoint,
-            data=data,
-            verify=self._certificate_file,
-            timeout=self._timeout,
+        self._result = LogExportResult
+        OTLPExporterMixin.__init__(
+            self,
+            self._endpoint,
+            self._certificate_file,
+            self._headers,
+            self._timeout,
+            self._compression,
+            self._session,
         )
-
-    @staticmethod
-    def _retryable(resp: requests.Response) -> bool:
-        if resp.status_code == 408:
-            return True
-        if resp.status_code >= 500 and resp.status_code <= 599:
-            return True
-        return False
 
     def export(self, batch: Sequence[LogData]) -> LogExportResult:
         # After the call to Shutdown subsequent calls to Export are
@@ -160,7 +149,7 @@ class OTLPLogExporter(LogExporter):
                 return LogExportResult.FAILURE
         return LogExportResult.FAILURE
 
-    def shutdown(self):
+    def shutdown(self, **kwargs):
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring call")
             return

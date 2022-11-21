@@ -20,6 +20,7 @@ from io import BytesIO
 from time import sleep
 
 from opentelemetry.exporter.otlp.proto.http import Compression
+from opentelemetry.exporter.otlp.proto.http.exporter import OTLPExporterMixin
 from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
@@ -90,7 +91,9 @@ def _expo(*args, **kwargs):
     return gen
 
 
-class OTLPMetricExporter(MetricExporter):
+class OTLPMetricExporter(
+    MetricExporter, OTLPExporterMixin[MetricsData, MetricExportResult]
+):
 
     _MAX_RETRY_TIMEOUT = 64
 
@@ -166,36 +169,22 @@ class OTLPMetricExporter(MetricExporter):
             }
         instrument_class_temporality.update(preferred_temporality or {})
 
+        self._result = MetricExportResult
+        OTLPExporterMixin.__init__(
+            self,
+            self._endpoint,
+            self._certificate_file,
+            self._headers,
+            self._timeout,
+            self._compression,
+            self._session,
+        )
+
         MetricExporter.__init__(
             self,
             preferred_temporality=instrument_class_temporality,
             preferred_aggregation=preferred_aggregation,
         )
-
-    def _export(self, serialized_data: str):
-        data = serialized_data
-        if self._compression == Compression.Gzip:
-            gzip_data = BytesIO()
-            with gzip.GzipFile(fileobj=gzip_data, mode="w") as gzip_stream:
-                gzip_stream.write(serialized_data)
-            data = gzip_data.getvalue()
-        elif self._compression == Compression.Deflate:
-            data = zlib.compress(bytes(serialized_data))
-
-        return self._session.post(
-            url=self._endpoint,
-            data=data,
-            verify=self._certificate_file,
-            timeout=self._timeout,
-        )
-
-    @staticmethod
-    def _retryable(resp: requests.Response) -> bool:
-        if resp.status_code == 408:
-            return True
-        if resp.status_code >= 500 and resp.status_code <= 599:
-            return True
-        return False
 
     def _translate_data(
         self, data: MetricsData
