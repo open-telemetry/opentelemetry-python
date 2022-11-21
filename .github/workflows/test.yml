@@ -66,7 +66,7 @@ jobs:
 #           jq -s '.[0].benchmarks = ([.[].benchmarks] | add)
 #           | if .[0].benchmarks == null then null else .[0] end'
 #           $(find . -name '*${{ matrix.package }}*-benchmark.json') > output.json
-#           && echo "::set-output name=json_plaintext::$(cat output.json)"
+#           && echo "json_plaintext=$(cat output.json)" >> $GITHUB_OUTPUT
 #       - name: Report on benchmark results
 #         if: steps.find_and_merge_benchmarks.outputs.json_plaintext != 'null'
 #         uses: rhysd/github-action-benchmark@v1
