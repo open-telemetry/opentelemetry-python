@@ -492,6 +492,16 @@ class TestOTELResourceDetector(unittest.TestCase):
             resources.Resource({"k": "v", "k2": "v2", "foo": "bar=baz"}),
         )
 
+    def test_multiple_with_url_decode(self):
+        detector = resources.OTELResourceDetector()
+        os.environ[
+            resources.OTEL_RESOURCE_ATTRIBUTES
+        ] = "key=value%20test%0A, key2=value+%202"
+        self.assertEqual(
+            detector.detect(),
+            resources.Resource({"key": "value test\n", "key2": "value+ 2"}),
+        )
+
     @mock.patch.dict(
         os.environ,
         {resources.OTEL_SERVICE_NAME: "test-srv-name"},
