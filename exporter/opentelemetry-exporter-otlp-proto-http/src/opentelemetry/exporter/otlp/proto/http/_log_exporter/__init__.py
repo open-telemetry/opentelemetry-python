@@ -149,7 +149,7 @@ class OTLPLogExporter(
                 return LogExportResult.FAILURE
         return LogExportResult.FAILURE
 
-    def shutdown(self, **kwargs):
+    def shutdown(self):
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring call")
             return
