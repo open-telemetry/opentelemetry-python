@@ -78,9 +78,6 @@ _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT = 128
 
 _ENV_VALUE_UNSET = ""
 
-# pylint: disable=protected-access
-_TRACE_SAMPLER = sampling._get_from_env_or_default()
-
 
 class SpanProcessor:
     """Interface which allows hooks for SDK's `Span` start and end method
@@ -334,7 +331,7 @@ def _check_span_ended(func):
     def wrapper(self, *args, **kwargs):
         already_ended = False
         with self._lock:  # pylint: disable=protected-access
-            if self._end_time is None:
+            if self._end_time is None:  # pylint: disable=protected-access
                 func(self, *args, **kwargs)
             else:
                 already_ended = True
@@ -519,7 +516,11 @@ class ReadableSpan:
             f_event = OrderedDict()
             f_event["name"] = event.name
             f_event["timestamp"] = util.ns_to_iso_str(event.timestamp)
-            f_event["attributes"] = Span._format_attributes(event.attributes)
+            f_event[
+                "attributes"
+            ] = Span._format_attributes(  # pylint: disable=protected-access
+                event.attributes
+            )
             f_events.append(f_event)
         return f_events
 
@@ -528,8 +529,16 @@ class ReadableSpan:
         f_links = []
         for link in links:
             f_link = OrderedDict()
-            f_link["context"] = Span._format_context(link.context)
-            f_link["attributes"] = Span._format_attributes(link.attributes)
+            f_link[
+                "context"
+            ] = Span._format_context(  # pylint: disable=protected-access
+                link.context
+            )
+            f_link[
+                "attributes"
+            ] = Span._format_attributes(  # pylint: disable=protected-access
+                link.attributes
+            )
             f_links.append(f_link)
         return f_links
 
@@ -691,10 +700,12 @@ _UnsetLimits = SpanLimits(
 )
 
 # not removed for backward compat. please use SpanLimits instead.
-SPAN_ATTRIBUTE_COUNT_LIMIT = SpanLimits._from_env_if_absent(
-    None,
-    OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
-    _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+SPAN_ATTRIBUTE_COUNT_LIMIT = (
+    SpanLimits._from_env_if_absent(  # pylint: disable=protected-access
+        None,
+        OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+        _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+    )
 )
 
 
@@ -1115,7 +1126,7 @@ class TracerProvider(trace_api.TracerProvider):
 
     def __init__(
         self,
-        sampler: sampling.Sampler = _TRACE_SAMPLER,
+        sampler: sampling.Sampler = None,
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
         active_span_processor: Union[
@@ -1132,6 +1143,8 @@ class TracerProvider(trace_api.TracerProvider):
         else:
             self.id_generator = id_generator
         self._resource = resource
+        if not sampler:
+            sampler = sampling._get_from_env_or_default()
         self.sampler = sampler
         self._span_limits = span_limits or SpanLimits()
         self._atexit_handler = None

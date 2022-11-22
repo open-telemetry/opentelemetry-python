@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Add url decode values from OTEL_RESOURCE_ATTRIBUTES
   ([#3046](https://github.com/open-telemetry/opentelemetry-python/pull/3046))
+- Fixed circular dependency issue with custom samplers
+  ([#3026](https://github.com/open-telemetry/opentelemetry-python/pull/3026))
 - Add missing entry points for OTLP/HTTP exporter
   ([#3027](https://github.com/open-telemetry/opentelemetry-python/pull/3027))
 
