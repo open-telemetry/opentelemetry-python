@@ -17,7 +17,9 @@ from typing import Dict, Optional, Sequence, Any, Callable, List, Mapping
 from time import sleep
 
 from opentelemetry.exporter.otlp.proto.http import Compression
-from opentelemetry.exporter.otlp.proto.http.exporter import OTLPExporterMixin
+from opentelemetry.exporter.otlp.proto.http.exporter import (
+    OTLPExporterMixin, DEFAULT_COMPRESSION, DEFAULT_ENDPOINT, DEFAULT_TIMEOUT
+)
 from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
     ExportMetricsServiceRequest,
@@ -59,6 +61,7 @@ from opentelemetry.sdk.metrics.export import (
     MetricExporter,
     MetricExportResult,
     MetricsData,
+    ResourceMetrics,
     Sum,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -70,10 +73,7 @@ import requests
 _logger = logging.getLogger(__name__)
 
 
-DEFAULT_COMPRESSION = Compression.NoCompression
-DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_METRICS_EXPORT_PATH = "v1/metrics"
-DEFAULT_TIMEOUT = 10  # in seconds
 
 # Work around API change between backoff 1.x and 2.x. Since 2.0.0 the backoff
 # wait generator API requires a first .send(None) before reading the backoff
@@ -89,7 +89,7 @@ def _expo(*args, **kwargs):
 
 
 class OTLPMetricExporter(
-    MetricExporter, OTLPExporterMixin[MetricsData, MetricExportResult]
+    MetricExporter, OTLPExporterMixin[ResourceMetrics, MetricExportResult]
 ):
 
     _MAX_RETRY_TIMEOUT = 64

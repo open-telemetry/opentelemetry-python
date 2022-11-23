@@ -13,7 +13,6 @@
 # limitations under the License.
 
 import gzip
-import logging
 import zlib
 from io import BytesIO
 from typing import Dict, Optional, Generic, TypeVar, Sequence
@@ -28,12 +27,9 @@ from opentelemetry.exporter.otlp.proto.http import (
 SDKDataT = TypeVar("SDKDataT")
 ExportResultT = TypeVar("ExportResultT")
 
-_logger = logging.getLogger(__name__)
-
 
 DEFAULT_COMPRESSION = Compression.NoCompression
 DEFAULT_ENDPOINT = "http://localhost:4318/"
-DEFAULT_TRACES_EXPORT_PATH = "v1/traces"
 DEFAULT_TIMEOUT = 10  # in seconds
 
 

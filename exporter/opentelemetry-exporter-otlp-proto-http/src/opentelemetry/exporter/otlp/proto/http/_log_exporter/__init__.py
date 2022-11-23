@@ -36,7 +36,8 @@ from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
 )
-from opentelemetry.exporter.otlp.proto.http.exporter import OTLPExporterMixin
+from opentelemetry.exporter.otlp.proto.http.exporter import (
+    OTLPExporterMixin, DEFAULT_COMPRESSION, DEFAULT_ENDPOINT, DEFAULT_TIMEOUT)
 
 from opentelemetry.exporter.otlp.proto.http._log_exporter.encoder import (
     _ProtobufEncoder,
@@ -47,10 +48,7 @@ from opentelemetry.util.re import parse_headers
 _logger = logging.getLogger(__name__)
 
 
-DEFAULT_COMPRESSION = Compression.NoCompression
-DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_LOGS_EXPORT_PATH = "v1/logs"
-DEFAULT_TIMEOUT = 10  # in seconds
 
 # Work around API change between backoff 1.x and 2.x. Since 2.0.0 the backoff
 # wait generator API requires a first .send(None) before reading the backoff
