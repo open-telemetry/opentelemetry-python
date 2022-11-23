@@ -12,10 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gzip
 import logging
-import zlib
-from io import BytesIO
 from os import environ
 from typing import Dict, Optional, Sequence
 from time import sleep
@@ -103,7 +100,6 @@ class OTLPLogExporter(
                 {"Content-Encoding": self._compression.value}
             )
         self._shutdown = False
-        self._result = LogExportResult
         OTLPExporterMixin.__init__(
             self,
             self._endpoint,

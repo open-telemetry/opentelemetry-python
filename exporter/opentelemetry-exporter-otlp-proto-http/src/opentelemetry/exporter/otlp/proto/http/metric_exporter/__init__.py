@@ -11,12 +11,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gzip
 import logging
-import zlib
 from os import environ
 from typing import Dict, Optional, Sequence, Any, Callable, List, Mapping
-from io import BytesIO
 from time import sleep
 
 from opentelemetry.exporter.otlp.proto.http import Compression
@@ -169,7 +166,6 @@ class OTLPMetricExporter(
             }
         instrument_class_temporality.update(preferred_temporality or {})
 
-        self._result = MetricExportResult
         OTLPExporterMixin.__init__(
             self,
             self._endpoint,
