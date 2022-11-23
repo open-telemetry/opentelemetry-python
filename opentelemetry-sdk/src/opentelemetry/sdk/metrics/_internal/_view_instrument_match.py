@@ -16,7 +16,7 @@
 from logging import getLogger
 from threading import Lock
 from time import time_ns
-from typing import Dict, Iterable
+from typing import Dict, List, Sequence
 
 from opentelemetry.metrics import Instrument
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -126,12 +126,14 @@ class _ViewInstrumentMatch:
         self,
         aggregation_temporality: AggregationTemporality,
         collection_start_nanos: int,
-    ) -> Iterable[DataPointT]:
+    ) -> Sequence[DataPointT]:
 
+        data_points: List[DataPointT] = []
         with self._lock:
             for aggregation in self._attributes_aggregation.values():
                 data_point = aggregation.collect(
                     aggregation_temporality, collection_start_nanos
                 )
                 if data_point is not None:
-                    yield data_point
+                    data_points.append(data_point)
+        return data_points
