@@ -12,10 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import gzip
 import logging
-import zlib
-from io import BytesIO
 from os import environ
 from typing import Dict, Optional, Sequence
 from time import sleep
@@ -39,6 +36,9 @@ from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
 )
+from opentelemetry.exporter.otlp.proto.http.exporter import (
+    OTLPExporterMixin, DEFAULT_COMPRESSION, DEFAULT_ENDPOINT, DEFAULT_TIMEOUT)
+
 from opentelemetry.exporter.otlp.proto.http._log_exporter.encoder import (
     _ProtobufEncoder,
 )
@@ -48,10 +48,7 @@ from opentelemetry.util.re import parse_headers
 _logger = logging.getLogger(__name__)
 
 
-DEFAULT_COMPRESSION = Compression.NoCompression
-DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_LOGS_EXPORT_PATH = "v1/logs"
-DEFAULT_TIMEOUT = 10  # in seconds
 
 # Work around API change between backoff 1.x and 2.x. Since 2.0.0 the backoff
 # wait generator API requires a first .send(None) before reading the backoff
@@ -66,7 +63,9 @@ def _expo(*args, **kwargs):
     return gen
 
 
-class OTLPLogExporter(LogExporter):
+class OTLPLogExporter(
+    LogExporter, OTLPExporterMixin[LogData, LogExportResult]
+):
 
     _MAX_RETRY_TIMEOUT = 64
 
@@ -99,31 +98,15 @@ class OTLPLogExporter(LogExporter):
                 {"Content-Encoding": self._compression.value}
             )
         self._shutdown = False
-
-    def _export(self, serialized_data: str):
-        data = serialized_data
-        if self._compression == Compression.Gzip:
-            gzip_data = BytesIO()
-            with gzip.GzipFile(fileobj=gzip_data, mode="w") as gzip_stream:
-                gzip_stream.write(serialized_data)
-            data = gzip_data.getvalue()
-        elif self._compression == Compression.Deflate:
-            data = zlib.compress(bytes(serialized_data))
-
-        return self._session.post(
-            url=self._endpoint,
-            data=data,
-            verify=self._certificate_file,
-            timeout=self._timeout,
+        OTLPExporterMixin.__init__(
+            self,
+            self._endpoint,
+            self._certificate_file,
+            self._headers,
+            self._timeout,
+            self._compression,
+            self._session,
         )
-
-    @staticmethod
-    def _retryable(resp: requests.Response) -> bool:
-        if resp.status_code == 408:
-            return True
-        if resp.status_code >= 500 and resp.status_code <= 599:
-            return True
-        return False
 
     def export(self, batch: Sequence[LogData]) -> LogExportResult:
         # After the call to Shutdown subsequent calls to Export are
