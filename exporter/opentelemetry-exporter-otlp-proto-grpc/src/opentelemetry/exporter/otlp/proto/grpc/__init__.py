@@ -71,5 +71,5 @@ API
 """
 from .version import __version__
 
-_user_agent_header_value = "OTel OTLP Exporter Python/" + __version__
-_OTLP_GRPC_HEADERS = [("user-agent", _user_agent_header_value)]
+_USER_AGENT_HEADER_VALUE = "OTel OTLP Exporter Python/" + __version__
+_OTLP_GRPC_HEADERS = [("user-agent", _USER_AGENT_HEADER_VALUE)]
