@@ -418,10 +418,6 @@ class Logger(APILogger):
         log_data = LogData(record, self._instrumentation_scope)
         self._multi_log_record_processor.emit(log_data)
 
-    def emit_event(self, record: LogRecord):
-        # TODO
-        pass
-
 
 class LoggerProvider(APILoggerProvider):
     def __init__(

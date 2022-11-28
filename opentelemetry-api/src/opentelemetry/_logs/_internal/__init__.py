@@ -95,10 +95,6 @@ class Logger(ABC):
         self._schema_url = schema_url
 
     @abstractmethod
-    def emit_event(self, record: "LogRecord") -> None:
-        """Emits a :class:`LogRecord` representing an Event to the processing pipeline."""
-
-    @abstractmethod
     def emit(self, record: "LogRecord") -> None:
         """Emits a :class:`LogRecord` representing a log to the processing pipeline."""
 
@@ -108,9 +104,6 @@ class NoOpLogger(Logger):
 
     All operations are no-op.
     """
-
-    def emit_event(self, record: "LogRecord") -> None:
-        pass
 
     def emit(self, record: "LogRecord") -> None:
         pass
