@@ -49,6 +49,20 @@ def _load_provider(
                 ),
             )
 
+        # FIXME remove when support for 3.7 is dropped.
+        if version_info.minor == 7:
+
+            for entry_point in entry_points():  # type: ignore
+                if (
+                    entry_point.name == provider_name
+                    and entry_point.group == f"opentelemetry_{provider}"
+                ):  # type: ignore
+                    return cast(Provider, entry_point.load()())  # type: ignore
+            raise Exception(f"Provider {provider_name} not found")
+
+        # FIXME remove when support for 3.9 is dropped.
+        elif version_info.minor <= 9:
+
             for entry_point in entry_points()[f"opentelemetry_{provider}"]:  # type: ignore
                 if entry_point.name == provider_name:  # type: ignore
                     return cast(Provider, entry_point.load()())  # type: ignore
