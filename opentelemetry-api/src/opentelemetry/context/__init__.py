@@ -25,7 +25,7 @@ if version_info.minor == 7:
     # pylint: disable=import-error
     from importlib_metadata import entry_points  # type: ignore
 else:
-    from importlib.metadata import entry_points
+    from importlib.metadata import entry_points  # type: ignore
 
 # pylint: disable=wrong-import-position
 from opentelemetry.context.context import Context, _RuntimeContext
@@ -65,10 +65,10 @@ def _load_runtime_context(func: _F) -> _F:
                 try:
                     # FIXME Remove when support for 3.7 is dropped.
                     if version_info.minor == 7:
-                        for entry_point in entry_points():
+                        for entry_point in entry_points():  # type: ignore
                             if (
-                                entry_point.group == "opentelemetry_context"
-                                and entry_point.name == configured_context
+                                entry_point.group == "opentelemetry_context"  # type: ignore
+                                and entry_point.name == configured_context  # type: ignore
                             ):
                                 _RUNTIME_CONTEXT = entry_point.load()()  # type: ignore
                                 break

@@ -31,12 +31,11 @@ class Test_Providers(TestCase):
 
     @patch.dict(
         environ,
-        {
+        {  # type: ignore
             "provider_environment_variable": "mock_provider_environment_variable"
         },
     )
     @patch(entry_points_path)
-    # @patch("opentelemetry.util._providers.entry_points")
     def test__providers(self, mock_entry_points):
 
         reload(_providers)

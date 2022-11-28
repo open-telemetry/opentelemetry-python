@@ -82,7 +82,7 @@ if version_info.minor == 7:
     # pylint: disable=import-error
     from importlib_metadata import entry_points  # type: ignore
 else:
-    from importlib.metadata import entry_points
+    from importlib.metadata import entry_points  # type: ignore
 
 logger = getLogger(__name__)
 
@@ -143,10 +143,10 @@ for propagator in environ_propagators.split(","):
         # FIXME: Remove when support for 3.7 is dropped.
         if version_info.minor == 7:
 
-            for entry_point in entry_points():
+            for entry_point in entry_points():  # type: ignore
                 if (
-                    entry_point.group == "opentelemetry_propagator"
-                    and entry_point.name == propagator
+                    entry_point.group == "opentelemetry_propagator"  # type: ignore
+                    and entry_point.name == propagator  # type: ignore
                 ):
                     propagators.append(entry_point.load()())  # type: ignore
 

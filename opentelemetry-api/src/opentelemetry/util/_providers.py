@@ -22,7 +22,7 @@ if version_info.minor == 7:
     # pylint: disable=import-error
     from importlib_metadata import entry_points  # type: ignore
 else:
-    from importlib.metadata import entry_points
+    from importlib.metadata import entry_points  # type: ignore
 
 if TYPE_CHECKING:
     from opentelemetry.metrics import MeterProvider
@@ -54,14 +54,14 @@ def _load_provider(
 
             for entry_point in entry_points():  # type: ignore
                 if (
-                    entry_point.name == provider_name
-                    and entry_point.group == f"opentelemetry_{provider}"
-                ):  # type: ignore
+                    entry_point.name == provider_name  # type: ignore
+                    and entry_point.group == f"opentelemetry_{provider}"  # type: ignore
+                ):
                     return cast(Provider, entry_point.load()())  # type: ignore
             raise Exception(f"Provider {provider_name} not found")
 
         # FIXME remove when support for 3.9 is dropped.
-        elif version_info.minor <= 9:
+        if version_info.minor <= 9:
 
             for entry_point in entry_points()[f"opentelemetry_{provider}"]:  # type: ignore
                 if entry_point.name == provider_name:  # type: ignore
