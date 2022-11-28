@@ -94,9 +94,7 @@ class TestPropagators(TestCase):
             )
 
             mock_entry_points.configure_mock(
-                **{
-                    "return_value": (mock_a, mock_b, mock_c)
-                }
+                **{"return_value": (mock_a, mock_b, mock_c)}
             )
 
         # FIXME Remove when support for 3.9 is dropped.

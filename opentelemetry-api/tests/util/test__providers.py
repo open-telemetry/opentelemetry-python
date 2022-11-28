@@ -12,11 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from unittest import TestCase
-from unittest.mock import patch, Mock
-from sys import version_info
-from os import environ
 from importlib import reload
+from os import environ
+from sys import version_info
+from unittest import TestCase
+from unittest.mock import Mock, patch
 
 from opentelemetry.util import _providers
 
@@ -31,7 +31,9 @@ class Test_Providers(TestCase):
 
     @patch.dict(
         environ,
-        {"provider_environment_variable": "mock_provider_environment_variable"}
+        {
+            "provider_environment_variable": "mock_provider_environment_variable"
+        },
     )
     @patch(entry_points_path)
     # @patch("opentelemetry.util._providers.entry_points")
@@ -51,11 +53,7 @@ class Test_Providers(TestCase):
                 }
             )
 
-            mock_entry_points.configure_mock(
-                **{
-                    "return_value": (mock_a,)
-                }
-            )
+            mock_entry_points.configure_mock(**{"return_value": (mock_a,)})
 
         # FIXME Remove when support for 3.9 is dropped.
         elif version_info.minor <= 9:
@@ -70,11 +68,7 @@ class Test_Providers(TestCase):
             )
 
             mock_entry_points.configure_mock(
-                **{
-                    "return_value": {
-                        "opentelemetry_provider": [mock_a]
-                    }
-                }
+                **{"return_value": {"opentelemetry_provider": [mock_a]}}
             )
 
         else:
@@ -97,8 +91,7 @@ class Test_Providers(TestCase):
 
         self.assertEqual(
             _providers._load_provider(
-                "provider_environment_variable",
-                "provider"
+                "provider_environment_variable", "provider"
             ),
-            "a"
+            "a",
         )
