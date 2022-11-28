@@ -140,7 +140,18 @@ for propagator in environ_propagators.split(","):
     propagator = propagator.strip()
     try:
 
-        if version_info.minor <= 9:
+        # FIXME: Remove when support for 3.7 is dropped.
+        if version_info.minor == 7:
+
+            for entry_point in entry_points():
+                if (
+                    entry_point.group == "opentelemetry_propagator"
+                    and entry_point.name == propagator
+                ):
+                    propagators.append(entry_point.load()())  # type: ignore
+
+        # FIXME: Remove when support for 3.9 is dropped.
+        elif version_info.minor <= 9:
 
             for entry_point in entry_points().get(  # type: ignore
                 "opentelemetry_propagator", []

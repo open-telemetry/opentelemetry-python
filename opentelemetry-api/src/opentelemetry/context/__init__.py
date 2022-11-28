@@ -63,7 +63,18 @@ def _load_runtime_context(func: _F) -> _F:
                     OTEL_PYTHON_CONTEXT, default_context
                 )  # type: str
                 try:
-                    if version_info.minor <= 9:
+                    # FIXME Remove when support for 3.7 is dropped.
+                    if version_info.minor == 7:
+                        for entry_point in entry_points():
+                            if (
+                                entry_point.group == "opentelemetry_context"
+                                and entry_point.name == configured_context
+                            ):
+                                _RUNTIME_CONTEXT = entry_point.load()()  # type: ignore
+                                break
+
+                    # FIXME Remove when support for 3.9 is dropped.
+                    elif version_info.minor <= 9:
                         for entry_point in entry_points()[  # type: ignore
                             "opentelemetry_context"
                         ]:
@@ -81,7 +92,7 @@ def _load_runtime_context(func: _F) -> _F:
                             name=configured_context,
                         )[0].load()()
                 except Exception:  # pylint: disable=broad-except
-                    logger.error(
+                    logger.exception(
                         "Failed to load context: %s", configured_context
                     )
         return func(*args, **kwargs)  # type: ignore[misc]
