@@ -25,7 +25,7 @@ if version_info.minor == 7:
     # pylint: disable=import-error
     from importlib_metadata import entry_points  # type: ignore
 else:
-    from importlib.metadata import entry_points  # type: ignore
+    from importlib.metadata import entry_points
 
 # pylint: disable=wrong-import-position
 from opentelemetry.context.context import Context, _RuntimeContext

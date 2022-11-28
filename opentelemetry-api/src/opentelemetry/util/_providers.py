@@ -22,7 +22,7 @@ if version_info.minor == 7:
     # pylint: disable=import-error
     from importlib_metadata import entry_points  # type: ignore
 else:
-    from importlib.metadata import entry_points  # type: ignore
+    from importlib.metadata import entry_points
 
 if TYPE_CHECKING:
     from opentelemetry.metrics import MeterProvider
