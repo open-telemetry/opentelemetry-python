@@ -19,6 +19,7 @@ import unittest
 import uuid
 from logging import ERROR
 from unittest import mock
+from urllib import parse
 
 from opentelemetry.sdk import resources
 
@@ -500,6 +501,15 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(
             detector.detect(),
             resources.Resource({"key": "value test\n", "key2": "value+ 2"}),
+        )
+        self.assertEqual(
+            detector.detect(),
+            resources.Resource(
+                {
+                    "key": parse.unquote("value%20test%0A"),
+                    "key2": parse.unquote("value+%202"),
+                }
+            ),
         )
 
     @mock.patch.dict(
