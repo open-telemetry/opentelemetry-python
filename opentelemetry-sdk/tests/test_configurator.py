@@ -19,7 +19,7 @@ from os import environ
 from sys import version_info
 from typing import Dict, Iterable, Optional, Sequence
 from unittest import TestCase
-from unittest.mock import patch, Mock
+from unittest.mock import Mock, patch
 
 from opentelemetry import trace
 from opentelemetry.context import Context
@@ -360,7 +360,7 @@ class TestTraceInit(TestCase):
                 **{
                     "name": "custom_id_generator",
                     "group": "opentelemetry_id_generator",
-                    "load.return_value": CustomIdGenerator
+                    "load.return_value": CustomIdGenerator,
                 }
             )
             mock_entry_points.configure_mock(return_value=(mock,))
@@ -413,7 +413,7 @@ class TestTraceInit(TestCase):
                 **{
                     "name": "custom_sampler_factory",
                     "group": "opentelemetry_traces_sampler",
-                    "load.return_value": CustomSamplerFactory.get_custom_sampler
+                    "load.return_value": CustomSamplerFactory.get_custom_sampler,
                 }
             )
             mock_entry_points.configure_mock(return_value=(mock,))
@@ -464,7 +464,7 @@ class TestTraceInit(TestCase):
                     "group": "opentelemetry_traces_sampler",
                     "load.return_value": (
                         CustomSamplerFactory.empty_get_custom_sampler
-                    )
+                    ),
                 }
             )
             mock_entry_points.configure_mock(return_value=(mock,))
@@ -520,7 +520,7 @@ class TestTraceInit(TestCase):
                 **{
                     "name": "custom_sampler_factory",
                     "group": "opentelemetry_traces_sampler",
-                    "load.return_value": CustomSamplerFactory.get_custom_sampler
+                    "load.return_value": CustomSamplerFactory.get_custom_sampler,
                 }
             )
             mock_entry_points.configure_mock(return_value=(mock,))
@@ -576,7 +576,7 @@ class TestTraceInit(TestCase):
                     "group": "opentelemetry_traces_sampler",
                     "load.return_value": (
                         CustomSamplerFactory.get_custom_ratio_sampler
-                    )
+                    ),
                 }
             )
             mock_entry_points.configure_mock(return_value=(mock,))
@@ -635,7 +635,7 @@ class TestTraceInit(TestCase):
                     "group": "opentelemetry_traces_sampler",
                     "load.return_value": (
                         CustomSamplerFactory.get_custom_ratio_sampler
-                    )
+                    ),
                 }
             )
             mock_entry_points.configure_mock(return_value=(mock,))
@@ -692,7 +692,7 @@ class TestTraceInit(TestCase):
                     "group": "opentelemetry_traces_sampler",
                     "load.return_value": (
                         CustomSamplerFactory.get_custom_ratio_sampler
-                    )
+                    ),
                 }
             )
             mock_entry_points.configure_mock(return_value=(mock,))
@@ -750,7 +750,7 @@ class TestTraceInit(TestCase):
                     "group": "opentelemetry_traces_sampler",
                     "load.return_value": (
                         CustomSamplerFactory.get_custom_ratio_sampler
-                    )
+                    ),
                 }
             )
             mock_sampler_factory = Mock()
@@ -760,7 +760,7 @@ class TestTraceInit(TestCase):
                     "group": "opentelemetry_traces_sampler",
                     "load.return_value": (
                         CustomSamplerFactory.get_custom_sampler
-                    )
+                    ),
                 }
             )
             mock_custom_z_sampler_factory = Mock()
@@ -770,7 +770,7 @@ class TestTraceInit(TestCase):
                     "group": "opentelemetry_traces_sampler",
                     "load.return_value": (
                         CustomSamplerFactory.empty_get_custom_sampler
-                    )
+                    ),
                 }
             )
 
@@ -778,7 +778,7 @@ class TestTraceInit(TestCase):
                 return_value=(
                     mock_ratio_sampler_factory,
                     mock_sampler_factory,
-                    mock_custom_z_sampler_factory
+                    mock_custom_z_sampler_factory,
                 )
             )
 
