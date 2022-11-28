@@ -100,8 +100,21 @@ def _import_config_components(
 
     component_implementations = []
 
+    # FIXME remove when support for 3.7 is dropped.
+    if version_info.minor == 7:
+
+        for entry_point in entry_points():
+            for selected_component in selected_components:
+                if (
+                    entry_point.name == selected_component
+                    and entry_point.group == entry_point_name
+                ):
+                    component_implementations.append(
+                        (selected_component, entry_point.load())
+                    )
+
     # FIXME remove when support for 3.9 is dropped.
-    if version_info.minor <= 9:
+    elif version_info.minor <= 9:
 
         for entry_point in entry_points()[entry_point_name]:
             for selected_component in selected_components:

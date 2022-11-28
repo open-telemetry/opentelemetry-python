@@ -19,7 +19,7 @@ from os import environ
 from sys import version_info
 from typing import Dict, Iterable, Optional, Sequence
 from unittest import TestCase
-from unittest.mock import patch
+from unittest.mock import patch, Mock
 
 from opentelemetry import trace
 from opentelemetry.context import Context
@@ -352,8 +352,20 @@ class TestTraceInit(TestCase):
     @patch("opentelemetry.sdk._configuration.IdGenerator", new=IdGenerator)
     @patch("opentelemetry.sdk._configuration.entry_points")
     def test_trace_init_custom_id_generator(self, mock_entry_points):
+        # FIXME remove when support for 3.7 is dropped.
+        if version_info.minor == 7:
+
+            mock = Mock()
+            mock.configure_mock(
+                **{
+                    "name": "custom_id_generator",
+                    "group": "opentelemetry_id_generator",
+                    "load.return_value": CustomIdGenerator
+                }
+            )
+            mock_entry_points.configure_mock(return_value=(mock,))
         # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor <= 9:
+        elif version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
                 return_value={
@@ -393,8 +405,21 @@ class TestTraceInit(TestCase):
     @patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"})
     def test_trace_init_custom_sampler_with_env(self, mock_entry_points):
 
+        # FIXME remove when support for 3.7 is dropped.
+        if version_info.minor == 7:
+
+            mock = Mock()
+            mock.configure_mock(
+                **{
+                    "name": "custom_sampler_factory",
+                    "group": "opentelemetry_traces_sampler",
+                    "load.return_value": CustomSamplerFactory.get_custom_sampler
+                }
+            )
+            mock_entry_points.configure_mock(return_value=(mock,))
+
         # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor <= 9:
+        elif version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
                 return_value={
@@ -429,9 +454,23 @@ class TestTraceInit(TestCase):
     def test_trace_init_custom_sampler_with_env_bad_factory(
         self, mock_entry_points
     ):
+        # FIXME remove when support for 3.7 is dropped.
+        if version_info.minor == 7:
+
+            mock = Mock()
+            mock.configure_mock(
+                **{
+                    "name": "custom_sampler_factory",
+                    "group": "opentelemetry_traces_sampler",
+                    "load.return_value": (
+                        CustomSamplerFactory.empty_get_custom_sampler
+                    )
+                }
+            )
+            mock_entry_points.configure_mock(return_value=(mock,))
 
         # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor <= 9:
+        elif version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
                 return_value={
@@ -473,8 +512,21 @@ class TestTraceInit(TestCase):
         self, mock_entry_points
     ):
 
+        # FIXME remove when support for 3.7 is dropped.
+        if version_info.minor == 7:
+
+            mock = Mock()
+            mock.configure_mock(
+                **{
+                    "name": "custom_sampler_factory",
+                    "group": "opentelemetry_traces_sampler",
+                    "load.return_value": CustomSamplerFactory.get_custom_sampler
+                }
+            )
+            mock_entry_points.configure_mock(return_value=(mock,))
+
         # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor <= 9:
+        elif version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
                 return_value={
@@ -514,8 +566,23 @@ class TestTraceInit(TestCase):
     )
     def test_trace_init_custom_ratio_sampler_with_env(self, mock_entry_points):
 
+        # FIXME remove when support for 3.7 is dropped.
+        if version_info.minor == 7:
+
+            mock = Mock()
+            mock.configure_mock(
+                **{
+                    "name": "custom_ratio_sampler_factory",
+                    "group": "opentelemetry_traces_sampler",
+                    "load.return_value": (
+                        CustomSamplerFactory.get_custom_ratio_sampler
+                    )
+                }
+            )
+            mock_entry_points.configure_mock(return_value=(mock,))
+
         # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor <= 9:
+        elif version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
                 return_value={
@@ -558,8 +625,23 @@ class TestTraceInit(TestCase):
         self, mock_entry_points
     ):
 
+        # FIXME remove when support for 3.7 is dropped.
+        if version_info.minor == 7:
+
+            mock = Mock()
+            mock.configure_mock(
+                **{
+                    "name": "custom_ratio_sampler_factory",
+                    "group": "opentelemetry_traces_sampler",
+                    "load.return_value": (
+                        CustomSamplerFactory.get_custom_ratio_sampler
+                    )
+                }
+            )
+            mock_entry_points.configure_mock(return_value=(mock,))
+
         # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor <= 9:
+        elif version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
                 return_value={
@@ -600,8 +682,23 @@ class TestTraceInit(TestCase):
         self, mock_entry_points
     ):
 
+        # FIXME remove when support for 3.7 is dropped.
+        if version_info.minor == 7:
+
+            mock = Mock()
+            mock.configure_mock(
+                **{
+                    "name": "custom_ratio_sampler_factory",
+                    "group": "opentelemetry_traces_sampler",
+                    "load.return_value": (
+                        CustomSamplerFactory.get_custom_ratio_sampler
+                    )
+                }
+            )
+            mock_entry_points.configure_mock(return_value=(mock,))
+
         # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor <= 9:
+        elif version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
                 return_value={
@@ -643,8 +740,50 @@ class TestTraceInit(TestCase):
         self, mock_entry_points
     ):
 
+        # FIXME remove when support for 3.7 is dropped.
+        if version_info.minor == 7:
+
+            mock_ratio_sampler_factory = Mock()
+            mock_ratio_sampler_factory.configure_mock(
+                **{
+                    "name": "custom_ratio_sampler_factory",
+                    "group": "opentelemetry_traces_sampler",
+                    "load.return_value": (
+                        CustomSamplerFactory.get_custom_ratio_sampler
+                    )
+                }
+            )
+            mock_sampler_factory = Mock()
+            mock_sampler_factory.configure_mock(
+                **{
+                    "name": "custom_sampler_factory",
+                    "group": "opentelemetry_traces_sampler",
+                    "load.return_value": (
+                        CustomSamplerFactory.get_custom_sampler
+                    )
+                }
+            )
+            mock_custom_z_sampler_factory = Mock()
+            mock_custom_z_sampler_factory.configure_mock(
+                **{
+                    "name": "custom_z_sampler_factory",
+                    "group": "opentelemetry_traces_sampler",
+                    "load.return_value": (
+                        CustomSamplerFactory.empty_get_custom_sampler
+                    )
+                }
+            )
+
+            mock_entry_points.configure_mock(
+                return_value=(
+                    mock_ratio_sampler_factory,
+                    mock_sampler_factory,
+                    mock_custom_z_sampler_factory
+                )
+            )
+
         # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor <= 9:
+        elif version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
                 return_value={
