@@ -55,6 +55,7 @@ class TestErrorHandler(TestCase):
             **{"load.return_value": AssertionErrorHandler}
         )
 
+        # FIXME remove when support for 3.9 is dropped.
         if version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
@@ -107,6 +108,7 @@ class TestErrorHandler(TestCase):
             **{"load.return_value": ErrorErrorHandler}
         )
 
+        # FIXME remove when support for 3.9 is dropped.
         if version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
@@ -146,6 +148,7 @@ class TestErrorHandler(TestCase):
             **{"load.return_value": MockErrorHandlerClass}
         )
 
+        # FIXME remove when support for 3.9 is dropped.
         if version_info.minor <= 9:
 
             mock_entry_points.configure_mock(

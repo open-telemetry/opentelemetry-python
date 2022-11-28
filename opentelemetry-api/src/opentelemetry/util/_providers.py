@@ -39,6 +39,7 @@ def _load_provider(
 
     try:
 
+        # FIXME remove when support for 3.9 is dropped.
         if version_info.minor <= 9:
 
             provider_name = cast(

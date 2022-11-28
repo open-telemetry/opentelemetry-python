@@ -124,6 +124,7 @@ class GlobalErrorHandler:
 
         plugin_handled = False
 
+        # FIXME remove when support for 3.9 is dropped.
         if version_info.minor <= 9:
 
             error_handler_entry_points = entry_points()[

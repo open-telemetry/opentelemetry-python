@@ -100,6 +100,7 @@ def _import_config_components(
 
     component_implementations = []
 
+    # FIXME remove when support for 3.9 is dropped.
     if version_info.minor <= 9:
 
         for entry_point in entry_points()[entry_point_name]:

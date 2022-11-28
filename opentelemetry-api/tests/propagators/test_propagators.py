@@ -52,6 +52,7 @@ class TestPropagators(TestCase):
 
         reload(opentelemetry.propagate)
 
+    # FIXME Remove when support for 3.7 is dropped.
     if version_info.minor == 7:
         entry_points_path = "importlib_metadata.entry_points"
     else:

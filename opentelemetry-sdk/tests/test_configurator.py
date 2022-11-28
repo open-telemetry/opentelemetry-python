@@ -352,6 +352,7 @@ class TestTraceInit(TestCase):
     @patch("opentelemetry.sdk._configuration.IdGenerator", new=IdGenerator)
     @patch("opentelemetry.sdk._configuration.entry_points")
     def test_trace_init_custom_id_generator(self, mock_entry_points):
+        # FIXME remove when support for 3.9 is dropped.
         if version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
@@ -392,6 +393,7 @@ class TestTraceInit(TestCase):
     @patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"})
     def test_trace_init_custom_sampler_with_env(self, mock_entry_points):
 
+        # FIXME remove when support for 3.9 is dropped.
         if version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
@@ -428,6 +430,7 @@ class TestTraceInit(TestCase):
         self, mock_entry_points
     ):
 
+        # FIXME remove when support for 3.9 is dropped.
         if version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
@@ -470,6 +473,7 @@ class TestTraceInit(TestCase):
         self, mock_entry_points
     ):
 
+        # FIXME remove when support for 3.9 is dropped.
         if version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
@@ -510,6 +514,7 @@ class TestTraceInit(TestCase):
     )
     def test_trace_init_custom_ratio_sampler_with_env(self, mock_entry_points):
 
+        # FIXME remove when support for 3.9 is dropped.
         if version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
@@ -553,6 +558,7 @@ class TestTraceInit(TestCase):
         self, mock_entry_points
     ):
 
+        # FIXME remove when support for 3.9 is dropped.
         if version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
@@ -594,6 +600,7 @@ class TestTraceInit(TestCase):
         self, mock_entry_points
     ):
 
+        # FIXME remove when support for 3.9 is dropped.
         if version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
@@ -636,6 +643,7 @@ class TestTraceInit(TestCase):
         self, mock_entry_points
     ):
 
+        # FIXME remove when support for 3.9 is dropped.
         if version_info.minor <= 9:
 
             mock_entry_points.configure_mock(
