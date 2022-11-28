@@ -72,7 +72,7 @@ class Test_Providers(TestCase):
             mock_entry_points.configure_mock(
                 **{
                     "return_value": {
-                        "opentelemetry_propagator": [mock_a]
+                        "opentelemetry_provider": [mock_a]
                     }
                 }
             )
