@@ -1,9 +1,17 @@
 [flake8]
 ignore =
-  E501  # line too long, defer to black
-  W503  # allow line breaks before binary ops
-  W504  # allow line breaks after binary ops
-  E203  # allow whitespace before ':' (https://github.com/psf/black#slices) 
+  # line too long, defer to black
+  E501
+
+  # allow line breaks before binary ops
+  W503
+
+  # allow line breaks after binary ops
+  W504
+
+  # allow whitespace before ':' (https://github.com/psf/black#slices)
+  E203
+
 exclude =
   .bzr
   .git
