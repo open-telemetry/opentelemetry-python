@@ -112,9 +112,7 @@ class TestExportingMetricReader(ConcurrencyTestBase):
         self, metrics, exporter, collect_wait=0, timeout=30000
     ):
 
-        pmr = ExportingMetricReader(
-            exporter, export_timeout_millis=timeout
-        )
+        pmr = ExportingMetricReader(exporter, export_timeout_millis=timeout)
 
         def _collect(reader, timeout_millis):
             sleep(collect_wait)
