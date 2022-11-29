@@ -37,6 +37,7 @@ from typing import (
     Type,
     Union,
 )
+from warnings import filterwarnings, resetwarnings
 
 from deprecated import deprecated
 
@@ -1167,16 +1168,20 @@ class TracerProvider(trace_api.TracerProvider):
             logger.error("get_tracer called with missing module name.")
         if instrumenting_library_version is None:
             instrumenting_library_version = ""
+
+        filterwarnings("ignore", category=DeprecationWarning)
+        instrumentation_info = InstrumentationInfo(
+            instrumenting_module_name,
+            instrumenting_library_version,
+            schema_url,
+        )
+        resetwarnings()
         return Tracer(
             self.sampler,
             self.resource,
             self._active_span_processor,
             self.id_generator,
-            InstrumentationInfo(
-                instrumenting_module_name,
-                instrumenting_library_version,
-                schema_url,
-            ),
+            instrumentation_info,
             self._span_limits,
             InstrumentationScope(
                 instrumenting_module_name,
