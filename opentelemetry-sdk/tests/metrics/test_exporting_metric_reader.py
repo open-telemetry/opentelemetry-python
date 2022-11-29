@@ -22,12 +22,12 @@ from opentelemetry.sdk.metrics import Counter
 from opentelemetry.sdk.metrics._internal import _Counter
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
+    ExportingMetricReader,
     Gauge,
     Metric,
     MetricExporter,
     MetricExportResult,
     NumberDataPoint,
-    ExportingMetricReader,
     Sum,
 )
 from opentelemetry.sdk.metrics.view import (
