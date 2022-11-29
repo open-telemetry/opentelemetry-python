@@ -138,7 +138,7 @@ class TestExportingMetricReader(ConcurrencyTestBase):
         exporter = FakeMetricsExporter()
 
         pmr = self._create_exporting_reader(
-            metrics_list, exporter, interval=100
+            metrics_list, exporter, timeout=100
         )
         sleep(0.15)
         self.assertEqual(exporter.metrics, metrics_list)
