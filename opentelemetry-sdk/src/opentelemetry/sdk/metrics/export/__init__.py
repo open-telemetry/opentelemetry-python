@@ -21,6 +21,7 @@ from opentelemetry.sdk.metrics._internal.export import (  # noqa: F401
     MetricExporter,
     MetricExportResult,
     MetricReader,
+    ExportingMetricReader,
     PeriodicExportingMetricReader,
 )
 
