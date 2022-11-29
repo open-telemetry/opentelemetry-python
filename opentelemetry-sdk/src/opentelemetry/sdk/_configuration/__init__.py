@@ -26,6 +26,7 @@ from typing import Callable, Dict, List, Optional, Sequence, Tuple, Type
 from pkg_resources import iter_entry_points
 from typing_extensions import Literal
 
+from opentelemetry._logs import set_logger_provider
 from opentelemetry.environment_variables import (
     OTEL_LOGS_EXPORTER,
     OTEL_METRICS_EXPORTER,
@@ -33,11 +34,7 @@ from opentelemetry.environment_variables import (
     OTEL_TRACES_EXPORTER,
 )
 from opentelemetry.metrics import set_meter_provider
-from opentelemetry.sdk._logs import (
-    LoggerProvider,
-    LoggingHandler,
-    set_logger_provider,
-)
+from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.sdk._logs.export import BatchLogRecordProcessor, LogExporter
 from opentelemetry.sdk.environment_variables import (
     _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED,

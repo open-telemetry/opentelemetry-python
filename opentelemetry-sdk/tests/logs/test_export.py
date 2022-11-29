@@ -21,6 +21,7 @@ import unittest
 from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import Mock, patch
 
+from opentelemetry._logs import SeverityNumber
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
     LogData,
@@ -36,7 +37,6 @@ from opentelemetry.sdk._logs.export import (
 from opentelemetry.sdk._logs.export.in_memory_log_exporter import (
     InMemoryLogExporter,
 )
-from opentelemetry.sdk._logs.severity import SeverityNumber
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase

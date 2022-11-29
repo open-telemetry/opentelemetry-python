@@ -55,7 +55,7 @@ class SeverityNumber(enum.Enum):
     FATAL4 = 24
 
 
-_STD_TO_OTLP = {
+_STD_TO_OTEL = {
     10: SeverityNumber.DEBUG,
     11: SeverityNumber.DEBUG2,
     12: SeverityNumber.DEBUG3,
@@ -103,13 +103,13 @@ _STD_TO_OTLP = {
 }
 
 
-def std_to_otlp(levelno: int) -> SeverityNumber:
+def std_to_otel(levelno: int) -> SeverityNumber:
     """
     Map python log levelno as defined in https://docs.python.org/3/library/logging.html#logging-levels
-    to OTLP log severity number.
+    to OTel log severity number as defined here: https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/logs/data-model.md#field-severitynumber
     """
     if levelno < 10:
         return SeverityNumber.UNSPECIFIED
     if levelno > 53:
         return SeverityNumber.FATAL4
-    return _STD_TO_OTLP[levelno]
+    return _STD_TO_OTEL[levelno]
