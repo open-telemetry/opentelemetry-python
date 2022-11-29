@@ -411,22 +411,17 @@ class InMemoryMetricReader(MetricReader):
         pass
 
 
-class PeriodicExportingMetricReader(MetricReader):
-    """`PeriodicExportingMetricReader` is an implementation of `MetricReader`
-    that collects metrics based on a user-configurable time interval, and passes the
-    metrics to the configured exporter.
-
-    The configured exporter's :py:meth:`~MetricExporter.export` method will not be called
-    concurrently.
+class ExportingMetricReader(MetricReader):
+    """`ExportingMetricReader` is an implementation of `MetricReader`
+    that collects metrics and passes the metrics to the configured exporter, explicitly.
     """
 
     def __init__(
         self,
         exporter: MetricExporter,
-        export_interval_millis: Optional[float] = None,
         export_timeout_millis: Optional[float] = None,
     ) -> None:
-        # PeriodicExportingMetricReader defers to exporter for configuration
+        # ExportingMetricReader defers to exporter for configuration
         super().__init__(
             preferred_temporality=exporter._preferred_temporality,
             preferred_aggregation=exporter._preferred_aggregation,
@@ -438,16 +433,7 @@ class PeriodicExportingMetricReader(MetricReader):
         self._export_lock = Lock()
 
         self._exporter = exporter
-        if export_interval_millis is None:
-            try:
-                export_interval_millis = float(
-                    environ.get(OTEL_METRIC_EXPORT_INTERVAL, 60000)
-                )
-            except ValueError:
-                _logger.warning(
-                    "Found invalid value for export interval, using default"
-                )
-                export_interval_millis = 60000
+
         if export_timeout_millis is None:
             try:
                 export_timeout_millis = float(
@@ -458,36 +444,15 @@ class PeriodicExportingMetricReader(MetricReader):
                     "Found invalid value for export timeout, using default"
                 )
                 export_timeout_millis = 30000
-        self._export_interval_millis = export_interval_millis
+
         self._export_timeout_millis = export_timeout_millis
         self._shutdown = False
         self._shutdown_event = Event()
         self._shutdown_once = Once()
-        self._daemon_thread = Thread(
-            name="OtelPeriodicExportingMetricReader",
-            target=self._ticker,
-            daemon=True,
-        )
-        self._daemon_thread.start()
-        if hasattr(os, "register_at_fork"):
-            os.register_at_fork(
-                after_in_child=self._at_fork_reinit
-            )  # pylint: disable=protected-access
 
-    def _at_fork_reinit(self):
-        self._daemon_thread = Thread(
-            name="OtelPeriodicExportingMetricReader",
-            target=self._ticker,
-            daemon=True,
-        )
-        self._daemon_thread.start()
-
-    def _ticker(self) -> None:
-        interval_secs = self._export_interval_millis / 1e3
-        while not self._shutdown_event.wait(interval_secs):
-            self.collect(timeout_millis=self._export_timeout_millis)
-        # one last collection below before shutting down completely
-        self.collect(timeout_millis=self._export_interval_millis)
+    def export(self, timeout_millis: float = 10_000) -> None:
+        # export is just a wrapper on force_flush.
+        return self.force_flush(timeout_millis=timeout_millis)
 
     def _receive_metrics(
         self,
@@ -519,10 +484,74 @@ class PeriodicExportingMetricReader(MetricReader):
             return
 
         self._shutdown_event.set()
-        self._daemon_thread.join(timeout=(deadline_ns - time_ns()) / 10**9)
         self._exporter.shutdown(timeout=(deadline_ns - time_ns()) / 10**6)
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         super().force_flush(timeout_millis=timeout_millis)
         self._exporter.force_flush(timeout_millis=timeout_millis)
         return True
+
+
+class PeriodicExportingMetricReader(ExportingMetricReader):
+    """`PeriodicExportingMetricReader` is an implementation of `ExportingMetricReader`
+    that collects metrics based on a user-configurable time interval, and passes the
+    metrics to the configured exporter.
+
+    The configured exporter's :py:meth:`~MetricExporter.export` method will not be called
+    concurrently.
+    """
+
+    def __init__(
+        self,
+        exporter: MetricExporter,
+        export_interval_millis: Optional[float] = None,
+        export_timeout_millis: Optional[float] = None,
+    ) -> None:
+        # PeriodicExportingMetricReader defers to exporter for configuration
+        super().__init__(
+            exporter=exporter,
+            export_timeout_millis=export_timeout_millis,
+        )
+
+        if export_interval_millis is None:
+            try:
+                export_interval_millis = float(
+                    environ.get(OTEL_METRIC_EXPORT_INTERVAL, 60000)
+                )
+            except ValueError:
+                _logger.warning(
+                    "Found invalid value for export interval, using default"
+                )
+                export_interval_millis = 60000
+
+        self._export_interval_millis = export_interval_millis
+        self._daemon_thread = Thread(
+            name="OtelPeriodicExportingMetricReader",
+            target=self._ticker,
+            daemon=True,
+        )
+        self._daemon_thread.start()
+        if hasattr(os, "register_at_fork"):
+            os.register_at_fork(
+                after_in_child=self._at_fork_reinit
+            )  # pylint: disable=protected-access
+
+    def _at_fork_reinit(self):
+        self._daemon_thread = Thread(
+            name="OtelPeriodicExportingMetricReader",
+            target=self._ticker,
+            daemon=True,
+        )
+        self._daemon_thread.start()
+
+    def _ticker(self) -> None:
+        interval_secs = self._export_interval_millis / 1e3
+        while not self._shutdown_event.wait(interval_secs):
+            self.collect(timeout_millis=self._export_timeout_millis)
+        # one last collection below before shutting down completely
+        self.collect(timeout_millis=self._export_interval_millis)
+
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+        deadline_ns = time_ns() + timeout_millis * 10**6
+        super().shutdown(timeout_millis=timeout_millis)
+        self._daemon_thread.join(timeout=(deadline_ns - time_ns()) / 10**9)
