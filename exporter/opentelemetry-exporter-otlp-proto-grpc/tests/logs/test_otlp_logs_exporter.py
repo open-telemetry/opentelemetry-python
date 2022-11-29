@@ -21,6 +21,7 @@ from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import StatusCode, server
 
+from opentelemetry._logs import SeverityNumber
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
     OTLPLogExporter,
 )
@@ -45,9 +46,6 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
 )
 from opentelemetry.sdk._logs import LogData, LogRecord
 from opentelemetry.sdk._logs.export import LogExportResult
-from opentelemetry.sdk._logs.severity import (
-    SeverityNumber as SDKSeverityNumber,
-)
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import TraceFlags
@@ -117,7 +115,7 @@ class TestOTLPLogExporter(TestCase):
                 span_id=5213367945872657620,
                 trace_flags=TraceFlags(0x01),
                 severity_text="WARNING",
-                severity_number=SDKSeverityNumber.WARN,
+                severity_number=SeverityNumber.WARN,
                 body="Zhengzhou, We have a heaviest rains in 1000 years",
                 resource=SDKResource({"key": "value"}),
                 attributes={"a": 1, "b": "c"},
@@ -133,7 +131,7 @@ class TestOTLPLogExporter(TestCase):
                 span_id=5213367945872657623,
                 trace_flags=TraceFlags(0x01),
                 severity_text="INFO",
-                severity_number=SDKSeverityNumber.INFO2,
+                severity_number=SeverityNumber.INFO2,
                 body="Sydney, Opera House is closed",
                 resource=SDKResource({"key": "value"}),
                 attributes={"custom_attr": [1, 2, 3]},
@@ -149,7 +147,7 @@ class TestOTLPLogExporter(TestCase):
                 span_id=5213367945872657628,
                 trace_flags=TraceFlags(0x01),
                 severity_text="ERROR",
-                severity_number=SDKSeverityNumber.WARN,
+                severity_number=SeverityNumber.WARN,
                 body="Mumbai, Boil water before drinking",
                 resource=SDKResource({"service": "myapp"}),
             ),

@@ -17,15 +17,19 @@ import atexit
 import concurrent.futures
 import json
 import logging
-import os
 import threading
 import traceback
 from time import time_ns
-from typing import Any, Callable, Optional, Tuple, Union, cast
+from typing import Any, Callable, Optional, Tuple, Union
 
-from opentelemetry.sdk._logs.severity import SeverityNumber, std_to_otlp
-from opentelemetry.sdk.environment_variables import (
-    _OTEL_PYTHON_LOGGER_PROVIDER,
+from opentelemetry._logs import Logger as APILogger
+from opentelemetry._logs import LoggerProvider as APILoggerProvider
+from opentelemetry._logs import LogRecord as APILogRecord
+from opentelemetry._logs import (
+    SeverityNumber,
+    get_logger,
+    get_logger_provider,
+    std_to_otel,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str
@@ -37,13 +41,12 @@ from opentelemetry.trace import (
     get_current_span,
 )
 from opentelemetry.trace.span import TraceFlags
-from opentelemetry.util._providers import _load_provider
 from opentelemetry.util.types import Attributes
 
 _logger = logging.getLogger(__name__)
 
 
-class LogRecord:
+class LogRecord(APILogRecord):
     """A LogRecord instance represents an event being logged.
 
     LogRecord instances are created and emitted via `Logger`
@@ -54,6 +57,7 @@ class LogRecord:
     def __init__(
         self,
         timestamp: Optional[int] = None,
+        observed_timestamp: Optional[int] = None,
         trace_id: Optional[int] = None,
         span_id: Optional[int] = None,
         trace_flags: Optional[TraceFlags] = None,
@@ -63,15 +67,20 @@ class LogRecord:
         resource: Optional[Resource] = None,
         attributes: Optional[Attributes] = None,
     ):
-        self.timestamp = timestamp
-        self.trace_id = trace_id
-        self.span_id = span_id
-        self.trace_flags = trace_flags
-        self.severity_text = severity_text
-        self.severity_number = severity_number
-        self.body = body
+        super().__init__(
+            **{
+                "timestamp": timestamp,
+                "observed_timestamp": observed_timestamp,
+                "trace_id": trace_id,
+                "span_id": span_id,
+                "trace_flags": trace_flags,
+                "severity_text": severity_text,
+                "severity_number": severity_number,
+                "body": body,
+                "attributes": attributes,
+            }
+        )
         self.resource = resource
-        self.attributes = attributes
 
     def __eq__(self, other: object) -> bool:
         if not isinstance(other, LogRecord):
@@ -351,7 +360,7 @@ class LoggingHandler(logging.Handler):
         timestamp = int(record.created * 1e9)
         span_context = get_current_span().get_span_context()
         attributes = self._get_attributes(record)
-        severity_number = std_to_otlp(record.levelno)
+        severity_number = std_to_otel(record.levelno)
         return LogRecord(
             timestamp=timestamp,
             trace_id=span_context.trace_id,
@@ -368,7 +377,7 @@ class LoggingHandler(logging.Handler):
         """
         Emit a record.
 
-        The record is translated to OTLP format, and then sent across the pipeline.
+        The record is translated to OTel format, and then sent across the pipeline.
         """
         self._logger.emit(self._translate(record))
 
@@ -379,7 +388,7 @@ class LoggingHandler(logging.Handler):
         self._logger_provider.force_flush()
 
 
-class Logger:
+class Logger(APILogger):
     def __init__(
         self,
         resource: Resource,
@@ -389,6 +398,11 @@ class Logger:
         ],
         instrumentation_scope: InstrumentationScope,
     ):
+        super().__init__(
+            instrumentation_scope.name,
+            instrumentation_scope.version,
+            instrumentation_scope.schema_url,
+        )
         self._resource = resource
         self._multi_log_record_processor = multi_log_record_processor
         self._instrumentation_scope = instrumentation_scope
@@ -405,7 +419,7 @@ class Logger:
         self._multi_log_record_processor.emit(log_data)
 
 
-class LoggerProvider:
+class LoggerProvider(APILoggerProvider):
     def __init__(
         self,
         resource: Resource = Resource.create(),
@@ -429,14 +443,17 @@ class LoggerProvider:
 
     def get_logger(
         self,
-        instrumenting_module_name: str,
-        instrumenting_module_version: str = "",
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
     ) -> Logger:
         return Logger(
             self._resource,
             self._multi_log_record_processor,
             InstrumentationScope(
-                instrumenting_module_name, instrumenting_module_version
+                name,
+                version,
+                schema_url,
             ),
         )
 
@@ -470,56 +487,3 @@ class LoggerProvider:
             False otherwise.
         """
         return self._multi_log_record_processor.force_flush(timeout_millis)
-
-
-_LOGGER_PROVIDER = None
-
-
-def get_logger_provider() -> LoggerProvider:
-    """Gets the current global :class:`~.LoggerProvider` object."""
-    global _LOGGER_PROVIDER  # pylint: disable=global-statement
-    if _LOGGER_PROVIDER is None:
-        if _OTEL_PYTHON_LOGGER_PROVIDER not in os.environ:
-            _LOGGER_PROVIDER = LoggerProvider()
-            return _LOGGER_PROVIDER
-
-        _LOGGER_PROVIDER = cast(
-            "LoggerProvider",
-            _load_provider(_OTEL_PYTHON_LOGGER_PROVIDER, "logger_provider"),
-        )
-
-    return _LOGGER_PROVIDER
-
-
-def set_logger_provider(logger_provider: LoggerProvider) -> None:
-    """Sets the current global :class:`~.LoggerProvider` object.
-
-    This can only be done once, a warning will be logged if any further attempt
-    is made.
-    """
-    global _LOGGER_PROVIDER  # pylint: disable=global-statement
-
-    if _LOGGER_PROVIDER is not None:
-        _logger.warning("Overriding of current LoggerProvider is not allowed")
-        return
-
-    _LOGGER_PROVIDER = logger_provider
-
-
-def get_logger(
-    instrumenting_module_name: str,
-    instrumenting_library_version: str = "",
-    logger_provider: Optional[LoggerProvider] = None,
-) -> Logger:
-    """Returns a `Logger` for use within a python process.
-
-    This function is a convenience wrapper for
-    opentelemetry.sdk._logs.LoggerProvider.get_logger.
-
-    If logger_provider param is omitted the current configured one is used.
-    """
-    if logger_provider is None:
-        logger_provider = get_logger_provider()
-    return logger_provider.get_logger(
-        instrumenting_module_name, instrumenting_library_version
-    )

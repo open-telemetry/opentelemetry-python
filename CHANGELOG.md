@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3026](https://github.com/open-telemetry/opentelemetry-python/pull/3026))
 - Add missing entry points for OTLP/HTTP exporter
   ([#3027](https://github.com/open-telemetry/opentelemetry-python/pull/3027))
+- Update logging to include logging api as per specification
+  ([#3038](https://github.com/open-telemetry/opentelemetry-python/pull/3038))
 - Fix: Avoid generator in metrics _ViewInstrumentMatch.collect()
   ([#3035](https://github.com/open-telemetry/opentelemetry-python/pull/3035)
 
