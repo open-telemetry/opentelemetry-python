@@ -17,11 +17,11 @@
 from opentelemetry.sdk.metrics._internal.export import (  # noqa: F401
     AggregationTemporality,
     ConsoleMetricExporter,
+    ExportingMetricReader,
     InMemoryMetricReader,
     MetricExporter,
     MetricExportResult,
     MetricReader,
-    ExportingMetricReader,
     PeriodicExportingMetricReader,
 )
 
