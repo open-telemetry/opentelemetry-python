@@ -134,13 +134,13 @@ class TestExportingMetricReader(ConcurrencyTestBase):
         pmr.shutdown()
 
     @flaky(max_runs=3, min_passes=1)
-    def test_ticker_collects_metrics(self):
+    def test_collects_metrics(self):
         exporter = FakeMetricsExporter()
 
         pmr = self._create_exporting_reader(
-            metrics_list, exporter, timeout=100
+            metrics_list, exporter, timeout=1000
         )
-        sleep(0.15)
+        pmr.collect()
         self.assertEqual(exporter.metrics, metrics_list)
         pmr.shutdown()
 
