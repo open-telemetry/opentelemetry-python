@@ -68,33 +68,32 @@ class Buckets:
         tmp[0:old_positive_limit] = self._counts[0:old_positive_limit]
         self._counts = tmp
 
+    @property
     def offset(self) -> int:
         return self._index_start
 
-    def len(self) -> int:
+    def __len__(self) -> int:
         if len(self._counts) == 0:
             return 0
 
-        if self._index_end == self._index_start and self.at(0) == 0:
+        if self._index_end == self._index_start and self[0] == 0:
             return 0
 
         return self._index_end - self._index_start + 1
 
-    # pylint: disable=invalid-name
-    def at(self, position: int) -> int:
+    def __getitem__(self, key: int) -> int:
         bias = self._index_base - self._index_start
 
-        if position < bias:
-            position += len(self._counts)
+        if key < bias:
+            key += len(self._counts)
 
-        position -= bias
+        key -= bias
 
-        return self._counts[position]
+        return self._counts[key]
 
-    # pylint: disable=invalid-name
-    def downscale(self, by: int) -> None:
+    def downscale(self, amount: int) -> None:
         """
-        Rotates, then collapses 2**`by`-to-1 buckets.
+        Rotates, then collapses 2 ** amount to 1 buckets.
         """
 
         bias = self._index_base - self._index_start
@@ -115,7 +114,7 @@ class Buckets:
             # [3, 4, 0, 1, 2] This is a rotation of the backing array.
 
         size = 1 + self._index_end - self._index_start
-        each = 1 << by
+        each = 1 << amount
         inpos = 0
         outpos = 0
 
@@ -140,8 +139,8 @@ class Buckets:
 
             outpos += 1
 
-        self._index_start >>= by
-        self._index_end >>= by
+        self._index_start >>= amount
+        self._index_end >>= amount
         self._index_base = self._index_start
 
     def increment_bucket(self, bucket_index: int):

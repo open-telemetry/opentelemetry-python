@@ -455,7 +455,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         is_rescaling_needed = False
 
-        if buckets.len() == 0:
+        if len(buckets) == 0:
             buckets._index_start = index
             buckets._index_end = index
             buckets._index_base = index
