@@ -189,7 +189,11 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
             self.assertEqual(
                 cm.records[0].message,
-                "Header doesn't match the format: missingValue.",
+                (
+                    "Header format invalid! Header values in environment "
+                    "variables must be URL encoded per the OpenTelemetry "
+                    "Protocol Exporter specification: missingValue"
+                )
             )
 
     # pylint: disable=no-self-use

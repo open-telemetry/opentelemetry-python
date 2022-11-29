@@ -64,7 +64,7 @@ from opentelemetry.sdk.metrics.export import (
     Sum,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
-from opentelemetry.util.re import parse_headers
+from opentelemetry.util.re import parse_env_headers
 
 import backoff
 import requests
@@ -119,7 +119,7 @@ class OTLPMetricExporter(MetricExporter):
             OTEL_EXPORTER_OTLP_METRICS_HEADERS,
             environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
         )
-        self._headers = headers or parse_headers(headers_string)
+        self._headers = headers or parse_env_headers(headers_string)
         self._timeout = timeout or int(
             environ.get(
                 OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,

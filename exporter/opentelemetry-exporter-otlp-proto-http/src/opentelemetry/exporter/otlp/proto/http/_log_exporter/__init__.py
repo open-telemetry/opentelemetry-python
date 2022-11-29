@@ -42,7 +42,7 @@ from opentelemetry.exporter.otlp.proto.http import (
 from opentelemetry.exporter.otlp.proto.http._log_exporter.encoder import (
     _ProtobufEncoder,
 )
-from opentelemetry.util.re import parse_headers
+from opentelemetry.util.re import parse_env_headers
 
 
 _logger = logging.getLogger(__name__)
@@ -86,7 +86,7 @@ class OTLPLogExporter(LogExporter):
             OTEL_EXPORTER_OTLP_CERTIFICATE, True
         )
         headers_string = environ.get(OTEL_EXPORTER_OTLP_HEADERS, "")
-        self._headers = headers or parse_headers(headers_string)
+        self._headers = headers or parse_env_headers(headers_string)
         self._timeout = timeout or int(
             environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT)
         )
