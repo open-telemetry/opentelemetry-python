@@ -224,7 +224,7 @@ class TestOTLPMetricExporter(unittest.TestCase):
                     "Header format invalid! Header values in environment "
                     "variables must be URL encoded per the OpenTelemetry "
                     "Protocol Exporter specification: missingValue"
-                )
+                ),
             )
 
     @patch.object(requests.Session, "post")
