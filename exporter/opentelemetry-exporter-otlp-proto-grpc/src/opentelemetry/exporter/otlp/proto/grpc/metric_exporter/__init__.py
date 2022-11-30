@@ -273,7 +273,7 @@ class OTLPMetricExporter(
                     elif isinstance(metric.data, ExponentialHistogramType):
                         for data_point in metric.data.data_points:
 
-                            if data_point.positive._counts:
+                            if data_point.positive.bucket_counts:
                                 positive = pb2.ExponentialHistogramDataPoint.Buckets(
                                     offset=data_point.positive.offset,
                                     bucket_counts=data_point.positive.bucket_counts,
@@ -281,7 +281,7 @@ class OTLPMetricExporter(
                             else:
                                 positive = None
 
-                            if data_point.negative._counts:
+                            if data_point.negative.bucket_counts:
                                 negative = pb2.ExponentialHistogramDataPoint.Buckets(
                                     offset=data_point.negative.offset,
                                     bucket_counts=data_point.negative.bucket_counts,
