@@ -430,6 +430,12 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         value = measurement.value
 
+        # 0. Set the following attributes:
+        # _min
+        # _max
+        # _count
+        # _zero_count
+        # _sum
         if value < self._min:
             self._min = value
 
@@ -444,15 +450,21 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         self._sum += value
 
+        # 1. Use the positive buckets for positive values and the negative
+        # buckets for negative values.
         if value > 0:
             buckets = self._positive
 
         else:
+            # Both exponential and logarithm mappings use only positive values
+            # so the absolute value is used here.
             value = -value
             buckets = self._negative
 
+        # 2. Compute the index for the value at the current scale.
         index = self._mapping.map_to_index(value)
 
+        # 3. Determine if a change of scale is needed.
         is_rescaling_needed = False
 
         if len(buckets) == 0:
@@ -476,6 +488,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             low = buckets._index_start
             high = index
 
+        # 4. Rescale the mapping if needed.
         if is_rescaling_needed:
 
             change = 0
@@ -512,6 +525,9 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             ):
                 raise Exception("Downscaling logic error")
 
+        # 5. If the index is outside
+        # [buckets._index_start, buckets._index_end] readjust the buckets
+        # boundaries or add more buckets.
         if index < buckets._index_start:
             span = buckets._index_end - index
 
@@ -528,11 +544,13 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
             buckets._index_end = index
 
+        # 6. Compute the index of the bucket to be incremented.
         bucket_index = index - buckets._index_base
 
         if bucket_index < 0:
             bucket_index += len(buckets.counts)
 
+        # 7. Increment the bucket.
         buckets.increment_bucket(bucket_index)
 
     def collect(

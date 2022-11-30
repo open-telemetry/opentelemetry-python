@@ -12,54 +12,59 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from math import ceil, log2
+
 
 class Buckets:
     def __init__(self):
         self._counts = [0]
 
-        # The term "index" refers to the number of the
-        # histogram bucket used to determine its boundaries.
-        # The lower-boundary of a bucket is determined by
-        # formula base**index and the upper-boundary of a
-        # bucket is base ** (index + 1). Index values are signed
-        # to account for values less than or equal to 1.
+        # The term index refers to the number of the expoential histogram bucket
+        # used to determine its boundaries. The lower boundary of a bucket is
+        # determined by base ** index and the upper boundary of a bucket is
+        # determined by base ** (index + 1). index values are signedto account
+        # for values less than or equal to 1.
 
         # self._index_* will all have values equal to a certain index that is
         # determined by the corresponding mapping _map_to_index function and
         # the value of the index depends on the value passed to _map_to_index.
 
-        # Index of the 0th position in the backing array: backing[0] is the
+        # Index of the 0th position in self._counts: self._counts[0] is the
         # count in the bucket with index self._index_base.
         self._index_base = 0
 
-        # indexStart is the smallest index value represented in the backing
-        # array.
+        # self._index_start is the smallest index value represented in
+        # self._counts.
         self._index_start = 0
 
-        # indexEnd is the largest index value represented in the backing array.
+        # self._index_start is the largest index value represented in
+        # self._counts.
         self._index_end = 0
 
     @property
     def counts(self):
         return self._counts
 
-    def grow(self, needed: int, max_size: int):
+    def grow(self, needed: int, max_size: int) -> None:
+
+        from ipdb import set_trace
+        set_trace()
 
         size = len(self._counts)
         bias = self._index_base - self._index_start
         old_positive_limit = size - bias
 
-        needed = needed - 1
-
-        needed |= needed >> 1
-        needed |= needed >> 2
-        needed |= needed >> 4
-        needed |= needed >> 8
-        needed |= needed >> 16
-
-        new_size = needed + 1
-
-        new_size = min(new_size, max_size)
+        # 2 ** ceil(log2(needed)) finds the smallest power of two that is larger
+        # or equal than needed:
+        # 2 ** ceil(log2(1)) == 1
+        # 2 ** ceil(log2(2)) == 2
+        # 2 ** ceil(log2(3)) == 4
+        # 2 ** ceil(log2(4)) == 4
+        # 2 ** ceil(log2(5)) == 8
+        # 2 ** ceil(log2(6)) == 8
+        # 2 ** ceil(log2(7)) == 8
+        # 2 ** ceil(log2(8)) == 8
+        new_size = min(2 ** ceil(log2(needed)), max_size)
 
         new_positive_limit = new_size - bias
 
