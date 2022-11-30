@@ -17,7 +17,6 @@
 from unittest import TestCase
 
 from opentelemetry.baggage import (
-    _is_valid_key,
     _is_valid_value,
     clear,
     get_all,
@@ -79,9 +78,6 @@ class TestBaggageManager(TestCase):
 
         ctx = clear(context=ctx)
         self.assertEqual(get_all(context=ctx), {})
-
-    def test__is_valid_key(self):
-        _is_valid_key
 
     def test__is_valid_value(self):
         self.assertTrue(_is_valid_value("GET%20%2Fapi%2F%2Freport"))
