@@ -14,14 +14,21 @@
 
 import gzip
 import zlib
+from os import environ
 from io import BytesIO
 from typing import Dict, Optional, Generic, TypeVar, Sequence
 from abc import ABC, abstractmethod
 
 import requests
+import backoff
+
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
+)
+
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_COMPRESSION,
 )
 
 SDKDataT = TypeVar("SDKDataT")
@@ -32,6 +39,17 @@ DEFAULT_COMPRESSION = Compression.NoCompression
 DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_TIMEOUT = 10  # in seconds
 
+# Work around API change between backoff 1.x and 2.x. Since 2.0.0 the backoff
+# wait generator API requires a first .send(None) before reading the backoff
+# values from the generator.
+_is_backoff_v2 = next(backoff.expo()) is None
+
+
+def _expo(*args, **kwargs):
+    gen = backoff.expo(*args, **kwargs)
+    if _is_backoff_v2:
+        gen.send(None)
+    return gen
 
 class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportResultT]):
 
@@ -93,3 +111,15 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportResultT]):
         **kwargs,
     ) -> ExportResultT:
         pass
+
+
+def _compression_from_env(key) -> Compression:
+    compression = (
+        environ.get(
+            key,
+            environ.get(OTEL_EXPORTER_OTLP_COMPRESSION, "none"),
+        )
+        .lower()
+        .strip()
+    )
+    return Compression(compression)

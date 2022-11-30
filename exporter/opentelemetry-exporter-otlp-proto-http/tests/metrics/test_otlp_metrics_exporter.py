@@ -272,7 +272,7 @@ class TestOTLPMetricExporter(unittest.TestCase):
         )
 
     @responses.activate
-    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.backoff")
+    @patch("opentelemetry.exporter.otlp.proto.http.exporter.backoff")
     @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.sleep")
     def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
         # In backoff ~= 2.0.0 the first value yielded from expo is None.

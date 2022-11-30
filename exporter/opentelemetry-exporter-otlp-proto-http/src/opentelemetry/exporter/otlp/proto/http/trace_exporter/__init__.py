@@ -17,7 +17,6 @@ from os import environ
 from typing import Dict, Optional, Sequence
 from time import sleep
 
-import backoff
 import requests
 
 from opentelemetry.sdk.environment_variables import (
@@ -39,7 +38,8 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http.exporter import  (
-    OTLPExporterMixin, DEFAULT_COMPRESSION, DEFAULT_ENDPOINT, DEFAULT_TIMEOUT
+    OTLPExporterMixin, DEFAULT_COMPRESSION, DEFAULT_ENDPOINT, 
+    DEFAULT_TIMEOUT, _expo, _compression_from_env
 )
 from opentelemetry.exporter.otlp.proto.http.trace_exporter.encoder import (
     _ProtobufEncoder,
@@ -50,18 +50,6 @@ from opentelemetry.util.re import parse_headers
 _logger = logging.getLogger(__name__)
 
 DEFAULT_TRACES_EXPORT_PATH = "v1/traces"
-
-# Work around API change between backoff 1.x and 2.x. Since 2.0.0 the backoff
-# wait generator API requires a first .send(None) before reading the backoff
-# values from the generator.
-_is_backoff_v2 = next(backoff.expo()) is None
-
-
-def _expo(*args, **kwargs):
-    gen = backoff.expo(*args, **kwargs)
-    if _is_backoff_v2:
-        gen.send(None)
-    return gen
 
 
 class OTLPSpanExporter(
@@ -100,7 +88,7 @@ class OTLPSpanExporter(
                 environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
             )
         )
-        self._compression = compression or _compression_from_env()
+        self._compression = compression or _compression_from_env(OTEL_EXPORTER_OTLP_TRACES_COMPRESSION)
         self._session = session or requests.Session()
         self._session.headers.update(self._headers)
         self._session.headers.update(_OTLP_HTTP_HEADERS)
@@ -164,18 +152,6 @@ class OTLPSpanExporter(
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
         return True
-
-
-def _compression_from_env() -> Compression:
-    compression = (
-        environ.get(
-            OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
-            environ.get(OTEL_EXPORTER_OTLP_COMPRESSION, "none"),
-        )
-        .lower()
-        .strip()
-    )
-    return Compression(compression)
 
 
 def _append_trace_path(endpoint: str) -> str:
