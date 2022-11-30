@@ -486,9 +486,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
                 change += 1
 
-            if change == 0:
-                return
-
             if change < 0:
                 raise Exception(f"Impossible change of scale: {change}")
 
