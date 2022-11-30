@@ -19,7 +19,7 @@ class Buckets:
     def __init__(self):
         self._counts = [0]
 
-        # The term index refers to the number of the expoential histogram bucket
+        # The term index refers to the number of the exponential histogram bucket
         # used to determine its boundaries. The lower boundary of a bucket is
         # determined by base ** index and the upper boundary of a bucket is
         # determined by base ** (index + 1). index values are signedto account
