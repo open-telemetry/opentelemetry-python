@@ -44,7 +44,7 @@ _BAGGAGE_PROPERTY_FORMAT = rf"{_KEY_VALUE_FORMAT}|{_OWS}{_KEY_FORMAT}{_OWS}"
 # pylint: disable=invalid-name
 
 
-@deprecated(version="1.15.0", reason="You should use parse_env_headers")
+@deprecated(version="1.15.0", reason="You should use parse_env_headers")  # type: ignore
 def parse_headers(s: str) -> Mapping[str, str]:
     return parse_env_headers(s)
 
