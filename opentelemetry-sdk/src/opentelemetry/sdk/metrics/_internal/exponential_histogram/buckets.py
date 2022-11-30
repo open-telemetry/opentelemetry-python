@@ -47,9 +47,6 @@ class Buckets:
 
     def grow(self, needed: int, max_size: int) -> None:
 
-        from ipdb import set_trace
-        set_trace()
-
         size = len(self._counts)
         bias = self._index_base - self._index_start
         old_positive_limit = size - bias

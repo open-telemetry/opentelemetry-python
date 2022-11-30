@@ -573,13 +573,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             max_ = self._max
             min_ = self._min
 
-            self._negative._counts = [0]
-            self._positive._counts = [0]
-            self._start_time_unix_nano = collection_start_nano
-            self._sum = 0
-            self._min = inf
-            self._max = -inf
-
         if self._count == self._zero_count:
             scale = 0
 
@@ -590,11 +583,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             attributes=self._attributes,
             start_time_unix_nano=start_time_unix_nano,
             time_unix_nano=collection_start_nano,
-            count=(
-                sum(self._negative.counts)
-                + sum(self._positive.counts)
-                + self._zero_count
-            ),
+            count=self._count,
             sum=sum_,
             scale=scale,
             zero_count=self._zero_count,
@@ -684,6 +673,18 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         )
 
         self._previous_point = current_point
+
+        with self._lock:
+
+            self._negative._counts = Buckets()
+            self._positive._counts = Buckets()
+            self._start_time_unix_nano = collection_start_nano
+            self._sum = 0
+            self._count = 0
+            self._zero_count = 0
+            self._min = inf
+            self._max = -inf
+
         return current_point
 
 
