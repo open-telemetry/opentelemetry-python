@@ -47,6 +47,7 @@ from opentelemetry.sdk.metrics import (
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
+    ExponentialHistogram,
 )
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -60,7 +61,7 @@ from opentelemetry.sdk.metrics.export import (
     ResourceMetrics,
     ScopeMetrics,
     Sum,
-    ExponentialHistogram,
+    ExponentialHistogram as ExponentialHistogramType,
 )
 
 _logger = getLogger(__name__)
@@ -136,6 +137,7 @@ class OTLPMetricExporter(
                 ObservableCounter: AggregationTemporality.DELTA,
                 ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
+                ExponentialHistogram: AggregationTemporality.DELTA,
             }
         else:
             instrument_class_temporality = {
@@ -268,7 +270,7 @@ class OTLPMetricExporter(
                             )
                             pb2_metric.sum.data_points.append(pt)
 
-                    elif isinstance(metric.data, ExponentialHistogram):
+                    elif isinstance(metric.data, ExponentialHistogramType):
                         for data_point in metric.data.data_points:
                             pt = pb2.ExponentialHistogramDataPoint(
                                 attributes=self._translate_attributes(
@@ -280,16 +282,16 @@ class OTLPMetricExporter(
                                 ),
                                 count=data_point.count,
                                 sum=data_point.sum,
+                                scale=data_point.scale,
+                                zero_count=data_point.zero_count,
                                 positive=pb2.ExponentialHistogramDataPoint.Buckets(
-                                    offset=data_point.positive.offset(),
+                                    offset=data_point.positive.offset,
                                     bucket_counts=data_point.positive.bucket_counts,
                                 ),
                                 negative=pb2.ExponentialHistogramDataPoint.Buckets(
-                                    offset=data_point.negative.offset(),
+                                    offset=data_point.negative.offset,
                                     bucket_counts=data_point.negative.bucket_counts,
                                 ),
-                                # positive=data_point.positive,
-                                # negative=data_point.negative,
                                 flags=data_point.flags,
                                 max=data_point.max,
                                 min=data_point.min,

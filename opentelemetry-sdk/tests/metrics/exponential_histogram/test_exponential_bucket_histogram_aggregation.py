@@ -562,12 +562,8 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         self.assertEqual(
             -1, exponential_histogram_aggregation._positive.offset
         )
-        self.assertLessEqual(
-            exponential_histogram_aggregation._positive[0], 2
-        )
-        self.assertLessEqual(
-            exponential_histogram_aggregation._positive[1], 1
-        )
+        self.assertLessEqual(exponential_histogram_aggregation._positive[0], 2)
+        self.assertLessEqual(exponential_histogram_aggregation._positive[1], 1)
 
     def test_aggregator_min_max(self):
 

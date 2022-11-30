@@ -17,6 +17,7 @@ from opentelemetry.sdk.metrics._internal import Meter, MeterProvider
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.instrument import (
     Counter,
+    ExponentialHistogram,
     Histogram,
     ObservableCounter,
     ObservableGauge,
