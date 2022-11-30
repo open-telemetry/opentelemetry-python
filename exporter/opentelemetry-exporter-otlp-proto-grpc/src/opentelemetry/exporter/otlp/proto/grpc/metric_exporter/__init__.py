@@ -272,6 +272,23 @@ class OTLPMetricExporter(
 
                     elif isinstance(metric.data, ExponentialHistogramType):
                         for data_point in metric.data.data_points:
+
+                            if data_point.positive._counts:
+                                positive = pb2.ExponentialHistogramDataPoint.Buckets(
+                                    offset=data_point.positive.offset,
+                                    bucket_counts=data_point.positive.bucket_counts,
+                                )
+                            else:
+                                positive = None
+
+                            if data_point.negative._counts:
+                                negative = pb2.ExponentialHistogramDataPoint.Buckets(
+                                    offset=data_point.negative.offset,
+                                    bucket_counts=data_point.negative.bucket_counts,
+                                )
+                            else:
+                                negative = None
+
                             pt = pb2.ExponentialHistogramDataPoint(
                                 attributes=self._translate_attributes(
                                     data_point.attributes
@@ -284,14 +301,8 @@ class OTLPMetricExporter(
                                 sum=data_point.sum,
                                 scale=data_point.scale,
                                 zero_count=data_point.zero_count,
-                                positive=pb2.ExponentialHistogramDataPoint.Buckets(
-                                    offset=data_point.positive.offset,
-                                    bucket_counts=data_point.positive.bucket_counts,
-                                ),
-                                negative=pb2.ExponentialHistogramDataPoint.Buckets(
-                                    offset=data_point.negative.offset,
-                                    bucket_counts=data_point.negative.bucket_counts,
-                                ),
+                                positive=positive,
+                                negative=negative,
                                 flags=data_point.flags,
                                 max=data_point.max,
                                 min=data_point.min,
