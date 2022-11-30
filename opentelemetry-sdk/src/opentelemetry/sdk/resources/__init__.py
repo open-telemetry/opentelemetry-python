@@ -62,6 +62,7 @@ import os
 import sys
 import typing
 from json import dumps
+from urllib import parse
 
 import pkg_resources
 
@@ -289,7 +290,8 @@ class OTELResourceDetector(ResourceDetector):
                         exc,
                     )
                     continue
-                env_resource_map[key.strip()] = value.strip()
+                value_url_decoded = parse.unquote(value.strip())
+                env_resource_map[key.strip()] = value_url_decoded
 
         service_name = os.environ.get(OTEL_SERVICE_NAME)
         if service_name:
