@@ -195,7 +195,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
     # pylint: disable=no-self-use
     @responses.activate
     @patch("opentelemetry.exporter.otlp.proto.http.exporter.backoff")
-    @patch("opentelemetry.exporter.otlp.proto.http.trace_exporter.sleep")
+    @patch("opentelemetry.exporter.otlp.proto.http.exporter.sleep")
     def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
         # In backoff ~= 2.0.0 the first value yielded from expo is None.
         def generate_delays(*args, **kwargs):

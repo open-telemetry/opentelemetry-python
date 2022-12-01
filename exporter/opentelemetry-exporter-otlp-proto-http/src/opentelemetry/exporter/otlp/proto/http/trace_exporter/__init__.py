@@ -15,7 +15,6 @@
 import logging
 from os import environ
 from typing import Dict, Optional, Sequence
-from time import sleep
 
 import requests
 
@@ -57,6 +56,9 @@ class OTLPSpanExporter(
 ):
 
     _MAX_RETRY_TIMEOUT = 64
+    _result = SpanExportResult
+    _encoder = _ProtobufEncoder
+
 
     def __init__(
         self,
@@ -109,39 +111,7 @@ class OTLPSpanExporter(
         )
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
-        # After the call to Shutdown subsequent calls to Export are
-        # not allowed and should return a Failure result.
-        if self._shutdown:
-            _logger.warning("Exporter already shutdown, ignoring batch")
-            return SpanExportResult.FAILURE
-
-        serialized_data = _ProtobufEncoder.serialize(spans)
-
-        for delay in _expo(max_value=self._MAX_RETRY_TIMEOUT):
-
-            if delay == self._MAX_RETRY_TIMEOUT:
-                return SpanExportResult.FAILURE
-
-            resp = self._export(serialized_data)
-            # pylint: disable=no-else-return
-            if resp.status_code in (200, 202):
-                return SpanExportResult.SUCCESS
-            elif self._retryable(resp):
-                _logger.warning(
-                    "Transient error %s encountered while exporting span batch, retrying in %ss.",
-                    resp.reason,
-                    delay,
-                )
-                sleep(delay)
-                continue
-            else:
-                _logger.error(
-                    "Failed to export batch code: %s, reason: %s",
-                    resp.status_code,
-                    resp.text,
-                )
-                return SpanExportResult.FAILURE
-        return SpanExportResult.FAILURE
+        return OTLPExporterMixin.export(self, spans)
 
     def shutdown(self):
         if self._shutdown:

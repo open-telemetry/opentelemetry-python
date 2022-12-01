@@ -15,7 +15,6 @@
 import logging
 from os import environ
 from typing import Dict, Optional, Sequence
-from time import sleep
 
 import requests
 
@@ -57,6 +56,8 @@ class OTLPLogExporter(
 ):
 
     _MAX_RETRY_TIMEOUT = 64
+    _result = LogExportResult
+    _encoder = _ProtobufEncoder
 
     def __init__(
         self,
@@ -98,39 +99,7 @@ class OTLPLogExporter(
         )
 
     def export(self, batch: Sequence[LogData]) -> LogExportResult:
-        # After the call to Shutdown subsequent calls to Export are
-        # not allowed and should return a Failure result.
-        if self._shutdown:
-            _logger.warning("Exporter already shutdown, ignoring batch")
-            return LogExportResult.FAILURE
-
-        serialized_data = _ProtobufEncoder.serialize(batch)
-
-        for delay in _expo(max_value=self._MAX_RETRY_TIMEOUT):
-
-            if delay == self._MAX_RETRY_TIMEOUT:
-                return LogExportResult.FAILURE
-
-            resp = self._export(serialized_data)
-            # pylint: disable=no-else-return
-            if resp.status_code in (200, 202):
-                return LogExportResult.SUCCESS
-            elif self._retryable(resp):
-                _logger.warning(
-                    "Transient error %s encountered while exporting logs batch, retrying in %ss.",
-                    resp.reason,
-                    delay,
-                )
-                sleep(delay)
-                continue
-            else:
-                _logger.error(
-                    "Failed to export logs batch code: %s, reason: %s",
-                    resp.status_code,
-                    resp.text,
-                )
-                return LogExportResult.FAILURE
-        return LogExportResult.FAILURE
+        return OTLPExporterMixin.export(self, batch)
 
     def shutdown(self):
         if self._shutdown:
@@ -138,7 +107,6 @@ class OTLPLogExporter(
             return
         self._session.close()
         self._shutdown = True
-
 
 def _append_logs_path(endpoint: str) -> str:
     if endpoint.endswith("/"):

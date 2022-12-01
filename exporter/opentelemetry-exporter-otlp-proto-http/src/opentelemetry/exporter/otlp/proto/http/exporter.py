@@ -12,12 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import logging
 import gzip
 import zlib
 from os import environ
 from io import BytesIO
 from typing import Dict, Optional, Generic, TypeVar, Sequence
-from abc import ABC, abstractmethod
+from abc import ABC
+from time import sleep
 
 import requests
 import backoff
@@ -30,6 +32,8 @@ from opentelemetry.exporter.otlp.proto.http import (
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
 )
+
+_logger = logging.getLogger(__name__)
 
 SDKDataT = TypeVar("SDKDataT")
 ExportResultT = TypeVar("ExportResultT")
@@ -104,13 +108,44 @@ class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportResultT]):
             return True
         return False
 
-    @abstractmethod
     def export(
         self,
         data: Sequence[SDKDataT],
         **kwargs,
     ) -> ExportResultT:
-        pass
+        # After the call to Shutdown subsequent calls to Export are
+        # not allowed and should return a Failure result.
+        if self._shutdown:
+            _logger.warning("Exporter already shutdown, ignoring batch")
+            return self._result.FAILURE
+
+        serialized_data = self._encoder.serialize(data)
+
+        for delay in _expo(max_value=self._MAX_RETRY_TIMEOUT):
+
+            if delay == self._MAX_RETRY_TIMEOUT:
+                return self._result.FAILURE
+
+            resp = self._export(serialized_data)
+            # pylint: disable=no-else-return
+            if resp.status_code in (200, 202):
+                return self._result.SUCCESS
+            elif self._retryable(resp):
+                _logger.warning(
+                    "Transient error %s encountered while exporting batch, retrying in %ss.",
+                    resp.reason,
+                    delay,
+                )
+                sleep(delay)
+                continue
+            else:
+                _logger.error(
+                    "Failed to export batch code: %s, reason: %s",
+                    resp.status_code,
+                    resp.text,
+                )
+                return self._result.FAILURE
+        return self._result.FAILURE
 
 
 def _compression_from_env(key) -> Compression:
