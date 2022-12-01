@@ -6,6 +6,7 @@ OpenTelemetry Python API
 .. toctree::
     :maxdepth: 1
 
+    _logs
     baggage
     context
     propagate
