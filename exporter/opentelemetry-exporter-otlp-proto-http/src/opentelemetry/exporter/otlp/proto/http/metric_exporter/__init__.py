@@ -18,8 +18,12 @@ from time import sleep
 
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.exporter import (
-    OTLPExporterMixin, DEFAULT_COMPRESSION, DEFAULT_ENDPOINT, 
-    DEFAULT_TIMEOUT, _expo, _compression_from_env
+    OTLPExporterMixin,
+    DEFAULT_COMPRESSION,
+    DEFAULT_ENDPOINT,
+    DEFAULT_TIMEOUT,
+    _expo,
+    _compression_from_env,
 )
 from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2 import (
@@ -114,7 +118,9 @@ class OTLPMetricExporter(
                 environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
             )
         )
-        self._compression = compression or _compression_from_env(OTEL_EXPORTER_OTLP_METRICS_COMPRESSION)
+        self._compression = compression or _compression_from_env(
+            OTEL_EXPORTER_OTLP_METRICS_COMPRESSION
+        )
         self._session = session or requests.Session()
         self._session.headers.update(self._headers)
         self._session.headers.update(

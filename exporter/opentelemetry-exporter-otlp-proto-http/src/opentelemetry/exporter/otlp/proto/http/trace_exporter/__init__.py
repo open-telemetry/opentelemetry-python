@@ -36,9 +36,13 @@ from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
 )
-from opentelemetry.exporter.otlp.proto.http.exporter import  (
-    OTLPExporterMixin, DEFAULT_COMPRESSION, DEFAULT_ENDPOINT, 
-    DEFAULT_TIMEOUT, _expo, _compression_from_env
+from opentelemetry.exporter.otlp.proto.http.exporter import (
+    OTLPExporterMixin,
+    DEFAULT_COMPRESSION,
+    DEFAULT_ENDPOINT,
+    DEFAULT_TIMEOUT,
+    _expo,
+    _compression_from_env,
 )
 from opentelemetry.exporter.otlp.proto.http.trace_exporter.encoder import (
     _ProtobufEncoder,
@@ -58,7 +62,6 @@ class OTLPSpanExporter(
     _MAX_RETRY_TIMEOUT = 64
     _result = SpanExportResult
     _encoder = _ProtobufEncoder
-
 
     def __init__(
         self,
@@ -90,7 +93,9 @@ class OTLPSpanExporter(
                 environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
             )
         )
-        self._compression = compression or _compression_from_env(OTEL_EXPORTER_OTLP_TRACES_COMPRESSION)
+        self._compression = compression or _compression_from_env(
+            OTEL_EXPORTER_OTLP_TRACES_COMPRESSION
+        )
         self._session = session or requests.Session()
         self._session.headers.update(self._headers)
         self._session.headers.update(_OTLP_HTTP_HEADERS)

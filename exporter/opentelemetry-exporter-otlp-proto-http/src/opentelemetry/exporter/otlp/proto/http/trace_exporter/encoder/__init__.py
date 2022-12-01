@@ -16,6 +16,9 @@ import logging
 from collections import abc
 from typing import Any, List, Optional, Sequence
 
+from opentelemetry.exporter.otlp.proto.http.encoder import (
+    _ProtobufEncoderMixin,
+)
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest as PB2ExportTraceServiceRequest,
 )
@@ -59,7 +62,9 @@ _SPAN_KIND_MAP = {
 _logger = logging.getLogger(__name__)
 
 
-class _ProtobufEncoder:
+class _ProtobufEncoder(
+    _ProtobufEncoderMixin[SDKSpan, PB2ExportTraceServiceRequest]
+):
     @classmethod
     def serialize(cls, sdk_spans: Sequence[SDKSpan]) -> str:
         return cls.encode(sdk_spans).SerializeToString()

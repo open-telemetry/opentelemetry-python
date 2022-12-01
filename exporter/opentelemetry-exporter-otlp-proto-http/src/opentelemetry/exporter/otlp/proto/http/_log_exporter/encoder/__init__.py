@@ -22,6 +22,11 @@ from opentelemetry.proto.logs.v1.logs_pb2 import (
     ResourceLogs,
 )
 from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord as PB2LogRecord
+
+from opentelemetry.exporter.otlp.proto.http.encoder import (
+    _ProtobufEncoderMixin,
+)
+
 from opentelemetry.exporter.otlp.proto.http.trace_exporter.encoder import (
     _encode_instrumentation_scope,
     _encode_resource,
@@ -35,11 +40,9 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter.encoder import (
 from opentelemetry.sdk._logs.export import LogData
 
 
-class _ProtobufEncoder:
-    @classmethod
-    def serialize(cls, batch: Sequence[LogData]) -> str:
-        return cls.encode(batch).SerializeToString()
-
+class _ProtobufEncoder(
+    _ProtobufEncoderMixin[LogData, ExportLogsServiceRequest]
+):
     @staticmethod
     def encode(batch: Sequence[LogData]) -> ExportLogsServiceRequest:
         return ExportLogsServiceRequest(

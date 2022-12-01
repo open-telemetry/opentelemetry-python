@@ -35,8 +35,12 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http.exporter import (
-    OTLPExporterMixin, DEFAULT_COMPRESSION, DEFAULT_ENDPOINT, 
-    DEFAULT_TIMEOUT, _expo, _compression_from_env
+    OTLPExporterMixin,
+    DEFAULT_COMPRESSION,
+    DEFAULT_ENDPOINT,
+    DEFAULT_TIMEOUT,
+    _expo,
+    _compression_from_env,
 )
 
 from opentelemetry.exporter.otlp.proto.http._log_exporter.encoder import (
@@ -79,7 +83,9 @@ class OTLPLogExporter(
         self._timeout = timeout or int(
             environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT)
         )
-        self._compression = compression or _compression_from_env(OTEL_EXPORTER_OTLP_COMPRESSION)
+        self._compression = compression or _compression_from_env(
+            OTEL_EXPORTER_OTLP_COMPRESSION
+        )
         self._session = session or requests.Session()
         self._session.headers.update(self._headers)
         self._session.headers.update(_OTLP_HTTP_HEADERS)
@@ -107,6 +113,7 @@ class OTLPLogExporter(
             return
         self._session.close()
         self._shutdown = True
+
 
 def _append_logs_path(endpoint: str) -> str:
     if endpoint.endswith("/"):

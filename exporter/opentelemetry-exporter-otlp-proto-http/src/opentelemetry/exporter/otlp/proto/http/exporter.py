@@ -55,6 +55,7 @@ def _expo(*args, **kwargs):
         gen.send(None)
     return gen
 
+
 class OTLPExporterMixin(ABC, Generic[SDKDataT, ExportResultT]):
 
     _MAX_RETRY_TIMEOUT = 64
