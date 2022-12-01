@@ -17,8 +17,8 @@
 from opentelemetry.sdk._logs._internal import (  # noqa: F401
     LogData,
     Logger,
-    LoggingHandler,
     LoggerProvider,
+    LoggingHandler,
     LogRecord,
     LogRecordProcessor,
 )

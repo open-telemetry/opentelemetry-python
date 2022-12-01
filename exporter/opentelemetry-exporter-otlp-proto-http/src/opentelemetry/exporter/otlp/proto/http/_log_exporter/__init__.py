@@ -30,10 +30,10 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
+from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs.export import (
     LogExporter,
     LogExportResult,
-    LogData,
 )
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
