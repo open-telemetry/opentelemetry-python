@@ -34,9 +34,7 @@ from opentelemetry.sdk._logs.export import (
     ConsoleLogExporter,
     SimpleLogRecordProcessor,
 )
-from opentelemetry.sdk._logs.export.in_memory_log_exporter import (
-    InMemoryLogExporter,
-)
+from opentelemetry.sdk._logs.export import InMemoryLogExporter
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase
