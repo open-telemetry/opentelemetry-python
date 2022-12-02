@@ -19,7 +19,6 @@ from time import sleep
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.exporter import (
     OTLPExporterMixin,
-    DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
     DEFAULT_TIMEOUT,
     _expo,
@@ -44,7 +43,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_TIMEOUT,
-    OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
     OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,

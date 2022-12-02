@@ -19,8 +19,8 @@ import requests
 import responses
 
 from opentelemetry.exporter.otlp.proto.http import Compression
+from opentelemetry.exporter.otlp.proto.http.exporter import DEFAULT_COMPRESSION
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
-    DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
     DEFAULT_METRICS_EXPORT_PATH,
     DEFAULT_TIMEOUT,

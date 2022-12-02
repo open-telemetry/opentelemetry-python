@@ -36,10 +36,8 @@ from opentelemetry.exporter.otlp.proto.http import (
 )
 from opentelemetry.exporter.otlp.proto.http.exporter import (
     OTLPExporterMixin,
-    DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
     DEFAULT_TIMEOUT,
-    _expo,
     _compression_from_env,
 )
 

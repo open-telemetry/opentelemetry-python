@@ -20,8 +20,8 @@ import requests
 import responses
 
 from opentelemetry.exporter.otlp.proto.http import Compression
+from opentelemetry.exporter.otlp.proto.http.exporter import DEFAULT_COMPRESSION
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
-    DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
     DEFAULT_TIMEOUT,
     DEFAULT_TRACES_EXPORT_PATH,

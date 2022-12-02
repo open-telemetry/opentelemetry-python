@@ -24,7 +24,6 @@ import responses
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
-    DEFAULT_COMPRESSION,
     DEFAULT_ENDPOINT,
     DEFAULT_LOGS_EXPORT_PATH,
     DEFAULT_TIMEOUT,
@@ -37,6 +36,7 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter.encoder import (
     _encode_value,
     _ProtobufEncoder,
 )
+from opentelemetry.exporter.otlp.proto.http.exporter import DEFAULT_COMPRESSION
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
