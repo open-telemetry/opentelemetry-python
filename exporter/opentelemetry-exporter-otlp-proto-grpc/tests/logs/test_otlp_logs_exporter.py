@@ -25,9 +25,8 @@ from opentelemetry._logs import SeverityNumber
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
     OTLPLogExporter,
 )
-from opentelemetry.exporter.otlp.proto.grpc.version import __version__
-
 from opentelemetry.exporter.otlp.proto.grpc.exporter import _translate_value
+from opentelemetry.exporter.otlp.proto.grpc.version import __version__
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
     ExportLogsServiceResponse,
@@ -253,7 +252,8 @@ class TestOTLPLogExporter(TestCase):
 
     def test_otlp_headers_from_env(self):
         self.assertEqual(
-            self.exporter._headers, (("user-agent", "OTel OTLP Exporter Python/" + __version__),)
+            self.exporter._headers,
+            (("user-agent", "OTel OTLP Exporter Python/" + __version__),),
         )
 
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")

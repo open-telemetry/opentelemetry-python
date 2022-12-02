@@ -29,6 +29,7 @@ from opentelemetry.exporter.otlp.proto.grpc.exporter import (
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
+from opentelemetry.exporter.otlp.proto.grpc.version import __version__
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
     ExportTraceServiceResponse,
@@ -69,8 +70,6 @@ from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
 )
-from opentelemetry.exporter.otlp.proto.grpc.version import __version__
-
 
 THIS_DIR = os.path.dirname(__file__)
 
@@ -277,21 +276,36 @@ class TestOTLPSpanExporter(TestCase):
         exporter = OTLPSpanExporter()
         # pylint: disable=protected-access
         self.assertEqual(
-            exporter._headers, (("key1", "value1"),("key2", "VALUE=2"), ("user-agent", "OTel OTLP Exporter Python/" + __version__))
+            exporter._headers,
+            (
+                ("key1", "value1"),
+                ("key2", "VALUE=2"),
+                ("user-agent", "OTel OTLP Exporter Python/" + __version__),
+            ),
         )
         exporter = OTLPSpanExporter(
             headers=(("key3", "value3"), ("key4", "value4"))
         )
         # pylint: disable=protected-access
         self.assertEqual(
-            exporter._headers, (("key3", "value3"), ("key4", "value4"), ("user-agent", "OTel OTLP Exporter Python/" + __version__))
+            exporter._headers,
+            (
+                ("key3", "value3"),
+                ("key4", "value4"),
+                ("user-agent", "OTel OTLP Exporter Python/" + __version__),
+            ),
         )
         exporter = OTLPSpanExporter(
             headers={"key5": "value5", "key6": "value6"}
         )
         # pylint: disable=protected-access
         self.assertEqual(
-            exporter._headers, (("key5", "value5"), ("key6", "value6"), ("user-agent", "OTel OTLP Exporter Python/" + __version__))
+            exporter._headers,
+            (
+                ("key5", "value5"),
+                ("key6", "value6"),
+                ("user-agent", "OTel OTLP Exporter Python/" + __version__),
+            ),
         )
 
     @patch.dict(
@@ -436,8 +450,11 @@ class TestOTLPSpanExporter(TestCase):
     def test_otlp_headers(self, mock_ssl_channel, mock_secure):
         exporter = OTLPSpanExporter()
         # pylint: disable=protected-access
-        #This ensures that there is no other header than standard user-agent.
-        self.assertEqual(exporter._headers, (("user-agent", "OTel OTLP Exporter Python/" + __version__),))
+        # This ensures that there is no other header than standard user-agent.
+        self.assertEqual(
+            exporter._headers,
+            (("user-agent", "OTel OTLP Exporter Python/" + __version__),),
+        )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.backoff")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
