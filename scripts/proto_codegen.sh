@@ -64,6 +64,11 @@ python -m grpc_tools.protoc \
 
 # generate grpc output only for protos with service definitions
 service_protos=$(grep -REl "service \w+ {" $PROTO_REPO_DIR/opentelemetry/)
+
+# print version info
+echo 'python -m grpc_tools.protoc --version'
+python -m grpc_tools.protoc --version
+
 python -m grpc_tools.protoc \
     -I $PROTO_REPO_DIR \
     --python_out=. \
