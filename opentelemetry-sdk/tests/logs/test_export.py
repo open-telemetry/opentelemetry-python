@@ -32,10 +32,8 @@ from opentelemetry.sdk._logs import (
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
     ConsoleLogExporter,
-    SimpleLogRecordProcessor,
-)
-from opentelemetry.sdk._logs.export.in_memory_log_exporter import (
     InMemoryLogExporter,
+    SimpleLogRecordProcessor,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope

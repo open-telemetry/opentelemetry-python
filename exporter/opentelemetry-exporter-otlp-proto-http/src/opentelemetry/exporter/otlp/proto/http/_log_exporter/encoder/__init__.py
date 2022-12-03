@@ -37,7 +37,7 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter.encoder import (
 )
 
 
-from opentelemetry.sdk._logs.export import LogData
+from opentelemetry.sdk._logs import LogData
 
 
 class _ProtobufEncoder(
