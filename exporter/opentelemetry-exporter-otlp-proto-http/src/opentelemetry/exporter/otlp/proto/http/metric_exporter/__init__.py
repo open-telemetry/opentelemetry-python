@@ -18,7 +18,7 @@ from time import sleep
 
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.exporter import (
-    OTLPExporterMixin,
+    _OTLPExporterMixin,
     DEFAULT_ENDPOINT,
     DEFAULT_TIMEOUT,
     _expo,
@@ -79,7 +79,7 @@ DEFAULT_METRICS_EXPORT_PATH = "v1/metrics"
 
 
 class OTLPMetricExporter(
-    MetricExporter, OTLPExporterMixin[ResourceMetrics, MetricExportResult]
+    MetricExporter, _OTLPExporterMixin[ResourceMetrics, MetricExportResult]
 ):
 
     _MAX_RETRY_TIMEOUT = 64
@@ -158,7 +158,7 @@ class OTLPMetricExporter(
             }
         instrument_class_temporality.update(preferred_temporality or {})
 
-        OTLPExporterMixin.__init__(
+        _OTLPExporterMixin.__init__(
             self,
             self._endpoint,
             self._certificate_file,

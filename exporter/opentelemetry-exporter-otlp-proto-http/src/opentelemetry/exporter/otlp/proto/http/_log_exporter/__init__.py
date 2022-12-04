@@ -35,7 +35,7 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http.exporter import (
-    OTLPExporterMixin,
+    _OTLPExporterMixin,
     DEFAULT_ENDPOINT,
     DEFAULT_TIMEOUT,
     _compression_from_env,
@@ -54,7 +54,7 @@ DEFAULT_LOGS_EXPORT_PATH = "v1/logs"
 
 
 class OTLPLogExporter(
-    LogExporter, OTLPExporterMixin[LogData, LogExportResult]
+    LogExporter, _OTLPExporterMixin[LogData, LogExportResult]
 ):
 
     _MAX_RETRY_TIMEOUT = 64
@@ -92,7 +92,7 @@ class OTLPLogExporter(
                 {"Content-Encoding": self._compression.value}
             )
         self._shutdown = False
-        OTLPExporterMixin.__init__(
+        _OTLPExporterMixin.__init__(
             self,
             self._endpoint,
             self._certificate_file,
@@ -103,7 +103,7 @@ class OTLPLogExporter(
         )
 
     def export(self, batch: Sequence[LogData]) -> LogExportResult:
-        return OTLPExporterMixin.export(self, batch)
+        return _OTLPExporterMixin.export(self, batch)
 
     def shutdown(self):
         if self._shutdown:

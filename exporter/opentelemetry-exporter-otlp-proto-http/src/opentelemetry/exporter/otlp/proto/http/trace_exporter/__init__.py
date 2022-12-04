@@ -36,7 +36,7 @@ from opentelemetry.exporter.otlp.proto.http import (
     Compression,
 )
 from opentelemetry.exporter.otlp.proto.http.exporter import (
-    OTLPExporterMixin,
+    _OTLPExporterMixin,
     DEFAULT_ENDPOINT,
     DEFAULT_TIMEOUT,
     _compression_from_env,
@@ -53,7 +53,7 @@ DEFAULT_TRACES_EXPORT_PATH = "v1/traces"
 
 
 class OTLPSpanExporter(
-    SpanExporter, OTLPExporterMixin[ReadableSpan, SpanExportResult]
+    SpanExporter, _OTLPExporterMixin[ReadableSpan, SpanExportResult]
 ):
 
     _MAX_RETRY_TIMEOUT = 64
@@ -102,7 +102,7 @@ class OTLPSpanExporter(
             )
         self._shutdown = False
 
-        OTLPExporterMixin.__init__(
+        _OTLPExporterMixin.__init__(
             self,
             self._endpoint,
             self._certificate_file,
@@ -113,7 +113,7 @@ class OTLPSpanExporter(
         )
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
-        return OTLPExporterMixin.export(self, spans)
+        return _OTLPExporterMixin.export(self, spans)
 
     def shutdown(self):
         if self._shutdown:
