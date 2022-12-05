@@ -251,6 +251,7 @@ class TestOTLPLogExporter(TestCase):
             mock_method.reset_mock()
 
     def test_otlp_headers_from_env(self):
+        # pylint: disable=protected-access
         self.assertEqual(
             self.exporter._headers,
             (("user-agent", "OTel OTLP Exporter Python/" + __version__),),
