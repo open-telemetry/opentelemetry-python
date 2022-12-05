@@ -455,6 +455,7 @@ class TestOTLPSpanExporter(TestCase):
             exporter._headers,
             (("user-agent", "OTel OTLP Exporter Python/" + __version__),),
         )
+
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.backoff")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
