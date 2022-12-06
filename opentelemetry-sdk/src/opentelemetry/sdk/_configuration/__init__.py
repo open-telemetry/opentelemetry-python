@@ -57,13 +57,7 @@ from opentelemetry.sdk.trace.id_generator import IdGenerator
 from opentelemetry.sdk.trace.sampling import Sampler
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.trace import set_tracer_provider
-
-# FIXME remove when support for 3.7 is dropped.
-if version_info.minor == 7:
-    # pylint: disable=import-error
-    from importlib_metadata import entry_points
-else:
-    from importlib.metadata import entry_points
+from opentelemetry.util._entry_points import entry_points
 
 _EXPORTER_OTLP = "otlp"
 _EXPORTER_OTLP_PROTO_GRPC = "otlp_proto_grpc"
@@ -100,21 +94,8 @@ def _import_config_components(
 
     component_implementations = []
 
-    # FIXME remove when support for 3.7 is dropped.
-    if version_info.minor == 7:
-
-        for entry_point in entry_points():
-            for selected_component in selected_components:
-                if (
-                    entry_point.name == selected_component
-                    and entry_point.group == entry_point_name
-                ):
-                    component_implementations.append(
-                        (selected_component, entry_point.load())
-                    )
-
     # FIXME remove when support for 3.9 is dropped.
-    elif version_info.minor <= 9:
+    if version_info.minor in (8, 9):
 
         for entry_point in entry_points()[entry_point_name]:
             for selected_component in selected_components:
@@ -128,9 +109,13 @@ def _import_config_components(
             component_implementations.append(
                 (
                     selected_component,
-                    entry_points(
-                        group=entry_point_name, name=selected_component
-                    )[0].load(),
+                    next(
+                        iter(
+                            entry_points(
+                                group=entry_point_name, name=selected_component
+                            )
+                        )
+                    ).load(),
                 )
             )
 

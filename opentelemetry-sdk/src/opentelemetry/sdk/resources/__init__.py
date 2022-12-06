@@ -63,7 +63,6 @@ import sys
 import typing
 from json import dumps
 from urllib import parse
-from sys import version_info
 
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.environment_variables import (
@@ -71,14 +70,8 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_SERVICE_NAME,
 )
 from opentelemetry.semconv.resource import ResourceAttributes
+from opentelemetry.util._entry_points import version
 from opentelemetry.util.types import AttributeValue
-
-# FIXME remove when support for 3.7 is dropped.
-if version_info.minor == 7:
-    # pylint: disable=import-error
-    from importlib_metadata import version
-else:
-    from importlib.metadata import version
 
 LabelValue = AttributeValue
 Attributes = typing.Dict[str, LabelValue]

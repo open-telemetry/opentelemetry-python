@@ -78,7 +78,6 @@ from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.propagators import composite, textmap
 from opentelemetry.util._entry_points import entry_points
 
-
 logger = getLogger(__name__)
 
 

@@ -17,8 +17,8 @@ from sys import version_info
 # FIXME remove this file when support for 3.7 is dropped.
 if version_info.minor == 7:
     # pylint: disable=import-error
-    from importlib_metadata import entry_points  # type: ignore
+    from importlib_metadata import entry_points, version  # type: ignore
 else:
-    from importlib.metadata import entry_points
+    from importlib.metadata import entry_points, version
 
-__all__ = ["entry_points"]
+__all__ = ["entry_points", "version"]

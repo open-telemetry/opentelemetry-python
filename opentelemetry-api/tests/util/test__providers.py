@@ -22,7 +22,6 @@ from opentelemetry.util import _providers
 
 
 class Test_Providers(TestCase):
-
     @patch.dict(
         environ,
         {  # type: ignore

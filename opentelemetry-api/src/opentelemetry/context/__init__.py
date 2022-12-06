@@ -19,11 +19,11 @@ from functools import wraps
 from os import environ
 from uuid import uuid4
 from sys import version_info
-from opentelemetry.util._entry_points import entry_points
 
 # pylint: disable=wrong-import-position
-from opentelemetry.context.context import Context
+from opentelemetry.context.context import Context, _RuntimeContext  # noqa
 from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
+from opentelemetry.util._entry_points import entry_points
 
 logger = logging.getLogger(__name__)
 _RUNTIME_CONTEXT = None  # type: typing.Optional[_RuntimeContext]
@@ -58,7 +58,7 @@ def _load_runtime_context(func: _F) -> _F:
                 )  # type: str
                 try:
                     # FIXME Remove when support for 3.9 is dropped.
-                    if version_info.minor == 8 or version_info.minor == 9:
+                    if version_info.minor in (8, 9):
                         for entry_point in entry_points()[  # type: ignore
                             "opentelemetry_context"
                         ]:

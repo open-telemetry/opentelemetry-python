@@ -16,6 +16,7 @@ from logging import getLogger
 from os import environ
 from sys import version_info
 from typing import TYPE_CHECKING, TypeVar, cast
+
 from opentelemetry.util._entry_points import entry_points
 
 if TYPE_CHECKING:

@@ -56,7 +56,7 @@ class TestErrorHandler(TestCase):
         )
 
         # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor <= 9:
+        if version_info.minor in (8, 9):
 
             mock_entry_points.configure_mock(
                 **{
@@ -109,7 +109,7 @@ class TestErrorHandler(TestCase):
         )
 
         # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor <= 9:
+        if version_info.minor in (8, 9):
 
             mock_entry_points.configure_mock(
                 **{
@@ -149,7 +149,7 @@ class TestErrorHandler(TestCase):
         )
 
         # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor <= 9:
+        if version_info.minor in (8, 9):
 
             mock_entry_points.configure_mock(
                 **{
