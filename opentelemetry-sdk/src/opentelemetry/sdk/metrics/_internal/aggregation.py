@@ -771,7 +771,7 @@ class DefaultAggregation(Aggregation):
         raise Exception(f"Invalid instrument type {type(instrument)} found")
 
 
-class ExponentialBucketHistogramAggregateion(Aggregation):
+class ExponentialBucketHistogramAggregation(Aggregation):
     def __init__(
         self,
         max_size: int = 160,
