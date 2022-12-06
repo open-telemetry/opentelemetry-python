@@ -65,13 +65,12 @@ def _load_runtime_context(func: _F) -> _F:
                 try:
                     # FIXME Remove when support for 3.7 is dropped.
                     if version_info.minor == 7:
-                        for entry_point in entry_points():  # type: ignore
-                            if (
-                                entry_point.group == "opentelemetry_context"  # type: ignore
-                                and entry_point.name == configured_context  # type: ignore
-                            ):
-                                _RUNTIME_CONTEXT = entry_point.load()()  # type: ignore
-                                break
+                        for entry_point in entry_points(
+                            group="opentelemetry_context",
+                            name=configured_context
+                        ):  # type: ignore
+                            _RUNTIME_CONTEXT = entry_point.load()()  # type: ignore
+                            break
 
                     # FIXME Remove when support for 3.9 is dropped.
                     elif version_info.minor <= 9:
