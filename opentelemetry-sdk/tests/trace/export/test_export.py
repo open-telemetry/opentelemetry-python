@@ -19,10 +19,10 @@ import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 from logging import WARNING
-from platform import python_implementation
+from platform import python_implementation, system
 from unittest import mock
 
-from flaky import flaky
+from pytest import mark
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
@@ -442,6 +442,10 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
 
         span_processor.shutdown()
 
+    @mark.skipif(
+        python_implementation() == "PyPy" and system() == "Windows",
+        reason="This test randomly fails in Windows with PyPy",
+    )
     def test_batch_span_processor_reset_timeout(self):
         """Test that the scheduled timeout is reset on cycles without spans"""
         spans_names_list = []
@@ -479,11 +483,6 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
             )
 
         span_processor.shutdown()
-
-    if python_implementation() == "PyPy":
-        test_batch_span_processor_reset_timeout = flaky(
-            max_runs=2, min_passes=1
-        )(test_batch_span_processor_reset_timeout)
 
     def test_batch_span_processor_parameters(self):
         # zero max_queue_size
