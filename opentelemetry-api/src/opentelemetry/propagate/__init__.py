@@ -143,9 +143,9 @@ for propagator in environ_propagators.split(","):
                     propagators.append(entry_point.load()())  # type: ignore
         else:
 
-            propagators.append(
-                next(
-                    iter(
+            propagators.append(  # type: ignore
+                next(  # type: ignore
+                    iter(  # type: ignore
                         entry_points(  # type: ignore
                             group="opentelemetry_propagator",
                             name=propagator,

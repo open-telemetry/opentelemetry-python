@@ -73,8 +73,8 @@ def _load_runtime_context(func: _F) -> _F:
                     else:
 
                         try:
-                            _RUNTIME_CONTEXT = next(
-                                iter(
+                            _RUNTIME_CONTEXT = next(  # type: ignore
+                                iter(  # type: ignore
                                     entry_points(  # type: ignore
                                         group="opentelemetry_context",
                                         name=configured_context,

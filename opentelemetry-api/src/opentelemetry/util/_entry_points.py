@@ -19,6 +19,6 @@ if version_info.minor == 7:
     # pylint: disable=import-error
     from importlib_metadata import entry_points, version  # type: ignore
 else:
-    from importlib.metadata import entry_points, version
+    from importlib.metadata import entry_points, version  # type: ignore
 
 __all__ = ["entry_points", "version"]
