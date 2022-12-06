@@ -522,15 +522,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
             index = self._mapping.map_to_index(value)
 
-            if (
-                index < buckets._index_start
-                and (buckets._index_end - index) >= self._max_size
-            ) or (
-                index > buckets._index_end
-                and (index - buckets._index_start) >= self._max_size
-            ):
-                raise Exception("Downscaling logic error")
-
         # 5. If the index is outside
         # [buckets._index_start, buckets._index_end] readjust the buckets
         # boundaries or add more buckets.
