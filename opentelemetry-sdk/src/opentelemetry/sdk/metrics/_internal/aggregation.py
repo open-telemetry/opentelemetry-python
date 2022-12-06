@@ -560,9 +560,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         """
 
         with self._lock:
-            if not any(self._negative.counts) and not any(
-                self._positive.counts
-            ):
+            if self._count == 0:
                 return None
 
             start_time_unix_nano = self._start_time_unix_nano
