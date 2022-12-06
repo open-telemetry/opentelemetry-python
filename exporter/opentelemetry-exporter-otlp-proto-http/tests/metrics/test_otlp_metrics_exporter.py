@@ -26,6 +26,9 @@ from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     DEFAULT_TIMEOUT,
     OTLPMetricExporter,
 )
+from opentelemetry.exporter.otlp.proto.http.metric_exporter.encoder import (
+    _ProtobufEncoder,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_COMPRESSION,
@@ -266,18 +269,17 @@ class TestOTLPMetricExporter(unittest.TestCase):
             exporter.export(self.metrics["sum_int"]),
             MetricExportResult.SUCCESS,
         )
-
-        serialized_data = exporter._translate_data(self.metrics["sum_int"])
+        serialized_data = _ProtobufEncoder.serialize(self.metrics["sum_int"])
         mock_post.assert_called_once_with(
             url=exporter._endpoint,
-            data=serialized_data.SerializeToString(),
+            data=serialized_data,
             verify=exporter._certificate_file,
             timeout=exporter._timeout,
         )
 
     @responses.activate
     @patch("opentelemetry.exporter.otlp.proto.http.exporter.backoff")
-    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.sleep")
+    @patch("opentelemetry.exporter.otlp.proto.http.exporter.sleep")
     def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
         # In backoff ~= 2.0.0 the first value yielded from expo is None.
         def generate_delays(*args, **kwargs):
