@@ -392,7 +392,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             raise Exception("size {max_size} is smaller than {min_max_size}")
 
         if max_size > self._max_max_size:
-            raise Exception("size {max_size} is larter than {max_max_size}")
+            raise Exception(f"size {max_size} is larger than {max_max_size}")
 
         self._max_size = max_size
 
