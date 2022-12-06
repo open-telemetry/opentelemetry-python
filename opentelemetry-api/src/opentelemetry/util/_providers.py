@@ -34,15 +34,13 @@ def _load_provider(
 
     try:
 
+        provider_name = cast(
+            str,
+            environ.get(provider_environment_variable, f"default_{provider}"),
+        )
+
         # FIXME remove when support for 3.9 is dropped.
         if version_info.minor in (8, 9):
-
-            provider_name = cast(
-                str,
-                environ.get(
-                    provider_environment_variable, f"default_{provider}"
-                ),
-            )
 
             for entry_point in entry_points()[f"opentelemetry_{provider}"]:  # type: ignore
                 if entry_point.name == provider_name:  # type: ignore
@@ -55,13 +53,7 @@ def _load_provider(
                 iter(  # type: ignore
                     entry_points(  # type: ignore
                         group=f"opentelemetry_{provider}",
-                        name=cast(
-                            str,
-                            environ.get(
-                                provider_environment_variable,
-                                f"default_{provider}",
-                            ),
-                        ),
+                        name=provider_name,
                     )
                 )
             ).load()(),
