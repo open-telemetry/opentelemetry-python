@@ -63,17 +63,8 @@ def _load_runtime_context(func: _F) -> _F:
                     OTEL_PYTHON_CONTEXT, default_context
                 )  # type: str
                 try:
-                    # FIXME Remove when support for 3.7 is dropped.
-                    if version_info.minor == 7:
-                        for entry_point in entry_points(
-                            group="opentelemetry_context",
-                            name=configured_context
-                        ):  # type: ignore
-                            _RUNTIME_CONTEXT = entry_point.load()()  # type: ignore
-                            break
-
                     # FIXME Remove when support for 3.9 is dropped.
-                    elif version_info.minor <= 9:
+                    if version_info.minor == 8 or version_info.minor == 9:
                         for entry_point in entry_points()[  # type: ignore
                             "opentelemetry_context"
                         ]:
@@ -86,10 +77,24 @@ def _load_runtime_context(func: _F) -> _F:
                                 f" {configured_context}"
                             )
                     else:
-                        _RUNTIME_CONTEXT = entry_points(  # type: ignore
-                            group="opentelemetry_context",
-                            name=configured_context,
-                        )[0].load()()
+
+                        try:
+                            _RUNTIME_CONTEXT = next(
+                                iter(
+                                    entry_points(  # type: ignore
+                                        group="opentelemetry_context",
+                                        name=configured_context,
+                                    )
+                                )
+                            ).load()()
+
+                        except StopIteration:
+
+                            raise Exception(
+                                f"No entry point found for configured_context:"
+                                f" {configured_context}"
+                            )
+
                 except Exception:  # pylint: disable=broad-except
                     logger.exception(
                         "Failed to load context: %s", configured_context
