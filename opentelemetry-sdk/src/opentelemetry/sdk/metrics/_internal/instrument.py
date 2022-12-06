@@ -212,28 +212,6 @@ class Histogram(_Synchronous, APIHistogram):
         )
 
 
-class ExponentialHistogram(_Synchronous, APIHistogram):
-    def __new__(cls, *args, **kwargs):
-        if cls is ExponentialHistogram:
-            raise TypeError(
-                "ExponentialHistogram must be instantiated via a meter."
-            )
-        return super().__new__(cls)
-
-    def record(
-        self, amount: Union[int, float], attributes: Dict[str, str] = None
-    ):
-        if amount < 0:
-            _logger.warning(
-                "Record amount must be non-negative on Histogram %s.",
-                self.name,
-            )
-            return
-        self._measurement_consumer.consume_measurement(
-            Measurement(amount, self, attributes)
-        )
-
-
 class ObservableGauge(_Asynchronous, APIObservableGauge):
     def __new__(cls, *args, **kwargs):
         if cls is ObservableGauge:
