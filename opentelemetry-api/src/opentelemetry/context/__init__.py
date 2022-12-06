@@ -28,7 +28,7 @@ else:
     from importlib.metadata import entry_points
 
 # pylint: disable=wrong-import-position
-from opentelemetry.context.context import Context, _RuntimeContext
+from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_CONTEXT
 
 logger = logging.getLogger(__name__)
