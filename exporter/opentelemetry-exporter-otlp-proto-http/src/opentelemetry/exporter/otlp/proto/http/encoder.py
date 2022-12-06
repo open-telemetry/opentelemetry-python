@@ -15,15 +15,15 @@
 from abc import ABC, abstractstaticmethod
 from typing import Generic, Sequence, TypeVar
 
-SDKDataT = TypeVar("SDKDataT")
-ExportServiceRequestT = TypeVar("ExportServiceRequestT")
+_SDKDataT = TypeVar("_SDKDataT")
+_ExportServiceRequestT = TypeVar("_ExportServiceRequestT")
 
 
-class _ProtobufEncoderMixin(ABC, Generic[SDKDataT, ExportServiceRequestT]):
+class _ProtobufEncoderMixin(ABC, Generic[_SDKDataT, _ExportServiceRequestT]):
     @classmethod
-    def serialize(cls, sdk_data: Sequence[SDKDataT]) -> str:
+    def serialize(cls, sdk_data: Sequence[_SDKDataT]) -> str:
         return cls.encode(sdk_data).SerializeToString()
 
     @abstractstaticmethod
-    def encode(sdk_data: Sequence[SDKDataT]) -> ExportServiceRequestT:
+    def encode(sdk_data: Sequence[_SDKDataT]) -> _ExportServiceRequestT:
         pass

@@ -35,8 +35,8 @@ from opentelemetry.sdk.environment_variables import (
 
 _logger = logging.getLogger(__name__)
 
-SDKDataT = TypeVar("SDKDataT")
-ExportResultT = TypeVar("ExportResultT")
+_SDKDataT = TypeVar("_SDKDataT")
+_ExportResultT = TypeVar("_ExportResultT")
 
 
 DEFAULT_COMPRESSION = Compression.NoCompression
@@ -56,7 +56,7 @@ def _expo(*args, **kwargs):
     return gen
 
 
-class _OTLPExporterMixin(ABC, Generic[SDKDataT, ExportResultT]):
+class _OTLPExporterMixin(ABC, Generic[_SDKDataT, _ExportResultT]):
 
     _MAX_RETRY_TIMEOUT = 64
 
@@ -111,9 +111,9 @@ class _OTLPExporterMixin(ABC, Generic[SDKDataT, ExportResultT]):
 
     def export(
         self,
-        data: Sequence[SDKDataT],
+        data: Sequence[_SDKDataT],
         **kwargs,
-    ) -> ExportResultT:
+    ) -> _ExportResultT:
         # After the call to Shutdown subsequent calls to Export are
         # not allowed and should return a Failure result.
         if self._shutdown:

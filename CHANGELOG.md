@@ -21,8 +21,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3038](https://github.com/open-telemetry/opentelemetry-python/pull/3038))
 - Fix: Avoid generator in metrics _ViewInstrumentMatch.collect()
   ([#3035](https://github.com/open-telemetry/opentelemetry-python/pull/3035)
-- Abstract out OTLP http logic
-  ([#3048]https://github.com/open-telemetry/opentelemetry-python/pull/3048)
 
 ## Version 1.14.0/0.35b0 (2022-11-04)
 
