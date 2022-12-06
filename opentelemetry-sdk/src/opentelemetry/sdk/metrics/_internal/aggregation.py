@@ -389,7 +389,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         # max_size is the maximum capacity of the positive and negative
         # buckets.
         if max_size < self._min_max_size:
-            raise Exception("size {max_size} is smaller than {min_max_size}")
+            raise Exception(f"size {max_size} is smaller than {min_max_size}")
 
         if max_size > self._max_max_size:
             raise Exception(f"size {max_size} is larger than {max_max_size}")
