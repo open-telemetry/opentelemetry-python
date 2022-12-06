@@ -12,17 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
-import socket
-import time
-from sys import version_info
-
-# FIXME remove when support for 3.7 is dropped.
-if version_info.minor == 7:
-    # pylint: disable=import-error
-    from importlib_metadata import version
-else:
-    from importlib.metadata import version
+from os import getpid
+from socket import gethostname
+from time import time
 
 # pylint: disable=wrong-import-position
 from google.protobuf.timestamp_pb2 import Timestamp
@@ -33,6 +25,7 @@ from opentelemetry.exporter.opencensus.version import (
     __version__ as opencensusexporter_exporter_version,
 )
 from opentelemetry.trace import SpanKind
+from opentelemetry.util._entry_points import version
 
 OPENTELEMETRY_VERSION = version("opentelemetry-api")
 
@@ -94,11 +87,9 @@ def get_node(service_name, host_name):
     """
     return common_pb2.Node(
         identifier=common_pb2.ProcessIdentifier(
-            host_name=socket.gethostname() if host_name is None else host_name,
-            pid=os.getpid(),
-            start_timestamp=proto_timestamp_from_time_ns(
-                int(time.time() * 1e9)
-            ),
+            host_name=gethostname() if host_name is None else host_name,
+            pid=getpid(),
+            start_timestamp=proto_timestamp_from_time_ns(int(time() * 1e9)),
         ),
         library_info=common_pb2.LibraryInfo(
             language=common_pb2.LibraryInfo.Language.Value("PYTHON"),
