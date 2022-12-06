@@ -19,13 +19,7 @@ from functools import wraps
 from os import environ
 from uuid import uuid4
 from sys import version_info
-
-# FIXME remove when support for 3.7 is dropped.
-if version_info.minor == 7:
-    # pylint: disable=import-error
-    from importlib_metadata import entry_points  # type: ignore
-else:
-    from importlib.metadata import entry_points
+from opentelemetry.util._entry_points import entry_points
 
 # pylint: disable=wrong-import-position
 from opentelemetry.context.context import Context

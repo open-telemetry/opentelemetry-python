@@ -23,39 +23,19 @@ from opentelemetry.util import _providers
 
 class Test_Providers(TestCase):
 
-    # FIXME Remove when support for 3.7 is dropped.
-    if version_info.minor == 7:
-        entry_points_path = "importlib_metadata.entry_points"
-    else:
-        entry_points_path = "importlib.metadata.entry_points"
-
     @patch.dict(
         environ,
         {  # type: ignore
             "provider_environment_variable": "mock_provider_environment_variable"
         },
     )
-    @patch(entry_points_path)
+    @patch("opentelemetry.util._entry_points.entry_points")
     def test__providers(self, mock_entry_points):
 
         reload(_providers)
 
-        # FIXME Remove when support for 3.7 is dropped.
-        if version_info.minor == 7:
-
-            mock_a = Mock()
-            mock_a.configure_mock(
-                **{
-                    "name": "mock_provider_environment_variable",
-                    "group": "opentelemetry_provider",
-                    "load.return_value": Mock(**{"return_value": "a"}),
-                }
-            )
-
-            mock_entry_points.configure_mock(**{"return_value": (mock_a,)})
-
         # FIXME Remove when support for 3.9 is dropped.
-        elif version_info.minor <= 9:
+        if version_info.minor in (8, 9):
 
             mock_a = Mock()
             mock_a.configure_mock(

@@ -76,13 +76,8 @@ from sys import version_info
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.propagators import composite, textmap
+from opentelemetry.util._entry_points import entry_points
 
-# FIXME remove when support for 3.7 is dropped.
-if version_info.minor == 7:
-    # pylint: disable=import-error
-    from importlib_metadata import entry_points  # type: ignore
-else:
-    from importlib.metadata import entry_points
 
 logger = getLogger(__name__)
 

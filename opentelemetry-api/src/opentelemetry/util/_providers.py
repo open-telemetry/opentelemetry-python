@@ -16,13 +16,7 @@ from logging import getLogger
 from os import environ
 from sys import version_info
 from typing import TYPE_CHECKING, TypeVar, cast
-
-# FIXME remove when support for 3.7 is dropped.
-if version_info.minor == 7:
-    # pylint: disable=import-error
-    from importlib_metadata import entry_points  # type: ignore
-else:
-    from importlib.metadata import entry_points
+from opentelemetry.util._entry_points import entry_points
 
 if TYPE_CHECKING:
     from opentelemetry.metrics import MeterProvider
@@ -40,7 +34,7 @@ def _load_provider(
     try:
 
         # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor <= 9:
+        if version_info.minor in (8, 9):
 
             provider_name = cast(
                 str,
@@ -48,20 +42,6 @@ def _load_provider(
                     provider_environment_variable, f"default_{provider}"
                 ),
             )
-
-        # FIXME remove when support for 3.7 is dropped.
-        if version_info.minor == 7:
-
-            for entry_point in entry_points():  # type: ignore
-                if (
-                    entry_point.name == provider_name  # type: ignore
-                    and entry_point.group == f"opentelemetry_{provider}"  # type: ignore
-                ):
-                    return cast(Provider, entry_point.load()())  # type: ignore
-            raise Exception(f"Provider {provider_name} not found")
-
-        # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor <= 9:
 
             for entry_point in entry_points()[f"opentelemetry_{provider}"]:  # type: ignore
                 if entry_point.name == provider_name:  # type: ignore

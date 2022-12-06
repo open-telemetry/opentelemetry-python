@@ -52,15 +52,9 @@ class TestPropagators(TestCase):
 
         reload(opentelemetry.propagate)
 
-    # FIXME Remove when support for 3.7 is dropped.
-    if version_info.minor == 7:
-        entry_points_path = "importlib_metadata.entry_points"
-    else:
-        entry_points_path = "importlib.metadata.entry_points"
-
     @patch.dict(environ, {OTEL_PROPAGATORS: "a,  b,   c  "})
     @patch("opentelemetry.propagators.composite.CompositePropagator")
-    @patch(entry_points_path)
+    @patch("opentelemetry.util._entry_points.entry_points")
     def test_non_default_propagators(
         self, mock_entry_points, mock_compositehttppropagator
     ):
