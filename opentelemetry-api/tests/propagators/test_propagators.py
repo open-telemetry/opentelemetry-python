@@ -65,40 +65,8 @@ class TestPropagators(TestCase):
         self, mock_entry_points, mock_compositehttppropagator
     ):
 
-        # FIXME Remove when support for 3.7 is dropped.
-        if version_info.minor == 7:
-
-            mock_a = Mock()
-            mock_a.configure_mock(
-                **{
-                    "name": "a",
-                    "group": "opentelemetry_propagator",
-                    "load.return_value": Mock(**{"return_value": "a"}),
-                }
-            )
-            mock_b = Mock()
-            mock_b.configure_mock(
-                **{
-                    "name": "b",
-                    "group": "opentelemetry_propagator",
-                    "load.return_value": Mock(**{"return_value": "b"}),
-                }
-            )
-            mock_c = Mock()
-            mock_c.configure_mock(
-                **{
-                    "name": "c",
-                    "group": "opentelemetry_propagator",
-                    "load.return_value": Mock(**{"return_value": "c"}),
-                }
-            )
-
-            mock_entry_points.configure_mock(
-                **{"return_value": (mock_a, mock_b, mock_c)}
-            )
-
         # FIXME Remove when support for 3.9 is dropped.
-        elif version_info.minor <= 9:
+        if version_info.minor in (8, 9):
 
             mock_a = Mock()
             mock_a.configure_mock(

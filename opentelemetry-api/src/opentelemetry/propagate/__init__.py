@@ -138,21 +138,10 @@ environ_propagators = environ.get(
 
 for propagator in environ_propagators.split(","):
     propagator = propagator.strip()
+
     try:
-
-        # FIXME: Remove when support for 3.7 is dropped.
-        if version_info.minor == 7:
-
-            for entry_point in entry_points():  # type: ignore
-                if (
-                    entry_point.group == "opentelemetry_propagator"  # type: ignore
-                    and entry_point.name == propagator  # type: ignore
-                ):
-                    propagators.append(entry_point.load()())  # type: ignore
-
-        # FIXME: Remove when support for 3.9 is dropped.
-        elif version_info.minor <= 9:
-
+        # FIXME Remove when support for 3.9 is dropped.
+        if version_info.minor in (8, 9):
             for entry_point in entry_points().get(  # type: ignore
                 "opentelemetry_propagator", []
             ):
@@ -160,17 +149,23 @@ for propagator in environ_propagators.split(","):
                     propagators.append(entry_point.load()())  # type: ignore
         else:
 
-            propagators.append(  # type: ignore
-                entry_points(  # type: ignore
-                    group="opentelemetry_propagator", name=propagator
-                )[0].load()()
+            propagators.append(
+                next(
+                    iter(
+                        entry_points(  # type: ignore
+                            group="opentelemetry_propagator",
+                            name=propagator,
+                        )
+                    )
+                ).load()()
             )
 
     except Exception:  # pylint: disable=broad-except
         logger.exception(
-            "Failed to load configured propagator `%s`", propagator
+            "Failed to load configured propagator: %s", propagator
         )
         raise
+
 
 _HTTP_TEXT_FORMAT = composite.CompositePropagator(propagators)  # type: ignore
 
