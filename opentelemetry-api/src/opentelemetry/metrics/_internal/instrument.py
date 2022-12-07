@@ -61,18 +61,24 @@ CallbackT = Union[
 ]
 
 
+# SPEC: Instruments have kind.
 class Instrument(ABC):
     """Abstract class that serves as base for all instruments."""
 
     @abstractmethod
     def __init__(
         self,
+        # SPEC: Instruments have `name`
         name: str,
+        # SPEC: Instruments have an optional unit of measure.
         unit: str = "",
+        # SPEC: Instruments have an optional description.
         description: str = "",
     ) -> None:
         pass
 
+    # SPEC: Instrument names conform to the specified syntax.
+    # SPEC: Instrument units conform to the specified syntax.
     @staticmethod
     def _check_name_unit_description(
         name: str, unit: str, description: str
@@ -150,6 +156,9 @@ class Synchronous(Instrument):
     """Base class for all synchronous instruments"""
 
 
+# SPEC: The API for `AsynchronousCounter` accepts a callback.
+# SPEC: The API for `AsynchronousUpDownCounter` accepts a callback.
+# SPEC: The API for `AsynchronousGauge` accepts a callback.
 class Asynchronous(Instrument):
     """Base class for all asynchronous instruments"""
 
@@ -167,6 +176,10 @@ class Asynchronous(Instrument):
 class Counter(Synchronous):
     """A Counter is a synchronous `Instrument` which supports non-negative increments."""
 
+    # SPEC: `Counter` has an `add` method.
+    # SPEC: The `add` method returns no (or dummy) value.
+    # SPEC: The `add` method accepts optional attributes.
+    # SPEC: The `add` method accepts the increment amount.
     @abstractmethod
     def add(
         self,
@@ -211,6 +224,10 @@ class _ProxyCounter(_ProxyInstrument[Counter], Counter):
 class UpDownCounter(Synchronous):
     """An UpDownCounter is a synchronous `Instrument` which supports increments and decrements."""
 
+    # SPEC: `UpDownCounter` has an `add` method.
+    # SPEC: The `add` method returns no (or dummy) value.
+    # SPEC: The `add` method accepts optional attributes.
+    # SPEC: The `add` method accepts the increment amount.
     @abstractmethod
     def add(
         self,
@@ -322,6 +339,10 @@ class Histogram(Synchronous):
     histograms, summaries, and percentile.
     """
 
+    # SPEC: `Histogram` has a `record` method.
+    # SPEC: The `record` method return no (or dummy) value.
+    # SPEC: The `record` method accepts optional attributes.
+    # SPEC: The `record` method accepts a value.
     @abstractmethod
     def record(
         self,

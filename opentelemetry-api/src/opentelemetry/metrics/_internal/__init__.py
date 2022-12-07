@@ -87,9 +87,12 @@ _ProxyInstrumentT = Union[
 
 class MeterProvider(ABC):
     """
-    MeterProvider is the entry point of the API. It provides access to `Meter` instances.
+    MeterProvider is the entry point of the API. It provides access to `Meter`
+    instances.
     """
 
+    # SPEC: `MeterProvider` provides a way to get a `Meter`.
+    # SPEC: `get_meter` accepts name, `version` and `schema_url`.
     @abstractmethod
     def get_meter(
         self,
@@ -125,9 +128,12 @@ class MeterProvider(ABC):
         """
 
 
+# SPEC: It is possible to create any number of `MeterProvider`s.
 class NoOpMeterProvider(MeterProvider):
     """The default MeterProvider used when no MeterProvider implementation is available."""
 
+    # SPEC: `MeterProvider` provides a way to get a `Meter`.
+    # SPEC: `get_meter` accepts name, `version` and `schema_url`.
     def get_meter(
         self,
         name: str,
@@ -145,6 +151,8 @@ class _ProxyMeterProvider(MeterProvider):
         self._meters: List[_ProxyMeter] = []
         self._real_meter_provider: Optional[MeterProvider] = None
 
+    # SPEC: `MeterProvider` provides a way to get a `Meter`.
+    # SPEC: `get_meter` accepts name, `version` and `schema_url`.
     def get_meter(
         self,
         name: str,
@@ -209,6 +217,11 @@ class Meter(ABC):
         """
         return self._schema_url
 
+    # SPEC: A valid instrument MUST be created and warning SHOULD be emitted
+    # when multiple instruments are registered under the same `Meter` using the
+    # same `name`.
+    # SPEC: It is possible to register two instruments with same `name` under
+    # different `Meter`s.
     def _is_instrument_registered(
         self, name: str, type_: type, unit: str, description: str
     ) -> Tuple[bool, str]:
@@ -235,6 +248,7 @@ class Meter(ABC):
 
         return (result, instrument_id)
 
+    # SPEC: The meter provides functions to create a new `Counter`.
     @abstractmethod
     def create_counter(
         self,
@@ -251,6 +265,7 @@ class Meter(ABC):
             description: A description for this instrument and what it measures.
         """
 
+    # SPEC: The meter provides functions to create a new `UpDownCounter`.
     @abstractmethod
     def create_up_down_counter(
         self,
@@ -267,6 +282,7 @@ class Meter(ABC):
             description: A description for this instrument and what it measures.
         """
 
+    # SPEC: The meter provides functions to create a new `AsynchronousCounter`.
     @abstractmethod
     def create_observable_counter(
         self,
@@ -364,6 +380,7 @@ class Meter(ABC):
             description: A description for this instrument and what it measures.
         """
 
+    # SPEC: The meter provides functions to create a new `AsynchronousGauge`.
     @abstractmethod
     def create_histogram(
         self,
@@ -400,6 +417,7 @@ class Meter(ABC):
             description: A description for this instrument and what it measures.
         """
 
+    # SPEC: The meter provides functions to create a new `AsynchronousUpDownCounter`.
     @abstractmethod
     def create_observable_up_down_counter(
         self,
@@ -450,6 +468,10 @@ class _ProxyMeter(Meter):
             for instrument in self._instruments:
                 instrument.on_meter_set(real_meter)
 
+    # SPEC: The meter provides functions to create a new `Counter`.
+    # SPEC: `create_counter` returns a `Counter`.
+    # SPEC: The API for `Counter` accepts the name, unit and description of the
+    # instrument.
     def create_counter(
         self,
         name: str,
@@ -463,6 +485,10 @@ class _ProxyMeter(Meter):
             self._instruments.append(proxy)
             return proxy
 
+    # SPEC: The meter provides functions to create a new `UpDownCounter`.
+    # SPEC: `create_up_down_counter` returns an `UpDownCounter`.
+    # SPEC: The API for `UpDownCounter` accepts the name, unit and description
+    # of the instrument.
     def create_up_down_counter(
         self,
         name: str,
@@ -478,6 +504,11 @@ class _ProxyMeter(Meter):
             self._instruments.append(proxy)
             return proxy
 
+    # SPEC: The meter provides functions to create a new `AsynchronousCounter`.
+    # SPEC: `create_asynchronous_counter` creates an `AsynchronousCounter`.
+    # SPEC: The API for `AsynchronousCounter` accepts the name, unit and
+    # description of the instrument.
+    # SPEC: The API for `AsynchronousCounter` accepts a callback.
     def create_observable_counter(
         self,
         name: str,
@@ -496,6 +527,8 @@ class _ProxyMeter(Meter):
             self._instruments.append(proxy)
             return proxy
 
+    # SPEC: The meter provides functions to create a new `AsynchronousGauge`.
+    # SPEC: The API for `Histogram` accepts the name, unit and description of the instrument.
     def create_histogram(
         self,
         name: str,
@@ -511,6 +544,8 @@ class _ProxyMeter(Meter):
             self._instruments.append(proxy)
             return proxy
 
+    # SPEC: `create_asynchronous_gauge` creates an `Asynchronous Gauge`.
+    # SPEC: The API for `AsynchronousGauge` accepts the name, unit and description of the instrument.
     def create_observable_gauge(
         self,
         name: str,
@@ -529,6 +564,10 @@ class _ProxyMeter(Meter):
             self._instruments.append(proxy)
             return proxy
 
+    # SPEC: The meter provides functions to create a new `AsynchronousUpDownCounter`.
+    # SPEC: `create_asynchronous_up_down_counter` creates an `AsynchronousUpDownCounter`.
+    # SPEC: The API for `AsynchronousUpDownCounter` accepts the name, unit and description of the instrument.
+    # SPEC: The API for `AsynchronousUpDownCounter` accepts a callback.
     def create_observable_up_down_counter(
         self,
         name: str,
@@ -557,6 +596,7 @@ class NoOpMeter(Meter):
     All operations are no-op.
     """
 
+    # SPEC: The meter provides functions to create a new `Counter`.
     def create_counter(
         self,
         name: str,
@@ -578,6 +618,7 @@ class NoOpMeter(Meter):
             )
         return NoOpCounter(name, unit=unit, description=description)
 
+    # SPEC: The meter provides functions to create a new `UpDownCounter`.
     def create_up_down_counter(
         self,
         name: str,
@@ -601,6 +642,7 @@ class NoOpMeter(Meter):
             )
         return NoOpUpDownCounter(name, unit=unit, description=description)
 
+    # SPEC: The meter provides functions to create a new `AsynchronousCounter`.
     def create_observable_counter(
         self,
         name: str,
@@ -630,6 +672,8 @@ class NoOpMeter(Meter):
             description=description,
         )
 
+    # SPEC: The meter provides functions to create a new `AsynchronousGauge`.
+    # SPEC: `create_histogram` returns a `Histogram`.
     def create_histogram(
         self,
         name: str,
@@ -680,6 +724,7 @@ class NoOpMeter(Meter):
             description=description,
         )
 
+    # SPEC: The meter provides functions to create a new `AsynchronousUpDownCounter`.
     def create_observable_up_down_counter(
         self,
         name: str,
@@ -715,6 +760,7 @@ _METER_PROVIDER: Optional[MeterProvider] = None
 _PROXY_METER_PROVIDER = _ProxyMeterProvider()
 
 
+# SPEC: `get_meter` accepts name, `version` and `schema_url`.
 def get_meter(
     name: str,
     version: str = "",
@@ -746,6 +792,7 @@ def _set_meter_provider(meter_provider: MeterProvider, log: bool) -> None:
         _logger.warning("Overriding of current MeterProvider is not allowed")
 
 
+# SPEC: The API provides a way to set and get a global default `MeterProvider`.
 def set_meter_provider(meter_provider: MeterProvider) -> None:
     """Sets the current global :class:`~.MeterProvider` object.
 
@@ -755,6 +802,7 @@ def set_meter_provider(meter_provider: MeterProvider) -> None:
     _set_meter_provider(meter_provider, log=True)
 
 
+# SPEC: The API provides a way to set and get a global default `MeterProvider`.
 def get_meter_provider() -> MeterProvider:
     """Gets the current global :class:`~.MeterProvider` object."""
 

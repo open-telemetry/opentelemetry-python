@@ -81,6 +81,7 @@ class View:
 
     _default_aggregation = DefaultAggregation()
 
+    # SPEC: The `View` instrument selection criteria is as specified.
     def __init__(
         self,
         instrument_type: Optional[Type[Instrument]] = None,
@@ -88,6 +89,8 @@ class View:
         meter_name: Optional[str] = None,
         meter_version: Optional[str] = None,
         meter_schema_url: Optional[str] = None,
+        # SPEC: The name of the `View` can be specified.
+        # SPEC: The `View` allows configuring the name description, attributes keys and aggregation of the resulting metric stream.
         name: Optional[str] = None,
         description: Optional[str] = None,
         attribute_keys: Optional[Set[str]] = None,
@@ -139,6 +142,8 @@ class View:
             if not isinstance(instrument, self._instrument_type):
                 return False
 
+        # SPEC: The `View` instrument selection criteria supports wildcards.
+        # SPEC: The `View` instrument selection criteria supports the match-all wildcard.
         if self._instrument_name is not None:
             if not fnmatch(instrument.name, self._instrument_name):
                 return False

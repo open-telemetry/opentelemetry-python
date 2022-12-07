@@ -94,6 +94,8 @@ class MetricExporter(ABC):
         self._preferred_temporality = preferred_temporality
         self._preferred_aggregation = preferred_aggregation
 
+    # SPEC: The metrics Exporter `export` function receives a batch of metrics.
+    # SPEC: The metrics Exporter `export` function returns `Success` or `Failure`.
     @abstractmethod
     def export(
         self,
@@ -171,6 +173,8 @@ class ConsoleMetricExporter(MetricExporter):
 
 class MetricReader(ABC):
     # pylint: disable=too-many-branches
+    # SPEC: The metrics Reader implementation supports configuring the default aggregation on the basis of instrument kind.
+    # SPEC: The metrics Reader implementation supports configuring the default temporality on the basis of instrument kind.
     """
     Base class for all metric readers
 

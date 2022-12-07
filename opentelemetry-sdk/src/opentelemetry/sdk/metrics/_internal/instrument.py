@@ -106,6 +106,9 @@ class _Asynchronous:
 
             for callback in callbacks:
 
+                # SPEC: There is a way to pass state to the callback.
+                # Callbacks can be generators or functions, both natively
+                # support having state passed to them via closures.
                 if isinstance(callback, Generator):
 
                     # advance generator to it's first yield
@@ -150,6 +153,7 @@ class Counter(_Synchronous, APICounter):
     def add(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
+        # SPEC: The `add` method of `Counter` accepts only positive amounts.
         if amount < 0:
             _logger.warning(
                 "Add amount must be non-negative on Counter %s.", self.name
@@ -201,6 +205,7 @@ class Histogram(_Synchronous, APIHistogram):
     def record(
         self, amount: Union[int, float], attributes: Dict[str, str] = None
     ):
+        # SPEC: The `record` method of `Histogram` accepts only positive amounts.
         if amount < 0:
             _logger.warning(
                 "Record amount must be non-negative on Histogram %s.",

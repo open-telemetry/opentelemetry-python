@@ -59,6 +59,7 @@ class Meter(APIMeter):
 
     def __init__(
         self,
+        # SPEC: Associate `Meter` with `InstrumentationScope`.
         instrumentation_scope: InstrumentationScope,
         measurement_consumer: MeasurementConsumer,
     ):
@@ -102,6 +103,7 @@ class Meter(APIMeter):
             self._instrument_id_instrument[instrument_id] = instrument
             return instrument
 
+    # SPEC: The meter provides functions to create a new `UpDownCounter`.
     def create_up_down_counter(
         self, name, unit="", description=""
     ) -> APIUpDownCounter:
@@ -140,6 +142,7 @@ class Meter(APIMeter):
             self._instrument_id_instrument[instrument_id] = instrument
             return instrument
 
+    # SPEC: The meter provides functions to create a new `AsynchronousCounter`.
     def create_observable_counter(
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableCounter:
@@ -181,6 +184,7 @@ class Meter(APIMeter):
             self._instrument_id_instrument[instrument_id] = instrument
             return instrument
 
+    # SPEC: The meter provides functions to create a new `AsynchronousGauge`.
     def create_histogram(self, name, unit="", description="") -> APIHistogram:
 
         (
@@ -255,6 +259,7 @@ class Meter(APIMeter):
             self._instrument_id_instrument[instrument_id] = instrument
             return instrument
 
+    # SPEC: The meter provides functions to create a new `AsynchronousUpDownCounter`.
     def create_observable_up_down_counter(
         self, name, callbacks=None, unit="", description=""
     ) -> APIObservableUpDownCounter:
@@ -297,6 +302,7 @@ class Meter(APIMeter):
             return instrument
 
 
+# SPEC: It is possible to create any number of `MeterProvider`s.
 class MeterProvider(APIMeterProvider):
     r"""See `opentelemetry.metrics.MeterProvider`.
 
@@ -332,13 +338,16 @@ class MeterProvider(APIMeterProvider):
     _all_metric_readers_lock = Lock()
     _all_metric_readers = set()
 
+    # SPEC: Configuration is managed solely by the `MeterProvider`.
     def __init__(
         self,
         metric_readers: Sequence[
             "opentelemetry.sdk.metrics.export.MetricReader"
         ] = (),
+        # SPEC: `MeterProvider` allows a `Resource` to be specified.
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
+        # SPEC: There is a way to register `View`s with a `MeterProvider`.
         views: Sequence["opentelemetry.sdk.metrics.view.View"] = (),
     ):
         self._lock = Lock()
@@ -463,6 +472,8 @@ class MeterProvider(APIMeterProvider):
                 )
             )
 
+    # SPEC: `MeterProvider` provides a way to get a `Meter`.
+    # SPEC: `get_meter` accepts name, `version` and `schema_url`.
     def get_meter(
         self,
         name: str,
@@ -476,10 +487,15 @@ class MeterProvider(APIMeterProvider):
             )
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
+        # SPEC: When an invalid `name` is specified a working `Meter`
+        # implementation is returned as a fallback.
         if not name:
             _logger.warning("Meter name cannot be None or empty.")
+            # SPEC: The fallback `Meter` `name` property keeps its original
+            # invalid value.
             return NoOpMeter(name, version=version, schema_url=schema_url)
 
+        # SPEC: The supplied `name`, `version` and `schema_url` arguments passed to the `MeterProvider` are used to create an `InstrumentationScope` instance stored in the `Meter`.
         info = InstrumentationScope(name, version, schema_url)
         with self._meter_lock:
             if not self._meters.get(info):

@@ -83,6 +83,7 @@ class _DropAggregation(_Aggregation):
     def aggregate(self, measurement: Measurement) -> None:
         pass
 
+    # SPEC: The `Drop` aggregation drops all measurements and does not produce a metric stream.
     def collect(
         self,
         aggregation_temporality: AggregationTemporality,
@@ -116,6 +117,7 @@ class _SumAggregation(_Aggregation[Sum]):
                 self._value = 0
             self._value = self._value + measurement.value
 
+    # SPEC: The metrics Exporter has access to the aggregated metrics data (aggregated points, not raw measurements).
     def collect(
         self,
         aggregation_temporality: AggregationTemporality,
@@ -190,6 +192,7 @@ class _LastValueAggregation(_Aggregation[Gauge]):
         with self._lock:
             self._value = measurement.value
 
+    # SPEC: The metrics Exporter has access to the aggregated metrics data (aggregated points, not raw measurements).
     def collect(
         self,
         aggregation_temporality: AggregationTemporality,
@@ -265,6 +268,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         self._bucket_counts[bisect_left(self._boundaries, value)] += 1
 
+    # SPEC: The metrics Exporter has access to the aggregated metrics data (aggregated points, not raw measurements).
     def collect(
         self,
         aggregation_temporality: AggregationTemporality,
@@ -433,6 +437,8 @@ class DefaultAggregation(Aggregation):
         raise Exception(f"Invalid instrument type {type(instrument)} found")
 
 
+# SPEC: The explicit bucket `Histogram` aggregation is available.
+# SPEC: The explicit bucket `Histogram` aggregation performs as specified.
 class ExplicitBucketHistogramAggregation(Aggregation):
     """This aggregation informs the SDK to collect:
 
@@ -485,6 +491,8 @@ class ExplicitBucketHistogramAggregation(Aggregation):
         )
 
 
+# SPEC: The `Sum` aggregation is available.
+# SPEC: The `Sum` aggregation performs as specified.
 class SumAggregation(Aggregation):
     """This aggregation informs the SDK to collect:
 
@@ -512,6 +520,8 @@ class SumAggregation(Aggregation):
         )
 
 
+# SPEC: The `LastValue` aggregation is available.
+# SPEC: The `LastValue` aggregation performs as specified.
 class LastValueAggregation(Aggregation):
     """
     This aggregation informs the SDK to collect:
@@ -529,6 +539,7 @@ class LastValueAggregation(Aggregation):
         return _LastValueAggregation(attributes)
 
 
+# SPEC: The `Drop` aggregation is available.
 class DropAggregation(Aggregation):
     """Using this aggregation will make all measurements be ignored."""
 

@@ -97,6 +97,7 @@ class MetricReaderStorage:
             # if no view targeted the instrument, use the default
             if not view_instrument_matches:
                 view_instrument_matches.append(
+                    # SPEC: The SDK allows more than one `View` to be specified per instrument.
                     _ViewInstrumentMatch(
                         view=_DEFAULT_VIEW,
                         instrument=instrument,
@@ -220,6 +221,7 @@ class MetricReaderStorage:
         return MetricsData(
             resource_metrics=[
                 ResourceMetrics(
+                    # SPEC: A specified `Resource` can be associated with all the produced metrics from any `Meter` from the `MeterProvider`.
                     resource=self._sdk_config.resource,
                     scope_metrics=list(
                         instrumentation_scope_scope_metrics.values()

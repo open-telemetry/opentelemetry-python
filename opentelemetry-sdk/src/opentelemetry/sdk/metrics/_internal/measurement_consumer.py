@@ -114,8 +114,10 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
                         timeout_millis=remaining_time
                     )
 
+                # SPEC: The callback function reports `Measurement`s.
                 measurements = async_instrument.callback(callback_options)
                 if time_ns() >= deadline_ns:
+                    # SPEC: The callback function of an `Asynchronous` instrument does not block indefinitely.
                     raise MetricsTimeoutError(
                         "Timed out while executing callback"
                     )
