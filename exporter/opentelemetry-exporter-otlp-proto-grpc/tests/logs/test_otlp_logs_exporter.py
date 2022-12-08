@@ -191,8 +191,8 @@ class TestOTLPLogExporter(TestCase):
         "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
     )
     def test_env_variables(self, mock_exporter_mixin):
-        OTLPLogExporter()
-
+        print("*************************")
+        print(mock_exporter_mixin.call_args_list)
         self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
         _, kwargs = mock_exporter_mixin.call_args_list[0]
 
