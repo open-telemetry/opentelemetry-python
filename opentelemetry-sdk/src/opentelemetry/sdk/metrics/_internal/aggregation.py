@@ -572,11 +572,11 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             if min_ == inf:
                 min_ = None
 
-        if self._count == self._zero_count:
-            scale = 0
+            if self._count == self._zero_count:
+                scale = 0
 
-        else:
-            scale = self._mapping.scale
+            else:
+                scale = self._mapping.scale
 
         current_point = ExponentialHistogramDataPoint(
             attributes=self._attributes,
