@@ -505,9 +505,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
                 change += 1
 
-            if change < 0:
-                raise Exception(f"Impossible change of scale: {change}")
-
             new_scale = self._mapping.scale - change
 
             self._positive.downscale(change)
