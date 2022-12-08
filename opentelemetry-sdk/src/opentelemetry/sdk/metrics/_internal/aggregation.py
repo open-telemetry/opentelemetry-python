@@ -635,14 +635,14 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             sum_ = current_point.sum - self._previous_point.sum
 
             negative_counts = [
-                curr_count + prev_count
+                curr_count - prev_count
                 for curr_count, prev_count in zip(
                     current_point.negative.bucket_counts,
                     self._previous_point.negative.bucket_counts,
                 )
             ]
             positive_counts = [
-                curr_count + prev_count
+                curr_count - prev_count
                 for curr_count, prev_count in zip(
                     current_point.positive.bucket_counts,
                     self._previous_point.positive.bucket_counts,
