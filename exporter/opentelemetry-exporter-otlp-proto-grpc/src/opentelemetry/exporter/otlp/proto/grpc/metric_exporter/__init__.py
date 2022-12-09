@@ -47,7 +47,6 @@ from opentelemetry.sdk.metrics import (
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
-    ExponentialHistogram,
 )
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -137,7 +136,6 @@ class OTLPMetricExporter(
                 ObservableCounter: AggregationTemporality.DELTA,
                 ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
-                ExponentialHistogram: AggregationTemporality.DELTA,
             }
         else:
             instrument_class_temporality = {

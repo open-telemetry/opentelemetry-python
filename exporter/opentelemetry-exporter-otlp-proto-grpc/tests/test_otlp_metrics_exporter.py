@@ -56,7 +56,6 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.metrics import (
     Counter,
-    ExponentialHistogram,
     Histogram,
     ObservableCounter,
     ObservableGauge,
@@ -413,10 +412,6 @@ class TestOTLPMetricExporter(TestCase):
         self.assertEqual(
             exporter._preferred_temporality[ObservableGauge],
             AggregationTemporality.CUMULATIVE,
-        )
-        self.assertEqual(
-            exporter._preferred_temporality[ExponentialHistogram],
-            AggregationTemporality.DELTA,
         )
 
     @patch.dict(
