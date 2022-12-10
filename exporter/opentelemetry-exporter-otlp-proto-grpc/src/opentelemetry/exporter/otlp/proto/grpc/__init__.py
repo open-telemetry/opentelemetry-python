@@ -26,3 +26,7 @@ You can configure all protobuf gRPC exporters, with the following environment va
 - :envvar:`OTEL_EXPORTER_OTLP_CERTIFICATE`
 
 """
+from .version import __version__
+
+_USER_AGENT_HEADER_VALUE = "OTel OTLP Exporter Python/" + __version__
+_OTLP_GRPC_HEADERS = [("user-agent", _USER_AGENT_HEADER_VALUE)]

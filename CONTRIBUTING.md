@@ -25,7 +25,7 @@ Please take a look at this list first, your contributions may belong in one of t
 
 # Find the right branch
 
-The default branch for this repo is `main`. Changes that pertain to `metrics` go into the `metrics` branch. Any changes that pertain to components marked as `stable` in the [specifications](https://github.com/open-telemetry/opentelemetry-specification) or anything that is not `metrics` related go into this branch.
+The default branch for this repo is `main`. All feature work is accomplished on branches from `main`.
 
 ## Find a Buddy and get Started Quickly!
 
@@ -47,11 +47,13 @@ during their normal contribution hours.
 
 This project uses [tox](https://tox.readthedocs.io) to automate
 some aspects of development, including testing against multiple Python versions.
-To install `tox`, run:
+To install `tox`, run[^1]:
 
 ```console
-$ pip install tox
+$ pip install tox==3.27.1
 ```
+
+[^1]: Right now we are experiencing issues with `tox==4.x.y`, so we recommend you use this version.
 
 You can run `tox` with the following arguments:
 

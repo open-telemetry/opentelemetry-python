@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: 66edf69811e142c397d8500cafe6eddeb5565d6e
+  CONTRIB_REPO_SHA: ce5dac763790203d68217cd3870b6be5517692fe
   # This is needed because we do not clone the core repo in contrib builds anymore.
   # When running contrib builds as part of core builds, we use actions/checkout@v2 which
   # does not set an environment variable (simply just runs tox), which is different when
@@ -46,7 +46,7 @@ jobs:
           python-version: ${{ env[matrix.python-version] }}
           architecture: 'x64'
       - name: Install tox
-        run: pip install -U tox-factor
+        run: pip install tox==3.27.1 -U tox-factor
       - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
         uses: actions/cache@v2
@@ -87,7 +87,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tox-environment: [ "docker-tests", "lint", "spellcheck", "docs", "mypy", "mypyinstalled", "tracecontext" ]
+        tox-environment: [ "docker-tests-proto3", "docker-tests-proto4", "lint", "spellcheck", "docs", "mypy", "mypyinstalled", "tracecontext" ]
     name: ${{ matrix.tox-environment }}
     runs-on: ubuntu-20.04
     steps:
@@ -99,7 +99,7 @@ jobs:
           python-version: 3.9
           architecture: 'x64'
       - name: Install tox
-        run: pip install -U tox
+        run: pip install tox==3.27.1
       - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
         uses: actions/cache@v2
@@ -142,7 +142,7 @@ jobs:
           python-version: ${{ env[matrix.python-version] }}
           architecture: 'x64'
       - name: Install tox
-        run: pip install -U tox-factor
+        run: pip install tox==3.27.1 -U tox-factor
       - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
         uses: actions/cache@v2
