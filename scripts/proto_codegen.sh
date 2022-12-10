@@ -34,6 +34,8 @@ source $venv_dir/bin/activate
 python -m pip install \
     -c $repo_root/dev-requirements.txt \
     grpcio-tools mypy-protobuf
+echo 'python -m grpc_tools.protoc --version'
+python -m grpc_tools.protoc --version
 
 # Clone the proto repo if it doesn't exist
 if [ ! -d "$PROTO_REPO_DIR" ]; then
@@ -64,6 +66,7 @@ python -m grpc_tools.protoc \
 
 # generate grpc output only for protos with service definitions
 service_protos=$(grep -REl "service \w+ {" $PROTO_REPO_DIR/opentelemetry/)
+
 python -m grpc_tools.protoc \
     -I $PROTO_REPO_DIR \
     --python_out=. \

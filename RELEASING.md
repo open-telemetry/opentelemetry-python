@@ -1,93 +1,90 @@
-# Releasing OpenTelemetry Packages (for maintainers only)
-This document explains how to publish all OT modules at version x.y.z. Ensure that you’re following semver when choosing a version number.
+# Release instructions
 
-Release Process:
-- [Checkout a clean repo](#checkout-a-clean-repo)
-- [Update versions](#update-versions)
-- [Create a new branch](#create-a-new-branch)
-- [Open a Pull Request](#open-a-pull-request)
-- [Create a Release](#create-a-release)
-- [Check PyPI](#check-pypi)
-- [Move stable tag](#move-stable-tag)
-- [Update main](#update-main)
-- [Hotfix procedure](#hotfix-procedure)
-- [Troubleshooting](#troubleshooting)
-  - [Publish failed](#publish-failed)
+## Preparing a new major or minor release
 
-## Checkout a clean repo
-To avoid pushing untracked changes, check out the repo in a new dir
+* Run the [Prepare release branch workflow](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/prepare-release-branch.yml).
+  * Press the "Run workflow" button, and leave the default branch `main` selected.
+    * If making a pre-release of stable components (e.g. release candidate),
+      enter the pre-release version number, e.g. `1.9.0rc2`.
+      (otherwise the workflow will pick up the version from `main` and just remove the `.dev` suffix).
+  * Review and merge the two pull requests that it creates
+    (one is targeted to the release branch and one is targeted to `main`).
 
-## Update versions
-The update of the version information relies on the information in eachdist.ini to identify which packages are stable, prerelease or
-experimental. Update the desired version there to begin the release process.
+## Preparing a new patch release
 
-## Create a new branch
-The following script does the following:
-- update main locally
-- creates a new release branch `release/<version>`
-- updates version and changelog files
-- commits the change
+* Backport pull request(s) to the release branch.
+  * Run the [Backport workflow](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/backport.yml).
+  * Press the "Run workflow" button, then select the release branch from the dropdown list,
+    e.g. `release/v1.9.x`, then enter the pull request number that you want to backport,
+    then click the "Run workflow" button below that.
+  * Review and merge the backport pull request that it generates.
+* Merge a pull request to the release branch updating the `CHANGELOG.md`.
+  * The heading for the unreleased entries should be `## Unreleased`.
+* Run the [Prepare patch release workflow](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/prepare-patch-release.yml).
+  * Press the "Run workflow" button, then select the release branch from the dropdown list,
+    e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
+  * Review and merge the pull request that it creates for updating the version.
 
-*NOTE: This script was run by a GitHub Action but required the Action bot to be excluded from the CLA check, which it currently is not.*
+## Making the release
 
-```bash
-./scripts/prepare_release.sh
-```
+* Run the [Release workflow](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/release.yml).
+  * Press the "Run workflow" button, then select the release branch from the dropdown list,
+    e.g. `release/v1.9.x`, and click the "Run workflow" button below that.
+  * This workflow will publish the artifacts and publish a GitHub release with release notes based on the change log.
+  * Review and merge the pull request that it creates for updating the change log in main
+    (note that if this is not a patch release then the change log on main may already be up-to-date,
+    in which case no pull request will be created).
 
-## Open a Pull Request
+## Notes about version numbering for stable components
 
-The PR should be opened from the `release/<version>` branch created as part of running `prepare_release.sh` in the steps above.
+* The version number for stable components in the `main` branch is always `X.Y.0.dev`,
+  where `X.Y.0` represents the next minor release.
+* When the release branch is created, you can opt to make a "pre-release", e.g. `X.Y.0rc2`.
+* If you ARE NOT making a "pre-release":
+  * A "long-term" release branch will be created, e.g. `release/v1.9.x-0.21bx` (notice the wildcard x's).
+    Later on, after the initial release, you can backport PRs to a "long-term" release branch and make patch releases
+    from it.
+  * The version number for stable components in the release branch will be bumped to remove the `.dev`,
+    e.g. `X.Y.0`.
+  * The version number for stable components in the `main` branch will be bumped to the next version,
+    e.g. `X.{Y+1}.0.dev`.
+* If you ARE making a "pre-release":
+  * A "short-term" release branch will be created, e.g. `release/v1.9.0rc2-0.21b0` (notice the precise version with no
+    wildcard x's). "Short-term" release branches do not support backports or patch releases after the initial release.
+  * The version number for stable components in the `main` branch will not be bumped, e.g. it will remain `X.Y.0.dev`
+    since the next minor release will still be `X.Y.0`.
 
-## Create a Release
+## Notes about version numbering for unstable components
 
-- Create the GH release from the main branch, using a new tag for this micro version, e.g. `v0.7.0`
-- Copy the changelogs from all packages that changed into the release notes (and reformat to remove hard line wraps)
+* The version number for unstable components in the `main` branch is always `0.Yb0.dev`,
+  where `0.Yb0` represents the next minor release.
+  * _Question: Is "b" (beta) redundant on "0." releases, or is this a python thing? I'm wondering if we can change it to `0.Y.0` to match up with the practice in js and go repos._
+* Unstable components do not need "pre-releases", and so whether or not you are making a "pre-release" of stable
+  components:
+  * The version number for unstable components in the release branch will be bumped to remove the `.dev`,
+    e.g. `0.Yb0`.
+  * The version number for unstable components in the `main` branch will be bumped to the next version,
+    e.g. `0.{Y+1}b0.dev`.
 
+## After the release
 
-## Check PyPI
-
-This should be handled automatically on release by the [publish action](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/publish.yml).
-
-- Check the [action logs](https://github.com/open-telemetry/opentelemetry-python/actions?query=workflow%3APublish) to make sure packages have been uploaded to PyPI
-- Check the release history (e.g. https://pypi.org/project/opentelemetry-api/#history) on PyPI
-
-If for some reason the action failed, see [Publish failed](#publish-failed) below
-
-## Move stable tag
-
-This will ensure the docs are pointing at the stable release.
-
-```bash
-git tag -d stable
-git tag stable
-git push --delete origin tagname
-git push origin stable
-```
-
-To validate this worked, ensure the stable build has run successfully: https://readthedocs.org/projects/opentelemetry-python/builds/. If the build has not run automatically, it can be manually trigger via the readthedocs interface.
-
-## Update main
-
-Ensure the version and changelog updates have been applied to main. Update the versions in eachdist.ini once again this time to include the `.dev0` tag and
-run eachdist once again:
-```bash
-./scripts/eachdist.py update_versions --versions stable,prerelease
-```
-
-## Hotfix procedure
-
-A `hotfix` is defined as a small change developed to correct a bug that should be released as quickly as possible. Due to the nature of hotfixes, they usually will only affect one or a few packages. Therefore, it usually is not necessary to go through the entire release process outlined above for hotfixes. Follow the below steps how to release a hotfix:
-
-1. Identify the packages that are affected by the bug. Make the changes to those packages, merging to `main`, as quickly as possible.
-2. On your local machine, remove the `dev0` tags from the version number and increment the patch version number.
-3. On your local machine, update `CHANGELOG.md` with the date of the hotfix change.
-4. With administrator privileges for PyPi, manually publish the affected packages.
-    1. Install [twine](https://pypi.org/project/twine/) and [build](https://pypi.org/project/build/)
-    2. Navigate to where the `pyproject.toml` file exists for the package you want to publish.
-    3. To build the package: run `python -m build`.
-    4. Validate your built distributions by running `twine check dist/*`.
-    5. Upload distributions to PyPi by running `twine upload dist/*`.
-5. Note that since hotfixes are manually published, the build scripts for publish after creating a release are not run.
+* Check PyPI
+  * This should be handled automatically on release by the [publish action](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/publish.yml).
+  * Check the [action logs](https://github.com/open-telemetry/opentelemetry-python/actions?query=workflow%3APublish) to make sure packages have been uploaded to PyPI
+  * Check the release history (e.g. https://pypi.org/project/opentelemetry-api/#history) on PyPI
+  * If for some reason the action failed, see [Publish failed](#publish-failed) below
+* Move stable tag
+  * Run the following (TODO automate):
+    ```bash
+    git tag -d stable
+    git tag stable
+    git push --delete origin tagname
+    git push origin stable
+    ```
+  * This will ensure the docs are pointing at the stable release.
+  * To validate this worked, ensure the stable build has run successfully:
+    https://readthedocs.org/projects/opentelemetry-python/builds/.
+    If the build has not run automatically, it can be manually trigger via the readthedocs interface.
 
 ## Troubleshooting
 

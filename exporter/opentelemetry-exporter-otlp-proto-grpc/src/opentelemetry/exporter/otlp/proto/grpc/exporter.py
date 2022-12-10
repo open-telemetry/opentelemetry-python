@@ -25,7 +25,7 @@ from typing import TypeVar
 from urllib.parse import urlparse
 from opentelemetry.sdk.trace import ReadableSpan
 
-from backoff import expo
+import backoff
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import (
     ChannelCredentials,
@@ -52,8 +52,11 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
-from opentelemetry.util.re import parse_headers
 from opentelemetry.sdk.metrics.export import MetricsData
+from opentelemetry.util.re import parse_env_headers
+from opentelemetry.exporter.otlp.proto.grpc import (
+    _OTLP_GRPC_HEADERS,
+)
 
 logger = getLogger(__name__)
 SDKDataT = TypeVar("SDKDataT")
@@ -183,6 +186,19 @@ def _get_credentials(creds, environ_key):
     return ssl_channel_credentials()
 
 
+# Work around API change between backoff 1.x and 2.x. Since 2.0.0 the backoff
+# wait generator API requires a first .send(None) before reading the backoff
+# values from the generator.
+_is_backoff_v2 = next(backoff.expo()) is None
+
+
+def _expo(*args, **kwargs):
+    gen = backoff.expo(*args, **kwargs)
+    if _is_backoff_v2:
+        gen.send(None)
+    return gen
+
+
 # pylint: disable=no-member
 class OTLPExporterMixin(
     ABC, Generic[SDKDataT, ExportServiceRequestT, ExportResultT]
@@ -234,10 +250,14 @@ class OTLPExporterMixin(
 
         self._headers = headers or environ.get(OTEL_EXPORTER_OTLP_HEADERS)
         if isinstance(self._headers, str):
-            temp_headers = parse_headers(self._headers)
+            temp_headers = parse_env_headers(self._headers)
             self._headers = tuple(temp_headers.items())
         elif isinstance(self._headers, dict):
             self._headers = tuple(self._headers.items())
+        if self._headers is None:
+            self._headers = tuple(_OTLP_GRPC_HEADERS)
+        else:
+            self._headers = self._headers + tuple(_OTLP_GRPC_HEADERS)
 
         self._timeout = timeout or int(
             environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10)
@@ -296,7 +316,7 @@ class OTLPExporterMixin(
         # expo returns a generator that yields delay values which grow
         # exponentially. Once delay is greater than max_value, the yielded
         # value will remain constant.
-        for delay in expo(max_value=max_value):
+        for delay in _expo(max_value=max_value):
 
             if delay == max_value:
                 return self._result.FAILURE

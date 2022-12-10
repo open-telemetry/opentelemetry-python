@@ -20,8 +20,8 @@ from os import environ
 from typing import Dict, Optional
 from time import sleep
 
+import backoff
 import requests
-from backoff import expo
 
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
@@ -36,11 +36,14 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
-from opentelemetry.exporter.otlp.proto.http import Compression
+from opentelemetry.exporter.otlp.proto.http import (
+    _OTLP_HTTP_HEADERS,
+    Compression,
+)
 from opentelemetry.exporter.otlp.proto.http.trace_exporter.encoder import (
     _ProtobufEncoder,
 )
-from opentelemetry.util.re import parse_headers
+from opentelemetry.util.re import parse_env_headers
 
 
 _logger = logging.getLogger(__name__)
@@ -50,6 +53,18 @@ DEFAULT_COMPRESSION = Compression.NoCompression
 DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_TRACES_EXPORT_PATH = "v1/traces"
 DEFAULT_TIMEOUT = 10  # in seconds
+
+# Work around API change between backoff 1.x and 2.x. Since 2.0.0 the backoff
+# wait generator API requires a first .send(None) before reading the backoff
+# values from the generator.
+_is_backoff_v2 = next(backoff.expo()) is None
+
+
+def _expo(*args, **kwargs):
+    gen = backoff.expo(*args, **kwargs)
+    if _is_backoff_v2:
+        gen.send(None)
+    return gen
 
 
 class OTLPSpanExporter(SpanExporter):
@@ -79,7 +94,7 @@ class OTLPSpanExporter(SpanExporter):
             OTEL_EXPORTER_OTLP_TRACES_HEADERS,
             environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
         )
-        self._headers = headers or parse_headers(headers_string)
+        self._headers = headers or parse_env_headers(headers_string)
         self._timeout = timeout or int(
             environ.get(
                 OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
@@ -89,9 +104,7 @@ class OTLPSpanExporter(SpanExporter):
         self._compression = compression or _compression_from_env()
         self._session = session or requests.Session()
         self._session.headers.update(self._headers)
-        self._session.headers.update(
-            {"Content-Type": _ProtobufEncoder._CONTENT_TYPE}
-        )
+        self._session.headers.update(_OTLP_HTTP_HEADERS)
         if self._compression is not Compression.NoCompression:
             self._session.headers.update(
                 {"Content-Encoding": self._compression.value}
@@ -132,7 +145,7 @@ class OTLPSpanExporter(SpanExporter):
 
         serialized_data = _ProtobufEncoder.serialize(spans)
 
-        for delay in expo(max_value=self._MAX_RETRY_TIMEOUT):
+        for delay in _expo(max_value=self._MAX_RETRY_TIMEOUT):
 
             if delay == self._MAX_RETRY_TIMEOUT:
                 return SpanExportResult.FAILURE
@@ -164,6 +177,9 @@ class OTLPSpanExporter(SpanExporter):
             return
         self._session.close()
         self._shutdown = True
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True
 
 
 def _compression_from_env() -> Compression:

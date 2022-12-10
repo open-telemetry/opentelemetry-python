@@ -16,11 +16,12 @@
 
 import logging
 from os import environ
-from typing import Dict, Iterable, Optional
+from typing import Dict, Iterable, Optional, Sequence
 from unittest import TestCase
 from unittest.mock import patch
 
 from opentelemetry import trace
+from opentelemetry.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_ID_GENERATOR
 from opentelemetry.sdk._configuration import (
     _EXPORTER_OTLP,
@@ -28,8 +29,10 @@ from opentelemetry.sdk._configuration import (
     _EXPORTER_OTLP_PROTO_HTTP,
     _get_exporter_names,
     _get_id_generator,
+    _get_sampler,
     _import_exporters,
     _import_id_generator,
+    _import_sampler,
     _init_logging,
     _init_metrics,
     _init_tracing,
@@ -37,6 +40,10 @@ from opentelemetry.sdk._configuration import (
 )
 from opentelemetry.sdk._logs import LoggingHandler
 from opentelemetry.sdk._logs.export import ConsoleLogExporter
+from opentelemetry.sdk.environment_variables import (
+    OTEL_TRACES_SAMPLER,
+    OTEL_TRACES_SAMPLER_ARG,
+)
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -49,10 +56,22 @@ from opentelemetry.sdk.metrics.view import Aggregation
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace.export import ConsoleSpanExporter
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
+from opentelemetry.sdk.trace.sampling import (
+    ALWAYS_ON,
+    Decision,
+    ParentBased,
+    Sampler,
+    SamplingResult,
+    TraceIdRatioBased,
+)
+from opentelemetry.trace import Link, SpanKind
+from opentelemetry.trace.span import TraceState
+from opentelemetry.util.types import Attributes
 
 
 class Provider:
-    def __init__(self, resource=None, id_generator=None):
+    def __init__(self, resource=None, sampler=None, id_generator=None):
+        self.sampler = sampler
         self.id_generator = id_generator
         self.processor = None
         self.resource = resource or Resource.create({})
@@ -61,16 +80,16 @@ class Provider:
         self.processor = processor
 
 
-class DummyLogEmitterProvider:
+class DummyLoggerProvider:
     def __init__(self, resource=None):
         self.resource = resource
-        self.processor = DummyLogProcessor(DummyOTLPLogExporter())
+        self.processor = DummyLogRecordProcessor(DummyOTLPLogExporter())
 
-    def add_log_processor(self, processor):
+    def add_log_record_processor(self, processor):
         self.processor = processor
 
-    def get_log_emitter(self, name, *args, **kwargs):
-        return DummyLogEmitter(name, self.resource, self.processor)
+    def get_logger(self, name, *args, **kwargs):
+        return DummyLogger(name, self.resource, self.processor)
 
     def force_flush(self, *args, **kwargs):
         pass
@@ -80,7 +99,7 @@ class DummyMeterProvider(MeterProvider):
     pass
 
 
-class DummyLogEmitter:
+class DummyLogger:
     def __init__(self, name, resource, processor):
         self.name = name
         self.resource = resource
@@ -90,7 +109,7 @@ class DummyLogEmitter:
         self.processor.emit(record)
 
 
-class DummyLogProcessor:
+class DummyLogRecordProcessor:
     def __init__(self, exporter):
         self.exporter = exporter
 
@@ -175,6 +194,73 @@ class DummyOTLPLogExporter:
         pass
 
 
+class CustomSampler(Sampler):
+    def __init__(self) -> None:
+        pass
+
+    def get_description(self) -> str:
+        return "CustomSampler"
+
+    def should_sample(
+        self,
+        parent_context: Optional["Context"],
+        trace_id: int,
+        name: str,
+        kind: SpanKind = None,
+        attributes: Attributes = None,
+        links: Sequence[Link] = None,
+        trace_state: TraceState = None,
+    ) -> "SamplingResult":
+        return SamplingResult(
+            Decision.RECORD_AND_SAMPLE,
+            None,
+            None,
+        )
+
+
+class CustomRatioSampler(TraceIdRatioBased):
+    def __init__(self, ratio):
+        if not isinstance(ratio, float):
+            raise ValueError(
+                "CustomRatioSampler ratio argument is not a float."
+            )
+        self.ratio = ratio
+        super().__init__(ratio)
+
+    def get_description(self) -> str:
+        return "CustomSampler"
+
+    def should_sample(
+        self,
+        parent_context: Optional["Context"],
+        trace_id: int,
+        name: str,
+        kind: SpanKind = None,
+        attributes: Attributes = None,
+        links: Sequence[Link] = None,
+        trace_state: TraceState = None,
+    ) -> "SamplingResult":
+        return SamplingResult(
+            Decision.RECORD_AND_SAMPLE,
+            None,
+            None,
+        )
+
+
+class CustomSamplerFactory:
+    @staticmethod
+    def get_custom_sampler(unused_sampler_arg):
+        return CustomSampler()
+
+    @staticmethod
+    def get_custom_ratio_sampler(sampler_arg):
+        return CustomRatioSampler(float(sampler_arg))
+
+    @staticmethod
+    def empty_get_custom_sampler(sampler_arg):
+        return
+
+
 class CustomIdGenerator(IdGenerator):
     def generate_span_id(self):
         pass
@@ -220,7 +306,11 @@ class TestTraceInit(TestCase):
         environ, {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-test-service"}
     )
     def test_trace_init_default(self):
-        _init_tracing({"zipkin": Exporter}, RandomIdGenerator, "test-version")
+        _init_tracing(
+            {"zipkin": Exporter},
+            id_generator=RandomIdGenerator(),
+            auto_instrumentation_version="test-version",
+        )
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
@@ -241,7 +331,9 @@ class TestTraceInit(TestCase):
         {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-otlp-test-service"},
     )
     def test_trace_init_otlp(self):
-        _init_tracing({"otlp": OTLPSpanExporter}, RandomIdGenerator)
+        _init_tracing(
+            {"otlp": OTLPSpanExporter}, id_generator=RandomIdGenerator()
+        )
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
@@ -266,23 +358,207 @@ class TestTraceInit(TestCase):
         )
         id_generator_name = _get_id_generator()
         id_generator = _import_id_generator(id_generator_name)
-        _init_tracing({}, id_generator)
+        _init_tracing({}, id_generator=id_generator)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider.id_generator, CustomIdGenerator)
+
+    @patch.dict(
+        "os.environ", {OTEL_TRACES_SAMPLER: "non_existent_entry_point"}
+    )
+    def test_trace_init_custom_sampler_with_env_non_existent_entry_point(self):
+        sampler_name = _get_sampler()
+        sampler = _import_sampler(sampler_name)
+        _init_tracing({}, sampler=sampler)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsNone(provider.sampler)
+
+    @patch("opentelemetry.sdk._configuration.iter_entry_points")
+    @patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"})
+    def test_trace_init_custom_sampler_with_env(self, mock_iter_entry_points):
+        mock_iter_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_sampler_factory",
+                    CustomSamplerFactory.get_custom_sampler,
+                )
+            ]
+        )
+        sampler_name = _get_sampler()
+        sampler = _import_sampler(sampler_name)
+        _init_tracing({}, sampler=sampler)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider.sampler, CustomSampler)
+
+    @patch("opentelemetry.sdk._configuration.iter_entry_points")
+    @patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"})
+    def test_trace_init_custom_sampler_with_env_bad_factory(
+        self, mock_iter_entry_points
+    ):
+        mock_iter_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_sampler_factory",
+                    CustomSamplerFactory.empty_get_custom_sampler,
+                )
+            ]
+        )
+        sampler_name = _get_sampler()
+        sampler = _import_sampler(sampler_name)
+        _init_tracing({}, sampler=sampler)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsNone(provider.sampler)
+
+    @patch("opentelemetry.sdk._configuration.iter_entry_points")
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "custom_sampler_factory",
+            OTEL_TRACES_SAMPLER_ARG: "0.5",
+        },
+    )
+    def test_trace_init_custom_sampler_with_env_unused_arg(
+        self, mock_iter_entry_points
+    ):
+        mock_iter_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_sampler_factory",
+                    CustomSamplerFactory.get_custom_sampler,
+                )
+            ]
+        )
+        sampler_name = _get_sampler()
+        sampler = _import_sampler(sampler_name)
+        _init_tracing({}, sampler=sampler)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider.sampler, CustomSampler)
+
+    @patch("opentelemetry.sdk._configuration.iter_entry_points")
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "custom_ratio_sampler_factory",
+            OTEL_TRACES_SAMPLER_ARG: "0.5",
+        },
+    )
+    def test_trace_init_custom_ratio_sampler_with_env(
+        self, mock_iter_entry_points
+    ):
+        mock_iter_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_ratio_sampler_factory",
+                    CustomSamplerFactory.get_custom_ratio_sampler,
+                )
+            ]
+        )
+        sampler_name = _get_sampler()
+        sampler = _import_sampler(sampler_name)
+        _init_tracing({}, sampler=sampler)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider.sampler, CustomRatioSampler)
+        self.assertEqual(provider.sampler.ratio, 0.5)
+
+    @patch("opentelemetry.sdk._configuration.iter_entry_points")
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "custom_ratio_sampler_factory",
+            OTEL_TRACES_SAMPLER_ARG: "foobar",
+        },
+    )
+    def test_trace_init_custom_ratio_sampler_with_env_bad_arg(
+        self, mock_iter_entry_points
+    ):
+        mock_iter_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_ratio_sampler_factory",
+                    CustomSamplerFactory.get_custom_ratio_sampler,
+                )
+            ]
+        )
+        sampler_name = _get_sampler()
+        sampler = _import_sampler(sampler_name)
+        _init_tracing({}, sampler=sampler)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsNone(provider.sampler)
+
+    @patch("opentelemetry.sdk._configuration.iter_entry_points")
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "custom_ratio_sampler_factory",
+        },
+    )
+    def test_trace_init_custom_ratio_sampler_with_env_missing_arg(
+        self, mock_iter_entry_points
+    ):
+        mock_iter_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_ratio_sampler_factory",
+                    CustomSamplerFactory.get_custom_ratio_sampler,
+                )
+            ]
+        )
+        sampler_name = _get_sampler()
+        sampler = _import_sampler(sampler_name)
+        _init_tracing({}, sampler=sampler)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsNone(provider.sampler)
+
+    @patch("opentelemetry.sdk._configuration.iter_entry_points")
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_TRACES_SAMPLER: "custom_sampler_factory",
+            OTEL_TRACES_SAMPLER_ARG: "0.5",
+        },
+    )
+    def test_trace_init_custom_ratio_sampler_with_env_multiple_entry_points(
+        self, mock_iter_entry_points
+    ):
+        mock_iter_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_ratio_sampler_factory",
+                    CustomSamplerFactory.get_custom_ratio_sampler,
+                ),
+                IterEntryPoint(
+                    "custom_sampler_factory",
+                    CustomSamplerFactory.get_custom_sampler,
+                ),
+                IterEntryPoint(
+                    "custom_z_sampler_factory",
+                    CustomSamplerFactory.empty_get_custom_sampler,
+                ),
+            ]
+        )
+        sampler_name = _get_sampler()
+        sampler = _import_sampler(sampler_name)
+        _init_tracing({}, sampler=sampler)
+        provider = self.set_provider_mock.call_args[0][0]
+        self.assertIsInstance(provider.sampler, CustomSampler)
+
+    def verify_default_sampler(self, tracer_provider):
+        self.assertIsInstance(tracer_provider.sampler, ParentBased)
+        # pylint: disable=protected-access
+        self.assertEqual(tracer_provider.sampler._root, ALWAYS_ON)
 
 
 class TestLoggingInit(TestCase):
     def setUp(self):
         self.processor_patch = patch(
-            "opentelemetry.sdk._configuration.BatchLogProcessor",
-            DummyLogProcessor,
+            "opentelemetry.sdk._configuration.BatchLogRecordProcessor",
+            DummyLogRecordProcessor,
         )
         self.provider_patch = patch(
-            "opentelemetry.sdk._configuration.LogEmitterProvider",
-            DummyLogEmitterProvider,
+            "opentelemetry.sdk._configuration.LoggerProvider",
+            DummyLoggerProvider,
         )
         self.set_provider_patch = patch(
-            "opentelemetry.sdk._configuration.set_log_emitter_provider"
+            "opentelemetry.sdk._configuration.set_logger_provider"
         )
 
         self.processor_mock = self.processor_patch.start()
@@ -304,7 +580,7 @@ class TestLoggingInit(TestCase):
         _init_logging({}, "auto-version")
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
-        self.assertIsInstance(provider, DummyLogEmitterProvider)
+        self.assertIsInstance(provider, DummyLoggerProvider)
         self.assertIsInstance(provider.resource, Resource)
         self.assertEqual(
             provider.resource.attributes.get("telemetry.auto.version"),
@@ -319,13 +595,13 @@ class TestLoggingInit(TestCase):
         _init_logging({"otlp": DummyOTLPLogExporter})
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
-        self.assertIsInstance(provider, DummyLogEmitterProvider)
+        self.assertIsInstance(provider, DummyLoggerProvider)
         self.assertIsInstance(provider.resource, Resource)
         self.assertEqual(
             provider.resource.attributes.get("service.name"),
             "otlp-service",
         )
-        self.assertIsInstance(provider.processor, DummyLogProcessor)
+        self.assertIsInstance(provider.processor, DummyLogRecordProcessor)
         self.assertIsInstance(
             provider.processor.exporter, DummyOTLPLogExporter
         )

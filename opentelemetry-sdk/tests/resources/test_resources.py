@@ -19,6 +19,7 @@ import unittest
 import uuid
 from logging import ERROR
 from unittest import mock
+from urllib import parse
 
 from opentelemetry.sdk import resources
 
@@ -490,6 +491,25 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(
             detector.detect(),
             resources.Resource({"k": "v", "k2": "v2", "foo": "bar=baz"}),
+        )
+
+    def test_multiple_with_url_decode(self):
+        detector = resources.OTELResourceDetector()
+        os.environ[
+            resources.OTEL_RESOURCE_ATTRIBUTES
+        ] = "key=value%20test%0A, key2=value+%202"
+        self.assertEqual(
+            detector.detect(),
+            resources.Resource({"key": "value test\n", "key2": "value+ 2"}),
+        )
+        self.assertEqual(
+            detector.detect(),
+            resources.Resource(
+                {
+                    "key": parse.unquote("value%20test%0A"),
+                    "key2": parse.unquote("value+%202"),
+                }
+            ),
         )
 
     @mock.patch.dict(

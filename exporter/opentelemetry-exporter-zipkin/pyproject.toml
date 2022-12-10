@@ -22,11 +22,12 @@ classifiers = [
   "Programming Language :: Python :: 3.8",
   "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
   "Typing :: Typed",
 ]
 dependencies = [
-  "opentelemetry-exporter-zipkin-json == 1.12.0",
-  "opentelemetry-exporter-zipkin-proto-http == 1.12.0",
+  "opentelemetry-exporter-zipkin-json == 1.16.0.dev",
+  "opentelemetry-exporter-zipkin-proto-http == 1.16.0.dev",
 ]
 
 [project.optional-dependencies]

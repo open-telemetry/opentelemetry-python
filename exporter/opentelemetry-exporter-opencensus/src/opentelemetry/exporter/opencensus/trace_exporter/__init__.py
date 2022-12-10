@@ -101,6 +101,9 @@ class OpenCensusSpanExporter(SpanExporter):
         )
         yield service_request
 
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True
+
 
 # pylint: disable=too-many-branches
 def translate_to_collector(spans: Sequence[ReadableSpan]):

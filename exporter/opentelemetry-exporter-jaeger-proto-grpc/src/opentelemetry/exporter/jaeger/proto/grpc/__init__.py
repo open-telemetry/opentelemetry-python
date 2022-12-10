@@ -186,3 +186,6 @@ class JaegerExporter(SpanExporter):
 
     def shutdown(self):
         pass
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True
