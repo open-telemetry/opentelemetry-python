@@ -15,10 +15,10 @@ import logging
 import unittest
 from unittest.mock import Mock
 
+from opentelemetry._logs import SeverityNumber
+from opentelemetry._logs import get_logger as APIGetLogger
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
-from opentelemetry.sdk._logs import get_logger as sdk_get_logger
-from opentelemetry.sdk._logs.severity import SeverityNumber
 from opentelemetry.semconv.trace import SpanAttributes
 from opentelemetry.trace import INVALID_SPAN_CONTEXT
 
@@ -33,7 +33,7 @@ def get_logger(level=logging.NOTSET, logger_provider=None):
 class TestLoggingHandler(unittest.TestCase):
     def test_handler_default_log_level(self):
         emitter_provider_mock = Mock(spec=LoggerProvider)
-        emitter_mock = sdk_get_logger(
+        emitter_mock = APIGetLogger(
             __name__, logger_provider=emitter_provider_mock
         )
         logger = get_logger(logger_provider=emitter_provider_mock)
@@ -46,7 +46,7 @@ class TestLoggingHandler(unittest.TestCase):
 
     def test_handler_custom_log_level(self):
         emitter_provider_mock = Mock(spec=LoggerProvider)
-        emitter_mock = sdk_get_logger(
+        emitter_mock = APIGetLogger(
             __name__, logger_provider=emitter_provider_mock
         )
         logger = get_logger(
@@ -61,7 +61,7 @@ class TestLoggingHandler(unittest.TestCase):
 
     def test_log_record_no_span_context(self):
         emitter_provider_mock = Mock(spec=LoggerProvider)
-        emitter_mock = sdk_get_logger(
+        emitter_mock = APIGetLogger(
             __name__, logger_provider=emitter_provider_mock
         )
         logger = get_logger(logger_provider=emitter_provider_mock)
@@ -80,7 +80,7 @@ class TestLoggingHandler(unittest.TestCase):
     def test_log_record_user_attributes(self):
         """Attributes can be injected into logs by adding them to the LogRecord"""
         emitter_provider_mock = Mock(spec=LoggerProvider)
-        emitter_mock = sdk_get_logger(
+        emitter_mock = APIGetLogger(
             __name__, logger_provider=emitter_provider_mock
         )
         logger = get_logger(logger_provider=emitter_provider_mock)
@@ -95,7 +95,7 @@ class TestLoggingHandler(unittest.TestCase):
     def test_log_record_exception(self):
         """Exception information will be included in attributes"""
         emitter_provider_mock = Mock(spec=LoggerProvider)
-        emitter_mock = sdk_get_logger(
+        emitter_mock = APIGetLogger(
             __name__, logger_provider=emitter_provider_mock
         )
         logger = get_logger(logger_provider=emitter_provider_mock)
@@ -128,7 +128,7 @@ class TestLoggingHandler(unittest.TestCase):
     def test_log_exc_info_false(self):
         """Exception information will be included in attributes"""
         emitter_provider_mock = Mock(spec=LoggerProvider)
-        emitter_mock = sdk_get_logger(
+        emitter_mock = APIGetLogger(
             __name__, logger_provider=emitter_provider_mock
         )
         logger = get_logger(logger_provider=emitter_provider_mock)
@@ -151,7 +151,7 @@ class TestLoggingHandler(unittest.TestCase):
 
     def test_log_record_trace_correlation(self):
         emitter_provider_mock = Mock(spec=LoggerProvider)
-        emitter_mock = sdk_get_logger(
+        emitter_mock = APIGetLogger(
             __name__, logger_provider=emitter_provider_mock
         )
         logger = get_logger(logger_provider=emitter_provider_mock)

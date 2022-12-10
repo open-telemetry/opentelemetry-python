@@ -23,3 +23,7 @@ wrapt>=1.0.0,<2.0.0
 # See https://github.com/pallets/markupsafe/issues/282
 # breaking change introduced in markupsafe causes jinja, flask to break
 markupsafe==2.0.1
+
+# Jaeger generated protobufs do not currently support protobuf 4.x. This can be removed once
+# they're regenerated.
+protobuf~=3.19

@@ -501,14 +501,6 @@ The following two environment variables have the same effect
 If both are set, :envvar:`OTEL_SERVICE_NAME` takes precedence.
 """
 
-_OTEL_PYTHON_LOGGER_PROVIDER = "OTEL_PYTHON_LOGGER_PROVIDER"
-"""
-.. envvar:: OTEL_PYTHON_LOGGER_PROVIDER
-
-The :envvar:`OTEL_PYTHON_LOGGER_PROVIDER` environment variable allows users to
-provide the entry point for loading the log emitter provider. If not specified, SDK
-LoggerProvider is used.
-"""
 
 _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED = (
     "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED"

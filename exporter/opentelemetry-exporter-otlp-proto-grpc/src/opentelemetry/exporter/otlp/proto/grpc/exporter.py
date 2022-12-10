@@ -52,8 +52,11 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
-from opentelemetry.util.re import parse_headers
 from opentelemetry.sdk.metrics.export import MetricsData
+from opentelemetry.util.re import parse_env_headers
+from opentelemetry.exporter.otlp.proto.grpc import (
+    _OTLP_GRPC_HEADERS,
+)
 
 logger = getLogger(__name__)
 SDKDataT = TypeVar("SDKDataT")
@@ -247,10 +250,14 @@ class OTLPExporterMixin(
 
         self._headers = headers or environ.get(OTEL_EXPORTER_OTLP_HEADERS)
         if isinstance(self._headers, str):
-            temp_headers = parse_headers(self._headers)
+            temp_headers = parse_env_headers(self._headers)
             self._headers = tuple(temp_headers.items())
         elif isinstance(self._headers, dict):
             self._headers = tuple(self._headers.items())
+        if self._headers is None:
+            self._headers = tuple(_OTLP_GRPC_HEADERS)
+        else:
+            self._headers = self._headers + tuple(_OTLP_GRPC_HEADERS)
 
         self._timeout = timeout or int(
             environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10)
