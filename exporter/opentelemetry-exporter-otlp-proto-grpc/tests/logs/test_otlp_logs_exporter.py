@@ -111,8 +111,8 @@ class LogsServiceServicerALREADY_EXISTS(LogsServiceServicer):
 
 
 class TestOTLPLogExporter(TestCase):
-    def setUp(self):
 
+    def setUp(self):
         self.exporter = OTLPLogExporter()
 
         self.server = server(ThreadPoolExecutor(max_workers=10))
@@ -182,26 +182,26 @@ class TestOTLPLogExporter(TestCase):
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "logs:4317",
             OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR
             + "/fixtures/test.cert",
-            OTEL_EXPORTER_OTLP_LOGS_HEADERS: " key1=value1,KEY2 = value=2",
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS: " key1=value1,KEY2 = VALUE=2",
             OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip",
         },
     )
-    @patch(
-        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
-    )
-    def test_env_variables(self, mock_exporter_mixin):
-        print("*************************")
-        print(mock_exporter_mixin.call_args_list)
-        self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
-        _, kwargs = mock_exporter_mixin.call_args_list[0]
-
-        self.assertEqual(kwargs["endpoint"], "log:4317")
-        self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = value=2")
-        self.assertEqual(kwargs["timeout"], 10)
-        self.assertEqual(kwargs["compression"], Compression.Gzip)
-        self.assertIsNotNone(kwargs["credentials"])
-        self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+    def test_env_variables(self):
+        exporter = OTLPLogExporter()
+        self.assertEqual(exporter._endpoint, "logs:4317")
+        self.assertEqual(exporter._timeout, 10)
+        self.assertEqual(exporter._compression, Compression.Gzip)
+        self.assertIsNotNone(exporter._credentials)
+        self.assertIsInstance(exporter._credentials, ChannelCredentials)
+        self.assertEqual(
+            exporter._headers,
+            (
+                ("key1", "value1"),
+                ("key2", "VALUE=2"),
+                ("user-agent", "OTel OTLP Exporter Python/" + __version__),
+            ),
+        )
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
