@@ -90,7 +90,7 @@ class TestBase(unittest.TestCase):
             reverse=True,
         )
 
-    def sorted_metrics(self, metrics):
+    def sorted_metrics(self, metrics):  # pylint: disable=R0201
         """
         Sorts metrics by metric name.
         """
