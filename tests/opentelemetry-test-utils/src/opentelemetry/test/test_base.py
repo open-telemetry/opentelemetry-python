@@ -20,9 +20,12 @@ from typing import Tuple
 from opentelemetry import metrics as metrics_api
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import (InMemoryMetricReader, MetricReader, HistogramDataPoint,
-    NumberDataPoint)
-
+from opentelemetry.sdk.metrics.export import (
+    HistogramDataPoint,
+    InMemoryMetricReader,
+    MetricReader,
+    NumberDataPoint,
+)
 from opentelemetry.sdk.trace import TracerProvider, export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
@@ -106,7 +109,7 @@ class TestBase(unittest.TestCase):
                 return self.sorted_metrics(all_metrics)
 
     def assert_metric_expected(
-            self, metric, expected_value, expected_attributes
+        self, metric, expected_value, expected_attributes
     ):
         data_point = next(iter(metric.data.data_points))
 
@@ -127,7 +130,7 @@ class TestBase(unittest.TestCase):
         )
 
     def assert_duration_metric_expected(
-            self, metric, duration_estimated, expected_attributes, est_delta=200
+        self, metric, duration_estimated, expected_attributes, est_delta=200
     ):
         data_point = next(iter(metric.data.data_points))
 
