@@ -20,7 +20,9 @@ from typing import Tuple
 from opentelemetry import metrics as metrics_api
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import InMemoryMetricReader, MetricReader
+from opentelemetry.sdk.metrics.export import (InMemoryMetricReader, MetricReader, HistogramDataPoint,
+    NumberDataPoint)
+
 from opentelemetry.sdk.trace import TracerProvider, export
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
@@ -83,6 +85,61 @@ class TestBase(unittest.TestCase):
             spans,
             key=lambda s: s._start_time,  # pylint: disable=W0212
             reverse=True,
+        )
+
+    def sorted_metrics(self, metrics):
+        """
+        Sorts metrics by metric name.
+        """
+        return sorted(
+            metrics,
+            key=lambda m: m.name,
+        )
+
+    def get_sorted_metrics(self):
+        resource_metrics = (
+            self.memory_metrics_reader.get_metrics_data().resource_metrics
+        )
+        for metrics in resource_metrics:
+            for scope_metrics in metrics.scope_metrics:
+                all_metrics = list(scope_metrics.metrics)
+                return self.sorted_metrics(all_metrics)
+
+    def assert_metric_expected(
+            self, metric, expected_value, expected_attributes
+    ):
+        data_point = next(iter(metric.data.data_points))
+
+        if isinstance(data_point, HistogramDataPoint):
+            self.assertEqual(
+                data_point.sum,
+                expected_value,
+            )
+        elif isinstance(data_point, NumberDataPoint):
+            self.assertEqual(
+                data_point.value,
+                expected_value,
+            )
+
+        self.assertDictEqual(
+            expected_attributes,
+            dict(data_point.attributes),
+        )
+
+    def assert_duration_metric_expected(
+            self, metric, duration_estimated, expected_attributes, est_delta=200
+    ):
+        data_point = next(iter(metric.data.data_points))
+
+        self.assertAlmostEqual(
+            data_point.sum,
+            duration_estimated,
+            delta=est_delta,
+        )
+
+        self.assertDictEqual(
+            expected_attributes,
+            dict(data_point.attributes),
         )
 
     @staticmethod
