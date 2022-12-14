@@ -21,7 +21,6 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from os import environ
-from sys import version_info
 from typing import Callable, Dict, List, Optional, Sequence, Tuple, Type
 
 from typing_extensions import Literal
@@ -57,7 +56,7 @@ from opentelemetry.sdk.trace.id_generator import IdGenerator
 from opentelemetry.sdk.trace.sampling import Sampler
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.trace import set_tracer_provider
-from opentelemetry.util._entry_points import entry_points
+from opentelemetry.util._importlib_metadata import entry_points
 
 _EXPORTER_OTLP = "otlp"
 _EXPORTER_OTLP_PROTO_GRPC = "otlp_proto_grpc"
@@ -94,30 +93,19 @@ def _import_config_components(
 
     component_implementations = []
 
-    # FIXME remove when support for 3.9 is dropped.
-    if version_info.minor in (8, 9):
-
-        for entry_point in entry_points()[entry_point_name]:
-            for selected_component in selected_components:
-                if entry_point.name == selected_component:
-                    component_implementations.append(
-                        (selected_component, entry_point.load())
-                    )
-    else:
-
-        for selected_component in selected_components:
-            component_implementations.append(
-                (
-                    selected_component,
-                    next(
-                        iter(
-                            entry_points(
-                                group=entry_point_name, name=selected_component
-                            )
+    for selected_component in selected_components:
+        component_implementations.append(
+            (
+                selected_component,
+                next(
+                    iter(
+                        entry_points(
+                            group=entry_point_name, name=selected_component
                         )
-                    ).load(),
-                )
+                    )
+                ).load(),
             )
+        )
 
     return component_implementations
 

@@ -25,7 +25,7 @@ from opentelemetry.exporter.opencensus.version import (
     __version__ as opencensusexporter_exporter_version,
 )
 from opentelemetry.trace import SpanKind
-from opentelemetry.util._entry_points import version
+from opentelemetry.util._importlib_metadata import version
 
 OPENTELEMETRY_VERSION = version("opentelemetry-api")
 

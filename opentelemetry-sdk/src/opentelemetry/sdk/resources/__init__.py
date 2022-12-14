@@ -70,7 +70,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_SERVICE_NAME,
 )
 from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.util._entry_points import version
+from opentelemetry.util._importlib_metadata import version
 from opentelemetry.util.types import AttributeValue
 
 LabelValue = AttributeValue

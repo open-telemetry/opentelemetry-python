@@ -12,13 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sys import version_info
+from unittest import TestCase
 
-# FIXME remove this file when support for 3.7 is dropped.
-if version_info.minor == 7:
-    # pylint: disable=import-error
-    from importlib_metadata import entry_points, version  # type: ignore
-else:
-    from importlib.metadata import entry_points, version  # type: ignore
+from opentelemetry.metrics import MeterProvider
+from opentelemetry.util._importlib_metadata import entry_points
 
-__all__ = ["entry_points", "version"]
+
+class TestEntryPoints(TestCase):
+    def test_entry_points(self):
+
+        self.assertIsInstance(
+            next(
+                iter(
+                    entry_points(
+                        group="opentelemetry_meter_provider",
+                        name="default_meter_provider",
+                    )
+                )
+            ).load()(),
+            MeterProvider,
+        )

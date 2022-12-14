@@ -14,7 +14,6 @@
 # pylint: disable=broad-except
 
 from logging import ERROR
-from sys import version_info
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -55,30 +54,14 @@ class TestErrorHandler(TestCase):
             **{"load.return_value": AssertionErrorHandler}
         )
 
-        # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor in (8, 9):
-
-            mock_entry_points.configure_mock(
-                **{
-                    "return_value": {
-                        "opentelemetry_error_handler": [
-                            mock_entry_point_zero_division_error_handler,
-                            mock_entry_point_assertion_error_handler,
-                        ]
-                    }
-                }
-            )
-
-        else:
-
-            mock_entry_points.configure_mock(
-                **{
-                    "return_value": [
-                        mock_entry_point_zero_division_error_handler,
-                        mock_entry_point_assertion_error_handler,
-                    ]
-                }
-            )
+        mock_entry_points.configure_mock(
+            **{
+                "return_value": [
+                    mock_entry_point_zero_division_error_handler,
+                    mock_entry_point_assertion_error_handler,
+                ]
+            }
+        )
 
         error = ZeroDivisionError()
 
@@ -108,24 +91,9 @@ class TestErrorHandler(TestCase):
             **{"load.return_value": ErrorErrorHandler}
         )
 
-        # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor in (8, 9):
-
-            mock_entry_points.configure_mock(
-                **{
-                    "return_value": {
-                        "opentelemetry_error_handler": [
-                            mock_entry_point_error_error_handler
-                        ]
-                    }
-                }
-            )
-
-        else:
-
-            mock_entry_points.configure_mock(
-                **{"return_value": [mock_entry_point_error_error_handler]}
-            )
+        mock_entry_points.configure_mock(
+            **{"return_value": [mock_entry_point_error_error_handler]}
+        )
 
         error = ZeroDivisionError()
 
@@ -148,24 +116,9 @@ class TestErrorHandler(TestCase):
             **{"load.return_value": MockErrorHandlerClass}
         )
 
-        # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor in (8, 9):
-
-            mock_entry_points.configure_mock(
-                **{
-                    "return_value": {
-                        "opentelemetry_error_handler": [
-                            mock_entry_point_error_handler
-                        ]
-                    }
-                }
-            )
-
-        else:
-
-            mock_entry_points.configure_mock(
-                **{"return_value": [mock_entry_point_error_handler]}
-            )
+        mock_entry_points.configure_mock(
+            **{"return_value": [mock_entry_point_error_handler]}
+        )
 
         error = IndexError()
 

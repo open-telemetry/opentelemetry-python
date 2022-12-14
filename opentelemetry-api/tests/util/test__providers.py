@@ -14,7 +14,6 @@
 
 from importlib import reload
 from os import environ
-from sys import version_info
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -28,44 +27,26 @@ class Test_Providers(TestCase):
             "provider_environment_variable": "mock_provider_environment_variable"
         },
     )
-    @patch("opentelemetry.util._entry_points.entry_points")
+    @patch("opentelemetry.util._importlib_metadata.entry_points")
     def test__providers(self, mock_entry_points):
 
         reload(_providers)
 
-        # FIXME Remove when support for 3.9 is dropped.
-        if version_info.minor in (8, 9):
-
-            mock_a = Mock()
-            mock_a.configure_mock(
-                **{
-                    "name": "mock_provider_environment_variable",
-                    "group": "opentelemetry_provider",
-                    "load.return_value": Mock(**{"return_value": "a"}),
-                }
-            )
-
-            mock_entry_points.configure_mock(
-                **{"return_value": {"opentelemetry_provider": [mock_a]}}
-            )
-
-        else:
-
-            mock_entry_points.configure_mock(
-                **{
-                    "side_effect": [
-                        [
-                            Mock(
-                                **{
-                                    "load.return_value": Mock(
-                                        **{"return_value": "a"}
-                                    )
-                                }
-                            ),
-                        ],
-                    ]
-                }
-            )
+        mock_entry_points.configure_mock(
+            **{
+                "side_effect": [
+                    [
+                        Mock(
+                            **{
+                                "load.return_value": Mock(
+                                    **{"return_value": "a"}
+                                )
+                            }
+                        ),
+                    ],
+                ]
+            }
+        )
 
         self.assertEqual(
             _providers._load_provider(

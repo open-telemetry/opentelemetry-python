@@ -16,7 +16,6 @@
 
 from logging import getLogger
 from os import environ
-from sys import version_info
 from typing import Dict, Iterable, Optional, Sequence
 from unittest import TestCase
 from unittest.mock import patch
@@ -352,26 +351,11 @@ class TestTraceInit(TestCase):
     @patch("opentelemetry.sdk._configuration.IdGenerator", new=IdGenerator)
     @patch("opentelemetry.sdk._configuration.entry_points")
     def test_trace_init_custom_id_generator(self, mock_entry_points):
-        # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor in (8, 9):
-
-            mock_entry_points.configure_mock(
-                return_value={
-                    "opentelemetry_id_generator": (
-                        IterEntryPoint(
-                            "custom_id_generator", CustomIdGenerator
-                        ),
-                    )
-                }
-            )
-
-        else:
-
-            mock_entry_points.configure_mock(
-                return_value=[
-                    IterEntryPoint("custom_id_generator", CustomIdGenerator)
-                ]
-            )
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint("custom_id_generator", CustomIdGenerator)
+            ]
+        )
 
         id_generator_name = _get_id_generator()
         id_generator = _import_id_generator(id_generator_name)
@@ -392,31 +376,14 @@ class TestTraceInit(TestCase):
     @patch("opentelemetry.sdk._configuration.entry_points")
     @patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"})
     def test_trace_init_custom_sampler_with_env(self, mock_entry_points):
-
-        # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor in (8, 9):
-
-            mock_entry_points.configure_mock(
-                return_value={
-                    "opentelemetry_traces_sampler": (
-                        IterEntryPoint(
-                            "custom_sampler_factory",
-                            CustomSamplerFactory.get_custom_sampler,
-                        ),
-                    )
-                }
-            )
-
-        else:
-
-            mock_entry_points.configure_mock(
-                return_value=[
-                    IterEntryPoint(
-                        "custom_sampler_factory",
-                        CustomSamplerFactory.get_custom_sampler,
-                    )
-                ]
-            )
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_sampler_factory",
+                    CustomSamplerFactory.get_custom_sampler,
+                )
+            ]
+        )
 
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
@@ -429,31 +396,14 @@ class TestTraceInit(TestCase):
     def test_trace_init_custom_sampler_with_env_bad_factory(
         self, mock_entry_points
     ):
-
-        # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor in (8, 9):
-
-            mock_entry_points.configure_mock(
-                return_value={
-                    "opentelemetry_traces_sampler": (
-                        IterEntryPoint(
-                            "custom_sampler_factory",
-                            CustomSamplerFactory.empty_get_custom_sampler,
-                        ),
-                    )
-                }
-            )
-
-        else:
-
-            mock_entry_points.configure_mock(
-                return_value=[
-                    IterEntryPoint(
-                        "custom_sampler_factory",
-                        CustomSamplerFactory.empty_get_custom_sampler,
-                    )
-                ]
-            )
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_sampler_factory",
+                    CustomSamplerFactory.empty_get_custom_sampler,
+                )
+            ]
+        )
 
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
@@ -472,31 +422,14 @@ class TestTraceInit(TestCase):
     def test_trace_init_custom_sampler_with_env_unused_arg(
         self, mock_entry_points
     ):
-
-        # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor in (8, 9):
-
-            mock_entry_points.configure_mock(
-                return_value={
-                    "opentelemetry_traces_sampler": (
-                        IterEntryPoint(
-                            "custom_sampler_factory",
-                            CustomSamplerFactory.get_custom_sampler,
-                        ),
-                    )
-                }
-            )
-
-        else:
-
-            mock_entry_points.configure_mock(
-                return_value=[
-                    IterEntryPoint(
-                        "custom_sampler_factory",
-                        CustomSamplerFactory.get_custom_sampler,
-                    )
-                ]
-            )
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_sampler_factory",
+                    CustomSamplerFactory.get_custom_sampler,
+                )
+            ]
+        )
 
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
@@ -513,31 +446,14 @@ class TestTraceInit(TestCase):
         },
     )
     def test_trace_init_custom_ratio_sampler_with_env(self, mock_entry_points):
-
-        # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor in (8, 9):
-
-            mock_entry_points.configure_mock(
-                return_value={
-                    "opentelemetry_traces_sampler": (
-                        IterEntryPoint(
-                            "custom_ratio_sampler_factory",
-                            CustomSamplerFactory.get_custom_ratio_sampler,
-                        ),
-                    )
-                }
-            )
-
-        else:
-
-            mock_entry_points.configure_mock(
-                return_value=[
-                    IterEntryPoint(
-                        "custom_ratio_sampler_factory",
-                        CustomSamplerFactory.get_custom_ratio_sampler,
-                    )
-                ]
-            )
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_ratio_sampler_factory",
+                    CustomSamplerFactory.get_custom_ratio_sampler,
+                )
+            ]
+        )
 
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
@@ -557,31 +473,14 @@ class TestTraceInit(TestCase):
     def test_trace_init_custom_ratio_sampler_with_env_bad_arg(
         self, mock_entry_points
     ):
-
-        # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor in (8, 9):
-
-            mock_entry_points.configure_mock(
-                return_value={
-                    "opentelemetry_traces_sampler": (
-                        IterEntryPoint(
-                            "custom_ratio_sampler_factory",
-                            CustomSamplerFactory.get_custom_ratio_sampler,
-                        ),
-                    )
-                }
-            )
-
-        else:
-
-            mock_entry_points.configure_mock(
-                return_value=[
-                    IterEntryPoint(
-                        "custom_ratio_sampler_factory",
-                        CustomSamplerFactory.get_custom_ratio_sampler,
-                    )
-                ]
-            )
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_ratio_sampler_factory",
+                    CustomSamplerFactory.get_custom_ratio_sampler,
+                )
+            ]
+        )
 
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
@@ -599,31 +498,14 @@ class TestTraceInit(TestCase):
     def test_trace_init_custom_ratio_sampler_with_env_missing_arg(
         self, mock_entry_points
     ):
-
-        # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor in (8, 9):
-
-            mock_entry_points.configure_mock(
-                return_value={
-                    "opentelemetry_traces_sampler": (
-                        IterEntryPoint(
-                            "custom_ratio_sampler_factory",
-                            CustomSamplerFactory.get_custom_ratio_sampler,
-                        ),
-                    )
-                }
-            )
-
-        else:
-
-            mock_entry_points.configure_mock(
-                return_value=[
-                    IterEntryPoint(
-                        "custom_ratio_sampler_factory",
-                        CustomSamplerFactory.get_custom_ratio_sampler,
-                    )
-                ]
-            )
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_ratio_sampler_factory",
+                    CustomSamplerFactory.get_custom_ratio_sampler,
+                )
+            ]
+        )
 
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
@@ -642,39 +524,14 @@ class TestTraceInit(TestCase):
     def test_trace_init_custom_ratio_sampler_with_env_multiple_entry_points(
         self, mock_entry_points
     ):
-
-        # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor in (8, 9):
-
-            mock_entry_points.configure_mock(
-                return_value={
-                    "opentelemetry_traces_sampler": (
-                        IterEntryPoint(
-                            "custom_ratio_sampler_factory",
-                            CustomSamplerFactory.get_custom_ratio_sampler,
-                        ),
-                        IterEntryPoint(
-                            "custom_sampler_factory",
-                            CustomSamplerFactory.get_custom_sampler,
-                        ),
-                        IterEntryPoint(
-                            "custom_z_sampler_factory",
-                            CustomSamplerFactory.empty_get_custom_sampler,
-                        ),
-                    )
-                }
-            )
-
-        else:
-
-            mock_entry_points.configure_mock(
-                return_value=[
-                    IterEntryPoint(
-                        "custom_sampler_factory",
-                        CustomSamplerFactory.get_custom_sampler,
-                    ),
-                ]
-            )
+        mock_entry_points.configure_mock(
+            return_value=[
+                IterEntryPoint(
+                    "custom_sampler_factory",
+                    CustomSamplerFactory.get_custom_sampler,
+                ),
+            ]
+        )
 
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)

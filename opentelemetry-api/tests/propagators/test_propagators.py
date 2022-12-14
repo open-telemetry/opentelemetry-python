@@ -17,7 +17,6 @@
 from importlib import reload
 from logging import ERROR
 from os import environ
-from sys import version_info
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
@@ -54,79 +53,44 @@ class TestPropagators(TestCase):
 
     @patch.dict(environ, {OTEL_PROPAGATORS: "a,  b,   c  "})
     @patch("opentelemetry.propagators.composite.CompositePropagator")
-    @patch("opentelemetry.util._entry_points.entry_points")
+    @patch("opentelemetry.util._importlib_metadata.entry_points")
     def test_non_default_propagators(
         self, mock_entry_points, mock_compositehttppropagator
     ):
 
-        # FIXME Remove when support for 3.9 is dropped.
-        if version_info.minor in (8, 9):
-
-            mock_a = Mock()
-            mock_a.configure_mock(
-                **{
-                    "name": "a",
-                    "load.return_value": Mock(**{"return_value": "a"}),
-                }
-            )
-            mock_b = Mock()
-            mock_b.configure_mock(
-                **{
-                    "name": "b",
-                    "load.return_value": Mock(**{"return_value": "b"}),
-                }
-            )
-            mock_c = Mock()
-            mock_c.configure_mock(
-                **{
-                    "name": "c",
-                    "load.return_value": Mock(**{"return_value": "c"}),
-                }
-            )
-
-            mock_entry_points.configure_mock(
-                **{
-                    "return_value": {
-                        "opentelemetry_propagator": [mock_a, mock_b, mock_c]
-                    }
-                }
-            )
-
-        else:
-
-            mock_entry_points.configure_mock(
-                **{
-                    "side_effect": [
-                        [
-                            Mock(
-                                **{
-                                    "load.return_value": Mock(
-                                        **{"return_value": "a"}
-                                    )
-                                }
-                            ),
-                        ],
-                        [
-                            Mock(
-                                **{
-                                    "load.return_value": Mock(
-                                        **{"return_value": "b"}
-                                    )
-                                }
-                            )
-                        ],
-                        [
-                            Mock(
-                                **{
-                                    "load.return_value": Mock(
-                                        **{"return_value": "c"}
-                                    )
-                                }
-                            )
-                        ],
-                    ]
-                }
-            )
+        mock_entry_points.configure_mock(
+            **{
+                "side_effect": [
+                    [
+                        Mock(
+                            **{
+                                "load.return_value": Mock(
+                                    **{"return_value": "a"}
+                                )
+                            }
+                        ),
+                    ],
+                    [
+                        Mock(
+                            **{
+                                "load.return_value": Mock(
+                                    **{"return_value": "b"}
+                                )
+                            }
+                        )
+                    ],
+                    [
+                        Mock(
+                            **{
+                                "load.return_value": Mock(
+                                    **{"return_value": "c"}
+                                )
+                            }
+                        )
+                    ],
+                ]
+            }
+        )
 
         def test_propagators(propagators):
             self.assertEqual(propagators, ["a", "b", "c"])

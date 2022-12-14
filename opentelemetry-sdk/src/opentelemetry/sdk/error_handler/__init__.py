@@ -61,9 +61,8 @@ exception to standard logging, the exception won't be raised any further.
 
 from abc import ABC, abstractmethod
 from logging import getLogger
-from sys import version_info
 
-from opentelemetry.util._entry_points import entry_points
+from opentelemetry.util._importlib_metadata import entry_points
 
 logger = getLogger(__name__)
 
@@ -119,18 +118,9 @@ class GlobalErrorHandler:
 
         plugin_handled = False
 
-        # FIXME remove when support for 3.9 is dropped.
-        if version_info.minor in (8, 9):
-
-            error_handler_entry_points = entry_points()[
-                "opentelemetry_error_handler"
-            ]
-
-        else:
-
-            error_handler_entry_points = entry_points(
-                group="opentelemetry_error_handler"
-            )
+        error_handler_entry_points = entry_points(
+            group="opentelemetry_error_handler"
+        )
 
         for error_handler_entry_point in error_handler_entry_points:
 

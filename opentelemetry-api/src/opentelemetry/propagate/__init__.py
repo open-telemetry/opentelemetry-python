@@ -68,22 +68,21 @@ Example::
     https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/api-propagators.md
 """
 
-import typing
 from logging import getLogger
 from os import environ
-from sys import version_info
+from typing import Optional
 
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.propagators import composite, textmap
-from opentelemetry.util._entry_points import entry_points
+from opentelemetry.util._importlib_metadata import entry_points
 
 logger = getLogger(__name__)
 
 
 def extract(
     carrier: textmap.CarrierT,
-    context: typing.Optional[Context] = None,
+    context: Optional[Context] = None,
     getter: textmap.Getter[textmap.CarrierT] = textmap.default_getter,
 ) -> Context:
     """Uses the configured propagator to extract a Context from the carrier.
@@ -104,7 +103,7 @@ def extract(
 
 def inject(
     carrier: textmap.CarrierT,
-    context: typing.Optional[Context] = None,
+    context: Optional[Context] = None,
     setter: textmap.Setter[textmap.CarrierT] = textmap.default_setter,
 ) -> None:
     """Uses the configured propagator to inject a Context into the carrier.
@@ -134,25 +133,17 @@ for propagator in environ_propagators.split(","):
     propagator = propagator.strip()
 
     try:
-        # FIXME Remove when support for 3.9 is dropped.
-        if version_info.minor in (8, 9):
-            for entry_point in entry_points().get(  # type: ignore
-                "opentelemetry_propagator", []
-            ):
-                if entry_point.name == propagator:  # type: ignore
-                    propagators.append(entry_point.load()())  # type: ignore
-        else:
 
-            propagators.append(  # type: ignore
-                next(  # type: ignore
-                    iter(  # type: ignore
-                        entry_points(  # type: ignore
-                            group="opentelemetry_propagator",
-                            name=propagator,
-                        )
+        propagators.append(  # type: ignore
+            next(  # type: ignore
+                iter(  # type: ignore
+                    entry_points(  # type: ignore
+                        group="opentelemetry_propagator",
+                        name=propagator,
                     )
-                ).load()()
-            )
+                )
+            ).load()()
+        )
 
     except Exception:  # pylint: disable=broad-except
         logger.exception(
