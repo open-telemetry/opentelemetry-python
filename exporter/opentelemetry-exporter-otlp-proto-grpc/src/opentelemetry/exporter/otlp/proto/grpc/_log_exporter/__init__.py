@@ -96,7 +96,7 @@ class OTLPLogExporter(
                 "insecure": insecure,
                 "credentials": credentials,
                 "headers": headers,
-                "timeout": timeout,
+                "timeout": timeout or environ_timeout,
                 "compression": compression,
             }
         )
