@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import os
 import time
 from concurrent.futures import ThreadPoolExecutor
 from unittest import TestCase
@@ -19,7 +19,7 @@ from unittest.mock import patch
 
 from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
-from grpc import StatusCode, server
+from grpc import ChannelCredentials, Compression, StatusCode, server
 
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
@@ -47,9 +47,19 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
 )
 from opentelemetry.sdk._logs import LogData, LogRecord
 from opentelemetry.sdk._logs.export import LogExportResult
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
+    OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+    OTEL_EXPORTER_OTLP_LOGS_HEADERS,
+    OTEL_EXPORTER_OTLP_LOGS_INSECURE,
+    OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
+)
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import TraceFlags
+
+THIS_DIR = os.path.dirname(__file__)
 
 
 class LogsServiceServicerUNAVAILABLEDelay(LogsServiceServicer):
@@ -249,13 +259,6 @@ class TestOTLPLogExporter(TestCase):
                 ),
             )
             mock_method.reset_mock()
-
-    def test_otlp_headers_from_env(self):
-        # pylint: disable=protected-access
-        self.assertEqual(
-            self.exporter._headers,
-            (("user-agent", "OTel OTLP Exporter Python/" + __version__),),
-        )
 
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
@@ -494,4 +497,209 @@ class TestOTLPLogExporter(TestCase):
             self.exporter._translate_data(
                 [self.log_data_1, self.log_data_2, self.log_data_3]
             ),
+        )
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "logs:9200",
+            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: THIS_DIR
+            + "/../fixtures/test.cert",
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS: " key1=value1,KEY2 = value=2",
+            OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "10",
+            OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip",
+        },
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.OTLPExporterMixin.__init__"
+    )
+    def test_env_variables(self, mock_exporter_mixin):
+        OTLPLogExporter()
+        self.assertTrue(len(mock_exporter_mixin.call_args_list) == 1)
+        _, kwargs = mock_exporter_mixin.call_args_list[0]
+
+        self.assertEqual(kwargs["endpoint"], "logs:9200")
+        self.assertEqual(kwargs["headers"], " key1=value1,KEY2 = value=2")
+        self.assertEqual(kwargs["timeout"], 10)
+        self.assertEqual(kwargs["compression"], Compression.Gzip)
+        self.assertIsNotNone(kwargs["credentials"])
+        self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_LOGS_HEADERS: " key1=value1,KEY2 = VALUE=2 "},
+    )
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
+    # pylint: disable=unused-argument
+    def test_otlp_headers_from_env(self, mock_ssl_channel, mock_secure):
+        exporter = OTLPLogExporter()
+        # pylint: disable=protected-access
+        self.assertEqual(
+            exporter._headers,
+            (
+                ("key1", "value1"),
+                ("key2", "VALUE=2"),
+                ("user-agent", "OTel OTLP Exporter Python/" + __version__),
+            ),
+        )
+        exporter = OTLPLogExporter(
+            headers=(("key3", "value3"), ("key4", "value4"))
+        )
+        # pylint: disable=protected-access
+        self.assertEqual(
+            exporter._headers,
+            (
+                ("key3", "value3"),
+                ("key4", "value4"),
+                ("user-agent", "OTel OTLP Exporter Python/" + __version__),
+            ),
+        )
+        exporter = OTLPLogExporter(
+            headers={"key5": "value5", "key6": "value6"}
+        )
+        # pylint: disable=protected-access
+        self.assertEqual(
+            exporter._headers,
+            (
+                ("key5", "value5"),
+                ("key6", "value6"),
+                ("user-agent", "OTel OTLP Exporter Python/" + __version__),
+            ),
+        )
+
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_LOGS_INSECURE: "True"},
+    )
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    # pylint: disable=unused-argument
+    def test_otlp_insecure_from_env(self, mock_insecure):
+        OTLPLogExporter()
+        # pylint: disable=protected-access
+        self.assertTrue(mock_insecure.called)
+        self.assertEqual(
+            1,
+            mock_insecure.call_count,
+            f"expected {mock_insecure} to be called",
+        )
+
+    # pylint: disable=no-self-use
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.secure_channel")
+    def test_otlp_exporter_endpoint(self, mock_secure, mock_insecure):
+        """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
+        expected_endpoint = "localhost:4317"
+        endpoints = [
+            (
+                "http://localhost:4317",
+                None,
+                mock_insecure,
+            ),
+            (
+                "localhost:4317",
+                None,
+                mock_secure,
+            ),
+            (
+                "http://localhost:4317",
+                True,
+                mock_insecure,
+            ),
+            (
+                "localhost:4317",
+                True,
+                mock_insecure,
+            ),
+            (
+                "http://localhost:4317",
+                False,
+                mock_secure,
+            ),
+            (
+                "localhost:4317",
+                False,
+                mock_secure,
+            ),
+            (
+                "https://localhost:4317",
+                False,
+                mock_secure,
+            ),
+            (
+                "https://localhost:4317",
+                None,
+                mock_secure,
+            ),
+            (
+                "https://localhost:4317",
+                True,
+                mock_secure,
+            ),
+        ]
+        for endpoint, insecure, mock_method in endpoints:
+            OTLPLogExporter(endpoint=endpoint, insecure=insecure)
+            self.assertEqual(
+                1,
+                mock_method.call_count,
+                f"expected {mock_method} to be called for {endpoint} {insecure}",
+            )
+            self.assertEqual(
+                expected_endpoint,
+                mock_method.call_args[0][0],
+                f"expected {expected_endpoint} got {mock_method.call_args[0][0]} {endpoint}",
+            )
+            mock_method.reset_mock()
+
+    # pylint: disable=no-self-use
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip"})
+    def test_otlp_exporter_otlp_compression_envvar(
+        self, mock_insecure_channel
+    ):
+        """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
+        OTLPLogExporter(insecure=True)
+        mock_insecure_channel.assert_called_once_with(
+            "localhost:4317", compression=Compression.Gzip
+        )
+
+    # pylint: disable=no-self-use
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip"})
+    def test_otlp_exporter_otlp_compression_kwarg(self, mock_insecure_channel):
+        """Specifying kwarg should take precedence over env"""
+        OTLPLogExporter(insecure=True, compression=Compression.NoCompression)
+        mock_insecure_channel.assert_called_once_with(
+            "localhost:4317", compression=Compression.NoCompression
+        )
+
+    # pylint: disable=no-self-use
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    @patch.dict("os.environ", {})
+    def test_otlp_exporter_otlp_compression_unspecified(
+        self, mock_insecure_channel
+    ):
+        """No env or kwarg should be NoCompression"""
+        OTLPLogExporter(insecure=True)
+        mock_insecure_channel.assert_called_once_with(
+            "localhost:4317", compression=Compression.NoCompression
+        )
+
+    # pylint: disable=no-self-use
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
+    @patch.dict(
+        "os.environ",
+        {OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: "gzip"},
+    )
+    def test_otlp_exporter_otlp_compression_precendence(
+        self, mock_insecure_channel
+    ):
+        """OTEL_EXPORTER_OTLP_TRACES_COMPRESSION as higher priority than
+        OTEL_EXPORTER_OTLP_COMPRESSION
+        """
+        OTLPLogExporter(insecure=True)
+        mock_insecure_channel.assert_called_once_with(
+            "localhost:4317", compression=Compression.Gzip
         )

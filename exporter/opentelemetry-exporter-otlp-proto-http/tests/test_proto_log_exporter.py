@@ -56,11 +56,11 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
 from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
 from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_CERTIFICATE,
-    OTEL_EXPORTER_OTLP_COMPRESSION,
-    OTEL_EXPORTER_OTLP_ENDPOINT,
-    OTEL_EXPORTER_OTLP_HEADERS,
-    OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
+    OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+    OTEL_EXPORTER_OTLP_LOGS_HEADERS,
+    OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
@@ -94,11 +94,11 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
     @patch.dict(
         "os.environ",
         {
-            OTEL_EXPORTER_OTLP_CERTIFICATE: ENV_CERTIFICATE,
-            OTEL_EXPORTER_OTLP_COMPRESSION: Compression.Gzip.value,
-            OTEL_EXPORTER_OTLP_ENDPOINT: ENV_ENDPOINT,
-            OTEL_EXPORTER_OTLP_HEADERS: ENV_HEADERS,
-            OTEL_EXPORTER_OTLP_TIMEOUT: ENV_TIMEOUT,
+            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: ENV_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: Compression.Gzip.value,
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: ENV_ENDPOINT,
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS: ENV_HEADERS,
+            OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: ENV_TIMEOUT,
         },
     )
     def test_exporter_constructor_take_priority(self):
@@ -125,11 +125,12 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
     @patch.dict(
         "os.environ",
         {
-            OTEL_EXPORTER_OTLP_CERTIFICATE: ENV_CERTIFICATE,
-            OTEL_EXPORTER_OTLP_COMPRESSION: Compression.Gzip.value,
-            OTEL_EXPORTER_OTLP_ENDPOINT: ENV_ENDPOINT,
-            OTEL_EXPORTER_OTLP_HEADERS: ENV_HEADERS,
-            OTEL_EXPORTER_OTLP_TIMEOUT: ENV_TIMEOUT,
+            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: ENV_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: Compression.Gzip.value,
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: ENV_ENDPOINT
+            + DEFAULT_LOGS_EXPORT_PATH,
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS: ENV_HEADERS,
+            OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: ENV_TIMEOUT,
         },
     )
     def test_exporter_env(self):
@@ -146,6 +147,26 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             exporter._headers, {"envheader1": "val1", "envheader2": "val2"}
         )
         self.assertIsInstance(exporter._session, requests.Session)
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS: "envHeader1=val1,envHeader2=val2,missingValue"
+        },
+    )
+    def test_headers_parse_from_env(self):
+
+        with self.assertLogs(level="WARNING") as cm:
+            _ = OTLPLogExporter()
+
+            self.assertEqual(
+                cm.records[0].message,
+                (
+                    "Header format invalid! Header values in environment "
+                    "variables must be URL encoded per the OpenTelemetry "
+                    "Protocol Exporter specification: missingValue"
+                ),
+            )
 
     def test_encode(self):
         sdk_logs, expected_encoding = self.get_test_logs()
