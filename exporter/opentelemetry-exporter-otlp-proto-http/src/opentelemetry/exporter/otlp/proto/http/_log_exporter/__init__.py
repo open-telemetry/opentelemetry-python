@@ -98,7 +98,7 @@ class OTLPLogExporter(LogExporter):
             OTEL_EXPORTER_OTLP_LOGS_HEADERS,
             environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
         )
-        self._headers = headers or  parse_env_headers(headers_string)
+        self._headers = headers or parse_env_headers(headers_string)
         self._timeout = timeout or int(
             environ.get(
                 OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
@@ -187,7 +187,7 @@ def _compression_from_env() -> Compression:
     compression = (
         environ.get(
             OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
-             environ.get(OTEL_EXPORTER_OTLP_COMPRESSION, "none"),
+            environ.get(OTEL_EXPORTER_OTLP_COMPRESSION, "none"),
         )
         .lower()
         .strip()

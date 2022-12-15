@@ -46,16 +46,15 @@ from opentelemetry.proto.logs.v1.logs_pb2 import ResourceLogs, ScopeLogs
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
+from opentelemetry.sdk._logs import LogData, LogRecord
+from opentelemetry.sdk._logs.export import LogExportResult
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
     OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
     OTEL_EXPORTER_OTLP_LOGS_HEADERS,
-    OTEL_EXPORTER_OTLP_LOGS_INSECURE,
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
 )
-from opentelemetry.sdk._logs import LogData, LogRecord
-from opentelemetry.sdk._logs.export import LogExportResult
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import TraceFlags
@@ -110,7 +109,6 @@ class LogsServiceServicerALREADY_EXISTS(LogsServiceServicer):
 
 
 class TestOTLPLogExporter(TestCase):
-
     def setUp(self):
         self.exporter = OTLPLogExporter()
 
@@ -200,7 +198,6 @@ class TestOTLPLogExporter(TestCase):
         self.assertEqual(kwargs["compression"], Compression.Gzip)
         self.assertIsNotNone(kwargs["credentials"])
         self.assertIsInstance(kwargs["credentials"], ChannelCredentials)
-
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter.ssl_channel_credentials"

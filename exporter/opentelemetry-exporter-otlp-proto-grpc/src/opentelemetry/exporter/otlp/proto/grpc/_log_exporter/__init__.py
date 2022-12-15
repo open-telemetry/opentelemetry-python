@@ -46,6 +46,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
 )
 
+
 class OTLPLogExporter(
     LogExporter,
     OTLPExporterMixin[SDKLogRecord, ExportLogsServiceRequest, LogExportResult],
@@ -86,9 +87,9 @@ class OTLPLogExporter(
             if compression is None
             else compression
         )
-        endpoint=endpoint or environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT)
+        endpoint = endpoint or environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT)
 
-        headers=headers or environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS)
+        headers = headers or environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS)
 
         super().__init__(
             **{

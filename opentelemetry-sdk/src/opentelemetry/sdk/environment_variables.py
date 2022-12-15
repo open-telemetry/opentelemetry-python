@@ -413,9 +413,7 @@ Same as :envvar:`OTEL_EXPORTER_OTLP_COMPRESSION` but only for the metric
 exporter. If both are present, this takes higher precedence.
 """
 
-OTEL_EXPORTER_OTLP_LOGS_COMPRESSION = (
-    "OTEL_EXPORTER_OTLP_LOGS_COMPRESSION"
-)
+OTEL_EXPORTER_OTLP_LOGS_COMPRESSION = "OTEL_EXPORTER_OTLP_LOGS_COMPRESSION"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_LOGS_COMPRESSION
 
@@ -476,9 +474,7 @@ The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE` stores the path to the cert
 TLS credentials of gRPC client for traces. Should only be used for a secure connection for tracing.
 """
 
-OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE = (
-    "OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE"
-)
+OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE = "OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE
 
