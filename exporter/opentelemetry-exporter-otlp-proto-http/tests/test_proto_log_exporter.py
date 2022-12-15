@@ -107,23 +107,23 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: "logs/certificate.env",
             OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: Compression.Deflate.value,
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "https://logs.endpoint.env",
-            OTEL_EXPORTER_OTLP_LOGS_HEADERS: "metricsEnv1=val1,metricsEnv2=val2,metricEnv3===val3==",
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS: "logsEnv1=val1,logsEnv2=val2,logsEnv3===val3==",
             OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "40",
         },
     )
     def test_exporter_metrics_env_take_priority(self):
         exporter = OTLPLogExporter()
 
-        self.assertEqual(exporter._endpoint, "https://metrics.endpoint.env")
-        self.assertEqual(exporter._certificate_file, "metrics/certificate.env")
+        self.assertEqual(exporter._endpoint, "https://logs.endpoint.env")
+        self.assertEqual(exporter._certificate_file, "logs/certificate.env")
         self.assertEqual(exporter._timeout, 40)
         self.assertIs(exporter._compression, Compression.Deflate)
         self.assertEqual(
             exporter._headers,
             {
-                "metricsenv1": "val1",
-                "metricsenv2": "val2",
-                "metricenv3": "==val3==",
+                "logsenv1": "val1",
+                "logsenv2": "val2",
+                "logsenv3": "==val3==",
             },
         )
         self.assertIsInstance(exporter._session, requests.Session)
