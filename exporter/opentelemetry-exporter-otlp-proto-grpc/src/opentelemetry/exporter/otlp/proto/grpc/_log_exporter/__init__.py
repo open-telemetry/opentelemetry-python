@@ -10,13 +10,15 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+from os import environ
 from typing import Optional, Sequence
 from grpc import ChannelCredentials, Compression
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     OTLPExporterMixin,
     get_resource_data,
     _translate_value,
+    _get_credentials,
+    environ_to_compression,
 )
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
@@ -33,6 +35,14 @@ from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord as PB2LogRecord
 from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
 from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs.export import LogExporter, LogExportResult
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
+    OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+    OTEL_EXPORTER_OTLP_LOGS_HEADERS,
+    OTEL_EXPORTER_OTLP_LOGS_INSECURE,
+    OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
+)
 
 
 class OTLPLogExporter(
@@ -52,13 +62,39 @@ class OTLPLogExporter(
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
+        if insecure is None:
+            insecure = environ.get(OTEL_EXPORTER_OTLP_LOGS_INSECURE)
+            if insecure is not None:
+                insecure = insecure.lower() == "true"
+
+        if (
+            not insecure
+            and environ.get(OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE) is not None
+        ):
+            credentials = _get_credentials(
+                credentials, OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE
+            )
+
+        environ_timeout = environ.get(OTEL_EXPORTER_OTLP_LOGS_TIMEOUT)
+        environ_timeout = (
+            int(environ_timeout) if environ_timeout is not None else None
+        )
+
+        compression = (
+            environ_to_compression(OTEL_EXPORTER_OTLP_LOGS_COMPRESSION)
+            if compression is None
+            else compression
+        )
+
         super().__init__(
             **{
-                "endpoint": endpoint,
+                "endpoint": endpoint
+                or environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT),
                 "insecure": insecure,
                 "credentials": credentials,
-                "headers": headers,
-                "timeout": timeout,
+                "headers": headers
+                or environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS),
+                "timeout": timeout or environ_timeout,
                 "compression": compression,
             }
         )

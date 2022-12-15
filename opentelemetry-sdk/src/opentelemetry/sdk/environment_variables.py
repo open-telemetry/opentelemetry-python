@@ -579,3 +579,12 @@ OTEL_EXPORTER_OTLP_LOGS_TIMEOUT = "OTEL_EXPORTER_OTLP_LOGS_TIMEOUT"
 The :envvar:`OTEL_EXPORTER_OTLP_LOGS_TIMEOUT` is the maximum time the OTLP exporter will
 wait for each batch export for logs.
 """
+
+OTEL_EXPORTER_OTLP_LOGS_INSECURE = "OTEL_EXPORTER_OTLP_LOGS_INSECURE"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_LOGS_INSECURE
+
+The :envvar:`OTEL_EXPORTER_OTLP_LOGS_INSECURE` represents whether to enable client transport security
+for gRPC requests for logs. A scheme of https takes precedence over the this configuration setting.
+Default: False
+"""
