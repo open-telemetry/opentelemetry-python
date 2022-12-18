@@ -103,10 +103,31 @@ class TestBase(unittest.TestCase):
         resource_metrics = (
             self.memory_metrics_reader.get_metrics_data().resource_metrics
         )
+
+        all_metrics = []
         for metrics in resource_metrics:
             for scope_metrics in metrics.scope_metrics:
-                all_metrics = list(scope_metrics.metrics)
-                return self.sorted_metrics(all_metrics)
+                all_metrics.extend(scope_metrics.metrics)
+
+        return self.sorted_metrics(all_metrics)
+
+    def assert_histogram_expected(self, data_point, expected_value):
+        self.assertEqual(
+            data_point.count,
+            1,
+        )
+        self.assertEqual(
+            data_point.sum,
+            expected_value,
+        )
+        self.assertEqual(
+            data_point.max,
+            expected_value,
+        )
+        self.assertEqual(
+            data_point.min,
+            expected_value,
+        )
 
     def assert_metric_expected(
         self, metric, expected_value, expected_attributes
@@ -114,10 +135,7 @@ class TestBase(unittest.TestCase):
         data_point = next(iter(metric.data.data_points))
 
         if isinstance(data_point, HistogramDataPoint):
-            self.assertEqual(
-                data_point.sum,
-                expected_value,
-            )
+            self.assert_histogram_expected(data_point, expected_value)
         elif isinstance(data_point, NumberDataPoint):
             self.assertEqual(
                 data_point.value,
