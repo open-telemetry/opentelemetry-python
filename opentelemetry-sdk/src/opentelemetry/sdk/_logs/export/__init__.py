@@ -32,3 +32,4 @@ for key, value in globals().copy().items():
     if not key.startswith("_"):
         value.__module__ = __name__
         __all__.append(key)
+    del key, value
