@@ -91,8 +91,18 @@ class MetricExporter(ABC):
             type, "opentelemetry.sdk.metrics.view.Aggregation"
         ] = None,
     ) -> None:
-        self._preferred_temporality = preferred_temporality
-        self._preferred_aggregation = preferred_aggregation
+        self.__preferred_temporality = preferred_temporality
+        self.__preferred_aggregation = preferred_aggregation
+
+    @property
+    def _preferred_temporality(self) -> Dict[type, AggregationTemporality]:
+        return self.__preferred_temporality
+
+    @property
+    def _preferred_aggregation(
+        self,
+    ) -> Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"]:
+        return self.__preferred_aggregation
 
     @abstractmethod
     def export(
@@ -218,7 +228,7 @@ class MetricReader(ABC):
             Iterable["opentelemetry.sdk.metrics.export.Metric"],
         ] = None
 
-        self._instrument_class_temporality = {
+        self.__instrument_class_temporality = {
             _Counter: AggregationTemporality.CUMULATIVE,
             _UpDownCounter: AggregationTemporality.CUMULATIVE,
             _Histogram: AggregationTemporality.CUMULATIVE,
@@ -240,32 +250,32 @@ class MetricReader(ABC):
         if preferred_temporality is not None:
             for typ, temporality in preferred_temporality.items():
                 if typ is Counter:
-                    self._instrument_class_temporality[_Counter] = temporality
+                    self.__instrument_class_temporality[_Counter] = temporality
                 elif typ is UpDownCounter:
-                    self._instrument_class_temporality[
+                    self.__instrument_class_temporality[
                         _UpDownCounter
                     ] = temporality
                 elif typ is Histogram:
-                    self._instrument_class_temporality[
+                    self.__instrument_class_temporality[
                         _Histogram
                     ] = temporality
                 elif typ is ObservableCounter:
-                    self._instrument_class_temporality[
+                    self.__instrument_class_temporality[
                         _ObservableCounter
                     ] = temporality
                 elif typ is ObservableUpDownCounter:
-                    self._instrument_class_temporality[
+                    self.__instrument_class_temporality[
                         _ObservableUpDownCounter
                     ] = temporality
                 elif typ is ObservableGauge:
-                    self._instrument_class_temporality[
+                    self.__instrument_class_temporality[
                         _ObservableGauge
                     ] = temporality
                 else:
                     raise Exception(f"Invalid instrument class found {typ}")
 
-        self._preferred_temporality = preferred_temporality
-        self._instrument_class_aggregation = {
+        self.__preferred_temporality = preferred_temporality
+        self.__instrument_class_aggregation = {
             _Counter: DefaultAggregation(),
             _UpDownCounter: DefaultAggregation(),
             _Histogram: DefaultAggregation(),
@@ -277,29 +287,45 @@ class MetricReader(ABC):
         if preferred_aggregation is not None:
             for typ, aggregation in preferred_aggregation.items():
                 if typ is Counter:
-                    self._instrument_class_aggregation[_Counter] = aggregation
+                    self.__instrument_class_aggregation[_Counter] = aggregation
                 elif typ is UpDownCounter:
-                    self._instrument_class_aggregation[
+                    self.__instrument_class_aggregation[
                         _UpDownCounter
                     ] = aggregation
                 elif typ is Histogram:
-                    self._instrument_class_aggregation[
+                    self.__instrument_class_aggregation[
                         _Histogram
                     ] = aggregation
                 elif typ is ObservableCounter:
-                    self._instrument_class_aggregation[
+                    self.__instrument_class_aggregation[
                         _ObservableCounter
                     ] = aggregation
                 elif typ is ObservableUpDownCounter:
-                    self._instrument_class_aggregation[
+                    self.__instrument_class_aggregation[
                         _ObservableUpDownCounter
                     ] = aggregation
                 elif typ is ObservableGauge:
-                    self._instrument_class_aggregation[
+                    self.__instrument_class_aggregation[
                         _ObservableGauge
                     ] = aggregation
                 else:
                     raise Exception(f"Invalid instrument class found {typ}")
+
+    @property
+    def _instrument_class_temporality(
+        self,
+    ) -> Dict[type, AggregationTemporality]:
+        return self.__instrument_class_temporality
+
+    @property
+    def _preferred_temporality(self) -> Dict[type, AggregationTemporality]:
+        return self.__preferred_temporality
+
+    @property
+    def _instrument_class_aggregation(
+        self,
+    ) -> Dict[type, "opentelemetry.sdk.metrics.view.Aggregation"]:
+        return self.__instrument_class_aggregation
 
     @final
     def collect(self, timeout_millis: float = 10_000) -> None:
@@ -413,11 +439,11 @@ class InMemoryMetricReader(MetricReader):
 
 class PeriodicExportingMetricReader(MetricReader):
     """`PeriodicExportingMetricReader` is an implementation of `MetricReader`
-    that collects metrics based on a user-configurable time interval, and passes the
-    metrics to the configured exporter.
+    that collects metrics based on a user-configurable time interval, and passes
+    the metrics to the configured exporter.
 
-    The configured exporter's :py:meth:`~MetricExporter.export` method will not be called
-    concurrently.
+    The configured exporter's :py:meth:`~MetricExporter.export` method will not
+    be called concurrently.
     """
 
     def __init__(
@@ -432,8 +458,8 @@ class PeriodicExportingMetricReader(MetricReader):
             preferred_aggregation=exporter._preferred_aggregation,
         )
 
-        # This lock is held whenever calling self._exporter.export() to prevent concurrent
-        # execution of MetricExporter.export()
+        # This lock is held whenever calling self._exporter.export() to prevent
+        # concurrent execution of MetricExporter.export()
         # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#exportbatch
         self._export_lock = Lock()
 
