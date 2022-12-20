@@ -15,11 +15,12 @@
 import logging
 import unittest
 from contextlib import contextmanager
-from typing import Tuple
+from typing import Optional, Tuple, Union
 
 from opentelemetry import metrics as metrics_api
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics._internal.point import Metric
 from opentelemetry.sdk.metrics.export import (
     HistogramDataPoint,
     InMemoryMetricReader,
@@ -111,52 +112,36 @@ class TestBase(unittest.TestCase):
 
         return self.sorted_metrics(all_metrics)
 
-    def assert_histogram_expected(self, data_point, expected_value):
-        self.assertEqual(
-            data_point.count,
-            1,
-        )
-        self.assertEqual(
-            data_point.sum,
-            expected_value,
-        )
-        self.assertEqual(
-            data_point.max,
-            expected_value,
-        )
-        self.assertEqual(
-            data_point.min,
-            expected_value,
-        )
-
     def assert_metric_expected(
-        self, metric, expected_value, expected_attributes
+        self,
+        metric: Metric,
+        expected_value: Union[int, float],
+        expected_attributes: dict,
+        est_delta: Optional[float] = None,
     ):
         data_point = next(iter(metric.data.data_points))
 
         if isinstance(data_point, HistogramDataPoint):
-            self.assert_histogram_expected(data_point, expected_value)
+            self.assertEqual(
+                data_point.count,
+                1,
+            )
+            if est_delta is None:
+                self.assertEqual(
+                    data_point.sum,
+                    expected_value,
+                )
+            else:
+                self.assertAlmostEqual(
+                    data_point.sum,
+                    expected_value,
+                    delta=est_delta,
+                )
         elif isinstance(data_point, NumberDataPoint):
             self.assertEqual(
                 data_point.value,
                 expected_value,
             )
-
-        self.assertDictEqual(
-            expected_attributes,
-            dict(data_point.attributes),
-        )
-
-    def assert_duration_metric_expected(
-        self, metric, duration_estimated, expected_attributes, est_delta=200
-    ):
-        data_point = next(iter(metric.data.data_points))
-
-        self.assertAlmostEqual(
-            data_point.sum,
-            duration_estimated,
-            delta=est_delta,
-        )
 
         self.assertDictEqual(
             expected_attributes,
