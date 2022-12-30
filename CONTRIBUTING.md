@@ -47,11 +47,13 @@ during their normal contribution hours.
 
 This project uses [tox](https://tox.readthedocs.io) to automate
 some aspects of development, including testing against multiple Python versions.
-To install `tox`, run:
+To install `tox`, run[^1]:
 
 ```console
-$ pip install tox
+$ pip install tox==3.27.1
 ```
+
+[^1]: Right now we are experiencing issues with `tox==4.x.y`, so we recommend you use this version.
 
 You can run `tox` with the following arguments:
 

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Version 1.15.0/0.36b0 (2022-12-09)
+
 - Regenerate opentelemetry-proto to be compatible with protobuf 3 and 4
   ([#3070](https://github.com/open-telemetry/opentelemetry-python/pull/3070))
 - Rename parse_headers to parse_env_headers and improve error message
@@ -21,6 +23,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3038](https://github.com/open-telemetry/opentelemetry-python/pull/3038))
 - Fix: Avoid generator in metrics _ViewInstrumentMatch.collect()
   ([#3035](https://github.com/open-telemetry/opentelemetry-python/pull/3035)
+- [exporter-otlp-proto-grpc] add user agent string
+  ([#3009](https://github.com/open-telemetry/opentelemetry-python/pull/3009))
 
 ## Version 1.14.0/0.35b0 (2022-11-04)
 
