@@ -29,6 +29,7 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_LOGS_EXPORT_PATH,
     DEFAULT_TIMEOUT,
     OTLPLogExporter,
+    _is_backoff_v2,
 )
 from opentelemetry.exporter.otlp.proto.http._log_exporter.encoder import (
     _encode_attributes,
@@ -166,7 +167,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
     def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
         # In backoff ~= 2.0.0 the first value yielded from expo is None.
         def generate_delays(*args, **kwargs):
-            yield None
+            if _is_backoff_v2:
+                yield None
             yield 1
 
         mock_backoff.expo.configure_mock(**{"side_effect": generate_delays})
