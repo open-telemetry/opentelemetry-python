@@ -452,6 +452,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         if value == 0:
             self._zero_count += 1
+            # No need to do anything else if value is zero, just increment the
+            # zero count.
             return
 
         self._sum += value
