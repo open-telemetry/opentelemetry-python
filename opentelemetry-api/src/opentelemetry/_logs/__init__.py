@@ -56,4 +56,4 @@ for key, value in globals().copy().items():  # type: ignore
     if not key.startswith("_"):
         value.__module__ = __name__  # type: ignore
         __all__.append(key)
-    del key, value
+    del key, value  # type: ignore
