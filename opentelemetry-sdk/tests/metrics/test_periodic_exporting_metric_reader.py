@@ -134,6 +134,16 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         self.assertTrue(collect_mock.assert_called_once)
         pmr.shutdown()
 
+    def test_ticker_not_called(self):
+        collect_mock = Mock()
+        exporter = FakeMetricsExporter()
+        exporter.export = Mock()
+        pmr = PeriodicExportingMetricReader(exporter, export_interval_millis=0)
+        pmr._set_collect_callback(collect_mock)
+        sleep(0.1)
+        self.assertTrue(collect_mock.assert_not_called)
+        pmr.shutdown()
+
     @flaky(max_runs=3, min_passes=1)
     def test_ticker_collects_metrics(self):
         exporter = FakeMetricsExporter()
