@@ -611,7 +611,9 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             min_ = current_point.min
 
             if aggregation_temporality is AggregationTemporality.CUMULATIVE:
-                start_time_unix_nano = self._previous_point.start_time_unix_nano
+                start_time_unix_nano = (
+                    self._previous_point.start_time_unix_nano
+                )
                 sum_ = current_point.sum + self._previous_point.sum
                 # Only update min/max on delta -> cumulative
                 max_ = max(current_point.max, self._previous_point.max)

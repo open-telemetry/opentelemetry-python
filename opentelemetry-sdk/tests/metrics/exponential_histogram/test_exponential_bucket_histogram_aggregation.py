@@ -778,7 +778,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             _ExponentialBucketHistogramAggregation(
                 Mock(),
                 Mock(),
-                max_size=_ExponentialBucketHistogramAggregation._min_max_size
+                max_size=_ExponentialBucketHistogramAggregation._min_max_size,
             )
         )
 
@@ -791,5 +791,5 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         # normal floating point values.
         self.assertEqual(
             len(exponential_histogram_aggregation._positive._counts),
-            exponential_histogram_aggregation._min_max_size
+            exponential_histogram_aggregation._min_max_size,
         )
