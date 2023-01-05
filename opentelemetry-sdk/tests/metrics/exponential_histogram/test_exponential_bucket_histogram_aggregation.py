@@ -768,3 +768,28 @@ class TestExponentialBucketHistogramAggregation(TestCase):
 
             self.assertInEpsilon(0.5, above / total, 0.05)
             self.assertInEpsilon(0.5, below / total, 0.06)
+
+    def test_min_max_size(self):
+        """
+        Tests that the minimum max_size is the right value.
+        """
+
+        exponential_histogram_aggregation = (
+            _ExponentialBucketHistogramAggregation(
+                Mock(),
+                Mock(),
+                max_size=_ExponentialBucketHistogramAggregation._min_max_size
+            )
+        )
+
+        # The minimum and maximum normal floating point values are used here to
+        # make sure the mapping can contain the full range of values.
+        exponential_histogram_aggregation.aggregate(Mock(value=float_info.min))
+        exponential_histogram_aggregation.aggregate(Mock(value=float_info.max))
+
+        # This means the smallest max_scale is enough for the full range of the
+        # normal floating point values.
+        self.assertEqual(
+            len(exponential_histogram_aggregation._positive._counts),
+            exponential_histogram_aggregation._min_max_size
+        )
