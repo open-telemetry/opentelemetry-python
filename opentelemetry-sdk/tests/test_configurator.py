@@ -221,9 +221,7 @@ class CustomSampler(Sampler):
 class CustomRatioSampler(TraceIdRatioBased):
     def __init__(self, ratio):
         if not isinstance(ratio, float):
-            raise ValueError(
-                "CustomRatioSampler ratio argument is not a float."
-            )
+            raise ValueError("CustomRatioSampler ratio argument is not a float.")
         self.ratio = ratio
         super().__init__(ratio)
 
@@ -302,14 +300,18 @@ class TestTraceInit(TestCase):
         self.set_provider_patcher.stop()
 
     # pylint: disable=protected-access
-    @patch.dict(
-        environ, {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-test-service"}
-    )
+    @patch.dict(environ, {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-test-service"})
     def test_trace_init_default(self):
+
+        auto_resource = Resource.create(
+            {
+                "telemetry.auto.version": "test-version",
+            }
+        )
         _init_tracing(
             {"zipkin": Exporter},
             id_generator=RandomIdGenerator(),
-            auto_instrumentation_version="test-version",
+            resource=auto_resource,
         )
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
@@ -318,9 +320,7 @@ class TestTraceInit(TestCase):
         self.assertIsInstance(provider.id_generator, RandomIdGenerator)
         self.assertIsInstance(provider.processor, Processor)
         self.assertIsInstance(provider.processor.exporter, Exporter)
-        self.assertEqual(
-            provider.processor.exporter.service_name, "my-test-service"
-        )
+        self.assertEqual(provider.processor.exporter.service_name, "my-test-service")
         self.assertEqual(
             provider.resource.attributes.get("telemetry.auto.version"),
             "test-version",
@@ -331,9 +331,7 @@ class TestTraceInit(TestCase):
         {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-otlp-test-service"},
     )
     def test_trace_init_otlp(self):
-        _init_tracing(
-            {"otlp": OTLPSpanExporter}, id_generator=RandomIdGenerator()
-        )
+        _init_tracing({"otlp": OTLPSpanExporter}, id_generator=RandomIdGenerator())
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
@@ -352,9 +350,7 @@ class TestTraceInit(TestCase):
     @patch("opentelemetry.sdk._configuration.iter_entry_points")
     def test_trace_init_custom_id_generator(self, mock_iter_entry_points):
         mock_iter_entry_points.configure_mock(
-            return_value=[
-                IterEntryPoint("custom_id_generator", CustomIdGenerator)
-            ]
+            return_value=[IterEntryPoint("custom_id_generator", CustomIdGenerator)]
         )
         id_generator_name = _get_id_generator()
         id_generator = _import_id_generator(id_generator_name)
@@ -362,9 +358,7 @@ class TestTraceInit(TestCase):
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider.id_generator, CustomIdGenerator)
 
-    @patch.dict(
-        "os.environ", {OTEL_TRACES_SAMPLER: "non_existent_entry_point"}
-    )
+    @patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "non_existent_entry_point"})
     def test_trace_init_custom_sampler_with_env_non_existent_entry_point(self):
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
@@ -441,9 +435,7 @@ class TestTraceInit(TestCase):
             OTEL_TRACES_SAMPLER_ARG: "0.5",
         },
     )
-    def test_trace_init_custom_ratio_sampler_with_env(
-        self, mock_iter_entry_points
-    ):
+    def test_trace_init_custom_ratio_sampler_with_env(self, mock_iter_entry_points):
         mock_iter_entry_points.configure_mock(
             return_value=[
                 IterEntryPoint(
@@ -577,7 +569,12 @@ class TestLoggingInit(TestCase):
         ]
 
     def test_logging_init_empty(self):
-        _init_logging({}, "auto-version")
+        auto_resource = Resource.create(
+            {
+                "telemetry.auto.version": "auto-version",
+            }
+        )
+        _init_logging({}, resource=auto_resource)
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, DummyLoggerProvider)
@@ -592,7 +589,8 @@ class TestLoggingInit(TestCase):
         {"OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service"},
     )
     def test_logging_init_exporter(self):
-        _init_logging({"otlp": DummyOTLPLogExporter})
+        resource = Resource.create({})
+        _init_logging({"otlp": DummyOTLPLogExporter}, resource=resource)
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, DummyLoggerProvider)
@@ -602,9 +600,7 @@ class TestLoggingInit(TestCase):
             "otlp-service",
         )
         self.assertIsInstance(provider.processor, DummyLogRecordProcessor)
-        self.assertIsInstance(
-            provider.processor.exporter, DummyOTLPLogExporter
-        )
+        self.assertIsInstance(provider.processor.exporter, DummyOTLPLogExporter)
         logging.getLogger(__name__).error("hello")
         self.assertTrue(provider.processor.exporter.export_called)
 
@@ -658,15 +654,18 @@ class TestMetricsInit(TestCase):
         self.provider_patch.stop()
 
     def test_metrics_init_empty(self):
-        _init_metrics({}, "auto-version")
+        auto_resource = Resource.create(
+            {
+                "telemetry.auto.version": "auto-version",
+            }
+        )
+        _init_metrics({}, resource=auto_resource)
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, DummyMeterProvider)
         self.assertIsInstance(provider._sdk_config.resource, Resource)
         self.assertEqual(
-            provider._sdk_config.resource.attributes.get(
-                "telemetry.auto.version"
-            ),
+            provider._sdk_config.resource.attributes.get("telemetry.auto.version"),
             "auto-version",
         )
 
@@ -675,7 +674,8 @@ class TestMetricsInit(TestCase):
         {"OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service"},
     )
     def test_metrics_init_exporter(self):
-        _init_metrics({"otlp": DummyOTLPMetricExporter})
+        resource = Resource.create({})
+        _init_metrics({"otlp": DummyOTLPMetricExporter}, resource=resource)
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, DummyMeterProvider)
@@ -699,15 +699,9 @@ class TestExporterNames(TestCase):
         },
     )
     def test_otlp_exporter(self):
-        self.assertEqual(
-            _get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_GRPC]
-        )
-        self.assertEqual(
-            _get_exporter_names("metrics"), [_EXPORTER_OTLP_PROTO_GRPC]
-        )
-        self.assertEqual(
-            _get_exporter_names("logs"), [_EXPORTER_OTLP_PROTO_HTTP]
-        )
+        self.assertEqual(_get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_GRPC])
+        self.assertEqual(_get_exporter_names("metrics"), [_EXPORTER_OTLP_PROTO_GRPC])
+        self.assertEqual(_get_exporter_names("logs"), [_EXPORTER_OTLP_PROTO_HTTP])
 
     @patch.dict(
         environ,
@@ -719,12 +713,8 @@ class TestExporterNames(TestCase):
         },
     )
     def test_otlp_custom_exporter(self):
-        self.assertEqual(
-            _get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_HTTP]
-        )
-        self.assertEqual(
-            _get_exporter_names("metrics"), [_EXPORTER_OTLP_PROTO_GRPC]
-        )
+        self.assertEqual(_get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_HTTP])
+        self.assertEqual(_get_exporter_names("metrics"), [_EXPORTER_OTLP_PROTO_GRPC])
 
     @patch.dict(
         environ,
@@ -738,9 +728,7 @@ class TestExporterNames(TestCase):
     def test_otlp_exporter_conflict(self):
         # Verify that OTEL_*_EXPORTER is used, and a warning is logged
         with self.assertLogs(level="WARNING") as logs_context:
-            self.assertEqual(
-                _get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_HTTP]
-            )
+            self.assertEqual(_get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_HTTP])
         assert len(logs_context.output) == 1
 
         with self.assertLogs(level="WARNING") as logs_context:
@@ -751,9 +739,7 @@ class TestExporterNames(TestCase):
 
     @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "jaeger,zipkin"})
     def test_multiple_exporters(self):
-        self.assertEqual(
-            sorted(_get_exporter_names("traces")), ["jaeger", "zipkin"]
-        )
+        self.assertEqual(sorted(_get_exporter_names("traces")), ["jaeger", "zipkin"])
 
     @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "none"})
     def test_none_exporters(self):
