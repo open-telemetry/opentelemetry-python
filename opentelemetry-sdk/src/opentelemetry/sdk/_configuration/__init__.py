@@ -205,9 +205,7 @@ def _init_metrics(
             PeriodicExportingMetricReader(exporter_class(**exporter_args))
         )
 
-    provider = MeterProvider(
-        resource=resource, metric_readers=metric_readers
-    )
+    provider = MeterProvider(resource=resource, metric_readers=metric_readers)
     set_meter_provider(provider)
 
 
