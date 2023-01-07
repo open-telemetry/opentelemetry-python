@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add db metric name to semantic conventions
+  ([#3115](https://github.com/open-telemetry/opentelemetry-python/pull/3115))
+
 ## Version 1.15.0/0.36b0 (2022-12-09)
 
 - Regenerate opentelemetry-proto to be compatible with protobuf 3 and 4
