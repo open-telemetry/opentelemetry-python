@@ -4,6 +4,7 @@ MetricReader configuration scenarios
 These examples show how to customize the metrics that are output by the SDK using configuration on metric readers. There are multiple examples:
 
 * preferred_aggregation.py: Shows how to configure the preferred aggregation for metric instrument types.
+* preferred_noninterval.py: Shows how to collect metric explicitly without relying on the set interval.
 * preferred_temporality.py: Shows how to configure the preferred temporality for metric instrument types.
 
 The source files of these examples are available :scm_web:`here <docs/examples/metrics/reader/>`.
