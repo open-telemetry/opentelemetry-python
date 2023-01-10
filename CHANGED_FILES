@@ -1,0 +1,2 @@
+internal_forks\fidelity-opentelemetry-python\exporter\opentelemetry-exporter-otlp-proto-grpc\src\opentelemetry\exporter\otlp\proto\grpc\__init__.py
+internal_forks\fidelity-opentelemetry-python\exporter\opentelemetry-exporter-otlp-proto-http\tests\test_proto_log_exporter.py
