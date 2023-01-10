@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Remove spaces from example exporter User-Agent header to conform to RFC7231 & RFC7230.
+
 ## Version 1.15.0/0.36b0 (2022-12-09)
 
 - Regenerate opentelemetry-proto to be compatible with protobuf 3 and 4
