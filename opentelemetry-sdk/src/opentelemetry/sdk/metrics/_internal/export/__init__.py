@@ -523,7 +523,9 @@ class PeriodicExportingMetricReader(MetricReader):
 
         self._shutdown_event.set()
         if self._export_interval_millis > 0:
-            self._daemon_thread.join(timeout=(deadline_ns - time_ns()) / 10**9)
+            self._daemon_thread.join(
+                timeout=(deadline_ns - time_ns()) / 10**9
+            )
         self._exporter.shutdown(timeout=(deadline_ns - time_ns()) / 10**6)
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:

@@ -61,7 +61,7 @@ reader.collect()
 # reader's own interval based triggering of metric collection, but have your
 # own triggering mechanism that could make the reader collect the metric.
 
-# Warning: Setting a time interval of 0 allows you to export metric records 
-# manually. Calling collect() explicitly is not officially recommended by 
-# OpenTelemetry in conjunction with the PeriodicExportingMetricReader. 
+# Warning: Setting a time interval of 0 allows you to export metric records
+# manually. Calling collect() explicitly is not officially recommended by
+# OpenTelemetry in conjunction with the PeriodicExportingMetricReader.
 # Therefore, pelase use at your own discretion.
