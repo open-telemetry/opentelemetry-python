@@ -19,6 +19,7 @@ from unittest.mock import Mock, patch
 import requests
 import responses
 
+from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_COMPRESSION,
@@ -66,6 +67,10 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(
             exporter._session.headers.get("Content-Type"),
             "application/x-protobuf",
+        )
+        self.assertEqual(
+            exporter._session.headers.get("User-Agent"),
+            "OTel-OTLP-Exporter-Python/" + __version__,
         )
 
     @patch.dict(

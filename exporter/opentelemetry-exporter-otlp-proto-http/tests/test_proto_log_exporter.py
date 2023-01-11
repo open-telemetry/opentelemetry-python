@@ -22,6 +22,7 @@ import requests
 import responses
 
 from opentelemetry._logs import SeverityNumber
+from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_COMPRESSION,
@@ -91,7 +92,10 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             exporter._session.headers.get("Content-Type"),
             "application/x-protobuf",
         )
-        self.assertTrue("OTel-OTLP-Exporter-Python/" in exporter._session.headers.get("User-Agent"))
+        self.assertEqual(
+            exporter._session.headers.get("User-Agent"),
+            "OTel-OTLP-Exporter-Python/" + __version__,
+        )
 
     @patch.dict(
         "os.environ",
