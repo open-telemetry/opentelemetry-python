@@ -91,7 +91,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             exporter._session.headers.get("Content-Type"),
             "application/x-protobuf",
         )
-        #self.assertTrue("OTel-OTLP-Exporter-Python/" in exporter._session.headers.get("User-Agent"))
+        self.assertTrue("OTel-OTLP-Exporter-Python/" in exporter._session.headers.get("User-Agent"))
 
     @patch.dict(
         "os.environ",
