@@ -29,6 +29,11 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
     OTEL_EXPORTER_OTLP_TIMEOUT,
+    OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+    OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_HEADERS,
+    OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
+    OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
 )
 from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs.export import (
@@ -79,16 +84,26 @@ class OTLPLogExporter(LogExporter):
         compression: Optional[Compression] = None,
         session: Optional[requests.Session] = None,
     ):
-        self._endpoint = endpoint or _append_logs_path(
-            environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
+        self._endpoint = endpoint or environ.get(
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+            _append_logs_path(
+                environ.get(OTEL_EXPORTER_OTLP_ENDPOINT, DEFAULT_ENDPOINT)
+            ),
         )
         self._certificate_file = certificate_file or environ.get(
-            OTEL_EXPORTER_OTLP_CERTIFICATE, True
+            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+            environ.get(OTEL_EXPORTER_OTLP_CERTIFICATE, True),
         )
-        headers_string = environ.get(OTEL_EXPORTER_OTLP_HEADERS, "")
+        headers_string = environ.get(
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS,
+            environ.get(OTEL_EXPORTER_OTLP_HEADERS, ""),
+        )
         self._headers = headers or parse_env_headers(headers_string)
         self._timeout = timeout or int(
-            environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT)
+            environ.get(
+                OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
+                environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, DEFAULT_TIMEOUT),
+            )
         )
         self._compression = compression or _compression_from_env()
         self._session = session or requests.Session()
@@ -170,7 +185,12 @@ class OTLPLogExporter(LogExporter):
 
 def _compression_from_env() -> Compression:
     compression = (
-        environ.get(OTEL_EXPORTER_OTLP_COMPRESSION, "none").lower().strip()
+        environ.get(
+            OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
+            environ.get(OTEL_EXPORTER_OTLP_COMPRESSION, "none"),
+        )
+        .lower()
+        .strip()
     )
     return Compression(compression)
 

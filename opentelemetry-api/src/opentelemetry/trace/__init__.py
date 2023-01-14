@@ -352,7 +352,7 @@ class Tracer(ABC):
 
             with tracer.start_as_current_span("one") as parent:
                 parent.add_event("parent's event")
-                with trace.start_as_current_span("two") as child:
+                with tracer.start_as_current_span("two") as child:
                     child.add_event("child's event")
                     trace.get_current_span()  # returns child
                 trace.get_current_span()      # returns parent
@@ -373,7 +373,7 @@ class Tracer(ABC):
 
         This can also be used as a decorator::
 
-            @tracer.start_as_current_span("name"):
+            @tracer.start_as_current_span("name")
             def function():
                 ...
 
