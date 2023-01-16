@@ -13,7 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add db metric name to semantic conventions
   ([#3115](https://github.com/open-telemetry/opentelemetry-python/pull/3115))
 
-- Remove spaces from example exporter User-Agent header to conform to RFC7231 & RFC7230.
+- Fix User-Agent header value for OTLP exporters to conform to RFC7231 & RFC7230
+  ([#3128](https://github.com/open-telemetry/opentelemetry-python/pull/3128))
 
 ## Version 1.15.0/0.36b0 (2022-12-09)
 
