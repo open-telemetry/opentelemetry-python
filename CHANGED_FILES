@@ -1,7 +1,0 @@
-exporter/opentelemetry-exporter-otlp-proto-http/src/opentelemetry/exporter/otlp/proto/http/__init__.py
-exporter/opentelemetry-exporter-otlp-proto-grpc/src/opentelemetry/exporter/otlp/proto/grpc/__init__.py
-exporter/opentelemetry-exporter-otlp-proto-http/tests/test_proto_log_exporter.py
-exporter/opentelemetry-exporter-otlp-proto-http/tests/test_proto_span_exporter.py
-exporter/opentelemetry-exporter-otlp-proto-grpc/tests/logs/test_otlp_logs_exporter.py
-exporter/opentelemetry-exporter-otlp-proto-grpc/tests/test_otlp_metrics_exporter.py
-exporter/opentelemetry-exporter-otlp-proto-grpc/tests/test_otlp_trace_exporter.py
