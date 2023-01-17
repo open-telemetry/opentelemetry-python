@@ -414,7 +414,7 @@ class InMemoryMetricReader(MetricReader):
 class PeriodicExportingMetricReader(MetricReader):
     """`PeriodicExportingMetricReader` is an implementation of `MetricReader`
     that collects metrics based on a user-configurable time interval, and passes the
-    metrics to the configured exporter. If the time interval is set to zero, the
+    metrics to the configured exporter. If the time interval is set to zero or less, the
     reader will not invoke periodic collection.
 
     The configured exporter's :py:meth:`~MetricExporter.export` method will not be called
