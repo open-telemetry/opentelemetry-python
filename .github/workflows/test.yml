@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: ce5dac763790203d68217cd3870b6be5517692fe
+  CONTRIB_REPO_SHA: 1f0dda9865b3c83e6dea2f2b127a2b0971853543
   # This is needed because we do not clone the core repo in contrib builds anymore.
   # When running contrib builds as part of core builds, we use actions/checkout@v2 which
   # does not set an environment variable (simply just runs tox), which is different when
@@ -29,37 +29,41 @@ jobs:
       py310: "3.10"
       py311: "3.11"
       pypy3: pypy-3.7
-      RUN_MATRIX_COMBINATION: ${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os }}
+      RUN_MATRIX_COMBINATION: ${{ matrix.python-version }}-${{ matrix.package }}-${{
+        matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
-        python-version: [ py37, py38, py39, py310, py311, pypy3 ]
-        package: ["api", "sdk", "semantic", "getting", "shim", "exporter", "protobuf", "propagator"]
-        os: [ ubuntu-20.04, windows-2019 ]
+        python-version: [py37, py38, py39, py310, py311, pypy3]
+        package: ["api", "sdk", "semantic", "getting", "shim", "exporter", "protobuf",
+          "propagator"]
+        os: [ubuntu-20.04, windows-2019]
     steps:
-      - name: Checkout Core Repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v2
-      - name: Set up Python ${{ env[matrix.python-version] }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ env[matrix.python-version] }}
-          architecture: 'x64'
-      - name: Install tox
-        run: pip install tox==3.27.1 -U tox-factor
-      - name: Cache tox environment
+    - name: Checkout Core Repo @ SHA - ${{ github.sha }}
+      uses: actions/checkout@v2
+    - name: Set up Python ${{ env[matrix.python-version] }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ env[matrix.python-version] }}
+        architecture: 'x64'
+    - name: Install tox
+      run: pip install tox==3.27.1 -U tox-factor
+    - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
-        uses: actions/cache@v2
-        with:
-          path: |
-            .tox
-            ~/.cache/pip
-          key: v3-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
-      - name: Windows does not let git check out files with long names
-        if: ${{ matrix.os == 'windows-2019'}} 
-        run: git config --system core.longpaths true
-      - name: run tox
-        run: tox -f ${{ matrix.python-version }}-${{ matrix.package }} -- --benchmark-json=${{ env.RUN_MATRIX_COMBINATION }}-benchmark.json
+      uses: actions/cache@v2
+      with:
+        path: |
+          .tox
+          ~/.cache/pip
+        key: v3-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini',
+          'dev-requirements.txt') }}-core
+    - name: Windows does not let git check out files with long names
+      if: ${{ matrix.os == 'windows-2019'}}
+      run: git config --system core.longpaths true
+    - name: run tox
+      run: tox -f ${{ matrix.python-version }}-${{ matrix.package }} -- --benchmark-json=${{
+        env.RUN_MATRIX_COMBINATION }}-benchmark.json
 #       - name: Find and merge benchmarks
 #         id: find_and_merge_benchmarks
 #         run: >-
@@ -87,29 +91,31 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tox-environment: [ "docker-tests-proto3", "docker-tests-proto4", "lint", "spellcheck", "docs", "mypy", "mypyinstalled", "tracecontext" ]
+        tox-environment: ["docker-tests-proto3", "docker-tests-proto4", "lint", "spellcheck",
+          "docs", "mypy", "mypyinstalled", "tracecontext"]
     name: ${{ matrix.tox-environment }}
     runs-on: ubuntu-20.04
     steps:
-      - name: Checkout Core Repo @ SHA - ${{ github.sha }}
-        uses: actions/checkout@v2
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: 3.9
-          architecture: 'x64'
-      - name: Install tox
-        run: pip install tox==3.27.1
-      - name: Cache tox environment
+    - name: Checkout Core Repo @ SHA - ${{ github.sha }}
+      uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+        architecture: 'x64'
+    - name: Install tox
+      run: pip install tox==3.27.1
+    - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
-        uses: actions/cache@v2
-        with:
-          path: |
-            .tox
-            ~/.cache/pip
-          key: v3-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-core
-      - name: run tox
-        run: tox -e ${{ matrix.tox-environment }}
+      uses: actions/cache@v2
+      with:
+        path: |
+          .tox
+          ~/.cache/pip
+        key: v3-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt')
+          }}-core
+    - name: run tox
+      run: tox -e ${{ matrix.tox-environment }}
 
   # Contrib unit test suite in order to ensure changes in core do not break anything in contrib.
   # We only run contrib unit tests on the oldest supported Python version (3.7) as running the same tests
@@ -122,34 +128,35 @@ jobs:
     strategy:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
-        python-version: [ py37 ]
+        python-version: [py37]
         package: ["instrumentation", "exporter"]
-        os: [ ubuntu-20.04]
+        os: [ubuntu-20.04]
     steps:
-      - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
-        uses: actions/checkout@v2
-        with:
-          repository: open-telemetry/opentelemetry-python-contrib
-          ref: ${{ env.CONTRIB_REPO_SHA }}
-      - name: Checkout Core Repo @ SHA ${{ github.sha }}
-        uses: actions/checkout@v2
-        with:
-          repository: open-telemetry/opentelemetry-python
-          path: opentelemetry-python-core
-      - name: Set up Python ${{ env[matrix.python-version] }}
-        uses: actions/setup-python@v2
-        with:
-          python-version: ${{ env[matrix.python-version] }}
-          architecture: 'x64'
-      - name: Install tox
-        run: pip install tox==3.27.1 -U tox-factor
-      - name: Cache tox environment
+    - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
+      uses: actions/checkout@v2
+      with:
+        repository: open-telemetry/opentelemetry-python-contrib
+        ref: ${{ env.CONTRIB_REPO_SHA }}
+    - name: Checkout Core Repo @ SHA ${{ github.sha }}
+      uses: actions/checkout@v2
+      with:
+        repository: open-telemetry/opentelemetry-python
+        path: opentelemetry-python-core
+    - name: Set up Python ${{ env[matrix.python-version] }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ env[matrix.python-version] }}
+        architecture: 'x64'
+    - name: Install tox
+      run: pip install tox==3.27.1 -U tox-factor
+    - name: Cache tox environment
         # Preserves .tox directory between runs for faster installs
-        uses: actions/cache@v2
-        with:
-          path: |
-            .tox
-            ~/.cache/pip
-          key: v3-tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
-      - name: run tox
-        run: tox -f ${{ matrix.python-version }}-${{ matrix.package }}
+      uses: actions/cache@v2
+      with:
+        path: |
+          .tox
+          ~/.cache/pip
+        key: v3-tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os
+          }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
+    - name: run tox
+      run: tox -f ${{ matrix.python-version }}-${{ matrix.package }}
