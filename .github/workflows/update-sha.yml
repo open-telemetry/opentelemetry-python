@@ -12,7 +12,7 @@ jobs:
         with:
           token: ${{ secrets.BOT_TOKEN }}
 
-      # would have been lit if github supported string split expression
+      # GitHub doesn't support string split expression
       - name: Extract branch name from comment to get commit SHA
         uses: jungwinter/split@v2
         id: split
