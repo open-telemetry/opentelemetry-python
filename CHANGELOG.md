@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 - Adds environment variables for log exporter
   ([#3037](https://github.com/open-telemetry/opentelemetry-python/pull/3037))
+- Add attribute name to type warning message.
+  ([3124](https://github.com/open-telemetry/opentelemetry-python/pull/3124))
+- Add db metric name to semantic conventions
+  ([#3115](https://github.com/open-telemetry/opentelemetry-python/pull/3115))
 
 ## Version 1.15.0/0.36b0 (2022-12-09)
 

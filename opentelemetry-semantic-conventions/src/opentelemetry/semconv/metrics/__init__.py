@@ -30,3 +30,5 @@ class MetricInstruments:
     HTTP_CLIENT_REQUEST_SIZE = "http.client.request.size"
 
     HTTP_CLIENT_RESPONSE_SIZE = "http.client.response.size"
+
+    DB_CLIENT_CONNECTIONS_USAGE = "db.client.connections.usage"

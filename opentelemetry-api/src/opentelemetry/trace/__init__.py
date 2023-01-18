@@ -373,7 +373,7 @@ class Tracer(ABC):
 
         This can also be used as a decorator::
 
-            @tracer.start_as_current_span("name"):
+            @tracer.start_as_current_span("name")
             def function():
                 ...
 
