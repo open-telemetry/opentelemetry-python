@@ -605,6 +605,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 self._instrument_temporality is aggregation_temporality
             ):
                 self._previous_point = current_point
+
                 return current_point
 
             max_ = current_point.max
@@ -674,8 +675,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
             self._previous_point = current_point
 
-            self._negative._counts = Buckets()
-            self._positive._counts = Buckets()
+            self._negative = Buckets()
+            self._positive = Buckets()
             self._start_time_unix_nano = collection_start_nano
             self._sum = 0
             self._count = 0

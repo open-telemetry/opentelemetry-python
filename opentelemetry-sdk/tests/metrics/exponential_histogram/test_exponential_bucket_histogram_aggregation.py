@@ -20,6 +20,7 @@ from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from opentelemetry.sdk.metrics._internal.aggregation import (
+    AggregationTemporality,
     _ExponentialBucketHistogramAggregation,
 )
 from opentelemetry.sdk.metrics._internal.exponential_histogram.buckets import (
@@ -793,3 +794,30 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             len(exponential_histogram_aggregation._positive._counts),
             exponential_histogram_aggregation._min_max_size,
         )
+
+    def test_aggregate_collect(self):
+        """
+        Tests a repeated cycle of aggregation and collection.
+        """
+        try:
+            exponential_histogram_aggregation = (
+                _ExponentialBucketHistogramAggregation(
+                    Mock(),
+                    Mock(),
+                )
+            )
+
+            exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
+            exponential_histogram_aggregation.collect(
+                AggregationTemporality.CUMULATIVE, 0
+            )
+            exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
+            exponential_histogram_aggregation.collect(
+                AggregationTemporality.CUMULATIVE, 0
+            )
+            exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
+            exponential_histogram_aggregation.collect(
+                AggregationTemporality.CUMULATIVE, 0
+            )
+        except Exception as error:
+            self.fail(f"Unexpected exception raised: {error}")
