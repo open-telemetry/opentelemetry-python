@@ -16,6 +16,10 @@ from math import ceil, log2
 
 
 class Buckets:
+
+    # No method of this class is protected by locks because instances of this
+    # class are only used in methods that are protected by locks themselves.
+
     def __init__(self):
         self._counts = [0]
 
