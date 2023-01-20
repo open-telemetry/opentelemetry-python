@@ -15,9 +15,9 @@
 import logging
 import threading
 import typing
-import uuid
 from functools import wraps
 from os import environ
+from uuid import uuid4
 
 from pkg_resources import iter_entry_points
 
@@ -78,7 +78,7 @@ def create_key(keyname: str) -> str:
     Returns:
         A unique string representing the newly created key.
     """
-    return keyname + "-" + str(uuid.uuid4())
+    return keyname + "-" + str(uuid4())
 
 
 def get_value(key: str, context: typing.Optional[Context] = None) -> "object":
