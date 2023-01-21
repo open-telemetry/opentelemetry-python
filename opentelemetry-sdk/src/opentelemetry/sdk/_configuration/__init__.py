@@ -94,18 +94,31 @@ def _import_config_components(
     component_implementations = []
 
     for selected_component in selected_components:
-        component_implementations.append(
-            (
-                selected_component,
-                next(
-                    iter(
-                        entry_points(
-                            group=entry_point_name, name=selected_component
+        try:
+            component_implementations.append(
+                (
+                    selected_component,
+                    next(
+                        iter(
+                            entry_points(
+                                group=entry_point_name, name=selected_component
+                            )
                         )
-                    )
-                ).load(),
+                    ).load(),
+                )
             )
-        )
+        except KeyError:
+
+            raise RuntimeError(
+                f"Requested entry point '{entry_point_name}' not found"
+            )
+
+        except StopIteration:
+
+            raise RuntimeError(
+                f"Requested component '{selected_component}' not found in "
+                f"entry point '{entry_point_name}'"
+            )
 
     return component_implementations
 

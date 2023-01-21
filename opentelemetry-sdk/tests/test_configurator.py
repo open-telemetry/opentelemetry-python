@@ -20,6 +20,8 @@ from typing import Dict, Iterable, Optional, Sequence
 from unittest import TestCase
 from unittest.mock import patch
 
+from pytest import raises
+
 from opentelemetry import trace
 from opentelemetry.context import Context
 from opentelemetry.environment_variables import OTEL_PYTHON_ID_GENERATOR
@@ -30,6 +32,7 @@ from opentelemetry.sdk._configuration import (
     _get_exporter_names,
     _get_id_generator,
     _get_sampler,
+    _import_config_components,
     _import_exporters,
     _import_id_generator,
     _import_sampler,
@@ -779,4 +782,35 @@ class TestImportExporters(TestCase):
         self.assertEqual(
             metric_exporterts["console"].__class__,
             ConsoleMetricExporter.__class__,
+        )
+
+
+class TestImportConfigComponents(TestCase):
+    @patch(
+        "opentelemetry.sdk._configuration.entry_points",
+        **{"side_effect": KeyError},
+    )
+    def test__import_config_components_missing_entry_point(
+        self, mock_entry_points
+    ):
+
+        with raises(RuntimeError) as error:
+            _import_config_components(["a", "b", "c"], "name")
+        self.assertEqual(
+            str(error.value), "Requested entry point 'name' not found"
+        )
+
+    @patch(
+        "opentelemetry.sdk._configuration.entry_points",
+        **{"side_effect": StopIteration},
+    )
+    def test__import_config_components_missing_component(
+        self, mock_entry_points
+    ):
+
+        with raises(RuntimeError) as error:
+            _import_config_components(["a", "b", "c"], "name")
+        self.assertEqual(
+            str(error.value),
+            "Requested component 'a' not found in entry point 'name'",
         )
