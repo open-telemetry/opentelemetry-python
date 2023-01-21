@@ -14,11 +14,11 @@
 #
 # type: ignore
 
-import unittest
 from logging import WARNING
+from unittest import TestCase
 from unittest.mock import Mock, patch
 
-from opentelemetry import baggage
+from opentelemetry.baggage import get_all, set_baggage
 from opentelemetry.baggage.propagation import (
     W3CBaggagePropagator,
     _format_baggage,
@@ -26,26 +26,26 @@ from opentelemetry.baggage.propagation import (
 from opentelemetry.context import get_current
 
 
-class TestBaggagePropagation(unittest.TestCase):
+class TestW3CBaggagePropagator(TestCase):
     def setUp(self):
         self.propagator = W3CBaggagePropagator()
 
     def _extract(self, header_value):
         """Test helper"""
         header = {"baggage": [header_value]}
-        return baggage.get_all(self.propagator.extract(header))
+        return get_all(self.propagator.extract(header))
 
     def _inject(self, values):
         """Test helper"""
         ctx = get_current()
         for k, v in values.items():
-            ctx = baggage.set_baggage(k, v, context=ctx)
+            ctx = set_baggage(k, v, context=ctx)
         output = {}
         self.propagator.inject(output, context=ctx)
         return output.get("baggage")
 
     def test_no_context_header(self):
-        baggage_entries = baggage.get_all(self.propagator.extract({}))
+        baggage_entries = get_all(self.propagator.extract({}))
         self.assertEqual(baggage_entries, {})
 
     def test_empty_context_header(self):
@@ -57,10 +57,9 @@ class TestBaggagePropagation(unittest.TestCase):
         expected = {"key1": "val1", "key2": "val2"}
         self.assertEqual(self._extract(header), expected)
 
-    def test_valid_header_with_space(self):
+    def test_invalid_header_with_space(self):
         header = "key1 =   val1,  key2 =val2   "
-        expected = {"key1": "val1", "key2": "val2"}
-        self.assertEqual(self._extract(header), expected)
+        self.assertEqual(self._extract(header), {})
 
     def test_valid_header_with_properties(self):
         header = "key1=val1,key2=val2;prop=1;prop2;prop3=2"
@@ -188,8 +187,8 @@ class TestBaggagePropagation(unittest.TestCase):
         output = self._inject(values)
         self.assertEqual(None, output)
 
-    def test_inject_invalid_entries(self):
-        self.assertEqual(None, self._inject({"key": "val ue"}))
+    def test_inject_space_entries(self):
+        self.assertEqual("key=val+ue", self._inject({"key": "val ue"}))
 
     def test_inject(self):
         values = {
@@ -241,4 +240,25 @@ class TestBaggagePropagation(unittest.TestCase):
         self.assertEqual(
             _format_baggage({"key/key": "value/value"}),
             "key%2Fkey=value%2Fvalue",
+        )
+
+    @patch("opentelemetry.baggage._BAGGAGE_KEY", new="abc")
+    def test_inject_extract(self):
+
+        carrier = {}
+
+        context = set_baggage(
+            "transaction", "string with spaces", context=get_current()
+        )
+
+        self.propagator.inject(carrier, context)
+
+        context = self.propagator.extract(carrier)
+
+        self.assertEqual(
+            carrier, {"baggage": "transaction=string+with+spaces"}
+        )
+
+        self.assertEqual(
+            context, {"abc": {"transaction": "string with spaces"}}
         )
