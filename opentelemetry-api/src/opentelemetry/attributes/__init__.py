@@ -97,9 +97,10 @@ def _clean_attribute(
         return tuple(cleaned_seq)
 
     _logger.warning(
-        "Invalid type %s for attribute value. Expected one of %s or a "
+        "Invalid type %s for attribute '%s' value. Expected one of %s or a "
         "sequence of those types",
         type(value).__name__,
+        key,
         [valid_type.__name__ for valid_type in _VALID_ATTR_VALUE_TYPES],
     )
     return None

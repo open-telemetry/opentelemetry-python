@@ -29,6 +29,7 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_LOGS_EXPORT_PATH,
     DEFAULT_TIMEOUT,
     OTLPLogExporter,
+    _is_backoff_v2,
 )
 from opentelemetry.exporter.otlp.proto.http._log_exporter.encoder import (
     _encode_attributes,
@@ -60,6 +61,11 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_HEADERS,
+    OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
+    OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+    OTEL_EXPORTER_OTLP_LOGS_HEADERS,
+    OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
 from opentelemetry.sdk.resources import Resource as SDKResource
@@ -90,6 +96,38 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
             exporter._session.headers.get("Content-Type"),
             "application/x-protobuf",
         )
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_EXPORTER_OTLP_CERTIFICATE: ENV_CERTIFICATE,
+            OTEL_EXPORTER_OTLP_COMPRESSION: Compression.Gzip.value,
+            OTEL_EXPORTER_OTLP_ENDPOINT: ENV_ENDPOINT,
+            OTEL_EXPORTER_OTLP_HEADERS: ENV_HEADERS,
+            OTEL_EXPORTER_OTLP_TIMEOUT: ENV_TIMEOUT,
+            OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE: "logs/certificate.env",
+            OTEL_EXPORTER_OTLP_LOGS_COMPRESSION: Compression.Deflate.value,
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "https://logs.endpoint.env",
+            OTEL_EXPORTER_OTLP_LOGS_HEADERS: "logsEnv1=val1,logsEnv2=val2,logsEnv3===val3==",
+            OTEL_EXPORTER_OTLP_LOGS_TIMEOUT: "40",
+        },
+    )
+    def test_exporter_metrics_env_take_priority(self):
+        exporter = OTLPLogExporter()
+
+        self.assertEqual(exporter._endpoint, "https://logs.endpoint.env")
+        self.assertEqual(exporter._certificate_file, "logs/certificate.env")
+        self.assertEqual(exporter._timeout, 40)
+        self.assertIs(exporter._compression, Compression.Deflate)
+        self.assertEqual(
+            exporter._headers,
+            {
+                "logsenv1": "val1",
+                "logsenv2": "val2",
+                "logsenv3": "==val3==",
+            },
+        )
+        self.assertIsInstance(exporter._session, requests.Session)
 
     @patch.dict(
         "os.environ",
@@ -166,7 +204,8 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
     def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
         # In backoff ~= 2.0.0 the first value yielded from expo is None.
         def generate_delays(*args, **kwargs):
-            yield None
+            if _is_backoff_v2:
+                yield None
             yield 1
 
         mock_backoff.expo.configure_mock(**{"side_effect": generate_delays})
