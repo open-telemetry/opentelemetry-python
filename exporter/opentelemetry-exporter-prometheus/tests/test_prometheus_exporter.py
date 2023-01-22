@@ -275,7 +275,7 @@ class TestPrometheusMetricReader(TestCase):
 
     def test_check_value(self):
 
-        collector = _CustomCollector("")
+        collector = _CustomCollector()
 
         self.assertEqual(collector._check_value(1), "1")
         self.assertEqual(collector._check_value(1.0), "1.0")
@@ -289,7 +289,7 @@ class TestPrometheusMetricReader(TestCase):
 
     def test_multiple_collection_calls(self):
 
-        metric_reader = PrometheusMetricReader(prefix="prefix")
+        metric_reader = PrometheusMetricReader()
         provider = MeterProvider(metric_readers=[metric_reader])
         meter = provider.get_meter("getting-started", "0.1.2")
         counter = meter.create_counter("counter")
