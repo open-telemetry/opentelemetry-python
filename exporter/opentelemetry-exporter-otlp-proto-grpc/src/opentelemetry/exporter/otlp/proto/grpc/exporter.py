@@ -131,15 +131,15 @@ def _translate_key_values(key: str, value: Any) -> KeyValue:
 
 
 def get_resource_data(
-        sdk_resource_scope_data: Dict[SDKResource, ResourceDataT],
-        resource_class: Callable[..., TypingResourceT],
-        name: str,
+    sdk_resource_scope_data: Dict[SDKResource, ResourceDataT],
+    resource_class: Callable[..., TypingResourceT],
+    name: str,
 ) -> List[TypingResourceT]:
     resource_data = []
 
     for (
-            sdk_resource,
-            scope_data,
+        sdk_resource,
+        scope_data,
     ) in sdk_resource_scope_data.items():
 
         collector_resource = Resource()
@@ -214,15 +214,15 @@ class OTLPExporterMixin(
     """
 
     def __init__(
-            self,
-            endpoint: Optional[str] = None,
-            insecure: Optional[bool] = None,
-            credentials: Optional[ChannelCredentials] = None,
-            headers: Optional[
-                Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
-            ] = None,
-            timeout: Optional[int] = None,
-            compression: Optional[Compression] = None,
+        self,
+        endpoint: Optional[str] = None,
+        insecure: Optional[bool] = None,
+        credentials: Optional[ChannelCredentials] = None,
+        headers: Optional[
+            Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
+        ] = None,
+        timeout: Optional[int] = None,
+        compression: Optional[Compression] = None,
     ):
         super().__init__()
 
@@ -264,10 +264,10 @@ class OTLPExporterMixin(
         self._collector_kwargs = None
 
         compression = (
-                          environ_to_compression(OTEL_EXPORTER_OTLP_COMPRESSION)
-                          if compression is None
-                          else compression
-                      ) or Compression.NoCompression
+            environ_to_compression(OTEL_EXPORTER_OTLP_COMPRESSION)
+            if compression is None
+            else compression
+        ) or Compression.NoCompression
 
         if insecure:
             self._client = self._stub(
@@ -286,7 +286,7 @@ class OTLPExporterMixin(
 
     @abstractmethod
     def _translate_data(
-            self, data: TypingSequence[SDKDataT]
+        self, data: TypingSequence[SDKDataT]
     ) -> ExportServiceRequestT:
         pass
 
@@ -302,7 +302,7 @@ class OTLPExporterMixin(
         return output
 
     def _export(
-            self, data: Union[TypingSequence[ReadableSpan], MetricsData]
+        self, data: Union[TypingSequence[ReadableSpan], MetricsData]
     ) -> ExportResultT:
         # After the call to shutdown, subsequent calls to Export are
         # not allowed and should return a Failure result.
@@ -356,8 +356,8 @@ class OTLPExporterMixin(
                             retry_info = RetryInfo()
                             retry_info.ParseFromString(retry_info_bin)
                             delay = (
-                                    retry_info.retry_delay.seconds
-                                    + retry_info.retry_delay.nanos / 1.0e9
+                                retry_info.retry_delay.seconds
+                                + retry_info.retry_delay.nanos / 1.0e9
                             )
 
                         logger.warning(
