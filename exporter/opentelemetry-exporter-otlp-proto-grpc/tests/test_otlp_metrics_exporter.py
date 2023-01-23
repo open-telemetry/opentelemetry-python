@@ -12,8 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-many-lines
 from concurrent.futures import ThreadPoolExecutor
+# pylint: disable=too-many-lines
+from logging import WARNING
 from os.path import dirname
 from typing import List
 from unittest import TestCase
@@ -22,6 +23,7 @@ from unittest.mock import patch
 from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
+from opentelemetry.test.metrictestutil import _generate_gauge, _generate_sum
 
 from opentelemetry.exporter.otlp.proto.grpc.metric_exporter import (
     OTLPMetricExporter,
@@ -77,7 +79,6 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope as SDKInstrumentationScope,
 )
-from opentelemetry.test.metrictestutil import _generate_gauge, _generate_sum
 
 THIS_DIR = dirname(__file__)
 
@@ -365,7 +366,7 @@ class TestOTLPMetricExporter(TestCase):
         {
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "collector:4317",
             OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE: THIS_DIR
-            + "/fixtures/test.cert",
+                                                    + "/fixtures/test.cert",
             OTEL_EXPORTER_OTLP_METRICS_HEADERS: " key1=value1,KEY2 = value=2",
             OTEL_EXPORTER_OTLP_METRICS_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_METRICS_COMPRESSION: "gzip",
@@ -396,7 +397,7 @@ class TestOTLPMetricExporter(TestCase):
     )
     # pylint: disable=unused-argument
     def test_no_credentials_error(
-        self, mock_ssl_channel, mock_secure, mock_stub
+            self, mock_ssl_channel, mock_secure, mock_stub
     ):
         OTLPMetricExporter(insecure=False)
         self.assertTrue(mock_ssl_channel.called)
@@ -526,7 +527,7 @@ class TestOTLPMetricExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
     def test_otlp_exporter_otlp_compression_envvar(
-        self, mock_insecure_channel, mock_expo
+            self, mock_insecure_channel, mock_expo
     ):
         """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
         OTLPMetricExporter(insecure=True)
@@ -550,7 +551,7 @@ class TestOTLPMetricExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {})
     def test_otlp_exporter_otlp_compression_unspecified(
-        self, mock_insecure_channel
+            self, mock_insecure_channel
     ):
         """No env or kwarg should be NoCompression"""
         OTLPMetricExporter(insecure=True)
@@ -1357,9 +1358,50 @@ class TestOTLPMetricExporter(TestCase):
         OTLPMetricExporter(endpoint="https://ab.c:123", insecure=True)
         mock_secure_channel.assert_called()
 
+    def test_shutdown(self):
+        add_MetricsServiceServicer_to_server(
+            MetricsServiceServicerSUCCESS(), self.server
+        )
+        self.assertEqual(
+            self.exporter.export(self.metrics["sum_int"]),
+            MetricExportResult.SUCCESS,
+        )
+        self.exporter.shutdown()
+        with self.assertLogs(level=WARNING) as warning:
+            self.assertEqual(
+                self.exporter.export(self.metrics["sum_int"]),
+                MetricExportResult.FAILURE,
+            )
+            self.assertEqual(
+                warning.records[0].message,
+                "Exporter already shutdown, ignoring batch",
+            )
+
+    def test_shutdown_wait_last_export(self):
+        import threading
+        import time
+
+        add_MetricsServiceServicer_to_server(
+            MetricsServiceServicerUNAVAILABLEDelay(), self.server
+        )
+
+        export_thread = threading.Thread(target=self.exporter.export, args=(self.metrics["sum_int"],))
+        export_thread.start()
+        try:
+            self.assertTrue(self.exporter._export_lock.locked())
+            # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
+            start_time = time.time()
+            self.exporter.shutdown()
+            now = time.time()
+            self.assertGreaterEqual(now, (start_time + 30 / 1000))
+            self.assertTrue(self.exporter._shutdown)
+            self.assertFalse(self.exporter._export_lock.locked())
+        finally:
+            export_thread.join()
+
 
 def _resource_metrics(
-    index: int, scope_metrics: List[ScopeMetrics]
+        index: int, scope_metrics: List[ScopeMetrics]
 ) -> ResourceMetrics:
     return ResourceMetrics(
         resource=Resource(

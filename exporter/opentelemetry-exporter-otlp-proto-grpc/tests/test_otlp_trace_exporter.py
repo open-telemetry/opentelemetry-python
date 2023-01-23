@@ -15,12 +15,16 @@
 import os
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
+from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock, PropertyMock, patch
 
 from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
+from opentelemetry.test.spantestutil import (
+    get_span_with_dropped_attributes_events_links,
+)
 
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
@@ -68,9 +72,6 @@ from opentelemetry.sdk.trace.export import (
     SpanExportResult,
 )
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
-from opentelemetry.test.spantestutil import (
-    get_span_with_dropped_attributes_events_links,
-)
 
 THIS_DIR = os.path.dirname(__file__)
 
@@ -228,7 +229,7 @@ class TestOTLPSpanExporter(TestCase):
         {
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "collector:4317",
             OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE: THIS_DIR
-            + "/fixtures/test.cert",
+                                                   + "/fixtures/test.cert",
             OTEL_EXPORTER_OTLP_TRACES_HEADERS: " key1=value1,KEY2 = value=2",
             OTEL_EXPORTER_OTLP_TRACES_TIMEOUT: "10",
             OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip",
@@ -259,7 +260,7 @@ class TestOTLPSpanExporter(TestCase):
     )
     # pylint: disable=unused-argument
     def test_no_credentials_error(
-        self, mock_ssl_channel, mock_secure, mock_stub
+            self, mock_ssl_channel, mock_secure, mock_stub
     ):
         OTLPSpanExporter(insecure=False)
         self.assertTrue(mock_ssl_channel.called)
@@ -396,7 +397,7 @@ class TestOTLPSpanExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
     def test_otlp_exporter_otlp_compression_envvar(
-        self, mock_insecure_channel
+            self, mock_insecure_channel
     ):
         """Just OTEL_EXPORTER_OTLP_COMPRESSION should work"""
         OTLPSpanExporter(insecure=True)
@@ -418,7 +419,7 @@ class TestOTLPSpanExporter(TestCase):
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {})
     def test_otlp_exporter_otlp_compression_unspecified(
-        self, mock_insecure_channel
+            self, mock_insecure_channel
     ):
         """No env or kwarg should be NoCompression"""
         OTLPSpanExporter(insecure=True)
@@ -433,7 +434,7 @@ class TestOTLPSpanExporter(TestCase):
         {OTEL_EXPORTER_OTLP_TRACES_COMPRESSION: "gzip"},
     )
     def test_otlp_exporter_otlp_compression_precendence(
-        self, mock_insecure_channel
+            self, mock_insecure_channel
     ):
         """OTEL_EXPORTER_OTLP_TRACES_COMPRESSION as higher priority than
         OTEL_EXPORTER_OTLP_COMPRESSION
@@ -797,9 +798,9 @@ class TestOTLPSpanExporter(TestCase):
         )
 
     def _check_translated_status(
-        self,
-        translated: ExportTraceServiceRequest,
-        code_expected: Status,
+            self,
+            translated: ExportTraceServiceRequest,
+            code_expected: Status,
     ):
         status = translated.resource_spans[0].scope_spans[0].spans[0].status
 
@@ -928,6 +929,45 @@ class TestOTLPSpanExporter(TestCase):
             .events[0]
             .dropped_attributes_count,
         )
+
+    def test_shutdown(self):
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerSUCCESS(), self.server
+        )
+        self.assertEqual(
+            self.exporter.export([self.span]), SpanExportResult.SUCCESS
+        )
+        self.exporter.shutdown()
+        with self.assertLogs(level=WARNING) as warning:
+            self.assertEqual(
+                self.exporter.export([self.span]), SpanExportResult.FAILURE
+            )
+            self.assertEqual(
+                warning.records[0].message,
+                "Exporter already shutdown, ignoring batch",
+            )
+
+    def test_shutdown_wait_last_export(self):
+        import threading
+        import time
+
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerUNAVAILABLEDelay(), self.server
+        )
+
+        export_thread = threading.Thread(target=self.exporter.export, args=([self.span],))
+        export_thread.start()
+        try:
+            self.assertTrue(self.exporter._export_lock.locked())
+            # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
+            start_time = time.time()
+            self.exporter.shutdown()
+            now = time.time()
+            self.assertGreaterEqual(now, (start_time + 30 / 1000))
+            self.assertTrue(self.exporter._shutdown)
+            self.assertFalse(self.exporter._export_lock.locked())
+        finally:
+            export_thread.join()
 
 
 def _create_span_with_status(status: SDKStatus):

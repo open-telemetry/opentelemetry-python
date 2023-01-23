@@ -18,6 +18,8 @@ from typing import Sequence
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
+from google.protobuf.duration_pb2 import Duration
+from google.rpc.error_details_pb2 import RetryInfo
 from grpc import Compression
 
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
@@ -34,12 +36,12 @@ from opentelemetry.exporter.otlp.proto.grpc.exporter import (
 class TestOTLPExporterMixin(TestCase):
     def test_environ_to_compression(self):
         with patch.dict(
-            "os.environ",
-            {
-                "test_gzip": "gzip",
-                "test_gzip_caseinsensitive_with_whitespace": " GzIp ",
-                "test_invalid": "some invalid compression",
-            },
+                "os.environ",
+                {
+                    "test_gzip": "gzip",
+                    "test_gzip_caseinsensitive_with_whitespace": " GzIp ",
+                    "test_invalid": "some invalid compression",
+                },
         ):
             self.assertEqual(
                 environ_to_compression("test_gzip"), Compression.Gzip
@@ -58,7 +60,6 @@ class TestOTLPExporterMixin(TestCase):
 
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
     def test_export_warning(self, mock_expo):
-
         mock_expo.configure_mock(**{"return_value": [0]})
 
         rpc_error = RpcError()
@@ -69,14 +70,13 @@ class TestOTLPExporterMixin(TestCase):
         rpc_error.code = MethodType(code, rpc_error)
 
         class OTLPMockExporter(OTLPExporterMixin):
-
             _result = Mock()
             _stub = Mock(
                 **{"return_value": Mock(**{"Export.side_effect": rpc_error})}
             )
 
             def _translate_data(
-                self, data: Sequence[SDKDataT]
+                    self, data: Sequence[SDKDataT]
             ) -> ExportServiceRequestT:
                 pass
 
@@ -113,3 +113,81 @@ class TestOTLPExporterMixin(TestCase):
                     "while exporting mock, retrying in 0s."
                 ),
             )
+
+    def test_shutdown(self):
+        result_mock = Mock()
+
+        class OTLPMockExporter(OTLPExporterMixin):
+            _result = result_mock
+            _stub = Mock(
+                **{"return_value": Mock()}
+            )
+
+            def _translate_data(
+                    self, data: Sequence[SDKDataT]
+            ) -> ExportServiceRequestT:
+                pass
+
+            @property
+            def _exporting(self) -> str:
+                return "mock"
+
+        otlp_mock_exporter = OTLPMockExporter()
+
+        with self.assertLogs(level=WARNING) as warning:
+            # pylint: disable=protected-access
+            self.assertEqual(otlp_mock_exporter._export(data={}), result_mock.SUCCESS)
+            otlp_mock_exporter.shutdown()
+            self.assertEqual(otlp_mock_exporter._export(data={}), result_mock.FAILURE)
+            self.assertEqual(
+                warning.records[0].message,
+                "Exporter already shutdown, ignoring batch",
+            )
+
+    def test_shutdown_wait_last_export(self):
+        import threading
+        import time
+        result_mock = Mock()
+        rpc_error = RpcError()
+
+        def code(self):
+            return StatusCode.UNAVAILABLE
+
+        def trailing_metadata(self):
+            return {
+                "google.rpc.retryinfo-bin": RetryInfo(retry_delay=Duration(seconds=1)).SerializeToString()
+            }
+
+        rpc_error.code = MethodType(code, rpc_error)
+        rpc_error.trailing_metadata = MethodType(trailing_metadata, rpc_error)
+
+        class OTLPMockExporter(OTLPExporterMixin):
+            _result = result_mock
+            _stub = Mock(
+                **{"return_value": Mock(**{"Export.side_effect": rpc_error})}
+            )
+
+            def _translate_data(
+                    self, data: Sequence[SDKDataT]
+            ) -> ExportServiceRequestT:
+                pass
+
+            @property
+            def _exporting(self) -> str:
+                return "mock"
+
+        otlp_mock_exporter = OTLPMockExporter()
+
+        export_thread = threading.Thread(target=otlp_mock_exporter._export, args=({},))
+        export_thread.start()
+        try:
+            self.assertTrue(otlp_mock_exporter._export_lock.locked())
+            # delay is 1 second while the default shutdown timeout is 30_000 milliseconds
+            start_time = time.time()
+            otlp_mock_exporter.shutdown()
+            now = time.time()
+            self.assertGreaterEqual(now, (start_time + 30 / 1000))
+            self.assertTrue(otlp_mock_exporter._shutdown)
+            self.assertFalse(otlp_mock_exporter._export_lock.locked())
+        finally:
+            export_thread.join()

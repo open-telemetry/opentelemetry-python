@@ -387,7 +387,7 @@ class OTLPMetricExporter(
             yield MetricsData(resource_metrics=split_resource_metrics)
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
-        pass
+        OTLPExporterMixin.shutdown(self, timeout_millis=timeout_millis)
 
     @property
     def _exporting(self) -> str:

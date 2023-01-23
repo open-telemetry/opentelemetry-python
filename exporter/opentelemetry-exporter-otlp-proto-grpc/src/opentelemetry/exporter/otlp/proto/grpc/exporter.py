@@ -14,16 +14,16 @@
 
 """OTLP Exporter"""
 
-from logging import getLogger
+import threading
 from abc import ABC, abstractmethod
 from collections.abc import Sequence
+from logging import getLogger
 from os import environ
 from time import sleep
 from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, Union
 from typing import Sequence as TypingSequence
 from typing import TypeVar
 from urllib.parse import urlparse
-from opentelemetry.sdk.trace import ReadableSpan
 
 import backoff
 from google.rpc.error_details_pb2 import RetryInfo
@@ -37,6 +37,9 @@ from grpc import (
     ssl_channel_credentials,
 )
 
+from opentelemetry.exporter.otlp.proto.grpc import (
+    _OTLP_GRPC_HEADERS,
+)
 from opentelemetry.proto.common.v1.common_pb2 import (
     AnyValue,
     ArrayValue,
@@ -51,12 +54,10 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_INSECURE,
     OTEL_EXPORTER_OTLP_TIMEOUT,
 )
-from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.metrics.export import MetricsData
+from opentelemetry.sdk.resources import Resource as SDKResource
+from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.util.re import parse_env_headers
-from opentelemetry.exporter.otlp.proto.grpc import (
-    _OTLP_GRPC_HEADERS,
-)
 
 logger = getLogger(__name__)
 SDKDataT = TypeVar("SDKDataT")
@@ -92,7 +93,6 @@ def environ_to_compression(environ_key: str) -> Optional[Compression]:
 
 
 def _translate_value(value: Any) -> KeyValue:
-
     if isinstance(value, bool):
         any_value = AnyValue(bool_value=value)
 
@@ -131,16 +131,15 @@ def _translate_key_values(key: str, value: Any) -> KeyValue:
 
 
 def get_resource_data(
-    sdk_resource_scope_data: Dict[SDKResource, ResourceDataT],
-    resource_class: Callable[..., TypingResourceT],
-    name: str,
+        sdk_resource_scope_data: Dict[SDKResource, ResourceDataT],
+        resource_class: Callable[..., TypingResourceT],
+        name: str,
 ) -> List[TypingResourceT]:
-
     resource_data = []
 
     for (
-        sdk_resource,
-        scope_data,
+            sdk_resource,
+            scope_data,
     ) in sdk_resource_scope_data.items():
 
         collector_resource = Resource()
@@ -215,15 +214,15 @@ class OTLPExporterMixin(
     """
 
     def __init__(
-        self,
-        endpoint: Optional[str] = None,
-        insecure: Optional[bool] = None,
-        credentials: Optional[ChannelCredentials] = None,
-        headers: Optional[
-            Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
-        ] = None,
-        timeout: Optional[int] = None,
-        compression: Optional[Compression] = None,
+            self,
+            endpoint: Optional[str] = None,
+            insecure: Optional[bool] = None,
+            credentials: Optional[ChannelCredentials] = None,
+            headers: Optional[
+                Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
+            ] = None,
+            timeout: Optional[int] = None,
+            compression: Optional[Compression] = None,
     ):
         super().__init__()
 
@@ -265,10 +264,10 @@ class OTLPExporterMixin(
         self._collector_kwargs = None
 
         compression = (
-            environ_to_compression(OTEL_EXPORTER_OTLP_COMPRESSION)
-            if compression is None
-            else compression
-        ) or Compression.NoCompression
+                          environ_to_compression(OTEL_EXPORTER_OTLP_COMPRESSION)
+                          if compression is None
+                          else compression
+                      ) or Compression.NoCompression
 
         if insecure:
             self._client = self._stub(
@@ -282,9 +281,12 @@ class OTLPExporterMixin(
                 secure_channel(endpoint, credentials, compression=compression)
             )
 
+        self._export_lock = threading.Lock()
+        self._shutdown = False
+
     @abstractmethod
     def _translate_data(
-        self, data: TypingSequence[SDKDataT]
+            self, data: TypingSequence[SDKDataT]
     ) -> ExportServiceRequestT:
         pass
 
@@ -300,8 +302,13 @@ class OTLPExporterMixin(
         return output
 
     def _export(
-        self, data: Union[TypingSequence[ReadableSpan], MetricsData]
+            self, data: Union[TypingSequence[ReadableSpan], MetricsData]
     ) -> ExportResultT:
+        # After the call to shutdown, subsequent calls to Export are
+        # not allowed and should return a Failure result.
+        if self._shutdown:
+            logger.warning("Exporter already shutdown, ignoring batch")
+            return self._result.FAILURE
 
         # FIXME remove this check if the export type for traces
         # gets updated to a class that represents the proto
@@ -317,69 +324,75 @@ class OTLPExporterMixin(
         # exponentially. Once delay is greater than max_value, the yielded
         # value will remain constant.
         for delay in _expo(max_value=max_value):
-
-            if delay == max_value:
+            if delay == max_value or self._shutdown:
                 return self._result.FAILURE
 
-            try:
-                self._client.Export(
-                    request=self._translate_data(data),
-                    metadata=self._headers,
-                    timeout=self._timeout,
-                )
-
-                return self._result.SUCCESS
-
-            except RpcError as error:
-
-                if error.code() in [
-                    StatusCode.CANCELLED,
-                    StatusCode.DEADLINE_EXCEEDED,
-                    StatusCode.RESOURCE_EXHAUSTED,
-                    StatusCode.ABORTED,
-                    StatusCode.OUT_OF_RANGE,
-                    StatusCode.UNAVAILABLE,
-                    StatusCode.DATA_LOSS,
-                ]:
-
-                    retry_info_bin = dict(error.trailing_metadata()).get(
-                        "google.rpc.retryinfo-bin"
-                    )
-                    if retry_info_bin is not None:
-                        retry_info = RetryInfo()
-                        retry_info.ParseFromString(retry_info_bin)
-                        delay = (
-                            retry_info.retry_delay.seconds
-                            + retry_info.retry_delay.nanos / 1.0e9
-                        )
-
-                    logger.warning(
-                        (
-                            "Transient error %s encountered while exporting "
-                            "%s, retrying in %ss."
-                        ),
-                        error.code(),
-                        self._exporting,
-                        delay,
-                    )
-                    sleep(delay)
-                    continue
-                else:
-                    logger.error(
-                        "Failed to export %s, error code: %s",
-                        self._exporting,
-                        error.code(),
+            with self._export_lock:
+                try:
+                    self._client.Export(
+                        request=self._translate_data(data),
+                        metadata=self._headers,
+                        timeout=self._timeout,
                     )
 
-                if error.code() == StatusCode.OK:
                     return self._result.SUCCESS
 
-                return self._result.FAILURE
+                except RpcError as error:
+
+                    if error.code() in [
+                        StatusCode.CANCELLED,
+                        StatusCode.DEADLINE_EXCEEDED,
+                        StatusCode.RESOURCE_EXHAUSTED,
+                        StatusCode.ABORTED,
+                        StatusCode.OUT_OF_RANGE,
+                        StatusCode.UNAVAILABLE,
+                        StatusCode.DATA_LOSS,
+                    ]:
+
+                        retry_info_bin = dict(error.trailing_metadata()).get(
+                            "google.rpc.retryinfo-bin"
+                        )
+                        if retry_info_bin is not None:
+                            retry_info = RetryInfo()
+                            retry_info.ParseFromString(retry_info_bin)
+                            delay = (
+                                    retry_info.retry_delay.seconds
+                                    + retry_info.retry_delay.nanos / 1.0e9
+                            )
+
+                        logger.warning(
+                            (
+                                "Transient error %s encountered while exporting "
+                                "%s, retrying in %ss."
+                            ),
+                            error.code(),
+                            self._exporting,
+                            delay,
+                        )
+                        sleep(delay)
+                        continue
+                    else:
+                        logger.error(
+                            "Failed to export %s, error code: %s",
+                            self._exporting,
+                            error.code(),
+                        )
+
+                    if error.code() == StatusCode.OK:
+                        return self._result.SUCCESS
+
+                    return self._result.FAILURE
 
         return self._result.FAILURE
 
-    def shutdown(self) -> None:
-        pass
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+        if self._shutdown:
+            logger.warning("Exporter already shutdown, ignoring call")
+            return
+        # wait for the last export if any
+        self._export_lock.acquire(timeout=timeout_millis)
+        self._shutdown = True
+        self._export_lock.release()
 
     @property
     @abstractmethod
