@@ -289,7 +289,7 @@ class TestOTLPLogExporter(TestCase):
         # pylint: disable=protected-access
         self.assertEqual(
             self.exporter._headers,
-            (("user-agent", "OTel OTLP Exporter Python/" + __version__),),
+            (("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),),
         )
 
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
