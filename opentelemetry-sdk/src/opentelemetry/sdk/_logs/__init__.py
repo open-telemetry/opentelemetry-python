@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=unused-import
 
-from opentelemetry.sdk._logs._internal import (  # noqa: F401
+from opentelemetry.sdk._logs._internal import (
     LogData,
     Logger,
     LoggerProvider,
@@ -23,8 +22,11 @@ from opentelemetry.sdk._logs._internal import (  # noqa: F401
     LogRecordProcessor,
 )
 
-__all__ = []
-for key, value in globals().copy().items():
-    if not key.startswith("_"):
-        value.__module__ = __name__
-        __all__.append(key)
+__all__ = [
+    "LogData",
+    "Logger",
+    "LoggerProvider",
+    "LoggingHandler",
+    "LogRecord",
+    "LogRecordProcessor",
+]
