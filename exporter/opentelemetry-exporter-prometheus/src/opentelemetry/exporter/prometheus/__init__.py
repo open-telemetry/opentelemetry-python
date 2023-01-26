@@ -114,8 +114,7 @@ def _convert_buckets(
 
 
 class PrometheusMetricReader(MetricReader):
-    """Prometheus metric exporter for OpenTelemetry.
-    """
+    """Prometheus metric exporter for OpenTelemetry."""
 
     def __init__(self) -> None:
 

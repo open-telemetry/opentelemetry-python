@@ -151,9 +151,7 @@ class TestPrometheusMetricReader(TestCase):
 
         for prometheus_metric in collector.collect():
             self.assertEqual(type(prometheus_metric), CounterMetricFamily)
-            self.assertEqual(
-                prometheus_metric.name, "test_sum_testunit"
-            )
+            self.assertEqual(prometheus_metric.name, "test_sum_testunit")
             self.assertEqual(prometheus_metric.documentation, "testdesc")
             self.assertTrue(len(prometheus_metric.samples) == 1)
             self.assertEqual(prometheus_metric.samples[0].value, 123)
@@ -196,9 +194,7 @@ class TestPrometheusMetricReader(TestCase):
 
         for prometheus_metric in collector.collect():
             self.assertEqual(type(prometheus_metric), GaugeMetricFamily)
-            self.assertEqual(
-                prometheus_metric.name, "test_gauge_testunit"
-            )
+            self.assertEqual(prometheus_metric.name, "test_gauge_testunit")
             self.assertEqual(prometheus_metric.documentation, "testdesc")
             self.assertTrue(len(prometheus_metric.samples) == 1)
             self.assertEqual(prometheus_metric.samples[0].value, 123)
@@ -260,9 +256,7 @@ class TestPrometheusMetricReader(TestCase):
 
         for prometheus_metric in collector.collect():
             self.assertEqual(type(prometheus_metric), GaugeMetricFamily)
-            self.assertEqual(
-                prometheus_metric.name, "test_gauge_testunit"
-            )
+            self.assertEqual(prometheus_metric.name, "test_gauge_testunit")
             self.assertEqual(prometheus_metric.documentation, "testdesc")
             self.assertTrue(len(prometheus_metric.samples) == 1)
             self.assertEqual(prometheus_metric.samples[0].value, 123)
