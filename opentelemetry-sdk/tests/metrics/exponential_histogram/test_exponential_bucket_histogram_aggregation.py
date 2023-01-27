@@ -821,3 +821,90 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             )
         except Exception as error:
             self.fail(f"Unexpected exception raised: {error}")
+
+    def test_collect_results_cumulative(self):
+        exponential_histogram_aggregation = (
+            _ExponentialBucketHistogramAggregation(
+                Mock(),
+                Mock(),
+            )
+        )
+
+        self.assertEqual(exponential_histogram_aggregation._mapping._scale, 20)
+
+        exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
+        self.assertEqual(exponential_histogram_aggregation._mapping._scale, 20)
+
+        exponential_histogram_aggregation.aggregate(Measurement(4, Mock()))
+        self.assertEqual(exponential_histogram_aggregation._mapping._scale, 7)
+
+        exponential_histogram_aggregation.aggregate(Measurement(1, Mock()))
+        self.assertEqual(exponential_histogram_aggregation._mapping._scale, 6)
+
+        collection_0 = exponential_histogram_aggregation.collect(
+            AggregationTemporality.CUMULATIVE, Mock()
+        )
+
+        self.assertEqual(len(collection_0.positive.bucket_counts), 160)
+
+        self.assertEqual(collection_0.count, 3)
+        self.assertEqual(collection_0.sum, 7)
+        self.assertEqual(collection_0.scale, 6)
+        self.assertEqual(collection_0.zero_count, 0)
+        self.assertEqual(
+            collection_0.positive.bucket_counts,
+            [1, *[0] * 63, 1, *[0] * 31, 1, *[0] * 63]
+        )
+        self.assertEqual(collection_0.flags, 0)
+        self.assertEqual(collection_0.min, 1)
+        self.assertEqual(collection_0.max, 4)
+
+        exponential_histogram_aggregation.aggregate(Measurement(1, Mock()))
+        exponential_histogram_aggregation.aggregate(Measurement(8, Mock()))
+        exponential_histogram_aggregation.aggregate(Measurement(0.5, Mock()))
+        exponential_histogram_aggregation.aggregate(Measurement(0.1, Mock()))
+        exponential_histogram_aggregation.aggregate(Measurement(0.045, Mock()))
+
+        collection_1 = exponential_histogram_aggregation.collect(
+            AggregationTemporality.CUMULATIVE, Mock()
+        )
+
+        previous_count = collection_1.positive.bucket_counts[0]
+
+        count_counts = [[previous_count, 0]]
+
+        for count in collection_1.positive.bucket_counts:
+            if count == previous_count:
+                count_counts[-1][1] += 1
+            else:
+                previous_count = count
+                count_counts.append([previous_count, 1])
+
+        self.assertEqual(collection_1.count, 8)
+        self.assertEqual(collection_1.sum, 23.645000000000003)
+        self.assertEqual(collection_1.scale, 4)
+        self.assertEqual(collection_1.zero_count, 0)
+        self.assertEqual(
+            collection_1.positive.bucket_counts,
+            [
+                2,
+                *[0] * 15,
+                2,
+                *[0] * 15,
+                1,
+                *[0] * 15,
+                1,
+                *[0] * 15,
+                2,
+                *[0] * 31,
+                2,
+                *[0] * 8,
+                1,
+                *[0] * 17,
+                1,
+                *[0] * 36
+            ]
+        )
+        self.assertEqual(collection_1.flags, 0)
+        self.assertEqual(collection_1.min, 0.045)
+        self.assertEqual(collection_1.max, 8)

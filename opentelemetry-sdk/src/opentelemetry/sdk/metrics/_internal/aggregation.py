@@ -675,6 +675,15 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
             self._previous_point = current_point
 
+            # FIXME this seems wrong, the values here should be updated
+            # depending on the aggregation temporality (cumulative or delta)
+            # the behavior here should be consistent with the sum and histogram
+            # aggregations above.
+            # Maybe what Srikanth says is that it does not make sense to return
+            # a point with a certain bucket boundaries, then another with
+            # different boundaries, that is maybe what Jmacd's merge methods
+            # did.
+
             self._negative = Buckets()
             self._positive = Buckets()
             self._start_time_unix_nano = collection_start_nano
