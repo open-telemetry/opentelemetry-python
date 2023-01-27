@@ -37,7 +37,7 @@ from typing import (
     Type,
     Union,
 )
-from warnings import filterwarnings, resetwarnings
+from warnings import filterwarnings, catch_warnings
 
 from deprecated import deprecated
 
@@ -1169,13 +1169,14 @@ class TracerProvider(trace_api.TracerProvider):
         if instrumenting_library_version is None:
             instrumenting_library_version = ""
 
-        filterwarnings("ignore", category=DeprecationWarning)
-        instrumentation_info = InstrumentationInfo(
-            instrumenting_module_name,
-            instrumenting_library_version,
-            schema_url,
-        )
-        resetwarnings()
+        with catch_warnings():
+            filterwarnings("ignore", category=DeprecationWarning)
+            instrumentation_info = InstrumentationInfo(
+                instrumenting_module_name,
+                instrumenting_library_version,
+                schema_url,
+            )
+
         return Tracer(
             self.sampler,
             self.resource,
