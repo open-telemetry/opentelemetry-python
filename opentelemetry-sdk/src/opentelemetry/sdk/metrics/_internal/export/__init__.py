@@ -23,6 +23,7 @@ from time import time_ns
 from typing import IO, Callable, Dict, Iterable, Optional
 
 from typing_extensions import final
+import math
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics._internal
@@ -465,7 +466,10 @@ class PeriodicExportingMetricReader(MetricReader):
         self._shutdown_event = Event()
         self._shutdown_once = Once()
         print(f"interval is set to {self._export_interval_millis}")
-        if self._export_interval_millis > 0:
+        if (
+            self._export_interval_millis > 0
+            and self._export_interval_millis < math.inf
+        ):
             self._daemon_thread = Thread(
                 name="OtelPeriodicExportingMetricReader",
                 target=self._ticker,
@@ -476,6 +480,11 @@ class PeriodicExportingMetricReader(MetricReader):
                 os.register_at_fork(
                     after_in_child=self._at_fork_reinit
                 )  # pylint: disable=protected-access
+        elif self._export_interval_millis <= 0:
+            raise ValueError(
+                f"interval value {self._export_interval_millis} is invalid \
+                and needs to be larger than zero and lower than infinity."
+            )
 
     def _at_fork_reinit(self):
         self._daemon_thread = Thread(
@@ -522,7 +531,10 @@ class PeriodicExportingMetricReader(MetricReader):
             return
 
         self._shutdown_event.set()
-        if self._export_interval_millis > 0:
+        if (
+            self._export_interval_millis > 0
+            and self._export_interval_millis < math.inf
+        ):
             self._daemon_thread.join(
                 timeout=(deadline_ns - time_ns()) / 10**9
             )

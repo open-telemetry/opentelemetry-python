@@ -17,6 +17,7 @@ from typing import Sequence
 from unittest.mock import Mock
 
 from flaky import flaky
+import math
 
 from opentelemetry.sdk.metrics import Counter
 from opentelemetry.sdk.metrics._internal import _Counter
@@ -134,15 +135,31 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         self.assertTrue(collect_mock.assert_called_once)
         pmr.shutdown()
 
-    def test_ticker_not_called(self):
+    def test_ticker_not_called_on_infinity(self):
         collect_mock = Mock()
         exporter = FakeMetricsExporter()
         exporter.export = Mock()
-        pmr = PeriodicExportingMetricReader(exporter, export_interval_millis=0)
+        pmr = PeriodicExportingMetricReader(exporter, export_interval_millis=math.inf)
         pmr._set_collect_callback(collect_mock)
         sleep(0.1)
         self.assertTrue(collect_mock.assert_not_called)
         pmr.shutdown()
+
+    def test_ticker_value_exception_on_zero(self):
+        exporter = FakeMetricsExporter()
+        exporter.export = Mock()
+        self.assertRaises(
+            ValueError, PeriodicExportingMetricReader,
+            exporter, export_interval_millis=0
+        )
+
+    def test_ticker_value_exception_on_negative(self):
+        exporter = FakeMetricsExporter()
+        exporter.export = Mock()
+        self.assertRaises(
+            ValueError, PeriodicExportingMetricReader,
+            exporter, export_interval_millis=-100
+        )
 
     @flaky(max_runs=3, min_passes=1)
     def test_ticker_collects_metrics(self):
