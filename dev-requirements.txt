@@ -22,3 +22,5 @@ mypy-protobuf~=3.0.0
 markupsafe==2.0.1
 bleach==4.1.0 # This dependency was updated to a breaking version.
 codespell==2.1.0
+requests==2.28.1
+ruamel.yaml==0.17.21
