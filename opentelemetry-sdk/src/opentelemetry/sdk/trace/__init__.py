@@ -37,7 +37,7 @@ from typing import (
     Type,
     Union,
 )
-from warnings import filterwarnings, catch_warnings
+from warnings import catch_warnings, filterwarnings
 
 from deprecated import deprecated
 
