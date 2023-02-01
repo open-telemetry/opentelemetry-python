@@ -55,11 +55,14 @@ def _load_runtime_context(func: _F) -> _F:
                     OTEL_PYTHON_CONTEXT, default_context
                 )  # type: str
                 try:
-                    _RUNTIME_CONTEXT = next(
-                        iter_entry_points(
-                            "opentelemetry_context", configured_context
+                    for entry_point in iter_entry_points("opentelemetry_context"):
+                        if entry_point.name==configured_context:
+                            _RUNTIME_CONTEXT = entry_point.load()()
+                            break
+                    if _RUNTIME_CONTEXT is None:
+                        logger.error(
+                            "Failed to load context (no such entry point): %s", configured_context
                         )
-                    ).load()()
                 except Exception:  # pylint: disable=broad-except
                     logger.error(
                         "Failed to load context: %s", configured_context
