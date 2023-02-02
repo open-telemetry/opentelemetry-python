@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from unittest import TestCase
+from warnings import catch_warnings, filterwarnings
 
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.util._importlib_metadata import EntryPoint, EntryPoints
