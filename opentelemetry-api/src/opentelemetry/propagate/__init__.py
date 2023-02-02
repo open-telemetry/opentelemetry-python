@@ -68,22 +68,21 @@ Example::
     https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/context/api-propagators.md
 """
 
-import typing
 from logging import getLogger
 from os import environ
-
-from pkg_resources import iter_entry_points
+from typing import Optional
 
 from opentelemetry.context.context import Context
 from opentelemetry.environment_variables import OTEL_PROPAGATORS
 from opentelemetry.propagators import composite, textmap
+from opentelemetry.util._importlib_metadata import entry_points
 
 logger = getLogger(__name__)
 
 
 def extract(
     carrier: textmap.CarrierT,
-    context: typing.Optional[Context] = None,
+    context: Optional[Context] = None,
     getter: textmap.Getter[textmap.CarrierT] = textmap.default_getter,
 ) -> Context:
     """Uses the configured propagator to extract a Context from the carrier.
@@ -104,7 +103,7 @@ def extract(
 
 def inject(
     carrier: textmap.CarrierT,
-    context: typing.Optional[Context] = None,
+    context: Optional[Context] = None,
     setter: textmap.Setter[textmap.CarrierT] = textmap.default_setter,
 ) -> None:
     """Uses the configured propagator to inject a Context into the carrier.
@@ -129,19 +128,29 @@ environ_propagators = environ.get(
     "tracecontext,baggage",
 )
 
+
 for propagator in environ_propagators.split(","):
     propagator = propagator.strip()
+
     try:
+
         propagators.append(  # type: ignore
             next(  # type: ignore
-                iter_entry_points("opentelemetry_propagator", propagator)
+                iter(  # type: ignore
+                    entry_points(  # type: ignore
+                        group="opentelemetry_propagator",
+                        name=propagator,
+                    )
+                )
             ).load()()
         )
+
     except Exception:  # pylint: disable=broad-except
         logger.exception(
-            "Failed to load configured propagator `%s`", propagator
+            "Failed to load configured propagator: %s", propagator
         )
         raise
+
 
 _HTTP_TEXT_FORMAT = composite.CompositePropagator(propagators)  # type: ignore
 

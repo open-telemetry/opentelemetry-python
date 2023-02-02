@@ -62,7 +62,7 @@ exception to standard logging, the exception won't be raised any further.
 from abc import ABC, abstractmethod
 from logging import getLogger
 
-from pkg_resources import iter_entry_points
+from opentelemetry.util._importlib_metadata import entry_points
 
 logger = getLogger(__name__)
 
@@ -118,9 +118,11 @@ class GlobalErrorHandler:
 
         plugin_handled = False
 
-        for error_handler_entry_point in iter_entry_points(
-            "opentelemetry_error_handler"
-        ):
+        error_handler_entry_points = entry_points(
+            group="opentelemetry_error_handler"
+        )
+
+        for error_handler_entry_point in error_handler_entry_points:
 
             error_handler_class = error_handler_entry_point.load()
 
