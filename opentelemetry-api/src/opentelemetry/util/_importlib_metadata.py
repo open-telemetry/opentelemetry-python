@@ -17,22 +17,51 @@ from sys import version_info
 # FIXME remove this when support for 3.7 is dropped.
 if version_info.minor == 7:
     # pylint: disable=import-error
-    from importlib_metadata import entry_points, version  # type: ignore
+    from importlib_metadata import (  # type: ignore
+        EntryPoint,
+        entry_points,
+        version,
+    )
 
 # FIXME remove this file when support for 3.9 is dropped.
 elif version_info.minor in (8, 9):
     # pylint: disable=import-error
+    from importlib.metadata import EntryPoint
     from importlib.metadata import (
         entry_points as importlib_metadata_entry_points,
     )
     from importlib.metadata import version
 
-    def entry_points(group: str, name: str):  # type: ignore
+    def entry_points(group: str = None, name: str = None):  # type: ignore
+
+        if group is None:
+            return importlib_metadata_entry_points()
+
+        if name is None:
+            return importlib_metadata_entry_points()[group]
+
         for entry_point in importlib_metadata_entry_points()[group]:
             if entry_point.name == name:
-                yield entry_point
+                return [entry_point]
+
+    __all__ = [
+        "entry_points",
+        "version",
+    ]
 
 else:
-    from importlib.metadata import entry_points, version
+    from importlib.metadata import (
+        EntryPoint,
+        EntryPoints,
+        SelectableGroups,
+        entry_points,
+        version,
+    )
 
-__all__ = ["entry_points", "version"]
+    __all__ = [
+        "entry_points",
+        "version",
+        "EntryPoint",
+        "SelectableGroups",
+        "EntryPoints",
+    ]
