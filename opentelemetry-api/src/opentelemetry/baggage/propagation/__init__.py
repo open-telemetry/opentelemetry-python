@@ -88,11 +88,13 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
                     "Baggage list-member `%s` doesn't match the format", entry
                 )
                 continue
-            name = unquote_plus(name).strip().lower()
-            value = unquote_plus(value).strip()
+
             if not _is_valid_pair(name, value):
                 _logger.warning("Invalid baggage entry: `%s`", entry)
                 continue
+
+            name = unquote_plus(name).strip().lower()
+            value = unquote_plus(value).strip()
 
             context = set_baggage(
                 name,

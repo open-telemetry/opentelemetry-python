@@ -53,29 +53,46 @@ class TestPropagators(TestCase):
 
     @patch.dict(environ, {OTEL_PROPAGATORS: "a,  b,   c  "})
     @patch("opentelemetry.propagators.composite.CompositePropagator")
-    @patch("pkg_resources.iter_entry_points")
+    @patch("opentelemetry.util._importlib_metadata.entry_points")
     def test_non_default_propagators(
-        self, mock_iter_entry_points, mock_compositehttppropagator
+        self, mock_entry_points, mock_compositehttppropagator
     ):
-        def iter_entry_points_mock(_, propagator):
-            return iter(
-                [
-                    Mock(
-                        **{
-                            "load.side_effect": [
-                                Mock(**{"side_effect": [propagator]})
-                            ]
-                        }
-                    )
-                ]
-            )
 
-        mock_iter_entry_points.configure_mock(
-            **{"side_effect": iter_entry_points_mock}
+        mock_entry_points.configure_mock(
+            **{
+                "side_effect": [
+                    [
+                        Mock(
+                            **{
+                                "load.return_value": Mock(
+                                    **{"return_value": "a"}
+                                )
+                            }
+                        ),
+                    ],
+                    [
+                        Mock(
+                            **{
+                                "load.return_value": Mock(
+                                    **{"return_value": "b"}
+                                )
+                            }
+                        )
+                    ],
+                    [
+                        Mock(
+                            **{
+                                "load.return_value": Mock(
+                                    **{"return_value": "c"}
+                                )
+                            }
+                        )
+                    ],
+                ]
+            }
         )
 
         def test_propagators(propagators):
-
             self.assertEqual(propagators, ["a", "b", "c"])
 
         mock_compositehttppropagator.configure_mock(

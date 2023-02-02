@@ -16,7 +16,7 @@ from logging import getLogger
 from os import environ
 from typing import TYPE_CHECKING, TypeVar, cast
 
-from pkg_resources import iter_entry_points
+from opentelemetry.util._importlib_metadata import entry_points
 
 if TYPE_CHECKING:
     from opentelemetry.metrics import MeterProvider
@@ -30,23 +30,25 @@ logger = getLogger(__name__)
 def _load_provider(
     provider_environment_variable: str, provider: str
 ) -> Provider:
+
     try:
-        entry_point = next(
-            iter_entry_points(
-                f"opentelemetry_{provider}",
-                name=cast(
-                    str,
-                    environ.get(
-                        provider_environment_variable,
-                        f"default_{provider}",
-                    ),
-                ),
-            )
+
+        provider_name = cast(
+            str,
+            environ.get(provider_environment_variable, f"default_{provider}"),
         )
+
         return cast(
             Provider,
-            entry_point.load()(),
+            next(  # type: ignore
+                iter(  # type: ignore
+                    entry_points(  # type: ignore
+                        group=f"opentelemetry_{provider}",
+                        name=provider_name,
+                    )
+                )
+            ).load()(),
         )
     except Exception:  # pylint: disable=broad-except
-        logger.error("Failed to load configured provider %s", provider)
+        logger.exception("Failed to load configured provider %s", provider)
         raise

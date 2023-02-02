@@ -28,7 +28,10 @@ from opentelemetry.test.spantestutil import (
 )
 from opentelemetry.trace import SpanKind
 
-from .common_tests import TEST_SERVICE_NAME, CommonEncoderTestCases
+from .common_tests import (  # pylint: disable=import-error
+    TEST_SERVICE_NAME,
+    CommonEncoderTestCases,
+)
 
 
 # pylint: disable=protected-access
