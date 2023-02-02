@@ -530,10 +530,7 @@ class PeriodicExportingMetricReader(MetricReader):
             return
 
         self._shutdown_event.set()
-        if (
-            self._export_interval_millis > 0
-            and self._export_interval_millis < math.inf
-        ):
+        if this._daemon_thread:
             self._daemon_thread.join(
                 timeout=(deadline_ns - time_ns()) / 10**9
             )
