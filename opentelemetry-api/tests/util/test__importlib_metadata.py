@@ -11,14 +11,24 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-# type: ignore
 
-from importlib.util import find_spec
 from unittest import TestCase
 
+from opentelemetry.metrics import MeterProvider
+from opentelemetry.util._importlib_metadata import entry_points
 
-class TestInstrumentor(TestCase):
-    def test_proto(self):
 
-        if find_spec("opentelemetry.proto") is None:
-            self.fail("opentelemetry-proto not installed")
+class TestEntryPoints(TestCase):
+    def test_entry_points(self):
+
+        self.assertIsInstance(
+            next(
+                iter(
+                    entry_points(
+                        group="opentelemetry_meter_provider",
+                        name="default_meter_provider",
+                    )
+                )
+            ).load()(),
+            MeterProvider,
+        )

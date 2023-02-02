@@ -14,11 +14,13 @@
 # type: ignore
 # pylint: skip-file
 
-import logging
+from logging import getLogger
 from os import environ
 from typing import Dict, Iterable, Optional, Sequence
 from unittest import TestCase
 from unittest.mock import patch
+
+from pytest import raises
 
 from opentelemetry import trace
 from opentelemetry.context import Context
@@ -30,6 +32,7 @@ from opentelemetry.sdk._configuration import (
     _get_exporter_names,
     _get_id_generator,
     _get_sampler,
+    _import_config_components,
     _import_exporters,
     _import_id_generator,
     _import_sampler,
@@ -349,13 +352,14 @@ class TestTraceInit(TestCase):
 
     @patch.dict(environ, {OTEL_PYTHON_ID_GENERATOR: "custom_id_generator"})
     @patch("opentelemetry.sdk._configuration.IdGenerator", new=IdGenerator)
-    @patch("opentelemetry.sdk._configuration.iter_entry_points")
-    def test_trace_init_custom_id_generator(self, mock_iter_entry_points):
-        mock_iter_entry_points.configure_mock(
+    @patch("opentelemetry.sdk._configuration.entry_points")
+    def test_trace_init_custom_id_generator(self, mock_entry_points):
+        mock_entry_points.configure_mock(
             return_value=[
                 IterEntryPoint("custom_id_generator", CustomIdGenerator)
             ]
         )
+
         id_generator_name = _get_id_generator()
         id_generator = _import_id_generator(id_generator_name)
         _init_tracing({}, id_generator=id_generator)
@@ -372,10 +376,10 @@ class TestTraceInit(TestCase):
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsNone(provider.sampler)
 
-    @patch("opentelemetry.sdk._configuration.iter_entry_points")
+    @patch("opentelemetry.sdk._configuration.entry_points")
     @patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"})
-    def test_trace_init_custom_sampler_with_env(self, mock_iter_entry_points):
-        mock_iter_entry_points.configure_mock(
+    def test_trace_init_custom_sampler_with_env(self, mock_entry_points):
+        mock_entry_points.configure_mock(
             return_value=[
                 IterEntryPoint(
                     "custom_sampler_factory",
@@ -383,18 +387,19 @@ class TestTraceInit(TestCase):
                 )
             ]
         )
+
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
         _init_tracing({}, sampler=sampler)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider.sampler, CustomSampler)
 
-    @patch("opentelemetry.sdk._configuration.iter_entry_points")
+    @patch("opentelemetry.sdk._configuration.entry_points")
     @patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "custom_sampler_factory"})
     def test_trace_init_custom_sampler_with_env_bad_factory(
-        self, mock_iter_entry_points
+        self, mock_entry_points
     ):
-        mock_iter_entry_points.configure_mock(
+        mock_entry_points.configure_mock(
             return_value=[
                 IterEntryPoint(
                     "custom_sampler_factory",
@@ -402,13 +407,14 @@ class TestTraceInit(TestCase):
                 )
             ]
         )
+
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
         _init_tracing({}, sampler=sampler)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsNone(provider.sampler)
 
-    @patch("opentelemetry.sdk._configuration.iter_entry_points")
+    @patch("opentelemetry.sdk._configuration.entry_points")
     @patch.dict(
         "os.environ",
         {
@@ -417,9 +423,9 @@ class TestTraceInit(TestCase):
         },
     )
     def test_trace_init_custom_sampler_with_env_unused_arg(
-        self, mock_iter_entry_points
+        self, mock_entry_points
     ):
-        mock_iter_entry_points.configure_mock(
+        mock_entry_points.configure_mock(
             return_value=[
                 IterEntryPoint(
                     "custom_sampler_factory",
@@ -427,13 +433,14 @@ class TestTraceInit(TestCase):
                 )
             ]
         )
+
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
         _init_tracing({}, sampler=sampler)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider.sampler, CustomSampler)
 
-    @patch("opentelemetry.sdk._configuration.iter_entry_points")
+    @patch("opentelemetry.sdk._configuration.entry_points")
     @patch.dict(
         "os.environ",
         {
@@ -441,10 +448,8 @@ class TestTraceInit(TestCase):
             OTEL_TRACES_SAMPLER_ARG: "0.5",
         },
     )
-    def test_trace_init_custom_ratio_sampler_with_env(
-        self, mock_iter_entry_points
-    ):
-        mock_iter_entry_points.configure_mock(
+    def test_trace_init_custom_ratio_sampler_with_env(self, mock_entry_points):
+        mock_entry_points.configure_mock(
             return_value=[
                 IterEntryPoint(
                     "custom_ratio_sampler_factory",
@@ -452,6 +457,7 @@ class TestTraceInit(TestCase):
                 )
             ]
         )
+
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
         _init_tracing({}, sampler=sampler)
@@ -459,7 +465,7 @@ class TestTraceInit(TestCase):
         self.assertIsInstance(provider.sampler, CustomRatioSampler)
         self.assertEqual(provider.sampler.ratio, 0.5)
 
-    @patch("opentelemetry.sdk._configuration.iter_entry_points")
+    @patch("opentelemetry.sdk._configuration.entry_points")
     @patch.dict(
         "os.environ",
         {
@@ -468,9 +474,9 @@ class TestTraceInit(TestCase):
         },
     )
     def test_trace_init_custom_ratio_sampler_with_env_bad_arg(
-        self, mock_iter_entry_points
+        self, mock_entry_points
     ):
-        mock_iter_entry_points.configure_mock(
+        mock_entry_points.configure_mock(
             return_value=[
                 IterEntryPoint(
                     "custom_ratio_sampler_factory",
@@ -478,13 +484,14 @@ class TestTraceInit(TestCase):
                 )
             ]
         )
+
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
         _init_tracing({}, sampler=sampler)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsNone(provider.sampler)
 
-    @patch("opentelemetry.sdk._configuration.iter_entry_points")
+    @patch("opentelemetry.sdk._configuration.entry_points")
     @patch.dict(
         "os.environ",
         {
@@ -492,9 +499,9 @@ class TestTraceInit(TestCase):
         },
     )
     def test_trace_init_custom_ratio_sampler_with_env_missing_arg(
-        self, mock_iter_entry_points
+        self, mock_entry_points
     ):
-        mock_iter_entry_points.configure_mock(
+        mock_entry_points.configure_mock(
             return_value=[
                 IterEntryPoint(
                     "custom_ratio_sampler_factory",
@@ -502,13 +509,14 @@ class TestTraceInit(TestCase):
                 )
             ]
         )
+
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
         _init_tracing({}, sampler=sampler)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsNone(provider.sampler)
 
-    @patch("opentelemetry.sdk._configuration.iter_entry_points")
+    @patch("opentelemetry.sdk._configuration.entry_points")
     @patch.dict(
         "os.environ",
         {
@@ -517,24 +525,17 @@ class TestTraceInit(TestCase):
         },
     )
     def test_trace_init_custom_ratio_sampler_with_env_multiple_entry_points(
-        self, mock_iter_entry_points
+        self, mock_entry_points
     ):
-        mock_iter_entry_points.configure_mock(
+        mock_entry_points.configure_mock(
             return_value=[
-                IterEntryPoint(
-                    "custom_ratio_sampler_factory",
-                    CustomSamplerFactory.get_custom_ratio_sampler,
-                ),
                 IterEntryPoint(
                     "custom_sampler_factory",
                     CustomSamplerFactory.get_custom_sampler,
                 ),
-                IterEntryPoint(
-                    "custom_z_sampler_factory",
-                    CustomSamplerFactory.empty_get_custom_sampler,
-                ),
             ]
         )
+
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
         _init_tracing({}, sampler=sampler)
@@ -569,7 +570,7 @@ class TestLoggingInit(TestCase):
         self.processor_patch.stop()
         self.set_provider_patch.stop()
         self.provider_patch.stop()
-        root_logger = logging.getLogger("root")
+        root_logger = getLogger("root")
         root_logger.handlers = [
             handler
             for handler in root_logger.handlers
@@ -605,7 +606,7 @@ class TestLoggingInit(TestCase):
         self.assertIsInstance(
             provider.processor.exporter, DummyOTLPLogExporter
         )
-        logging.getLogger(__name__).error("hello")
+        getLogger(__name__).error("hello")
         self.assertTrue(provider.processor.exporter.export_called)
 
     @patch.dict(
@@ -781,4 +782,35 @@ class TestImportExporters(TestCase):
         self.assertEqual(
             metric_exporterts["console"].__class__,
             ConsoleMetricExporter.__class__,
+        )
+
+
+class TestImportConfigComponents(TestCase):
+    @patch(
+        "opentelemetry.sdk._configuration.entry_points",
+        **{"side_effect": KeyError},
+    )
+    def test__import_config_components_missing_entry_point(
+        self, mock_entry_points
+    ):
+
+        with raises(RuntimeError) as error:
+            _import_config_components(["a", "b", "c"], "name")
+        self.assertEqual(
+            str(error.value), "Requested entry point 'name' not found"
+        )
+
+    @patch(
+        "opentelemetry.sdk._configuration.entry_points",
+        **{"side_effect": StopIteration},
+    )
+    def test__import_config_components_missing_component(
+        self, mock_entry_points
+    ):
+
+        with raises(RuntimeError) as error:
+            _import_config_components(["a", "b", "c"], "name")
+        self.assertEqual(
+            str(error.value),
+            "Requested component 'a' not found in entry point 'name'",
         )
