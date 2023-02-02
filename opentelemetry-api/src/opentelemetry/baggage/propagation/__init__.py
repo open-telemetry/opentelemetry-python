@@ -93,7 +93,7 @@ class W3CBaggagePropagator(textmap.TextMapPropagator):
                 _logger.warning("Invalid baggage entry: `%s`", entry)
                 continue
 
-            name = unquote_plus(name).strip().lower()
+            name = unquote_plus(name).strip()
             value = unquote_plus(value).strip()
 
             context = set_baggage(
