@@ -59,11 +59,13 @@ class TestParseHeaders(unittest.TestCase):
                 True,
             ),
         ]
-        for case in inp:
-            s, expected, warn = case
+        for case_ in inp:
+            headers, expected, warn = case_
             if warn:
                 with self.assertLogs(level="WARNING") as cm:
-                    self.assertEqual(parse_env_headers(s), dict(expected))
+                    self.assertEqual(
+                        parse_env_headers(headers), dict(expected)
+                    )
                     self.assertTrue(
                         "Header format invalid! Header values in environment "
                         "variables must be URL encoded per the OpenTelemetry "
@@ -71,4 +73,4 @@ class TestParseHeaders(unittest.TestCase):
                         in cm.records[0].message,
                     )
             else:
-                self.assertEqual(parse_env_headers(s), dict(expected))
+                self.assertEqual(parse_env_headers(headers), dict(expected))
