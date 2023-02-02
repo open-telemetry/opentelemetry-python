@@ -6,13 +6,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+- Remove the ability to set a global metric prefix for Prometheus exporter
+  ([#3137](https://github.com/open-telemetry/opentelemetry-python/pull/3137))
 - Adds environment variables for log exporter
   ([#3037](https://github.com/open-telemetry/opentelemetry-python/pull/3037))
 - Add attribute name to type warning message.
   ([3124](https://github.com/open-telemetry/opentelemetry-python/pull/3124))
 - Add db metric name to semantic conventions
   ([#3115](https://github.com/open-telemetry/opentelemetry-python/pull/3115))
-
+- Fix User-Agent header value for OTLP exporters to conform to RFC7231 & RFC7230
+  ([#3128](https://github.com/open-telemetry/opentelemetry-python/pull/3128))
 - Fix validation of baggage values
   ([#3058](https://github.com/open-telemetry/opentelemetry-python/pull/3058))
 

@@ -114,14 +114,9 @@ def _convert_buckets(
 
 
 class PrometheusMetricReader(MetricReader):
-    """Prometheus metric exporter for OpenTelemetry.
+    """Prometheus metric exporter for OpenTelemetry."""
 
-    Args:
-        prefix: single-word application prefix relevant to the domain
-            the metric belongs to.
-    """
-
-    def __init__(self, prefix: str = "") -> None:
+    def __init__(self) -> None:
 
         super().__init__(
             preferred_temporality={
@@ -133,7 +128,7 @@ class PrometheusMetricReader(MetricReader):
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             }
         )
-        self._collector = _CustomCollector(prefix)
+        self._collector = _CustomCollector()
         REGISTRY.register(self._collector)
         self._collector._callback = self.collect
 
@@ -158,8 +153,7 @@ class _CustomCollector:
     https://github.com/prometheus/client_python#custom-collectors
     """
 
-    def __init__(self, prefix: str = ""):
-        self._prefix = prefix
+    def __init__(self):
         self._callback = None
         self._metrics_datas = deque()
         self._non_letters_digits_underscore_re = compile(
@@ -210,8 +204,6 @@ class _CustomCollector:
             pre_metric_family_ids = []
 
             metric_name = ""
-            if self._prefix != "":
-                metric_name = self._prefix + "_"
             metric_name += self._sanitize(metric.name)
 
             metric_description = metric.description or ""
