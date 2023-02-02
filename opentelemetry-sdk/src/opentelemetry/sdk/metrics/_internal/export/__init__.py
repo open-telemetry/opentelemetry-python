@@ -465,7 +465,6 @@ class PeriodicExportingMetricReader(MetricReader):
         self._shutdown = False
         self._shutdown_event = Event()
         self._shutdown_once = Once()
-        print(f"interval is set to {self._export_interval_millis}")
         if (
             self._export_interval_millis > 0
             and self._export_interval_millis < math.inf
