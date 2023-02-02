@@ -224,7 +224,9 @@ class CustomSampler(Sampler):
 class CustomRatioSampler(TraceIdRatioBased):
     def __init__(self, ratio):
         if not isinstance(ratio, float):
-            raise ValueError("CustomRatioSampler ratio argument is not a float.")
+            raise ValueError(
+                "CustomRatioSampler ratio argument is not a float."
+            )
         self.ratio = ratio
         super().__init__(ratio)
 
@@ -303,7 +305,9 @@ class TestTraceInit(TestCase):
         self.set_provider_patcher.stop()
 
     # pylint: disable=protected-access
-    @patch.dict(environ, {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-test-service"})
+    @patch.dict(
+        environ, {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-test-service"}
+    )
     def test_trace_init_default(self):
 
         auto_resource = Resource.create(
@@ -323,7 +327,9 @@ class TestTraceInit(TestCase):
         self.assertIsInstance(provider.id_generator, RandomIdGenerator)
         self.assertIsInstance(provider.processor, Processor)
         self.assertIsInstance(provider.processor.exporter, Exporter)
-        self.assertEqual(provider.processor.exporter.service_name, "my-test-service")
+        self.assertEqual(
+            provider.processor.exporter.service_name, "my-test-service"
+        )
         self.assertEqual(
             provider.resource.attributes.get("telemetry.auto.version"),
             "test-version",
@@ -334,7 +340,9 @@ class TestTraceInit(TestCase):
         {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-otlp-test-service"},
     )
     def test_trace_init_otlp(self):
-        _init_tracing({"otlp": OTLPSpanExporter}, id_generator=RandomIdGenerator())
+        _init_tracing(
+            {"otlp": OTLPSpanExporter}, id_generator=RandomIdGenerator()
+        )
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
@@ -364,7 +372,9 @@ class TestTraceInit(TestCase):
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider.id_generator, CustomIdGenerator)
 
-    @patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "non_existent_entry_point"})
+    @patch.dict(
+        "os.environ", {OTEL_TRACES_SAMPLER: "non_existent_entry_point"}
+    )
     def test_trace_init_custom_sampler_with_env_non_existent_entry_point(self):
         sampler_name = _get_sampler()
         sampler = _import_sampler(sampler_name)
@@ -697,7 +707,9 @@ class TestMetricsInit(TestCase):
         self.assertIsInstance(provider, DummyMeterProvider)
         self.assertIsInstance(provider._sdk_config.resource, Resource)
         self.assertEqual(
-            provider._sdk_config.resource.attributes.get("telemetry.auto.version"),
+            provider._sdk_config.resource.attributes.get(
+                "telemetry.auto.version"
+            ),
             "auto-version",
         )
 
@@ -731,9 +743,15 @@ class TestExporterNames(TestCase):
         },
     )
     def test_otlp_exporter(self):
-        self.assertEqual(_get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_GRPC])
-        self.assertEqual(_get_exporter_names("metrics"), [_EXPORTER_OTLP_PROTO_GRPC])
-        self.assertEqual(_get_exporter_names("logs"), [_EXPORTER_OTLP_PROTO_HTTP])
+        self.assertEqual(
+            _get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_GRPC]
+        )
+        self.assertEqual(
+            _get_exporter_names("metrics"), [_EXPORTER_OTLP_PROTO_GRPC]
+        )
+        self.assertEqual(
+            _get_exporter_names("logs"), [_EXPORTER_OTLP_PROTO_HTTP]
+        )
 
     @patch.dict(
         environ,
@@ -745,8 +763,12 @@ class TestExporterNames(TestCase):
         },
     )
     def test_otlp_custom_exporter(self):
-        self.assertEqual(_get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_HTTP])
-        self.assertEqual(_get_exporter_names("metrics"), [_EXPORTER_OTLP_PROTO_GRPC])
+        self.assertEqual(
+            _get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_HTTP]
+        )
+        self.assertEqual(
+            _get_exporter_names("metrics"), [_EXPORTER_OTLP_PROTO_GRPC]
+        )
 
     @patch.dict(
         environ,
@@ -760,7 +782,9 @@ class TestExporterNames(TestCase):
     def test_otlp_exporter_conflict(self):
         # Verify that OTEL_*_EXPORTER is used, and a warning is logged
         with self.assertLogs(level="WARNING") as logs_context:
-            self.assertEqual(_get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_HTTP])
+            self.assertEqual(
+                _get_exporter_names("traces"), [_EXPORTER_OTLP_PROTO_HTTP]
+            )
         assert len(logs_context.output) == 1
 
         with self.assertLogs(level="WARNING") as logs_context:
@@ -771,7 +795,9 @@ class TestExporterNames(TestCase):
 
     @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "jaeger,zipkin"})
     def test_multiple_exporters(self):
-        self.assertEqual(sorted(_get_exporter_names("traces")), ["jaeger", "zipkin"])
+        self.assertEqual(
+            sorted(_get_exporter_names("traces")), ["jaeger", "zipkin"]
+        )
 
     @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "none"})
     def test_none_exporters(self):
