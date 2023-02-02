@@ -27,6 +27,7 @@ classifiers = [
 dependencies = [
     "Deprecated >= 1.2.6",
     "setuptools >= 16.0",
+    "importlib-metadata >= 5.0.0; python_version=='3.7'"
 ]
 dynamic = [
     "version",
