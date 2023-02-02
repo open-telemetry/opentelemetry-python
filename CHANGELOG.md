@@ -18,6 +18,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3128](https://github.com/open-telemetry/opentelemetry-python/pull/3128))
 - Fix validation of baggage values
   ([#3058](https://github.com/open-telemetry/opentelemetry-python/pull/3058))
+- Fix capitalization of baggage keys
+  ([#3151](https://github.com/open-telemetry/opentelemetry-python/pull/3151))
 - Bump min required api version for OTLP exporters
   ([#3156](https://github.com/open-telemetry/opentelemetry-python/pull/3156))
 
