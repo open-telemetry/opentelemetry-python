@@ -281,7 +281,7 @@ class TestOTLPSpanExporter(TestCase):
             (
                 ("key1", "value1"),
                 ("key2", "VALUE=2"),
-                ("user-agent", "OTel OTLP Exporter Python/" + __version__),
+                ("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),
             ),
         )
         exporter = OTLPSpanExporter(
@@ -293,7 +293,7 @@ class TestOTLPSpanExporter(TestCase):
             (
                 ("key3", "value3"),
                 ("key4", "value4"),
-                ("user-agent", "OTel OTLP Exporter Python/" + __version__),
+                ("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),
             ),
         )
         exporter = OTLPSpanExporter(
@@ -305,7 +305,7 @@ class TestOTLPSpanExporter(TestCase):
             (
                 ("key5", "value5"),
                 ("key6", "value6"),
-                ("user-agent", "OTel OTLP Exporter Python/" + __version__),
+                ("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),
             ),
         )
 
@@ -454,7 +454,7 @@ class TestOTLPSpanExporter(TestCase):
         # This ensures that there is no other header than standard user-agent.
         self.assertEqual(
             exporter._headers,
-            (("user-agent", "OTel OTLP Exporter Python/" + __version__),),
+            (("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),),
         )
 
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.backoff")

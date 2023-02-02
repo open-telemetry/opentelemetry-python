@@ -38,6 +38,7 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter.encoder import (
     _encode_value,
     _ProtobufEncoder,
 )
+from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
 )
@@ -95,6 +96,10 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertEqual(
             exporter._session.headers.get("Content-Type"),
             "application/x-protobuf",
+        )
+        self.assertEqual(
+            exporter._session.headers.get("User-Agent"),
+            "OTel-OTLP-Exporter-Python/" + __version__,
         )
 
     @patch.dict(

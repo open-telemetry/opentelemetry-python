@@ -52,8 +52,7 @@ class TestPrometheusMetricReader(TestCase):
     def test_constructor(self):
         """Test the constructor."""
         with self._registry_register_patch:
-            exporter = PrometheusMetricReader(prefix="testprefix")
-            self.assertEqual(exporter._collector._prefix, "testprefix")
+            _ = PrometheusMetricReader()
             self.assertTrue(self._mock_registry_register.called)
 
     def test_shutdown(self):
@@ -102,7 +101,7 @@ class TestPrometheusMetricReader(TestCase):
             ]
         )
 
-        collector = _CustomCollector("testprefix")
+        collector = _CustomCollector()
         collector.add_metrics_data(metrics_data)
         result_bytes = generate_latest(collector)
         result = result_bytes.decode("utf-8")
@@ -110,13 +109,13 @@ class TestPrometheusMetricReader(TestCase):
             result,
             dedent(
                 """\
-                # HELP testprefix_test_name_s foo
-                # TYPE testprefix_test_name_s histogram
-                testprefix_test_name_s_bucket{histo="1",le="123.0"} 1.0
-                testprefix_test_name_s_bucket{histo="1",le="456.0"} 4.0
-                testprefix_test_name_s_bucket{histo="1",le="+Inf"} 6.0
-                testprefix_test_name_s_count{histo="1"} 6.0
-                testprefix_test_name_s_sum{histo="1"} 579.0
+                # HELP test_name_s foo
+                # TYPE test_name_s histogram
+                test_name_s_bucket{histo="1",le="123.0"} 1.0
+                test_name_s_bucket{histo="1",le="456.0"} 4.0
+                test_name_s_bucket{histo="1",le="+Inf"} 6.0
+                test_name_s_count{histo="1"} 6.0
+                test_name_s_sum{histo="1"} 579.0
                 """
             ),
         )
@@ -147,14 +146,12 @@ class TestPrometheusMetricReader(TestCase):
             ]
         )
 
-        collector = _CustomCollector("testprefix")
+        collector = _CustomCollector()
         collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
             self.assertEqual(type(prometheus_metric), CounterMetricFamily)
-            self.assertEqual(
-                prometheus_metric.name, "testprefix_test_sum_testunit"
-            )
+            self.assertEqual(prometheus_metric.name, "test_sum_testunit")
             self.assertEqual(prometheus_metric.documentation, "testdesc")
             self.assertTrue(len(prometheus_metric.samples) == 1)
             self.assertEqual(prometheus_metric.samples[0].value, 123)
@@ -192,14 +189,12 @@ class TestPrometheusMetricReader(TestCase):
             ]
         )
 
-        collector = _CustomCollector("testprefix")
+        collector = _CustomCollector()
         collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
             self.assertEqual(type(prometheus_metric), GaugeMetricFamily)
-            self.assertEqual(
-                prometheus_metric.name, "testprefix_test_gauge_testunit"
-            )
+            self.assertEqual(prometheus_metric.name, "test_gauge_testunit")
             self.assertEqual(prometheus_metric.documentation, "testdesc")
             self.assertTrue(len(prometheus_metric.samples) == 1)
             self.assertEqual(prometheus_metric.samples[0].value, 123)
@@ -217,13 +212,13 @@ class TestPrometheusMetricReader(TestCase):
             description="testdesc",
             unit="testunit",
         )
-        collector = _CustomCollector("testprefix")
+        collector = _CustomCollector()
         collector.add_metrics_data([record])
         collector.collect()
         self.assertLogs("opentelemetry.exporter.prometheus", level="WARNING")
 
     def test_sanitize(self):
-        collector = _CustomCollector("testprefix")
+        collector = _CustomCollector()
         self.assertEqual(
             collector._sanitize("1!2@3#4$5%6^7&8*9(0)_-"),
             "1_2_3_4_5_6_7_8_9_0___",
@@ -256,14 +251,12 @@ class TestPrometheusMetricReader(TestCase):
                 )
             ]
         )
-        collector = _CustomCollector("testprefix")
+        collector = _CustomCollector()
         collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
             self.assertEqual(type(prometheus_metric), GaugeMetricFamily)
-            self.assertEqual(
-                prometheus_metric.name, "testprefix_test_gauge_testunit"
-            )
+            self.assertEqual(prometheus_metric.name, "test_gauge_testunit")
             self.assertEqual(prometheus_metric.documentation, "testdesc")
             self.assertTrue(len(prometheus_metric.samples) == 1)
             self.assertEqual(prometheus_metric.samples[0].value, 123)
@@ -276,7 +269,7 @@ class TestPrometheusMetricReader(TestCase):
 
     def test_check_value(self):
 
-        collector = _CustomCollector("")
+        collector = _CustomCollector()
 
         self.assertEqual(collector._check_value(1), "1")
         self.assertEqual(collector._check_value(1.0), "1.0")
@@ -290,7 +283,7 @@ class TestPrometheusMetricReader(TestCase):
 
     def test_multiple_collection_calls(self):
 
-        metric_reader = PrometheusMetricReader(prefix="prefix")
+        metric_reader = PrometheusMetricReader()
         provider = MeterProvider(metric_readers=[metric_reader])
         meter = provider.get_meter("getting-started", "0.1.2")
         counter = meter.create_counter("counter")
