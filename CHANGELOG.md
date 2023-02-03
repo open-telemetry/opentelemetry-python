@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3058](https://github.com/open-telemetry/opentelemetry-python/pull/3058))
 - Fix warning filters being reset when instrumenting
   ([#3147](https://github.com/open-telemetry/opentelemetry-python/pull/3147))
+- Fix capitalization of baggage keys
+  ([#3151](https://github.com/open-telemetry/opentelemetry-python/pull/3151))
 
 ## Version 1.15.0/0.36b0 (2022-12-09)
 
