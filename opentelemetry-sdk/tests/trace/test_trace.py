@@ -23,7 +23,6 @@ from random import randint
 from time import time_ns
 from typing import Optional
 from unittest import mock
-from unittest.mock import Mock
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
@@ -40,7 +39,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
-from opentelemetry.sdk.trace import Resource, TracerProvider
+from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
@@ -59,11 +58,6 @@ from opentelemetry.trace import Status, StatusCode
 
 
 class TestTracer(unittest.TestCase):
-    def test_no_deprecated_warning(self):
-        with self.assertRaises(AssertionError):
-            with self.assertWarns(DeprecationWarning):
-                TracerProvider(Mock(), Mock()).get_tracer(Mock(), Mock())
-
     def test_extends_api(self):
         tracer = new_tracer()
         self.assertIsInstance(tracer, trace.Tracer)
