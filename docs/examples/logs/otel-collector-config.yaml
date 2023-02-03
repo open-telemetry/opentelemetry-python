@@ -5,6 +5,7 @@ receivers:
 
 exporters:
   logging:
+    loglevel: debug
 
 processors:
   batch:
