@@ -664,9 +664,12 @@ class TestLoggingInit(TestCase):
         self.assertEqual(tracing_mock.call_count, 1)
         self.assertEqual(metrics_mock.call_count, 1)
 
-        logging_resource = logging_mock.call_args.args[1]
-        tracing_resource = tracing_mock.call_args.kwargs["resource"]
-        metrics_resource = metrics_mock.call_args.args[1]
+        _, args, _ = logging_mock.mock_calls[0]
+        logging_resource = args[1]
+        _, _, kwargs = tracing_mock.mock_calls[0]
+        tracing_resource = kwargs["resource"]
+        _, args, _ = metrics_mock.mock_calls[0]
+        metrics_resource = args[1]
         self.assertEqual(logging_resource, tracing_resource)
         self.assertEqual(logging_resource, metrics_resource)
         self.assertEqual(tracing_resource, metrics_resource)
