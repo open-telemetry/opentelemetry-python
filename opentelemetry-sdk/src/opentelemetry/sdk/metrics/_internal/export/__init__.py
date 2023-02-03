@@ -465,6 +465,7 @@ class PeriodicExportingMetricReader(MetricReader):
         self._shutdown = False
         self._shutdown_event = Event()
         self._shutdown_once = Once()
+        self._daemon_thread = None
         if (
             self._export_interval_millis > 0
             and self._export_interval_millis < math.inf
