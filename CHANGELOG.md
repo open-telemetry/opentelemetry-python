@@ -22,6 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3151](https://github.com/open-telemetry/opentelemetry-python/pull/3151))
 - Bump min required api version for OTLP exporters
   ([#3156](https://github.com/open-telemetry/opentelemetry-python/pull/3156))
+- deprecate jaeger exporters
+  ([#3158](https://github.com/open-telemetry/opentelemetry-python/pull/3158))
 
 ## Version 1.15.0/0.36b0 (2022-12-09)
 
