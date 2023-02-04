@@ -133,7 +133,7 @@ class JaegerExporter(SpanExporter):
     """
 
     @deprecated(
-        version="1.15.0",
+        version="1.16.0",
         reason="Since v1.35, the Jaeger supports OTLP natively. Please use the OTLP exporter instead. Support for this exporter will end July 2023.",
     )
     def __init__(
