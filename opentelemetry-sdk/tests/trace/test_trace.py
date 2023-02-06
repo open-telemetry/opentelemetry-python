@@ -20,9 +20,11 @@ import unittest
 from importlib import reload
 from logging import ERROR, WARNING
 from random import randint
+from sys import version_info
 from time import time_ns
 from typing import Optional
 from unittest import mock
+from unittest.mock import Mock
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
@@ -39,7 +41,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
-from opentelemetry.sdk.trace import Resource
+from opentelemetry.sdk.trace import Resource, TracerProvider
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
@@ -48,7 +50,7 @@ from opentelemetry.sdk.trace.sampling import (
     ParentBased,
     StaticSampler,
 )
-from opentelemetry.sdk.util import ns_to_iso_str
+from opentelemetry.sdk.util import BoundedDict, ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
@@ -56,8 +58,35 @@ from opentelemetry.test.spantestutil import (
 )
 from opentelemetry.trace import Status, StatusCode
 
+message = """
+
+If this test fails it may be because a change was made in
+opentelemetry-sdk/src/trace/__init__.py. That file has a call to
+warnings.filterwarnings that needs the line number where an of the line where
+InstrumentationInfo instance is created to catch the DeprecationWarning that is
+raised. Make sure to update the line number in the warnings.filterwarnings call
+if necessary.
+"""
+
 
 class TestTracer(unittest.TestCase):
+    def test_no_deprecated_warning(self):
+        try:
+            with self.assertRaises(AssertionError):
+                with self.assertWarns(DeprecationWarning) as the_warning:
+                    the_warning = the_warning
+                    TracerProvider(Mock(), Mock()).get_tracer(Mock(), Mock())
+        except AssertionError as assertion_error:
+            if version_info > 7:
+                raise AssertionError(f"{assertion_error.args[0]}:{message}")
+            raise
+
+        # This is being added here to make sure the filter on
+        # InstrumentationInfo does not affect other DeprecationWarnings that
+        # may be raised.
+        with self.assertWarns(DeprecationWarning):
+            BoundedDict(0)
+
     def test_extends_api(self):
         tracer = new_tracer()
         self.assertIsInstance(tracer, trace.Tracer)

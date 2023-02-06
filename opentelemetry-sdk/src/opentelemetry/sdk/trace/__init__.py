@@ -24,6 +24,7 @@ import typing
 from collections import OrderedDict
 from contextlib import contextmanager
 from os import environ
+from sys import version_info
 from time import time_ns
 from types import MappingProxyType, TracebackType
 from typing import (
@@ -37,6 +38,7 @@ from typing import (
     Type,
     Union,
 )
+from warnings import filterwarnings
 
 from deprecated import deprecated
 
@@ -1167,16 +1169,37 @@ class TracerProvider(trace_api.TracerProvider):
             logger.error("get_tracer called with missing module name.")
         if instrumenting_library_version is None:
             instrumenting_library_version = ""
+
+        kwargs = {
+            "message": (
+                "Call to deprecated method __init__. \(You should use "
+                "InstrumentationScope\) -- Deprecated since version 1.11.1."
+            ),
+            "category": DeprecationWarning,
+            "module": "opentelemetry.sdk.trace",
+        }
+
+        # FIXME: Remove when 3.7 is no longer supported.
+        # For some reason the lineno argument in 3.7 does not seem to work.
+        # This is still safe enough because we also filter by message and
+        # module.
+        if version_info.minor > 7:
+            kwargs["lineno"]: 1191
+
+        filterwarnings("ignore", **kwargs)
+
+        instrumentation_info = InstrumentationInfo(
+            instrumenting_module_name,
+            instrumenting_library_version,
+            schema_url,
+        )
+
         return Tracer(
             self.sampler,
             self.resource,
             self._active_span_processor,
             self.id_generator,
-            InstrumentationInfo(
-                instrumenting_module_name,
-                instrumenting_library_version,
-                schema_url,
-            ),
+            instrumentation_info,
             self._span_limits,
             InstrumentationScope(
                 instrumenting_module_name,
