@@ -32,6 +32,7 @@ dependencies = [
   "opentelemetry-api ~= 1.15",
   "opentelemetry-proto == 1.18.0.dev",
   "opentelemetry-sdk ~= 1.18.0.dev",
+  "opentelemetry-exporter-otlp-proto-common == 1.18.0.dev",
 ]
 
 [project.optional-dependencies]

@@ -23,6 +23,7 @@ from time import sleep
 import backoff
 import requests
 
+from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_COMPRESSION,
@@ -43,9 +44,6 @@ from opentelemetry.sdk._logs.export import (
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
-)
-from opentelemetry.exporter.otlp.proto.http._log_exporter.encoder import (
-    _ProtobufEncoder,
 )
 from opentelemetry.util.re import parse_env_headers
 
@@ -147,7 +145,7 @@ class OTLPLogExporter(LogExporter):
             _logger.warning("Exporter already shutdown, ignoring batch")
             return LogExportResult.FAILURE
 
-        serialized_data = _ProtobufEncoder.serialize(batch)
+        serialized_data = encode_logs(batch).SerializeToString()
 
         for delay in _expo(max_value=self._MAX_RETRY_TIMEOUT):
 
