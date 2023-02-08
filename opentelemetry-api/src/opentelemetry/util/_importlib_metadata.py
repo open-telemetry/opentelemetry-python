@@ -13,15 +13,67 @@
 # limitations under the License.
 
 from sys import version_info
+from typing import Dict, List, Union
+
+# This is a cache to avoid going through creating a dictionary for all entry
+# points for 3.7 every time the entry points function is called.
+result_entry_points_37 = {}
 
 # FIXME remove this when support for 3.7 is dropped.
 if version_info.minor == 7:
     # pylint: disable=import-error
-    from importlib_metadata import (  # type: ignore
-        EntryPoint,
-        entry_points,
-        version,
+    from importlib_metadata import EntryPoint
+    from importlib_metadata import (
+        entry_points as importlib_metadata_entry_points,  # type: ignore
     )
+    from importlib_metadata import version
+
+    def entry_points(group: str = None, name: str = None) -> Union[List, Dict]:
+
+        if group is None and name is None:
+
+            if not result_entry_points_37:
+
+                for entry_point in importlib_metadata_entry_points():
+
+                    if entry_point.group not in result_entry_points_37.keys():
+                        result_entry_points_37[entry_point.group] = []
+
+                    (
+                        result_entry_points_37[entry_point.group].append(
+                            entry_point
+                        )
+                    )
+
+                for key, value in result_entry_points_37.items():
+                    result_entry_points_37[key] = tuple(value)
+
+            return result_entry_points_37
+
+        if group is not None and name is None:
+            return tuple(
+                entry_point
+                for entry_point in importlib_metadata_entry_points(group=group)
+            )
+
+        if group is None and name is not None:
+            return tuple(
+                entry_point
+                for entry_point in importlib_metadata_entry_points(name=name)
+            )
+
+        return tuple(
+            entry_point
+            for entry_point in importlib_metadata_entry_points(
+                group=group, name=name
+            )
+        )
+
+    __all__ = [
+        "entry_points",
+        "EntryPoint",
+        "version",
+    ]
 
 # FIXME remove this file when support for 3.9 is dropped.
 elif version_info.minor in (8, 9):
@@ -32,36 +84,83 @@ elif version_info.minor in (8, 9):
     )
     from importlib.metadata import version
 
-    def entry_points(group: str = None, name: str = None):  # type: ignore
+    def entry_points(group: str = None, name: str = None) -> Union[List, Dict]:
 
-        if group is None:
-            return importlib_metadata_entry_points()
+        result_key_entry_points = importlib_metadata_entry_points()
 
-        if name is None:
-            return importlib_metadata_entry_points()[group]
+        if group is None and name is None:
+            return result_key_entry_points
 
-        for entry_point in importlib_metadata_entry_points()[group]:
-            if entry_point.name == name:
-                return [entry_point]
+        if group is not None and group not in result_key_entry_points.keys():
+            return tuple()
+
+        if group is not None and name is None:
+            return result_key_entry_points[group]
+
+        if group is None and name is not None:
+
+            name_entry_points = []
+
+            for result_entry_points in result_key_entry_points.values():
+                for result_entry_point in result_entry_points:
+                    if result_entry_point.name == name:
+                        name_entry_points.append(result_entry_point)
+
+            return tuple(name_entry_points)
+
+        name_group_entry_points = []
+
+        for result_entry_point in result_key_entry_points[group]:
+            if result_entry_point.name == name:
+                name_group_entry_points.append(result_entry_point)
+                break
+
+        return tuple(name_group_entry_points)
 
     __all__ = [
         "entry_points",
+        "EntryPoint",
         "version",
     ]
 
 else:
+    from importlib.metadata import EntryPoint
     from importlib.metadata import (
-        EntryPoint,
-        EntryPoints,
-        SelectableGroups,
-        entry_points,
-        version,
+        entry_points as importlib_metadata_entry_points,
     )
+    from importlib.metadata import version
+
+    def entry_points(group: str = None, name: str = None) -> Union[List, Dict]:
+
+        if group is None and name is None:
+            result_entry_points = {}
+
+            for key, value in importlib_metadata_entry_points().items():
+                result_entry_points[key] = tuple(value)
+
+            return result_entry_points
+
+        if group is not None and name is None:
+            return tuple(
+                entry_point
+                for entry_point in importlib_metadata_entry_points(group=group)
+            )
+
+        if group is None and name is not None:
+            return tuple(
+                entry_point
+                for entry_point in importlib_metadata_entry_points(name=name)
+            )
+
+        return tuple(
+            entry_point
+            for entry_point in importlib_metadata_entry_points(
+                group=group, name=name
+            )
+        )
 
     __all__ = [
         "entry_points",
         "version",
         "EntryPoint",
-        "SelectableGroups",
-        "EntryPoints",
     ]

@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from typing import Dict, Tuple
 from unittest import TestCase
-from warnings import catch_warnings, filterwarnings
 
 from opentelemetry.metrics import MeterProvider
 from opentelemetry.util._importlib_metadata import EntryPoint
 from opentelemetry.util._importlib_metadata import (
-    entry_points as entry_points_function,  # SelectableGroups,; EntryPoints
+    entry_points as importlib_metadata_entry_points,
 )
 
 
@@ -28,7 +28,7 @@ class TestEntryPoints(TestCase):
         self.assertIsInstance(
             next(
                 iter(
-                    entry_points_function(
+                    importlib_metadata_entry_points(
                         group="opentelemetry_meter_provider",
                         name="default_meter_provider",
                     )
@@ -43,52 +43,36 @@ class TestEntryPoints(TestCase):
         version.
         """
 
-        selectable_groups = entry_points_function()
+        entry_points = importlib_metadata_entry_points()
+        self.assertIsInstance(entry_points, Dict)
 
-        # self.assertIsInstance(selectable_groups, SelectableGroups)
+        entry_points = entry_points["opentelemetry_propagator"]
+        self.assertIsInstance(entry_points, Tuple)
+        self.assertIsInstance(entry_points[0], EntryPoint)
 
-        # Supressing the following warning here:
-        # DeprecationWarning: SelectableGroups dict interface is deprecated. Use select.
-        # The behavior of the importlib metadata library is hard to understand,
-        # this is True: selectable_groups is selectable_groups.select(). So,
-        # using select, as the warning says yields the same problem. Also
-        # select does not accept any parameters.
+        entry_points = importlib_metadata_entry_points(
+            group="opentelemetry_propagator"
+        )
+        self.assertIsInstance(entry_points, Tuple)
+        self.assertIsInstance(entry_points[0], EntryPoint)
 
-        with catch_warnings():
-            filterwarnings("ignore", category=DeprecationWarning)
-            entry_points = selectable_groups.select()[
-                "opentelemetry_propagator"
-            ]
+        entry_points = importlib_metadata_entry_points(
+            group="opentelemetry_propagator", name="baggage"
+        )
+        self.assertIsInstance(entry_points, Tuple)
+        self.assertIsInstance(entry_points[0], EntryPoint)
 
-        # Supressing the following warning here:
-        # DeprecationWarning: DeprecationWarning: Accessing entry points by index is deprecated. Cast to tuple if needed.
-        # The behavior of the importlib metadata library is hard to understand,
-        # this is True: entry_points == .select(). So, using select, as the
-        # warning says yields the same problem. Also select does not accept any
-        # parameters.
-        with catch_warnings():
-            filterwarnings("ignore", category=DeprecationWarning)
+        entry_points = importlib_metadata_entry_points(name="baggage")
+        self.assertIsInstance(entry_points, Tuple)
+        self.assertIsInstance(entry_points[0], EntryPoint)
 
-            self.assertIsInstance(entry_points.select()[0], EntryPoint)
+        entry_points = importlib_metadata_entry_points(group="abc")
+        self.assertEqual(entry_points, tuple())
 
-            entry_points = entry_points_function(
-                group="opentelemetry_propagator"
-            )
-
-            self.assertIsInstance(entry_points.select()[0], EntryPoint)
-
-            entry_points = entry_points_function(
-                group="opentelemetry_propagator", name="baggage"
-            )
-
-            self.assertIsInstance(entry_points.select()[0], EntryPoint)
-
-        entry_points = entry_points_function(group="abc")
-
-        self.assertEqual(entry_points, [])
-
-        entry_points = entry_points_function(
+        entry_points = importlib_metadata_entry_points(
             group="opentelemetry_propagator", name="abc"
         )
+        self.assertEqual(entry_points, tuple())
 
-        self.assertEqual(entry_points, [])
+        entry_points = importlib_metadata_entry_points(group="abc", name="abc")
+        self.assertEqual(entry_points, tuple())
