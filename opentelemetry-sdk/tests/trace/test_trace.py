@@ -20,7 +20,6 @@ import unittest
 from importlib import reload
 from logging import ERROR, WARNING
 from random import randint
-from sys import version_info
 from time import time_ns
 from typing import Optional
 from unittest import mock
@@ -58,28 +57,12 @@ from opentelemetry.test.spantestutil import (
 )
 from opentelemetry.trace import Status, StatusCode
 
-message = """
-
-If this test fails it may be because a change was made in
-opentelemetry-sdk/src/trace/__init__.py. That file has a call to
-warnings.filterwarnings that needs the line number where an of the line where
-InstrumentationInfo instance is created to catch the DeprecationWarning that is
-raised. Make sure to update the line number in the warnings.filterwarnings call
-if necessary.
-"""
-
 
 class TestTracer(unittest.TestCase):
     def test_no_deprecated_warning(self):
-        try:
-            with self.assertRaises(AssertionError):
-                with self.assertWarns(DeprecationWarning) as the_warning:
-                    the_warning = the_warning
-                    TracerProvider(Mock(), Mock()).get_tracer(Mock(), Mock())
-        except AssertionError as assertion_error:
-            if version_info > 7:
-                raise AssertionError(f"{assertion_error.args[0]}:{message}")
-            raise
+        with self.assertRaises(AssertionError):
+            with self.assertWarns(DeprecationWarning):
+                TracerProvider(Mock(), Mock()).get_tracer(Mock(), Mock())
 
         # This is being added here to make sure the filter on
         # InstrumentationInfo does not affect other DeprecationWarnings that
