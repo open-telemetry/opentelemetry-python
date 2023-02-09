@@ -12,8 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# type: ignore
+
 from sys import version_info
-from typing import Dict, List, Union
+from typing import Dict, Tuple, Union
 
 # This is a cache to avoid going through creating a dictionary for all entry
 # points for 3.7 every time the entry points function is called.
@@ -24,11 +26,13 @@ if version_info.minor == 7:
     # pylint: disable=import-error
     from importlib_metadata import EntryPoint
     from importlib_metadata import (
-        entry_points as importlib_metadata_entry_points,  # type: ignore
+        entry_points as importlib_metadata_entry_points,
     )
     from importlib_metadata import version
 
-    def entry_points(group: str = None, name: str = None) -> Union[List, Dict]:
+    def entry_points(
+        group: str = None, name: str = None
+    ) -> Union[Tuple, Dict]:
 
         if group is None and name is None:
 
@@ -84,7 +88,9 @@ elif version_info.minor in (8, 9):
     )
     from importlib.metadata import version
 
-    def entry_points(group: str = None, name: str = None) -> Union[List, Dict]:
+    def entry_points(
+        group: str = None, name: str = None
+    ) -> Union[Tuple, Dict]:
 
         result_key_entry_points = importlib_metadata_entry_points()
 
@@ -130,7 +136,9 @@ else:
     )
     from importlib.metadata import version
 
-    def entry_points(group: str = None, name: str = None) -> Union[List, Dict]:
+    def entry_points(
+        group: str = None, name: str = None
+    ) -> Union[Tuple, Dict]:
 
         if group is None and name is None:
             result_entry_points = {}
