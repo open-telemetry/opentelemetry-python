@@ -16,7 +16,7 @@ from logging import getLogger
 from os import environ
 from typing import TYPE_CHECKING, TypeVar, cast
 
-from opentelemetry.util._importlib_metadata import entry_points
+from opentelemetry.util._importlib_metadata import entry_points  # type: ignore
 
 if TYPE_CHECKING:
     from opentelemetry.metrics import MeterProvider
