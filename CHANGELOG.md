@@ -23,6 +23,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Bump min required api version for OTLP exporters
   ([#3156](https://github.com/open-telemetry/opentelemetry-python/pull/3156))
 
+- Create a single resource instance
+  ([#3118](https://github.com/open-telemetry/opentelemetry-python/pull/3118))
+
 ## Version 1.15.0/0.36b0 (2022-12-09)
 
 - PeriodicExportingMetricsReader with +Inf interval
