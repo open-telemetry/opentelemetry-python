@@ -193,20 +193,12 @@ def _init_tracing(
     exporters: Dict[str, Type[SpanExporter]],
     id_generator: IdGenerator = None,
     sampler: Sampler = None,
-    auto_instrumentation_version: Optional[str] = None,
+    resource: Resource = None,
 ):
-    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
-    # from the env variable else defaults to "unknown_service"
-    auto_resource = {}
-    # populate version if using auto-instrumentation
-    if auto_instrumentation_version:
-        auto_resource[
-            ResourceAttributes.TELEMETRY_AUTO_VERSION
-        ] = auto_instrumentation_version
     provider = TracerProvider(
         id_generator=id_generator,
         sampler=sampler,
-        resource=Resource.create(auto_resource),
+        resource=resource,
     )
     set_tracer_provider(provider)
 
@@ -219,17 +211,8 @@ def _init_tracing(
 
 def _init_metrics(
     exporters: Dict[str, Type[MetricExporter]],
-    auto_instrumentation_version: Optional[str] = None,
+    resource: Resource = None,
 ):
-    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
-    # from the env variable else defaults to "unknown_service"
-    auto_resource = {}
-    # populate version if using auto-instrumentation
-    if auto_instrumentation_version:
-        auto_resource[
-            ResourceAttributes.TELEMETRY_AUTO_VERSION
-        ] = auto_instrumentation_version
-
     metric_readers = []
 
     for _, exporter_class in exporters.items():
@@ -238,25 +221,15 @@ def _init_metrics(
             PeriodicExportingMetricReader(exporter_class(**exporter_args))
         )
 
-    provider = MeterProvider(
-        resource=Resource.create(auto_resource), metric_readers=metric_readers
-    )
+    provider = MeterProvider(resource=resource, metric_readers=metric_readers)
     set_meter_provider(provider)
 
 
 def _init_logging(
     exporters: Dict[str, Type[LogExporter]],
-    auto_instrumentation_version: Optional[str] = None,
+    resource: Resource = None,
 ):
-    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
-    # from the env variable else defaults to "unknown_service"
-    auto_resource = {}
-    # populate version if using auto-instrumentation
-    if auto_instrumentation_version:
-        auto_resource[
-            ResourceAttributes.TELEMETRY_AUTO_VERSION
-        ] = auto_instrumentation_version
-    provider = LoggerProvider(resource=Resource.create(auto_resource))
+    provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
 
     for _, exporter_class in exporters.items():
@@ -359,18 +332,28 @@ def _initialize_components(auto_instrumentation_version):
     sampler = _import_sampler(sampler_name)
     id_generator_name = _get_id_generator()
     id_generator = _import_id_generator(id_generator_name)
+    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
+    # from the env variable else defaults to "unknown_service"
+    auto_resource = {}
+    # populate version if using auto-instrumentation
+    if auto_instrumentation_version:
+        auto_resource[
+            ResourceAttributes.TELEMETRY_AUTO_VERSION
+        ] = auto_instrumentation_version
+    resource = Resource.create(auto_resource)
+
     _init_tracing(
         exporters=trace_exporters,
         id_generator=id_generator,
         sampler=sampler,
-        auto_instrumentation_version=auto_instrumentation_version,
+        resource=resource,
     )
-    _init_metrics(metric_exporters, auto_instrumentation_version)
+    _init_metrics(metric_exporters, resource)
     logging_enabled = os.getenv(
         _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, "false"
     )
     if logging_enabled.strip().lower() == "true":
-        _init_logging(log_exporters, auto_instrumentation_version)
+        _init_logging(log_exporters, resource)
 
 
 class _BaseConfigurator(ABC):
