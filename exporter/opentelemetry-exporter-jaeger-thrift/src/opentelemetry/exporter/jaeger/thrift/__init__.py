@@ -85,6 +85,8 @@ import logging
 from os import environ
 from typing import Optional
 
+from deprecated import deprecated
+
 from opentelemetry import trace
 from opentelemetry.exporter.jaeger.thrift.gen.jaeger import (
     Collector as jaeger_thrift,
@@ -130,6 +132,10 @@ class JaegerExporter(SpanExporter):
         timeout: Maximum time the Jaeger exporter should wait for each batch export.
     """
 
+    @deprecated(
+        version="1.16.0",
+        reason="Since v1.35, the Jaeger supports OTLP natively. Please use the OTLP exporter instead. Support for this exporter will end July 2023.",
+    )
     def __init__(
         self,
         agent_host_name: Optional[str] = None,

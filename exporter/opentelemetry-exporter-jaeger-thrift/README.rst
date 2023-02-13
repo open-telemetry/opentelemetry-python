@@ -1,6 +1,10 @@
 OpenTelemetry Jaeger Thrift Exporter
 ====================================
 
+.. warning::
+    Since v1.35, the Jaeger supports OTLP natively. Please use the OTLP exporter instead.
+    Support for this exporter will end July 2023.
+
 |pypi|
 
 .. |pypi| image:: https://badge.fury.io/py/opentelemetry-exporter-jaeger-thrift.svg
