@@ -564,6 +564,10 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             if self._count == 0:
                 return None
 
+            negative = self._negative
+            positive = self._positive
+            zero_count = self._zero_count
+            count = self._count
             start_time_unix_nano = self._start_time_unix_nano
             sum_ = self._sum
             max_ = self._max
@@ -579,21 +583,30 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             else:
                 scale = self._mapping.scale
 
+            self._negative = Buckets()
+            self._positive = Buckets()
+            self._start_time_unix_nano = collection_start_nano
+            self._sum = 0
+            self._count = 0
+            self._zero_count = 0
+            self._min = inf
+            self._max = -inf
+
             current_point = ExponentialHistogramDataPoint(
                 attributes=self._attributes,
                 start_time_unix_nano=start_time_unix_nano,
                 time_unix_nano=collection_start_nano,
-                count=self._count,
+                count=count,
                 sum=sum_,
                 scale=scale,
-                zero_count=self._zero_count,
+                zero_count=zero_count,
                 positive=BucketsPoint(
-                    offset=self._positive.offset,
-                    bucket_counts=self._positive.counts,
+                    offset=positive.offset,
+                    bucket_counts=positive.counts,
                 ),
                 negative=BucketsPoint(
-                    offset=self._negative.offset,
-                    bucket_counts=self._negative.counts,
+                    offset=negative.offset,
+                    bucket_counts=negative.counts,
                 ),
                 # FIXME: Find the right value for flags
                 flags=0,
@@ -620,6 +633,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 max_ = max(current_point.max, self._previous_point.max)
                 min_ = min(current_point.min, self._previous_point.min)
 
+                # Merging should be implemented here somehow
                 negative_counts = [
                     curr_count + prev_count
                     for curr_count, prev_count in zip(
@@ -657,15 +671,15 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 attributes=self._attributes,
                 start_time_unix_nano=start_time_unix_nano,
                 time_unix_nano=current_point.time_unix_nano,
-                count=self._count,
+                count=count,
                 sum=sum_,
                 scale=scale,
-                zero_count=self._zero_count,
+                zero_count=zero_count,
                 positive=BucketsPoint(
-                    offset=self._positive.offset, bucket_counts=positive_counts
+                    offset=positive.offset, bucket_counts=positive_counts
                 ),
                 negative=BucketsPoint(
-                    offset=self._negative.offset, bucket_counts=negative_counts
+                    offset=negative.offset, bucket_counts=negative_counts
                 ),
                 # FIXME: Find the right value for flags
                 flags=0,
@@ -683,15 +697,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             # a point with a certain bucket boundaries, then another with
             # different boundaries, that is maybe what Jmacd's merge methods
             # did.
-
-            self._negative = Buckets()
-            self._positive = Buckets()
-            self._start_time_unix_nano = collection_start_nano
-            self._sum = 0
-            self._count = 0
-            self._zero_count = 0
-            self._min = inf
-            self._max = -inf
 
             return current_point
 

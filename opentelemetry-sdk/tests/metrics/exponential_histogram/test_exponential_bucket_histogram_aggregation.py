@@ -880,29 +880,26 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 previous_count = count
                 count_counts.append([previous_count, 1])
 
-        self.assertEqual(collection_1.count, 8)
-        self.assertEqual(collection_1.sum, 23.645000000000003)
+        self.assertEqual(collection_1.count, 5)
+        self.assertEqual(collection_1.sum, 16.645)
         self.assertEqual(collection_1.scale, 4)
         self.assertEqual(collection_1.zero_count, 0)
+
         self.assertEqual(
             collection_1.positive.bucket_counts,
             [
                 2,
                 *[0] * 15,
-                2,
-                *[0] * 15,
                 1,
-                *[0] * 15,
-                1,
-                *[0] * 15,
+                *[0] * 47,
                 2,
                 *[0] * 31,
-                2,
+                1,
                 *[0] * 8,
                 1,
                 *[0] * 17,
                 1,
-                *[0] * 36
+                *[0] * 36,
             ]
         )
         self.assertEqual(collection_1.flags, 0)
