@@ -625,6 +625,19 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             min_ = current_point.min
 
             if aggregation_temporality is AggregationTemporality.CUMULATIVE:
+
+                # attributes: always the same
+                # start_time_unix_nano: defined below
+                # time_unix_nano: defined in parameter above
+                # count: treat as we do in explicit bucket histogram
+                # sum: "
+                # zero_count: "
+                # scale: needs merging
+                # positive: needs merging
+                # negative: needs merging
+                # min: treat as we do in explicit bucket histogram
+                # max: treat as we do in explicit bucket histogram
+
                 start_time_unix_nano = (
                     self._previous_point.start_time_unix_nano
                 )
@@ -699,6 +712,10 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             # did.
 
             return current_point
+
+    def _merge(self, current_point):
+
+        pass
 
 
 class Aggregation(ABC):
