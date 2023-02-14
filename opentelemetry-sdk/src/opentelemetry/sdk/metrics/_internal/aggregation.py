@@ -621,8 +621,16 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
                 return current_point
 
-            max_ = current_point.max
-            min_ = current_point.min
+            previous_point = self._previous_point
+
+            min_scale = min(previous_point.scale, current_point.scale)
+
+            low_positive, high_positive = self._get_low_high(
+                previous_point.positive, current_point.positive, min_scale
+            )
+            low_negative, high_negative = self._get_low_high(
+                previous_point.negative, current_point.negative, min_scale
+            )
 
             if aggregation_temporality is AggregationTemporality.CUMULATIVE:
 
@@ -639,44 +647,46 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 # max: treat as we do in explicit bucket histogram
 
                 start_time_unix_nano = (
-                    self._previous_point.start_time_unix_nano
+                    previous_point.start_time_unix_nano
                 )
-                sum_ = current_point.sum + self._previous_point.sum
+                sum_ = current_point.sum + previous_point.sum
                 # Only update min/max on delta -> cumulative
-                max_ = max(current_point.max, self._previous_point.max)
-                min_ = min(current_point.min, self._previous_point.min)
+                max_ = max(current_point.max, previous_point.max)
+                min_ = min(current_point.min, previous_point.min)
 
                 # Merging should be implemented here somehow
                 negative_counts = [
                     curr_count + prev_count
                     for curr_count, prev_count in zip(
                         current_point.negative.bucket_counts,
-                        self._previous_point.negative.bucket_counts,
+                        previous_point.negative.bucket_counts,
                     )
                 ]
                 positive_counts = [
                     curr_count + prev_count
                     for curr_count, prev_count in zip(
                         current_point.positive.bucket_counts,
-                        self._previous_point.positive.bucket_counts,
+                        previous_point.positive.bucket_counts,
                     )
                 ]
             else:
-                start_time_unix_nano = self._previous_point.time_unix_nano
-                sum_ = current_point.sum - self._previous_point.sum
+                start_time_unix_nano = previous_point.time_unix_nano
+                sum_ = current_point.sum - previous_point.sum
+                max_ = current_point.max
+                min_ = current_point.min
 
                 negative_counts = [
                     curr_count - prev_count
                     for curr_count, prev_count in zip(
                         current_point.negative.bucket_counts,
-                        self._previous_point.negative.bucket_counts,
+                        previous_point.negative.bucket_counts,
                     )
                 ]
                 positive_counts = [
                     curr_count - prev_count
                     for curr_count, prev_count in zip(
                         current_point.positive.bucket_counts,
-                        self._previous_point.positive.bucket_counts,
+                        previous_point.positive.bucket_counts,
                     )
                 ]
 
@@ -713,9 +723,50 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
             return current_point
 
-    def _merge(self, current_point):
+    def _get_low_high_previous_current_buckets(
+        self, previous_point_buckets, current_point_buckets, min_scale
+    ):
 
-        pass
+        (
+            previous_point_low,
+            previous_point_high
+        ) = self._get_low_high(
+            previous_point_buckets,
+            min_scale
+        )
+        (
+            current_point_low,
+            current_point_high
+        ) = self._get_low_high(
+            current_point_buckets,
+            min_scale
+        )
+
+        if current_point_low > current_point_high:
+            low = previous_point_low
+            high = previous_point_high
+
+        elif previous_point_low > previous_point_high:
+            low = current_point_low
+            high = current_point_high
+
+        else:
+            low = min(
+                previous_point_low, current_point_low
+            )
+            high = min(
+                previous_point_high, current_point_high
+            )
+
+        return low, high
+
+    def _get_low_high(self, buckets, min_scale):
+        if len(buckets) == 0:
+            return 0, -1
+
+        shift = self.scale - min_scale
+
+        return buckets.index_start >> shift, buckets.index_end >> shift
 
 
 class Aggregation(ABC):
