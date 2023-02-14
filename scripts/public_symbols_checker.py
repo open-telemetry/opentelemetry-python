@@ -76,8 +76,10 @@ def get_symbols(change_type, diff_lines_getter, prefix):
 def a_diff_lines_getter(diff_lines):
     return diff_lines.b_blob.data_stream.read().decode("utf-8").split("\n")
 
+
 def d_diff_lines_getter(diff_lines):
     return diff_lines.a_blob.data_stream.read().decode("utf-8").split("\n")
+
 
 def m_diff_lines_getter(diff_lines):
     return unified_diff(
@@ -90,6 +92,7 @@ get_symbols("A", a_diff_lines_getter, r"")
 get_symbols("D", d_diff_lines_getter, r"")
 get_symbols("M", m_diff_lines_getter, r"\+")
 get_symbols("M", m_diff_lines_getter, r"\-")
+
 
 def remove_common_symbols():
     # For each file, we remove the symbols that are added and removed in the
@@ -115,6 +118,7 @@ def remove_common_symbols():
         if not removed_symbols[file_path]:
             del removed_symbols[file_path]
 
+
 if added_symbols or removed_symbols:
 
     # If a symbol is added and removed in the same commit, we consider it
@@ -122,10 +126,10 @@ if added_symbols or removed_symbols:
     remove_common_symbols()
     print("The code in this branch adds the following public symbols:")
     print()
-    for file_path, symbols in added_symbols.items():
-        print(f"- {file_path}")
-        for symbol in symbols:
-            print(f"\t{symbol}")
+    for file_path_, symbols_ in added_symbols.items():
+        print(f"- {file_path_}")
+        for symbol_ in symbols_:
+            print(f"\t{symbol_}")
         print()
 
     print(
@@ -137,10 +141,10 @@ if added_symbols or removed_symbols:
     print()
     print("The code in this branch removes the following public symbols:")
     print()
-    for file_path, symbols in removed_symbols.items():
-        print(f"- {file_path}")
-        for symbol in symbols:
-            print(f"\t{symbol}")
+    for file_path_, symbols_ in removed_symbols.items():
+        print(f"- {file_path_}")
+        for symbol_ in symbols_:
+            print(f"\t{symbol_}")
         print()
 
     print(
