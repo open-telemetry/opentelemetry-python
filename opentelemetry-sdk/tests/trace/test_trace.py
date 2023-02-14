@@ -23,6 +23,7 @@ from random import randint
 from time import time_ns
 from typing import Optional
 from unittest import mock
+from unittest.mock import Mock
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
@@ -39,7 +40,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
-from opentelemetry.sdk.trace import Resource
+from opentelemetry.sdk.trace import Resource, TracerProvider
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
@@ -48,7 +49,7 @@ from opentelemetry.sdk.trace.sampling import (
     ParentBased,
     StaticSampler,
 )
-from opentelemetry.sdk.util import ns_to_iso_str
+from opentelemetry.sdk.util import BoundedDict, ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
@@ -58,6 +59,17 @@ from opentelemetry.trace import Status, StatusCode
 
 
 class TestTracer(unittest.TestCase):
+    def test_no_deprecated_warning(self):
+        with self.assertRaises(AssertionError):
+            with self.assertWarns(DeprecationWarning):
+                TracerProvider(Mock(), Mock()).get_tracer(Mock(), Mock())
+
+        # This is being added here to make sure the filter on
+        # InstrumentationInfo does not affect other DeprecationWarnings that
+        # may be raised.
+        with self.assertWarns(DeprecationWarning):
+            BoundedDict(0)
+
     def test_extends_api(self):
         tracer = new_tracer()
         self.assertIsInstance(tracer, trace.Tracer)

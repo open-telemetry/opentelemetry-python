@@ -37,6 +37,7 @@ from typing import (
     Type,
     Union,
 )
+from warnings import filterwarnings
 
 from deprecated import deprecated
 
@@ -1167,16 +1168,29 @@ class TracerProvider(trace_api.TracerProvider):
             logger.error("get_tracer called with missing module name.")
         if instrumenting_library_version is None:
             instrumenting_library_version = ""
+
+        filterwarnings(
+            "ignore",
+            message=(
+                r"Call to deprecated method __init__. \(You should use "
+                r"InstrumentationScope\) -- Deprecated since version 1.11.1."
+            ),
+            category=DeprecationWarning,
+            module="opentelemetry.sdk.trace",
+        )
+
+        instrumentation_info = InstrumentationInfo(
+            instrumenting_module_name,
+            instrumenting_library_version,
+            schema_url,
+        )
+
         return Tracer(
             self.sampler,
             self.resource,
             self._active_span_processor,
             self.id_generator,
-            InstrumentationInfo(
-                instrumenting_module_name,
-                instrumenting_library_version,
-                schema_url,
-            ),
+            instrumentation_info,
             self._span_limits,
             InstrumentationScope(
                 instrumenting_module_name,
