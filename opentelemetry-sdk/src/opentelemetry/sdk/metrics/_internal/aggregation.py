@@ -501,13 +501,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             # 4. Rescale the mapping if needed.
             if is_rescaling_needed:
 
-                change = 0
-
-                while high - low >= self._max_size:
-                    high = high >> 1
-                    low = low >> 1
-
-                    change += 1
+                change = self._get_scale_change(low, high)
 
                 new_scale = self._mapping.scale - change
 
@@ -603,10 +597,14 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 positive=BucketsPoint(
                     offset=positive.offset,
                     bucket_counts=positive.counts,
+                    _index_start=positive.index_start,
+                    _index_end=positive.index_end,
                 ),
                 negative=BucketsPoint(
                     offset=negative.offset,
                     bucket_counts=negative.counts,
+                    _index_start=negative.index_start,
+                    _index_end=negative.index_end,
                 ),
                 # FIXME: Find the right value for flags
                 flags=0,
@@ -625,10 +623,10 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
             min_scale = min(previous_point.scale, current_point.scale)
 
-            low_positive, high_positive = self._get_low_high(
+            low_positive, high_positive = self._get_low_high_previous_current(
                 previous_point.positive, current_point.positive, min_scale
             )
-            low_negative, high_negative = self._get_low_high(
+            low_negative, high_negative = self._get_low_high_previous_current(
                 previous_point.negative, current_point.negative, min_scale
             )
 
@@ -699,10 +697,16 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 scale=scale,
                 zero_count=zero_count,
                 positive=BucketsPoint(
-                    offset=positive.offset, bucket_counts=positive_counts
+                    offset=positive.offset,
+                    bucket_counts=positive_counts,
+                    _index_start=positive.index_start,
+                    _index_end=positive.index_end
                 ),
                 negative=BucketsPoint(
-                    offset=negative.offset, bucket_counts=negative_counts
+                    offset=negative.offset,
+                    bucket_counts=negative_counts,
+                    _index_start=negative.index_start,
+                    _index_end=negative.index_end
                 ),
                 # FIXME: Find the right value for flags
                 flags=0,
@@ -723,7 +727,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
             return current_point
 
-    def _get_low_high_previous_current_buckets(
+    def _get_low_high_previous_current(
         self, previous_point_buckets, current_point_buckets, min_scale
     ):
 
@@ -760,13 +764,27 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         return low, high
 
-    def _get_low_high(self, buckets, min_scale):
-        if len(buckets) == 0:
+    def _get_low_high(
+        self, buckets, min_scale
+    ):
+        if len(buckets.bucket_counts) == 0:
             return 0, -1
 
-        shift = self.scale - min_scale
+        shift = self._mapping._scale - min_scale
 
-        return buckets.index_start >> shift, buckets.index_end >> shift
+        return buckets._index_start >> shift, buckets._index_end >> shift
+
+    def _get_scale_change(self, low, high):
+
+        change = 0
+
+        while high - low >= self._max_size:
+            high = high >> 1
+            low = low >> 1
+
+            change += 1
+
+        return change
 
 
 class Aggregation(ABC):
