@@ -12,16 +12,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=unused-import
 
-from opentelemetry.sdk.metrics._internal import (  # noqa: F401
-    Meter,
-    MeterProvider,
-)
-from opentelemetry.sdk.metrics._internal.exceptions import (  # noqa: F401
-    MetricsTimeoutError,
-)
-from opentelemetry.sdk.metrics._internal.instrument import (  # noqa: F401
+from opentelemetry.sdk.metrics._internal import Meter, MeterProvider
+from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
+from opentelemetry.sdk.metrics._internal.instrument import (
     Counter,
     Histogram,
     ObservableCounter,
@@ -30,8 +24,14 @@ from opentelemetry.sdk.metrics._internal.instrument import (  # noqa: F401
     UpDownCounter,
 )
 
-__all__ = []
-for key, value in globals().copy().items():
-    if not key.startswith("_"):
-        value.__module__ = __name__
-        __all__.append(key)
+__all__ = [
+    "Meter",
+    "MeterProvider",
+    "MetricsTimeoutError",
+    "Counter",
+    "Histogram",
+    "ObservableCounter",
+    "ObservableGauge",
+    "ObservableUpDownCounter",
+    "UpDownCounter",
+]
