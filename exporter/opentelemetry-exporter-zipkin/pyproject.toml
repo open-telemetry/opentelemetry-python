@@ -26,8 +26,8 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "opentelemetry-exporter-zipkin-json == 1.16.0.dev",
-  "opentelemetry-exporter-zipkin-proto-http == 1.16.0.dev",
+  "opentelemetry-exporter-zipkin-json == 1.17.0.dev",
+  "opentelemetry-exporter-zipkin-proto-http == 1.17.0.dev",
 ]
 
 [project.optional-dependencies]
