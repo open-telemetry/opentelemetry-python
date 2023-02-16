@@ -172,5 +172,5 @@ class Buckets:
         self.__index_end >>= amount
         self.__index_base = self.__index_start
 
-    def increment_bucket(self, bucket_index: int) -> None:
-        self._counts[bucket_index] += 1
+    def increment_bucket(self, bucket_index: int, increment: int = 1) -> None:
+        self._counts[bucket_index] += increment

@@ -649,41 +649,41 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 max_ = max(current_point.max, previous_point.max)
                 min_ = min(current_point.min, previous_point.min)
 
-                # Merging should be implemented here somehow
-                negative_counts = [
-                    curr_count + prev_count
-                    for curr_count, prev_count in zip(
-                        current_point.negative.bucket_counts,
-                        previous_point.negative.bucket_counts,
-                    )
-                ]
-                positive_counts = [
-                    curr_count + prev_count
-                    for curr_count, prev_count in zip(
-                        current_point.positive.bucket_counts,
-                        previous_point.positive.bucket_counts,
-                    )
-                ]
+                self._merge(
+                    previous_point.positive,
+                    current_point.positive,
+                    current_point.scale,
+                    min_scale,
+                    aggregation_temporality
+                )
+                self._merge(
+                    previous_point.negative,
+                    current_point.negative,
+                    current_point.scale,
+                    min_scale,
+                    aggregation_temporality
+                )
+
             else:
                 start_time_unix_nano = previous_point.time_unix_nano
                 sum_ = current_point.sum - previous_point.sum
                 max_ = current_point.max
                 min_ = current_point.min
 
-                negative_counts = [
-                    curr_count - prev_count
-                    for curr_count, prev_count in zip(
-                        current_point.negative.bucket_counts,
-                        previous_point.negative.bucket_counts,
-                    )
-                ]
-                positive_counts = [
-                    curr_count - prev_count
-                    for curr_count, prev_count in zip(
-                        current_point.positive.bucket_counts,
-                        previous_point.positive.bucket_counts,
-                    )
-                ]
+                self._merge(
+                    previous_point.positive,
+                    current_point.positive,
+                    current_point.scale,
+                    min_scale,
+                    aggregation_temporality
+                )
+                self._merge(
+                    previous_point.negative,
+                    current_point.negative,
+                    current_point.scale,
+                    min_scale,
+                    aggregation_temporality
+                )
 
             current_point = ExponentialHistogramDataPoint(
                 attributes=self._attributes,
@@ -695,13 +695,13 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 zero_count=zero_count,
                 positive=BucketsPoint(
                     offset=positive.offset,
-                    bucket_counts=positive_counts,
+                    bucket_counts=current_point.positive.counts,
                     _index_start=positive.index_start,
                     _index_end=positive.index_end
                 ),
                 negative=BucketsPoint(
                     offset=negative.offset,
-                    bucket_counts=negative_counts,
+                    bucket_counts=current_point.negative.counts,
                     _index_start=negative.index_start,
                     _index_end=negative.index_end
                 ),
@@ -712,15 +712,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             )
 
             self._previous_point = current_point
-
-            # FIXME this seems wrong, the values here should be updated
-            # depending on the aggregation temporality (cumulative or delta)
-            # the behavior here should be consistent with the sum and histogram
-            # aggregations above.
-            # Maybe what Srikanth says is that it does not make sense to return
-            # a point with a certain bucket boundaries, then another with
-            # different boundaries, that is maybe what Jmacd's merge methods
-            # did.
 
             return current_point
 
@@ -803,14 +794,64 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         self._mapping = mapping
 
-    def _merge(self, previous_buckets, current_buckets, current_scale, min_scale):
+    def _merge(
+        self,
+        previous_buckets,
+        current_buckets,
+        current_scale,
+        min_scale,
+        aggregation_temporality
+    ):
 
         current_change = current_scale - min_scale
 
-        for index, current_bucket in enumerate(current_buckets):
-            self._increment_index_by
+        for current_bucket_index, current_bucket in enumerate(current_buckets):
 
-            current_change
+            if current_bucket == 0:
+                continue
+
+            # Not considering the case where len(previous_buckets) == 0. This
+            # would not happen because self._previous_point is only assigned to
+            # an ExponentialHistogramDataPoint object if self._count != 0.
+
+            index = (
+                current_buckets.offset + current_bucket_index
+            ) >> current_change
+
+            if index < previous_buckets._index_start:
+                span = previous_buckets.index_end - index
+
+                if span >= self._max_size:
+                    raise Exception("Incorrect merge scale")
+
+                if span >= len(previous_buckets.counts):
+                    previous_buckets.grow(span + 1, self._max_size)
+
+                previous_buckets.index_start = index
+
+            if index > previous_buckets._index_end:
+                span = index - previous_buckets.index_end
+
+                if span >= self._max_size:
+                    raise Exception("Incorrect merge scale")
+
+                if span >= len(previous_buckets.counts):
+                    previous_buckets.grow(span + 1, self._max_size)
+
+                previous_buckets.index_end = index
+                current_change
+
+            bucket_index = index - previous_buckets.index_base
+
+            if bucket_index < 0:
+                bucket_index += len(previous_buckets.counts)
+
+            if aggregation_temporality is AggregationTemporality.DELTA:
+                current_bucket = -current_bucket
+
+            previous_buckets.increment_bucket(
+                bucket_index, increment=current_bucket
+            )
 
 
 class Aggregation(ABC):
