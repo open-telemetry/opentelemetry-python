@@ -474,6 +474,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             # 2. Compute the index for the value at the current scale.
             index = self._mapping.map_to_index(value)
 
+            # IncrementIndexBy starts here
+
             # 3. Determine if a change of scale is needed.
             is_rescaling_needed = False
 
@@ -800,6 +802,15 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             mapping = LogarithmMapping(new_scale)
 
         self._mapping = mapping
+
+    def _merge(self, previous_buckets, current_buckets, current_scale, min_scale):
+
+        current_change = current_scale - min_scale
+
+        for index, current_bucket in enumerate(current_buckets):
+            self._increment_index_by
+
+            current_change
 
 
 class Aggregation(ABC):
