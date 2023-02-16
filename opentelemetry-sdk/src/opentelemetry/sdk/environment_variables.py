@@ -635,3 +635,12 @@ OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE = (
 
 The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE` is the client certificate/chain trust for clients private key to use in mTLS communication in PEM format.
 """
+
+_OTEL_RESOURCE_DETECTORS = "_OTEL_RESOURCE_DETECTORS"
+"""
+.. envvar:: _OTEL_RESOURCE_DETECTORS
+
+The :envvar:`_OTEL_RESOURCE_DETECTORS` is a comma-separated string of names of
+resource detectors. These names must be the same as the names of entry points
+for the `opentelemetry-resource-detectors` entry point.
+"""

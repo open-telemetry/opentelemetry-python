@@ -58,19 +58,20 @@ above example.
 import abc
 import concurrent.futures
 import logging
-import os
 import sys
 import typing
 from json import dumps
+from os import environ
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.environment_variables import (
+    _OTEL_RESOURCE_DETECTORS,
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
 )
 from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.util._importlib_metadata import version
+from opentelemetry.util._importlib_metadata import entry_points, version
 from opentelemetry.util.types import AttributeValue
 
 LabelValue = AttributeValue
@@ -165,9 +166,23 @@ class Resource:
         """
         if not attributes:
             attributes = {}
-        resource = _DEFAULT_RESOURCE.merge(
-            OTELResourceDetector().detect()
-        ).merge(Resource(attributes, schema_url))
+
+        resource = _DEFAULT_RESOURCE
+
+        for resource_detector in environ.get(
+            _OTEL_RESOURCE_DETECTORS, "otel"
+        ).split(","):
+
+            resource = resource.merge(
+                entry_points(
+                    group="opentelemetry_resource_detector",
+                    name=resource_detector,
+                )[0]
+                .load()()
+                .detect()
+            )
+
+        resource = resource.merge(Resource(attributes, schema_url))
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
             process_executable_name = resource.attributes.get(
@@ -273,7 +288,7 @@ class ResourceDetector(abc.ABC):
 class OTELResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
-        env_resources_items = os.environ.get(OTEL_RESOURCE_ATTRIBUTES)
+        env_resources_items = environ.get(OTEL_RESOURCE_ATTRIBUTES)
         env_resource_map = {}
 
         if env_resources_items:
@@ -290,7 +305,7 @@ class OTELResourceDetector(ResourceDetector):
                 value_url_decoded = parse.unquote(value.strip())
                 env_resource_map[key.strip()] = value_url_decoded
 
-        service_name = os.environ.get(OTEL_SERVICE_NAME)
+        service_name = environ.get(OTEL_SERVICE_NAME)
         if service_name:
             env_resource_map[SERVICE_NAME] = service_name
         return Resource(env_resource_map)
