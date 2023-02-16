@@ -501,19 +501,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             # 4. Rescale the mapping if needed.
             if is_rescaling_needed:
 
-                change = self._get_scale_change(low, high)
-
-                new_scale = self._mapping.scale - change
-
-                self._positive.downscale(change)
-                self._negative.downscale(change)
-
-                if new_scale <= 0:
-                    mapping = ExponentMapping(new_scale)
-                else:
-                    mapping = LogarithmMapping(new_scale)
-
-                self._mapping = mapping
+                self._downscale(self._get_scale_change(low, high))
 
                 index = self._mapping.map_to_index(value)
 
@@ -629,6 +617,13 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             low_negative, high_negative = self._get_low_high_previous_current(
                 previous_point.negative, current_point.negative, min_scale
             )
+
+            min_scale = min(
+                min_scale - self._get_scale_change(low_positive, high_positive),
+                min_scale - self._get_scale_change(low_negative, high_negative),
+            )
+
+            self._downscale(self._mapping.scale - min_scale)
 
             if aggregation_temporality is AggregationTemporality.CUMULATIVE:
 
@@ -785,6 +780,26 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             change += 1
 
         return change
+
+    def _downscale(self, change: int):
+
+        if change == 0:
+            return
+
+        if change < 0:
+            raise Exception("Invalid change of scale")
+
+        new_scale = self._mapping.scale - change
+
+        self._positive.downscale(change)
+        self._negative.downscale(change)
+
+        if new_scale <= 0:
+            mapping = ExponentMapping(new_scale)
+        else:
+            mapping = LogarithmMapping(new_scale)
+
+        self._mapping = mapping
 
 
 class Aggregation(ABC):
