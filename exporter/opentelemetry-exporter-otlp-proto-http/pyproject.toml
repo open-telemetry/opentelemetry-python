@@ -30,7 +30,7 @@ dependencies = [
   "googleapis-common-protos ~= 1.52",
   "opentelemetry-api ~= 1.15",
   "opentelemetry-proto == 1.16.0",
-  "opentelemetry-sdk ~= 1.16.0.dev",
+  "opentelemetry-sdk ~= 1.16.0",
   "requests ~= 2.7",
 ]
 
