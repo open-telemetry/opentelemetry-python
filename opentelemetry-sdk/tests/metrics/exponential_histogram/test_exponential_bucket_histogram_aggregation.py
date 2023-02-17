@@ -799,6 +799,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         """
         Tests a repeated cycle of aggregation and collection.
         """
+        """
         try:
             exponential_histogram_aggregation = (
                 _ExponentialBucketHistogramAggregation(
@@ -821,6 +822,26 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             )
         except Exception as error:
             self.fail(f"Unexpected exception raised: {error}")
+        """
+        exponential_histogram_aggregation = (
+            _ExponentialBucketHistogramAggregation(
+                Mock(),
+                Mock(),
+            )
+        )
+
+        exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
+        exponential_histogram_aggregation.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
+        exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
+        exponential_histogram_aggregation.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
+        exponential_histogram_aggregation.aggregate(Measurement(2, Mock()))
+        exponential_histogram_aggregation.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
 
     def test_collect_results_cumulative(self):
         exponential_histogram_aggregation = (

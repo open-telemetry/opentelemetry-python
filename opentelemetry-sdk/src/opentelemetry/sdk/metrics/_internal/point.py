@@ -64,17 +64,6 @@ class HistogramDataPoint:
 class Buckets:
     offset: int
     bucket_counts: Sequence[int]
-    # The following attributes are an implementation detail. This class is
-    # instantiated in the collect method of _ExponentialHistogramAggregation
-    # using the values of the offset and counts attributes of an
-    # opentelemetry.sdk.metrics._internal.exponential_histogram.buckets.Buckets
-    # instance. The values of the index_start and index_end attributes of the
-    # opentelemetry.sdk.metrics._internal.exponential_histogram.buckets.Buckets
-    # will be needed later in the collect method so it makes sense to keep them
-    # here because instances of this class correspond directly with instances of
-    # opentelemetry.sdk.metrics._internal.exponential_histogram.buckets.Buckets.
-    _index_start: int
-    _index_end: int
 
 
 @dataclass(frozen=True)
