@@ -26,8 +26,8 @@ classifiers = [
   "Typing :: Typed",
 ]
 dependencies = [
-  "opentelemetry-exporter-jaeger-proto-grpc == 1.16.0.dev",
-  "opentelemetry-exporter-jaeger-thrift == 1.16.0.dev",
+  "opentelemetry-exporter-jaeger-proto-grpc == 1.17.0.dev",
+  "opentelemetry-exporter-jaeger-thrift == 1.17.0.dev",
 ]
 
 [project.optional-dependencies]
