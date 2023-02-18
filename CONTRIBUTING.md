@@ -187,7 +187,7 @@ updating the GitHub workflow to reference a PR in the Contrib repo
 * Trivial change (typo, cosmetic, doc, etc.) doesn't have to wait for one day.
 * Urgent fix can take exception as long as it has been actively communicated.
 
-One of tha maintainers will merge the PR once it is **ready to merge**.
+One of the maintainers will merge the PR once it is **ready to merge**.
 
 ## Design Choices
 
