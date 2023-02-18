@@ -184,7 +184,7 @@ jobs:
       - name: Create pull request against main
         env:
           # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
-          GITHUB_TOKEN: ${{ secrets.BOT_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
         run: |
           message="Copy change log updates from $GITHUB_REF_NAME"
           body="Copy log updates from \`$GITHUB_REF_NAME\`."

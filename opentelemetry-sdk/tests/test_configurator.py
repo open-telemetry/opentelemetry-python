@@ -309,10 +309,16 @@ class TestTraceInit(TestCase):
         environ, {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-test-service"}
     )
     def test_trace_init_default(self):
+
+        auto_resource = Resource.create(
+            {
+                "telemetry.auto.version": "test-version",
+            }
+        )
         _init_tracing(
             {"zipkin": Exporter},
             id_generator=RandomIdGenerator(),
-            auto_instrumentation_version="test-version",
+            resource=auto_resource,
         )
 
         self.assertEqual(self.set_provider_mock.call_count, 1)
@@ -578,7 +584,12 @@ class TestLoggingInit(TestCase):
         ]
 
     def test_logging_init_empty(self):
-        _init_logging({}, "auto-version")
+        auto_resource = Resource.create(
+            {
+                "telemetry.auto.version": "auto-version",
+            }
+        )
+        _init_logging({}, resource=auto_resource)
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, DummyLoggerProvider)
@@ -593,7 +604,8 @@ class TestLoggingInit(TestCase):
         {"OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service"},
     )
     def test_logging_init_exporter(self):
-        _init_logging({"otlp": DummyOTLPLogExporter})
+        resource = Resource.create({})
+        _init_logging({"otlp": DummyOTLPLogExporter}, resource=resource)
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, DummyLoggerProvider)
@@ -634,6 +646,34 @@ class TestLoggingInit(TestCase):
         self.assertEqual(logging_mock.call_count, 1)
         self.assertEqual(tracing_mock.call_count, 1)
 
+    @patch.dict(
+        environ,
+        {
+            "OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service",
+            "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED": "True",
+        },
+    )
+    @patch("opentelemetry.sdk._configuration._init_tracing")
+    @patch("opentelemetry.sdk._configuration._init_logging")
+    @patch("opentelemetry.sdk._configuration._init_metrics")
+    def test_initialize_components_resource(
+        self, metrics_mock, logging_mock, tracing_mock
+    ):
+        _initialize_components("auto-version")
+        self.assertEqual(logging_mock.call_count, 1)
+        self.assertEqual(tracing_mock.call_count, 1)
+        self.assertEqual(metrics_mock.call_count, 1)
+
+        _, args, _ = logging_mock.mock_calls[0]
+        logging_resource = args[1]
+        _, _, kwargs = tracing_mock.mock_calls[0]
+        tracing_resource = kwargs["resource"]
+        _, args, _ = metrics_mock.mock_calls[0]
+        metrics_resource = args[1]
+        self.assertEqual(logging_resource, tracing_resource)
+        self.assertEqual(logging_resource, metrics_resource)
+        self.assertEqual(tracing_resource, metrics_resource)
+
 
 class TestMetricsInit(TestCase):
     def setUp(self):
@@ -659,7 +699,12 @@ class TestMetricsInit(TestCase):
         self.provider_patch.stop()
 
     def test_metrics_init_empty(self):
-        _init_metrics({}, "auto-version")
+        auto_resource = Resource.create(
+            {
+                "telemetry.auto.version": "auto-version",
+            }
+        )
+        _init_metrics({}, resource=auto_resource)
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, DummyMeterProvider)
@@ -676,7 +721,8 @@ class TestMetricsInit(TestCase):
         {"OTEL_RESOURCE_ATTRIBUTES": "service.name=otlp-service"},
     )
     def test_metrics_init_exporter(self):
-        _init_metrics({"otlp": DummyOTLPMetricExporter})
+        resource = Resource.create({})
+        _init_metrics({"otlp": DummyOTLPMetricExporter}, resource=resource)
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, DummyMeterProvider)

@@ -12,9 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=unused-import
 
-from opentelemetry.sdk.metrics._internal.export import (  # noqa: F401
+from opentelemetry.sdk.metrics._internal.export import (
     AggregationTemporality,
     ConsoleMetricExporter,
     InMemoryMetricReader,
@@ -25,7 +24,7 @@ from opentelemetry.sdk.metrics._internal.export import (  # noqa: F401
 )
 
 # The point module is not in the export directory to avoid a circular import.
-from opentelemetry.sdk.metrics._internal.point import (  # noqa: F401
+from opentelemetry.sdk.metrics._internal.point import (
     DataPointT,
     DataT,
     Gauge,
@@ -39,8 +38,23 @@ from opentelemetry.sdk.metrics._internal.point import (  # noqa: F401
     Sum,
 )
 
-__all__ = []
-for key, value in globals().copy().items():
-    if not key.startswith("_"):
-        value.__module__ = __name__
-        __all__.append(key)
+__all__ = [
+    "AggregationTemporality",
+    "ConsoleMetricExporter",
+    "InMemoryMetricReader",
+    "MetricExporter",
+    "MetricExportResult",
+    "MetricReader",
+    "PeriodicExportingMetricReader",
+    "DataPointT",
+    "DataT",
+    "Gauge",
+    "Histogram",
+    "HistogramDataPoint",
+    "Metric",
+    "MetricsData",
+    "NumberDataPoint",
+    "ResourceMetrics",
+    "ScopeMetrics",
+    "Sum",
+]

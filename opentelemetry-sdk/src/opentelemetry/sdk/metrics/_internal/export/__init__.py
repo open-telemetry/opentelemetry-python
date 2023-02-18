@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import math
 import os
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -23,7 +24,6 @@ from time import time_ns
 from typing import IO, Callable, Dict, Iterable, Optional
 
 from typing_extensions import final
-import math
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics._internal

@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Implement shutdown procedure forOTLP grpc exporters
+  ([#3138](https://github.com/open-telemetry/opentelemetry-python/pull/3138))
+
+## Version 1.16.0/0.37b0 (2023-02-15)
+
+- Change ``__all__`` to be statically defined.
+  ([#3143](https://github.com/open-telemetry/opentelemetry-python/pull/3143))
 - Remove the ability to set a global metric prefix for Prometheus exporter
   ([#3137](https://github.com/open-telemetry/opentelemetry-python/pull/3137))
 - Adds environment variables for log exporter
@@ -19,12 +26,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3128](https://github.com/open-telemetry/opentelemetry-python/pull/3128))
 - Fix validation of baggage values
   ([#3058](https://github.com/open-telemetry/opentelemetry-python/pull/3058))
-- Implement shutdown procedure forOTLP grpc exporters
-  ([#3138](https://github.com/open-telemetry/opentelemetry-python/pull/3138))
 - Fix capitalization of baggage keys
   ([#3151](https://github.com/open-telemetry/opentelemetry-python/pull/3151))
 - Bump min required api version for OTLP exporters
   ([#3156](https://github.com/open-telemetry/opentelemetry-python/pull/3156))
+- deprecate jaeger exporters
+  ([#3158](https://github.com/open-telemetry/opentelemetry-python/pull/3158))
+
+- Create a single resource instance
+  ([#3118](https://github.com/open-telemetry/opentelemetry-python/pull/3118))
 
 ## Version 1.15.0/0.36b0 (2022-12-09)
 
