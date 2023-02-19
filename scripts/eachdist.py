@@ -12,6 +12,10 @@ from inspect import cleandoc
 from itertools import chain
 from os.path import basename
 from pathlib import Path, PurePath
+from packaging.requirements import Requirement, SpecifierSet
+from packaging.specifiers import Specifier
+import tomli
+import tomli_w
 
 DEFAULT_ALLSEP = " "
 DEFAULT_ALLFMT = "{rel}"
@@ -573,17 +577,63 @@ def update_version_files(targets, version, packages):
         f'__version__ = "{version}"',
     )
 
+def update_dependency_requirements(deps, pkg, version):
+    updated_deps = []
+    for dep in deps:
+        req = Requirement(dep)
+        if req.name == basename(pkg):
+            specifiers_set = []
+            for spec in req.specifier:
+                if ".dev" in spec.version:
+                    if spec.operator == "<":
+                        specifiers_set.append(Specifier(f"<{spec.version.replace('.dev', '')}"))
+                    elif spec.operator == "<=":
+                        specifiers_set.append(Specifier(f"<={spec.version.replace('.dev', '')}"))
+                    elif spec.operator == "==":
+                        specifiers_set.append(Specifier(f"=={version}"))
+                    elif spec.operator == ">=":
+                        specifiers_set.append(Specifier(f">={spec.version.replace('.dev', '')}"))
+                    elif spec.operator == ">":
+                        specifiers_set.append(Specifier(f">{spec.version.replace('.dev', '')}"))
+                    elif spec.operator == "!=":
+                        specifiers_set.append(Specifier(f"!={spec.version.replace('.dev', '')}"))
+                    elif spec.operator == "~=":
+                        specifiers_set.append(Specifier(f"!={spec.version.replace('.dev', '')}"))
+                else:
+                    specifiers_set.append(spec)
+                specifiers = ",".join([str(s) for s in specifiers_set])
+            if specifiers:
+                req.specifier = SpecifierSet(specifiers)
+        updated_deps.append(str(req))
+    return updated_deps
+
 
 def update_dependencies(targets, version, packages):
     print("updating dependencies")
     for pkg in packages:
-        update_files(
-            targets,
-            "pyproject.toml",
-            rf"({basename(pkg)}.*)==(.*)",
-            r"\1== " + version + '",',
-        )
+        for target in targets:
+            curr_file = find("pyproject.toml", target)
+            if curr_file is None:
+                print(f"file missing: {target}/pyproject.toml")
+                continue
 
+            with open(curr_file, mode = "rb") as _file:
+                pyproject_toml = tomli.load(_file)
+
+            # update dependencies
+            if "dependencies" in pyproject_toml["project"]:
+                pyproject_toml["project"]["dependencies"] = update_dependency_requirements(
+                    pyproject_toml["project"]["dependencies"], pkg, version
+                )
+
+            # update test dependencies
+            if "optional-dependencies" in pyproject_toml["project"] and "test" in pyproject_toml["project"]["optional-dependencies"]:
+                pyproject_toml["project"]["optional-dependencies"]["test"] = update_dependency_requirements(
+                    pyproject_toml["project"]["optional-dependencies"]["test"], pkg, version
+                )
+
+            with open(curr_file, "wb") as _file:
+                tomli_w.dump(pyproject_toml, _file)
 
 def update_files(targets, filename, search, replace):
     errors = False
