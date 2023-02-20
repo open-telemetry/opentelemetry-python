@@ -12,6 +12,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([3124](https://github.com/open-telemetry/opentelemetry-python/pull/3124))
 - Add db metric name to semantic conventions
   ([#3115](https://github.com/open-telemetry/opentelemetry-python/pull/3115))
+- Add celery task runtime metric name to semantic conventions
+  ([#3191](https://github.com/open-telemetry/opentelemetry-python/pull/3191))
 
 ## Version 1.15.0/0.36b0 (2022-12-09)
 
