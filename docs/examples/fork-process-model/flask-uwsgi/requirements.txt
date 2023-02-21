@@ -16,5 +16,5 @@ protobuf==3.18.3
 six==1.15.0
 thrift==0.13.0
 uWSGI==2.0.19.1
-Werkzeug==1.0.1
+Werkzeug==2.2.3
 wrapt==1.12.1
