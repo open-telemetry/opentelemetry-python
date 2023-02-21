@@ -979,3 +979,10 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             exponential_histogram_aggregation_1._positive.counts, [2, 2, 2, 2]
         )
         self.assertEqual(exponential_histogram_aggregation_1._mapping.scale, -1)
+
+        exponential_histogram_aggregation_0.collect(
+            AggregationTemporality.CUMULATIVE,
+            0,
+        )
+
+        self.assertEqual(exponential_histogram_aggregation_0._mapping.scale, -1)
