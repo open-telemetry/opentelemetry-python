@@ -926,3 +926,35 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         self.assertEqual(collection_1.flags, 0)
         self.assertEqual(collection_1.min, 0.045)
         self.assertEqual(collection_1.max, 8)
+
+    def test_merge_simple_event(self):
+        exponential_histogram_aggregation_0 = (
+            _ExponentialBucketHistogramAggregation(Mock(), Mock(), max_size=4)
+        )
+        exponential_histogram_aggregation_1 = (
+            _ExponentialBucketHistogramAggregation(Mock(), Mock(), max_size=4)
+        )
+        exponential_histogram_aggregation_2 = (
+            _ExponentialBucketHistogramAggregation(Mock(), Mock(), max_size=4)
+        )
+
+        for i in range(1, 5):
+            value_0 = 2 ** i
+            value_1 = 2 / value_0
+
+            exponential_histogram_aggregation_0.aggregate(
+                Measurement(value_0, Mock())
+            )
+            exponential_histogram_aggregation_1.aggregate(
+                Measurement(value_1, Mock())
+            )
+            exponential_histogram_aggregation_2.aggregate(
+                Measurement(value_0, Mock())
+            )
+            exponential_histogram_aggregation_2.aggregate(
+                Measurement(value_1, Mock())
+            )
+
+        self.assertEqual(exponential_histogram_aggregation_0._mapping.scale, 0)
+        self.assertEqual(exponential_histogram_aggregation_1._mapping.scale, 0)
+        self.assertEqual(exponential_histogram_aggregation_2._mapping.scale, -1)
