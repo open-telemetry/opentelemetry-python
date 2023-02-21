@@ -934,27 +934,48 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         exponential_histogram_aggregation_1 = (
             _ExponentialBucketHistogramAggregation(Mock(), Mock(), max_size=4)
         )
-        exponential_histogram_aggregation_2 = (
-            _ExponentialBucketHistogramAggregation(Mock(), Mock(), max_size=4)
-        )
 
-        for i in range(1, 5):
-            value_0 = 2 ** i
-            value_1 = 2 / value_0
-
+        for value in [2, 4, 8, 16]:
             exponential_histogram_aggregation_0.aggregate(
-                Measurement(value_0, Mock())
+                Measurement(value, Mock())
             )
             exponential_histogram_aggregation_1.aggregate(
-                Measurement(value_1, Mock())
-            )
-            exponential_histogram_aggregation_2.aggregate(
-                Measurement(value_0, Mock())
-            )
-            exponential_histogram_aggregation_2.aggregate(
-                Measurement(value_1, Mock())
+                Measurement(value, Mock())
             )
 
         self.assertEqual(exponential_histogram_aggregation_0._mapping.scale, 0)
-        self.assertEqual(exponential_histogram_aggregation_1._mapping.scale, 0)
-        self.assertEqual(exponential_histogram_aggregation_2._mapping.scale, -1)
+        self.assertEqual(
+            exponential_histogram_aggregation_0._positive.offset, 0
+        )
+        self.assertEqual(
+            exponential_histogram_aggregation_0._positive.counts, [1, 1, 1, 1]
+        )
+
+        exponential_histogram_aggregation_0.collect(
+            AggregationTemporality.CUMULATIVE,
+            0,
+        )
+
+        for value in [1, 2, 4, 8]:
+            exponential_histogram_aggregation_0.aggregate(
+                Measurement(1 / value, Mock())
+            )
+            exponential_histogram_aggregation_1.aggregate(
+                Measurement(1 / value, Mock())
+            )
+
+        self.assertEqual(exponential_histogram_aggregation_0._mapping.scale, 0)
+        self.assertEqual(
+            exponential_histogram_aggregation_0._positive.offset, -4
+        )
+        self.assertEqual(
+            exponential_histogram_aggregation_0._positive.counts, [1, 1, 1, 1]
+        )
+
+        self.assertEqual(
+            exponential_histogram_aggregation_1._positive.offset, -2
+        )
+        self.assertEqual(
+            exponential_histogram_aggregation_1._positive.counts, [2, 2, 2, 2]
+        )
+        self.assertEqual(exponential_histogram_aggregation_1._mapping.scale, -1)
