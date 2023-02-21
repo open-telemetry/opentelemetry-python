@@ -186,10 +186,17 @@ class TestBase(unittest.TestCase):
             return False
 
         values_diff = None
-        if isinstance(data_point, HistogramDataPoint):
-            values_diff = abs(expected_data_point.sum - data_point.sum)
-        elif isinstance(data_point, NumberDataPoint):
+        if isinstance(data_point, NumberDataPoint):
             values_diff = abs(expected_data_point.value - data_point.value)
+        elif isinstance(data_point, HistogramDataPoint):
+            values_diff = abs(expected_data_point.sum - data_point.sum)
+
+            if (
+                expected_data_point.count != data_point.count
+                or expected_data_point.min != data_point.min
+                or expected_data_point.max != data_point.max
+            ):
+                return False
 
         return (
             values_diff <= est_value_delta
