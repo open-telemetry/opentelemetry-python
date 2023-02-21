@@ -24,9 +24,12 @@ from opentelemetry.sdk.metrics._internal.export import (
 )
 
 # The point module is not in the export directory to avoid a circular import.
-from opentelemetry.sdk.metrics._internal.point import (
+from opentelemetry.sdk.metrics._internal.point import (  # noqa: F401
+    Buckets,
     DataPointT,
     DataT,
+    ExponentialHistogram,
+    ExponentialHistogramDataPoint,
     Gauge,
     Histogram,
     HistogramDataPoint,

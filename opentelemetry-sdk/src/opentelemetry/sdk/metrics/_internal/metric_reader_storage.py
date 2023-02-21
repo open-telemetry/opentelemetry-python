@@ -31,12 +31,14 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     ExplicitBucketHistogramAggregation,
     _DropAggregation,
     _ExplicitBucketHistogramAggregation,
+    _ExponentialBucketHistogramAggregation,
     _LastValueAggregation,
     _SumAggregation,
 )
 from opentelemetry.sdk.metrics._internal.export import AggregationTemporality
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import (
+    ExponentialHistogram,
     Gauge,
     Histogram,
     Metric,
@@ -191,6 +193,18 @@ class MetricReaderStorage:
                         _DropAggregation,
                     ):
                         continue
+
+                    elif isinstance(
+                        # pylint: disable=protected-access
+                        view_instrument_match._aggregation,
+                        _ExponentialBucketHistogramAggregation,
+                    ):
+                        data = ExponentialHistogram(
+                            data_points=view_instrument_match.collect(
+                                aggregation_temporality, collection_start_nanos
+                            ),
+                            aggregation_temporality=aggregation_temporality,
+                        )
 
                     metrics.append(
                         Metric(

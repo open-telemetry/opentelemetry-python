@@ -1,0 +1,148 @@
+# Copyright The OpenTelemetry Authors
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
+
+class Buckets:
+    def __init__(self):
+        self._counts = [0]
+
+        # The term "index" refers to the number of the
+        # histogram bucket used to determine its boundaries.
+        # The lower-boundary of a bucket is determined by
+        # formula base**index and the upper-boundary of a
+        # bucket is base ** (index + 1). Index values are signed
+        # to account for values less than or equal to 1.
+
+        # self._index_* will all have values equal to a certain index that is
+        # determined by the corresponding mapping _map_to_index function and
+        # the value of the index depends on the value passed to _map_to_index.
+
+        # Index of the 0th position in the backing array: backing[0] is the
+        # count in the bucket with index self._index_base.
+        self._index_base = 0
+
+        # indexStart is the smallest index value represented in the backing
+        # array.
+        self._index_start = 0
+
+        # indexEnd is the largest index value represented in the backing array.
+        self._index_end = 0
+
+    @property
+    def counts(self):
+        return self._counts
+
+    def grow(self, needed: int, max_size: int):
+
+        size = len(self._counts)
+        bias = self._index_base - self._index_start
+        old_positive_limit = size - bias
+
+        needed = needed - 1
+
+        needed |= needed >> 1
+        needed |= needed >> 2
+        needed |= needed >> 4
+        needed |= needed >> 8
+        needed |= needed >> 16
+
+        new_size = needed + 1
+
+        new_size = min(new_size, max_size)
+
+        new_positive_limit = new_size - bias
+
+        tmp = [0] * new_size
+        tmp[new_positive_limit:] = self._counts[old_positive_limit:]
+        tmp[0:old_positive_limit] = self._counts[0:old_positive_limit]
+        self._counts = tmp
+
+    def offset(self) -> int:
+        return self._index_start
+
+    def len(self) -> int:
+        if len(self._counts) == 0:
+            return 0
+
+        if self._index_end == self._index_start and self.at(0) == 0:
+            return 0
+
+        return self._index_end - self._index_start + 1
+
+    # pylint: disable=invalid-name
+    def at(self, position: int) -> int:
+        bias = self._index_base - self._index_start
+
+        if position < bias:
+            position += len(self._counts)
+
+        position -= bias
+
+        return self._counts[position]
+
+    # pylint: disable=invalid-name
+    def downscale(self, by: int) -> None:
+        """
+        Rotates, then collapses 2**`by`-to-1 buckets.
+        """
+
+        bias = self._index_base - self._index_start
+
+        if bias != 0:
+
+            self._index_base = self._index_start
+
+            # [0, 1, 2, 3, 4] Original backing array
+
+            self._counts = self._counts[::-1]
+            # [4, 3, 2, 1, 0]
+
+            self._counts = self._counts[:bias][::-1] + self._counts[bias:]
+            # [3, 4, 2, 1, 0]
+
+            self._counts = self._counts[:bias] + self._counts[bias:][::-1]
+            # [3, 4, 0, 1, 2] This is a rotation of the backing array.
+
+        size = 1 + self._index_end - self._index_start
+        each = 1 << by
+        inpos = 0
+        outpos = 0
+
+        pos = self._index_start
+
+        while pos <= self._index_end:
+            mod = pos % each
+            if mod < 0:
+                mod += each
+
+            index = mod
+
+            while index < each and inpos < size:
+
+                if outpos != inpos:
+                    self._counts[outpos] += self._counts[inpos]
+                    self._counts[inpos] = 0
+
+                inpos += 1
+                pos += 1
+                index += 1
+
+            outpos += 1
+
+        self._index_start >>= by
+        self._index_end >>= by
+        self._index_base = self._index_start
+
+    def increment_bucket(self, bucket_index: int):
+        self._counts[bucket_index] += 1
