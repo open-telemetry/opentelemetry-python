@@ -244,8 +244,8 @@ class TestBase(unittest.TestCase):
             attributes=attributes,
             start_time_unix_nano=0,
             time_unix_nano=0,
-            bucket_counts=[0],
-            explicit_bounds=[0],
+            bucket_counts=[],
+            explicit_bounds=[],
         )
 
 
