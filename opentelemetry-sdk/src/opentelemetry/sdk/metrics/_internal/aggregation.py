@@ -275,7 +275,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         """
         with self._lock:
             if not any(self._bucket_counts):
-                return None
+                return self._previous_point
 
             bucket_counts = self._bucket_counts
             start_time_unix_nano = self._start_time_unix_nano
