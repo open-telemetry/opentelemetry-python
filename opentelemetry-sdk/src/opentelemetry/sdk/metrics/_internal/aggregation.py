@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# pylint: disable=too-many-lines
+
 from abc import ABC, abstractmethod
 from bisect import bisect_left
 from enum import IntEnum
@@ -440,7 +442,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         self._previous_negative = None
 
     def aggregate(self, measurement: Measurement) -> None:
-        # pylint: disable=too-many-branches,too-many-statements
+        # pylint: disable=too-many-branches,too-many-statements, too-many-locals
 
         with self._lock:
 
@@ -555,6 +557,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         """
         Atomically return a point for the current value of the metric.
         """
+        # pylint: disable=too-many-statements, too-many-locals
 
         with self._lock:
             if self._count == 0:
@@ -674,22 +677,22 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 )
 
             else:
-                start_time_unix_nano = self._previous_time_unix_nano
+                start_time_unix_nano = self._previous_start_time_unix_nano
                 sum_ = current_point.sum - self._previous_sum
                 max_ = current_point.max
                 min_ = current_point.min
 
                 self._merge(
                     self._previous_positive,
-                    self._current_positive,
-                    self._current_scale,
+                    current_point.positive,
+                    current_point.scale,
                     min_scale,
                     aggregation_temporality,
                 )
                 self._merge(
                     self._previous_negative,
-                    self._current_negative,
-                    self._current_scale,
+                    current_point.negative,
+                    current_point.scale,
                     min_scale,
                     aggregation_temporality,
                 )
@@ -836,7 +839,6 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     previous_buckets.grow(span + 1, self._max_size)
 
                 previous_buckets.index_end = index
-                current_change
 
             bucket_index = index - previous_buckets.index_base
 
