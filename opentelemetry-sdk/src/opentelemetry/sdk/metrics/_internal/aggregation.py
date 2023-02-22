@@ -511,7 +511,11 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             # 4. Rescale the mapping if needed.
             if is_rescaling_needed:
 
-                self._downscale(self._get_scale_change(low, high))
+                self._downscale(
+                    self._get_scale_change(low, high),
+                    self._positive,
+                    self._negative,
+                )
 
                 index = self._mapping.map_to_index(value)
 
@@ -635,7 +639,14 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 min_scale - self._get_scale_change(low_negative, high_negative),
             )
 
-            self._downscale(self._mapping.scale - min_scale)
+            # FIXME Go implementation checks if the histogram (not the mapping
+            # but the histogram) has a count larger than zero, if not, scale
+            # (the histogram scale) would be zero. See exponential.go 191
+            self._downscale(
+                self._mapping.scale - min_scale,
+                self._previous_positive,
+                self._previous_negative
+            )
 
             if aggregation_temporality is AggregationTemporality.CUMULATIVE:
 
@@ -746,7 +757,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             low = min(
                 previous_point_low, current_point_low
             )
-            high = min(
+            high = max(
                 previous_point_high, current_point_high
             )
 
@@ -755,7 +766,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
     def _get_low_high(
         self, buckets, min_scale
     ):
-        if len(buckets.counts) == 0:
+        if buckets.counts == [0]:
             return 0, -1
 
         shift = self._mapping._scale - min_scale
@@ -774,7 +785,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         return change
 
-    def _downscale(self, change: int):
+    def _downscale(self, change: int, positive, negative):
 
         if change == 0:
             return
@@ -784,8 +795,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         new_scale = self._mapping.scale - change
 
-        self._positive.downscale(change)
-        self._negative.downscale(change)
+        positive.downscale(change)
+        negative.downscale(change)
 
         if new_scale <= 0:
             mapping = ExponentMapping(new_scale)
