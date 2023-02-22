@@ -874,7 +874,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         self.assertEqual(collection_0.zero_count, 0)
         self.assertEqual(
             collection_0.positive.bucket_counts,
-            [1, *[0] * 63, 1, *[0] * 31, 1, *[0] * 63]
+            [1, *[0] * 63, 1, *[0] * 31, 1, *[0] * 63],
         )
         self.assertEqual(collection_0.flags, 0)
         self.assertEqual(collection_0.min, 1)
@@ -919,7 +919,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                 *[0] * 17,
                 1,
                 *[0] * 36,
-            ]
+            ],
         )
         self.assertEqual(collection_1.flags, 0)
         self.assertEqual(collection_1.min, 0.045)
@@ -936,9 +936,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
             )
 
         self.assertEqual(exponential_histogram_aggregation._mapping.scale, 0)
-        self.assertEqual(
-            exponential_histogram_aggregation._positive.offset, 0
-        )
+        self.assertEqual(exponential_histogram_aggregation._positive.offset, 0)
         self.assertEqual(
             exponential_histogram_aggregation._positive.counts, [1, 1, 1, 1]
         )
