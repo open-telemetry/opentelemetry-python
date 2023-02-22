@@ -656,43 +656,43 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             if aggregation_temporality is AggregationTemporality.CUMULATIVE:
 
                 start_time_unix_nano = self._previous_start_time_unix_nano
-                sum_ = current_point.sum + self._previous_sum
+                sum_ = current_sum + self._previous_sum
                 # Only update min/max on delta -> cumulative
-                max_ = max(current_point.max, self._previous_max)
-                min_ = min(current_point.min, self._previous_min)
+                max_ = max(current_max, self._previous_max)
+                min_ = min(current_min, self._previous_min)
 
                 self._merge(
                     self._previous_positive,
-                    current_point.positive,
-                    current_point.scale,
+                    current_positive,
+                    current_scale,
                     min_scale,
                     aggregation_temporality,
                 )
                 self._merge(
                     self._previous_negative,
-                    current_point.negative,
-                    current_point.scale,
+                    current_negative,
+                    current_scale,
                     min_scale,
                     aggregation_temporality,
                 )
 
             else:
                 start_time_unix_nano = self._previous_start_time_unix_nano
-                sum_ = current_point.sum - self._previous_sum
-                max_ = current_point.max
-                min_ = current_point.min
+                sum_ = current_sum - self._previous_sum
+                max_ = current_max
+                min_ = current_min
 
                 self._merge(
                     self._previous_positive,
-                    current_point.positive,
-                    current_point.scale,
+                    current_positive,
+                    current_scale,
                     min_scale,
                     aggregation_temporality,
                 )
                 self._merge(
                     self._previous_negative,
-                    current_point.negative,
-                    current_point.scale,
+                    current_negative,
+                    current_scale,
                     min_scale,
                     aggregation_temporality,
                 )
@@ -700,7 +700,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             current_point = ExponentialHistogramDataPoint(
                 attributes=self._attributes,
                 start_time_unix_nano=start_time_unix_nano,
-                time_unix_nano=current_point.time_unix_nano,
+                time_unix_nano=collection_start_nano,
                 count=current_count,
                 sum=sum_,
                 scale=current_scale,
@@ -804,7 +804,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         current_change = current_scale - min_scale
 
         for current_bucket_index, current_bucket in enumerate(
-            current_buckets.bucket_counts
+            current_buckets.counts
         ):
 
             if current_bucket == 0:
