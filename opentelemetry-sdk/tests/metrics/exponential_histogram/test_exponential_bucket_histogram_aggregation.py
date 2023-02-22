@@ -909,14 +909,12 @@ class TestExponentialBucketHistogramAggregation(TestCase):
         self.assertEqual(
             collection_1.positive.bucket_counts,
             [
-                2,
+                1,
                 *[0] * 15,
                 1,
                 *[0] * 47,
-                2,
-                *[0] * 31,
                 1,
-                *[0] * 8,
+                *[0] * 40,
                 1,
                 *[0] * 17,
                 1,
