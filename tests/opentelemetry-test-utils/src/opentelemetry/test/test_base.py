@@ -190,11 +190,12 @@ class TestBase(unittest.TestCase):
             values_diff = abs(expected_data_point.value - data_point.value)
         elif isinstance(data_point, HistogramDataPoint):
             values_diff = abs(expected_data_point.sum - data_point.sum)
-
-            if (
-                expected_data_point.count != data_point.count
-                or expected_data_point.min != data_point.min
-                or expected_data_point.max != data_point.max
+            if expected_data_point.count != data_point.count or (
+                est_value_delta == 0
+                and (
+                    expected_data_point.min != data_point.min
+                    or expected_data_point.max != data_point.max
+                )
             ):
                 return False
 
@@ -229,6 +230,22 @@ class TestBase(unittest.TestCase):
             attributes=attributes,
             start_time_unix_nano=0,
             time_unix_nano=0,
+        )
+
+    @staticmethod
+    def create_histogram_data_point(
+        sum_data_point, count, max_data_point, min_data_point, attributes
+    ):
+        return HistogramDataPoint(
+            count=count,
+            sum=sum_data_point,
+            min=min_data_point,
+            max=max_data_point,
+            attributes=attributes,
+            start_time_unix_nano=0,
+            time_unix_nano=0,
+            bucket_counts=[0],
+            explicit_bounds=[0],
         )
 
 
