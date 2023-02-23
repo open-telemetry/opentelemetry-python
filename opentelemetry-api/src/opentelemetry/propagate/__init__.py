@@ -132,11 +132,12 @@ environ_propagators = environ.get(
 for propagator in environ_propagators.split(","):
     propagator = propagator.strip()
     try:
-        propagators.append(  # type: ignore
-            next(  # type: ignore
-                iter_entry_points("opentelemetry_propagator", propagator)
-            ).load()()
-        )
+        for entry in iter_entry_points("opentelemetry_propagator"):
+            if entry.name==propagator:
+                propagators.append(  # type: ignore
+                    entry.load()()
+                )
+                break
     except Exception:  # pylint: disable=broad-except
         logger.exception(
             "Failed to load configured propagator `%s`", propagator
