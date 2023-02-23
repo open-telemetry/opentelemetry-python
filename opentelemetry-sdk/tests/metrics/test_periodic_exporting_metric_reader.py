@@ -14,12 +14,12 @@
 
 import math
 from time import sleep, time_ns
-from typing import Sequence
+from typing import Optional, Sequence
 from unittest.mock import Mock
 
 from flaky import flaky
 
-from opentelemetry.sdk.metrics import Counter
+from opentelemetry.sdk.metrics import Counter, MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal import _Counter
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -67,6 +67,25 @@ class FakeMetricsExporter(MetricExporter):
         return True
 
 
+class ExceptionAtCollectionPeriodicExportingMetricReader(
+    PeriodicExportingMetricReader
+):
+    def __init__(
+        self,
+        exporter: MetricExporter,
+        exception: Exception,
+        export_interval_millis: Optional[float] = None,
+        export_timeout_millis: Optional[float] = None,
+    ) -> None:
+        super().__init__(
+            exporter, export_interval_millis, export_timeout_millis
+        )
+        self._collect_exception = exception
+
+    def collect(self, timeout_millis: float = 10_000) -> None:
+        raise self._collect_exception
+
+
 metrics_list = [
     Metric(
         name="sum_name",
@@ -111,11 +130,13 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         pmr.shutdown()
 
     def _create_periodic_reader(
-        self, metrics, exporter, collect_wait=0, interval=60000
+        self, metrics, exporter, collect_wait=0, interval=60000, timeout=30000
     ):
 
         pmr = PeriodicExportingMetricReader(
-            exporter, export_interval_millis=interval
+            exporter,
+            export_interval_millis=interval,
+            export_timeout_millis=timeout,
         )
 
         def _collect(reader, timeout_millis):
@@ -219,3 +240,15 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
                 self.assertTrue(isinstance(value, DefaultAggregation))
             else:
                 self.assertTrue(isinstance(value, LastValueAggregation))
+
+    def test_metric_timeout_does_not_kill_worker_thread(self):
+        exporter = FakeMetricsExporter()
+        pmr = ExceptionAtCollectionPeriodicExportingMetricReader(
+            exporter,
+            MetricsTimeoutError("test timeout"),
+            export_timeout_millis=1,
+        )
+
+        sleep(0.1)
+        self.assertTrue(pmr._daemon_thread.is_alive())
+        pmr.shutdown()

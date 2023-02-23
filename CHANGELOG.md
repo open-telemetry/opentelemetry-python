@@ -6,8 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+- PeriodicExportingMetricReader will continue if collection times out 
+  ([#3100](https://github.com/open-telemetry/opentelemetry-python/pull/3100))
 
-## Version 1.16.0/0.37b0 (2023-02-15)
+
+## Version 1.16.0/0.37b0 (2023-02-17)
 - Change ``__all__`` to be statically defined.
   ([#3143](https://github.com/open-telemetry/opentelemetry-python/pull/3143))
 - Remove the ability to set a global metric prefix for Prometheus exporter
@@ -28,9 +31,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3156](https://github.com/open-telemetry/opentelemetry-python/pull/3156))
 - deprecate jaeger exporters
   ([#3158](https://github.com/open-telemetry/opentelemetry-python/pull/3158))
-
 - Create a single resource instance
   ([#3118](https://github.com/open-telemetry/opentelemetry-python/pull/3118))
+
 
 ## Version 1.15.0/0.36b0 (2022-12-09)
 
