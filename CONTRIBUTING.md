@@ -1,12 +1,9 @@
 # Contributing to opentelemetry-python
 
-The Python special interest group (SIG) meets regularly. See the OpenTelemetry
-[community](https://github.com/open-telemetry/community#python-sdk) repo for
-information on this and other language SIGs.
+The Python special interest group (SIG) meets weekly on Thursdays at 9AM PST. Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=google.com_b79e3e90j7bbsa2n2p5an5lf60%40group.calendar.google.com) for specific dates and Zoom meeting links.
 
 See the [public meeting notes](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit)
-for a summary description of past meetings. To request edit access, join the
-meeting or get in touch on [Slack](https://cloud-native.slack.com/archives/C01PD4HUVBL).
+for a summary description of past meetings.
 
 See to the [community membership document](https://github.com/open-telemetry/community/blob/main/community-membership.md)
 on how to become a [**Member**](https://github.com/open-telemetry/community/blob/main/community-membership.md#member),
@@ -19,13 +16,7 @@ This is the main repo for OpenTelemetry Python. Nevertheless, there are other re
 Please take a look at this list first, your contributions may belong in one of these repos better:
 
 1. [OpenTelemetry Contrib](https://github.com/open-telemetry/opentelemetry-python-contrib): Instrumentations for third-party
-   libraries and frameworks. There is an ongoing effort to migrate into the OpenTelemetry Contrib repo some of the existing
-   programmatic instrumentations that are now in the `ext` directory in the main OpenTelemetry repo. Please ask in the Slack
-   channel (see below) for guidance if you want to contribute with these instrumentations.
-
-# Find the right branch
-
-The default branch for this repo is `main`. All feature work is accomplished on branches from `main`.
+   libraries and frameworks.
 
 ## Find a Buddy and get Started Quickly!
 
@@ -75,8 +66,8 @@ An easier way to do so is:
 We try to keep the amount of _public symbols_ in our code minimal. A public symbol is any Python identifier that does not start with an underscore.
 Every public symbol is something that has to be kept in order to maintain backwards compatibility, so we try to have as few as possible.
 
-To check if your PR is adding public symbols, run `tox -e public-symbols-check`. This will always fail if public symbols are being added. The idea
-behind this is that every PR that adds public symbols fails in CI, forcing reviewers to check the symbols to make sure they are strictly necessary.
+To check if your PR is adding public symbols, run `tox -e public-symbols-check`. This will always fail if public symbols are being added/removed. The idea
+behind this is that every PR that adds/removes public symbols fails in CI, forcing reviewers to check the symbols to make sure they are strictly necessary.
 If after checking them, it is considered that they are indeed necessary, the PR will be labeled with `Skip Public API check` so that this check is not
 run.
 
@@ -95,7 +86,7 @@ CONTRIB_REPO_SHA=dde62cebffe519c35875af6d06fae053b3be65ec tox
 ```
 
 The continuation integration overrides that environment variable with as per the configuration
-[here](https://github.com/open-telemetry/opentelemetry-python/blob/9020b0baaeb41b7137badca988bb5c2d562cddee/.github/workflows/test.yml#L13).
+[here](https://github.com/open-telemetry/opentelemetry-python/blob/main/.github/workflows/test.yml#L13).
 
 ### Benchmarks
 
@@ -196,7 +187,7 @@ updating the GitHub workflow to reference a PR in the Contrib repo
 * Trivial change (typo, cosmetic, doc, etc.) doesn't have to wait for one day.
 * Urgent fix can take exception as long as it has been actively communicated.
 
-Any Approver / Maintainer can merge the PR once it is **ready to merge**.
+One of the maintainers will merge the PR once it is **ready to merge**.
 
 ## Design Choices
 
