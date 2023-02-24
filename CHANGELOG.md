@@ -8,7 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 - PeriodicExportingMetricReader will continue if collection times out 
   ([#3100](https://github.com/open-telemetry/opentelemetry-python/pull/3100))
-
+- Fix formatting of ConsoleMetricExporter.
+  ([#3197](https://github.com/open-telemetry/opentelemetry-python/pull/3197))
 
 ## Version 1.16.0/0.37b0 (2023-02-17)
 - Change ``__all__`` to be statically defined.
