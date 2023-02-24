@@ -21,7 +21,9 @@ from os import environ
 from unittest.mock import Mock, patch
 from urllib import parse
 
-from opentelemetry.sdk.environment_variables import _OTEL_RESOURCE_DETECTORS
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
+)
 from opentelemetry.sdk.resources import (
     _DEFAULT_RESOURCE,
     _EMPTY_RESOURCE,
@@ -566,7 +568,9 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(resource.attributes["c"], "d")
         self.assertEqual(resource.schema_url, "")
 
-    @patch.dict(environ, {_OTEL_RESOURCE_DETECTORS: "mock"}, clear=True)
+    @patch.dict(
+        environ, {OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "mock"}, clear=True
+    )
     @patch(
         "opentelemetry.sdk.resources.entry_points",
         Mock(

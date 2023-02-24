@@ -66,7 +66,7 @@ from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.environment_variables import (
-    _OTEL_RESOURCE_DETECTORS,
+    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
 )
@@ -170,7 +170,7 @@ class Resource:
         resource = _DEFAULT_RESOURCE
 
         for resource_detector in environ.get(
-            _OTEL_RESOURCE_DETECTORS, "otel"
+            OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "otel"
         ).split(","):
 
             resource = resource.merge(
