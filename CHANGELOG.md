@@ -28,6 +28,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3156](https://github.com/open-telemetry/opentelemetry-python/pull/3156))
 - deprecate jaeger exporters
   ([#3158](https://github.com/open-telemetry/opentelemetry-python/pull/3158))
+- Fix export histograms when their values are not changed
+  ([#3196](https://github.com/open-telemetry/opentelemetry-python/pull/3196))
 
 - Create a single resource instance
   ([#3118](https://github.com/open-telemetry/opentelemetry-python/pull/3118))
