@@ -212,5 +212,5 @@ class MetricsData:
                     for resource_metrics in self.resource_metrics
                 ]
             },
-            indent=indent
+            indent=indent,
         )
