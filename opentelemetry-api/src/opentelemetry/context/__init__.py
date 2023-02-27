@@ -64,6 +64,7 @@ def _load_runtime_context(func: _F) -> _F:
                                 name=configured_context,
                             )
                         )
+                    ).load()()
 
                 except Exception:  # pylint: disable=broad-except
                     logger.exception(
