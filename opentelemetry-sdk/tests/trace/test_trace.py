@@ -49,7 +49,7 @@ from opentelemetry.sdk.trace.sampling import (
     ParentBased,
     StaticSampler,
 )
-from opentelemetry.sdk.util import ns_to_iso_str
+from opentelemetry.sdk.util import BoundedDict, ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
@@ -63,6 +63,12 @@ class TestTracer(unittest.TestCase):
         with self.assertRaises(AssertionError):
             with self.assertWarns(DeprecationWarning):
                 TracerProvider(Mock(), Mock()).get_tracer(Mock(), Mock())
+
+        # This is being added here to make sure the filter on
+        # InstrumentationInfo does not affect other DeprecationWarnings that
+        # may be raised.
+        with self.assertWarns(DeprecationWarning):
+            BoundedDict(0)
 
     def test_extends_api(self):
         tracer = new_tracer()

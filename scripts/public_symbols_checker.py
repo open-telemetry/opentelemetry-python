@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from collections import defaultdict
 from difflib import unified_diff
 from pathlib import Path
 from re import match
@@ -23,10 +24,17 @@ from git.db import GitDB
 repo = Repo(__file__, odbt=GitDB, search_parent_directories=True)
 
 
-file_path_symbols = {}
+added_symbols = defaultdict(list)
+removed_symbols = defaultdict(list)
 
 
 def get_symbols(change_type, diff_lines_getter, prefix):
+
+    if change_type == "D" or prefix == r"\-":
+        file_path_symbols = removed_symbols
+    else:
+        file_path_symbols = added_symbols
+
     for diff_lines in (
         repo.commit("main")
         .diff(repo.head.commit)
@@ -60,9 +68,6 @@ def get_symbols(change_type, diff_lines_getter, prefix):
             )
 
             if matching_line is not None:
-                if b_file_path not in file_path_symbols.keys():
-                    file_path_symbols[b_file_path] = []
-
                 file_path_symbols[b_file_path].append(
                     next(filter(bool, matching_line.groups()))
                 )
@@ -70,6 +75,10 @@ def get_symbols(change_type, diff_lines_getter, prefix):
 
 def a_diff_lines_getter(diff_lines):
     return diff_lines.b_blob.data_stream.read().decode("utf-8").split("\n")
+
+
+def d_diff_lines_getter(diff_lines):
+    return diff_lines.a_blob.data_stream.read().decode("utf-8").split("\n")
 
 
 def m_diff_lines_getter(diff_lines):
@@ -80,15 +89,47 @@ def m_diff_lines_getter(diff_lines):
 
 
 get_symbols("A", a_diff_lines_getter, r"")
+get_symbols("D", d_diff_lines_getter, r"")
 get_symbols("M", m_diff_lines_getter, r"\+")
+get_symbols("M", m_diff_lines_getter, r"\-")
 
-if file_path_symbols:
+
+def remove_common_symbols():
+    # For each file, we remove the symbols that are added and removed in the
+    # same commit.
+    common_symbols = defaultdict(list)
+    for file_path, symbols in added_symbols.items():
+        for symbol in symbols:
+            if symbol in removed_symbols[file_path]:
+                common_symbols[file_path].append(symbol)
+
+    for file_path, symbols in common_symbols.items():
+        for symbol in symbols:
+            added_symbols[file_path].remove(symbol)
+            removed_symbols[file_path].remove(symbol)
+
+    # If a file has no added or removed symbols, we remove it from the
+    # dictionaries.
+    for file_path in list(added_symbols.keys()):
+        if not added_symbols[file_path]:
+            del added_symbols[file_path]
+
+    for file_path in list(removed_symbols.keys()):
+        if not removed_symbols[file_path]:
+            del removed_symbols[file_path]
+
+
+if added_symbols or removed_symbols:
+
+    # If a symbol is added and removed in the same commit, we consider it
+    # as not added or removed.
+    remove_common_symbols()
     print("The code in this branch adds the following public symbols:")
     print()
-    for file_path, symbols in file_path_symbols.items():
-        print(f"- {file_path}")
-        for symbol in symbols:
-            print(f"\t{symbol}")
+    for file_path_, symbols_ in added_symbols.items():
+        print(f"- {file_path_}")
+        for symbol_ in symbols_:
+            print(f"\t{symbol_}")
         print()
 
     print(
@@ -96,6 +137,20 @@ if file_path_symbols:
         "please consider prefixing them with an underscore to make them "
         'private. After that, please label this PR with "Skip Public API '
         'check".'
+    )
+    print()
+    print("The code in this branch removes the following public symbols:")
+    print()
+    for file_path_, symbols_ in removed_symbols.items():
+        print(f"- {file_path_}")
+        for symbol_ in symbols_:
+            print(f"\t{symbol_}")
+        print()
+
+    print(
+        "Please make sure no public symbols are removed, if so, please "
+        "consider deprecating them instead. After that, please label this "
+        'PR with "Skip Public API check".'
     )
     exit(1)
 else:

@@ -34,9 +34,7 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 .. versionadded:: 1.15.0
 """
 
-# pylint: disable=unused-import
-
-from opentelemetry._logs._internal import (  # noqa: F401
+from opentelemetry._logs._internal import (
     Logger,
     LoggerProvider,
     LogRecord,
@@ -46,13 +44,17 @@ from opentelemetry._logs._internal import (  # noqa: F401
     get_logger_provider,
     set_logger_provider,
 )
-from opentelemetry._logs.severity import (  # noqa: F401
-    SeverityNumber,
-    std_to_otel,
-)
+from opentelemetry._logs.severity import SeverityNumber, std_to_otel
 
-__all__ = []
-for key, value in globals().copy().items():  # type: ignore
-    if not key.startswith("_"):
-        value.__module__ = __name__  # type: ignore
-        __all__.append(key)
+__all__ = [
+    "Logger",
+    "LoggerProvider",
+    "LogRecord",
+    "NoOpLogger",
+    "NoOpLoggerProvider",
+    "get_logger",
+    "get_logger_provider",
+    "set_logger_provider",
+    "SeverityNumber",
+    "std_to_otel",
+]

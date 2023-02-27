@@ -85,7 +85,8 @@ def _clean_attribute(
             # use equality instead of isinstance as isinstance(True, int) evaluates to True
             elif element_type != sequence_first_valid_type:
                 _logger.warning(
-                    "Mixed types %s and %s in attribute value sequence",
+                    "Attribute %r mixes types %s and %s in attribute value sequence",
+                    key,
                     sequence_first_valid_type.__name__,
                     type(element).__name__,
                 )

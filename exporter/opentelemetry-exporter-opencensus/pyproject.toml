@@ -28,8 +28,8 @@ classifiers = [
 dependencies = [
   "grpcio >= 1.0.0, < 2.0.0",
   "opencensus-proto >= 0.1.0, < 1.0.0",
-  "opentelemetry-api ~= 1.3",
-  "opentelemetry-sdk ~= 1.3",
+  "opentelemetry-api >= 1.17.0.dev",
+  "opentelemetry-sdk >= 1.15",
   "protobuf ~= 3.13",
   "setuptools >= 16.0",
 ]

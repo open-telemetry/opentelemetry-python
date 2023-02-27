@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=unused-import
-
-from opentelemetry.sdk._logs._internal.export import (  # noqa: F401
+from opentelemetry.sdk._logs._internal.export import (
     BatchLogRecordProcessor,
     ConsoleLogExporter,
     LogExporter,
@@ -23,12 +21,15 @@ from opentelemetry.sdk._logs._internal.export import (  # noqa: F401
 )
 
 # The point module is not in the export directory to avoid a circular import.
-from opentelemetry.sdk._logs._internal.export.in_memory_log_exporter import (  # noqa: F401
+from opentelemetry.sdk._logs._internal.export.in_memory_log_exporter import (
     InMemoryLogExporter,
 )
 
-__all__ = []
-for key, value in globals().copy().items():
-    if not key.startswith("_"):
-        value.__module__ = __name__
-        __all__.append(key)
+__all__ = [
+    "BatchLogRecordProcessor",
+    "ConsoleLogExporter",
+    "LogExporter",
+    "LogExportResult",
+    "SimpleLogRecordProcessor",
+    "InMemoryLogExporter",
+]

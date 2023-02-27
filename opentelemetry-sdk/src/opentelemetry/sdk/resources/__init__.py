@@ -64,14 +64,13 @@ import typing
 from json import dumps
 from urllib import parse
 
-import pkg_resources
-
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.environment_variables import (
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
 )
 from opentelemetry.semconv.resource import ResourceAttributes
+from opentelemetry.util._importlib_metadata import version
 from opentelemetry.util.types import AttributeValue
 
 LabelValue = AttributeValue
@@ -136,9 +135,7 @@ TELEMETRY_AUTO_VERSION = ResourceAttributes.TELEMETRY_AUTO_VERSION
 TELEMETRY_SDK_LANGUAGE = ResourceAttributes.TELEMETRY_SDK_LANGUAGE
 
 
-_OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
-    "opentelemetry-sdk"
-).version
+_OPENTELEMETRY_SDK_VERSION = version("opentelemetry-sdk")
 
 
 class Resource:

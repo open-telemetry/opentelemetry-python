@@ -10,7 +10,7 @@ env:
   # Otherwise, set variable to the commit of your branch on
   # opentelemetry-python-contrib which is compatible with these Core repo
   # changes.
-  CONTRIB_REPO_SHA: 1f0dda9865b3c83e6dea2f2b127a2b0971853543
+  CONTRIB_REPO_SHA: ca2c23fd3b91c48f2b6515658993480f634cf1b2
   # This is needed because we do not clone the core repo in contrib builds anymore.
   # When running contrib builds as part of core builds, we use actions/checkout@v2 which
   # does not set an environment variable (simply just runs tox), which is different when
@@ -101,7 +101,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9
+        python-version: '3.10'
         architecture: 'x64'
     - name: Install tox
       run: pip install tox==3.27.1

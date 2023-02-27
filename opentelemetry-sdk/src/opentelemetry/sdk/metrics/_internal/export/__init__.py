@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import math
 import os
 from abc import ABC, abstractmethod
 from enum import Enum
@@ -40,6 +41,7 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
     DefaultAggregation,
 )
+from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.instrument import (
     Counter,
     Histogram,
@@ -414,7 +416,8 @@ class InMemoryMetricReader(MetricReader):
 class PeriodicExportingMetricReader(MetricReader):
     """`PeriodicExportingMetricReader` is an implementation of `MetricReader`
     that collects metrics based on a user-configurable time interval, and passes the
-    metrics to the configured exporter.
+    metrics to the configured exporter. If the time interval is set to `math.inf`, the
+    reader will not invoke periodic collection.
 
     The configured exporter's :py:meth:`~MetricExporter.export` method will not be called
     concurrently.
@@ -463,16 +466,26 @@ class PeriodicExportingMetricReader(MetricReader):
         self._shutdown = False
         self._shutdown_event = Event()
         self._shutdown_once = Once()
-        self._daemon_thread = Thread(
-            name="OtelPeriodicExportingMetricReader",
-            target=self._ticker,
-            daemon=True,
-        )
-        self._daemon_thread.start()
-        if hasattr(os, "register_at_fork"):
-            os.register_at_fork(
-                after_in_child=self._at_fork_reinit
-            )  # pylint: disable=protected-access
+        self._daemon_thread = None
+        if (
+            self._export_interval_millis > 0
+            and self._export_interval_millis < math.inf
+        ):
+            self._daemon_thread = Thread(
+                name="OtelPeriodicExportingMetricReader",
+                target=self._ticker,
+                daemon=True,
+            )
+            self._daemon_thread.start()
+            if hasattr(os, "register_at_fork"):
+                os.register_at_fork(
+                    after_in_child=self._at_fork_reinit
+                )  # pylint: disable=protected-access
+        elif self._export_interval_millis <= 0:
+            raise ValueError(
+                f"interval value {self._export_interval_millis} is invalid \
+                and needs to be larger than zero and lower than infinity."
+            )
 
     def _at_fork_reinit(self):
         self._daemon_thread = Thread(
@@ -485,7 +498,14 @@ class PeriodicExportingMetricReader(MetricReader):
     def _ticker(self) -> None:
         interval_secs = self._export_interval_millis / 1e3
         while not self._shutdown_event.wait(interval_secs):
-            self.collect(timeout_millis=self._export_timeout_millis)
+            try:
+                self.collect(timeout_millis=self._export_timeout_millis)
+            except MetricsTimeoutError:
+                _logger.warning(
+                    "Metric collection timed out. Will try again after %s seconds",
+                    interval_secs,
+                    exc_info=True,
+                )
         # one last collection below before shutting down completely
         self.collect(timeout_millis=self._export_interval_millis)
 
@@ -519,7 +539,10 @@ class PeriodicExportingMetricReader(MetricReader):
             return
 
         self._shutdown_event.set()
-        self._daemon_thread.join(timeout=(deadline_ns - time_ns()) / 10**9)
+        if self._daemon_thread:
+            self._daemon_thread.join(
+                timeout=(deadline_ns - time_ns()) / 10**9
+            )
         self._exporter.shutdown(timeout=(deadline_ns - time_ns()) / 10**6)
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:

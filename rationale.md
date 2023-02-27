@@ -40,7 +40,7 @@ Pre-release packages are denoted by appending identifiers such as -Alpha, -Beta,
 
 ### Immature or experimental signals
 
-Modules for experimental signals will be released in a separate versions that will be marked as pre-releases, and must be installed manually. Modules will remain at version v0.x.y to make it abundantly clear that depending on them is at your own risk. For example, the `opentelemetry-api` v0.x.y-b0 module will provide experimental access to the latest features in development, which will include the experimental metrics signals. Notice the `b0` suffix which indicates that the release is still in beta, and therefore deemed to be in pre-release. NO STABILITY GUARANTEES ARE MADE.
+Modules for experimental signals will be released in the same packages as the core components, but prefixed with `_` to indicate that they are unstable and subject to change. NO STABILITY GUARANTEES ARE MADE.
 
 ## Examples
 
@@ -53,13 +53,6 @@ Purely for illustration purposes, not intended to represent actual releases:
 - `opentelemetry-sdk` 1.0.0
   - Contains SDK components for tracing, baggage, propagators, and context
 
-##### Contains the following experimental packages
-
-- `opentelemetry-api` 1.x.y-b0
-  - Contains the EXPERIMENTAL API for metrics plus other unstable features. There are no stability guarantees.
-- `opentelemetry-sdk` 1.x.y-b0
-  - Contains the EXPERIMENTAL SDK for metrics plus other unstable features. There are no stability guarantees.
-
 #### V1.15.0 Release (with metrics)
 
 - `opentelemetry-api` 1.15.0
@@ -67,9 +60,9 @@ Purely for illustration purposes, not intended to represent actual releases:
 - `opentelemetry-sdk` 1.15.0
   - Contains SDK components for tracing, baggage, propagators, context and metrics
 
-##### Contains the following experimental packages
+##### Contains the following pre-release packages
 
-- `opentelemetry-api` 1.x.y-b0
-  - Contains the EXPERIMENTAL API for logging plus other unstable features. There are no stability guarantees.
-- `opentelemetry-sdk` 1.x.y-b0
-  - Contains the EXPERIMENTAL SDK for logging plus other unstable features. There are no stability guarantees.
+- `opentelemetry-api` 1.x.yrc1
+  - Contains the experimental public API for logging plus other unstable features. There are no stability guarantees.
+- `opentelemetry-sdk` 1.x.yrc1
+  - Contains the experimental public SDK for logging plus other unstable features. There are no stability guarantees.

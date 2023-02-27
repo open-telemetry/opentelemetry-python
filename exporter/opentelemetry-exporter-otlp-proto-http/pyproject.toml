@@ -28,9 +28,9 @@ dependencies = [
   "backoff >= 1.10.0, < 2.0.0; python_version<'3.7'",
   "backoff >= 1.10.0, < 3.0.0; python_version>='3.7'",
   "googleapis-common-protos ~= 1.52",
-  "opentelemetry-api ~= 1.12",
-  "opentelemetry-proto == 1.16.0.dev",
-  "opentelemetry-sdk ~= 1.16.0.dev",
+  "opentelemetry-api ~= 1.15",
+  "opentelemetry-proto == 1.17.0.dev",
+  "opentelemetry-sdk ~= 1.17.0.dev",
   "requests ~= 2.7",
 ]
 

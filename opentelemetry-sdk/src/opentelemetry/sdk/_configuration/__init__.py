@@ -23,7 +23,6 @@ from abc import ABC, abstractmethod
 from os import environ
 from typing import Callable, Dict, List, Optional, Sequence, Tuple, Type
 
-from pkg_resources import iter_entry_points
 from typing_extensions import Literal
 
 from opentelemetry._logs import set_logger_provider
@@ -57,6 +56,7 @@ from opentelemetry.sdk.trace.id_generator import IdGenerator
 from opentelemetry.sdk.trace.sampling import Sampler
 from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.trace import set_tracer_provider
+from opentelemetry.util._importlib_metadata import entry_points
 
 _EXPORTER_OTLP = "otlp"
 _EXPORTER_OTLP_PROTO_GRPC = "otlp_proto_grpc"
@@ -90,21 +90,37 @@ _logger = logging.getLogger(__name__)
 def _import_config_components(
     selected_components: List[str], entry_point_name: str
 ) -> Sequence[Tuple[str, object]]:
-    component_entry_points = {
-        ep.name: ep for ep in iter_entry_points(entry_point_name)
-    }
-    component_impls = []
+
+    component_implementations = []
+
     for selected_component in selected_components:
-        entry_point = component_entry_points.get(selected_component, None)
-        if not entry_point:
+        try:
+            component_implementations.append(
+                (
+                    selected_component,
+                    next(
+                        iter(
+                            entry_points(
+                                group=entry_point_name, name=selected_component
+                            )
+                        )
+                    ).load(),
+                )
+            )
+        except KeyError:
+
             raise RuntimeError(
-                f"Requested component '{selected_component}' not found in entry points for '{entry_point_name}'"
+                f"Requested entry point '{entry_point_name}' not found"
             )
 
-        component_impl = entry_point.load()
-        component_impls.append((selected_component, component_impl))
+        except StopIteration:
 
-    return component_impls
+            raise RuntimeError(
+                f"Requested component '{selected_component}' not found in "
+                f"entry point '{entry_point_name}'"
+            )
+
+    return component_implementations
 
 
 def _get_sampler() -> Optional[str]:
@@ -177,20 +193,12 @@ def _init_tracing(
     exporters: Dict[str, Type[SpanExporter]],
     id_generator: IdGenerator = None,
     sampler: Sampler = None,
-    auto_instrumentation_version: Optional[str] = None,
+    resource: Resource = None,
 ):
-    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
-    # from the env variable else defaults to "unknown_service"
-    auto_resource = {}
-    # populate version if using auto-instrumentation
-    if auto_instrumentation_version:
-        auto_resource[
-            ResourceAttributes.TELEMETRY_AUTO_VERSION
-        ] = auto_instrumentation_version
     provider = TracerProvider(
         id_generator=id_generator,
         sampler=sampler,
-        resource=Resource.create(auto_resource),
+        resource=resource,
     )
     set_tracer_provider(provider)
 
@@ -203,17 +211,8 @@ def _init_tracing(
 
 def _init_metrics(
     exporters: Dict[str, Type[MetricExporter]],
-    auto_instrumentation_version: Optional[str] = None,
+    resource: Resource = None,
 ):
-    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
-    # from the env variable else defaults to "unknown_service"
-    auto_resource = {}
-    # populate version if using auto-instrumentation
-    if auto_instrumentation_version:
-        auto_resource[
-            ResourceAttributes.TELEMETRY_AUTO_VERSION
-        ] = auto_instrumentation_version
-
     metric_readers = []
 
     for _, exporter_class in exporters.items():
@@ -222,25 +221,15 @@ def _init_metrics(
             PeriodicExportingMetricReader(exporter_class(**exporter_args))
         )
 
-    provider = MeterProvider(
-        resource=Resource.create(auto_resource), metric_readers=metric_readers
-    )
+    provider = MeterProvider(resource=resource, metric_readers=metric_readers)
     set_meter_provider(provider)
 
 
 def _init_logging(
     exporters: Dict[str, Type[LogExporter]],
-    auto_instrumentation_version: Optional[str] = None,
+    resource: Resource = None,
 ):
-    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
-    # from the env variable else defaults to "unknown_service"
-    auto_resource = {}
-    # populate version if using auto-instrumentation
-    if auto_instrumentation_version:
-        auto_resource[
-            ResourceAttributes.TELEMETRY_AUTO_VERSION
-        ] = auto_instrumentation_version
-    provider = LoggerProvider(resource=Resource.create(auto_resource))
+    provider = LoggerProvider(resource=resource)
     set_logger_provider(provider)
 
     for _, exporter_class in exporters.items():
@@ -343,18 +332,28 @@ def _initialize_components(auto_instrumentation_version):
     sampler = _import_sampler(sampler_name)
     id_generator_name = _get_id_generator()
     id_generator = _import_id_generator(id_generator_name)
+    # if env var OTEL_RESOURCE_ATTRIBUTES is given, it will read the service_name
+    # from the env variable else defaults to "unknown_service"
+    auto_resource = {}
+    # populate version if using auto-instrumentation
+    if auto_instrumentation_version:
+        auto_resource[
+            ResourceAttributes.TELEMETRY_AUTO_VERSION
+        ] = auto_instrumentation_version
+    resource = Resource.create(auto_resource)
+
     _init_tracing(
         exporters=trace_exporters,
         id_generator=id_generator,
         sampler=sampler,
-        auto_instrumentation_version=auto_instrumentation_version,
+        resource=resource,
     )
-    _init_metrics(metric_exporters, auto_instrumentation_version)
+    _init_metrics(metric_exporters, resource)
     logging_enabled = os.getenv(
         _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, "false"
     )
     if logging_enabled.strip().lower() == "true":
-        _init_logging(log_exporters, auto_instrumentation_version)
+        _init_logging(log_exporters, resource)
 
 
 class _BaseConfigurator(ABC):

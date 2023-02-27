@@ -12,26 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from unittest import TestCase
 
-from opentelemetry.sdk.metrics._internal import Meter, MeterProvider
-from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
-from opentelemetry.sdk.metrics._internal.instrument import (
-    Counter,
-    Histogram,
-    ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
-    UpDownCounter,
-)
+from opentelemetry.metrics import MeterProvider
+from opentelemetry.util._importlib_metadata import entry_points
 
-__all__ = [
-    "Meter",
-    "MeterProvider",
-    "MetricsTimeoutError",
-    "Counter",
-    "Histogram",
-    "ObservableCounter",
-    "ObservableGauge",
-    "ObservableUpDownCounter",
-    "UpDownCounter",
-]
+
+class TestEntryPoints(TestCase):
+    def test_entry_points(self):
+
+        self.assertIsInstance(
+            next(
+                iter(
+                    entry_points(
+                        group="opentelemetry_meter_provider",
+                        name="default_meter_provider",
+                    )
+                )
+            ).load()(),
+            MeterProvider,
+        )

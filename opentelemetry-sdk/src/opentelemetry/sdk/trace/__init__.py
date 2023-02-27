@@ -37,7 +37,7 @@ from typing import (
     Type,
     Union,
 )
-from warnings import filterwarnings, resetwarnings
+from warnings import filterwarnings
 
 from deprecated import deprecated
 
@@ -1169,13 +1169,22 @@ class TracerProvider(trace_api.TracerProvider):
         if instrumenting_library_version is None:
             instrumenting_library_version = ""
 
-        filterwarnings("ignore", category=DeprecationWarning)
+        filterwarnings(
+            "ignore",
+            message=(
+                r"Call to deprecated method __init__. \(You should use "
+                r"InstrumentationScope\) -- Deprecated since version 1.11.1."
+            ),
+            category=DeprecationWarning,
+            module="opentelemetry.sdk.trace",
+        )
+
         instrumentation_info = InstrumentationInfo(
             instrumenting_module_name,
             instrumenting_library_version,
             schema_url,
         )
-        resetwarnings()
+
         return Tracer(
             self.sampler,
             self.resource,

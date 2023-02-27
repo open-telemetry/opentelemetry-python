@@ -119,7 +119,7 @@ class MeterProvider(ABC):
 
             version: Optional. The version string of the
                 instrumenting library.  Usually this should be the same as
-                ``pkg_resources.get_distribution(instrumenting_library_name).version``.
+                ``importlib.metadata.version(instrumenting_library_name)``.
 
             schema_url: Optional. Specifies the Schema URL of the emitted telemetry.
         """

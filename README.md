@@ -1,50 +1,47 @@
-## OpenTelemetry Python
----
-<p align="center">
-  <strong>
-    <a href="https://opentelemetry.io/docs/instrumentation/python/getting-started/">Getting Started<a/>
-    &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-    <a href="https://opentelemetry-python.readthedocs.io/">API Documentation<a/>
-    &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-    <a href="https://github.com/open-telemetry/opentelemetry-python/discussions">Getting In Touch (GitHub Discussions)<a/>
-  </strong>
-</p>
+# OpenTelemetry Python
+[![Slack](https://img.shields.io/badge/slack-@cncf/otel/python-brightgreen.svg?logo=slack)](https://cloud-native.slack.com/archives/C01PD4HUVBL)
+[![Build Status](https://github.com/open-telemetry/opentelemetry-python/actions/workflows/test.yml/badge.svg?branch=main)](https://github.com/open-telemetry/opentelemetry-python/actions)
+[![Minimum Python Version](https://img.shields.io/badge/python-3.7+-blue.svg)](https://www.python.org/downloads/)
+[![Release](https://img.shields.io/github/v/release/open-telemetry/opentelemetry-python?include_prereleases&style=)](https://github.com/open-telemetry/opentelemetry-python/releases/)
+[![Read the Docs](https://readthedocs.org/projects/opentelemetry-python/badge/?version=latest)](https://opentelemetry-python.readthedocs.io/en/latest/)
 
-<p align="center">
-  <a href="https://github.com/open-telemetry/opentelemetry-python/releases">
-    <img alt="GitHub release (latest by date including pre-releases)" src="https://img.shields.io/github/v/release/open-telemetry/opentelemetry-python?include_prereleases&style=for-the-badge">
-  </a>
-  <a href="https://codecov.io/gh/open-telemetry/opentelemetry-python/branch/main/">
-    <img alt="Codecov Status" src="https://img.shields.io/codecov/c/github/open-telemetry/opentelemetry-python?style=for-the-badge">
-  </a>
-  <a href="https://github.com/open-telemetry/opentelemetry-python/blob/main/LICENSE">
-    <img alt="license" src="https://img.shields.io/badge/license-Apache_2.0-green.svg?style=for-the-badge">
-  </a>
-  <br/>
-  <a href="https://github.com/open-telemetry/opentelemetry-python/actions?query=workflow%3ATest+branch%3Amaster">
-    <img alt="Build Status" src="https://github.com/open-telemetry/opentelemetry-python/workflows/Test/badge.svg">
-  </a>
-  <img alt="Beta" src="https://img.shields.io/badge/status-beta-informational?logo=data:image/png;base64,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">
-</p>
+## Project Status
 
-<p align="center">
-  <strong>
-    <a href="CONTRIBUTING.md">Contributing<a/>
-    &nbsp;&nbsp;&bull;&nbsp;&nbsp;
-    <a href="https://opentelemetry-python.readthedocs.io/en/stable/#examples">Examples<a/>
-  </strong>
-</p>
+See the [OpenTelemetry Instrumentation for Python](https://opentelemetry.io/docs/instrumentation/python/#status-and-releases).
 
----
+| Signal  | Status       | Project |
+| ------- | ------------ | ------- |
+| Traces  | Stable       | N/A     |
+| Metrics | Stable       | N/A     |
+| Logs    | Experimental | N/A     |
 
-This page describes the Python [OpenTelemetry](https://opentelemetry.io/) implementation. OpenTelemetry is an observability framework for cloud-native software.
-
-## Requirements
-Unless otherwise noted, all published artifacts support Python 3.7 or higher. See CONTRIBUTING.md for additional instructions for building this project for development.
+Project versioning information and stability guarantees can be found [here](./rationale.md#versioning-and-releasing).
 
 ## Getting started
 
-The goal of OpenTelemetry is to provide a single set of APIs to capture distributed traces and metrics from your application and send them to an observability platform. This project lets you do just that for applications written in Python.
+You can find the getting started guide for OpenTelemetry Python [here](https://opentelemetry.io/docs/instrumentation/python/getting-started/).
+
+If you are looking for **examples** on how to use the OpenTelemetry API to
+instrument your code manually, or how to set up the OpenTelemetry
+Python SDK, see https://opentelemetry.io/docs/instrumentation/python/manual/.
+
+## Python Version Support
+
+This project ensures compatibility with the current supported versions of the Python. As new Python versions are released, support for them is added and
+as old Python versions reach their end of life, support for them is removed.
+
+We add support for new Python versions no later than 3 months after they become stable.
+
+We remove support for old Python versions 6 months after they reach their [end of life](https://devguide.python.org/devcycle/#end-of-life-branches).
+
+
+## Documentation
+
+The online documentation is available at https://opentelemetry-python.readthedocs.io/.
+To access the latest version of the documentation, see
+https://opentelemetry-python.readthedocs.io/en/latest/.
+
+## Install
 
 This repository includes multiple installable packages. The `opentelemetry-api`
 package includes abstract classes and no-op implementations that comprise the OpenTelemetry API following the
@@ -91,60 +88,27 @@ pip install -e ./instrumentation/opentelemetry-instrumentation-{instrumentation}
 For additional exporter and instrumentation packages, see the 
 [`opentelemetry-python-contrib`](https://github.com/open-telemetry/opentelemetry-python-contrib) repository.
 
-## Running Performance Tests
-
-This section provides details on how to reproduce performance tests results on your own
-machine.
-
-### Resource Usage Tests
-
-1. Install scalene using the following command
-
-```sh
-pip install scalene
-```
-
-2. Run the `scalene` tests on any of the example Python programs
-
-```sh
-scalene opentelemetry-<PACKAGE>/tests/performance/resource-usage/<PATH_TO_TEST>/profile_resource_usage_<NAME_OF_TEST>.py
-```
-
-## Python Version Support Addition and Removal
-
-This project supports the latest Python versions. As new Python versions are released, support for them is added and
-as old Python versions reach their end of life, support for them is removed.
-
-We add support for new Python versions no later than 3 months after they become stable.
-
-We remove support for old Python versions 6 months after they reach their [end of life](https://devguide.python.org/devcycle/#end-of-life-branches).
-
-## Documentation
-
-The online documentation is available at https://opentelemetry-python.readthedocs.io/.
-To access the latest version of the documentation, see
-https://opentelemetry-python.readthedocs.io/en/latest/.
-
 ## Contributing
 
 For information about contributing to OpenTelemetry Python, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 We meet weekly on Thursdays at 9AM PST. The meeting is subject to change depending on contributors' availability. Check the [OpenTelemetry community calendar](https://calendar.google.com/calendar/embed?src=google.com_b79e3e90j7bbsa2n2p5an5lf60%40group.calendar.google.com) for specific dates and Zoom meeting links.
 
-Meeting notes are available as a public [Google doc](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit). For edit access, get in touch on [GitHub Discussions](https://github.com/open-telemetry/opentelemetry-python/discussions).
+Meeting notes are available as a public [Google doc](https://docs.google.com/document/d/1CIMGoIOZ-c3-igzbd6_Pnxx1SjAkjwqoYSUWxPY8XIs/edit).
 
 Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telemetry/teams/python-approvers)):
 
 - [Aaron Abbott](https://github.com/aabmass), Google
-- [Owais Lone](https://github.com/owais), Splunk
-- [Nathaniel Ruiz Nowell](https://github.com/NathanielRN), AWS
+- [Sanket Mehta](https://github.com/sanketmehta28), Cisco
 
 Emeritus Approvers
 
+- [Ashutosh Goel](https://github.com/ashu658), Cisco
 - [Carlos Alberto Cortez](https://github.com/carlosalberto), Lightstep
 - [Christian Neumüller](https://github.com/Oberon00), Dynatrace
 - [Hector Hernandez](https://github.com/hectorhdzg), Microsoft
 - [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Kinvolk
+- [Nathaniel Ruiz Nowell](https://github.com/NathanielRN), AWS
 - [Tahir H. Butt](https://github.com/majorgreys) DataDog
 
 *For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver).*
@@ -159,6 +123,7 @@ Emeritus Maintainers:
 
 - [Alex Boten](https://github.com/codeboten), Lightstep
 - [Chris Kleinknecht](https://github.com/c24t), Google
+- [Owais Lone](https://github.com/owais), Splunk
 - [Reiley Yang](https://github.com/reyang), Microsoft
 - [Yusuke Tsutsumi](https://github.com/toumorokoshi), Google
 
@@ -169,12 +134,3 @@ Emeritus Maintainers:
 <a href="https://github.com/open-telemetry/opentelemetry-python/graphs/contributors">
   <img src="https://contributors-img.web.app/image?repo=open-telemetry/opentelemetry-python" />
 </a>
-
-## Project Status
-
-For project boards and milestones, see the following links: 
-- [Project boards](https://github.com/open-telemetry/opentelemetry-python/projects)
-- [Milestones](https://github.com/open-telemetry/opentelemetry-python/milestones)
-
-We try to keep these links accurate, so they're the best place to go for questions about project status. The dates and features described in the issues
-and milestones are estimates and subject to change.
