@@ -133,17 +133,12 @@ for propagator in environ_propagators.split(","):
     propagator = propagator.strip()
 
     try:
-
-        propagators.append(  # type: ignore
-            next(  # type: ignore
-                iter(  # type: ignore
-                    entry_points(  # type: ignore
-                        group="opentelemetry_propagator",
-                        name=propagator,
-                    )
+        for entry in entry_points(group="opentelemetry_propagator"):
+            if entry.name==propagator:
+                propagators.append(  # type: ignore
+                    entry.load()()
                 )
-            ).load()()
-        )
+                break
 
     except Exception:  # pylint: disable=broad-except
         logger.exception(
