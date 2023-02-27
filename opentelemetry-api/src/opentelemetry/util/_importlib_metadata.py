@@ -32,7 +32,7 @@ if version_info.minor == 7:
 
     def entry_points(
         group: str = None, name: str = None
-    ) -> Union[Tuple, Dict]:
+    ) -> Union[Tuple[EntryPoint], Dict[str, Tuple[EntryPoint]]]:
 
         if group is None and name is None:
 
@@ -88,7 +88,7 @@ elif version_info.minor in (8, 9):
 
     def entry_points(
         group: str = None, name: str = None
-    ) -> Union[Tuple, Dict]:
+    ) -> Union[Tuple[EntryPoint], Dict[str, Tuple[EntryPoint]]]:
 
         result_key_entry_points = importlib_metadata_entry_points()
 
