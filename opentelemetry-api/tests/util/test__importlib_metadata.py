@@ -50,6 +50,7 @@ class TestEntryPoints(TestCase):
 
         entry_points = entry_points["opentelemetry_propagator"]
         self.assertIsInstance(entry_points, Tuple)
+
         self.assertIsInstance(entry_points[0], EntryPoint)
 
         entry_points = importlib_metadata_entry_points(
@@ -57,12 +58,15 @@ class TestEntryPoints(TestCase):
         )
         self.assertIsInstance(entry_points, Tuple)
         self.assertIsInstance(entry_points[0], EntryPoint)
+        self.assertEqual(entry_points[0].group, "opentelemetry_propagator")
 
         entry_points = importlib_metadata_entry_points(
             group="opentelemetry_propagator", name="baggage"
         )
         self.assertIsInstance(entry_points, Tuple)
         self.assertIsInstance(entry_points[0], EntryPoint)
+        self.assertEqual(entry_points[0].name, "baggage")
+        self.assertEqual(entry_points[0].group, "opentelemetry_propagator")
 
         entry_points = importlib_metadata_entry_points(name="baggage")
         self.assertIsInstance(entry_points, Tuple)
