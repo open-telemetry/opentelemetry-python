@@ -57,14 +57,14 @@ def _load_runtime_context(func: _F) -> _F:
                 )  # type: str
                 try:
 
-                    _RUNTIME_CONTEXT = next(  # type: ignore
-                        iter(  # type: ignore
-                            entry_points(  # type: ignore
-                                group="opentelemetry_context",
-                                name=configured_context,
-                            )
+                    for entry_point in entry_points(group="opentelemetry_context"):
+                        if entry_point.name==configured_context:
+                            _RUNTIME_CONTEXT = entry_point.load()()
+                            break
+                    if _RUNTIME_CONTEXT is None:
+                        logger.exception(
+                            "Failed to load context (no such entry point): %s", configured_context
                         )
-                    ).load()()
 
                 except Exception:  # pylint: disable=broad-except
                     logger.exception(
