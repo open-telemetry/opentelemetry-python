@@ -43,10 +43,8 @@ if version_info.minor == 7:
                     if entry_point.group not in result_entry_points_37.keys():
                         result_entry_points_37[entry_point.group] = []
 
-                    (
-                        result_entry_points_37[entry_point.group].append(
-                            entry_point
-                        )
+                    result_entry_points_37[entry_point.group].append(
+                        entry_point
                     )
 
                 for key, value in result_entry_points_37.items():
