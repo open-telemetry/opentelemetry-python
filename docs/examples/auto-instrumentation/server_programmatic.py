@@ -13,16 +13,14 @@
 # limitations under the License.
 
 from flask import Flask, request
+
 from opentelemetry.instrumentation.flask import FlaskInstrumentor
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
     ConsoleSpanExporter,
 )
-
-from opentelemetry.trace import (
-    set_tracer_provider, get_tracer_provider
-)
+from opentelemetry.trace import get_tracer_provider, set_tracer_provider
 
 set_tracer_provider(TracerProvider())
 get_tracer_provider().add_span_processor(

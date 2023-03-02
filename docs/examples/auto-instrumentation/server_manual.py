@@ -14,15 +14,17 @@
 
 from flask import Flask, request
 
-from opentelemetry.trace import (
-    set_tracer_provider, get_tracer_provider, SpanKind
-)
 from opentelemetry.instrumentation.wsgi import collect_request_attributes
 from opentelemetry.propagate import extract
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
     BatchSpanProcessor,
     ConsoleSpanExporter,
+)
+from opentelemetry.trace import (
+    SpanKind,
+    get_tracer_provider,
+    set_tracer_provider,
 )
 
 app = Flask(__name__)
