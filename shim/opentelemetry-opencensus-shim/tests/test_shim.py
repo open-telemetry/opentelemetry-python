@@ -17,4 +17,4 @@ import unittest
 
 class TestShim(unittest.TestCase):
     def test_shim(self):
-        self.assertTrue(True)
+        pass
