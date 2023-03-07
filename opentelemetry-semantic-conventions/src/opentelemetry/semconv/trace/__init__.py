@@ -12,10 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-many-lines
-
 from enum import Enum
-
 
 class SpanAttributes:
     AWS_LAMBDA_INVOKED_ARN = "aws.lambda.invoked_arn"
@@ -95,18 +92,33 @@ class SpanAttributes:
 
     NET_PEER_NAME = "net.peer.name"
     """
-    Remote hostname or similar, see note below.
+    Name of the database host.
     Note: `net.peer.name` SHOULD NOT be set if capturing it would require an extra DNS lookup.
-    """
-
-    NET_PEER_IP = "net.peer.ip"
-    """
-    Remote address of the peer (dotted decimal for IPv4 or [RFC5952](https://tools.ietf.org/html/rfc5952) for IPv6).
     """
 
     NET_PEER_PORT = "net.peer.port"
     """
-    Remote port number.
+    Logical remote port number.
+    """
+
+    NET_SOCK_PEER_ADDR = "net.sock.peer.addr"
+    """
+    Remote socket peer address: IPv4 or IPv6 for internet protocols, path for local communication, [etc](https://man7.org/linux/man-pages/man7/address_families.7.html).
+    """
+
+    NET_SOCK_PEER_PORT = "net.sock.peer.port"
+    """
+    Remote socket peer port.
+    """
+
+    NET_SOCK_FAMILY = "net.sock.family"
+    """
+    Protocol [address family](https://man7.org/linux/man-pages/man7/address_families.7.html) which is used for communication.
+    """
+
+    NET_SOCK_PEER_NAME = "net.sock.peer.name"
+    """
+    Remote socket peer name.
     """
 
     NET_TRANSPORT = "net.transport"
@@ -141,9 +153,7 @@ class SpanAttributes:
     Whether or not the query is idempotent.
     """
 
-    DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT = (
-        "db.cassandra.speculative_execution_count"
-    )
+    DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT = "db.cassandra.speculative_execution_count"
     """
     The number of times a query was speculatively executed. Not set or `0` if the query was not executed speculatively.
     """
@@ -254,28 +264,6 @@ call to invoke the lambda, which is often HTTP).
     HTTP request method.
     """
 
-    HTTP_URL = "http.url"
-    """
-    Full HTTP request URL in the form `scheme://host[:port]/path?query[#fragment]`. Usually the fragment is not transmitted over HTTP, but if it is known, it should be included nevertheless.
-    Note: `http.url` MUST NOT contain credentials passed via URL in form of `https://username:password@www.example.com/`. In such case the attribute's value should be `https://www.example.com/`.
-    """
-
-    HTTP_TARGET = "http.target"
-    """
-    The full request target as passed in a HTTP request line or equivalent.
-    """
-
-    HTTP_HOST = "http.host"
-    """
-    The value of the [HTTP host header](https://tools.ietf.org/html/rfc7230#section-5.4). An empty Host header should also be reported, see note.
-    Note: When the header is present but empty the attribute SHOULD be set to the empty string. Note that this is a valid situation that is expected in certain cases, according the aforementioned [section of RFC 7230](https://tools.ietf.org/html/rfc7230#section-5.4). When the header is not set the attribute MUST NOT be set.
-    """
-
-    HTTP_SCHEME = "http.scheme"
-    """
-    The URI scheme identifying the used protocol.
-    """
-
     HTTP_STATUS_CODE = "http.status_code"
     """
     [HTTP response status code](https://tools.ietf.org/html/rfc7231#section-6).
@@ -289,78 +277,95 @@ call to invoke the lambda, which is often HTTP).
 
     HTTP_USER_AGENT = "http.user_agent"
     """
-    Value of the [HTTP User-Agent](https://tools.ietf.org/html/rfc7231#section-5.5.3) header sent by the client.
+    Value of the [HTTP User-Agent](https://www.rfc-editor.org/rfc/rfc9110.html#field.user-agent) header sent by the client.
     """
 
     HTTP_REQUEST_CONTENT_LENGTH = "http.request_content_length"
     """
-    The size of the request payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://tools.ietf.org/html/rfc7230#section-3.3.2) header. For requests using transport encoding, this should be the compressed size.
-    """
-
-    HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED = (
-        "http.request_content_length_uncompressed"
-    )
-    """
-    The size of the uncompressed request payload body after transport decoding. Not set if transport encoding not used.
+    The size of the request payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-length) header. For requests using transport encoding, this should be the compressed size.
     """
 
     HTTP_RESPONSE_CONTENT_LENGTH = "http.response_content_length"
     """
-    The size of the response payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://tools.ietf.org/html/rfc7230#section-3.3.2) header. For requests using transport encoding, this should be the compressed size.
+    The size of the response payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-length) header. For requests using transport encoding, this should be the compressed size.
     """
 
-    HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED = (
-        "http.response_content_length_uncompressed"
-    )
+    HTTP_SCHEME = "http.scheme"
     """
-    The size of the uncompressed response payload body after transport decoding. Not set if transport encoding not used.
+    The URI scheme identifying the used protocol.
     """
 
-    HTTP_RETRY_COUNT = "http.retry_count"
+    HTTP_TARGET = "http.target"
     """
-    The ordinal number of request re-sending attempt.
-    """
-
-    HTTP_SERVER_NAME = "http.server_name"
-    """
-    The primary server name of the matched virtual host. This should be obtained via configuration. If no such configuration can be obtained, this attribute MUST NOT be set ( `net.host.name` should be used instead).
-    Note: `http.url` is usually not readily available on the server side but would have to be assembled in a cumbersome and sometimes lossy process from other information (see e.g. open-telemetry/opentelemetry-python/pull/148). It is thus preferred to supply the raw data that is available.
+    The full request target as passed in a HTTP request line or equivalent.
     """
 
     HTTP_ROUTE = "http.route"
     """
-    The matched route (path template).
+    The matched route (path template in the format used by the respective server framework). See note below.
+    Note: 'http.route' MUST NOT be populated when this is not supported by the HTTP server framework as the route attribute should have low-cardinality and the URI path can NOT substitute it.
     """
 
     HTTP_CLIENT_IP = "http.client_ip"
     """
     The IP address of the original client behind all proxies, if known (e.g. from [X-Forwarded-For](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For)).
-    Note: This is not necessarily the same as `net.peer.ip`, which would
+    Note: This is not necessarily the same as `net.sock.peer.addr`, which would
 identify the network-level peer, which may be a proxy.
 
 This attribute should be set when a source of information different
-from the one used for `net.peer.ip`, is available even if that other
-source just confirms the same value as `net.peer.ip`.
-Rationale: For `net.peer.ip`, one typically does not know if it
+from the one used for `net.sock.peer.addr`, is available even if that other
+source just confirms the same value as `net.sock.peer.addr`.
+Rationale: For `net.sock.peer.addr`, one typically does not know if it
 comes from a proxy, reverse proxy, or the actual client. Setting
-`http.client_ip` when it's the same as `net.peer.ip` means that
+`http.client_ip` when it's the same as `net.sock.peer.addr` means that
 one is at least somewhat confident that the address is not that of
 the closest proxy.
     """
 
-    NET_HOST_IP = "net.host.ip"
+    NET_HOST_NAME = "net.host.name"
     """
-    Like `net.peer.ip` but for the host IP. Useful in case of a multi-IP host.
+    Name of the local HTTP server that received the request.
+    Note: Determined by using the first of the following that applies
+
+- The [primary server name](#http-server-definitions) of the matched virtual host. MUST only
+  include host identifier.
+- Host identifier of the [request target](https://www.rfc-editor.org/rfc/rfc9110.html#target.resource)
+  if it's sent in absolute-form.
+- Host identifier of the `Host` header
+
+SHOULD NOT be set if only IP address is available and capturing name would require a reverse DNS lookup.
     """
 
     NET_HOST_PORT = "net.host.port"
     """
-    Like `net.peer.port` but for the host port.
+    Port of the local HTTP server that received the request.
+    Note: Determined by using the first of the following that applies
+
+- Port identifier of the [primary server host](#http-server-definitions) of the matched virtual host.
+- Port identifier of the [request target](https://www.rfc-editor.org/rfc/rfc9110.html#target.resource)
+  if it's sent in absolute-form.
+- Port identifier of the `Host` header.
     """
 
-    NET_HOST_NAME = "net.host.name"
+    NET_SOCK_HOST_ADDR = "net.sock.host.addr"
     """
-    Local hostname or similar, see note below.
+    Local socket address. Useful in case of a multi-IP host.
+    """
+
+    NET_SOCK_HOST_PORT = "net.sock.host.port"
+    """
+    Local socket port number.
+    """
+
+    NET_APP_PROTOCOL_NAME = "net.app.protocol.name"
+    """
+    Application layer protocol used. The value SHOULD be normalized to lowercase.
+    """
+
+    NET_APP_PROTOCOL_VERSION = "net.app.protocol.version"
+    """
+    Version of the application layer protocol used. See note below.
+    Note: `net.app.protocol.version` refers to the version of the protocol used and might be different from the protocol client's version. If the HTTP client used has a version of `0.27.2`, but sends HTTP version `1.1`, this attribute should be set to `1.1`.
     """
 
     NET_HOST_CONNECTION_TYPE = "net.host.connection.type"
@@ -438,16 +443,12 @@ the closest proxy.
     The [conversation ID](#conversations) identifying the conversation to which the message belongs, represented as a string. Sometimes called "Correlation ID".
     """
 
-    MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES = (
-        "messaging.message_payload_size_bytes"
-    )
+    MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES = "messaging.message_payload_size_bytes"
     """
     The (uncompressed) size of the message payload in bytes. Also use this attribute if it is unknown whether the compressed or uncompressed payload size is reported.
     """
 
-    MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES = (
-        "messaging.message_payload_compressed_size_bytes"
-    )
+    MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES = "messaging.message_payload_compressed_size_bytes"
     """
     The compressed size of the message payload in bytes.
     """
@@ -535,6 +536,17 @@ the closest proxy.
     The line number in `code.filepath` best representing the operation. It SHOULD point within the code unit named in `code.function`.
     """
 
+    HTTP_URL = "http.url"
+    """
+    Full HTTP request URL in the form `scheme://host[:port]/path?query[#fragment]`. Usually the fragment is not transmitted over HTTP, but if it is known, it should be included nevertheless.
+    Note: `http.url` MUST NOT contain credentials passed via URL in form of `https://username:password@www.example.com/`. In such case the attribute's value should be `https://www.example.com/`.
+    """
+
+    HTTP_RETRY_COUNT = "http.retry_count"
+    """
+    The ordinal number of request re-sending attempt.
+    """
+
     RPC_SYSTEM = "rpc.system"
     """
     The value `aws-api`.
@@ -562,23 +574,17 @@ the closest proxy.
     The JSON-serialized value of each item in the `ConsumedCapacity` response field.
     """
 
-    AWS_DYNAMODB_ITEM_COLLECTION_METRICS = (
-        "aws.dynamodb.item_collection_metrics"
-    )
+    AWS_DYNAMODB_ITEM_COLLECTION_METRICS = "aws.dynamodb.item_collection_metrics"
     """
     The JSON-serialized value of the `ItemCollectionMetrics` response field.
     """
 
-    AWS_DYNAMODB_PROVISIONED_READ_CAPACITY = (
-        "aws.dynamodb.provisioned_read_capacity"
-    )
+    AWS_DYNAMODB_PROVISIONED_READ_CAPACITY = "aws.dynamodb.provisioned_read_capacity"
     """
     The value of the `ProvisionedThroughput.ReadCapacityUnits` request parameter.
     """
 
-    AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY = (
-        "aws.dynamodb.provisioned_write_capacity"
-    )
+    AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY = "aws.dynamodb.provisioned_write_capacity"
     """
     The value of the `ProvisionedThroughput.WriteCapacityUnits` request parameter.
     """
@@ -613,16 +619,12 @@ the closest proxy.
     The value of the `Select` request parameter.
     """
 
-    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEXES = (
-        "aws.dynamodb.global_secondary_indexes"
-    )
+    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEXES = "aws.dynamodb.global_secondary_indexes"
     """
     The JSON-serialized value of each item of the `GlobalSecondaryIndexes` request field.
     """
 
-    AWS_DYNAMODB_LOCAL_SECONDARY_INDEXES = (
-        "aws.dynamodb.local_secondary_indexes"
-    )
+    AWS_DYNAMODB_LOCAL_SECONDARY_INDEXES = "aws.dynamodb.local_secondary_indexes"
     """
     The JSON-serialized value of each item of the `LocalSecondaryIndexes` request field.
     """
@@ -667,11 +669,25 @@ the closest proxy.
     The JSON-serialized value of each item in the `AttributeDefinitions` request field.
     """
 
-    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEX_UPDATES = (
-        "aws.dynamodb.global_secondary_index_updates"
-    )
+    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEX_UPDATES = "aws.dynamodb.global_secondary_index_updates"
     """
     The JSON-serialized value of each item in the the `GlobalSecondaryIndexUpdates` request field.
+    """
+
+    GRAPHQL_OPERATION_NAME = "graphql.operation.name"
+    """
+    The name of the operation being executed.
+    """
+
+    GRAPHQL_OPERATION_TYPE = "graphql.operation.type"
+    """
+    The type of the operation being executed.
+    """
+
+    GRAPHQL_DOCUMENT = "graphql.document"
+    """
+    The GraphQL document being executed.
+    Note: The value may be sanitized to exclude sensitive information.
     """
 
     MESSAGING_OPERATION = "messaging.operation"
@@ -745,9 +761,7 @@ the closest proxy.
     Key(s) of message, another way to mark message besides message id.
     """
 
-    MESSAGING_ROCKETMQ_CONSUMPTION_MODEL = (
-        "messaging.rocketmq.consumption_model"
-    )
+    MESSAGING_ROCKETMQ_CONSUMPTION_MODEL = "messaging.rocketmq.consumption_model"
     """
     Model of message consumption. This only applies to consumer spans.
     """
@@ -797,7 +811,6 @@ the closest proxy.
     """
     Uncompressed size of the message in bytes.
     """
-
 
 class OpentracingRefTypeValues(Enum):
     CHILD_OF = "child_of"
@@ -949,6 +962,20 @@ class DbSystemValues(Enum):
     COCKROACHDB = "cockroachdb"
     """CockroachDB."""
 
+    OPENSEARCH = "opensearch"
+    """OpenSearch."""
+
+
+class NetSockFamilyValues(Enum):
+    INET = "inet"
+    """IPv4 address."""
+
+    INET6 = "inet6"
+    """IPv6 address."""
+
+    UNIX = "unix"
+    """Unix domain socket path."""
+
 
 class NetTransportValues(Enum):
     IP_TCP = "ip_tcp"
@@ -956,12 +983,6 @@ class NetTransportValues(Enum):
 
     IP_UDP = "ip_udp"
     """ip_udp."""
-
-    IP = "ip"
-    """Another IP-based protocol."""
-
-    UNIX = "unix"
-    """Unix Domain socket. See below."""
 
     PIPE = "pipe"
     """Named or anonymous pipe. See note below."""
@@ -1177,6 +1198,17 @@ class RpcSystemValues(Enum):
     """Apache Dubbo."""
 
 
+class GraphqlOperationTypeValues(Enum):
+    QUERY = "query"
+    """GraphQL query."""
+
+    MUTATION = "mutation"
+    """GraphQL mutation."""
+
+    SUBSCRIPTION = "subscription"
+    """GraphQL subscription."""
+
+
 class MessagingOperationValues(Enum):
     RECEIVE = "receive"
     """receive."""
@@ -1266,3 +1298,4 @@ class MessageTypeValues(Enum):
 
     RECEIVED = "RECEIVED"
     """received."""
+
