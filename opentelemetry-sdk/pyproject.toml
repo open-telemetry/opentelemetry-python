@@ -41,6 +41,14 @@ sdk = "opentelemetry.sdk.environment_variables"
 [project.entry-points.opentelemetry_id_generator]
 random = "opentelemetry.sdk.trace.id_generator:RandomIdGenerator"
 
+[project.entry-points.opentelemetry_traces_sampler]
+always_on = "opentelemetry.sdk.trace.sampling:_AlwaysOn"
+always_off = "opentelemetry.sdk.trace.sampling:_AlwaysOff"
+parentbased_always_on = "opentelemetry.sdk.trace.sampling:_DefaultOn"
+parentbased_always_off = "opentelemetry.sdk.trace.sampling:_DefaultOff"
+traceidratio = "opentelemetry.sdk.trace.sampling:TraceIdRatioBased"
+parentbased_traceidratio = "opentelemetry.sdk.trace.sampling:ParentBasedTraceIdRatio"
+
 [project.entry-points.opentelemetry_logger_provider]
 sdk_logger_provider = "opentelemetry.sdk._logs:LoggerProvider"
 
