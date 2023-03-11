@@ -211,5 +211,6 @@ class MetricsData:
                     loads(resource_metrics.to_json(indent=indent))
                     for resource_metrics in self.resource_metrics
                 ]
-            }
+            },
+            indent=indent,
         )

@@ -49,7 +49,7 @@ class TestConsoleExporter(TestCase):
         provider.shutdown()
 
         output.seek(0)
-        result_0 = loads(output.readlines()[0])
+        result_0 = loads("".join(output.readlines()))
 
         self.assertGreater(len(result_0), 0)
 

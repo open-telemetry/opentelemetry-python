@@ -41,6 +41,7 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     AggregationTemporality,
     DefaultAggregation,
 )
+from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.instrument import (
     Counter,
     Histogram,
@@ -497,7 +498,14 @@ class PeriodicExportingMetricReader(MetricReader):
     def _ticker(self) -> None:
         interval_secs = self._export_interval_millis / 1e3
         while not self._shutdown_event.wait(interval_secs):
-            self.collect(timeout_millis=self._export_timeout_millis)
+            try:
+                self.collect(timeout_millis=self._export_timeout_millis)
+            except MetricsTimeoutError:
+                _logger.warning(
+                    "Metric collection timed out. Will try again after %s seconds",
+                    interval_secs,
+                    exc_info=True,
+                )
         # one last collection below before shutting down completely
         self.collect(timeout_millis=self._export_interval_millis)
 
