@@ -6,6 +6,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+- PeriodicExportingMetricReader will continue if collection times out 
+  ([#3100](https://github.com/open-telemetry/opentelemetry-python/pull/3100))
+- Fix formatting of ConsoleMetricExporter.
+  ([#3197](https://github.com/open-telemetry/opentelemetry-python/pull/3197))
 
 - Implement shutdown procedure forOTLP grpc exporters
   ([#3138](https://github.com/open-telemetry/opentelemetry-python/pull/3138))
@@ -34,6 +38,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3158](https://github.com/open-telemetry/opentelemetry-python/pull/3158))
 - Create a single resource instance
   ([#3118](https://github.com/open-telemetry/opentelemetry-python/pull/3118))
+
 
 ## Version 1.15.0/0.36b0 (2022-12-09)
 
