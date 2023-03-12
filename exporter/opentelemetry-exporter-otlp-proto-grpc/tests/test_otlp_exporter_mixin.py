@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import threading
+import time
 from logging import WARNING
 from types import MethodType
 from typing import Sequence
@@ -138,6 +140,7 @@ class TestOTLPExporterMixin(TestCase):
                 otlp_mock_exporter._export(data={}), result_mock.SUCCESS
             )
             otlp_mock_exporter.shutdown()
+            # pylint: disable=protected-access
             self.assertEqual(
                 otlp_mock_exporter._export(data={}), result_mock.FAILURE
             )
@@ -147,9 +150,6 @@ class TestOTLPExporterMixin(TestCase):
             )
 
     def test_shutdown_wait_last_export(self):
-        import threading
-        import time
-
         result_mock = Mock()
         rpc_error = RpcError()
 
@@ -183,18 +183,22 @@ class TestOTLPExporterMixin(TestCase):
 
         otlp_mock_exporter = OTLPMockExporter()
 
+        # pylint: disable=protected-access
         export_thread = threading.Thread(
             target=otlp_mock_exporter._export, args=({},)
         )
         export_thread.start()
         try:
+            # pylint: disable=protected-access
             self.assertTrue(otlp_mock_exporter._export_lock.locked())
             # delay is 1 second while the default shutdown timeout is 30_000 milliseconds
             start_time = time.time()
             otlp_mock_exporter.shutdown()
             now = time.time()
             self.assertGreaterEqual(now, (start_time + 30 / 1000))
+            # pylint: disable=protected-access
             self.assertTrue(otlp_mock_exporter._shutdown)
+            # pylint: disable=protected-access
             self.assertFalse(otlp_mock_exporter._export_lock.locked())
         finally:
             export_thread.join()

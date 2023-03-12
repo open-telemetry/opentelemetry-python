@@ -13,6 +13,8 @@
 # limitations under the License.
 
 import os
+import threading
+import time
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
 from logging import WARNING
@@ -948,9 +950,6 @@ class TestOTLPSpanExporter(TestCase):
             )
 
     def test_shutdown_wait_last_export(self):
-        import threading
-        import time
-
         add_TraceServiceServicer_to_server(
             TraceServiceServicerUNAVAILABLEDelay(), self.server
         )
@@ -960,13 +959,16 @@ class TestOTLPSpanExporter(TestCase):
         )
         export_thread.start()
         try:
+            # pylint: disable=protected-access
             self.assertTrue(self.exporter._export_lock.locked())
             # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
             start_time = time.time()
             self.exporter.shutdown()
             now = time.time()
             self.assertGreaterEqual(now, (start_time + 30 / 1000))
+            # pylint: disable=protected-access
             self.assertTrue(self.exporter._shutdown)
+            # pylint: disable=protected-access
             self.assertFalse(self.exporter._export_lock.locked())
         finally:
             export_thread.join()

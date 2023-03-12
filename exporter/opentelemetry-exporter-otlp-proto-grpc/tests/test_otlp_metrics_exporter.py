@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 
 # pylint: disable=too-many-lines
@@ -1379,9 +1381,6 @@ class TestOTLPMetricExporter(TestCase):
             )
 
     def test_shutdown_wait_last_export(self):
-        import threading
-        import time
-
         add_MetricsServiceServicer_to_server(
             MetricsServiceServicerUNAVAILABLEDelay(), self.server
         )
@@ -1391,13 +1390,16 @@ class TestOTLPMetricExporter(TestCase):
         )
         export_thread.start()
         try:
+            # pylint: disable=protected-access
             self.assertTrue(self.exporter._export_lock.locked())
             # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
             start_time = time.time()
             self.exporter.shutdown()
             now = time.time()
             self.assertGreaterEqual(now, (start_time + 30 / 1000))
+            # pylint: disable=protected-access
             self.assertTrue(self.exporter._shutdown)
+            # pylint: disable=protected-access
             self.assertFalse(self.exporter._export_lock.locked())
         finally:
             export_thread.join()
