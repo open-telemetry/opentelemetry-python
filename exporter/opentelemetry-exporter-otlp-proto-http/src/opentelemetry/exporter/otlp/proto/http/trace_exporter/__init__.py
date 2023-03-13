@@ -23,6 +23,9 @@ from time import sleep
 import backoff
 import requests
 
+from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
+    encode_spans,
+)
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE,
     OTEL_EXPORTER_OTLP_TRACES_COMPRESSION,
@@ -39,9 +42,6 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.exporter.otlp.proto.http import (
     _OTLP_HTTP_HEADERS,
     Compression,
-)
-from opentelemetry.exporter.otlp.proto.http.trace_exporter.encoder import (
-    _ProtobufEncoder,
 )
 from opentelemetry.util.re import parse_env_headers
 
@@ -143,7 +143,7 @@ class OTLPSpanExporter(SpanExporter):
             _logger.warning("Exporter already shutdown, ignoring batch")
             return SpanExportResult.FAILURE
 
-        serialized_data = _ProtobufEncoder.serialize(spans)
+        serialized_data = encode_spans(spans).SerializeToString()
 
         for delay in _expo(max_value=self._MAX_RETRY_TIMEOUT):
 
