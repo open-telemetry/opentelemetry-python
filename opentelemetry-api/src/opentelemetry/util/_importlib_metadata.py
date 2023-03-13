@@ -17,10 +17,6 @@
 from sys import version_info
 from typing import Dict, Tuple, Union
 
-# This is a cache to avoid going through creating a dictionary for all entry
-# points for 3.7 every time the entry points function is called.
-result_entry_points_37 = {}
-
 # FIXME remove this when support for 3.7 is dropped.
 if version_info.minor == 7:
     # pylint: disable=import-error
@@ -29,6 +25,10 @@ if version_info.minor == 7:
         entry_points as importlib_metadata_entry_points,
     )
     from importlib_metadata import version
+
+    # This is a cache to avoid going through creating a dictionary for all
+    # entry points for 3.7 every time the entry points function is called.
+    result_entry_points_37 = {}
 
     def entry_points(
         group: str = None, name: str = None
