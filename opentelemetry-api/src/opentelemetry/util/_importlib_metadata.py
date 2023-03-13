@@ -71,12 +71,6 @@ if version_info.minor == 7:
             )
         )
 
-    __all__ = [
-        "entry_points",
-        "EntryPoint",
-        "version",
-    ]
-
 # FIXME remove this file when support for 3.9 is dropped.
 elif version_info.minor in (8, 9):
     # pylint: disable=import-error
@@ -121,12 +115,6 @@ elif version_info.minor in (8, 9):
 
         return tuple(name_group_entry_points)
 
-    __all__ = [
-        "entry_points",
-        "EntryPoint",
-        "version",
-    ]
-
 else:
     from importlib.metadata import EntryPoint
     from importlib.metadata import (
@@ -165,8 +153,8 @@ else:
             )
         )
 
-    __all__ = [
-        "entry_points",
-        "version",
-        "EntryPoint",
-    ]
+__all__ = [
+    "entry_points",
+    "version",
+    "EntryPoint",
+]
