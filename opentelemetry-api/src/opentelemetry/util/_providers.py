@@ -16,7 +16,7 @@ from logging import getLogger
 from os import environ
 from typing import TYPE_CHECKING, TypeVar, cast
 
-from opentelemetry.util._importlib_metadata import entry_points  # type: ignore
+from opentelemetry.util._importlib_metadata import entry_points
 
 if TYPE_CHECKING:
     from opentelemetry.metrics import MeterProvider
@@ -41,8 +41,8 @@ def _load_provider(
         return cast(
             Provider,
             next(  # type: ignore
-                iter(  # type: ignore
-                    entry_points(  # type: ignore
+                iter(
+                    entry_points(
                         group=f"opentelemetry_{provider}",
                         name=provider_name,
                     )
