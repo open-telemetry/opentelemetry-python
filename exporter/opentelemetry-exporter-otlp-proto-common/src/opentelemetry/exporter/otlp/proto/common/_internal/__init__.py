@@ -15,7 +15,7 @@
 
 import logging
 from collections.abc import Sequence
-from typing import Any, Optional, List
+from typing import Any, Mapping, Optional, List, Callable, TypeVar, Dict
 
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.proto.common.v1.common_pb2 import (
@@ -27,6 +27,9 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue as PB2AnyValue
 from opentelemetry.proto.common.v1.common_pb2 import KeyValue as PB2KeyValue
 from opentelemetry.proto.common.v1.common_pb2 import (
+    KeyValueList as PB2KeyValueList,
+)
+from opentelemetry.proto.common.v1.common_pb2 import (
     ArrayValue as PB2ArrayValue,
 )
 from opentelemetry.sdk.trace import Resource
@@ -34,6 +37,9 @@ from opentelemetry.util.types import Attributes
 
 
 _logger = logging.getLogger(__name__)
+
+_TypingResourceT = TypeVar("_TypingResourceT")
+_ResourceDataT = TypeVar("_ResourceDataT")
 
 
 def _encode_instrumentation_scope(
@@ -64,9 +70,12 @@ def _encode_value(value: Any) -> PB2AnyValue:
         return PB2AnyValue(
             array_value=PB2ArrayValue(values=[_encode_value(v) for v in value])
         )
-    # tracing specs currently does not support Mapping type attributes.
-    # elif isinstance(value, abc.Mapping):
-    #     pass
+    elif isinstance(value, Mapping):
+        return PB2AnyValue(
+            kvlist_value=PB2KeyValueList(
+                values=[_encode_key_value(str(k), v) for k, v in value.items()]
+            )
+        )
     raise Exception(f"Invalid type {type(value)} of value {value}")
 
 
@@ -95,3 +104,29 @@ def _encode_attributes(
     else:
         pb2_attributes = None
     return pb2_attributes
+
+
+def _get_resource_data(
+    sdk_resource_scope_data: Dict[Resource, _ResourceDataT],
+    resource_class: Callable[..., _TypingResourceT],
+    name: str,
+) -> List[_TypingResourceT]:
+
+    resource_data = []
+
+    for (
+        sdk_resource,
+        scope_data,
+    ) in sdk_resource_scope_data.items():
+        collector_resource = PB2Resource(
+            attributes=_encode_attributes(sdk_resource.attributes)
+        )
+        resource_data.append(
+            resource_class(
+                **{
+                    "resource": collector_resource,
+                    "scope_{}".format(name): scope_data.values(),
+                }
+            )
+        )
+    return resource_data

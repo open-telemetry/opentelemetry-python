@@ -25,6 +25,11 @@ from typing import Sequence as TypingSequence
 from typing import TypeVar
 from urllib.parse import urlparse
 
+from deprecated import deprecated
+
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    _get_resource_data,
+)
 import backoff
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import (
@@ -45,7 +50,7 @@ from opentelemetry.proto.common.v1.common_pb2 import (
     ArrayValue,
     KeyValue,
 )
-from opentelemetry.proto.resource.v1.resource_pb2 import Resource
+from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_COMPRESSION,
@@ -130,40 +135,16 @@ def _translate_key_values(key: str, value: Any) -> KeyValue:
     return KeyValue(key=key, value=_translate_value(value))
 
 
+@deprecated(
+    version="1.18.0",
+    reason="Use one of the encoders from opentelemetry-exporter-otlp-proto-common instead",
+)
 def get_resource_data(
     sdk_resource_scope_data: Dict[SDKResource, ResourceDataT],
     resource_class: Callable[..., TypingResourceT],
     name: str,
 ) -> List[TypingResourceT]:
-    resource_data = []
-
-    for (
-        sdk_resource,
-        scope_data,
-    ) in sdk_resource_scope_data.items():
-
-        collector_resource = Resource()
-
-        for key, value in sdk_resource.attributes.items():
-
-            try:
-                # pylint: disable=no-member
-                collector_resource.attributes.append(
-                    _translate_key_values(key, value)
-                )
-            except Exception as error:  # pylint: disable=broad-except
-                logger.exception(error)
-
-        resource_data.append(
-            resource_class(
-                **{
-                    "resource": collector_resource,
-                    "scope_{}".format(name): scope_data.values(),
-                }
-            )
-        )
-
-    return resource_data
+    return _get_resource_data(sdk_resource_scope_data, resource_class, name)
 
 
 def _load_credential_from_file(filepath) -> ChannelCredentials:
