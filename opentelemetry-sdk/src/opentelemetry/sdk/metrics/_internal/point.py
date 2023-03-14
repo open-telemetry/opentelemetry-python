@@ -61,6 +61,48 @@ class HistogramDataPoint:
 
 
 @dataclass(frozen=True)
+class Buckets:
+    offset: int
+    bucket_counts: Sequence[int]
+
+
+@dataclass(frozen=True)
+class ExponentialHistogramDataPoint:
+    """Single data point in a timeseries whose boundaries are defined by an
+    exponential function. This timeseries describes the time-varying scalar
+    value of a metric.
+    """
+
+    attributes: Attributes
+    start_time_unix_nano: int
+    time_unix_nano: int
+    count: int
+    sum: Union[int, float]
+    scale: int
+    zero_count: int
+    positive: Buckets
+    negative: Buckets
+    flags: int
+    min: float
+    max: float
+
+    def to_json(self, indent=4) -> str:
+        return dumps(asdict(self), indent=indent)
+
+
+@dataclass(frozen=True)
+class ExponentialHistogram:
+    """Represents the type of a metric that is calculated by aggregating as an
+    ExponentialHistogram of all reported measurements over a time interval.
+    """
+
+    data_points: Sequence[ExponentialHistogramDataPoint]
+    aggregation_temporality: (
+        "opentelemetry.sdk.metrics.export.AggregationTemporality"
+    )
+
+
+@dataclass(frozen=True)
 class Sum:
     """Represents the type of a scalar metric that is calculated as a sum of
     all reported measurements over a time interval."""
