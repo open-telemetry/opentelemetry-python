@@ -60,6 +60,7 @@ from opentelemetry.sdk.metrics.export import (
     ResourceMetrics,
     ScopeMetrics,
     Sum,
+    ExponentialHistogram as ExponentialHistogramType,
 )
 
 _logger = getLogger(__name__)
@@ -266,6 +267,51 @@ class OTLPMetricExporter(
                                 metric.data.is_monotonic
                             )
                             pb2_metric.sum.data_points.append(pt)
+
+                    elif isinstance(metric.data, ExponentialHistogramType):
+                        for data_point in metric.data.data_points:
+
+                            if data_point.positive.bucket_counts:
+                                positive = pb2.ExponentialHistogramDataPoint.Buckets(
+                                    offset=data_point.positive.offset,
+                                    bucket_counts=data_point.positive.bucket_counts,
+                                )
+                            else:
+                                positive = None
+
+                            if data_point.negative.bucket_counts:
+                                negative = pb2.ExponentialHistogramDataPoint.Buckets(
+                                    offset=data_point.negative.offset,
+                                    bucket_counts=data_point.negative.bucket_counts,
+                                )
+                            else:
+                                negative = None
+
+                            pt = pb2.ExponentialHistogramDataPoint(
+                                attributes=self._translate_attributes(
+                                    data_point.attributes
+                                ),
+                                time_unix_nano=data_point.time_unix_nano,
+                                start_time_unix_nano=(
+                                    data_point.start_time_unix_nano
+                                ),
+                                count=data_point.count,
+                                sum=data_point.sum,
+                                scale=data_point.scale,
+                                zero_count=data_point.zero_count,
+                                positive=positive,
+                                negative=negative,
+                                flags=data_point.flags,
+                                max=data_point.max,
+                                min=data_point.min,
+                            )
+                            pb2_metric.exponential_histogram.aggregation_temporality = (
+                                metric.data.aggregation_temporality
+                            )
+                            pb2_metric.exponential_histogram.data_points.append(
+                                pt
+                            )
+
                     else:
                         _logger.warning(
                             "unsupported data type %s",
