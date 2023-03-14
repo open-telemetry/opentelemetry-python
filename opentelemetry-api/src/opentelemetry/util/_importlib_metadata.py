@@ -14,7 +14,7 @@
 
 
 from sys import version_info
-from typing import Dict, Tuple, Union, overload, Optional, List
+from typing import Dict, List, Optional, Tuple, Union, overload
 
 # FIXME remove this when support for 3.7 is dropped.
 if version_info.minor == 7:
@@ -48,8 +48,7 @@ if version_info.minor == 7:
         ...
 
     def entry_points(
-        group: Optional[str] = None,
-        name: Optional[str] = None
+        group: Optional[str] = None, name: Optional[str] = None
     ) -> Union[Tuple[EntryPoint, ...], Dict[str, Tuple[EntryPoint, ...]]]:
 
         if group is None and name is None:
@@ -91,12 +90,13 @@ if version_info.minor == 7:
             )
         )
 
+
 # FIXME remove this file when support for 3.9 is dropped.
 elif version_info.minor in (8, 9):
     # pylint: disable=import-error
     from importlib.metadata import EntryPoint  # type: ignore
-    from importlib.metadata import (  # type: ignore
-        entry_points as importlib_metadata_entry_points,
+    from importlib.metadata import (
+        entry_points as importlib_metadata_entry_points,  # type: ignore
     )
     from importlib.metadata import version
 
@@ -119,13 +119,12 @@ elif version_info.minor in (8, 9):
         ...
 
     def entry_points(
-        group: Optional[str] = None,
-        name: Optional[str] = None
+        group: Optional[str] = None, name: Optional[str] = None
     ) -> Union[Tuple[EntryPoint, ...], Dict[str, Tuple[EntryPoint, ...]]]:
 
-        result_key_entry_points: Dict[str, Tuple[EntryPoint, ...]] = (
-            importlib_metadata_entry_points()  # type: ignore
-        )
+        result_key_entry_points: Dict[
+            str, Tuple[EntryPoint, ...]
+        ] = importlib_metadata_entry_points()  # type: ignore
 
         if group is None and name is None:
             return result_key_entry_points
@@ -158,8 +157,8 @@ elif version_info.minor in (8, 9):
 
 else:
     from importlib.metadata import EntryPoint  # type: ignore
-    from importlib.metadata import (  # type: ignore
-        entry_points as importlib_metadata_entry_points,
+    from importlib.metadata import (
+        entry_points as importlib_metadata_entry_points,  # type: ignore
     )
     from importlib.metadata import version
 
@@ -182,8 +181,7 @@ else:
         ...
 
     def entry_points(
-        group: Optional[str] = None,
-        name: Optional[str] = None
+        group: Optional[str] = None, name: Optional[str] = None
     ) -> Union[Tuple[EntryPoint, ...], Dict[str, Tuple[EntryPoint, ...]]]:
 
         if group is None and name is None:
@@ -215,6 +213,7 @@ else:
                 group=group, name=name
             )
         )
+
 
 __all__ = [
     "entry_points",
