@@ -13,8 +13,11 @@
 # limitations under the License.
 
 import os
+import threading
+import time
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
+from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -928,6 +931,47 @@ class TestOTLPSpanExporter(TestCase):
             .events[0]
             .dropped_attributes_count,
         )
+
+    def test_shutdown(self):
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerSUCCESS(), self.server
+        )
+        self.assertEqual(
+            self.exporter.export([self.span]), SpanExportResult.SUCCESS
+        )
+        self.exporter.shutdown()
+        with self.assertLogs(level=WARNING) as warning:
+            self.assertEqual(
+                self.exporter.export([self.span]), SpanExportResult.FAILURE
+            )
+            self.assertEqual(
+                warning.records[0].message,
+                "Exporter already shutdown, ignoring batch",
+            )
+
+    def test_shutdown_wait_last_export(self):
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerUNAVAILABLEDelay(), self.server
+        )
+
+        export_thread = threading.Thread(
+            target=self.exporter.export, args=([self.span],)
+        )
+        export_thread.start()
+        try:
+            # pylint: disable=protected-access
+            self.assertTrue(self.exporter._export_lock.locked())
+            # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
+            start_time = time.time()
+            self.exporter.shutdown()
+            now = time.time()
+            self.assertGreaterEqual(now, (start_time + 30 / 1000))
+            # pylint: disable=protected-access
+            self.assertTrue(self.exporter._shutdown)
+            # pylint: disable=protected-access
+            self.assertFalse(self.exporter._export_lock.locked())
+        finally:
+            export_thread.join()
 
 
 def _create_span_with_status(status: SDKStatus):
