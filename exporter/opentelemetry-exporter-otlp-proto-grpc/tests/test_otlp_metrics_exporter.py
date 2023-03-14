@@ -62,7 +62,14 @@ from opentelemetry.sdk.metrics import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk.metrics.export import AggregationTemporality, Gauge
+from opentelemetry.sdk.metrics.export import AggregationTemporality, Buckets
+from opentelemetry.sdk.metrics.export import (
+    ExponentialHistogram as ExponentialHistogramType,
+)
+from opentelemetry.sdk.metrics.export import (
+    ExponentialHistogramDataPoint,
+    Gauge,
+)
 from opentelemetry.sdk.metrics.export import Histogram as HistogramType
 from opentelemetry.sdk.metrics.export import (
     HistogramDataPoint,
@@ -157,6 +164,31 @@ class TestOTLPMetricExporter(TestCase):
                         explicit_bounds=[10.0, 20.0],
                         min=8,
                         max=18,
+                    )
+                ],
+                aggregation_temporality=AggregationTemporality.DELTA,
+            ),
+        )
+
+        exponential_histogram = Metric(
+            name="exponential_histogram",
+            description="description",
+            unit="unit",
+            data=ExponentialHistogramType(
+                data_points=[
+                    ExponentialHistogramDataPoint(
+                        attributes={"a": 1, "b": True},
+                        start_time_unix_nano=0,
+                        time_unix_nano=1,
+                        count=2,
+                        sum=3,
+                        scale=4,
+                        zero_count=5,
+                        positive=Buckets(offset=6, bucket_counts=[7, 8]),
+                        negative=Buckets(offset=9, bucket_counts=[10, 11]),
+                        flags=12,
+                        min=13.0,
+                        max=14.0,
                     )
                 ],
                 aggregation_temporality=AggregationTemporality.DELTA,
@@ -269,6 +301,28 @@ class TestOTLPMetricExporter(TestCase):
                                     schema_url="insrumentation_scope_schema_url",
                                 ),
                                 metrics=[histogram],
+                                schema_url="instrumentation_scope_schema_url",
+                            )
+                        ],
+                        schema_url="resource_schema_url",
+                    )
+                ]
+            ),
+            "exponential_histogram": MetricsData(
+                resource_metrics=[
+                    ResourceMetrics(
+                        resource=Resource(
+                            attributes={"a": 1, "b": False},
+                            schema_url="resource_schema_url",
+                        ),
+                        scope_metrics=[
+                            ScopeMetrics(
+                                scope=SDKInstrumentationScope(
+                                    name="first_name",
+                                    version="first_version",
+                                    schema_url="insrumentation_scope_schema_url",
+                                ),
+                                metrics=[exponential_histogram],
                                 schema_url="instrumentation_scope_schema_url",
                             )
                         ],
@@ -894,6 +948,80 @@ class TestOTLPMetricExporter(TestCase):
         )
         # pylint: disable=protected-access
         actual = self.exporter._translate_data(self.metrics["histogram"])
+        self.assertEqual(expected, actual)
+
+    def test_translate_exponential_histogram(self):
+        expected = ExportMetricsServiceRequest(
+            resource_metrics=[
+                pb2.ResourceMetrics(
+                    resource=OTLPResource(
+                        attributes=[
+                            KeyValue(key="a", value=AnyValue(int_value=1)),
+                            KeyValue(
+                                key="b", value=AnyValue(bool_value=False)
+                            ),
+                        ]
+                    ),
+                    scope_metrics=[
+                        pb2.ScopeMetrics(
+                            scope=InstrumentationScope(
+                                name="first_name", version="first_version"
+                            ),
+                            metrics=[
+                                pb2.Metric(
+                                    name="exponential_histogram",
+                                    unit="unit",
+                                    description="description",
+                                    exponential_histogram=pb2.ExponentialHistogram(
+                                        data_points=[
+                                            pb2.ExponentialHistogramDataPoint(
+                                                attributes=[
+                                                    KeyValue(
+                                                        key="a",
+                                                        value=AnyValue(
+                                                            int_value=1
+                                                        ),
+                                                    ),
+                                                    KeyValue(
+                                                        key="b",
+                                                        value=AnyValue(
+                                                            bool_value=True
+                                                        ),
+                                                    ),
+                                                ],
+                                                start_time_unix_nano=0,
+                                                time_unix_nano=1,
+                                                count=2,
+                                                sum=3,
+                                                scale=4,
+                                                zero_count=5,
+                                                positive=pb2.ExponentialHistogramDataPoint.Buckets(
+                                                    offset=6,
+                                                    bucket_counts=[7, 8],
+                                                ),
+                                                negative=pb2.ExponentialHistogramDataPoint.Buckets(
+                                                    offset=9,
+                                                    bucket_counts=[10, 11],
+                                                ),
+                                                flags=12,
+                                                exemplars=[],
+                                                min=13.0,
+                                                max=14.0,
+                                            )
+                                        ],
+                                        aggregation_temporality=AggregationTemporality.DELTA,
+                                    ),
+                                )
+                            ],
+                        )
+                    ],
+                )
+            ]
+        )
+        # pylint: disable=protected-access
+        actual = self.exporter._translate_data(
+            self.metrics["exponential_histogram"]
+        )
         self.assertEqual(expected, actual)
 
     def test_translate_multiple_scope_histogram(self):
