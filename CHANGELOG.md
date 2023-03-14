@@ -6,15 +6,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
 - PeriodicExportingMetricReader will continue if collection times out 
   ([#3100](https://github.com/open-telemetry/opentelemetry-python/pull/3100))
 - Fix formatting of ConsoleMetricExporter.
   ([#3197](https://github.com/open-telemetry/opentelemetry-python/pull/3197))
-
+- Implement shutdown procedure forOTLP grpc exporters
+  ([#3138](https://github.com/open-telemetry/opentelemetry-python/pull/3138))
 - Add exponential histogram
   ([#2964](https://github.com/open-telemetry/opentelemetry-python/pull/2964))
 
-## Version 1.16.0/0.37b0 (2023-02-15)
+## Version 1.16.0/0.37b0 (2023-02-17)
 
 - Change ``__all__`` to be statically defined.
   ([#3143](https://github.com/open-telemetry/opentelemetry-python/pull/3143))
@@ -398,7 +400,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `opentelemetry-distro` & `opentelemetry-sdk` Moved Auto Instrumentation Configurator code to SDK
   to let distros use its default implementation
   ([#1937](https://github.com/open-telemetry/opentelemetry-python/pull/1937))
-- Add Trace ID validation to meet [TraceID spec](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#spancontext) ([#1992](https://github.com/open-telemetry/opentelemetry-python/pull/1992))
+- Add Trace ID validation to
+  meet [TraceID spec](https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/overview.md#spancontext) ([#1992](https://github.com/open-telemetry/opentelemetry-python/pull/1992))
 - Fixed Python 3.10 incompatibility in `opentelemetry-opentracing-shim` tests
   ([#2018](https://github.com/open-telemetry/opentelemetry-python/pull/2018))
 - `opentelemetry-sdk` added support for `OTEL_SPAN_ATTRIBUTE_VALUE_LENGTH_LIMIT`
@@ -729,7 +732,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1471](https://github.com/open-telemetry/opentelemetry-python/pull/1471))
 - Add support for Python 3.9
   ([#1441](https://github.com/open-telemetry/opentelemetry-python/pull/1441))
-- Added the ability to disable instrumenting libraries specified by OTEL_PYTHON_DISABLED_INSTRUMENTATIONS env variable, when using opentelemetry-instrument command.
+- Added the ability to disable instrumenting libraries specified by OTEL_PYTHON_DISABLED_INSTRUMENTATIONS env variable,
+  when using opentelemetry-instrument command.
   ([#1461](https://github.com/open-telemetry/opentelemetry-python/pull/1461))
 - Add `fields` to propagators
   ([#1374](https://github.com/open-telemetry/opentelemetry-python/pull/1374))
@@ -778,7 +782,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1533](https://github.com/open-telemetry/opentelemetry-python/pull/1533))
 - `opentelemetry-sdk` The JaegerPropagator has been moved into its own package: `opentelemetry-propagator-jaeger`
   ([#1525](https://github.com/open-telemetry/opentelemetry-python/pull/1525))
-- `opentelemetry-exporter-jaeger`, `opentelemetry-exporter-zipkin` Update InstrumentationInfo tag keys for Jaeger and Zipkin exporters
+- `opentelemetry-exporter-jaeger`, `opentelemetry-exporter-zipkin` Update InstrumentationInfo tag keys for Jaeger and
+  Zipkin exporters
   ([#1535](https://github.com/open-telemetry/opentelemetry-python/pull/1535))
 - `opentelemetry-sdk` Remove rate property setter from TraceIdRatioBasedSampler
   ([#1536](https://github.com/open-telemetry/opentelemetry-python/pull/1536))
@@ -888,7 +893,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1199](https://github.com/open-telemetry/opentelemetry-python/pull/1199))
 - Add Global Error Handler
   ([#1080](https://github.com/open-telemetry/opentelemetry-python/pull/1080))
-- Add support for `OTEL_BSP_MAX_QUEUE_SIZE`, `OTEL_BSP_SCHEDULE_DELAY_MILLIS`, `OTEL_BSP_MAX_EXPORT_BATCH_SIZE` and `OTEL_BSP_EXPORT_TIMEOUT_MILLIS` environment variables
+- Add support for `OTEL_BSP_MAX_QUEUE_SIZE`, `OTEL_BSP_SCHEDULE_DELAY_MILLIS`, `OTEL_BSP_MAX_EXPORT_BATCH_SIZE`
+  and `OTEL_BSP_EXPORT_TIMEOUT_MILLIS` environment variables
   ([#1105](https://github.com/open-telemetry/opentelemetry-python/pull/1120))
 - Adding Resource to MeterRecord
   ([#1209](https://github.com/open-telemetry/opentelemetry-python/pull/1209))
@@ -913,7 +919,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1151](https://github.com/open-telemetry/opentelemetry-python/pull/1151))
 - Fixed OTLP events to Zipkin annotations translation.
   ([#1161](https://github.com/open-telemetry/opentelemetry-python/pull/1161))
-- Fixed bootstrap command to correctly install opentelemetry-instrumentation-falcon instead of opentelemetry-instrumentation-flask.
+- Fixed bootstrap command to correctly install opentelemetry-instrumentation-falcon instead of
+  opentelemetry-instrumentation-flask.
   ([#1138](https://github.com/open-telemetry/opentelemetry-python/pull/1138))
 - Update sampling result names
   ([#1128](https://github.com/open-telemetry/opentelemetry-python/pull/1128))
@@ -923,7 +930,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#1203](https://github.com/open-telemetry/opentelemetry-python/pull/1203))
 - Protect access to Span implementation
   ([#1188](https://github.com/open-telemetry/opentelemetry-python/pull/1188))
-- `start_as_current_span` and `use_span` can now optionally auto-record any exceptions raised inside the context manager.
+- `start_as_current_span` and `use_span` can now optionally auto-record any exceptions raised inside the context
+  manager.
   ([#1162](https://github.com/open-telemetry/opentelemetry-python/pull/1162))
 
 ## Version 0.13b0 (2020-09-17)
@@ -1000,7 +1008,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#959](https://github.com/open-telemetry/opentelemetry-python/pull/959))
 - Update default port to 55680
   ([#977](https://github.com/open-telemetry/opentelemetry-python/pull/977))
-- Add proper length zero padding to hex strings of traceId, spanId, parentId sent on the wire, for compatibility with jaeger-collector
+- Add proper length zero padding to hex strings of traceId, spanId, parentId sent on the wire, for compatibility with
+  jaeger-collector
   ([#908](https://github.com/open-telemetry/opentelemetry-python/pull/908))
 - Send start_timestamp and convert labels to strings
   ([#937](https://github.com/open-telemetry/opentelemetry-python/pull/937))

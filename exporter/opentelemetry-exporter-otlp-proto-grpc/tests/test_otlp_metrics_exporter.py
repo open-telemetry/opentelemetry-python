@@ -12,8 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-many-lines
+import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
+
+# pylint: disable=too-many-lines
+from logging import WARNING
 from os.path import dirname
 from typing import List
 from unittest import TestCase
@@ -1484,6 +1488,49 @@ class TestOTLPMetricExporter(TestCase):
     def test_insecure_https_endpoint(self, mock_secure_channel):
         OTLPMetricExporter(endpoint="https://ab.c:123", insecure=True)
         mock_secure_channel.assert_called()
+
+    def test_shutdown(self):
+        add_MetricsServiceServicer_to_server(
+            MetricsServiceServicerSUCCESS(), self.server
+        )
+        self.assertEqual(
+            self.exporter.export(self.metrics["sum_int"]),
+            MetricExportResult.SUCCESS,
+        )
+        self.exporter.shutdown()
+        with self.assertLogs(level=WARNING) as warning:
+            self.assertEqual(
+                self.exporter.export(self.metrics["sum_int"]),
+                MetricExportResult.FAILURE,
+            )
+            self.assertEqual(
+                warning.records[0].message,
+                "Exporter already shutdown, ignoring batch",
+            )
+
+    def test_shutdown_wait_last_export(self):
+        add_MetricsServiceServicer_to_server(
+            MetricsServiceServicerUNAVAILABLEDelay(), self.server
+        )
+
+        export_thread = threading.Thread(
+            target=self.exporter.export, args=(self.metrics["sum_int"],)
+        )
+        export_thread.start()
+        try:
+            # pylint: disable=protected-access
+            self.assertTrue(self.exporter._export_lock.locked())
+            # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
+            start_time = time.time()
+            self.exporter.shutdown()
+            now = time.time()
+            self.assertGreaterEqual(now, (start_time + 30 / 1000))
+            # pylint: disable=protected-access
+            self.assertTrue(self.exporter._shutdown)
+            # pylint: disable=protected-access
+            self.assertFalse(self.exporter._export_lock.locked())
+        finally:
+            export_thread.join()
 
 
 def _resource_metrics(

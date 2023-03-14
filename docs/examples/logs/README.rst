@@ -34,7 +34,7 @@ Then start the Docker container:
 
     docker run \
         -p 4317:4317 \
-        -v $(pwd)/otel-collector-config.yaml:/etc/otel/config.yaml \
+        -v $(pwd)/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml \
         otel/opentelemetry-collector-contrib:latest
 
 .. code-block:: sh
