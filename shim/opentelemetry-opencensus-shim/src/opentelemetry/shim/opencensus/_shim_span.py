@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import logging
+from datetime import datetime
 from typing import TYPE_CHECKING
 
 import wrapt
@@ -41,6 +42,20 @@ _MESSAGE_EVENT_TYPE_STR_MAPPING = {
     1: "SENT",
     2: "RECEIVED",
 }
+
+
+def _opencensus_time_to_nanos(timestamp: str) -> int:
+    """Converts an OpenCensus formatted time string (ISO 8601 with Z) to time.time_ns style
+    unix timestamp
+    """
+    # format taken from
+    # https://github.com/census-instrumentation/opencensus-python/blob/c38c71b9285e71de94d0185ff3c5bf65ee163345/opencensus/common/utils/__init__.py#L76
+    #
+    # datetime.fromisoformat() does not work with the added "Z" until python 3.11
+    seconds_float = datetime.strptime(
+        timestamp, "%Y-%m-%dT%H:%M:%S.%fZ"
+    ).timestamp()
+    return round(seconds_float * 1e9)
 
 
 # pylint: disable=abstract-method
@@ -89,9 +104,11 @@ class ShimSpan(wrapt.ObjectProxy):
                 _MESSAGE_EVENT_ATTRIBUTE_KEY_SIZE_COMPRESSED
             ] = message_event.compressed_size_bytes
 
+        timestamp = _opencensus_time_to_nanos(message_event.timestamp)
         self._self_otel_span.add_event(
             str(message_event.id),
             attrs,
+            timestamp=timestamp,
         )
 
     # pylint: disable=no-self-use

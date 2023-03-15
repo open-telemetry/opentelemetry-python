@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import logging
+from logging import getLogger
 from typing import Optional
 
 from opencensus.trace.tracer import Tracer
@@ -22,16 +22,16 @@ from opentelemetry import trace
 from opentelemetry.shim.opencensus._shim_tracer import ShimTracer
 from opentelemetry.shim.opencensus.version import __version__
 
-_logger = logging.getLogger(__name__)
+_logger = getLogger(__name__)
 
 
 def install_shim(
     tracer_provider: Optional[trace.TracerProvider] = None,
 ) -> None:
-    if tracer_provider is None:
-        tracer_provider = trace.get_tracer_provider()
-    otel_tracer = tracer_provider.get_tracer(
-        "opentelemetry-opencensus-shim", __version__
+    otel_tracer = trace.get_tracer(
+        "opentelemetry-opencensus-shim",
+        __version__,
+        tracer_provider=tracer_provider,
     )
     shim_tracer = ShimTracer(NoopTracer(), otel_tracer=otel_tracer)
 
@@ -48,6 +48,7 @@ def install_shim(
     # We monkeypatch Tracer.tracer with a property to return the shim instance instead. This
     # makes all instances of Tracer (even those already created) use the ShimTracer singleton.
     Tracer.tracer = property(fget_tracer, fset_tracer)
+    _logger.info("Installed OpenCensus shim")
 
 
 def uninstall_shim() -> None:

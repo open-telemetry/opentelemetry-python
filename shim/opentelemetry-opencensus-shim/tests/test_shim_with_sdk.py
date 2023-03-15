@@ -29,6 +29,8 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
 from opentelemetry.sdk.trace.sampling import ALWAYS_ON
 from opentelemetry.shim.opencensus import install_shim, uninstall_shim
 
+_TIMESTAMP = datetime.fromisoformat("2023-01-01T00:00:00.000000")
+
 
 class TestShimWithSdk(unittest.TestCase):
     def setUp(self):
@@ -110,12 +112,12 @@ class TestShimWithSdk(unittest.TestCase):
         with oc_tracer.start_span("span1") as span:
             span.add_message_event(
                 time_event.MessageEvent(
-                    datetime.now(), "id_sent", time_event.Type.SENT, "20", "10"
+                    _TIMESTAMP, "id_sent", time_event.Type.SENT, "20", "10"
                 )
             )
             span.add_message_event(
                 time_event.MessageEvent(
-                    datetime.now(),
+                    _TIMESTAMP,
                     "id_received",
                     time_event.Type.RECEIVED,
                     "20",
@@ -124,7 +126,7 @@ class TestShimWithSdk(unittest.TestCase):
             )
             span.add_message_event(
                 time_event.MessageEvent(
-                    datetime.now(),
+                    _TIMESTAMP,
                     "id_unspecified",
                     None,
                     "20",
