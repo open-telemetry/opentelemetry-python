@@ -295,8 +295,20 @@ def _import_sampler(sampler_name: str) -> Optional[Sampler]:
         return None
     try:
         sampler_factory = _import_sampler_factory(sampler_name)
-        sampler_arg = os.getenv(OTEL_TRACES_SAMPLER_ARG, "")
-        sampler = sampler_factory(sampler_arg)
+        arg = None
+        if sampler_name in ("traceidratio", "parentbased_traceidratio"):
+            try:
+                rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG))
+            except (ValueError, TypeError):
+                _logger.warning(
+                    "Could not convert TRACES_SAMPLER_ARG to float. Using default value 1.0."
+                )
+                rate = 1.0
+            arg = rate
+        else:
+            arg = os.getenv(OTEL_TRACES_SAMPLER_ARG)
+
+        sampler = sampler_factory(arg)
         if not isinstance(sampler, Sampler):
             message = f"Sampler factory, {sampler_factory}, produced output, {sampler}, which is not a Sampler."
             _logger.warning(message)
@@ -304,7 +316,7 @@ def _import_sampler(sampler_name: str) -> Optional[Sampler]:
         return sampler
     except Exception as exc:  # pylint: disable=broad-except
         _logger.warning(
-            "Using default sampler. Failed to initialize custom sampler, %s: %s",
+            "Using default sampler. Failed to initialize sampler, %s: %s",
             sampler_name,
             exc,
         )
