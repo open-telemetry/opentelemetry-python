@@ -1534,6 +1534,7 @@ class TestOTLPMetricExporter(TestCase):
             export_thread.join()
 
     def test_aggregation_temporality(self):
+        # pylint: disable=protected-access
 
         otlp_metric_exporter = OTLPMetricExporter()
 
