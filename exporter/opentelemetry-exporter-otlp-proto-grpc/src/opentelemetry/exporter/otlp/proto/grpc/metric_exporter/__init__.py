@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import dataclasses
+from dataclasses import replace
 from logging import getLogger
 from os import environ
 from typing import Dict, Iterable, List, Optional, Sequence
@@ -120,15 +120,17 @@ class OTLPMetricExporter(
         )
 
         instrument_class_temporality = {}
-        if (
+
+        otel_exporter_otlp_metrics_temporality_preference = (
             environ.get(
                 OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
                 "CUMULATIVE",
             )
             .upper()
             .strip()
-            == "DELTA"
-        ):
+        )
+
+        if otel_exporter_otlp_metrics_temporality_preference == "DELTA":
             instrument_class_temporality = {
                 Counter: AggregationTemporality.DELTA,
                 UpDownCounter: AggregationTemporality.CUMULATIVE,
@@ -137,7 +139,27 @@ class OTLPMetricExporter(
                 ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             }
+
+        elif otel_exporter_otlp_metrics_temporality_preference == "LOWMEMORY":
+            instrument_class_temporality = {
+                Counter: AggregationTemporality.DELTA,
+                UpDownCounter: AggregationTemporality.CUMULATIVE,
+                Histogram: AggregationTemporality.DELTA,
+                ObservableCounter: AggregationTemporality.CUMULATIVE,
+                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+                ObservableGauge: AggregationTemporality.CUMULATIVE,
+            }
+
         else:
+            if otel_exporter_otlp_metrics_temporality_preference != (
+                "CUMULATIVE"
+            ):
+                _logger.warning(
+                    "Unrecognized OTEL_EXPORTER_METRICS_TEMPORALITY_PREFERENCE"
+                    " value found: "
+                    f"{otel_exporter_otlp_metrics_temporality_preference}, "
+                    "using CUMULATIVE"
+                )
             instrument_class_temporality = {
                 Counter: AggregationTemporality.CUMULATIVE,
                 UpDownCounter: AggregationTemporality.CUMULATIVE,
@@ -146,6 +168,7 @@ class OTLPMetricExporter(
                 ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             }
+
         instrument_class_temporality.update(preferred_temporality or {})
 
         MetricExporter.__init__(
@@ -359,7 +382,7 @@ class OTLPMetricExporter(
         for resource_metrics in metrics_data.resource_metrics:
             split_scope_metrics: List[ScopeMetrics] = []
             split_resource_metrics.append(
-                dataclasses.replace(
+                replace(
                     resource_metrics,
                     scope_metrics=split_scope_metrics,
                 )
@@ -367,7 +390,7 @@ class OTLPMetricExporter(
             for scope_metrics in resource_metrics.scope_metrics:
                 split_metrics: List[Metric] = []
                 split_scope_metrics.append(
-                    dataclasses.replace(
+                    replace(
                         scope_metrics,
                         metrics=split_metrics,
                     )
@@ -375,9 +398,9 @@ class OTLPMetricExporter(
                 for metric in scope_metrics.metrics:
                     split_data_points: List[DataPointT] = []
                     split_metrics.append(
-                        dataclasses.replace(
+                        replace(
                             metric,
-                            data=dataclasses.replace(
+                            data=replace(
                                 metric.data,
                                 data_points=split_data_points,
                             ),
@@ -396,22 +419,22 @@ class OTLPMetricExporter(
                             batch_size = 0
                             split_data_points = []
                             split_metrics = [
-                                dataclasses.replace(
+                                replace(
                                     metric,
-                                    data=dataclasses.replace(
+                                    data=replace(
                                         metric.data,
                                         data_points=split_data_points,
                                     ),
                                 )
                             ]
                             split_scope_metrics = [
-                                dataclasses.replace(
+                                replace(
                                     scope_metrics,
                                     metrics=split_metrics,
                                 )
                             ]
                             split_resource_metrics = [
-                                dataclasses.replace(
+                                replace(
                                     resource_metrics,
                                     scope_metrics=split_scope_metrics,
                                 )
