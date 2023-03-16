@@ -394,6 +394,26 @@ class ParentBasedTraceIdRatio(ParentBased):
         super().__init__(root=root)
 
 
+class _AlwaysOff(StaticSampler):
+    def __init__(self, _):
+        super().__init__(Decision.DROP)
+
+
+class _AlwaysOn(StaticSampler):
+    def __init__(self, _):
+        super().__init__(Decision.RECORD_AND_SAMPLE)
+
+
+class _ParentBasedAlwaysOff(ParentBased):
+    def __init__(self, _):
+        super().__init__(ALWAYS_OFF)
+
+
+class _ParentBasedAlwaysOn(ParentBased):
+    def __init__(self, _):
+        super().__init__(ALWAYS_ON)
+
+
 _KNOWN_SAMPLERS = {
     "always_on": ALWAYS_ON,
     "always_off": ALWAYS_OFF,
@@ -415,7 +435,7 @@ def _get_from_env_or_default() -> Sampler:
     if trace_sampler in ("traceidratio", "parentbased_traceidratio"):
         try:
             rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG))
-        except ValueError:
+        except (ValueError, TypeError):
             _logger.warning("Could not convert TRACES_SAMPLER_ARG to float.")
             rate = 1.0
         return _KNOWN_SAMPLERS[trace_sampler](rate)
