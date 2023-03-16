@@ -12,6 +12,8 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# FIXME: Use importlib.metadata when support for 3.11 is dropped if the rest of
+# the supported versions at that time have the same API.
 from importlib_metadata import (  # type: ignore
     EntryPoint,
     EntryPoints,
