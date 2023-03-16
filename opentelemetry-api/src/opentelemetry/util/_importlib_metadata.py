@@ -12,27 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sys import version_info
+# FIXME: Use importlib.metadata when support for 3.11 is dropped if the rest of
+# the supported versions at that time have the same API.
+from importlib_metadata import (  # type: ignore
+    EntryPoint,
+    EntryPoints,
+    entry_points,
+    version,
+)
 
-# FIXME remove this when support for 3.7 is dropped.
-if version_info.minor == 7:
-    # pylint: disable=import-error
-    from importlib_metadata import entry_points, version  # type: ignore
+# The importlib-metadata library has introduced breaking changes before to its
+# API, this module is kept just to act as a layer between the
+# importlib-metadata library and our project if in any case it is necessary to
+# do so.
 
-# FIXME remove this file when support for 3.9 is dropped.
-elif version_info.minor in (8, 9):
-    # pylint: disable=import-error
-    from importlib.metadata import (
-        entry_points as importlib_metadata_entry_points,
-    )
-    from importlib.metadata import version
-
-    def entry_points(group: str, name: str):  # type: ignore
-        for entry_point in importlib_metadata_entry_points()[group]:
-            if entry_point.name == name:
-                yield entry_point
-
-else:
-    from importlib.metadata import entry_points, version
-
-__all__ = ["entry_points", "version"]
+__all__ = ["entry_points", "version", "EntryPoint", "EntryPoints"]
