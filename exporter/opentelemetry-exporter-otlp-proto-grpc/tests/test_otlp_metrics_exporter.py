@@ -18,6 +18,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 # pylint: disable=too-many-lines
 from logging import WARNING
+from os import environ
 from os.path import dirname
 from typing import List
 from unittest import TestCase
@@ -1531,6 +1532,112 @@ class TestOTLPMetricExporter(TestCase):
             self.assertFalse(self.exporter._export_lock.locked())
         finally:
             export_thread.join()
+
+    def test_aggregation_temporality(self):
+        # pylint: disable=protected-access
+
+        otlp_metric_exporter = OTLPMetricExporter()
+
+        for (
+            temporality
+        ) in otlp_metric_exporter._preferred_temporality.values():
+            self.assertEqual(temporality, AggregationTemporality.CUMULATIVE)
+
+        with patch.dict(
+            environ,
+            {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "CUMULATIVE"},
+        ):
+
+            otlp_metric_exporter = OTLPMetricExporter()
+
+            for (
+                temporality
+            ) in otlp_metric_exporter._preferred_temporality.values():
+                self.assertEqual(
+                    temporality, AggregationTemporality.CUMULATIVE
+                )
+
+        with patch.dict(
+            environ, {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "ABC"}
+        ):
+
+            with self.assertLogs(level=WARNING):
+                otlp_metric_exporter = OTLPMetricExporter()
+
+            for (
+                temporality
+            ) in otlp_metric_exporter._preferred_temporality.values():
+                self.assertEqual(
+                    temporality, AggregationTemporality.CUMULATIVE
+                )
+
+        with patch.dict(
+            environ,
+            {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "DELTA"},
+        ):
+
+            otlp_metric_exporter = OTLPMetricExporter()
+
+            self.assertEqual(
+                otlp_metric_exporter._preferred_temporality[Counter],
+                AggregationTemporality.DELTA,
+            )
+            self.assertEqual(
+                otlp_metric_exporter._preferred_temporality[UpDownCounter],
+                AggregationTemporality.CUMULATIVE,
+            )
+            self.assertEqual(
+                otlp_metric_exporter._preferred_temporality[Histogram],
+                AggregationTemporality.DELTA,
+            )
+            self.assertEqual(
+                otlp_metric_exporter._preferred_temporality[ObservableCounter],
+                AggregationTemporality.DELTA,
+            )
+            self.assertEqual(
+                otlp_metric_exporter._preferred_temporality[
+                    ObservableUpDownCounter
+                ],
+                AggregationTemporality.CUMULATIVE,
+            )
+            self.assertEqual(
+                otlp_metric_exporter._preferred_temporality[ObservableGauge],
+                AggregationTemporality.CUMULATIVE,
+            )
+
+        with patch.dict(
+            environ,
+            {OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE: "LOWMEMORY"},
+        ):
+
+            otlp_metric_exporter = OTLPMetricExporter()
+
+            self.assertEqual(
+                otlp_metric_exporter._preferred_temporality[Counter],
+                AggregationTemporality.DELTA,
+            )
+            self.assertEqual(
+                otlp_metric_exporter._preferred_temporality[UpDownCounter],
+                AggregationTemporality.CUMULATIVE,
+            )
+            self.assertEqual(
+                otlp_metric_exporter._preferred_temporality[Histogram],
+                AggregationTemporality.DELTA,
+            )
+            self.assertEqual(
+                otlp_metric_exporter._preferred_temporality[ObservableCounter],
+                AggregationTemporality.CUMULATIVE,
+            )
+            self.assertEqual(
+                otlp_metric_exporter._preferred_temporality[
+                    ObservableUpDownCounter
+                ],
+                AggregationTemporality.CUMULATIVE,
+            )
+            self.assertEqual(
+                otlp_metric_exporter._preferred_temporality[ObservableGauge],
+                AggregationTemporality.CUMULATIVE,
+            )
 
 
 def _resource_metrics(

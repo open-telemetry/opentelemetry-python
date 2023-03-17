@@ -138,15 +138,17 @@ class OTLPMetricExporter(MetricExporter):
             )
 
         instrument_class_temporality = {}
-        if (
+
+        otel_exporter_otlp_metrics_temporality_preference = (
             environ.get(
                 OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
                 "CUMULATIVE",
             )
             .upper()
             .strip()
-            == "DELTA"
-        ):
+        )
+
+        if otel_exporter_otlp_metrics_temporality_preference == "DELTA":
             instrument_class_temporality = {
                 Counter: AggregationTemporality.DELTA,
                 UpDownCounter: AggregationTemporality.CUMULATIVE,
@@ -155,7 +157,27 @@ class OTLPMetricExporter(MetricExporter):
                 ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             }
+
+        elif otel_exporter_otlp_metrics_temporality_preference == "LOWMEMORY":
+            instrument_class_temporality = {
+                Counter: AggregationTemporality.DELTA,
+                UpDownCounter: AggregationTemporality.CUMULATIVE,
+                Histogram: AggregationTemporality.DELTA,
+                ObservableCounter: AggregationTemporality.CUMULATIVE,
+                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+                ObservableGauge: AggregationTemporality.CUMULATIVE,
+            }
+
         else:
+            if otel_exporter_otlp_metrics_temporality_preference != (
+                "CUMULATIVE"
+            ):
+                _logger.warning(
+                    "Unrecognized OTEL_EXPORTER_METRICS_TEMPORALITY_PREFERENCE"
+                    " value found: "
+                    f"{otel_exporter_otlp_metrics_temporality_preference}, "
+                    "using CUMULATIVE"
+                )
             instrument_class_temporality = {
                 Counter: AggregationTemporality.CUMULATIVE,
                 UpDownCounter: AggregationTemporality.CUMULATIVE,
@@ -164,6 +186,7 @@ class OTLPMetricExporter(MetricExporter):
                 ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             }
+
         instrument_class_temporality.update(preferred_temporality or {})
 
         MetricExporter.__init__(
