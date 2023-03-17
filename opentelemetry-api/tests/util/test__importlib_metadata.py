@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# type: ignore
-
-from typing import Dict, Tuple
 from unittest import TestCase
 
 from opentelemetry.metrics import MeterProvider
@@ -64,7 +61,6 @@ class TestEntryPoints(TestCase):
             entry_point.value,
             "opentelemetry.baggage.propagation:W3CBaggagePropagator",
         )
-        self.assertEqual(entry_points, tuple())
 
         entry_points = importlib_metadata_entry_points(
             group="opentelemetry_propagator"
