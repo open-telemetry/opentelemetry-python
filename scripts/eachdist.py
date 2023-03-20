@@ -576,6 +576,7 @@ def update_version_files(targets, version, packages):
 
 def update_dependencies(targets, version, packages):
     print("updating dependencies")
+    targets = filter_packages(targets, packages)
     for pkg in packages:
         update_files(
             targets,
