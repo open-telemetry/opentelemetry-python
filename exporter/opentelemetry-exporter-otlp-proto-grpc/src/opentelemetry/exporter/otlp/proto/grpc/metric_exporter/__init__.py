@@ -14,7 +14,8 @@
 import dataclasses
 from logging import getLogger
 from os import environ
-from typing import Dict, Iterable, List, Optional, Sequence
+from typing import Dict, Iterable, List, Optional, Tuple, Union
+from typing import Sequence as TypingSequence
 from grpc import ChannelCredentials, Compression
 from opentelemetry.sdk.metrics._internal.aggregation import Aggregation
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
@@ -87,7 +88,9 @@ class OTLPMetricExporter(
         endpoint: Optional[str] = None,
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
-        headers: Optional[Sequence] = None,
+        headers: Optional[
+            Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
+        ] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
         preferred_temporality: Dict[type, AggregationTemporality] = None,
