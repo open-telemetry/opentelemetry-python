@@ -576,9 +576,11 @@ The :envvar:`OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE` environment
 variable allows users to set the default aggregation temporality policy to use
 on the basis of instrument kind. The valid (case-insensitive) values are:
 
-``CUMULATIVE``: Choose ``CUMULATIVE`` aggregation temporality for all instrument kinds.
-``DELTA``: Choose ``DELTA`` aggregation temporality for ``Counter``, ``Asynchronous Counter`` and ``Histogram``.
-Choose ``CUMULATIVE`` aggregation temporality for ``UpDownCounter`` and ``Asynchronous UpDownCounter``.
+``CUMULATIVE``: Use ``CUMULATIVE`` aggregation temporality for all instrument kinds.
+``DELTA``: Use ``DELTA`` aggregation temporality for ``Counter``, ``Asynchronous Counter`` and ``Histogram``.
+Use ``CUMULATIVE`` aggregation temporality for ``UpDownCounter`` and ``Asynchronous UpDownCounter``.
+``LOWMEMORY``: Use ``DELTA`` aggregation temporality for ``Counter`` and ``Histogram``.
+Use ``CUMULATIVE`` aggregation temporality for ``UpDownCounter``, ``AsynchronousCounter`` and ``Asynchronous UpDownCounter``.
 """
 
 OTEL_EXPORTER_JAEGER_GRPC_INSECURE = "OTEL_EXPORTER_JAEGER_GRPC_INSECURE"

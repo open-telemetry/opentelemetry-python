@@ -610,6 +610,7 @@ def update_dependency_requirements(deps, pkg, version):
 
 def update_dependencies(targets, version, packages):
     print("updating dependencies")
+    targets = filter_packages(targets, packages)
     for pkg in packages:
         for target in targets:
             curr_file = find("pyproject.toml", target)

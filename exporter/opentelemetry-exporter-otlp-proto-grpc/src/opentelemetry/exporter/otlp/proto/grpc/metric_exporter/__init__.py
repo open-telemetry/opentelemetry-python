@@ -11,7 +11,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import dataclasses
+from dataclasses import replace
 from logging import getLogger
 from os import environ
 from typing import Dict, Iterable, List, Optional, Sequence
@@ -60,6 +60,7 @@ from opentelemetry.sdk.metrics.export import (
     ResourceMetrics,
     ScopeMetrics,
     Sum,
+    ExponentialHistogram as ExponentialHistogramType,
 )
 
 _logger = getLogger(__name__)
@@ -119,15 +120,17 @@ class OTLPMetricExporter(
         )
 
         instrument_class_temporality = {}
-        if (
+
+        otel_exporter_otlp_metrics_temporality_preference = (
             environ.get(
                 OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
                 "CUMULATIVE",
             )
             .upper()
             .strip()
-            == "DELTA"
-        ):
+        )
+
+        if otel_exporter_otlp_metrics_temporality_preference == "DELTA":
             instrument_class_temporality = {
                 Counter: AggregationTemporality.DELTA,
                 UpDownCounter: AggregationTemporality.CUMULATIVE,
@@ -136,7 +139,27 @@ class OTLPMetricExporter(
                 ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             }
+
+        elif otel_exporter_otlp_metrics_temporality_preference == "LOWMEMORY":
+            instrument_class_temporality = {
+                Counter: AggregationTemporality.DELTA,
+                UpDownCounter: AggregationTemporality.CUMULATIVE,
+                Histogram: AggregationTemporality.DELTA,
+                ObservableCounter: AggregationTemporality.CUMULATIVE,
+                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
+                ObservableGauge: AggregationTemporality.CUMULATIVE,
+            }
+
         else:
+            if otel_exporter_otlp_metrics_temporality_preference != (
+                "CUMULATIVE"
+            ):
+                _logger.warning(
+                    "Unrecognized OTEL_EXPORTER_METRICS_TEMPORALITY_PREFERENCE"
+                    " value found: "
+                    f"{otel_exporter_otlp_metrics_temporality_preference}, "
+                    "using CUMULATIVE"
+                )
             instrument_class_temporality = {
                 Counter: AggregationTemporality.CUMULATIVE,
                 UpDownCounter: AggregationTemporality.CUMULATIVE,
@@ -145,6 +168,7 @@ class OTLPMetricExporter(
                 ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             }
+
         instrument_class_temporality.update(preferred_temporality or {})
 
         MetricExporter.__init__(
@@ -266,6 +290,51 @@ class OTLPMetricExporter(
                                 metric.data.is_monotonic
                             )
                             pb2_metric.sum.data_points.append(pt)
+
+                    elif isinstance(metric.data, ExponentialHistogramType):
+                        for data_point in metric.data.data_points:
+
+                            if data_point.positive.bucket_counts:
+                                positive = pb2.ExponentialHistogramDataPoint.Buckets(
+                                    offset=data_point.positive.offset,
+                                    bucket_counts=data_point.positive.bucket_counts,
+                                )
+                            else:
+                                positive = None
+
+                            if data_point.negative.bucket_counts:
+                                negative = pb2.ExponentialHistogramDataPoint.Buckets(
+                                    offset=data_point.negative.offset,
+                                    bucket_counts=data_point.negative.bucket_counts,
+                                )
+                            else:
+                                negative = None
+
+                            pt = pb2.ExponentialHistogramDataPoint(
+                                attributes=self._translate_attributes(
+                                    data_point.attributes
+                                ),
+                                time_unix_nano=data_point.time_unix_nano,
+                                start_time_unix_nano=(
+                                    data_point.start_time_unix_nano
+                                ),
+                                count=data_point.count,
+                                sum=data_point.sum,
+                                scale=data_point.scale,
+                                zero_count=data_point.zero_count,
+                                positive=positive,
+                                negative=negative,
+                                flags=data_point.flags,
+                                max=data_point.max,
+                                min=data_point.min,
+                            )
+                            pb2_metric.exponential_histogram.aggregation_temporality = (
+                                metric.data.aggregation_temporality
+                            )
+                            pb2_metric.exponential_histogram.data_points.append(
+                                pt
+                            )
+
                     else:
                         _logger.warning(
                             "unsupported data type %s",
@@ -313,7 +382,7 @@ class OTLPMetricExporter(
         for resource_metrics in metrics_data.resource_metrics:
             split_scope_metrics: List[ScopeMetrics] = []
             split_resource_metrics.append(
-                dataclasses.replace(
+                replace(
                     resource_metrics,
                     scope_metrics=split_scope_metrics,
                 )
@@ -321,7 +390,7 @@ class OTLPMetricExporter(
             for scope_metrics in resource_metrics.scope_metrics:
                 split_metrics: List[Metric] = []
                 split_scope_metrics.append(
-                    dataclasses.replace(
+                    replace(
                         scope_metrics,
                         metrics=split_metrics,
                     )
@@ -329,9 +398,9 @@ class OTLPMetricExporter(
                 for metric in scope_metrics.metrics:
                     split_data_points: List[DataPointT] = []
                     split_metrics.append(
-                        dataclasses.replace(
+                        replace(
                             metric,
-                            data=dataclasses.replace(
+                            data=replace(
                                 metric.data,
                                 data_points=split_data_points,
                             ),
@@ -350,22 +419,22 @@ class OTLPMetricExporter(
                             batch_size = 0
                             split_data_points = []
                             split_metrics = [
-                                dataclasses.replace(
+                                replace(
                                     metric,
-                                    data=dataclasses.replace(
+                                    data=replace(
                                         metric.data,
                                         data_points=split_data_points,
                                     ),
                                 )
                             ]
                             split_scope_metrics = [
-                                dataclasses.replace(
+                                replace(
                                     scope_metrics,
                                     metrics=split_metrics,
                                 )
                             ]
                             split_resource_metrics = [
-                                dataclasses.replace(
+                                replace(
                                     resource_metrics,
                                     scope_metrics=split_scope_metrics,
                                 )
@@ -387,7 +456,7 @@ class OTLPMetricExporter(
             yield MetricsData(resource_metrics=split_resource_metrics)
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
-        pass
+        OTLPExporterMixin.shutdown(self, timeout_millis=timeout_millis)
 
     @property
     def _exporting(self) -> str:
