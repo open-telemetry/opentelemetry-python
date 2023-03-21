@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-## Version 1.17.0/0.38b0 (2023-03-20)
+## Version 1.17.0/0.38b0 (2023-03-21)
 
 - Implement LowMemory temporality
   ([#3223](https://github.com/open-telemetry/opentelemetry-python/pull/3223))
