@@ -2,3 +2,6 @@ opentelemetry-api
 opentelemetry-sdk
 opentelemetry-exporter-jaeger
 opentelemetry-opencensus-shim
+opentelemetry-instrumentation-sqlite3
+opencensus
+opencensus-ext-flask
