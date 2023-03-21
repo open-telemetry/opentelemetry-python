@@ -25,8 +25,8 @@ from typing import IO, Callable, Deque, List, Optional, Sequence
 
 from opentelemetry.context import (
     _SUPPRESS_INSTRUMENTATION_KEY,
-    attach, 
-    detach, 
+    attach,
+    detach,
     set_value,
 )
 from opentelemetry.sdk._logs import LogData, LogRecord, LogRecordProcessor
