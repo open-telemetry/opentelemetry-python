@@ -16,15 +16,21 @@ import logging
 import unittest
 from unittest.mock import patch
 
+from opencensus.trace import trace_options, tracestate
 from opencensus.trace.blank_span import BlankSpan as OcBlankSpan
 from opencensus.trace.link import Link as OcLink
 from opencensus.trace.span import SpanKind
+from opencensus.trace.span_context import SpanContext
 from opencensus.trace.tracer import Tracer as OcTracer
 from opencensus.trace.tracers.noop_tracer import NoopTracer as OcNoopTracer
 
+from opentelemetry import context, trace
 from opentelemetry.shim.opencensus import install_shim, uninstall_shim
 from opentelemetry.shim.opencensus._shim_span import ShimSpan
-from opentelemetry.shim.opencensus._shim_tracer import ShimTracer
+from opentelemetry.shim.opencensus._shim_tracer import (
+    ShimTracer,
+    set_oc_span_in_context,
+)
 
 
 class TestShim(unittest.TestCase):
@@ -126,3 +132,78 @@ class TestShim(unittest.TestCase):
                 pass
 
         spy_otel_span.end.assert_not_called()
+
+    def test_set_oc_span_in_context_no_span_id(self):
+        # This won't create a span ID and is the default behavior if you don't pass a context
+        # when creating the Tracer
+        ctx = set_oc_span_in_context(SpanContext(), context.get_current())
+        self.assertIs(trace.get_current_span(ctx), trace.INVALID_SPAN)
+
+    def test_set_oc_span_in_context_ids(self):
+        ctx = set_oc_span_in_context(
+            SpanContext(
+                trace_id="ace0216bab2b7ba249761dbb19c871b7",
+                span_id="1fead89ecf242225",
+            ),
+            context.get_current(),
+        )
+        span_ctx = trace.get_current_span(ctx).get_span_context()
+
+        self.assertEqual(
+            trace.format_trace_id(span_ctx.trace_id),
+            "ace0216bab2b7ba249761dbb19c871b7",
+        )
+        self.assertEqual(
+            trace.format_span_id(span_ctx.span_id), "1fead89ecf242225"
+        )
+
+    def test_set_oc_span_in_context_remote(self):
+        for is_from_remote in True, False:
+            ctx = set_oc_span_in_context(
+                SpanContext(
+                    trace_id="ace0216bab2b7ba249761dbb19c871b7",
+                    span_id="1fead89ecf242225",
+                    from_header=is_from_remote,
+                ),
+                context.get_current(),
+            )
+            span_ctx = trace.get_current_span(ctx).get_span_context()
+            self.assertEqual(span_ctx.is_remote, is_from_remote)
+
+    def test_set_oc_span_in_context_traceoptions(self):
+        for oc_trace_options, expect in [
+            # Not sampled
+            (
+                trace_options.TraceOptions("0"),
+                trace.TraceFlags(trace.TraceFlags.DEFAULT),
+            ),
+            # Sampled
+            (
+                trace_options.TraceOptions("1"),
+                trace.TraceFlags(trace.TraceFlags.SAMPLED),
+            ),
+        ]:
+            ctx = set_oc_span_in_context(
+                SpanContext(
+                    trace_id="ace0216bab2b7ba249761dbb19c871b7",
+                    span_id="1fead89ecf242225",
+                    trace_options=oc_trace_options,
+                ),
+                context.get_current(),
+            )
+            span_ctx = trace.get_current_span(ctx).get_span_context()
+            self.assertEqual(span_ctx.trace_flags, expect)
+
+    def test_set_oc_span_in_context_tracestate(self):
+        ctx = set_oc_span_in_context(
+            SpanContext(
+                trace_id="ace0216bab2b7ba249761dbb19c871b7",
+                span_id="1fead89ecf242225",
+                tracestate=tracestate.Tracestate({"hello": "tracestate"}),
+            ),
+            context.get_current(),
+        )
+        span_ctx = trace.get_current_span(ctx).get_span_context()
+        self.assertEqual(
+            span_ctx.trace_state, trace.TraceState([("hello", "tracestate")])
+        )

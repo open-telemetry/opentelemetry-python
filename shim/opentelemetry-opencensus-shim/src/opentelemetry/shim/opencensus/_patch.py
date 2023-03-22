@@ -33,10 +33,15 @@ def install_shim(
         __version__,
         tracer_provider=tracer_provider,
     )
-    shim_tracer = ShimTracer(NoopTracer(), otel_tracer=otel_tracer)
 
-    def fget_tracer(self) -> ShimTracer:
-        return shim_tracer
+    def fget_tracer(self: Tracer) -> ShimTracer:
+        # self.span_context is how instrumentations pass propagated context into OpenCensus e.g.
+        # https://github.com/census-instrumentation/opencensus-python/blob/fd064f438c5e490d25b004ee2545be55d2e28679/contrib/opencensus-ext-flask/opencensus/ext/flask/flask_middleware.py#L147-L153
+        return ShimTracer(
+            NoopTracer(),
+            oc_span_context=self.span_context,
+            otel_tracer=otel_tracer,
+        )
 
     def fset_tracer(self, value) -> None:
         # ignore attempts to set the value
@@ -45,8 +50,8 @@ def install_shim(
     # Tracer's constructor sets self.tracer to either a NoopTracer or ContextTracer depending
     # on sampler:
     # https://github.com/census-instrumentation/opencensus-python/blob/2e08df591b507612b3968be8c2538dedbf8fab37/opencensus/trace/tracer.py#L63.
-    # We monkeypatch Tracer.tracer with a property to return the shim instance instead. This
-    # makes all instances of Tracer (even those already created) use the ShimTracer singleton.
+    # We monkeypatch Tracer.tracer with a property to return a shim instance instead. This
+    # makes all instances of Tracer (even those already created) use a ShimTracer.
     Tracer.tracer = property(fget_tracer, fset_tracer)
     _logger.info("Installed OpenCensus shim")
 
