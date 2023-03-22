@@ -6,8 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-- Fixes Tight Decoupling of OTLP Grpc Exporters
+
+- Fix headers types mismatch for OTLP Exporters
   ([#3226](https://github.com/open-telemetry/opentelemetry-python/pull/3226))
+
+## Version 1.17.0/0.38b0 (2023-03-22)
+
+- Implement LowMemory temporality
+  ([#3223](https://github.com/open-telemetry/opentelemetry-python/pull/3223))
 - PeriodicExportingMetricReader will continue if collection times out 
   ([#3100](https://github.com/open-telemetry/opentelemetry-python/pull/3100))
 - Fix formatting of ConsoleMetricExporter.
@@ -18,6 +24,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3138](https://github.com/open-telemetry/opentelemetry-python/pull/3138))
 - Add exponential histogram
   ([#2964](https://github.com/open-telemetry/opentelemetry-python/pull/2964))
+- Add OpenCensus trace bridge/shim
+  ([#3210](https://github.com/open-telemetry/opentelemetry-python/pull/3210))
 
 ## Version 1.16.0/0.37b0 (2023-02-17)
 
