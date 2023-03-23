@@ -14,7 +14,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Implement LowMemory temporality
   ([#3223](https://github.com/open-telemetry/opentelemetry-python/pull/3223))
-- PeriodicExportingMetricReader will continue if collection times out 
+- PeriodicExportingMetricReader will continue if collection times out
   ([#3100](https://github.com/open-telemetry/opentelemetry-python/pull/3100))
 - Fix formatting of ConsoleMetricExporter.
   ([#3197](https://github.com/open-telemetry/opentelemetry-python/pull/3197))
