@@ -164,8 +164,11 @@ class Resource:
         Returns:
             The newly-created Resource.
         """
+
         if not attributes:
             attributes = {}
+
+        resource_detectors = []
 
         resource = _DEFAULT_RESOURCE
 
@@ -173,7 +176,7 @@ class Resource:
             OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "otel"
         ).split(","):
 
-            resource = resource.merge(
+            resource_detectors.append(
                 next(
                     iter(
                         entry_points(
@@ -181,12 +184,13 @@ class Resource:
                             name=resource_detector,
                         )
                     )
-                )
-                .load()()
-                .detect()
+                ).load()()
             )
 
-        resource = resource.merge(Resource(attributes, schema_url))
+        resource = get_aggregated_resources(
+            resource_detectors, _DEFAULT_RESOURCE
+        ).merge(Resource(attributes, schema_url))
+
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
             process_executable_name = resource.attributes.get(
