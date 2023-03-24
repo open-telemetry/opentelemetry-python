@@ -19,7 +19,7 @@ import logging
 import os
 import sys
 import threading
-from os import linesep
+from os import environ, linesep
 from time import time_ns
 from typing import IO, Callable, Deque, List, Optional, Sequence
 
@@ -30,6 +30,12 @@ from opentelemetry.context import (
     set_value,
 )
 from opentelemetry.sdk._logs import LogData, LogRecord, LogRecordProcessor
+from opentelemetry.sdk.environment_variables import (
+    OTEL_BLRP_EXPORT_TIMEOUT,
+    OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
+    OTEL_BLRP_MAX_QUEUE_SIZE,
+    OTEL_BLRP_SCHEDULE_DELAY,
+)
 from opentelemetry.util._once import Once
 
 _logger = logging.getLogger(__name__)
@@ -142,20 +148,66 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     """This is an implementation of LogRecordProcessor which creates batches of
     received logs in the export-friendly LogData representation and
     send to the configured LogExporter, as soon as they are emitted.
+
+    `BatchLogRecordProcessor` is configurable with the following environment
+    variables which correspond to constructor parameters:
+
+    - :envvar:`OTEL_BLRP_SCHEDULE_DELAY`
+    - :envvar:`OTEL_BLRP_MAX_QUEUE_SIZE`
+    - :envvar:`OTEL_BLRP_MAX_EXPORT_BATCH_SIZE`
+    - :envvar:`OTEL_BLRP_EXPORT_TIMEOUT`
     """
 
     def __init__(
         self,
         exporter: LogExporter,
-        schedule_delay_millis: int = 5000,
-        max_export_batch_size: int = 512,
-        export_timeout_millis: int = 30000,
+        max_queue_size: int = None,
+        schedule_delay_millis: int = None,
+        max_export_batch_size: int = None,
+        export_timeout_millis: int = None,
     ):
+        if max_queue_size is None:
+            max_queue_size = int(environ.get(OTEL_BLRP_MAX_QUEUE_SIZE, 2048))
+
+        if schedule_delay_millis is None:
+            schedule_delay_millis = int(
+                environ.get(OTEL_BLRP_SCHEDULE_DELAY, 5000)
+            )
+
+        if max_export_batch_size is None:
+            max_export_batch_size = int(
+                environ.get(OTEL_BLRP_MAX_EXPORT_BATCH_SIZE, 512)
+            )
+
+        if export_timeout_millis is None:
+            export_timeout_millis = int(
+                environ.get(OTEL_BLRP_EXPORT_TIMEOUT, 30000)
+            )
+
+        if max_queue_size <= 0:
+            raise ValueError("max_queue_size must be a positive integer.")
+
+        if schedule_delay_millis <= 0:
+            raise ValueError("schedule_delay_millis must be positive.")
+
+        if max_export_batch_size <= 0:
+            raise ValueError(
+                "max_export_batch_size must be a positive integer."
+            )
+
+        if max_export_batch_size > max_queue_size:
+            raise ValueError(
+                "max_export_batch_size must be less than or equal to max_queue_size."
+            )
+
         self._exporter = exporter
+        self._max_queue_size = max_queue_size
         self._schedule_delay_millis = schedule_delay_millis
         self._max_export_batch_size = max_export_batch_size
         self._export_timeout_millis = export_timeout_millis
-        self._queue = collections.deque()  # type: Deque[LogData]
+        self._queue = collections.deque(
+            [], max_queue_size
+        )  # type: Deque[LogData]
         self._worker_thread = threading.Thread(
             name="OtelBatchLogRecordProcessor",
             target=self.worker,

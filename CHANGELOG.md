@@ -30,6 +30,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2964](https://github.com/open-telemetry/opentelemetry-python/pull/2964))
 - Add OpenCensus trace bridge/shim
   ([#3210](https://github.com/open-telemetry/opentelemetry-python/pull/3210))
+- Add speced out environment variables and arguments for BatchLogRecordProcessor
+  ([#3237](https://github.com/open-telemetry/opentelemetry-python/pull/3237))
 
 ## Version 1.16.0/0.37b0 (2023-02-17)
 
