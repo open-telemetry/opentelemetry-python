@@ -56,7 +56,7 @@ jobs:
         path: |
           .tox
           ~/.cache/pip
-        key: v3-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini',
+        key: v4-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini',
           'dev-requirements.txt') }}-core
     - name: Windows does not let git check out files with long names
       if: ${{ matrix.os == 'windows-2019'}}
@@ -112,7 +112,7 @@ jobs:
         path: |
           .tox
           ~/.cache/pip
-        key: v3-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt')
+        key: v4-tox-cache-${{ matrix.tox-environment }}-${{ hashFiles('tox.ini', 'dev-requirements.txt')
           }}-core
     - name: run tox
       run: tox -e ${{ matrix.tox-environment }}
@@ -156,7 +156,7 @@ jobs:
         path: |
           .tox
           ~/.cache/pip
-        key: v3-tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os
+        key: v4-tox-cache-${{ matrix.python-version }}-${{ matrix.package }}-${{ matrix.os
           }}-${{ hashFiles('tox.ini', 'dev-requirements.txt') }}-contrib
     - name: run tox
       run: tox -f ${{ matrix.python-version }}-${{ matrix.package }}
