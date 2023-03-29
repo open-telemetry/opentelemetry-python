@@ -256,7 +256,7 @@ class OTLPExporterMixin(
         if self._headers is None:
             self._headers = tuple(_OTLP_GRPC_HEADERS)
         else:
-            self._headers = self._headers + tuple(_OTLP_GRPC_HEADERS)
+            self._headers = tuple(self._headers) + tuple(_OTLP_GRPC_HEADERS)
 
         self._timeout = timeout or int(
             environ.get(OTEL_EXPORTER_OTLP_TIMEOUT, 10)

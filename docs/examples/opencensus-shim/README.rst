@@ -44,23 +44,44 @@ Alternatively, you can install the Python dependencies separately:
         opentelemetry-api \
         opentelemetry-sdk \
         opentelemetry-exporter-jaeger \
-        opentelemetry-opencensus-shim
+        opentelemetry-opencensus-shim \
+        opentelemetry-instrumentation-sqlite3 \
+        opencensus \
+        opencensus-ext-flask
 
 
 Run the Application
 -------------------
 
-.. TODO implement the example
+Start the application in a terminal.
+
+.. code-block:: sh
+
+    flask --app app run -h 0.0.0.0
+
+Point your browser to the address printed out (probably http://127.0.0.1:5000). Alternatively, just use curl to trigger a request:
+
+.. code-block:: sh
+
+    curl http://127.0.0.1:5000
 
 Jaeger UI
 *********
 
-Open the Jaeger UI in your browser at
-`<http://localhost:16686>`_ and view traces for the
-"OpenCensus Shim Example" service.
+Open the Jaeger UI in your browser at `<http://localhost:16686>`_ and view traces for the
+"opencensus-shim-example-flask" service. Click on a span named "span" in the scatter plot. You
+will see a span tree with the following structure:
 
-Note that tags and logs (OpenCensus) and attributes and events (OpenTelemetry)
-from both tracing systems appear in the exported trace.
+* ``span``
+    * ``query movies from db``
+        * ``SELECT``
+    * ``build response html``
+
+The root span comes from OpenCensus Flask instrumentation. The children ``query movies from
+db`` and ``build response html`` come from the manual instrumentation using OpenTelemetry's
+:meth:`opentelemetry.trace.Tracer.start_as_current_span`. Finally, the ``SELECT`` span is
+created by OpenTelemetry's SQLite3 instrumentation. Everything is exported to Jaeger using the
+OpenTelemetry exporter.
 
 Useful links
 ------------

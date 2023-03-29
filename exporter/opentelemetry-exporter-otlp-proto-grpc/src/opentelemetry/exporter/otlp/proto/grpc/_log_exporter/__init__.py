@@ -12,7 +12,8 @@
 # limitations under the License.
 
 from os import environ
-from typing import Optional, Sequence
+from typing import Dict, Optional, Tuple, Union, Sequence
+from typing import Sequence as TypingSequence
 from grpc import ChannelCredentials, Compression
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     OTLPExporterMixin,
@@ -60,7 +61,9 @@ class OTLPLogExporter(
         endpoint: Optional[str] = None,
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
-        headers: Optional[Sequence] = None,
+        headers: Optional[
+            Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
+        ] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
