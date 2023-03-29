@@ -223,6 +223,24 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         self.assertEqual(log_record_processor._max_export_batch_size, 512)
         self.assertEqual(log_record_processor._export_timeout_millis, 30000)
 
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_BLRP_MAX_QUEUE_SIZE: "a",
+            OTEL_BLRP_SCHEDULE_DELAY: " ",
+            OTEL_BLRP_MAX_EXPORT_BATCH_SIZE: "One",
+            OTEL_BLRP_EXPORT_TIMEOUT: "@",
+        },
+    )
+    def test_args_env_var_value_error(self):
+        exporter = InMemoryLogExporter()
+        log_record_processor = BatchLogRecordProcessor(exporter)
+        self.assertEqual(log_record_processor._exporter, exporter)
+        self.assertEqual(log_record_processor._max_queue_size, 2048)
+        self.assertEqual(log_record_processor._schedule_delay_millis, 5000)
+        self.assertEqual(log_record_processor._max_export_batch_size, 512)
+        self.assertEqual(log_record_processor._export_timeout_millis, 30000)
+
     def test_args_none_defaults(self):
         exporter = InMemoryLogExporter()
         log_record_processor = BatchLogRecordProcessor(

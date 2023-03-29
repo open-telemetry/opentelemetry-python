@@ -39,6 +39,14 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
 from opentelemetry.util._once import Once
 
+_DEFAULT_SCHEDULE_DELAY_MILLIS = 5000
+_DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
+_DEFAULT_EXPORT_TIMEOUT_MILLIS = 30000
+_DEFAULT_MAX_QUEUE_SIZE = 2048
+_ENV_VAR_INT_VALUE_ERROR_MESSAGE = (
+    "Unable to parse value for %s as integer. Defaulting to %s: %s"
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -154,22 +162,73 @@ class BatchSpanProcessor(SpanProcessor):
     ):
 
         if max_queue_size is None:
-            max_queue_size = int(environ.get(OTEL_BSP_MAX_QUEUE_SIZE, 2048))
+            try:
+                max_queue_size = int(
+                    environ.get(
+                        OTEL_BSP_MAX_QUEUE_SIZE, _DEFAULT_MAX_QUEUE_SIZE
+                    )
+                )
+            except ValueError as e:
+                max_queue_size = _DEFAULT_MAX_QUEUE_SIZE
+                logger.warning(
+                    _ENV_VAR_INT_VALUE_ERROR_MESSAGE
+                    % (OTEL_BSP_MAX_QUEUE_SIZE, _DEFAULT_MAX_QUEUE_SIZE, e)
+                )
 
         if schedule_delay_millis is None:
-            schedule_delay_millis = int(
-                environ.get(OTEL_BSP_SCHEDULE_DELAY, 5000)
-            )
+            try:
+                schedule_delay_millis = int(
+                    environ.get(
+                        OTEL_BSP_SCHEDULE_DELAY, _DEFAULT_SCHEDULE_DELAY_MILLIS
+                    )
+                )
+            except ValueError as e:
+                schedule_delay_millis = _DEFAULT_SCHEDULE_DELAY_MILLIS
+                logger.warning(
+                    _ENV_VAR_INT_VALUE_ERROR_MESSAGE
+                    % (
+                        OTEL_BSP_SCHEDULE_DELAY,
+                        _DEFAULT_SCHEDULE_DELAY_MILLIS,
+                        e,
+                    )
+                )
 
         if max_export_batch_size is None:
-            max_export_batch_size = int(
-                environ.get(OTEL_BSP_MAX_EXPORT_BATCH_SIZE, 512)
-            )
+            try:
+                max_export_batch_size = int(
+                    environ.get(
+                        OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
+                        _DEFAULT_MAX_EXPORT_BATCH_SIZE,
+                    )
+                )
+            except ValueError as e:
+                max_export_batch_size = _DEFAULT_MAX_EXPORT_BATCH_SIZE
+                logger.warning(
+                    _ENV_VAR_INT_VALUE_ERROR_MESSAGE
+                    % (
+                        OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
+                        _DEFAULT_MAX_EXPORT_BATCH_SIZE,
+                        e,
+                    )
+                )
 
         if export_timeout_millis is None:
-            export_timeout_millis = int(
-                environ.get(OTEL_BSP_EXPORT_TIMEOUT, 30000)
-            )
+            try:
+                export_timeout_millis = int(
+                    environ.get(
+                        OTEL_BSP_EXPORT_TIMEOUT, _DEFAULT_EXPORT_TIMEOUT_MILLIS
+                    )
+                )
+            except ValueError as e:
+                export_timeout_millis = _DEFAULT_EXPORT_TIMEOUT_MILLIS
+                logger.warning(
+                    _ENV_VAR_INT_VALUE_ERROR_MESSAGE
+                    % (
+                        OTEL_BSP_EXPORT_TIMEOUT,
+                        _DEFAULT_EXPORT_TIMEOUT_MILLIS,
+                        e,
+                    )
+                )
 
         if max_queue_size <= 0:
             raise ValueError("max_queue_size must be a positive integer.")
