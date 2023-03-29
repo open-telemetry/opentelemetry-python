@@ -6,6 +6,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+- Fix exporting of ExponentialBucketHistogramAggregation from opentelemetry.sdk.metrics.view
+  ([#3240](https://github.com/open-telemetry/opentelemetry-python/pull/3240))
 
 - Fix suppress instrumentation for log batch processor
   ([#3223](https://github.com/open-telemetry/opentelemetry-python/pull/3223))
