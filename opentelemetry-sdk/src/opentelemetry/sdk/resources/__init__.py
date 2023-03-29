@@ -172,9 +172,14 @@ class Resource:
 
         resource = _DEFAULT_RESOURCE
 
-        for resource_detector in environ.get(
+        otel_experimental_resource_detectors = environ.get(
             OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "otel"
-        ).split(","):
+        ).split(",")
+
+        if "otel" not in otel_experimental_resource_detectors:
+            otel_experimental_resource_detectors.append("otel")
+
+        for resource_detector in otel_experimental_resource_detectors:
 
             resource_detectors.append(
                 next(
@@ -296,6 +301,7 @@ class ResourceDetector(abc.ABC):
 class OTELResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
+
         env_resources_items = environ.get(OTEL_RESOURCE_ATTRIBUTES)
         env_resource_map = {}
 

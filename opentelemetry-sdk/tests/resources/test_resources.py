@@ -600,3 +600,52 @@ class TestOTELResourceDetector(unittest.TestCase):
         )
         self.assertEqual(resource.attributes["a"], "b")
         self.assertEqual(resource.schema_url, "")
+
+    def test_resource_detector_entry_points_otel(self):
+        """
+        Test that OTELResourceDetector-resource-generated attributes are
+        always being added.
+        """
+        with patch.dict(
+            environ, {OTEL_RESOURCE_ATTRIBUTES: "a=b,c=d"}, clear=True
+        ):
+            resource = Resource({}).create()
+            self.assertEqual(
+                resource.attributes["telemetry.sdk.language"], "python"
+            )
+            self.assertEqual(
+                resource.attributes["telemetry.sdk.name"], "opentelemetry"
+            )
+            self.assertEqual(
+                resource.attributes["service.name"], "unknown_service"
+            )
+            self.assertEqual(resource.attributes["a"], "b")
+            self.assertEqual(resource.attributes["c"], "d")
+            self.assertEqual(resource.schema_url, "")
+
+        with patch.dict(
+            environ,
+            {
+                OTEL_RESOURCE_ATTRIBUTES: "a=b,c=d",
+                OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "process",
+            },
+            clear=True,
+        ):
+            resource = Resource({}).create()
+            self.assertEqual(
+                resource.attributes["telemetry.sdk.language"], "python"
+            )
+            self.assertEqual(
+                resource.attributes["telemetry.sdk.name"], "opentelemetry"
+            )
+            self.assertEqual(
+                resource.attributes["service.name"], "unknown_service"
+            )
+            self.assertEqual(resource.attributes["a"], "b")
+            self.assertEqual(resource.attributes["c"], "d")
+            self.assertIn(PROCESS_RUNTIME_NAME, resource.attributes.keys())
+            self.assertIn(
+                PROCESS_RUNTIME_DESCRIPTION, resource.attributes.keys()
+            )
+            self.assertIn(PROCESS_RUNTIME_VERSION, resource.attributes.keys())
+            self.assertEqual(resource.schema_url, "")
