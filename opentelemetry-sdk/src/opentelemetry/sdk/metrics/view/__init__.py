@@ -17,6 +17,7 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
     DefaultAggregation,
     DropAggregation,
     ExplicitBucketHistogramAggregation,
+    ExponentialBucketHistogramAggregation,
     LastValueAggregation,
     SumAggregation,
 )
@@ -27,6 +28,7 @@ __all__ = [
     "DefaultAggregation",
     "DropAggregation",
     "ExplicitBucketHistogramAggregation",
+    "ExponentialBucketHistogramAggregation",
     "LastValueAggregation",
     "SumAggregation",
     "View",
