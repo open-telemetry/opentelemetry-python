@@ -23,7 +23,12 @@ from os import linesep
 from time import time_ns
 from typing import IO, Callable, Deque, List, Optional, Sequence
 
-from opentelemetry.context import attach, detach, set_value
+from opentelemetry.context import (
+    _SUPPRESS_INSTRUMENTATION_KEY,
+    attach,
+    detach,
+    set_value,
+)
 from opentelemetry.sdk._logs import LogData, LogRecord, LogRecordProcessor
 from opentelemetry.util._once import Once
 
@@ -105,7 +110,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         if self._shutdown:
             _logger.warning("Processor is already shutdown, ignoring call")
             return
-        token = attach(set_value("suppress_instrumentation", True))
+        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             self._exporter.export((log_data,))
         except Exception:  # pylint: disable=broad-except
