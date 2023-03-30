@@ -8,12 +8,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## Unreleased
 - Fix exporting of ExponentialBucketHistogramAggregation from opentelemetry.sdk.metrics.view
   ([#3240](https://github.com/open-telemetry/opentelemetry-python/pull/3240))
-
 - Fix headers types mismatch for OTLP Exporters
   ([#3226](https://github.com/open-telemetry/opentelemetry-python/pull/3226))
 - Fix suppress instrumentation for log batch processor
   ([#3223](https://github.com/open-telemetry/opentelemetry-python/pull/3223))
-
 - Add speced out environment variables and arguments for BatchLogRecordProcessor
   ([#3237](https://github.com/open-telemetry/opentelemetry-python/pull/3237))
 

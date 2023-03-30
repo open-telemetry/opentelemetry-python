@@ -44,7 +44,7 @@ _DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
 _DEFAULT_EXPORT_TIMEOUT_MILLIS = 30000
 _DEFAULT_MAX_QUEUE_SIZE = 2048
 _ENV_VAR_INT_VALUE_ERROR_MESSAGE = (
-    "Unable to parse value for %s as integer. Defaulting to %s: %s"
+    "Unable to parse value for %s as integer. Defaulting to %s."
 )
 
 logger = logging.getLogger(__name__)
@@ -168,11 +168,12 @@ class BatchSpanProcessor(SpanProcessor):
                         OTEL_BSP_MAX_QUEUE_SIZE, _DEFAULT_MAX_QUEUE_SIZE
                     )
                 )
-            except ValueError as e:
+            except ValueError:
                 max_queue_size = _DEFAULT_MAX_QUEUE_SIZE
-                logger.warning(
-                    _ENV_VAR_INT_VALUE_ERROR_MESSAGE
-                    % (OTEL_BSP_MAX_QUEUE_SIZE, _DEFAULT_MAX_QUEUE_SIZE, e)
+                logger.exception(
+                    _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
+                    OTEL_BSP_MAX_QUEUE_SIZE,
+                    _DEFAULT_MAX_QUEUE_SIZE,
                 )
 
         if schedule_delay_millis is None:
@@ -182,15 +183,12 @@ class BatchSpanProcessor(SpanProcessor):
                         OTEL_BSP_SCHEDULE_DELAY, _DEFAULT_SCHEDULE_DELAY_MILLIS
                     )
                 )
-            except ValueError as e:
+            except ValueError:
                 schedule_delay_millis = _DEFAULT_SCHEDULE_DELAY_MILLIS
-                logger.warning(
-                    _ENV_VAR_INT_VALUE_ERROR_MESSAGE
-                    % (
-                        OTEL_BSP_SCHEDULE_DELAY,
-                        _DEFAULT_SCHEDULE_DELAY_MILLIS,
-                        e,
-                    )
+                logger.exception(
+                    _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
+                    OTEL_BSP_SCHEDULE_DELAY,
+                    _DEFAULT_SCHEDULE_DELAY_MILLIS,
                 )
 
         if max_export_batch_size is None:
@@ -201,15 +199,12 @@ class BatchSpanProcessor(SpanProcessor):
                         _DEFAULT_MAX_EXPORT_BATCH_SIZE,
                     )
                 )
-            except ValueError as e:
+            except ValueError:
                 max_export_batch_size = _DEFAULT_MAX_EXPORT_BATCH_SIZE
-                logger.warning(
-                    _ENV_VAR_INT_VALUE_ERROR_MESSAGE
-                    % (
-                        OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
-                        _DEFAULT_MAX_EXPORT_BATCH_SIZE,
-                        e,
-                    )
+                logger.exception(
+                    _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
+                    OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
+                    _DEFAULT_MAX_EXPORT_BATCH_SIZE,
                 )
 
         if export_timeout_millis is None:
@@ -219,15 +214,12 @@ class BatchSpanProcessor(SpanProcessor):
                         OTEL_BSP_EXPORT_TIMEOUT, _DEFAULT_EXPORT_TIMEOUT_MILLIS
                     )
                 )
-            except ValueError as e:
+            except ValueError:
                 export_timeout_millis = _DEFAULT_EXPORT_TIMEOUT_MILLIS
-                logger.warning(
-                    _ENV_VAR_INT_VALUE_ERROR_MESSAGE
-                    % (
-                        OTEL_BSP_EXPORT_TIMEOUT,
-                        _DEFAULT_EXPORT_TIMEOUT_MILLIS,
-                        e,
-                    )
+                logger.exception(
+                    _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
+                    OTEL_BSP_EXPORT_TIMEOUT,
+                    _DEFAULT_EXPORT_TIMEOUT_MILLIS,
                 )
 
         if max_queue_size <= 0:
