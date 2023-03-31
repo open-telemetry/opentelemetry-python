@@ -186,7 +186,7 @@ class Resource:
                     iter(
                         entry_points(
                             group="opentelemetry_resource_detector",
-                            name=resource_detector,
+                            name=resource_detector.strip(),
                         )
                     )
                 ).load()()
