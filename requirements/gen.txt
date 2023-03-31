@@ -5,19 +5,17 @@
 #
 #    pip-compile-multi
 #
-grpcio==1.44.0
+grpcio==1.53.0
     # via grpcio-tools
 grpcio-tools==1.41.1
     # via -r requirements/gen.in
 mypy-protobuf==3.0.0
     # via -r requirements/gen.in
-protobuf==3.19.4
+protobuf==3.20.3
     # via
     #   grpcio-tools
     #   mypy-protobuf
-six==1.16.0
-    # via grpcio
-types-protobuf==3.19.15
+types-protobuf==4.22.0.0
     # via mypy-protobuf
 
 # The following packages are considered to be unsafe in a requirements file:
