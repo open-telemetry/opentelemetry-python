@@ -39,6 +39,14 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.trace import ReadableSpan, Span, SpanProcessor
 from opentelemetry.util._once import Once
 
+_DEFAULT_SCHEDULE_DELAY_MILLIS = 5000
+_DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
+_DEFAULT_EXPORT_TIMEOUT_MILLIS = 30000
+_DEFAULT_MAX_QUEUE_SIZE = 2048
+_ENV_VAR_INT_VALUE_ERROR_MESSAGE = (
+    "Unable to parse value for %s as integer. Defaulting to %s."
+)
+
 logger = logging.getLogger(__name__)
 
 
@@ -152,40 +160,27 @@ class BatchSpanProcessor(SpanProcessor):
         max_export_batch_size: int = None,
         export_timeout_millis: float = None,
     ):
-
         if max_queue_size is None:
-            max_queue_size = int(environ.get(OTEL_BSP_MAX_QUEUE_SIZE, 2048))
+            max_queue_size = BatchSpanProcessor._default_max_queue_size()
 
         if schedule_delay_millis is None:
-            schedule_delay_millis = int(
-                environ.get(OTEL_BSP_SCHEDULE_DELAY, 5000)
+            schedule_delay_millis = (
+                BatchSpanProcessor._default_schedule_delay_millis()
             )
 
         if max_export_batch_size is None:
-            max_export_batch_size = int(
-                environ.get(OTEL_BSP_MAX_EXPORT_BATCH_SIZE, 512)
+            max_export_batch_size = (
+                BatchSpanProcessor._default_max_export_batch_size()
             )
 
         if export_timeout_millis is None:
-            export_timeout_millis = int(
-                environ.get(OTEL_BSP_EXPORT_TIMEOUT, 30000)
+            export_timeout_millis = (
+                BatchSpanProcessor._default_export_timeout_millis()
             )
 
-        if max_queue_size <= 0:
-            raise ValueError("max_queue_size must be a positive integer.")
-
-        if schedule_delay_millis <= 0:
-            raise ValueError("schedule_delay_millis must be positive.")
-
-        if max_export_batch_size <= 0:
-            raise ValueError(
-                "max_export_batch_size must be a positive integer."
-            )
-
-        if max_export_batch_size > max_queue_size:
-            raise ValueError(
-                "max_export_batch_size must be less than or equal to max_queue_size."
-            )
+        BatchSpanProcessor._validate_arguments(
+            max_queue_size, schedule_delay_millis, max_export_batch_size
+        )
 
         self.span_exporter = span_exporter
         self.queue = collections.deque(
@@ -416,6 +411,89 @@ class BatchSpanProcessor(SpanProcessor):
             self.condition.notify_all()
         self.worker_thread.join()
         self.span_exporter.shutdown()
+
+    @staticmethod
+    def _default_max_queue_size():
+        try:
+            return int(
+                environ.get(OTEL_BSP_MAX_QUEUE_SIZE, _DEFAULT_MAX_QUEUE_SIZE)
+            )
+        except ValueError:
+            logger.exception(
+                _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
+                OTEL_BSP_MAX_QUEUE_SIZE,
+                _DEFAULT_MAX_QUEUE_SIZE,
+            )
+            return _DEFAULT_MAX_QUEUE_SIZE
+
+    @staticmethod
+    def _default_schedule_delay_millis():
+        try:
+            return int(
+                environ.get(
+                    OTEL_BSP_SCHEDULE_DELAY, _DEFAULT_SCHEDULE_DELAY_MILLIS
+                )
+            )
+        except ValueError:
+            logger.exception(
+                _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
+                OTEL_BSP_SCHEDULE_DELAY,
+                _DEFAULT_SCHEDULE_DELAY_MILLIS,
+            )
+            return _DEFAULT_SCHEDULE_DELAY_MILLIS
+
+    @staticmethod
+    def _default_max_export_batch_size():
+        try:
+            return int(
+                environ.get(
+                    OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
+                    _DEFAULT_MAX_EXPORT_BATCH_SIZE,
+                )
+            )
+        except ValueError:
+            logger.exception(
+                _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
+                OTEL_BSP_MAX_EXPORT_BATCH_SIZE,
+                _DEFAULT_MAX_EXPORT_BATCH_SIZE,
+            )
+            return _DEFAULT_MAX_EXPORT_BATCH_SIZE
+
+    @staticmethod
+    def _default_export_timeout_millis():
+        try:
+            return int(
+                environ.get(
+                    OTEL_BSP_EXPORT_TIMEOUT, _DEFAULT_EXPORT_TIMEOUT_MILLIS
+                )
+            )
+        except ValueError:
+            logger.exception(
+                _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
+                OTEL_BSP_EXPORT_TIMEOUT,
+                _DEFAULT_EXPORT_TIMEOUT_MILLIS,
+            )
+            return _DEFAULT_EXPORT_TIMEOUT_MILLIS
+
+    @staticmethod
+    def _validate_arguments(
+        max_queue_size, schedule_delay_millis, max_export_batch_size
+    ):
+        if max_queue_size <= 0:
+            raise ValueError("max_queue_size must be a positive integer.")
+
+        if schedule_delay_millis <= 0:
+            raise ValueError("schedule_delay_millis must be positive.")
+
+        if max_export_batch_size <= 0:
+            raise ValueError(
+                "max_export_batch_size must be a positive integer."
+            )
+
+        if max_export_batch_size > max_queue_size:
+            raise ValueError(
+                "max_export_batch_size must be less than or equal to max_queue_size."
+            )
 
 
 class ConsoleSpanExporter(SpanExporter):

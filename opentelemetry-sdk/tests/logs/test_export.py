@@ -35,6 +35,12 @@ from opentelemetry.sdk._logs.export import (
     InMemoryLogExporter,
     SimpleLogRecordProcessor,
 )
+from opentelemetry.sdk.environment_variables import (
+    OTEL_BLRP_EXPORT_TIMEOUT,
+    OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
+    OTEL_BLRP_MAX_QUEUE_SIZE,
+    OTEL_BLRP_SCHEDULE_DELAY,
+)
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase
@@ -174,6 +180,127 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
 
         logger.error("error")
         self.assertEqual(log_record_processor.emit.call_count, 1)
+
+    def test_args(self):
+        exporter = InMemoryLogExporter()
+        log_record_processor = BatchLogRecordProcessor(
+            exporter,
+            max_queue_size=1024,
+            schedule_delay_millis=2500,
+            max_export_batch_size=256,
+            export_timeout_millis=15000,
+        )
+        self.assertEqual(log_record_processor._exporter, exporter)
+        self.assertEqual(log_record_processor._max_queue_size, 1024)
+        self.assertEqual(log_record_processor._schedule_delay_millis, 2500)
+        self.assertEqual(log_record_processor._max_export_batch_size, 256)
+        self.assertEqual(log_record_processor._export_timeout_millis, 15000)
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_BLRP_MAX_QUEUE_SIZE: "1024",
+            OTEL_BLRP_SCHEDULE_DELAY: "2500",
+            OTEL_BLRP_MAX_EXPORT_BATCH_SIZE: "256",
+            OTEL_BLRP_EXPORT_TIMEOUT: "15000",
+        },
+    )
+    def test_env_vars(self):
+        exporter = InMemoryLogExporter()
+        log_record_processor = BatchLogRecordProcessor(exporter)
+        self.assertEqual(log_record_processor._exporter, exporter)
+        self.assertEqual(log_record_processor._max_queue_size, 1024)
+        self.assertEqual(log_record_processor._schedule_delay_millis, 2500)
+        self.assertEqual(log_record_processor._max_export_batch_size, 256)
+        self.assertEqual(log_record_processor._export_timeout_millis, 15000)
+
+    def test_args_defaults(self):
+        exporter = InMemoryLogExporter()
+        log_record_processor = BatchLogRecordProcessor(exporter)
+        self.assertEqual(log_record_processor._exporter, exporter)
+        self.assertEqual(log_record_processor._max_queue_size, 2048)
+        self.assertEqual(log_record_processor._schedule_delay_millis, 5000)
+        self.assertEqual(log_record_processor._max_export_batch_size, 512)
+        self.assertEqual(log_record_processor._export_timeout_millis, 30000)
+
+    @patch.dict(
+        "os.environ",
+        {
+            OTEL_BLRP_MAX_QUEUE_SIZE: "a",
+            OTEL_BLRP_SCHEDULE_DELAY: " ",
+            OTEL_BLRP_MAX_EXPORT_BATCH_SIZE: "One",
+            OTEL_BLRP_EXPORT_TIMEOUT: "@",
+        },
+    )
+    def test_args_env_var_value_error(self):
+        exporter = InMemoryLogExporter()
+        log_record_processor = BatchLogRecordProcessor(exporter)
+        self.assertEqual(log_record_processor._exporter, exporter)
+        self.assertEqual(log_record_processor._max_queue_size, 2048)
+        self.assertEqual(log_record_processor._schedule_delay_millis, 5000)
+        self.assertEqual(log_record_processor._max_export_batch_size, 512)
+        self.assertEqual(log_record_processor._export_timeout_millis, 30000)
+
+    def test_args_none_defaults(self):
+        exporter = InMemoryLogExporter()
+        log_record_processor = BatchLogRecordProcessor(
+            exporter,
+            max_queue_size=None,
+            schedule_delay_millis=None,
+            max_export_batch_size=None,
+            export_timeout_millis=None,
+        )
+        self.assertEqual(log_record_processor._exporter, exporter)
+        self.assertEqual(log_record_processor._max_queue_size, 2048)
+        self.assertEqual(log_record_processor._schedule_delay_millis, 5000)
+        self.assertEqual(log_record_processor._max_export_batch_size, 512)
+        self.assertEqual(log_record_processor._export_timeout_millis, 30000)
+
+    def test_validation_negative_max_queue_size(self):
+        exporter = InMemoryLogExporter()
+        self.assertRaises(
+            ValueError,
+            BatchLogRecordProcessor,
+            exporter,
+            max_queue_size=0,
+        )
+        self.assertRaises(
+            ValueError,
+            BatchLogRecordProcessor,
+            exporter,
+            max_queue_size=-1,
+        )
+        self.assertRaises(
+            ValueError,
+            BatchLogRecordProcessor,
+            exporter,
+            schedule_delay_millis=0,
+        )
+        self.assertRaises(
+            ValueError,
+            BatchLogRecordProcessor,
+            exporter,
+            schedule_delay_millis=-1,
+        )
+        self.assertRaises(
+            ValueError,
+            BatchLogRecordProcessor,
+            exporter,
+            max_export_batch_size=0,
+        )
+        self.assertRaises(
+            ValueError,
+            BatchLogRecordProcessor,
+            exporter,
+            max_export_batch_size=-1,
+        )
+        self.assertRaises(
+            ValueError,
+            BatchLogRecordProcessor,
+            exporter,
+            max_queue_size=100,
+            max_export_batch_size=101,
+        )
 
     def test_shutdown(self):
         exporter = InMemoryLogExporter()

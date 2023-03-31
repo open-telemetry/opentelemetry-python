@@ -66,11 +66,43 @@ Invalid or unrecognized input is ignored,
 i.e. the SDK behaves as if OTEL_TRACES_SAMPLER_ARG is not set.
 """
 
+OTEL_BLRP_SCHEDULE_DELAY = "OTEL_BLRP_SCHEDULE_DELAY"
+"""
+.. envvar:: OTEL_BLRP_SCHEDULE_DELAY
+
+The :envvar:`OTEL_BLRP_SCHEDULE_DELAY` represents the delay interval between two consecutive exports of the BatchLogRecordProcessor.
+Default: 5000
+"""
+
+OTEL_BLRP_EXPORT_TIMEOUT = "OTEL_BLRP_EXPORT_TIMEOUT"
+"""
+.. envvar:: OTEL_BLRP_EXPORT_TIMEOUT
+
+The :envvar:`OTEL_BLRP_EXPORT_TIMEOUT` represents the maximum allowed time to export data from the BatchLogRecordProcessor.
+Default: 30000
+"""
+
+OTEL_BLRP_MAX_QUEUE_SIZE = "OTEL_BLRP_MAX_QUEUE_SIZE"
+"""
+.. envvar:: OTEL_BLRP_MAX_QUEUE_SIZE
+
+The :envvar:`OTEL_BLRP_MAX_QUEUE_SIZE` represents the maximum queue size for the data export of the BatchLogRecordProcessor.
+Default: 2048
+"""
+
+OTEL_BLRP_MAX_EXPORT_BATCH_SIZE = "OTEL_BLRP_MAX_EXPORT_BATCH_SIZE"
+"""
+.. envvar:: OTEL_BLRP_MAX_EXPORT_BATCH_SIZE
+
+The :envvar:`OTEL_BLRP_MAX_EXPORT_BATCH_SIZE` represents the maximum batch size for the data export of the BatchLogRecordProcessor.
+Default: 512
+"""
+
 OTEL_BSP_SCHEDULE_DELAY = "OTEL_BSP_SCHEDULE_DELAY"
 """
 .. envvar:: OTEL_BSP_SCHEDULE_DELAY
 
-The :envvar:`OTEL_BSP_SCHEDULE_DELAY` represents the delay interval between two consecutive exports.
+The :envvar:`OTEL_BSP_SCHEDULE_DELAY` represents the delay interval between two consecutive exports of the BatchSpanProcessor.
 Default: 5000
 """
 
@@ -78,7 +110,7 @@ OTEL_BSP_EXPORT_TIMEOUT = "OTEL_BSP_EXPORT_TIMEOUT"
 """
 .. envvar:: OTEL_BSP_EXPORT_TIMEOUT
 
-The :envvar:`OTEL_BSP_EXPORT_TIMEOUT` represents the maximum allowed time to export data.
+The :envvar:`OTEL_BSP_EXPORT_TIMEOUT` represents the maximum allowed time to export data from the BatchSpanProcessor.
 Default: 30000
 """
 
@@ -86,7 +118,7 @@ OTEL_BSP_MAX_QUEUE_SIZE = "OTEL_BSP_MAX_QUEUE_SIZE"
 """
 .. envvar:: OTEL_BSP_MAX_QUEUE_SIZE
 
-The :envvar:`OTEL_BSP_MAX_QUEUE_SIZE` represents the maximum queue size for the data export.
+The :envvar:`OTEL_BSP_MAX_QUEUE_SIZE` represents the maximum queue size for the data export of the BatchSpanProcessor.
 Default: 2048
 """
 
@@ -94,7 +126,7 @@ OTEL_BSP_MAX_EXPORT_BATCH_SIZE = "OTEL_BSP_MAX_EXPORT_BATCH_SIZE"
 """
 .. envvar:: OTEL_BSP_MAX_EXPORT_BATCH_SIZE
 
-The :envvar:`OTEL_BSP_MAX_EXPORT_BATCH_SIZE` represents the maximum batch size for the data export.
+The :envvar:`OTEL_BSP_MAX_EXPORT_BATCH_SIZE` represents the maximum batch size for the data export of the BatchSpanProcessor.
 Default: 512
 """
 
@@ -634,4 +666,15 @@ OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE = (
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE
 
 The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE` is the client certificate/chain trust for clients private key to use in mTLS communication in PEM format.
+"""
+
+OTEL_EXPERIMENTAL_RESOURCE_DETECTORS = "OTEL_EXPERIMENTAL_RESOURCE_DETECTORS"
+"""
+.. envvar:: OTEL_EXPERIMENTAL_RESOURCE_DETECTORS
+
+The :envvar:`OTEL_EXPERIMENTAL_RESOURCE_DETECTORS` is a comma-separated string
+of names of resource detectors. These names must be the same as the names of
+entry points for the `opentelemetry_resource_detector` entry point. This is an
+experimental feature and the name of this variable and its behavior can change
+in a non-backwards compatible way.
 """

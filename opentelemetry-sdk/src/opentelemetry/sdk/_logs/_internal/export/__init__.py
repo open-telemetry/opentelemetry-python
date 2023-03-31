@@ -19,13 +19,32 @@ import logging
 import os
 import sys
 import threading
-from os import linesep
+from os import environ, linesep
 from time import time_ns
 from typing import IO, Callable, Deque, List, Optional, Sequence
 
-from opentelemetry.context import attach, detach, set_value
+from opentelemetry.context import (
+    _SUPPRESS_INSTRUMENTATION_KEY,
+    attach,
+    detach,
+    set_value,
+)
 from opentelemetry.sdk._logs import LogData, LogRecord, LogRecordProcessor
+from opentelemetry.sdk.environment_variables import (
+    OTEL_BLRP_EXPORT_TIMEOUT,
+    OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
+    OTEL_BLRP_MAX_QUEUE_SIZE,
+    OTEL_BLRP_SCHEDULE_DELAY,
+)
 from opentelemetry.util._once import Once
+
+_DEFAULT_SCHEDULE_DELAY_MILLIS = 5000
+_DEFAULT_MAX_EXPORT_BATCH_SIZE = 512
+_DEFAULT_EXPORT_TIMEOUT_MILLIS = 30000
+_DEFAULT_MAX_QUEUE_SIZE = 2048
+_ENV_VAR_INT_VALUE_ERROR_MESSAGE = (
+    "Unable to parse value for %s as integer. Defaulting to %s."
+)
 
 _logger = logging.getLogger(__name__)
 
@@ -105,7 +124,7 @@ class SimpleLogRecordProcessor(LogRecordProcessor):
         if self._shutdown:
             _logger.warning("Processor is already shutdown, ignoring call")
             return
-        token = attach(set_value("suppress_instrumentation", True))
+        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             self._exporter.export((log_data,))
         except Exception:  # pylint: disable=broad-except
@@ -137,20 +156,54 @@ class BatchLogRecordProcessor(LogRecordProcessor):
     """This is an implementation of LogRecordProcessor which creates batches of
     received logs in the export-friendly LogData representation and
     send to the configured LogExporter, as soon as they are emitted.
+
+    `BatchLogRecordProcessor` is configurable with the following environment
+    variables which correspond to constructor parameters:
+
+    - :envvar:`OTEL_BLRP_SCHEDULE_DELAY`
+    - :envvar:`OTEL_BLRP_MAX_QUEUE_SIZE`
+    - :envvar:`OTEL_BLRP_MAX_EXPORT_BATCH_SIZE`
+    - :envvar:`OTEL_BLRP_EXPORT_TIMEOUT`
     """
 
     def __init__(
         self,
         exporter: LogExporter,
-        schedule_delay_millis: int = 5000,
-        max_export_batch_size: int = 512,
-        export_timeout_millis: int = 30000,
+        schedule_delay_millis: float = None,
+        max_export_batch_size: int = None,
+        export_timeout_millis: float = None,
+        max_queue_size: int = None,
     ):
+        if max_queue_size is None:
+            max_queue_size = BatchLogRecordProcessor._default_max_queue_size()
+
+        if schedule_delay_millis is None:
+            schedule_delay_millis = (
+                BatchLogRecordProcessor._default_schedule_delay_millis()
+            )
+
+        if max_export_batch_size is None:
+            max_export_batch_size = (
+                BatchLogRecordProcessor._default_max_export_batch_size()
+            )
+
+        if export_timeout_millis is None:
+            export_timeout_millis = (
+                BatchLogRecordProcessor._default_export_timeout_millis()
+            )
+
+        BatchLogRecordProcessor._validate_arguments(
+            max_queue_size, schedule_delay_millis, max_export_batch_size
+        )
+
         self._exporter = exporter
+        self._max_queue_size = max_queue_size
         self._schedule_delay_millis = schedule_delay_millis
         self._max_export_batch_size = max_export_batch_size
         self._export_timeout_millis = export_timeout_millis
-        self._queue = collections.deque()  # type: Deque[LogData]
+        self._queue = collections.deque(
+            [], max_queue_size
+        )  # type: Deque[LogData]
         self._worker_thread = threading.Thread(
             name="OtelBatchLogRecordProcessor",
             target=self.worker,
@@ -328,3 +381,86 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         if not ret:
             _logger.warning("Timeout was exceeded in force_flush().")
         return ret
+
+    @staticmethod
+    def _default_max_queue_size():
+        try:
+            return int(
+                environ.get(OTEL_BLRP_MAX_QUEUE_SIZE, _DEFAULT_MAX_QUEUE_SIZE)
+            )
+        except ValueError:
+            _logger.exception(
+                _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
+                OTEL_BLRP_MAX_QUEUE_SIZE,
+                _DEFAULT_MAX_QUEUE_SIZE,
+            )
+            return _DEFAULT_MAX_QUEUE_SIZE
+
+    @staticmethod
+    def _default_schedule_delay_millis():
+        try:
+            return int(
+                environ.get(
+                    OTEL_BLRP_SCHEDULE_DELAY, _DEFAULT_SCHEDULE_DELAY_MILLIS
+                )
+            )
+        except ValueError:
+            _logger.exception(
+                _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
+                OTEL_BLRP_SCHEDULE_DELAY,
+                _DEFAULT_SCHEDULE_DELAY_MILLIS,
+            )
+            return _DEFAULT_SCHEDULE_DELAY_MILLIS
+
+    @staticmethod
+    def _default_max_export_batch_size():
+        try:
+            return int(
+                environ.get(
+                    OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
+                    _DEFAULT_MAX_EXPORT_BATCH_SIZE,
+                )
+            )
+        except ValueError:
+            _logger.exception(
+                _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
+                OTEL_BLRP_MAX_EXPORT_BATCH_SIZE,
+                _DEFAULT_MAX_EXPORT_BATCH_SIZE,
+            )
+            return _DEFAULT_MAX_EXPORT_BATCH_SIZE
+
+    @staticmethod
+    def _default_export_timeout_millis():
+        try:
+            return int(
+                environ.get(
+                    OTEL_BLRP_EXPORT_TIMEOUT, _DEFAULT_EXPORT_TIMEOUT_MILLIS
+                )
+            )
+        except ValueError:
+            _logger.exception(
+                _ENV_VAR_INT_VALUE_ERROR_MESSAGE,
+                OTEL_BLRP_EXPORT_TIMEOUT,
+                _DEFAULT_EXPORT_TIMEOUT_MILLIS,
+            )
+            return _DEFAULT_EXPORT_TIMEOUT_MILLIS
+
+    @staticmethod
+    def _validate_arguments(
+        max_queue_size, schedule_delay_millis, max_export_batch_size
+    ):
+        if max_queue_size <= 0:
+            raise ValueError("max_queue_size must be a positive integer.")
+
+        if schedule_delay_millis <= 0:
+            raise ValueError("schedule_delay_millis must be positive.")
+
+        if max_export_batch_size <= 0:
+            raise ValueError(
+                "max_export_batch_size must be a positive integer."
+            )
+
+        if max_export_batch_size > max_queue_size:
+            raise ValueError(
+                "max_export_batch_size must be less than or equal to max_queue_size."
+            )
