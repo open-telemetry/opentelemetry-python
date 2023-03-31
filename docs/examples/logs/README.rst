@@ -4,7 +4,7 @@ OpenTelemetry Logs SDK
 .. warning::
    OpenTelemetry Python logs are in an experimental state. The APIs within
    :mod:`opentelemetry.sdk._logs` are subject to change in minor/patch releases and make no
-   backward compatability guarantees at this time.
+   backward compatibility guarantees at this time.
 
 Start the Collector locally to see data being exported. Write the following file:
 
@@ -34,7 +34,7 @@ Then start the Docker container:
 
     docker run \
         -p 4317:4317 \
-        -v $(pwd)/otel-collector-config.yaml:/etc/otel/config.yaml \
+        -v $(pwd)/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml \
         otel/opentelemetry-collector-contrib:latest
 
 .. code-block:: sh

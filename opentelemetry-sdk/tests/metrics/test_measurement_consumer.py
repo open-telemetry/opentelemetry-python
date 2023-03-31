@@ -12,18 +12,24 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from sys import version_info
+from time import sleep
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
-from opentelemetry.sdk._metrics.measurement_consumer import (
+from opentelemetry.sdk.metrics._internal.measurement_consumer import (
     MeasurementConsumer,
     SynchronousMeasurementConsumer,
 )
-from opentelemetry.sdk._metrics.point import AggregationTemporality
-from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
+from opentelemetry.sdk.metrics._internal.sdk_configuration import (
+    SdkConfiguration,
+)
 
 
-@patch("opentelemetry.sdk._metrics.measurement_consumer.MetricReaderStorage")
+@patch(
+    "opentelemetry.sdk.metrics._internal."
+    "measurement_consumer.MetricReaderStorage"
+)
 class TestSynchronousMeasurementConsumer(TestCase):
     def test_parent(self, _):
 
@@ -80,10 +86,8 @@ class TestSynchronousMeasurementConsumer(TestCase):
         )
         for r_mock, rs_mock in zip(reader_mocks, reader_storage_mocks):
             rs_mock.collect.assert_not_called()
-            consumer.collect(r_mock, AggregationTemporality.CUMULATIVE)
-            rs_mock.collect.assert_called_once_with(
-                AggregationTemporality.CUMULATIVE
-            )
+            consumer.collect(r_mock)
+            rs_mock.collect.assert_called_once_with()
 
     def test_collect_calls_async_instruments(self, MockMetricReaderStorage):
         """Its collect() method should invoke async instruments and pass measurements to the
@@ -103,7 +107,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
             i_mock.callback.return_value = [Mock()]
             consumer.register_asynchronous_instrument(i_mock)
 
-        consumer.collect(reader_mock, AggregationTemporality.CUMULATIVE)
+        consumer.collect(reader_mock)
 
         # it should call async instruments
         for i_mock in async_instrument_mocks:
@@ -112,4 +116,75 @@ class TestSynchronousMeasurementConsumer(TestCase):
         # it should pass measurements to reader storage
         self.assertEqual(
             len(reader_storage_mock.consume_measurement.mock_calls), 5
+        )
+
+    def test_collect_timeout(self, MockMetricReaderStorage):
+        reader_mock = Mock()
+        reader_storage_mock = Mock()
+        MockMetricReaderStorage.return_value = reader_storage_mock
+        consumer = SynchronousMeasurementConsumer(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=[reader_mock],
+                views=Mock(),
+            )
+        )
+
+        def sleep_1(*args, **kwargs):
+            sleep(1)
+
+        consumer.register_asynchronous_instrument(
+            Mock(**{"callback.side_effect": sleep_1})
+        )
+
+        with self.assertRaises(Exception) as error:
+            consumer.collect(reader_mock, timeout_millis=10)
+
+        self.assertIn(
+            "Timed out while executing callback", error.exception.args[0]
+        )
+
+    @patch(
+        "opentelemetry.sdk.metrics._internal."
+        "measurement_consumer.CallbackOptions"
+    )
+    def test_collect_deadline(
+        self, mock_callback_options, MockMetricReaderStorage
+    ):
+        reader_mock = Mock()
+        reader_storage_mock = Mock()
+        MockMetricReaderStorage.return_value = reader_storage_mock
+        consumer = SynchronousMeasurementConsumer(
+            SdkConfiguration(
+                resource=Mock(),
+                metric_readers=[reader_mock],
+                views=Mock(),
+            )
+        )
+
+        def sleep_1(*args, **kwargs):
+            sleep(1)
+            return []
+
+        consumer.register_asynchronous_instrument(
+            Mock(**{"callback.side_effect": sleep_1})
+        )
+        consumer.register_asynchronous_instrument(
+            Mock(**{"callback.side_effect": sleep_1})
+        )
+
+        consumer.collect(reader_mock)
+
+        if version_info < (3, 8):
+            callback_options_time_call = mock_callback_options.mock_calls[-1][
+                2
+            ]["timeout_millis"]
+        else:
+            callback_options_time_call = mock_callback_options.mock_calls[
+                -1
+            ].kwargs["timeout_millis"]
+
+        self.assertLess(
+            callback_options_time_call,
+            10000 * 10**6,
         )

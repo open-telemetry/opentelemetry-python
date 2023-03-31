@@ -150,6 +150,12 @@ class ResourceAttributes:
     Note: It's recommended this value represents a human readable version of the device model rather than a machine readable alternative.
     """
 
+    DEVICE_MANUFACTURER = "device.manufacturer"
+    """
+    The name of the device manufacturer.
+    Note: The Android OS provides this field via [Build](https://developer.android.com/reference/android/os/Build#MANUFACTURER). iOS apps SHOULD hardcode the value `Apple`.
+    """
+
     FAAS_NAME = "faas.name"
     """
     The name of the single function that this runtime instance executes.
@@ -163,7 +169,7 @@ class ResourceAttributes:
 
 * **AWS Lambda:** The function [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html).
 Take care not to use the "invoked ARN" directly but replace any
-[alias suffix](https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html) with the resolved function version, as the same runtime instance may be invokable with multiple
+[alias suffix](https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html) with the resolved function version, as the same runtime instance may be invocable with multiple
 different aliases.
 * **GCP:** The [URI of the resource](https://cloud.google.com/iam/docs/full-resource-names)
 * **Azure:** The [Fully Qualified Resource ID](https://docs.microsoft.com/en-us/rest/api/resources/resources/get-by-id).
@@ -610,7 +616,7 @@ class OsTypeValues(Enum):
     """AIX (Advanced Interactive eXecutive)."""
 
     SOLARIS = "solaris"
-    """Oracle Solaris."""
+    """SunOS, Oracle Solaris."""
 
     Z_OS = "z_os"
     """IBM z/OS."""

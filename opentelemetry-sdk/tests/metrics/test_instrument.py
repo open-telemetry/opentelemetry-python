@@ -15,8 +15,9 @@
 from unittest import TestCase
 from unittest.mock import Mock
 
-from opentelemetry._metrics.measurement import Measurement as APIMeasurement
-from opentelemetry.sdk._metrics.instrument import (
+from opentelemetry.metrics import Observation
+from opentelemetry.metrics._internal.instrument import CallbackOptions
+from opentelemetry.sdk.metrics import (
     Counter,
     Histogram,
     ObservableCounter,
@@ -24,64 +25,112 @@ from opentelemetry.sdk._metrics.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
-from opentelemetry.sdk._metrics.measurement import Measurement
+from opentelemetry.sdk.metrics._internal.instrument import (
+    _Counter,
+    _Histogram,
+    _ObservableCounter,
+    _ObservableGauge,
+    _ObservableUpDownCounter,
+    _UpDownCounter,
+)
+from opentelemetry.sdk.metrics._internal.measurement import Measurement
 
 
 class TestCounter(TestCase):
+    def testname(self):
+        self.assertEqual(_Counter("name", Mock(), Mock()).name, "name")
+        self.assertEqual(_Counter("Name", Mock(), Mock()).name, "name")
+
     def test_add(self):
         mc = Mock()
-        counter = Counter("name", Mock(), mc)
+        counter = _Counter("name", Mock(), mc)
         counter.add(1.0)
         mc.consume_measurement.assert_called_once()
 
     def test_add_non_monotonic(self):
         mc = Mock()
-        counter = Counter("name", Mock(), mc)
+        counter = _Counter("name", Mock(), mc)
         counter.add(-1.0)
         mc.consume_measurement.assert_not_called()
+
+    def test_disallow_direct_counter_creation(self):
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            Counter("name", Mock(), Mock())
 
 
 class TestUpDownCounter(TestCase):
     def test_add(self):
         mc = Mock()
-        counter = UpDownCounter("name", Mock(), mc)
+        counter = _UpDownCounter("name", Mock(), mc)
         counter.add(1.0)
         mc.consume_measurement.assert_called_once()
 
     def test_add_non_monotonic(self):
         mc = Mock()
-        counter = UpDownCounter("name", Mock(), mc)
+        counter = _UpDownCounter("name", Mock(), mc)
         counter.add(-1.0)
         mc.consume_measurement.assert_called_once()
+
+    def test_disallow_direct_up_down_counter_creation(self):
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            UpDownCounter("name", Mock(), Mock())
 
 
 TEST_ATTRIBUTES = {"foo": "bar"}
 
 
-def callable_callback():
+def callable_callback_0(options: CallbackOptions):
     return [
-        APIMeasurement(1, attributes=TEST_ATTRIBUTES),
-        APIMeasurement(2, attributes=TEST_ATTRIBUTES),
-        APIMeasurement(3, attributes=TEST_ATTRIBUTES),
+        Observation(1, attributes=TEST_ATTRIBUTES),
+        Observation(2, attributes=TEST_ATTRIBUTES),
+        Observation(3, attributes=TEST_ATTRIBUTES),
     ]
 
 
-def generator_callback():
-    yield [
-        APIMeasurement(1, attributes=TEST_ATTRIBUTES),
-        APIMeasurement(2, attributes=TEST_ATTRIBUTES),
-        APIMeasurement(3, attributes=TEST_ATTRIBUTES),
+def callable_callback_1(options: CallbackOptions):
+    return [
+        Observation(4, attributes=TEST_ATTRIBUTES),
+        Observation(5, attributes=TEST_ATTRIBUTES),
+        Observation(6, attributes=TEST_ATTRIBUTES),
     ]
+
+
+def generator_callback_0():
+    options = yield
+    assert isinstance(options, CallbackOptions)
+    options = yield [
+        Observation(1, attributes=TEST_ATTRIBUTES),
+        Observation(2, attributes=TEST_ATTRIBUTES),
+        Observation(3, attributes=TEST_ATTRIBUTES),
+    ]
+    assert isinstance(options, CallbackOptions)
+
+
+def generator_callback_1():
+    options = yield
+    assert isinstance(options, CallbackOptions)
+    options = yield [
+        Observation(4, attributes=TEST_ATTRIBUTES),
+        Observation(5, attributes=TEST_ATTRIBUTES),
+        Observation(6, attributes=TEST_ATTRIBUTES),
+    ]
+    assert isinstance(options, CallbackOptions)
 
 
 class TestObservableGauge(TestCase):
-    def test_callable_callback(self):
-        observable_gauge = ObservableGauge(
-            "name", Mock(), Mock(), callable_callback
+    def testname(self):
+        self.assertEqual(_ObservableGauge("name", Mock(), Mock()).name, "name")
+        self.assertEqual(_ObservableGauge("Name", Mock(), Mock()).name, "name")
+
+    def test_callable_callback_0(self):
+        observable_gauge = _ObservableGauge(
+            "name", Mock(), Mock(), [callable_callback_0]
         )
 
         self.assertEqual(
-            list(observable_gauge.callback()),
+            list(observable_gauge.callback(CallbackOptions())),
             [
                 Measurement(
                     1, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
@@ -95,13 +144,42 @@ class TestObservableGauge(TestCase):
             ],
         )
 
-    def test_generator_callback(self):
-        observable_gauge = ObservableGauge(
-            "name", Mock(), Mock(), generator_callback()
+    def test_callable_multiple_callable_callback(self):
+        observable_gauge = _ObservableGauge(
+            "name", Mock(), Mock(), [callable_callback_0, callable_callback_1]
         )
 
         self.assertEqual(
-            list(observable_gauge.callback()),
+            list(observable_gauge.callback(CallbackOptions())),
+            [
+                Measurement(
+                    1, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+                Measurement(
+                    2, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+                Measurement(
+                    3, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+                Measurement(
+                    4, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+                Measurement(
+                    5, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+                Measurement(
+                    6, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+            ],
+        )
+
+    def test_generator_callback_0(self):
+        observable_gauge = _ObservableGauge(
+            "name", Mock(), Mock(), [generator_callback_0()]
+        )
+
+        self.assertEqual(
+            list(observable_gauge.callback(CallbackOptions())),
             [
                 Measurement(
                     1, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
@@ -114,16 +192,54 @@ class TestObservableGauge(TestCase):
                 ),
             ],
         )
+
+    def test_generator_multiple_generator_callback(self):
+        self.maxDiff = None
+        observable_gauge = _ObservableGauge(
+            "name",
+            Mock(),
+            Mock(),
+            callbacks=[generator_callback_0(), generator_callback_1()],
+        )
+
+        self.assertEqual(
+            list(observable_gauge.callback(CallbackOptions())),
+            [
+                Measurement(
+                    1, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+                Measurement(
+                    2, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+                Measurement(
+                    3, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+                Measurement(
+                    4, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+                Measurement(
+                    5, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+                Measurement(
+                    6, instrument=observable_gauge, attributes=TEST_ATTRIBUTES
+                ),
+            ],
+        )
+
+    def test_disallow_direct_observable_gauge_creation(self):
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            ObservableGauge("name", Mock(), Mock())
 
 
 class TestObservableCounter(TestCase):
-    def test_callable_callback(self):
-        observable_counter = ObservableCounter(
-            "name", Mock(), Mock(), callable_callback
+    def test_callable_callback_0(self):
+        observable_counter = _ObservableCounter(
+            "name", Mock(), Mock(), [callable_callback_0]
         )
 
         self.assertEqual(
-            list(observable_counter.callback()),
+            list(observable_counter.callback(CallbackOptions())),
             [
                 Measurement(
                     1,
@@ -143,13 +259,13 @@ class TestObservableCounter(TestCase):
             ],
         )
 
-    def test_generator_callback(self):
-        observable_counter = ObservableCounter(
-            "name", Mock(), Mock(), generator_callback()
+    def test_generator_callback_0(self):
+        observable_counter = _ObservableCounter(
+            "name", Mock(), Mock(), [generator_callback_0()]
         )
 
         self.assertEqual(
-            list(observable_counter.callback()),
+            list(observable_counter.callback(CallbackOptions())),
             [
                 Measurement(
                     1,
@@ -168,16 +284,21 @@ class TestObservableCounter(TestCase):
                 ),
             ],
         )
+
+    def test_disallow_direct_observable_counter_creation(self):
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            ObservableCounter("name", Mock(), Mock())
 
 
 class TestObservableUpDownCounter(TestCase):
-    def test_callable_callback(self):
-        observable_up_down_counter = ObservableUpDownCounter(
-            "name", Mock(), Mock(), callable_callback
+    def test_callable_callback_0(self):
+        observable_up_down_counter = _ObservableUpDownCounter(
+            "name", Mock(), Mock(), [callable_callback_0]
         )
 
         self.assertEqual(
-            list(observable_up_down_counter.callback()),
+            list(observable_up_down_counter.callback(CallbackOptions())),
             [
                 Measurement(
                     1,
@@ -197,13 +318,13 @@ class TestObservableUpDownCounter(TestCase):
             ],
         )
 
-    def test_generator_callback(self):
-        observable_up_down_counter = ObservableUpDownCounter(
-            "name", Mock(), Mock(), generator_callback()
+    def test_generator_callback_0(self):
+        observable_up_down_counter = _ObservableUpDownCounter(
+            "name", Mock(), Mock(), [generator_callback_0()]
         )
 
         self.assertEqual(
-            list(observable_up_down_counter.callback()),
+            list(observable_up_down_counter.callback(CallbackOptions())),
             [
                 Measurement(
                     1,
@@ -222,17 +343,27 @@ class TestObservableUpDownCounter(TestCase):
                 ),
             ],
         )
+
+    def test_disallow_direct_observable_up_down_counter_creation(self):
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            ObservableUpDownCounter("name", Mock(), Mock())
 
 
 class TestHistogram(TestCase):
     def test_record(self):
         mc = Mock()
-        hist = Histogram("name", Mock(), mc)
+        hist = _Histogram("name", Mock(), mc)
         hist.record(1.0)
         mc.consume_measurement.assert_called_once()
 
     def test_record_non_monotonic(self):
         mc = Mock()
-        hist = Histogram("name", Mock(), mc)
+        hist = _Histogram("name", Mock(), mc)
         hist.record(-1.0)
         mc.consume_measurement.assert_not_called()
+
+    def test_disallow_direct_histogram_creation(self):
+        with self.assertRaises(TypeError):
+            # pylint: disable=abstract-class-instantiated
+            Histogram("name", Mock(), Mock())

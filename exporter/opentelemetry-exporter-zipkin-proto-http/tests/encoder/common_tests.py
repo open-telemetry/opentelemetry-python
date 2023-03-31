@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 import abc
-import json
-import sys
 import unittest
 from typing import Dict, List
 
@@ -24,7 +22,7 @@ from opentelemetry.exporter.zipkin.encoder import (
 )
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.sdk import trace
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import TraceFlags
 from opentelemetry.trace.status import Status, StatusCode
 
@@ -417,7 +415,7 @@ class CommonEncoderTestCases:
                 context=other_context,
                 parent=None,
                 resource=trace.Resource({}),
-                instrumentation_info=InstrumentationInfo(
+                instrumentation_scope=InstrumentationScope(
                     name="name", version="version"
                 ),
             )
@@ -478,28 +476,4 @@ class CommonEncoderTestCases:
             return popped_item
 
         def assert_equal_encoded_spans(self, expected_spans, actual_spans):
-            if sys.version_info.major == 3 and sys.version_info.minor <= 5:
-                expected_spans = json.loads(expected_spans)
-                actual_spans = json.loads(actual_spans)
-                for expected_span, actual_span in zip(
-                    expected_spans, actual_spans
-                ):
-                    actual_annotations = self.pop_and_sort(
-                        actual_span, "annotations", "timestamp"
-                    )
-                    expected_annotations = self.pop_and_sort(
-                        expected_span, "annotations", "timestamp"
-                    )
-                    expected_binary_annotations = self.pop_and_sort(
-                        expected_span, "binaryAnnotations", "key"
-                    )
-                    actual_binary_annotations = self.pop_and_sort(
-                        actual_span, "binaryAnnotations", "key"
-                    )
-                    self.assertEqual(actual_span, expected_span)
-                    self.assertEqual(actual_annotations, expected_annotations)
-                    self.assertEqual(
-                        actual_binary_annotations, expected_binary_annotations
-                    )
-            else:
-                self.assertEqual(expected_spans, actual_spans)
+            self.assertEqual(expected_spans, actual_spans)

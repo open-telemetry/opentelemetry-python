@@ -13,14 +13,17 @@
 # limitations under the License.
 
 # pylint: disable=too-many-lines
+
 import shutil
 import subprocess
 import unittest
 from importlib import reload
 from logging import ERROR, WARNING
 from random import randint
+from time import time_ns
 from typing import Optional
 from unittest import mock
+from unittest.mock import Mock
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
@@ -37,19 +40,36 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
-from opentelemetry.sdk.trace import Resource, sampling
+from opentelemetry.sdk.trace import Resource, TracerProvider
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
-from opentelemetry.sdk.util import ns_to_iso_str
+from opentelemetry.sdk.trace.sampling import (
+    ALWAYS_OFF,
+    ALWAYS_ON,
+    Decision,
+    ParentBased,
+    StaticSampler,
+)
+from opentelemetry.sdk.util import BoundedDict, ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
     new_tracer,
 )
-from opentelemetry.trace import StatusCode
-from opentelemetry.util._time import _time_ns
+from opentelemetry.trace import Status, StatusCode
 
 
 class TestTracer(unittest.TestCase):
+    def test_no_deprecated_warning(self):
+        with self.assertRaises(AssertionError):
+            with self.assertWarns(DeprecationWarning):
+                TracerProvider(Mock(), Mock()).get_tracer(Mock(), Mock())
+
+        # This is being added here to make sure the filter on
+        # InstrumentationInfo does not affect other DeprecationWarnings that
+        # may be raised.
+        with self.assertWarns(DeprecationWarning):
+            BoundedDict(0)
+
     def test_extends_api(self):
         tracer = new_tracer()
         self.assertIsInstance(tracer, trace.Tracer)
@@ -118,7 +138,7 @@ tracer_provider.add_span_processor(mock_processor)
         self.assertTrue(out.startswith(b"1"))
 
         # test that shutdown is called only once even if Tracer.shutdown is
-        # called explicitely
+        # called explicitly
         out = run_general_code(True, True)
         self.assertTrue(out.startswith(b"1"))
 
@@ -164,12 +184,11 @@ class TestTracerSampling(unittest.TestCase):
 
     def test_default_sampler_type(self):
         tracer_provider = trace.TracerProvider()
-        self.assertIsInstance(tracer_provider.sampler, sampling.ParentBased)
-        # pylint: disable=protected-access
-        self.assertEqual(tracer_provider.sampler._root, sampling.ALWAYS_ON)
+        self.verify_default_sampler(tracer_provider)
 
-    def test_sampler_no_sampling(self):
-        tracer_provider = trace.TracerProvider(sampling.ALWAYS_OFF)
+    @mock.patch("opentelemetry.sdk.trace.sampling._get_from_env_or_default")
+    def test_sampler_no_sampling(self, _get_from_env_or_default):
+        tracer_provider = trace.TracerProvider(ALWAYS_OFF)
         tracer = tracer_provider.get_tracer(__name__)
 
         # Check that the default tracer creates no-op spans if the sampler
@@ -187,16 +206,15 @@ class TestTracerSampling(unittest.TestCase):
             child_span.get_span_context().trace_flags,
             trace_api.TraceFlags.DEFAULT,
         )
+        self.assertFalse(_get_from_env_or_default.called)
 
     @mock.patch.dict("os.environ", {OTEL_TRACES_SAMPLER: "always_off"})
     def test_sampler_with_env(self):
         # pylint: disable=protected-access
         reload(trace)
         tracer_provider = trace.TracerProvider()
-        self.assertIsInstance(tracer_provider.sampler, sampling.StaticSampler)
-        self.assertEqual(
-            tracer_provider.sampler._decision, sampling.Decision.DROP
-        )
+        self.assertIsInstance(tracer_provider.sampler, StaticSampler)
+        self.assertEqual(tracer_provider.sampler._decision, Decision.DROP)
 
         tracer = tracer_provider.get_tracer(__name__)
 
@@ -215,8 +233,13 @@ class TestTracerSampling(unittest.TestCase):
         # pylint: disable=protected-access
         reload(trace)
         tracer_provider = trace.TracerProvider()
-        self.assertIsInstance(tracer_provider.sampler, sampling.ParentBased)
+        self.assertIsInstance(tracer_provider.sampler, ParentBased)
         self.assertEqual(tracer_provider.sampler._root.rate, 0.25)
+
+    def verify_default_sampler(self, tracer_provider):
+        self.assertIsInstance(tracer_provider.sampler, ParentBased)
+        # pylint: disable=protected-access
+        self.assertEqual(tracer_provider.sampler._root, ALWAYS_ON)
 
 
 class TestSpanCreation(unittest.TestCase):
@@ -270,7 +293,7 @@ class TestSpanCreation(unittest.TestCase):
         )
         span1 = tracer1.start_span("foo")
         self.assertTrue(span1.is_recording())
-        self.assertEqual(tracer1.instrumentation_info.schema_url, None)
+        self.assertEqual(tracer1.instrumentation_info.schema_url, "")
         self.assertEqual(tracer1.instrumentation_info.version, "")
         self.assertEqual(tracer1.instrumentation_info.name, "")
 
@@ -279,7 +302,7 @@ class TestSpanCreation(unittest.TestCase):
         )
         span2 = tracer2.start_span("bar")
         self.assertTrue(span2.is_recording())
-        self.assertEqual(tracer2.instrumentation_info.schema_url, None)
+        self.assertEqual(tracer2.instrumentation_info.schema_url, "")
         self.assertEqual(tracer2.instrumentation_info.version, "")
         self.assertEqual(tracer2.instrumentation_info.name, "")
 
@@ -711,7 +734,7 @@ class TestSpan(unittest.TestCase):
             "attr-in-both": "decision-attr",
         }
         tracer_provider = trace.TracerProvider(
-            sampling.StaticSampler(sampling.Decision.RECORD_AND_SAMPLE)
+            StaticSampler(Decision.RECORD_AND_SAMPLE)
         )
 
         self.tracer = tracer_provider.get_tracer(__name__)
@@ -740,7 +763,7 @@ class TestSpan(unittest.TestCase):
             )
 
             # event name, attributes and timestamp
-            now = _time_ns()
+            now = time_ns()
             root.add_event("event2", {"name": ["birthday"]}, now)
 
             mutable_list = ["original_contents"]
@@ -902,6 +925,39 @@ class TestSpan(unittest.TestCase):
         end_time = 456
         span.end(end_time)
         self.assertEqual(end_time, span.end_time)
+
+    def test_span_set_status(self):
+
+        span1 = self.tracer.start_span("span1")
+        span1.set_status(Status(status_code=StatusCode.ERROR))
+        self.assertEqual(span1.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span1.status.description, None)
+
+        span2 = self.tracer.start_span("span2")
+        span2.set_status(
+            Status(status_code=StatusCode.ERROR, description="desc")
+        )
+        self.assertEqual(span2.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span2.status.description, "desc")
+
+        span3 = self.tracer.start_span("span3")
+        span3.set_status(StatusCode.ERROR)
+        self.assertEqual(span3.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span3.status.description, None)
+
+        span4 = self.tracer.start_span("span4")
+        span4.set_status(StatusCode.ERROR, "span4 desc")
+        self.assertEqual(span4.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span4.status.description, "span4 desc")
+
+        span5 = self.tracer.start_span("span5")
+        with self.assertLogs(level=WARNING):
+            span5.set_status(
+                Status(status_code=StatusCode.ERROR, description="desc"),
+                description="ignored",
+            )
+        self.assertEqual(span5.status.status_code, StatusCode.ERROR)
+        self.assertEqual(span5.status.description, "desc")
 
     def test_ended_span(self):
         """Events, attributes are not allowed after span is ended"""
@@ -1313,12 +1369,15 @@ class TestSpanProcessor(unittest.TestCase):
     "attributes": {},
     "events": [],
     "links": [],
-    "resource": {}
+    "resource": {
+        "attributes": {},
+        "schema_url": ""
+    }
 }""",
         )
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "[]"}, "kind": "SpanKind.INTERNAL", "parent_id": "0x00000000deadbef0", "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {}, "events": [], "links": [], "resource": {}}',
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "[]"}, "kind": "SpanKind.INTERNAL", "parent_id": "0x00000000deadbef0", "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {}, "events": [], "links": [], "resource": {"attributes": {}, "schema_url": ""}}',
         )
 
     def test_attributes_to_json(self):
@@ -1336,7 +1395,7 @@ class TestSpanProcessor(unittest.TestCase):
             span.to_json(indent=None),
             '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "[]"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {"key": "value"}, "events": [{"name": "event", "timestamp": "'
             + date_str
-            + '", "attributes": {"key2": "value2"}}], "links": [], "resource": {}}',
+            + '", "attributes": {"key2": "value2"}}], "links": [], "resource": {"attributes": {}, "schema_url": ""}}',
         )
 
 

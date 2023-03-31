@@ -24,6 +24,7 @@ import typing
 from collections import OrderedDict
 from contextlib import contextmanager
 from os import environ
+from time import time_ns
 from types import MappingProxyType, TracebackType
 from typing import (
     Any,
@@ -36,6 +37,9 @@ from typing import (
     Type,
     Union,
 )
+from warnings import filterwarnings
+
+from deprecated import deprecated
 
 from opentelemetry import context as context_api
 from opentelemetry import trace as trace_api
@@ -55,11 +59,13 @@ from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import sampling
 from opentelemetry.sdk.trace.id_generator import IdGenerator, RandomIdGenerator
 from opentelemetry.sdk.util import BoundedList
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import (
+    InstrumentationInfo,
+    InstrumentationScope,
+)
 from opentelemetry.trace import SpanContext
 from opentelemetry.trace.status import Status, StatusCode
 from opentelemetry.util import types
-from opentelemetry.util._time import _time_ns
 
 logger = logging.getLogger(__name__)
 
@@ -72,9 +78,6 @@ _DEFAULT_OTEL_SPAN_LINK_COUNT_LIMIT = 128
 
 
 _ENV_VALUE_UNSET = ""
-
-# pylint: disable=protected-access
-_TRACE_SAMPLER = sampling._get_from_env_or_default()
 
 
 class SpanProcessor:
@@ -179,9 +182,9 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
             True if all span processors flushed their spans within the
             given timeout, False otherwise.
         """
-        deadline_ns = _time_ns() + timeout_millis * 1000000
+        deadline_ns = time_ns() + timeout_millis * 1000000
         for sp in self._span_processors:
-            current_time_ns = _time_ns()
+            current_time_ns = time_ns()
             if current_time_ns >= deadline_ns:
                 return False
 
@@ -281,7 +284,7 @@ class EventBase(abc.ABC):
     def __init__(self, name: str, timestamp: Optional[int] = None) -> None:
         self._name = name
         if timestamp is None:
-            self._timestamp = _time_ns()
+            self._timestamp = time_ns()
         else:
             self._timestamp = timestamp
 
@@ -329,7 +332,7 @@ def _check_span_ended(func):
     def wrapper(self, *args, **kwargs):
         already_ended = False
         with self._lock:  # pylint: disable=protected-access
-            if self._end_time is None:
+            if self._end_time is None:  # pylint: disable=protected-access
                 func(self, *args, **kwargs)
             else:
                 already_ended = True
@@ -357,11 +360,13 @@ class ReadableSpan:
         status: Status = Status(StatusCode.UNSET),
         start_time: Optional[int] = None,
         end_time: Optional[int] = None,
+        instrumentation_scope: InstrumentationScope = None,
     ) -> None:
         self._name = name
         self._context = context
         self._kind = kind
         self._instrumentation_info = instrumentation_info
+        self._instrumentation_scope = instrumentation_scope
         self._parent = parent
         self._start_time = start_time
         self._end_time = end_time
@@ -437,8 +442,15 @@ class ReadableSpan:
         return self._resource
 
     @property
+    @deprecated(
+        version="1.11.1", reason="You should use instrumentation_scope"
+    )
     def instrumentation_info(self) -> InstrumentationInfo:
         return self._instrumentation_info
+
+    @property
+    def instrumentation_scope(self) -> InstrumentationScope:
+        return self._instrumentation_scope
 
     def to_json(self, indent=4):
         parent_id = None
@@ -478,7 +490,7 @@ class ReadableSpan:
         f_span["attributes"] = self._format_attributes(self._attributes)
         f_span["events"] = self._format_events(self._events)
         f_span["links"] = self._format_links(self._links)
-        f_span["resource"] = self._format_attributes(self._resource.attributes)
+        f_span["resource"] = json.loads(self.resource.to_json())
 
         return json.dumps(f_span, indent=indent)
 
@@ -505,7 +517,11 @@ class ReadableSpan:
             f_event = OrderedDict()
             f_event["name"] = event.name
             f_event["timestamp"] = util.ns_to_iso_str(event.timestamp)
-            f_event["attributes"] = Span._format_attributes(event.attributes)
+            f_event[
+                "attributes"
+            ] = Span._format_attributes(  # pylint: disable=protected-access
+                event.attributes
+            )
             f_events.append(f_event)
         return f_events
 
@@ -514,8 +530,16 @@ class ReadableSpan:
         f_links = []
         for link in links:
             f_link = OrderedDict()
-            f_link["context"] = Span._format_context(link.context)
-            f_link["attributes"] = Span._format_attributes(link.attributes)
+            f_link[
+                "context"
+            ] = Span._format_context(  # pylint: disable=protected-access
+                link.context
+            )
+            f_link[
+                "attributes"
+            ] = Span._format_attributes(  # pylint: disable=protected-access
+                link.attributes
+            )
             f_links.append(f_link)
         return f_links
 
@@ -677,10 +701,12 @@ _UnsetLimits = SpanLimits(
 )
 
 # not removed for backward compat. please use SpanLimits instead.
-SPAN_ATTRIBUTE_COUNT_LIMIT = SpanLimits._from_env_if_absent(
-    None,
-    OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
-    _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+SPAN_ATTRIBUTE_COUNT_LIMIT = (
+    SpanLimits._from_env_if_absent(  # pylint: disable=protected-access
+        None,
+        OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+        _DEFAULT_OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT,
+    )
 )
 
 
@@ -729,6 +755,7 @@ class Span(trace_api.Span, ReadableSpan):
         record_exception: bool = True,
         set_status_on_exception: bool = True,
         limits=_UnsetLimits,
+        instrumentation_scope: InstrumentationScope = None,
     ) -> None:
         super().__init__(
             name=name,
@@ -737,6 +764,7 @@ class Span(trace_api.Span, ReadableSpan):
             kind=kind,
             resource=resource,
             instrumentation_info=instrumentation_info,
+            instrumentation_scope=instrumentation_scope,
         )
         self._sampler = sampler
         self._trace_config = trace_config
@@ -835,6 +863,7 @@ class Span(trace_api.Span, ReadableSpan):
             start_time=self._start_time,
             end_time=self._end_time,
             instrumentation_info=self._instrumentation_info,
+            instrumentation_scope=self._instrumentation_scope,
         )
 
     def start(
@@ -847,7 +876,7 @@ class Span(trace_api.Span, ReadableSpan):
                 logger.warning("Calling start() on a started span.")
                 return
             self._start_time = (
-                start_time if start_time is not None else _time_ns()
+                start_time if start_time is not None else time_ns()
             )
 
         self._span_processor.on_start(self, parent_context=parent_context)
@@ -860,7 +889,7 @@ class Span(trace_api.Span, ReadableSpan):
                 logger.warning("Calling end() on an ended span.")
                 return
 
-            self._end_time = end_time if end_time is not None else _time_ns()
+            self._end_time = end_time if end_time is not None else time_ns()
 
         self._span_processor.on_end(self._readable_span())
 
@@ -872,16 +901,34 @@ class Span(trace_api.Span, ReadableSpan):
         return self._end_time is None
 
     @_check_span_ended
-    def set_status(self, status: trace_api.Status) -> None:
+    def set_status(
+        self,
+        status: typing.Union[Status, StatusCode],
+        description: typing.Optional[str] = None,
+    ) -> None:
         # Ignore future calls if status is already set to OK
         # Ignore calls to set to StatusCode.UNSET
-        if (
-            self._status
-            and self._status.status_code is StatusCode.OK
-            or status.status_code is StatusCode.UNSET
-        ):
-            return
-        self._status = status
+        if isinstance(status, Status):
+            if (
+                self._status
+                and self._status.status_code is StatusCode.OK
+                or status.status_code is StatusCode.UNSET
+            ):
+                return
+            if description is not None:
+                logger.warning(
+                    "Description %s ignored. Use either `Status` or `(StatusCode, Description)`",
+                    description,
+                )
+            self._status = status
+        elif isinstance(status, StatusCode):
+            if (
+                self._status
+                and self._status.status_code is StatusCode.OK
+                or status is StatusCode.UNSET
+            ):
+                return
+            self._status = Status(status, description)
 
     def __exit__(
         self,
@@ -956,6 +1003,7 @@ class Tracer(trace_api.Tracer):
         id_generator: IdGenerator,
         instrumentation_info: InstrumentationInfo,
         span_limits: SpanLimits,
+        instrumentation_scope: InstrumentationScope,
     ) -> None:
         self.sampler = sampler
         self.resource = resource
@@ -963,6 +1011,7 @@ class Tracer(trace_api.Tracer):
         self.id_generator = id_generator
         self.instrumentation_info = instrumentation_info
         self._span_limits = span_limits
+        self._instrumentation_scope = instrumentation_scope
 
     @contextmanager
     def start_as_current_span(
@@ -1065,6 +1114,7 @@ class Tracer(trace_api.Tracer):
                 record_exception=record_exception,
                 set_status_on_exception=set_status_on_exception,
                 limits=self._span_limits,
+                instrumentation_scope=self._instrumentation_scope,
             )
             span.start(start_time=start_time, parent_context=context)
         else:
@@ -1077,7 +1127,7 @@ class TracerProvider(trace_api.TracerProvider):
 
     def __init__(
         self,
-        sampler: sampling.Sampler = _TRACE_SAMPLER,
+        sampler: sampling.Sampler = None,
         resource: Resource = Resource.create({}),
         shutdown_on_exit: bool = True,
         active_span_processor: Union[
@@ -1094,6 +1144,8 @@ class TracerProvider(trace_api.TracerProvider):
         else:
             self.id_generator = id_generator
         self._resource = resource
+        if not sampler:
+            sampler = sampling._get_from_env_or_default()
         self.sampler = sampler
         self._span_limits = span_limits or SpanLimits()
         self._atexit_handler = None
@@ -1116,17 +1168,35 @@ class TracerProvider(trace_api.TracerProvider):
             logger.error("get_tracer called with missing module name.")
         if instrumenting_library_version is None:
             instrumenting_library_version = ""
+
+        filterwarnings(
+            "ignore",
+            message=(
+                r"Call to deprecated method __init__. \(You should use "
+                r"InstrumentationScope\) -- Deprecated since version 1.11.1."
+            ),
+            category=DeprecationWarning,
+            module="opentelemetry.sdk.trace",
+        )
+
+        instrumentation_info = InstrumentationInfo(
+            instrumenting_module_name,
+            instrumenting_library_version,
+            schema_url,
+        )
+
         return Tracer(
             self.sampler,
             self.resource,
             self._active_span_processor,
             self.id_generator,
-            InstrumentationInfo(
+            instrumentation_info,
+            self._span_limits,
+            InstrumentationScope(
                 instrumenting_module_name,
                 instrumenting_library_version,
                 schema_url,
             ),
-            self._span_limits,
         )
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:

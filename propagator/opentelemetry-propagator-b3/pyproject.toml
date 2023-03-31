@@ -1,0 +1,53 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "opentelemetry-propagator-b3"
+dynamic = ["version"]
+description = "OpenTelemetry B3 Propagator"
+readme = "README.rst"
+license = "Apache-2.0"
+requires-python = ">=3.7"
+authors = [
+  { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
+]
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Developers",
+  "License :: OSI Approved :: Apache Software License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3.7",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Typing :: Typed",
+]
+dependencies = [
+  "deprecated >= 1.2.6",
+  "opentelemetry-api ~= 1.3",
+]
+
+[project.optional-dependencies]
+test = []
+
+[project.entry-points.opentelemetry_propagator]
+b3 = "opentelemetry.propagators.b3:B3SingleFormat"
+b3multi = "opentelemetry.propagators.b3:B3MultiFormat"
+
+[project.urls]
+Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/propagator/opentelemetry-propagator-b3"
+
+[tool.hatch.version]
+path = "src/opentelemetry/propagators/b3/version.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+  "/src",
+  "/tests",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/opentelemetry"]

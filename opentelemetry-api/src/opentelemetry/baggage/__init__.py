@@ -81,16 +81,7 @@ def set_baggage(
         A Context with the value updated
     """
     baggage = dict(get_all(context=context))
-    if not _is_valid_key(name):
-        _logger.warning(
-            "Baggage key `%s` does not match format, ignoring", name
-        )
-    elif not _is_valid_value(str(value)):
-        _logger.warning(
-            "Baggage value `%s` does not match format, ignoring", value
-        )
-    else:
-        baggage[name] = value
+    baggage[name] = value
     return set_value(_BAGGAGE_KEY, baggage, context=context)
 
 

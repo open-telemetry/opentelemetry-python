@@ -29,18 +29,16 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
 )
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue as PB2AnyValue
 from opentelemetry.proto.common.v1.common_pb2 import (
-    InstrumentationLibrary as PB2InstrumentationLibrary,
+    InstrumentationScope as PB2InstrumentationScope,
 )
 from opentelemetry.proto.common.v1.common_pb2 import KeyValue as PB2KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (
-    InstrumentationLibrarySpans as PB2InstrumentationLibrarySpans,
-)
-from opentelemetry.proto.trace.v1.trace_pb2 import (
     ResourceSpans as PB2ResourceSpans,
 )
+from opentelemetry.proto.trace.v1.trace_pb2 import ScopeSpans as PB2ScopeSpans
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as PB2SPan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status as PB2Status
 from opentelemetry.sdk.trace import Event as SDKEvent
@@ -48,7 +46,7 @@ from opentelemetry.sdk.trace import Resource as SDKResource
 from opentelemetry.sdk.trace import SpanContext as SDKSpanContext
 from opentelemetry.sdk.trace import _Span as SDKSpan
 from opentelemetry.sdk.util.instrumentation import (
-    InstrumentationInfo as SDKInstrumentationInfo,
+    InstrumentationScope as SDKInstrumentationScope,
 )
 from opentelemetry.trace import Link as SDKLink
 from opentelemetry.trace import SpanKind as SDKSpanKind
@@ -69,11 +67,6 @@ class TestProtobufEncoder(unittest.TestCase):
         self.assertEqual(
             _ProtobufEncoder().serialize(otel_spans),
             expected_encoding.SerializeToString(),
-        )
-
-    def test_content_type(self):
-        self.assertEqual(
-            _ProtobufEncoder._CONTENT_TYPE, "application/x-protobuf"
         )
 
     @staticmethod
@@ -158,7 +151,7 @@ class TestProtobufEncoder(unittest.TestCase):
             context=other_context,
             parent=None,
             resource=SDKResource({}),
-            instrumentation_info=SDKInstrumentationInfo(
+            instrumentation_scope=SDKInstrumentationScope(
                 name="name", version="version"
             ),
         )
@@ -178,9 +171,9 @@ class TestProtobufEncoder(unittest.TestCase):
             resource_spans=[
                 PB2ResourceSpans(
                     resource=PB2Resource(),
-                    instrumentation_library_spans=[
-                        PB2InstrumentationLibrarySpans(
-                            instrumentation_library=PB2InstrumentationLibrary(),
+                    scope_spans=[
+                        PB2ScopeSpans(
+                            scope=PB2InstrumentationScope(),
                             spans=[
                                 PB2SPan(
                                     trace_id=trace_id,
@@ -274,8 +267,8 @@ class TestProtobufEncoder(unittest.TestCase):
                                 )
                             ],
                         ),
-                        PB2InstrumentationLibrarySpans(
-                            instrumentation_library=PB2InstrumentationLibrary(
+                        PB2ScopeSpans(
+                            scope=PB2InstrumentationScope(
                                 name="name",
                                 version="version",
                             ),
@@ -313,9 +306,9 @@ class TestProtobufEncoder(unittest.TestCase):
                             )
                         ]
                     ),
-                    instrumentation_library_spans=[
-                        PB2InstrumentationLibrarySpans(
-                            instrumentation_library=PB2InstrumentationLibrary(),
+                    scope_spans=[
+                        PB2ScopeSpans(
+                            scope=PB2InstrumentationScope(),
                             spans=[
                                 PB2SPan(
                                     trace_id=trace_id,

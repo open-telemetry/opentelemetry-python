@@ -1,0 +1,73 @@
+name: Prepare patch release
+on:
+  workflow_dispatch:
+
+jobs:
+  prepare-patch-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - run: |
+          if [[ ! $GITHUB_REF_NAME =~ ^release/v[0-9]+\.[0-9]+\.x-0\.[0-9]+bx$ ]]; then
+            echo this workflow should only be run against long-term release branches
+            exit 1
+          fi
+
+          if ! grep --quiet "^## Unreleased$" CHANGELOG.md; then
+            echo the change log is missing an \"Unreleased\" section
+            exit 1
+          fi
+
+      - name: Set environment variables
+        run: |
+          stable_version=$(./scripts/eachdist.py version --mode stable)
+          unstable_version=$(./scripts/eachdist.py version --mode prerelease)
+
+          if [[ $stable_version =~ ^([0-9]+\.[0-9]+)\.([0-9]+)$ ]]; then
+            stable_major_minor="${BASH_REMATCH[1]}"
+            stable_patch="${BASH_REMATCH[2]}"
+          else
+            echo "unexpected stable_version: $stable_version"
+            exit 1
+          fi
+
+          if [[ $unstable_version =~ ^0\.([0-9]+)b([0-9]+)$ ]]; then
+            unstable_minor="${BASH_REMATCH[1]}"
+            unstable_patch="${BASH_REMATCH[2]}"
+          else
+            echo "unexpected unstable_version: $unstable_version"
+            exit 1
+          fi
+
+          stable_version="$stable_major_minor.$((stable_patch + 1))"
+          unstable_version="0.${unstable_minor}b$((unstable_patch + 1))"
+
+          echo "STABLE_VERSION=$stable_version" >> $GITHUB_ENV
+          echo "UNSTABLE_VERSION=$unstable_version" >> $GITHUB_ENV
+
+      - name: Update version
+        run: .github/scripts/update-version.sh $STABLE_VERSION $UNSTABLE_VERSION
+
+      - name: Update the change log with the approximate release date
+        run: |
+          date=$(date "+%Y-%m-%d")
+          sed -Ei "s/^## Unreleased$/## Version ${STABLE_VERSION}\/${UNSTABLE_VERSION} ($date)/" CHANGELOG.md
+
+      - name: Use CLA approved github bot
+        run: .github/scripts/use-cla-approved-github-bot.sh
+
+      - name: Create pull request
+        env:
+          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          GITHUB_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+        run: |
+          message="Prepare release ${STABLE_VERSION}/${UNSTABLE_VERSION}"
+          branch="opentelemetrybot/prepare-release-${STABLE_VERSION}-${UNSTABLE_VERSION}"
+
+          git commit -a -m "$message"
+          git push origin HEAD:$branch
+          gh pr create --title "[$GITHUB_REF_NAME] $message" \
+                       --body "$message." \
+                       --head $branch \
+                       --base $GITHUB_REF_NAME

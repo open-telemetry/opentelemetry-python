@@ -1,0 +1,70 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "opentelemetry-api"
+description = "OpenTelemetry Python API"
+readme = "README.rst"
+license = "Apache-2.0"
+requires-python = ">=3.7"
+authors = [
+    { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Typing :: Typed",
+]
+dependencies = [
+    "Deprecated >= 1.2.6",
+    "setuptools >= 16.0",
+    # FIXME This should be able to be removed after 3.12 is released if there is a reliable API
+    # in importlib.metadata.
+    "importlib-metadata ~= 6.0.0",
+]
+dynamic = [
+    "version",
+]
+
+[project.optional-dependencies]
+test = []
+
+[project.entry-points.opentelemetry_context]
+contextvars_context = "opentelemetry.context.contextvars_context:ContextVarsRuntimeContext"
+
+[project.entry-points.opentelemetry_environment_variables]
+api = "opentelemetry.environment_variables"
+
+[project.entry-points.opentelemetry_meter_provider]
+default_meter_provider = "opentelemetry.metrics:NoOpMeterProvider"
+
+[project.entry-points.opentelemetry_propagator]
+baggage = "opentelemetry.baggage.propagation:W3CBaggagePropagator"
+tracecontext = "opentelemetry.trace.propagation.tracecontext:TraceContextTextMapPropagator"
+
+[project.entry-points.opentelemetry_tracer_provider]
+default_tracer_provider = "opentelemetry.trace:NoOpTracerProvider"
+
+[project.urls]
+Homepage = "https://github.com/open-telemetry/opentelemetry-python/tree/main/opentelemetry-api"
+
+[tool.hatch.version]
+path = "src/opentelemetry/version.py"
+
+[tool.hatch.build.targets.sdist]
+include = [
+    "/src",
+    "/tests",
+]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/opentelemetry"]

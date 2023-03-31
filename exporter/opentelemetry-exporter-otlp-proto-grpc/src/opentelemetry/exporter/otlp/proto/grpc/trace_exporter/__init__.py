@@ -15,7 +15,9 @@
 
 import logging
 from os import environ
-from typing import Optional, Sequence
+from typing import Dict, Optional, Sequence, Tuple, Union
+from typing import Sequence as TypingSequence
+
 
 from grpc import ChannelCredentials, Compression
 
@@ -32,9 +34,9 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
     TraceServiceStub,
 )
-from opentelemetry.proto.common.v1.common_pb2 import InstrumentationLibrary
+from opentelemetry.proto.common.v1.common_pb2 import InstrumentationScope
 from opentelemetry.proto.trace.v1.trace_pb2 import (
-    InstrumentationLibrarySpans,
+    ScopeSpans,
     ResourceSpans,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as CollectorSpan
@@ -80,7 +82,9 @@ class OTLPSpanExporter(
         endpoint: Optional[str] = None,
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
-        headers: Optional[Sequence] = None,
+        headers: Optional[
+            Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
+        ] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
@@ -217,45 +221,33 @@ class OTLPSpanExporter(
     ) -> ExportTraceServiceRequest:
         # pylint: disable=attribute-defined-outside-init
 
-        sdk_resource_instrumentation_library_spans = {}
+        sdk_resource_scope_spans = {}
 
         for sdk_span in data:
-            instrumentation_library_spans_map = (
-                sdk_resource_instrumentation_library_spans.get(
-                    sdk_span.resource, {}
-                )
+            scope_spans_map = sdk_resource_scope_spans.get(
+                sdk_span.resource, {}
             )
             # If we haven't seen the Resource yet, add it to the map
-            if not instrumentation_library_spans_map:
-                sdk_resource_instrumentation_library_spans[
-                    sdk_span.resource
-                ] = instrumentation_library_spans_map
-            instrumentation_library_spans = (
-                instrumentation_library_spans_map.get(
-                    sdk_span.instrumentation_info
-                )
-            )
-            # If we haven't seen the InstrumentationInfo for this Resource yet, add it to the map
-            if not instrumentation_library_spans:
-                if sdk_span.instrumentation_info is not None:
-                    instrumentation_library_spans_map[
-                        sdk_span.instrumentation_info
-                    ] = InstrumentationLibrarySpans(
-                        instrumentation_library=InstrumentationLibrary(
-                            name=sdk_span.instrumentation_info.name,
-                            version=sdk_span.instrumentation_info.version,
+            if not scope_spans_map:
+                sdk_resource_scope_spans[sdk_span.resource] = scope_spans_map
+            scope_spans = scope_spans_map.get(sdk_span.instrumentation_scope)
+            # If we haven't seen the InstrumentationScope for this Resource yet, add it to the map
+            if not scope_spans:
+                if sdk_span.instrumentation_scope is not None:
+                    scope_spans_map[
+                        sdk_span.instrumentation_scope
+                    ] = ScopeSpans(
+                        scope=InstrumentationScope(
+                            name=sdk_span.instrumentation_scope.name,
+                            version=sdk_span.instrumentation_scope.version,
                         )
                     )
                 else:
-                    # If no InstrumentationInfo, store in None key
-                    instrumentation_library_spans_map[
-                        sdk_span.instrumentation_info
-                    ] = InstrumentationLibrarySpans()
-            instrumentation_library_spans = (
-                instrumentation_library_spans_map.get(
-                    sdk_span.instrumentation_info
-                )
-            )
+                    # If no InstrumentationScope, store in None key
+                    scope_spans_map[
+                        sdk_span.instrumentation_scope
+                    ] = ScopeSpans()
+            scope_spans = scope_spans_map.get(sdk_span.instrumentation_scope)
             self._collector_kwargs = {}
 
             self._translate_name(sdk_span)
@@ -289,13 +281,11 @@ class OTLPSpanExporter(
                 f"SPAN_KIND_{sdk_span.kind.name}",
             )
 
-            instrumentation_library_spans.spans.append(
-                CollectorSpan(**self._collector_kwargs)
-            )
+            scope_spans.spans.append(CollectorSpan(**self._collector_kwargs))
 
         return ExportTraceServiceRequest(
             resource_spans=get_resource_data(
-                sdk_resource_instrumentation_library_spans,
+                sdk_resource_scope_spans,
                 ResourceSpans,
                 "spans",
             )
@@ -303,3 +293,13 @@ class OTLPSpanExporter(
 
     def export(self, spans: Sequence[ReadableSpan]) -> SpanExportResult:
         return self._export(spans)
+
+    def shutdown(self) -> None:
+        OTLPExporterMixin.shutdown(self)
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True
+
+    @property
+    def _exporting(self):
+        return "traces"

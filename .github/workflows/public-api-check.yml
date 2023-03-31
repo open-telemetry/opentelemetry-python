@@ -31,10 +31,10 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: 3.9
+          python-version: '3.10'
 
       - name: Install tox
-        run: pip install -U tox-factor
+        run: pip install tox==3.27.1 -U tox-factor
 
       - name: Public API Check
         run: tox -e public-symbols-check

@@ -66,11 +66,43 @@ Invalid or unrecognized input is ignored,
 i.e. the SDK behaves as if OTEL_TRACES_SAMPLER_ARG is not set.
 """
 
+OTEL_BLRP_SCHEDULE_DELAY = "OTEL_BLRP_SCHEDULE_DELAY"
+"""
+.. envvar:: OTEL_BLRP_SCHEDULE_DELAY
+
+The :envvar:`OTEL_BLRP_SCHEDULE_DELAY` represents the delay interval between two consecutive exports of the BatchLogRecordProcessor.
+Default: 5000
+"""
+
+OTEL_BLRP_EXPORT_TIMEOUT = "OTEL_BLRP_EXPORT_TIMEOUT"
+"""
+.. envvar:: OTEL_BLRP_EXPORT_TIMEOUT
+
+The :envvar:`OTEL_BLRP_EXPORT_TIMEOUT` represents the maximum allowed time to export data from the BatchLogRecordProcessor.
+Default: 30000
+"""
+
+OTEL_BLRP_MAX_QUEUE_SIZE = "OTEL_BLRP_MAX_QUEUE_SIZE"
+"""
+.. envvar:: OTEL_BLRP_MAX_QUEUE_SIZE
+
+The :envvar:`OTEL_BLRP_MAX_QUEUE_SIZE` represents the maximum queue size for the data export of the BatchLogRecordProcessor.
+Default: 2048
+"""
+
+OTEL_BLRP_MAX_EXPORT_BATCH_SIZE = "OTEL_BLRP_MAX_EXPORT_BATCH_SIZE"
+"""
+.. envvar:: OTEL_BLRP_MAX_EXPORT_BATCH_SIZE
+
+The :envvar:`OTEL_BLRP_MAX_EXPORT_BATCH_SIZE` represents the maximum batch size for the data export of the BatchLogRecordProcessor.
+Default: 512
+"""
+
 OTEL_BSP_SCHEDULE_DELAY = "OTEL_BSP_SCHEDULE_DELAY"
 """
 .. envvar:: OTEL_BSP_SCHEDULE_DELAY
 
-The :envvar:`OTEL_BSP_SCHEDULE_DELAY` represents the delay interval between two consecutive exports.
+The :envvar:`OTEL_BSP_SCHEDULE_DELAY` represents the delay interval between two consecutive exports of the BatchSpanProcessor.
 Default: 5000
 """
 
@@ -78,7 +110,7 @@ OTEL_BSP_EXPORT_TIMEOUT = "OTEL_BSP_EXPORT_TIMEOUT"
 """
 .. envvar:: OTEL_BSP_EXPORT_TIMEOUT
 
-The :envvar:`OTEL_BSP_EXPORT_TIMEOUT` represents the maximum allowed time to export data.
+The :envvar:`OTEL_BSP_EXPORT_TIMEOUT` represents the maximum allowed time to export data from the BatchSpanProcessor.
 Default: 30000
 """
 
@@ -86,7 +118,7 @@ OTEL_BSP_MAX_QUEUE_SIZE = "OTEL_BSP_MAX_QUEUE_SIZE"
 """
 .. envvar:: OTEL_BSP_MAX_QUEUE_SIZE
 
-The :envvar:`OTEL_BSP_MAX_QUEUE_SIZE` represents the maximum queue size for the data export.
+The :envvar:`OTEL_BSP_MAX_QUEUE_SIZE` represents the maximum queue size for the data export of the BatchSpanProcessor.
 Default: 2048
 """
 
@@ -94,7 +126,7 @@ OTEL_BSP_MAX_EXPORT_BATCH_SIZE = "OTEL_BSP_MAX_EXPORT_BATCH_SIZE"
 """
 .. envvar:: OTEL_BSP_MAX_EXPORT_BATCH_SIZE
 
-The :envvar:`OTEL_BSP_MAX_EXPORT_BATCH_SIZE` represents the maximum batch size for the data export.
+The :envvar:`OTEL_BSP_MAX_EXPORT_BATCH_SIZE` represents the maximum batch size for the data export of the BatchSpanProcessor.
 Default: 512
 """
 
@@ -103,7 +135,7 @@ OTEL_ATTRIBUTE_COUNT_LIMIT = "OTEL_ATTRIBUTE_COUNT_LIMIT"
 .. envvar:: OTEL_ATTRIBUTE_COUNT_LIMIT
 
 The :envvar:`OTEL_ATTRIBUTE_COUNT_LIMIT` represents the maximum allowed attribute count for spans, events and links.
-This limit is overriden by model specific limits such as OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT.
+This limit is overridden by model specific limits such as OTEL_SPAN_ATTRIBUTE_COUNT_LIMIT.
 Default: 128
 """
 
@@ -234,6 +266,27 @@ The :envvar:`OTEL_EXPORTER_OTLP_PROTOCOL` represents the the transport protocol 
 OTLP exporter.
 """
 
+OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
+
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` represents the the transport protocol for spans.
+"""
+
+OTEL_EXPORTER_OTLP_METRICS_PROTOCOL = "OTEL_EXPORTER_OTLP_METRICS_PROTOCOL"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
+
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` represents the the transport protocol for metrics.
+"""
+
+OTEL_EXPORTER_OTLP_LOGS_PROTOCOL = "OTEL_EXPORTER_OTLP_LOGS_PROTOCOL"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
+
+The :envvar:`OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` represents the the transport protocol for logs.
+"""
+
 OTEL_EXPORTER_OTLP_CERTIFICATE = "OTEL_EXPORTER_OTLP_CERTIFICATE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_CERTIFICATE
@@ -314,11 +367,22 @@ The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https),
 A scheme of https indicates a secure connection and takes precedence over this configuration setting.
 """
 
-OTEL_EXPORTER_OTLP_TRACES_PROTOCOL = "OTEL_EXPORTER_OTLP_TRACES_PROTOCOL"
+OTEL_EXPORTER_OTLP_METRICS_ENDPOINT = "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"
 """
-.. envvar:: OTEL_EXPORTER_OTLP_TRACES_PROTOCOL
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
 
-The :envvar:`OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` represents the the transport protocol for spans.
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_ENDPOINT` target to which the metrics exporter is going to send metrics.
+The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https), port and path.
+A scheme of https indicates a secure connection and takes precedence over this configuration setting.
+"""
+
+OTEL_EXPORTER_OTLP_LOGS_ENDPOINT = "OTEL_EXPORTER_OTLP_LOGS_ENDPOINT"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_LOGS_ENDPOINT
+
+The :envvar:`OTEL_EXPORTER_OTLP_LOGS_ENDPOINT` target to which the log exporter is going to send logs.
+The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https), port and path.
+A scheme of https indicates a secure connection and takes precedence over this configuration setting.
 """
 
 OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE = "OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE"
@@ -329,6 +393,16 @@ The :envvar:`OTEL_EXPORTER_OTLP_TRACES_CERTIFICATE` stores the path to the certi
 TLS credentials of gRPC client for traces. Should only be used for a secure connection for tracing.
 """
 
+OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE = (
+    "OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE"
+)
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE` stores the path to the certificate file for
+TLS credentials of gRPC client for metrics. Should only be used for a secure connection for exporting metrics.
+"""
+
 OTEL_EXPORTER_OTLP_TRACES_HEADERS = "OTEL_EXPORTER_OTLP_TRACES_HEADERS"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_HEADERS
@@ -337,13 +411,46 @@ The :envvar:`OTEL_EXPORTER_OTLP_TRACES_HEADERS` contains the key-value pairs to 
 associated with gRPC or HTTP requests.
 """
 
+OTEL_EXPORTER_OTLP_METRICS_HEADERS = "OTEL_EXPORTER_OTLP_METRICS_HEADERS"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_HEADERS
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_HEADERS` contains the key-value pairs to be used as headers for metrics
+associated with gRPC or HTTP requests.
+"""
+
+OTEL_EXPORTER_OTLP_LOGS_HEADERS = "OTEL_EXPORTER_OTLP_LOGS_HEADERS"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_LOGS_HEADERS
+
+The :envvar:`OTEL_EXPORTER_OTLP_LOGS_HEADERS` contains the key-value pairs to be used as headers for logs
+associated with gRPC or HTTP requests.
+"""
 
 OTEL_EXPORTER_OTLP_TRACES_COMPRESSION = "OTEL_EXPORTER_OTLP_TRACES_COMPRESSION"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_TRACES_COMPRESSION
 
 Same as :envvar:`OTEL_EXPORTER_OTLP_COMPRESSION` but only for the span
-exporter. If both are present, this takes higher precendence.
+exporter. If both are present, this takes higher precedence.
+"""
+
+OTEL_EXPORTER_OTLP_METRICS_COMPRESSION = (
+    "OTEL_EXPORTER_OTLP_METRICS_COMPRESSION"
+)
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_COMPRESSION
+
+Same as :envvar:`OTEL_EXPORTER_OTLP_COMPRESSION` but only for the metric
+exporter. If both are present, this takes higher precedence.
+"""
+
+OTEL_EXPORTER_OTLP_LOGS_COMPRESSION = "OTEL_EXPORTER_OTLP_LOGS_COMPRESSION"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_LOGS_COMPRESSION
+
+Same as :envvar:`OTEL_EXPORTER_OTLP_COMPRESSION` but only for the log
+exporter. If both are present, this takes higher precedence.
 """
 
 OTEL_EXPORTER_OTLP_TRACES_TIMEOUT = "OTEL_EXPORTER_OTLP_TRACES_TIMEOUT"
@@ -354,6 +461,14 @@ The :envvar:`OTEL_EXPORTER_OTLP_TRACES_TIMEOUT` is the maximum time the OTLP exp
 wait for each batch export for spans.
 """
 
+OTEL_EXPORTER_OTLP_METRICS_TIMEOUT = "OTEL_EXPORTER_OTLP_METRICS_TIMEOUT"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_TIMEOUT
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_TIMEOUT` is the maximum time the OTLP exporter will
+wait for each batch export for metrics.
+"""
+
 OTEL_EXPORTER_OTLP_METRICS_INSECURE = "OTEL_EXPORTER_OTLP_METRICS_INSECURE"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_INSECURE
@@ -361,6 +476,76 @@ OTEL_EXPORTER_OTLP_METRICS_INSECURE = "OTEL_EXPORTER_OTLP_METRICS_INSECURE"
 The :envvar:`OTEL_EXPORTER_OTLP_METRICS_INSECURE` represents whether to enable client transport security
 for gRPC requests for metrics. A scheme of https takes precedence over the this configuration setting.
 Default: False
+"""
+
+OTEL_EXPORTER_OTLP_LOGS_INSECURE = "OTEL_EXPORTER_OTLP_LOGS_INSECURE"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_LOGS_INSECURE
+
+The :envvar:`OTEL_EXPORTER_OTLP_LOGS_INSECURE` represents whether to enable client transport security
+for gRPC requests for metrics. A scheme of https takes precedence over the this configuration setting.
+Default: False
+"""
+
+OTEL_EXPORTER_OTLP_METRICS_ENDPOINT = "OTEL_EXPORTER_OTLP_METRICS_ENDPOINT"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_ENDPOINT
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_ENDPOINT` target to which the metric exporter is going to send spans.
+The endpoint MUST be a valid URL host, and MAY contain a scheme (http or https), port and path.
+A scheme of https indicates a secure connection and takes precedence over this configuration setting.
+"""
+
+OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE = (
+    "OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE"
+)
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE` stores the path to the certificate file for
+TLS credentials of gRPC client for traces. Should only be used for a secure connection for tracing.
+"""
+
+OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE = "OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE
+
+The :envvar:`OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE` stores the path to the certificate file for
+TLS credentials of gRPC client for traces. Should only be used for a secure connection for tracing.
+"""
+
+OTEL_EXPORTER_OTLP_METRICS_HEADERS = "OTEL_EXPORTER_OTLP_METRICS_HEADERS"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_HEADERS
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_HEADERS` contains the key-value pairs to be used as headers for metrics
+associated with gRPC or HTTP requests.
+"""
+
+OTEL_EXPORTER_OTLP_METRICS_TIMEOUT = "OTEL_EXPORTER_OTLP_METRICS_TIMEOUT"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_TIMEOUT
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_TIMEOUT` is the maximum time the OTLP exporter will
+wait for each batch export for metrics.
+"""
+
+OTEL_EXPORTER_OTLP_LOGS_TIMEOUT = "OTEL_EXPORTER_OTLP_LOGS_TIMEOUT"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_LOGS_TIMEOUT
+
+The :envvar:`OTEL_EXPORTER_OTLP_LOGS_TIMEOUT` is the maximum time the OTLP exporter will
+wait for each batch export for logs.
+"""
+
+OTEL_EXPORTER_OTLP_METRICS_COMPRESSION = (
+    "OTEL_EXPORTER_OTLP_METRICS_COMPRESSION"
+)
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_COMPRESSION
+
+Same as :envvar:`OTEL_EXPORTER_OTLP_COMPRESSION` but only for the metric
+exporter. If both are present, this takes higher precedence.
 """
 
 OTEL_EXPORTER_JAEGER_CERTIFICATE = "OTEL_EXPORTER_JAEGER_CERTIFICATE"
@@ -398,11 +583,98 @@ The following two environment variables have the same effect
 If both are set, :envvar:`OTEL_SERVICE_NAME` takes precedence.
 """
 
-_OTEL_PYTHON_LOG_EMITTER_PROVIDER = "OTEL_PYTHON_LOG_EMITTER_PROVIDER"
-"""
-.. envvar:: OTEL_PYTHON_LOG_EMITTER_PROVIDER
 
-The :envvar:`OTEL_PYTHON_LOG_EMITTER_PROVIDER` environment variable allows users to
-provide the entry point for loading the log emitter provider. If not specified, SDK
-LogEmitterProvider is used.
+_OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED = (
+    "OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED"
+)
+"""
+.. envvar:: OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED
+
+The :envvar:`OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED` environment variable allows users to
+enable/disable the logging SDK auto instrumentation.
+Default: False
+
+Note: Logs SDK and its related settings are experimental.
+"""
+
+
+OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE = (
+    "OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE"
+)
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE` environment
+variable allows users to set the default aggregation temporality policy to use
+on the basis of instrument kind. The valid (case-insensitive) values are:
+
+``CUMULATIVE``: Use ``CUMULATIVE`` aggregation temporality for all instrument kinds.
+``DELTA``: Use ``DELTA`` aggregation temporality for ``Counter``, ``Asynchronous Counter`` and ``Histogram``.
+Use ``CUMULATIVE`` aggregation temporality for ``UpDownCounter`` and ``Asynchronous UpDownCounter``.
+``LOWMEMORY``: Use ``DELTA`` aggregation temporality for ``Counter`` and ``Histogram``.
+Use ``CUMULATIVE`` aggregation temporality for ``UpDownCounter``, ``AsynchronousCounter`` and ``Asynchronous UpDownCounter``.
+"""
+
+OTEL_EXPORTER_JAEGER_GRPC_INSECURE = "OTEL_EXPORTER_JAEGER_GRPC_INSECURE"
+"""
+.. envvar:: OTEL_EXPORTER_JAEGER_GRPC_INSECURE
+
+The :envvar:`OTEL_EXPORTER_JAEGER_GRPC_INSECURE` is a boolean flag to True if collector has no encryption or authentication.
+"""
+
+OTEL_METRIC_EXPORT_INTERVAL = "OTEL_METRIC_EXPORT_INTERVAL"
+"""
+.. envvar:: OTEL_METRIC_EXPORT_INTERVAL
+
+The :envvar:`OTEL_METRIC_EXPORT_INTERVAL` is the time interval (in milliseconds) between the start of two export attempts.
+"""
+
+OTEL_METRIC_EXPORT_TIMEOUT = "OTEL_METRIC_EXPORT_TIMEOUT"
+"""
+.. envvar:: OTEL_METRIC_EXPORT_TIMEOUT
+
+The :envvar:`OTEL_METRIC_EXPORT_TIMEOUT` is the maximum allowed time (in milliseconds) to export data.
+"""
+
+OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY = "OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY"
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CLIENT_KEY` is the clients private key to use in mTLS communication in PEM format.
+"""
+
+OTEL_METRICS_EXEMPLAR_FILTER = "OTEL_METRICS_EXEMPLAR_FILTER"
+"""
+.. envvar:: OTEL_METRICS_EXEMPLAR_FILTER
+
+The :envvar:`OTEL_METRICS_EXEMPLAR_FILTER` is the filter for which measurements can become Exemplars.
+"""
+
+_OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION = (
+    "OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION"
+)
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION` is the default aggregation to use for histogram instruments.
+"""
+
+OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE = (
+    "OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE"
+)
+"""
+.. envvar:: OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE
+
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_CLIENT_CERTIFICATE` is the client certificate/chain trust for clients private key to use in mTLS communication in PEM format.
+"""
+
+OTEL_EXPERIMENTAL_RESOURCE_DETECTORS = "OTEL_EXPERIMENTAL_RESOURCE_DETECTORS"
+"""
+.. envvar:: OTEL_EXPERIMENTAL_RESOURCE_DETECTORS
+
+The :envvar:`OTEL_EXPERIMENTAL_RESOURCE_DETECTORS` is a comma-separated string
+of names of resource detectors. These names must be the same as the names of
+entry points for the `opentelemetry_resource_detector` entry point. This is an
+experimental feature and the name of this variable and its behavior can change
+in a non-backwards compatible way.
 """

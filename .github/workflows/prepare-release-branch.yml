@@ -1,0 +1,177 @@
+name: Prepare release branch
+on:
+  workflow_dispatch:
+    inputs:
+      prerelease_version:
+        description: "Pre-release version number? (e.g. 1.9.0rc2)"
+        required: false
+
+jobs:
+  prereqs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Verify prerequisites
+        env:
+          PRERELEASE_VERSION: ${{ github.event.inputs.prerelease_version }}
+        run: |
+          if [[ $GITHUB_REF_NAME != main ]]; then
+            echo this workflow should only be run against main
+            exit 1
+          fi
+
+          if ! grep --quiet "^## Unreleased$" CHANGELOG.md; then
+            echo the change log is missing an \"Unreleased\" section
+            exit 1
+          fi
+
+          if [[ ! -z $PRERELEASE_VERSION ]]; then
+            stable_version=$(./scripts/eachdist.py version --mode stable)
+            stable_version=${stable_version//.dev/}
+            if [[ $PRERELEASE_VERSION != ${stable_version}* ]]; then
+              echo "$PRERELEASE_VERSION is not a prerelease for the version on main ($stable_version)"
+              exit 1
+            fi
+          fi
+
+  create-pull-request-against-release-branch:
+    runs-on: ubuntu-latest
+    needs: prereqs
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Create release branch
+        env:
+          PRERELEASE_VERSION: ${{ github.event.inputs.prerelease_version }}
+        run: |
+          if [[ -z $PRERELEASE_VERSION ]]; then
+            stable_version=$(./scripts/eachdist.py version --mode stable)
+            stable_version=${stable_version//.dev/}
+          else
+            stable_version=$PRERELEASE_VERSION
+          fi
+
+          unstable_version=$(./scripts/eachdist.py version --mode prerelease)
+          unstable_version=${unstable_version//.dev/}
+
+          if [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
+            stable_version_branch_part=$(echo $stable_version | sed -E 's/([0-9]+)\.([0-9]+)\.0/\1.\2.x/')
+            unstable_version_branch_part=$(echo $unstable_version | sed -E 's/0\.([0-9]+)b0/0.\1bx/')
+            release_branch_name="release/v${stable_version_branch_part}-${unstable_version_branch_part}"
+          elif [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0 ]]; then
+            # pre-release version, e.g. 1.9.0rc2
+            release_branch_name="release/v$stable_version-$unstable_version"
+          else
+            echo "unexpected version: $stable_version"
+            exit 1
+          fi
+
+          git push origin HEAD:$release_branch_name
+
+          echo "STABLE_VERSION=$stable_version" >> $GITHUB_ENV
+          echo "UNSTABLE_VERSION=$unstable_version" >> $GITHUB_ENV
+          echo "RELEASE_BRANCH_NAME=$release_branch_name" >> $GITHUB_ENV
+
+      - name: Update version
+        run: .github/scripts/update-version.sh $STABLE_VERSION $UNSTABLE_VERSION
+
+      - name: Update the change log with the approximate release date
+        run: |
+          date=$(date "+%Y-%m-%d")
+          sed -Ei "s/^## Unreleased$/## Version ${STABLE_VERSION}\/${UNSTABLE_VERSION} ($date)/" CHANGELOG.md
+
+      - name: Use CLA approved github bot
+        run: .github/scripts/use-cla-approved-github-bot.sh
+
+      - name: Create pull request against the release branch
+        env:
+          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          GITHUB_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+        run: |
+          message="Prepare release ${STABLE_VERSION}/${UNSTABLE_VERSION}"
+          branch="opentelemetrybot/prepare-release-${STABLE_VERSION}-${UNSTABLE_VERSION}"
+
+          git commit -a -m "$message"
+          git push origin HEAD:$branch
+          gh pr create --title "[$RELEASE_BRANCH_NAME] $message" \
+                       --body "$message." \
+                       --head $branch \
+                       --base $RELEASE_BRANCH_NAME
+
+  create-pull-request-against-main:
+    runs-on: ubuntu-latest
+    needs: prereqs
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set environment variables
+        env:
+          PRERELEASE_VERSION: ${{ github.event.inputs.prerelease_version }}
+        run: |
+          if [[ -z $PRERELEASE_VERSION ]]; then
+            stable_version=$(./scripts/eachdist.py version --mode stable)
+            stable_version=${stable_version//.dev/}
+          else
+            stable_version=$PRERELEASE_VERSION
+          fi
+
+          unstable_version=$(./scripts/eachdist.py version --mode prerelease)
+          unstable_version=${unstable_version//.dev/}
+
+          if [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0$ ]]; then
+            stable_major="${BASH_REMATCH[1]}"
+            stable_minor="${BASH_REMATCH[2]}"
+            stable_next_version="$stable_major.$((stable_minor + 1)).0"
+          elif [[ $stable_version =~ ^([0-9]+)\.([0-9]+)\.0 ]]; then
+            # pre-release version, e.g. 1.9.0rc2
+            stable_major="${BASH_REMATCH[1]}"
+            stable_minor="${BASH_REMATCH[2]}"
+            stable_next_version="$stable_major.$stable_minor.0"
+          else
+            echo "unexpected stable_version: $stable_version"
+            exit 1
+          fi
+
+          if [[ $unstable_version =~ ^0\.([0-9]+)b[0-9]+$ ]]; then
+            unstable_minor="${BASH_REMATCH[1]}"
+          else
+            echo "unexpected unstable_version: $unstable_version"
+            exit 1
+          fi
+
+          unstable_next_version="0.$((unstable_minor + 1))b0"
+
+          echo "STABLE_VERSION=${stable_version}" >> $GITHUB_ENV
+          echo "STABLE_NEXT_VERSION=${stable_next_version}.dev" >> $GITHUB_ENV
+
+          echo "UNSTABLE_VERSION=${unstable_version}" >> $GITHUB_ENV
+          echo "UNSTABLE_NEXT_VERSION=${unstable_next_version}.dev" >> $GITHUB_ENV
+
+      - name: Update version
+        run: .github/scripts/update-version.sh $STABLE_NEXT_VERSION $UNSTABLE_NEXT_VERSION
+
+      - name: Update the change log on main
+        run: |
+          # the actual release date on main will be updated at the end of the release workflow
+          date=$(date "+%Y-%m-%d")
+          sed -Ei "s/^## Unreleased$/## Unreleased\n\n## Version ${STABLE_VERSION}\/${UNSTABLE_VERSION} ($date)/" CHANGELOG.md
+
+      - name: Use CLA approved github bot
+        run: .github/scripts/use-cla-approved-github-bot.sh
+
+      - name: Create pull request against main
+        env:
+          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          GITHUB_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+        run: |
+          message="Update version to ${STABLE_NEXT_VERSION}/${UNSTABLE_NEXT_VERSION}"
+          body="Update version to \`${STABLE_NEXT_VERSION}/${UNSTABLE_NEXT_VERSION}\`."
+          branch="opentelemetrybot/update-version-to-${STABLE_NEXT_VERSION}-${UNSTABLE_NEXT_VERSION}"
+
+          git commit -a -m "$message"
+          git push origin HEAD:$branch
+          gh pr create --title "$message" \
+                       --body "$body" \
+                       --head $branch \
+                       --base main

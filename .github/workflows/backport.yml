@@ -1,0 +1,43 @@
+name: Backport
+on:
+  workflow_dispatch:
+    inputs:
+      number:
+        description: "The pull request # to backport"
+        required: true
+
+jobs:
+  backport:
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [[ ! $GITHUB_REF_NAME =~ ^release/v[0-9]+\.[0-9]+\.x-0\.[0-9]+bx$ ]]; then
+            echo this workflow should only be run against long-term release branches
+            exit 1
+          fi
+
+      - uses: actions/checkout@v3
+        with:
+          # history is needed to run git cherry-pick below
+          fetch-depth: 0
+
+      - name: Use CLA approved github bot
+        run: .github/scripts/use-cla-approved-github-bot.sh
+
+      - name: Create pull request
+        env:
+          NUMBER: ${{ github.event.inputs.number }}
+          # not using secrets.GITHUB_TOKEN since pull requests from that token do not run workflows
+          GITHUB_TOKEN: ${{ secrets.OPENTELEMETRYBOT_GITHUB_TOKEN }}
+        run: |
+          commit=$(gh pr view $NUMBER --json mergeCommit --jq .mergeCommit.oid)
+          title=$(gh pr view $NUMBER --json title --jq .title)
+
+          branch="opentelemetrybot/backport-${NUMBER}-to-${GITHUB_REF_NAME//\//-}"
+
+          git cherry-pick $commit
+          git push origin HEAD:$branch
+          gh pr create --title "[$GITHUB_REF_NAME] $title" \
+                       --body "Clean cherry-pick of #$NUMBER to the \`$GITHUB_REF_NAME\` branch." \
+                       --head $branch \
+                       --base $GITHUB_REF_NAME

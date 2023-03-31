@@ -24,14 +24,14 @@ from opentelemetry.proto.common.v1.common_pb2 import (
     ArrayValue as PB2ArrayValue,
 )
 from opentelemetry.proto.common.v1.common_pb2 import (
-    InstrumentationLibrary as PB2InstrumentationLibrary,
+    InstrumentationScope as PB2InstrumentationScope,
 )
 from opentelemetry.proto.common.v1.common_pb2 import KeyValue as PB2KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (
-    InstrumentationLibrarySpans as PB2InstrumentationLibrarySpans,
+    ScopeSpans as PB2ScopeSpans,
 )
 from opentelemetry.proto.trace.v1.trace_pb2 import (
     ResourceSpans as PB2ResourceSpans,
@@ -39,7 +39,7 @@ from opentelemetry.proto.trace.v1.trace_pb2 import (
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as PB2SPan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status as PB2Status
 from opentelemetry.sdk.trace import Event
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.sdk.trace import Resource
 from opentelemetry.sdk.trace import Span as SDKSpan
 from opentelemetry.trace import Link
@@ -60,8 +60,6 @@ _logger = logging.getLogger(__name__)
 
 
 class _ProtobufEncoder:
-    _CONTENT_TYPE = "application/x-protobuf"
-
     @classmethod
     def serialize(cls, sdk_spans: Sequence[SDKSpan]) -> str:
         return cls.encode(sdk_spans).SerializeToString()
@@ -91,7 +89,7 @@ def _encode_resource_spans(
 
     for sdk_span in sdk_spans:
         sdk_resource = sdk_span.resource
-        sdk_instrumentation = sdk_span.instrumentation_info or None
+        sdk_instrumentation = sdk_span.instrumentation_scope or None
         pb2_span = _encode_span(sdk_span)
 
         if sdk_resource not in sdk_resource_spans.keys():
@@ -110,20 +108,18 @@ def _encode_resource_spans(
     pb2_resource_spans = []
 
     for sdk_resource, sdk_instrumentations in sdk_resource_spans.items():
-        instrumentation_library_spans = []
+        scope_spans = []
         for sdk_instrumentation, pb2_spans in sdk_instrumentations.items():
-            instrumentation_library_spans.append(
-                PB2InstrumentationLibrarySpans(
-                    instrumentation_library=(
-                        _encode_instrumentation_library(sdk_instrumentation)
-                    ),
+            scope_spans.append(
+                PB2ScopeSpans(
+                    scope=(_encode_instrumentation_scope(sdk_instrumentation)),
                     spans=pb2_spans,
                 )
             )
         pb2_resource_spans.append(
             PB2ResourceSpans(
                 resource=_encode_resource(sdk_resource),
-                instrumentation_library_spans=instrumentation_library_spans,
+                scope_spans=scope_spans,
             )
         )
 
@@ -245,17 +241,17 @@ def _encode_resource(resource: Resource) -> PB2Resource:
     return pb2_resource
 
 
-def _encode_instrumentation_library(
-    instrumentation_info: InstrumentationInfo,
-) -> PB2InstrumentationLibrary:
-    if instrumentation_info is None:
-        pb2_instrumentation_library = PB2InstrumentationLibrary()
+def _encode_instrumentation_scope(
+    instrumentation_scope: InstrumentationScope,
+) -> PB2InstrumentationScope:
+    if instrumentation_scope is None:
+        pb2_instrumentation_scope = PB2InstrumentationScope()
     else:
-        pb2_instrumentation_library = PB2InstrumentationLibrary(
-            name=instrumentation_info.name,
-            version=instrumentation_info.version,
+        pb2_instrumentation_scope = PB2InstrumentationScope(
+            name=instrumentation_scope.name,
+            version=instrumentation_scope.version,
         )
-    return pb2_instrumentation_library
+    return pb2_instrumentation_scope
 
 
 def _encode_value(value: Any) -> PB2AnyValue:

@@ -68,6 +68,7 @@ API
 import logging
 from os import environ
 from typing import Optional
+from deprecated import deprecated
 
 from grpc import ChannelCredentials, RpcError, insecure_channel, secure_channel
 
@@ -87,6 +88,7 @@ from opentelemetry.exporter.jaeger.proto.grpc.translate import (
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_ENDPOINT,
     OTEL_EXPORTER_JAEGER_TIMEOUT,
+    OTEL_EXPORTER_JAEGER_GRPC_INSECURE,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
@@ -109,6 +111,10 @@ class JaegerExporter(SpanExporter):
         timeout: Maximum time the Jaeger exporter should wait for each batch export.
     """
 
+    @deprecated(
+        version="1.16.0",
+        reason="Since v1.35, the Jaeger supports OTLP natively. Please use the OTLP exporter instead. Support for this exporter will end July 2023.",
+    )
     def __init__(
         self,
         collector_endpoint: Optional[str] = None,
@@ -122,11 +128,17 @@ class JaegerExporter(SpanExporter):
         self.collector_endpoint = collector_endpoint or environ.get(
             OTEL_EXPORTER_JAEGER_ENDPOINT, DEFAULT_GRPC_COLLECTOR_ENDPOINT
         )
+        self.insecure = (
+            insecure
+            or environ.get(OTEL_EXPORTER_JAEGER_GRPC_INSECURE, "")
+            .strip()
+            .lower()
+            == "true"
+        )
         self._timeout = timeout or int(
             environ.get(OTEL_EXPORTER_JAEGER_TIMEOUT, DEFAULT_EXPORT_TIMEOUT)
         )
         self._grpc_client = None
-        self.insecure = insecure
         self.credentials = util._get_credentials(credentials)
         tracer_provider = trace.get_tracer_provider()
         self.service_name = (
@@ -179,3 +191,6 @@ class JaegerExporter(SpanExporter):
 
     def shutdown(self):
         pass
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True

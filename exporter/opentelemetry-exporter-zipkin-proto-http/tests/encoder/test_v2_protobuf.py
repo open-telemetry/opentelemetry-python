@@ -14,7 +14,12 @@
 import ipaddress
 import json
 
-from opentelemetry.exporter.zipkin.encoder import NAME_KEY, VERSION_KEY
+from opentelemetry.exporter.zipkin.encoder import (
+    _SCOPE_NAME_KEY,
+    _SCOPE_VERSION_KEY,
+    NAME_KEY,
+    VERSION_KEY,
+)
 from opentelemetry.exporter.zipkin.node_endpoint import NodeEndpoint
 from opentelemetry.exporter.zipkin.proto.http.v2 import ProtobufEncoder
 from opentelemetry.exporter.zipkin.proto.http.v2.gen import zipkin_pb2
@@ -23,7 +28,10 @@ from opentelemetry.test.spantestutil import (
 )
 from opentelemetry.trace import SpanKind
 
-from .common_tests import TEST_SERVICE_NAME, CommonEncoderTestCases
+from .common_tests import (  # pylint: disable=import-error
+    TEST_SERVICE_NAME,
+    CommonEncoderTestCases,
+)
 
 
 # pylint: disable=protected-access
@@ -183,7 +191,12 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
                     ),
                     local_endpoint=local_endpoint,
                     kind=span_kind,
-                    tags={NAME_KEY: "name", VERSION_KEY: "version"},
+                    tags={
+                        NAME_KEY: "name",
+                        VERSION_KEY: "version",
+                        _SCOPE_NAME_KEY: "name",
+                        _SCOPE_VERSION_KEY: "version",
+                    },
                     debug=False,
                 ),
             ],

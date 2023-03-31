@@ -85,7 +85,8 @@ def _clean_attribute(
             # use equality instead of isinstance as isinstance(True, int) evaluates to True
             elif element_type != sequence_first_valid_type:
                 _logger.warning(
-                    "Mixed types %s and %s in attribute value sequence",
+                    "Attribute %r mixes types %s and %s in attribute value sequence",
+                    key,
                     sequence_first_valid_type.__name__,
                     type(element).__name__,
                 )
@@ -97,9 +98,10 @@ def _clean_attribute(
         return tuple(cleaned_seq)
 
     _logger.warning(
-        "Invalid type %s for attribute value. Expected one of %s or a "
+        "Invalid type %s for attribute '%s' value. Expected one of %s or a "
         "sequence of those types",
         type(value).__name__,
+        key,
         [valid_type.__name__ for valid_type in _VALID_ATTR_VALUE_TYPES],
     )
     return None

@@ -58,20 +58,23 @@ above example.
 import abc
 import concurrent.futures
 import logging
-import os
+import sys
 import typing
 from json import dumps
-
-import pkg_resources
+from os import environ
+from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
 )
 from opentelemetry.semconv.resource import ResourceAttributes
+from opentelemetry.util._importlib_metadata import entry_points, version
+from opentelemetry.util.types import AttributeValue
 
-LabelValue = typing.Union[str, bool, int, float]
+LabelValue = AttributeValue
 Attributes = typing.Dict[str, LabelValue]
 logger = logging.getLogger(__name__)
 
@@ -133,9 +136,7 @@ TELEMETRY_AUTO_VERSION = ResourceAttributes.TELEMETRY_AUTO_VERSION
 TELEMETRY_SDK_LANGUAGE = ResourceAttributes.TELEMETRY_SDK_LANGUAGE
 
 
-_OPENTELEMETRY_SDK_VERSION = pkg_resources.get_distribution(
-    "opentelemetry-sdk"
-).version
+_OPENTELEMETRY_SDK_VERSION = version("opentelemetry-sdk")
 
 
 class Resource:
@@ -163,11 +164,38 @@ class Resource:
         Returns:
             The newly-created Resource.
         """
+
         if not attributes:
             attributes = {}
-        resource = _DEFAULT_RESOURCE.merge(
-            OTELResourceDetector().detect()
+
+        resource_detectors = []
+
+        resource = _DEFAULT_RESOURCE
+
+        otel_experimental_resource_detectors = environ.get(
+            OTEL_EXPERIMENTAL_RESOURCE_DETECTORS, "otel"
+        ).split(",")
+
+        if "otel" not in otel_experimental_resource_detectors:
+            otel_experimental_resource_detectors.append("otel")
+
+        for resource_detector in otel_experimental_resource_detectors:
+
+            resource_detectors.append(
+                next(
+                    iter(
+                        entry_points(
+                            group="opentelemetry_resource_detector",
+                            name=resource_detector.strip(),
+                        )
+                    )
+                ).load()()
+            )
+
+        resource = get_aggregated_resources(
+            resource_detectors, _DEFAULT_RESOURCE
         ).merge(Resource(attributes, schema_url))
+
         if not resource.attributes.get(SERVICE_NAME, None):
             default_service_name = "unknown_service"
             process_executable_name = resource.attributes.get(
@@ -241,6 +269,15 @@ class Resource:
             f"{dumps(self._attributes.copy(), sort_keys=True)}|{self._schema_url}"
         )
 
+    def to_json(self, indent=4) -> str:
+        return dumps(
+            {
+                "attributes": dict(self._attributes),
+                "schema_url": self._schema_url,
+            },
+            indent=indent,
+        )
+
 
 _EMPTY_RESOURCE = Resource({})
 _DEFAULT_RESOURCE = Resource(
@@ -264,7 +301,8 @@ class ResourceDetector(abc.ABC):
 class OTELResourceDetector(ResourceDetector):
     # pylint: disable=no-self-use
     def detect(self) -> "Resource":
-        env_resources_items = os.environ.get(OTEL_RESOURCE_ATTRIBUTES)
+
+        env_resources_items = environ.get(OTEL_RESOURCE_ATTRIBUTES)
         env_resource_map = {}
 
         if env_resources_items:
@@ -278,12 +316,35 @@ class OTELResourceDetector(ResourceDetector):
                         exc,
                     )
                     continue
-                env_resource_map[key.strip()] = value.strip()
+                value_url_decoded = parse.unquote(value.strip())
+                env_resource_map[key.strip()] = value_url_decoded
 
-        service_name = os.environ.get(OTEL_SERVICE_NAME)
+        service_name = environ.get(OTEL_SERVICE_NAME)
         if service_name:
             env_resource_map[SERVICE_NAME] = service_name
         return Resource(env_resource_map)
+
+
+class ProcessResourceDetector(ResourceDetector):
+    # pylint: disable=no-self-use
+    def detect(self) -> "Resource":
+        _runtime_version = ".".join(
+            map(
+                str,
+                sys.version_info[:3]
+                if sys.version_info.releaselevel == "final"
+                and not sys.version_info.serial
+                else sys.version_info,
+            )
+        )
+
+        return Resource(
+            {
+                PROCESS_RUNTIME_DESCRIPTION: sys.version,
+                PROCESS_RUNTIME_NAME: sys.implementation.name,
+                PROCESS_RUNTIME_VERSION: _runtime_version,
+            }
+        )
 
 
 def get_aggregated_resources(

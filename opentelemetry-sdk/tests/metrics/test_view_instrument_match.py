@@ -13,19 +13,27 @@
 # limitations under the License.
 
 from unittest import TestCase
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
-from opentelemetry.sdk._metrics._view_instrument_match import (
+from opentelemetry.sdk.metrics._internal._view_instrument_match import (
     _ViewInstrumentMatch,
 )
-from opentelemetry.sdk._metrics.aggregation import (
-    DropAggregation,
+from opentelemetry.sdk.metrics._internal.aggregation import (
     _DropAggregation,
+    _LastValueAggregation,
 )
-from opentelemetry.sdk._metrics.measurement import Measurement
-from opentelemetry.sdk._metrics.point import AggregationTemporality, Metric
-from opentelemetry.sdk._metrics.sdk_configuration import SdkConfiguration
-from opentelemetry.sdk._metrics.view import View
+from opentelemetry.sdk.metrics._internal.instrument import _Counter
+from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.sdk.metrics._internal.sdk_configuration import (
+    SdkConfiguration,
+)
+from opentelemetry.sdk.metrics.export import AggregationTemporality
+from opentelemetry.sdk.metrics.view import (
+    DefaultAggregation,
+    DropAggregation,
+    LastValueAggregation,
+    View,
+)
 
 
 class Test_ViewInstrumentMatch(TestCase):
@@ -37,16 +45,16 @@ class Test_ViewInstrumentMatch(TestCase):
             cls.mock_aggregation_factory._create_aggregation()
         )
         cls.mock_resource = Mock()
-        cls.mock_instrumentation_info = Mock()
-
-    def test_consume_measurement(self):
-        instrument1 = Mock(name="instrument1")
-        instrument1.instrumentation_info = self.mock_instrumentation_info
-        sdk_config = SdkConfiguration(
-            resource=self.mock_resource,
+        cls.mock_instrumentation_scope = Mock()
+        cls.sdk_configuration = SdkConfiguration(
+            resource=cls.mock_resource,
             metric_readers=[],
             views=[],
         )
+
+    def test_consume_measurement(self):
+        instrument1 = Mock(name="instrument1")
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
         view_instrument_match = _ViewInstrumentMatch(
             view=View(
                 instrument_name="instrument1",
@@ -55,7 +63,9 @@ class Test_ViewInstrumentMatch(TestCase):
                 attribute_keys={"a", "c"},
             ),
             instrument=instrument1,
-            sdk_config=sdk_config,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
         )
 
         view_instrument_match.consume_measurement(
@@ -94,7 +104,9 @@ class Test_ViewInstrumentMatch(TestCase):
                 aggregation=self.mock_aggregation_factory,
             ),
             instrument=instrument1,
-            sdk_config=sdk_config,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
         )
 
         view_instrument_match.consume_measurement(
@@ -113,7 +125,8 @@ class Test_ViewInstrumentMatch(TestCase):
             },
         )
 
-        # empty set attribute_keys will drop all labels and aggregate everything together
+        # empty set attribute_keys will drop all labels and aggregate
+        # everything together
         view_instrument_match = _ViewInstrumentMatch(
             view=View(
                 instrument_name="instrument1",
@@ -122,7 +135,9 @@ class Test_ViewInstrumentMatch(TestCase):
                 attribute_keys={},
             ),
             instrument=instrument1,
-            sdk_config=sdk_config,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
         )
         view_instrument_match.consume_measurement(
             Measurement(value=0, instrument=instrument1, attributes=None)
@@ -144,7 +159,9 @@ class Test_ViewInstrumentMatch(TestCase):
                 attribute_keys={},
             ),
             instrument=instrument1,
-            sdk_config=sdk_config,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
         )
         view_instrument_match.consume_measurement(
             Measurement(value=0, instrument=instrument1, attributes=None)
@@ -155,24 +172,25 @@ class Test_ViewInstrumentMatch(TestCase):
         )
 
     def test_collect(self):
-        instrument1 = Mock(
-            name="instrument1", description="description", unit="unit"
+        instrument1 = _Counter(
+            "instrument1",
+            Mock(),
+            Mock(),
+            description="description",
+            unit="unit",
         )
-        instrument1.instrumentation_info = self.mock_instrumentation_info
-        sdk_config = SdkConfiguration(
-            resource=self.mock_resource,
-            metric_readers=[],
-            views=[],
-        )
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
         view_instrument_match = _ViewInstrumentMatch(
             view=View(
                 instrument_name="instrument1",
                 name="name",
-                aggregation=self.mock_aggregation_factory,
+                aggregation=DefaultAggregation(),
                 attribute_keys={"a", "c"},
             ),
             instrument=instrument1,
-            sdk_config=sdk_config,
+            instrument_class_aggregation=MagicMock(
+                **{"__getitem__.return_value": DefaultAggregation()}
+            ),
         )
 
         view_instrument_match.consume_measurement(
@@ -182,19 +200,121 @@ class Test_ViewInstrumentMatch(TestCase):
                 attributes={"c": "d", "f": "g"},
             )
         )
-        self.assertEqual(
-            next(
-                view_instrument_match.collect(
-                    AggregationTemporality.CUMULATIVE
-                )
-            ),
-            Metric(
-                attributes={"c": "d"},
-                description="description",
-                instrumentation_info=self.mock_instrumentation_info,
+
+        number_data_points = view_instrument_match.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
+        number_data_points = list(number_data_points)
+        self.assertEqual(len(number_data_points), 1)
+
+        number_data_point = number_data_points[0]
+
+        self.assertEqual(number_data_point.attributes, {"c": "d"})
+        self.assertEqual(number_data_point.value, 0)
+
+    def test_data_point_check(self):
+        instrument1 = _Counter(
+            "instrument1",
+            Mock(),
+            Mock(),
+            description="description",
+            unit="unit",
+        )
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
                 name="name",
-                resource=self.mock_resource,
-                unit="unit",
-                point=None,
+                aggregation=DefaultAggregation(),
             ),
+            instrument=instrument1,
+            instrument_class_aggregation=MagicMock(
+                **{
+                    "__getitem__.return_value": Mock(
+                        **{
+                            "_create_aggregation.return_value": Mock(
+                                **{
+                                    "collect.side_effect": [
+                                        Mock(),
+                                        Mock(),
+                                        None,
+                                        Mock(),
+                                    ]
+                                }
+                            )
+                        }
+                    )
+                }
+            ),
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0,
+                instrument=Mock(name="instrument1"),
+                attributes={"c": "d", "f": "g"},
+            )
+        )
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0,
+                instrument=Mock(name="instrument1"),
+                attributes={"h": "i", "j": "k"},
+            )
+        )
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0,
+                instrument=Mock(name="instrument1"),
+                attributes={"l": "m", "n": "o"},
+            )
+        )
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0,
+                instrument=Mock(name="instrument1"),
+                attributes={"p": "q", "r": "s"},
+            )
+        )
+
+        result = view_instrument_match.collect(
+            AggregationTemporality.CUMULATIVE, 0
+        )
+
+        self.assertEqual(len(list(result)), 3)
+
+    def test_setting_aggregation(self):
+        instrument1 = _Counter(
+            name="instrument1",
+            instrumentation_scope=Mock(),
+            measurement_consumer=Mock(),
+            description="description",
+            unit="unit",
+        )
+        instrument1.instrumentation_scope = self.mock_instrumentation_scope
+        view_instrument_match = _ViewInstrumentMatch(
+            view=View(
+                instrument_name="instrument1",
+                name="name",
+                aggregation=DefaultAggregation(),
+                attribute_keys={"a", "c"},
+            ),
+            instrument=instrument1,
+            instrument_class_aggregation={_Counter: LastValueAggregation()},
+        )
+
+        view_instrument_match.consume_measurement(
+            Measurement(
+                value=0,
+                instrument=Mock(name="instrument1"),
+                attributes={"c": "d", "f": "g"},
+            )
+        )
+
+        self.assertIsInstance(
+            view_instrument_match._attributes_aggregation[
+                frozenset({("c", "d")})
+            ],
+            _LastValueAggregation,
         )

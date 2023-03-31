@@ -13,7 +13,11 @@
 # limitations under the License.
 
 import unittest
-from unittest.mock import patch
+from collections import OrderedDict
+from unittest.mock import Mock, patch
+
+import requests
+import responses
 
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
@@ -22,7 +26,9 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_TIMEOUT,
     DEFAULT_TRACES_EXPORT_PATH,
     OTLPSpanExporter,
+    _is_backoff_v2,
 )
+from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_COMPRESSION,
@@ -35,6 +41,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_TRACES_HEADERS,
     OTEL_EXPORTER_OTLP_TRACES_TIMEOUT,
 )
+from opentelemetry.sdk.trace import _Span
 
 OS_ENV_ENDPOINT = "os.env.base"
 OS_ENV_CERTIFICATE = "os/env/base.crt"
@@ -55,6 +62,16 @@ class TestOTLPSpanExporter(unittest.TestCase):
         self.assertEqual(exporter._timeout, DEFAULT_TIMEOUT)
         self.assertIs(exporter._compression, DEFAULT_COMPRESSION)
         self.assertEqual(exporter._headers, {})
+        self.assertIsInstance(exporter._session, requests.Session)
+        self.assertIn("User-Agent", exporter._session.headers)
+        self.assertEqual(
+            exporter._session.headers.get("Content-Type"),
+            "application/x-protobuf",
+        )
+        self.assertEqual(
+            exporter._session.headers.get("User-Agent"),
+            "OTel-OTLP-Exporter-Python/" + __version__,
+        )
 
     @patch.dict(
         "os.environ",
@@ -86,6 +103,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
                 "traceenv3": "==val3==",
             },
         )
+        self.assertIsInstance(exporter._session, requests.Session)
 
     @patch.dict(
         "os.environ",
@@ -105,6 +123,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             headers={"testHeader1": "value1", "testHeader2": "value2"},
             timeout=20,
             compression=Compression.NoCompression,
+            session=requests.Session(),
         )
 
         self.assertEqual(exporter._endpoint, "example.com/1234")
@@ -115,6 +134,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
             exporter._headers,
             {"testHeader1": "value1", "testHeader2": "value2"},
         )
+        self.assertIsInstance(exporter._session, requests.Session)
 
     @patch.dict(
         "os.environ",
@@ -175,5 +195,47 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
             self.assertEqual(
                 cm.records[0].message,
-                "Header doesn't match the format: missingValue.",
+                (
+                    "Header format invalid! Header values in environment "
+                    "variables must be URL encoded per the OpenTelemetry "
+                    "Protocol Exporter specification: missingValue"
+                ),
             )
+
+    # pylint: disable=no-self-use
+    @responses.activate
+    @patch("opentelemetry.exporter.otlp.proto.http.trace_exporter.backoff")
+    @patch("opentelemetry.exporter.otlp.proto.http.trace_exporter.sleep")
+    def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
+        # In backoff ~= 2.0.0 the first value yielded from expo is None.
+        def generate_delays(*args, **kwargs):
+            if _is_backoff_v2:
+                yield None
+            yield 1
+
+        mock_backoff.expo.configure_mock(**{"side_effect": generate_delays})
+
+        # return a retryable error
+        responses.add(
+            responses.POST,
+            "http://traces.example.com/export",
+            json={"error": "something exploded"},
+            status=500,
+        )
+
+        exporter = OTLPSpanExporter(
+            endpoint="http://traces.example.com/export"
+        )
+        span = _Span(
+            "abc",
+            context=Mock(
+                **{
+                    "trace_state": OrderedDict([("a", "b"), ("c", "d")]),
+                    "span_id": 10217189687419569865,
+                    "trace_id": 67545097771067222548457157018666467027,
+                }
+            ),
+        )
+
+        exporter.export([span])
+        mock_sleep.assert_called_once_with(1)

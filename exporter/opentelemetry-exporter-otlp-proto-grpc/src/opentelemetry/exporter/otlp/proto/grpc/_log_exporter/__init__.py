@@ -11,12 +11,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from typing import Optional, Sequence
+from os import environ
+from typing import Dict, Optional, Tuple, Union, Sequence
+from typing import Sequence as TypingSequence
 from grpc import ChannelCredentials, Compression
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     OTLPExporterMixin,
     get_resource_data,
+    _get_credentials,
     _translate_value,
+    environ_to_compression,
 )
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
@@ -24,15 +28,24 @@ from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2_grpc import (
     LogsServiceStub,
 )
-from opentelemetry.proto.common.v1.common_pb2 import InstrumentationLibrary
+from opentelemetry.proto.common.v1.common_pb2 import InstrumentationScope
 from opentelemetry.proto.logs.v1.logs_pb2 import (
-    InstrumentationLibraryLogs,
+    ScopeLogs,
     ResourceLogs,
 )
 from opentelemetry.proto.logs.v1.logs_pb2 import LogRecord as PB2LogRecord
 from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
 from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs.export import LogExporter, LogExportResult
+
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE,
+    OTEL_EXPORTER_OTLP_LOGS_COMPRESSION,
+    OTEL_EXPORTER_OTLP_LOGS_ENDPOINT,
+    OTEL_EXPORTER_OTLP_LOGS_HEADERS,
+    OTEL_EXPORTER_OTLP_LOGS_INSECURE,
+    OTEL_EXPORTER_OTLP_LOGS_TIMEOUT,
+)
 
 
 class OTLPLogExporter(
@@ -48,17 +61,46 @@ class OTLPLogExporter(
         endpoint: Optional[str] = None,
         insecure: Optional[bool] = None,
         credentials: Optional[ChannelCredentials] = None,
-        headers: Optional[Sequence] = None,
+        headers: Optional[
+            Union[TypingSequence[Tuple[str, str]], Dict[str, str], str]
+        ] = None,
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
     ):
+        if insecure is None:
+            insecure = environ.get(OTEL_EXPORTER_OTLP_LOGS_INSECURE)
+            if insecure is not None:
+                insecure = insecure.lower() == "true"
+
+        if (
+            not insecure
+            and environ.get(OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE) is not None
+        ):
+            credentials = _get_credentials(
+                credentials, OTEL_EXPORTER_OTLP_LOGS_CERTIFICATE
+            )
+
+        environ_timeout = environ.get(OTEL_EXPORTER_OTLP_LOGS_TIMEOUT)
+        environ_timeout = (
+            int(environ_timeout) if environ_timeout is not None else None
+        )
+
+        compression = (
+            environ_to_compression(OTEL_EXPORTER_OTLP_LOGS_COMPRESSION)
+            if compression is None
+            else compression
+        )
+        endpoint = endpoint or environ.get(OTEL_EXPORTER_OTLP_LOGS_ENDPOINT)
+
+        headers = headers or environ.get(OTEL_EXPORTER_OTLP_LOGS_HEADERS)
+
         super().__init__(
             **{
                 "endpoint": endpoint,
                 "insecure": insecure,
                 "credentials": credentials,
                 "headers": headers,
-                "timeout": timeout,
+                "timeout": timeout or environ_timeout,
                 "compression": compression,
             }
         )
@@ -96,44 +138,30 @@ class OTLPLogExporter(
     ) -> ExportLogsServiceRequest:
         # pylint: disable=attribute-defined-outside-init
 
-        sdk_resource_instrumentation_library_logs = {}
+        sdk_resource_scope_logs = {}
 
         for log_data in data:
             resource = log_data.log_record.resource
 
-            instrumentation_library_logs_map = (
-                sdk_resource_instrumentation_library_logs.get(resource, {})
-            )
-            if not instrumentation_library_logs_map:
-                sdk_resource_instrumentation_library_logs[
-                    resource
-                ] = instrumentation_library_logs_map
+            scope_logs_map = sdk_resource_scope_logs.get(resource, {})
+            if not scope_logs_map:
+                sdk_resource_scope_logs[resource] = scope_logs_map
 
-            instrumentation_library_logs = (
-                instrumentation_library_logs_map.get(
-                    log_data.instrumentation_info
-                )
-            )
-            if not instrumentation_library_logs:
-                if log_data.instrumentation_info is not None:
-                    instrumentation_library_logs_map[
-                        log_data.instrumentation_info
-                    ] = InstrumentationLibraryLogs(
-                        instrumentation_library=InstrumentationLibrary(
-                            name=log_data.instrumentation_info.name,
-                            version=log_data.instrumentation_info.version,
+            scope_logs = scope_logs_map.get(log_data.instrumentation_scope)
+            if not scope_logs:
+                if log_data.instrumentation_scope is not None:
+                    scope_logs_map[log_data.instrumentation_scope] = ScopeLogs(
+                        scope=InstrumentationScope(
+                            name=log_data.instrumentation_scope.name,
+                            version=log_data.instrumentation_scope.version,
                         )
                     )
                 else:
-                    instrumentation_library_logs_map[
-                        log_data.instrumentation_info
-                    ] = InstrumentationLibraryLogs()
+                    scope_logs_map[
+                        log_data.instrumentation_scope
+                    ] = ScopeLogs()
 
-            instrumentation_library_logs = (
-                instrumentation_library_logs_map.get(
-                    log_data.instrumentation_info
-                )
-            )
+            scope_logs = scope_logs_map.get(log_data.instrumentation_scope)
 
             self._collector_kwargs = {}
 
@@ -151,13 +179,13 @@ class OTLPLogExporter(
                 "severity_number"
             ] = log_data.log_record.severity_number.value
 
-            instrumentation_library_logs.log_records.append(
+            scope_logs.log_records.append(
                 PB2LogRecord(**self._collector_kwargs)
             )
 
         return ExportLogsServiceRequest(
             resource_logs=get_resource_data(
-                sdk_resource_instrumentation_library_logs,
+                sdk_resource_scope_logs,
                 ResourceLogs,
                 "logs",
             )
@@ -168,3 +196,7 @@ class OTLPLogExporter(
 
     def shutdown(self) -> None:
         pass
+
+    @property
+    def _exporting(self) -> str:
+        return "logs"

@@ -14,13 +14,15 @@
 
 import multiprocessing
 import os
-import sys
 import threading
 import time
 import unittest
 from concurrent.futures import ThreadPoolExecutor
 from logging import WARNING
+from platform import python_implementation, system
 from unittest import mock
+
+from pytest import mark
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
@@ -173,7 +175,7 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
             OTEL_BSP_EXPORT_TIMEOUT: "4",
         },
     )
-    def test_batch_span_processor_environment_variables(self):
+    def test_args_env_var(self):
 
         batch_span_processor = export.BatchSpanProcessor(
             MySpanExporter(destination=[])
@@ -183,6 +185,37 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
         self.assertEqual(batch_span_processor.schedule_delay_millis, 2)
         self.assertEqual(batch_span_processor.max_export_batch_size, 3)
         self.assertEqual(batch_span_processor.export_timeout_millis, 4)
+
+    def test_args_env_var_defaults(self):
+
+        batch_span_processor = export.BatchSpanProcessor(
+            MySpanExporter(destination=[])
+        )
+
+        self.assertEqual(batch_span_processor.max_queue_size, 2048)
+        self.assertEqual(batch_span_processor.schedule_delay_millis, 5000)
+        self.assertEqual(batch_span_processor.max_export_batch_size, 512)
+        self.assertEqual(batch_span_processor.export_timeout_millis, 30000)
+
+    @mock.patch.dict(
+        "os.environ",
+        {
+            OTEL_BSP_MAX_QUEUE_SIZE: "a",
+            OTEL_BSP_SCHEDULE_DELAY: " ",
+            OTEL_BSP_MAX_EXPORT_BATCH_SIZE: "One",
+            OTEL_BSP_EXPORT_TIMEOUT: "@",
+        },
+    )
+    def test_args_env_var_value_error(self):
+
+        batch_span_processor = export.BatchSpanProcessor(
+            MySpanExporter(destination=[])
+        )
+
+        self.assertEqual(batch_span_processor.max_queue_size, 2048)
+        self.assertEqual(batch_span_processor.schedule_delay_millis, 5000)
+        self.assertEqual(batch_span_processor.max_export_batch_size, 512)
+        self.assertEqual(batch_span_processor.export_timeout_millis, 30000)
 
     def test_on_start_accepts_parent_context(self):
         # pylint: disable=no-self-use
@@ -369,8 +402,8 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
             self.assertIn(span.name, expected)
 
     @unittest.skipUnless(
-        hasattr(os, "fork") and sys.version_info >= (3, 7),
-        "needs *nix and minor version 7 or later",
+        hasattr(os, "fork"),
+        "needs *nix",
     )
     def test_batch_span_processor_fork(self):
         # pylint: disable=invalid-name
@@ -440,6 +473,10 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
 
         span_processor.shutdown()
 
+    @mark.skipif(
+        python_implementation() == "PyPy" and system() == "Windows",
+        reason="This test randomly fails in Windows with PyPy",
+    )
     def test_batch_span_processor_reset_timeout(self):
         """Test that the scheduled timeout is reset on cycles without spans"""
         spans_names_list = []

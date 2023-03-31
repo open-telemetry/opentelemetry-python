@@ -25,6 +25,8 @@ from opentelemetry.exporter.jaeger.proto.grpc import JaegerExporter
 # pylint:disable=import-error
 from opentelemetry.exporter.jaeger.proto.grpc.gen import model_pb2
 from opentelemetry.exporter.jaeger.proto.grpc.translate import (
+    _SCOPE_NAME_KEY,
+    _SCOPE_VERSION_KEY,
     NAME_KEY,
     VERSION_KEY,
     Translate,
@@ -33,13 +35,14 @@ from opentelemetry.sdk import trace
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_JAEGER_CERTIFICATE,
     OTEL_EXPORTER_JAEGER_ENDPOINT,
+    OTEL_EXPORTER_JAEGER_GRPC_INSECURE,
     OTEL_EXPORTER_JAEGER_TIMEOUT,
     OTEL_RESOURCE_ATTRIBUTES,
 )
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SpanExportResult
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
 )
@@ -85,6 +88,7 @@ class TestJaegerExporter(unittest.TestCase):
                 + "/certs/cred.cert",
                 OTEL_RESOURCE_ATTRIBUTES: "service.name=my-opentelemetry-jaeger",
                 OTEL_EXPORTER_JAEGER_TIMEOUT: "5",
+                OTEL_EXPORTER_JAEGER_GRPC_INSECURE: "False",
             },
         )
 
@@ -97,6 +101,7 @@ class TestJaegerExporter(unittest.TestCase):
         self.assertEqual(exporter.collector_endpoint, collector_endpoint)
         self.assertEqual(exporter._timeout, 5)
         self.assertIsNotNone(exporter.credentials)
+        self.assertEqual(exporter.insecure, False)
         env_patch.stop()
 
     # pylint: disable=too-many-locals,too-many-statements
@@ -188,7 +193,7 @@ class TestJaegerExporter(unittest.TestCase):
                 context=other_context,
                 parent=None,
                 resource=Resource({}),
-                instrumentation_info=InstrumentationInfo(
+                instrumentation_scope=InstrumentationScope(
                     name="name", version="version"
                 ),
             ),
@@ -388,6 +393,16 @@ class TestJaegerExporter(unittest.TestCase):
                     ),
                     model_pb2.KeyValue(
                         key=VERSION_KEY,
+                        v_type=model_pb2.ValueType.STRING,
+                        v_str="version",
+                    ),
+                    model_pb2.KeyValue(
+                        key=_SCOPE_NAME_KEY,
+                        v_type=model_pb2.ValueType.STRING,
+                        v_str="name",
+                    ),
+                    model_pb2.KeyValue(
+                        key=_SCOPE_VERSION_KEY,
                         v_type=model_pb2.ValueType.STRING,
                         v_str="version",
                     ),

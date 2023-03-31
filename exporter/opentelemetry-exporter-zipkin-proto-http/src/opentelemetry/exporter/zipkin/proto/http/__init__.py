@@ -31,6 +31,8 @@ collector endpoint using HTTP and supports v2 protobuf.
 
 .. code:: python
 
+    import requests
+
     from opentelemetry import trace
     from opentelemetry.exporter.zipkin.proto.http import ZipkinExporter
     from opentelemetry.sdk.trace import TracerProvider
@@ -46,8 +48,9 @@ collector endpoint using HTTP and supports v2 protobuf.
         # local_node_ipv4="192.168.0.1",
         # local_node_ipv6="2001:db8::c001",
         # local_node_port=31313,
-        # max_tag_value_length=256
-        # timeout=5 (in seconds)
+        # max_tag_value_length=256,
+        # timeout=5 (in seconds),
+        # session=requests.Session()
     )
 
     # Create a BatchSpanProcessor and add the exporter to it
@@ -99,6 +102,7 @@ class ZipkinExporter(SpanExporter):
         local_node_port: Optional[int] = None,
         max_tag_value_length: Optional[int] = None,
         timeout: Optional[int] = None,
+        session: Optional[requests.Session] = None,
     ):
         """Zipkin exporter.
 
@@ -112,6 +116,7 @@ class ZipkinExporter(SpanExporter):
             max_tag_value_length: Max length string attribute values can have.
             timeout: Maximum time the Zipkin exporter will wait for each batch export.
                 The default value is 10s.
+            session: Connection session to the Zipkin collector endpoint.
 
             The tuple (local_node_ipv4, local_node_ipv6, local_node_port) is used to represent
             the network context of a node in the service graph.
@@ -128,7 +133,7 @@ class ZipkinExporter(SpanExporter):
 
         self.encoder = ProtobufEncoder(max_tag_value_length)
 
-        self.session = requests.Session()
+        self.session = session or requests.Session()
         self.session.headers.update(
             {"Content-Type": self.encoder.content_type()}
         )
@@ -173,3 +178,6 @@ class ZipkinExporter(SpanExporter):
             return
         self.session.close()
         self._closed = True
+
+    def force_flush(self, timeout_millis: int = 30000) -> bool:
+        return True

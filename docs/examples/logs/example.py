@@ -1,15 +1,12 @@
 import logging
 
 from opentelemetry import trace
+from opentelemetry._logs import set_logger_provider
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
     OTLPLogExporter,
 )
-from opentelemetry.sdk._logs import (
-    LogEmitterProvider,
-    LoggingHandler,
-    set_log_emitter_provider,
-)
-from opentelemetry.sdk._logs.export import BatchLogProcessor
+from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
+from opentelemetry.sdk._logs.export import BatchLogRecordProcessor
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import (
@@ -22,7 +19,7 @@ trace.get_tracer_provider().add_span_processor(
     BatchSpanProcessor(ConsoleSpanExporter())
 )
 
-log_emitter_provider = LogEmitterProvider(
+logger_provider = LoggerProvider(
     resource=Resource.create(
         {
             "service.name": "shoppingcart",
@@ -30,12 +27,11 @@ log_emitter_provider = LogEmitterProvider(
         }
     ),
 )
-set_log_emitter_provider(log_emitter_provider)
+set_logger_provider(logger_provider)
 
 exporter = OTLPLogExporter(insecure=True)
-log_emitter_provider.add_log_processor(BatchLogProcessor(exporter))
-log_emitter = log_emitter_provider.get_log_emitter(__name__, "0.1")
-handler = LoggingHandler(level=logging.NOTSET, log_emitter=log_emitter)
+logger_provider.add_log_record_processor(BatchLogRecordProcessor(exporter))
+handler = LoggingHandler(level=logging.NOTSET, logger_provider=logger_provider)
 
 # Attach OTLP handler to root logger
 logging.getLogger().addHandler(handler)
@@ -59,4 +55,4 @@ with tracer.start_as_current_span("foo"):
     # Do something
     logger2.error("Hyderabad, we have a major problem.")
 
-log_emitter_provider.shutdown()
+logger_provider.shutdown()

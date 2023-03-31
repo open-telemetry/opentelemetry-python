@@ -8,7 +8,6 @@ import shutil
 import subprocess
 import sys
 from configparser import ConfigParser
-from datetime import datetime
 from inspect import cleandoc
 from itertools import chain
 from os.path import basename
@@ -81,7 +80,7 @@ def parse_args(args=None):
         commands according to `format` and `--all`.
 
         Target paths are initially all Python distribution root paths
-        (as determined by the existence of setup.py, etc. files).
+        (as determined by the existence of pyproject.toml, etc. files).
         They are then augmented according to the section of the
         `PROJECT_ROOT/eachdist.ini` config file specified by the `--mode` option.
 
@@ -518,18 +517,18 @@ def lint_args(args):
 
     runsubprocess(
         args.dry_run,
-        ("black", ".") + (("--diff", "--check") if args.check_only else ()),
+        ("black", "--config", "pyproject.toml", ".") + (("--diff", "--check") if args.check_only else ()),
         cwd=rootdir,
         check=True,
     )
     runsubprocess(
         args.dry_run,
-        ("isort", ".")
+        ("isort", "--settings-path", ".isort.cfg", ".")
         + (("--diff", "--check-only") if args.check_only else ()),
         cwd=rootdir,
         check=True,
     )
-    runsubprocess(args.dry_run, ("flake8", rootdir), check=True)
+    runsubprocess(args.dry_run, ("flake8", "--config", ".flake8", rootdir), check=True)
     execute_args(
         parse_subargs(
             args, ("exec", "pylint {}", "--all", "--mode", "lintroots")
@@ -545,55 +544,6 @@ def lint_args(args):
             ),
         )
     )
-
-
-def update_changelog(path, version, new_entry):
-    unreleased_changes = False
-    try:
-        with open(path, encoding="utf-8") as changelog:
-            text = changelog.read()
-            if f"## [{version}]" in text:
-                raise AttributeError(
-                    f"{path} already contans version {version}"
-                )
-        with open(path, encoding="utf-8") as changelog:
-            for line in changelog:
-                if line.startswith("## [Unreleased]"):
-                    unreleased_changes = False
-                elif line.startswith("## "):
-                    break
-                elif len(line.strip()) > 0:
-                    unreleased_changes = True
-
-    except FileNotFoundError:
-        print(f"file missing: {path}")
-        return
-
-    if unreleased_changes:
-        print(f"updating: {path}")
-        text = re.sub(r"## \[Unreleased\].*", new_entry, text)
-        with open(path, "w", encoding="utf-8") as changelog:
-            changelog.write(text)
-
-
-def update_changelogs(version):
-    today = datetime.now().strftime("%Y-%m-%d")
-    new_entry = """## [Unreleased](https://github.com/open-telemetry/opentelemetry-python/compare/v{version}...HEAD)
-
-## [{version}](https://github.com/open-telemetry/opentelemetry-python/releases/tag/v{version}) - {today}
-
-""".format(
-        version=version, today=today
-    )
-    errors = False
-    try:
-        update_changelog("./CHANGELOG.md", version, new_entry)
-    except Exception as err:  # pylint: disable=broad-except
-        print(str(err))
-        errors = True
-
-    if errors:
-        sys.exit(1)
 
 
 def find(name, path):
@@ -626,12 +576,13 @@ def update_version_files(targets, version, packages):
 
 def update_dependencies(targets, version, packages):
     print("updating dependencies")
+    targets = filter_packages(targets, packages)
     for pkg in packages:
         update_files(
             targets,
-            "setup.cfg",
+            "pyproject.toml",
             rf"({basename(pkg)}.*)==(.*)",
-            r"\1== " + version,
+            r"\1== " + version + '",',
         )
 
 
@@ -675,8 +626,6 @@ def release_args(args):
         update_dependencies(targets, version, packages)
         update_version_files(targets, version, packages)
 
-    update_changelogs("-".join(updated_versions))
-
 
 def test_args(args):
     clean_remainder_args(args.pytestargs)
@@ -694,19 +643,19 @@ def test_args(args):
 
 
 def format_args(args):
-    format_dir = str(find_projectroot())
+    root_dir = format_dir = str(find_projectroot())
     if args.path:
         format_dir = os.path.join(format_dir, args.path)
 
     runsubprocess(
         args.dry_run,
-        ("black", "."),
+        ("black", "--config", f"{root_dir}/pyproject.toml", "."),
         cwd=format_dir,
         check=True,
     )
     runsubprocess(
         args.dry_run,
-        ("isort", "--profile", "black", "."),
+        ("isort", "--settings-path", f"{root_dir}/.isort.cfg", "--profile", "black", "."),
         cwd=format_dir,
         check=True,
     )

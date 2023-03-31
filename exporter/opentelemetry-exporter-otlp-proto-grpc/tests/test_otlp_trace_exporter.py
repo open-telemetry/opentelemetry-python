@@ -13,8 +13,11 @@
 # limitations under the License.
 
 import os
+import threading
+import time
 from collections import OrderedDict
 from concurrent.futures import ThreadPoolExecutor
+from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock, PropertyMock, patch
 
@@ -24,11 +27,13 @@ from grpc import ChannelCredentials, Compression, StatusCode, server
 
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
+    _is_backoff_v2,
     _translate_key_values,
 )
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
+from opentelemetry.exporter.otlp.proto.grpc.version import __version__
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest,
     ExportTraceServiceResponse,
@@ -37,19 +42,15 @@ from opentelemetry.proto.collector.trace.v1.trace_service_pb2_grpc import (
     TraceServiceServicer,
     add_TraceServiceServicer_to_server,
 )
+from opentelemetry.proto.common.v1.common_pb2 import AnyValue, ArrayValue
 from opentelemetry.proto.common.v1.common_pb2 import (
-    AnyValue,
-    ArrayValue,
-    InstrumentationLibrary,
-    KeyValue,
+    InstrumentationScope as PB2InstrumentationScope,
 )
+from opentelemetry.proto.common.v1.common_pb2 import KeyValue
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as OTLPResource,
 )
-from opentelemetry.proto.trace.v1.trace_pb2 import (
-    InstrumentationLibrarySpans,
-    ResourceSpans,
-)
+from opentelemetry.proto.trace.v1.trace_pb2 import ResourceSpans, ScopeSpans
 from opentelemetry.proto.trace.v1.trace_pb2 import Span as OTLPSpan
 from opentelemetry.proto.trace.v1.trace_pb2 import Status
 from opentelemetry.sdk.environment_variables import (
@@ -69,7 +70,7 @@ from opentelemetry.sdk.trace.export import (
     SimpleSpanProcessor,
     SpanExportResult,
 )
-from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
+from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
 )
@@ -174,7 +175,7 @@ class TestOTLPSpanExporter(TestCase):
                     }
                 )
             ],
-            instrumentation_info=InstrumentationInfo(
+            instrumentation_scope=InstrumentationScope(
                 name="name", version="version"
             ),
         )
@@ -190,7 +191,7 @@ class TestOTLPSpanExporter(TestCase):
             ),
             resource=SDKResource(OrderedDict([("a", 2), ("b", False)])),
             parent=Mock(**{"span_id": 12345}),
-            instrumentation_info=InstrumentationInfo(
+            instrumentation_scope=InstrumentationScope(
                 name="name", version="version"
             ),
         )
@@ -206,7 +207,7 @@ class TestOTLPSpanExporter(TestCase):
             ),
             resource=SDKResource(OrderedDict([("a", 1), ("b", False)])),
             parent=Mock(**{"span_id": 12345}),
-            instrumentation_info=InstrumentationInfo(
+            instrumentation_scope=InstrumentationScope(
                 name="name2", version="version2"
             ),
         )
@@ -220,6 +221,10 @@ class TestOTLPSpanExporter(TestCase):
 
     def tearDown(self):
         self.server.stop(None)
+
+    def test_exporting(self):
+        # pylint: disable=protected-access
+        self.assertEqual(self.exporter._exporting, "traces")
 
     @patch.dict(
         "os.environ",
@@ -275,21 +280,36 @@ class TestOTLPSpanExporter(TestCase):
         exporter = OTLPSpanExporter()
         # pylint: disable=protected-access
         self.assertEqual(
-            exporter._headers, (("key1", "value1"), ("key2", "VALUE=2"))
+            exporter._headers,
+            (
+                ("key1", "value1"),
+                ("key2", "VALUE=2"),
+                ("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),
+            ),
         )
         exporter = OTLPSpanExporter(
             headers=(("key3", "value3"), ("key4", "value4"))
         )
         # pylint: disable=protected-access
         self.assertEqual(
-            exporter._headers, (("key3", "value3"), ("key4", "value4"))
+            exporter._headers,
+            (
+                ("key3", "value3"),
+                ("key4", "value4"),
+                ("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),
+            ),
         )
         exporter = OTLPSpanExporter(
             headers={"key5": "value5", "key6": "value6"}
         )
         # pylint: disable=protected-access
         self.assertEqual(
-            exporter._headers, (("key5", "value5"), ("key6", "value6"))
+            exporter._headers,
+            (
+                ("key5", "value5"),
+                ("key6", "value6"),
+                ("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),
+            ),
         )
 
     @patch.dict(
@@ -434,9 +454,30 @@ class TestOTLPSpanExporter(TestCase):
     def test_otlp_headers(self, mock_ssl_channel, mock_secure):
         exporter = OTLPSpanExporter()
         # pylint: disable=protected-access
-        self.assertIsNone(exporter._headers, None)
+        # This ensures that there is no other header than standard user-agent.
+        self.assertEqual(
+            exporter._headers,
+            (("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),),
+        )
 
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.expo")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.backoff")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
+    def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
+        # In backoff ~= 2.0.0 the first value yielded from expo is None.
+        def generate_delays(*args, **kwargs):
+            if _is_backoff_v2:
+                yield None
+            yield 1
+
+        mock_backoff.expo.configure_mock(**{"side_effect": generate_delays})
+
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerUNAVAILABLE(), self.server
+        )
+        self.exporter.export([self.span])
+        mock_sleep.assert_called_once_with(1)
+
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
@@ -450,7 +491,7 @@ class TestOTLPSpanExporter(TestCase):
         )
         mock_sleep.assert_called_with(1)
 
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.expo")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable_delay(self, mock_sleep, mock_expo):
 
@@ -493,9 +534,9 @@ class TestOTLPSpanExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_spans=[
-                        InstrumentationLibrarySpans(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_spans=[
+                        ScopeSpans(
+                            scope=PB2InstrumentationScope(
                                 name="name", version="version"
                             ),
                             spans=[
@@ -595,9 +636,9 @@ class TestOTLPSpanExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_spans=[
-                        InstrumentationLibrarySpans(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_spans=[
+                        ScopeSpans(
+                            scope=PB2InstrumentationScope(
                                 name="name", version="version"
                             ),
                             spans=[
@@ -677,8 +718,8 @@ class TestOTLPSpanExporter(TestCase):
                                 )
                             ],
                         ),
-                        InstrumentationLibrarySpans(
-                            instrumentation_library=InstrumentationLibrary(
+                        ScopeSpans(
+                            scope=PB2InstrumentationScope(
                                 name="name2", version="version2"
                             ),
                             spans=[
@@ -717,9 +758,9 @@ class TestOTLPSpanExporter(TestCase):
                             ),
                         ]
                     ),
-                    instrumentation_library_spans=[
-                        InstrumentationLibrarySpans(
-                            instrumentation_library=InstrumentationLibrary(
+                    scope_spans=[
+                        ScopeSpans(
+                            scope=PB2InstrumentationScope(
                                 name="name", version="version"
                             ),
                             spans=[
@@ -763,12 +804,7 @@ class TestOTLPSpanExporter(TestCase):
         translated: ExportTraceServiceRequest,
         code_expected: Status,
     ):
-        status = (
-            translated.resource_spans[0]
-            .instrumentation_library_spans[0]
-            .spans[0]
-            .status
-        )
+        status = translated.resource_spans[0].scope_spans[0].spans[0].status
 
         self.assertEqual(
             status.code,
@@ -861,28 +897,28 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(
             1,
             translated.resource_spans[0]
-            .instrumentation_library_spans[0]
+            .scope_spans[0]
             .spans[0]
             .dropped_links_count,
         )
         self.assertEqual(
             2,
             translated.resource_spans[0]
-            .instrumentation_library_spans[0]
+            .scope_spans[0]
             .spans[0]
             .dropped_attributes_count,
         )
         self.assertEqual(
             3,
             translated.resource_spans[0]
-            .instrumentation_library_spans[0]
+            .scope_spans[0]
             .spans[0]
             .dropped_events_count,
         )
         self.assertEqual(
             2,
             translated.resource_spans[0]
-            .instrumentation_library_spans[0]
+            .scope_spans[0]
             .spans[0]
             .links[0]
             .dropped_attributes_count,
@@ -890,11 +926,52 @@ class TestOTLPSpanExporter(TestCase):
         self.assertEqual(
             2,
             translated.resource_spans[0]
-            .instrumentation_library_spans[0]
+            .scope_spans[0]
             .spans[0]
             .events[0]
             .dropped_attributes_count,
         )
+
+    def test_shutdown(self):
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerSUCCESS(), self.server
+        )
+        self.assertEqual(
+            self.exporter.export([self.span]), SpanExportResult.SUCCESS
+        )
+        self.exporter.shutdown()
+        with self.assertLogs(level=WARNING) as warning:
+            self.assertEqual(
+                self.exporter.export([self.span]), SpanExportResult.FAILURE
+            )
+            self.assertEqual(
+                warning.records[0].message,
+                "Exporter already shutdown, ignoring batch",
+            )
+
+    def test_shutdown_wait_last_export(self):
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerUNAVAILABLEDelay(), self.server
+        )
+
+        export_thread = threading.Thread(
+            target=self.exporter.export, args=([self.span],)
+        )
+        export_thread.start()
+        try:
+            # pylint: disable=protected-access
+            self.assertTrue(self.exporter._export_lock.locked())
+            # delay is 4 seconds while the default shutdown timeout is 30_000 milliseconds
+            start_time = time.time()
+            self.exporter.shutdown()
+            now = time.time()
+            self.assertGreaterEqual(now, (start_time + 30 / 1000))
+            # pylint: disable=protected-access
+            self.assertTrue(self.exporter._shutdown)
+            # pylint: disable=protected-access
+            self.assertFalse(self.exporter._export_lock.locked())
+        finally:
+            export_thread.join()
 
 
 def _create_span_with_status(status: SDKStatus):
@@ -908,7 +985,7 @@ def _create_span_with_status(status: SDKStatus):
             }
         ),
         parent=Mock(**{"span_id": 12345}),
-        instrumentation_info=InstrumentationInfo(
+        instrumentation_scope=InstrumentationScope(
             name="name", version="version"
         ),
     )

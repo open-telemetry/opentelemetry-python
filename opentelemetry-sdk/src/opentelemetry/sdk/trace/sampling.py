@@ -64,7 +64,7 @@ To use a sampler, pass it into the tracer provider constructor. For example:
         ...
 
 The tracer sampler can also be configured via environment variables ``OTEL_TRACES_SAMPLER`` and ``OTEL_TRACES_SAMPLER_ARG`` (only if applicable).
-The list of known values for ``OTEL_TRACES_SAMPLER`` are:
+The list of built-in values for ``OTEL_TRACES_SAMPLER`` are:
 
     * always_on - Sampler that always samples spans, regardless of the parent span's sampling decision.
     * always_off - Sampler that never samples spans, regardless of the parent span's sampling decision.
@@ -73,10 +73,10 @@ The list of known values for ``OTEL_TRACES_SAMPLER`` are:
     * parentbased_always_off - Sampler that respects its parent span's sampling decision, but otherwise never samples.
     * parentbased_traceidratio - Sampler that respects its parent span's sampling decision, but otherwise samples probabalistically based on rate.
 
-Sampling probability can be set with ``OTEL_TRACES_SAMPLER_ARG`` if the sampler is traceidratio or parentbased_traceidratio, when not provided rate will be set to 1.0 (maximum rate possible).
+Sampling probability can be set with ``OTEL_TRACES_SAMPLER_ARG`` if the sampler is traceidratio or parentbased_traceidratio. Rate must be in the range [0.0,1.0]. When not provided rate will be set to
+1.0 (maximum rate possible).
 
-
-Prev example but with environment vairables. Please make sure to set the env ``OTEL_TRACES_SAMPLER=traceidratio`` and ``OTEL_TRACES_SAMPLER_ARG=0.001``.
+Prev example but with environment variables. Please make sure to set the env ``OTEL_TRACES_SAMPLER=traceidratio`` and ``OTEL_TRACES_SAMPLER_ARG=0.001``.
 
 .. code:: python
 
@@ -97,6 +97,39 @@ Prev example but with environment vairables. Please make sure to set the env ``O
     # created spans will now be sampled by the TraceIdRatioBased sampler with rate 1/1000.
     with trace.get_tracer(__name__).start_as_current_span("Test Span"):
         ...
+
+When utilizing a configurator, you can configure a custom sampler. In order to create a configurable custom sampler, create an entry point for the custom sampler
+factory method or function under the entry point group, ``opentelemetry_traces_sampler``. The custom sampler factory method must be of type ``Callable[[str], Sampler]``, taking a single string argument and
+returning a Sampler object. The single input will come from the string value of the ``OTEL_TRACES_SAMPLER_ARG`` environment variable. If ``OTEL_TRACES_SAMPLER_ARG`` is not configured, the input will
+be an empty string. For example:
+
+.. code:: python
+
+    setup(
+        ...
+        entry_points={
+            ...
+            "opentelemetry_traces_sampler": [
+                "custom_sampler_name = path.to.sampler.factory.method:CustomSamplerFactory.get_sampler"
+            ]
+        }
+    )
+    # ...
+    class CustomRatioSampler(Sampler):
+        def __init__(rate):
+            # ...
+    # ...
+    class CustomSamplerFactory:
+        @staticmethod
+        get_sampler(sampler_argument):
+            try:
+                rate = float(sampler_argument)
+                return CustomSampler(rate)
+            except ValueError: # In case argument is empty string.
+                return CustomSampler(0.5)
+
+In order to configure you application with a custom sampler's entry point, set the ``OTEL_TRACES_SAMPLER`` environment variable to the key name of the entry point. For example, to configured the
+above sampler, set ``OTEL_TRACES_SAMPLER=custom_sampler_name`` and ``OTEL_TRACES_SAMPLER_ARG=0.5``.
 """
 import abc
 import enum
@@ -361,6 +394,26 @@ class ParentBasedTraceIdRatio(ParentBased):
         super().__init__(root=root)
 
 
+class _AlwaysOff(StaticSampler):
+    def __init__(self, _):
+        super().__init__(Decision.DROP)
+
+
+class _AlwaysOn(StaticSampler):
+    def __init__(self, _):
+        super().__init__(Decision.RECORD_AND_SAMPLE)
+
+
+class _ParentBasedAlwaysOff(ParentBased):
+    def __init__(self, _):
+        super().__init__(ALWAYS_OFF)
+
+
+class _ParentBasedAlwaysOn(ParentBased):
+    def __init__(self, _):
+        super().__init__(ALWAYS_ON)
+
+
 _KNOWN_SAMPLERS = {
     "always_on": ALWAYS_ON,
     "always_off": ALWAYS_OFF,
@@ -382,7 +435,7 @@ def _get_from_env_or_default() -> Sampler:
     if trace_sampler in ("traceidratio", "parentbased_traceidratio"):
         try:
             rate = float(os.getenv(OTEL_TRACES_SAMPLER_ARG))
-        except ValueError:
+        except (ValueError, TypeError):
             _logger.warning("Could not convert TRACES_SAMPLER_ARG to float.")
             rate = 1.0
         return _KNOWN_SAMPLERS[trace_sampler](rate)

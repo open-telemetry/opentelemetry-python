@@ -12,18 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import unittest
 from functools import partial
-from importlib import reload
 
 from opentelemetry import trace as trace_api
 from opentelemetry.sdk import trace as trace_sdk
-from opentelemetry.sdk.trace import Resource, TracerProvider, export
-from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
-    InMemorySpanExporter,
-)
-
-_MEMORY_EXPORTER = None
+from opentelemetry.sdk.trace import Resource
 
 
 def new_tracer(span_limits=None, resource=None) -> trace_api.Tracer:
@@ -31,25 +24,6 @@ def new_tracer(span_limits=None, resource=None) -> trace_api.Tracer:
     if resource is not None:
         provider_factory = partial(provider_factory, resource=resource)
     return provider_factory(span_limits=span_limits).get_tracer(__name__)
-
-
-class SpanTestBase(unittest.TestCase):
-    @classmethod
-    def setUpClass(cls):
-        global _MEMORY_EXPORTER  # pylint:disable=global-statement
-        trace_api.set_tracer_provider(TracerProvider())
-        tracer_provider = trace_api.get_tracer_provider()
-        _MEMORY_EXPORTER = InMemorySpanExporter()
-        span_processor = export.SimpleSpanProcessor(_MEMORY_EXPORTER)
-        tracer_provider.add_span_processor(span_processor)
-
-    @classmethod
-    def tearDownClass(cls):
-        reload(trace_api)
-
-    def setUp(self):
-        self.memory_exporter = _MEMORY_EXPORTER
-        self.memory_exporter.clear()
 
 
 def get_span_with_dropped_attributes_events_links():
