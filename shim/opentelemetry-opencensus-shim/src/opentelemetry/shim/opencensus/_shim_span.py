@@ -159,7 +159,8 @@ class ShimSpan(wrapt.ObjectProxy):
         )
         # OpenCensus Span.__exit__() calls Tracer.end_span()
         # https://github.com/census-instrumentation/opencensus-python/blob/2e08df591b507612b3968be8c2538dedbf8fab37/opencensus/trace/span.py#L390
-        # but that would cause the OTel span to be ended twice. Instead I just copied the context teardown from that method.
+        # but that would cause the OTel span to be ended twice. Instead, this code just copies
+        # the context teardown from that method.
         context.detach(self._self_token)
         execution_context.set_current_span(
             self._self_shim_tracer.current_span()
