@@ -36,7 +36,7 @@ def install_shim(
         tracer_provider=tracer_provider,
     )
 
-    @lru_cache
+    @lru_cache()
     def cached_shim_tracer(span_context: SpanContext) -> ShimTracer:
         return ShimTracer(
             NoopTracer(),
