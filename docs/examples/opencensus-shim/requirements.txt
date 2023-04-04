@@ -5,3 +5,4 @@ opentelemetry-opencensus-shim
 opentelemetry-instrumentation-sqlite3
 opencensus
 opencensus-ext-flask
+Flask

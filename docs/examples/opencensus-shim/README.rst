@@ -47,7 +47,8 @@ Alternatively, you can install the Python dependencies separately:
         opentelemetry-opencensus-shim \
         opentelemetry-instrumentation-sqlite3 \
         opencensus \
-        opencensus-ext-flask
+        opencensus-ext-flask \
+        Flask
 
 
 Run the Application
