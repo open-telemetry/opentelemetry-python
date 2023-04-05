@@ -17,13 +17,15 @@
 import unittest
 from typing import List, Tuple
 
-from opentelemetry.exporter.otlp.proto.http.trace_exporter.encoder import (
-    _SPAN_KIND_MAP,
+from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_span_id,
-    _encode_status,
     _encode_trace_id,
-    _ProtobufEncoder,
 )
+from opentelemetry.exporter.otlp.proto.common._internal.trace_encoder import (
+    _SPAN_KIND_MAP,
+    _encode_status,
+)
+from opentelemetry.exporter.otlp.proto.common.trace_encoder import encode_spans
 from opentelemetry.proto.collector.trace.v1.trace_service_pb2 import (
     ExportTraceServiceRequest as PB2ExportTraceServiceRequest,
 )
@@ -55,19 +57,10 @@ from opentelemetry.trace.status import Status as SDKStatus
 from opentelemetry.trace.status import StatusCode as SDKStatusCode
 
 
-class TestProtobufEncoder(unittest.TestCase):
-    def test_encode(self):
+class TestOTLPTraceEncoder(unittest.TestCase):
+    def test_encode_spans(self):
         otel_spans, expected_encoding = self.get_exhaustive_test_spans()
-        self.assertEqual(
-            _ProtobufEncoder().encode(otel_spans), expected_encoding
-        )
-
-    def test_serialize(self):
-        otel_spans, expected_encoding = self.get_exhaustive_test_spans()
-        self.assertEqual(
-            _ProtobufEncoder().serialize(otel_spans),
-            expected_encoding.SerializeToString(),
-        )
+        self.assertEqual(encode_spans(otel_spans), expected_encoding)
 
     @staticmethod
     def get_exhaustive_otel_span_list() -> List[SDKSpan]:
