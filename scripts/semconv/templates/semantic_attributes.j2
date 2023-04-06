@@ -33,9 +33,122 @@ class {{class}}:
     {%- if attribute.deprecated %}
     Deprecated: {{attribute.deprecated | to_doc_brief}}.
     {%- endif %}
-    """
+    """   
 {# Extra line #}
     {%- endfor %}
+
+    {%- if class == "SpanAttributes" %}
+    # Manually defined deprecated attributes
+
+    NET_PEER_IP = "net.peer.ip"
+    """
+    Deprecated, use the `net.peer.sock.addr` attribute.
+    """
+
+    NET_HOST_IP = "net.host.ip"
+    """
+    Deprecated, use the `net.host.sock.addr` attribute.
+    """
+
+    HTTP_SERVER_NAME = "http.server_name"
+    """
+    Deprecated, use the `net.host.name` attribute.
+    """
+
+    HTTP_HOST = "http.host"
+    """
+    Deprecated, use the `net.peer.name` attribute.
+    """
+
+    HTTP_RETRY_COUNT = "http.retry_count"
+    """
+    Deprecated, use the `http.resend_count` attribute.
+    """
+
+    HTTP_REQUEST_CONTENT_LENGTH_UNCOMPRESSED = (
+        "http.request_content_length_uncompressed"
+    )
+    """
+    Deprecated, use the `http.request_content_length` attribute.
+    """
+
+    HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED = (
+        "http.response_content_length_uncompressed"
+    )
+    """
+    Deprecated, use the `http.response_content_length` attribute.
+    """
+
+    MESSAGING_DESTINATION = "messaging.destination"
+    """
+    Deprecated, use the `messaging.destination.name` attribute.
+    """
+
+    MESSAGING_DESTINATION_KIND = "messaging.destination_kind"
+    """
+    Deprecated.
+    """
+
+    MESSAGING_TEMP_DESTINATION = "messaging.temp_destination"
+    """
+    Deprecated. Use `messaging.destination.temporary` attribute.
+    """
+
+    MESSAGING_PROTOCOL = "messaging.protocol"
+    """
+    Deprecated. Use `net.protocol.name` attribute.
+    """
+ 
+    MESSAGING_PROTOCOL_VERSION = "messaging.protocol_version"
+    """
+    Deprecated. Use `net.protocol.version` attribute.
+    """
+ 
+    MESSAGING_URL = "messaging.url"
+    """
+    Deprecated. Use `net.peer.name` attribute.
+    """
+ 
+    MESSAGING_CONVERSATION_ID = "messaging.conversation_id"
+    """
+    Deprecated. Use `messaging.message.conversation.id` attribute.
+    """
+
+    MESSAGING_KAFKA_PARTITION = "messaging.kafka.partition"
+    """
+    Deprecated. Use `messaging.kafka.destination.partition` attribute.
+    """
+
+    FAAS_EXECUTION = "faas.execution"
+    """
+    Deprecated. Use `faas.invocation_id` attribute.
+    """
+
+    HTTP_USER_AGENT = "http.user_agent"
+    """
+    Deprecated. Use `user_agent.original` attribute.
+    """
+
+    MESSAGING_RABBITMQ_ROUTING_KEY = "messaging.rabbitmq.routing_key"
+    """
+    Deprecated. Use `messaging.rabbitmq.destination.routing_key` attribute.
+    """
+
+    MESSAGING_KAFKA_TOMBSTONE = "messaging.kafka.tombstone"
+    """
+    Deprecated. Use `messaging.kafka.destination.tombstone` attribute.
+    """
+
+    {% endif %}
+
+    {%- if class == "ResourceAttributes" %}
+    # Manually defined deprecated attributes
+
+    FAAS_ID = "faas.id"
+    """
+    Deprecated, use the `cloud.resource.id` attribute.
+    """
+    {% endif %}
 
 {%- for attribute in attributes | unique(attribute="fqn") %}
 {%- if attribute.is_enum %}

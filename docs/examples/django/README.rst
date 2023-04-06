@@ -85,14 +85,12 @@ output similar to this one:
         },
         "attributes": {
             "http.method": "GET",
-            "http.server_name": "localhost",
+            "net.peer.name": "localhost",
             "http.scheme": "http",
-            "host.port": 8000,
-            "http.host": "localhost:8000",
+            "net.peer.port": 8000,
             "http.url": "http://localhost:8000/?param=hello",
-            "net.peer.ip": "127.0.0.1",
-            "http.flavor": "1.1",
-            "http.status_text": "OK",
+            "net.sock.peer.addr": "127.0.0.1",
+            "net.protocol.version": "1.1",
             "http.status_code": 200
         },
         "events": [],

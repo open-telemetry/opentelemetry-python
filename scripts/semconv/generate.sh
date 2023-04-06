@@ -4,8 +4,8 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOT_DIR="${SCRIPT_DIR}/../../"
 
 # freeze the spec version to make SemanticAttributes generation reproducible
-SPEC_VERSION=v1.11.0
-OTEL_SEMCONV_GEN_IMG_VERSION=0.11.1
+SPEC_VERSION=v1.19.0
+OTEL_SEMCONV_GEN_IMG_VERSION=0.18.0
 
 cd ${SCRIPT_DIR}
 
@@ -20,20 +20,22 @@ git reset --hard FETCH_HEAD
 cd ${SCRIPT_DIR}
 
 docker run --rm \
-  -v ${SCRIPT_DIR}/opentelemetry-specification/semantic_conventions/trace:/source \
+  -v ${SCRIPT_DIR}/opentelemetry-specification/semantic_conventions:/source \
   -v ${SCRIPT_DIR}/templates:/templates \
   -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/trace/:/output \
   otel/semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
+  --only span,event,attribute_group \
   -f /source code \
   --template /templates/semantic_attributes.j2 \
   --output /output/__init__.py \
   -Dclass=SpanAttributes
 
 docker run --rm \
-  -v ${SCRIPT_DIR}/opentelemetry-specification/semantic_conventions/resource:/source \
+  -v ${SCRIPT_DIR}/opentelemetry-specification/semantic_conventions:/source \
   -v ${SCRIPT_DIR}/templates:/templates \
   -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/resource/:/output \
   otel/semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
+  --only resource \
   -f /source code \
   --template /templates/semantic_attributes.j2 \
   --output /output/__init__.py \
