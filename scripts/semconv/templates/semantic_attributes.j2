@@ -21,6 +21,10 @@
 from enum import Enum
 
 class {{class}}:
+    SCHEMA_URL = "{{schemaUrl}}"
+    """
+    The URL of the OpenTelemetry schema for these keys and values.
+    """
     {%- for attribute in attributes | unique(attribute="fqn") %}
     {{attribute.fqn | to_const_name}} = "{{attribute.fqn}}"
     """
@@ -33,7 +37,7 @@ class {{class}}:
     {%- if attribute.deprecated %}
     Deprecated: {{attribute.deprecated | to_doc_brief}}.
     {%- endif %}
-    """   
+    """
 {# Extra line #}
     {%- endfor %}
 
@@ -98,17 +102,17 @@ class {{class}}:
     """
     Deprecated. Use `net.protocol.name` attribute.
     """
- 
+
     MESSAGING_PROTOCOL_VERSION = "messaging.protocol_version"
     """
     Deprecated. Use `net.protocol.version` attribute.
     """
- 
+
     MESSAGING_URL = "messaging.url"
     """
     Deprecated. Use `net.peer.name` attribute.
     """
- 
+
     MESSAGING_CONVERSATION_ID = "messaging.conversation_id"
     """
     Deprecated. Use `messaging.message.conversation.id` attribute.

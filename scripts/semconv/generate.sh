@@ -5,6 +5,7 @@ ROOT_DIR="${SCRIPT_DIR}/../../"
 
 # freeze the spec version to make SemanticAttributes generation reproducible
 SPEC_VERSION=v1.19.0
+SCHEMA_URL=https://opentelemetry.io/schemas/$SPEC_VERSION
 OTEL_SEMCONV_GEN_IMG_VERSION=0.18.0
 
 cd ${SCRIPT_DIR}
@@ -28,7 +29,8 @@ docker run --rm \
   -f /source code \
   --template /templates/semantic_attributes.j2 \
   --output /output/__init__.py \
-  -Dclass=SpanAttributes
+  -Dclass=SpanAttributes \
+  -DschemaUrl=$SCHEMA_URL
 
 docker run --rm \
   -v ${SCRIPT_DIR}/opentelemetry-specification/semantic_conventions:/source \
@@ -39,6 +41,7 @@ docker run --rm \
   -f /source code \
   --template /templates/semantic_attributes.j2 \
   --output /output/__init__.py \
-  -Dclass=ResourceAttributes
+  -Dclass=ResourceAttributes \
+  -DschemaUrl=$SCHEMA_URL  
 
 cd "$ROOT_DIR"

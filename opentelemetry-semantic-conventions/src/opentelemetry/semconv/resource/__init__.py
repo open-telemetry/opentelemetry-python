@@ -14,53 +14,58 @@
 
 from enum import Enum
 
+
 class ResourceAttributes:
+    SCHEMA_URL = "https://opentelemetry.io/schemas/v1.19.0"
+    """
+    The URL of the OpenTelemetry schema for these keys and values.    
+    """
     BROWSER_BRANDS = "browser.brands"
     """
     Array of brand name and version separated by a space.
     Note: This value is intended to be taken from the [UA client hints API](https://wicg.github.io/ua-client-hints/#interface) (`navigator.userAgentData.brands`).
-    """   
+    """
 
     BROWSER_PLATFORM = "browser.platform"
     """
     The platform on which the browser is running.
     Note: This value is intended to be taken from the [UA client hints API](https://wicg.github.io/ua-client-hints/#interface) (`navigator.userAgentData.platform`). If unavailable, the legacy `navigator.platform` API SHOULD NOT be used instead and this attribute SHOULD be left unset in order for the values to be consistent.
 The list of possible values is defined in the [W3C User-Agent Client Hints specification](https://wicg.github.io/ua-client-hints/#sec-ch-ua-platform). Note that some (but not all) of these values can overlap with values in the [`os.type` and `os.name` attributes](./os.md). However, for consistency, the values in the `browser.platform` attribute should capture the exact value that the user agent provides.
-    """   
+    """
 
     BROWSER_MOBILE = "browser.mobile"
     """
     A boolean that is true if the browser is running on a mobile device.
     Note: This value is intended to be taken from the [UA client hints API](https://wicg.github.io/ua-client-hints/#interface) (`navigator.userAgentData.mobile`). If unavailable, this attribute SHOULD be left unset.
-    """   
+    """
 
     BROWSER_LANGUAGE = "browser.language"
     """
     Preferred language of the user using the browser.
     Note: This value is intended to be taken from the Navigator API `navigator.language`.
-    """   
+    """
 
     USER_AGENT_ORIGINAL = "user_agent.original"
     """
     Full user-agent string provided by the browser.
     Note: The user-agent value SHOULD be provided only from browsers that do not have a mechanism to retrieve brands and platform individually from the User-Agent Client Hints API. To retrieve the value, the legacy `navigator.userAgent` API can be used.
-    """   
+    """
 
     CLOUD_PROVIDER = "cloud.provider"
     """
     Name of the cloud provider.
-    """   
+    """
 
     CLOUD_ACCOUNT_ID = "cloud.account.id"
     """
     The cloud account ID the resource is assigned to.
-    """   
+    """
 
     CLOUD_REGION = "cloud.region"
     """
     The geographical region the resource is running.
     Note: Refer to your provider's docs to see the available regions, for example [Alibaba Cloud regions](https://www.alibabacloud.com/help/doc-detail/40654.htm), [AWS regions](https://aws.amazon.com/about-aws/global-infrastructure/regions_az/), [Azure regions](https://azure.microsoft.com/en-us/global-infrastructure/geographies/), [Google Cloud regions](https://cloud.google.com/about/locations), or [Tencent Cloud regions](https://www.tencentcloud.com/document/product/213/6091).
-    """   
+    """
 
     CLOUD_RESOURCE_ID = "cloud.resource_id"
     """
@@ -82,146 +87,146 @@ The following well-known definitions MUST be used if you set this attribute and 
   `/subscriptions/<SUBSCIPTION_GUID>/resourceGroups/<RG>/providers/Microsoft.Web/sites/<FUNCAPP>/functions/<FUNC>`.
   This means that a span attribute MUST be used, as an Azure function app can host multiple functions that would usually share
   a TracerProvider.
-    """   
+    """
 
     CLOUD_AVAILABILITY_ZONE = "cloud.availability_zone"
     """
     Cloud regions often have multiple, isolated locations known as zones to increase availability. Availability zone represents the zone where the resource is running.
     Note: Availability zones are called "zones" on Alibaba Cloud and Google Cloud.
-    """   
+    """
 
     CLOUD_PLATFORM = "cloud.platform"
     """
     The cloud platform in use.
     Note: The prefix of the service SHOULD match the one specified in `cloud.provider`.
-    """   
+    """
 
     AWS_ECS_CONTAINER_ARN = "aws.ecs.container.arn"
     """
     The Amazon Resource Name (ARN) of an [ECS container instance](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/ECS_instances.html).
-    """   
+    """
 
     AWS_ECS_CLUSTER_ARN = "aws.ecs.cluster.arn"
     """
     The ARN of an [ECS cluster](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/clusters.html).
-    """   
+    """
 
     AWS_ECS_LAUNCHTYPE = "aws.ecs.launchtype"
     """
     The [launch type](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/launch_types.html) for an ECS task.
-    """   
+    """
 
     AWS_ECS_TASK_ARN = "aws.ecs.task.arn"
     """
     The ARN of an [ECS task definition](https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task_definitions.html).
-    """   
+    """
 
     AWS_ECS_TASK_FAMILY = "aws.ecs.task.family"
     """
     The task definition family this task definition is a member of.
-    """   
+    """
 
     AWS_ECS_TASK_REVISION = "aws.ecs.task.revision"
     """
     The revision for this task definition.
-    """   
+    """
 
     AWS_EKS_CLUSTER_ARN = "aws.eks.cluster.arn"
     """
     The ARN of an EKS cluster.
-    """   
+    """
 
     AWS_LOG_GROUP_NAMES = "aws.log.group.names"
     """
     The name(s) of the AWS log group(s) an application is writing to.
     Note: Multiple log groups must be supported for cases like multi-container applications, where a single application has sidecar containers, and each write to their own log group.
-    """   
+    """
 
     AWS_LOG_GROUP_ARNS = "aws.log.group.arns"
     """
     The Amazon Resource Name(s) (ARN) of the AWS log group(s).
     Note: See the [log group ARN format documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/iam-access-control-overview-cwl.html#CWL_ARN_Format).
-    """   
+    """
 
     AWS_LOG_STREAM_NAMES = "aws.log.stream.names"
     """
     The name(s) of the AWS log stream(s) an application is writing to.
-    """   
+    """
 
     AWS_LOG_STREAM_ARNS = "aws.log.stream.arns"
     """
     The ARN(s) of the AWS log stream(s).
     Note: See the [log stream ARN format documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/iam-access-control-overview-cwl.html#CWL_ARN_Format). One log group can contain several log streams, so these ARNs necessarily identify both a log group and a log stream.
-    """   
+    """
 
     HEROKU_RELEASE_CREATION_TIMESTAMP = "heroku.release.creation_timestamp"
     """
     Time and date the release was created.
-    """   
+    """
 
     HEROKU_RELEASE_COMMIT = "heroku.release.commit"
     """
     Commit hash for the current release.
-    """   
+    """
 
     HEROKU_APP_ID = "heroku.app.id"
     """
     Unique identifier for the application.
-    """   
+    """
 
     CONTAINER_NAME = "container.name"
     """
     Container name used by container runtime.
-    """   
+    """
 
     CONTAINER_ID = "container.id"
     """
     Container ID. Usually a UUID, as for example used to [identify Docker containers](https://docs.docker.com/engine/reference/run/#container-identification). The UUID might be abbreviated.
-    """   
+    """
 
     CONTAINER_RUNTIME = "container.runtime"
     """
     The container runtime managing this container.
-    """   
+    """
 
     CONTAINER_IMAGE_NAME = "container.image.name"
     """
     Name of the image the container was built on.
-    """   
+    """
 
     CONTAINER_IMAGE_TAG = "container.image.tag"
     """
     Container image tag.
-    """   
+    """
 
     DEPLOYMENT_ENVIRONMENT = "deployment.environment"
     """
     Name of the [deployment environment](https://en.wikipedia.org/wiki/Deployment_environment) (aka deployment tier).
-    """   
+    """
 
     DEVICE_ID = "device.id"
     """
     A unique identifier representing the device.
     Note: The device identifier MUST only be defined using the values outlined below. This value is not an advertising identifier and MUST NOT be used as such. On iOS (Swift or Objective-C), this value MUST be equal to the [vendor identifier](https://developer.apple.com/documentation/uikit/uidevice/1620059-identifierforvendor). On Android (Java or Kotlin), this value MUST be equal to the Firebase Installation ID or a globally unique UUID which is persisted across sessions in your application. More information can be found [here](https://developer.android.com/training/articles/user-data-ids) on best practices and exact implementation details. Caution should be taken when storing personal data or anything which can identify a user. GDPR and data protection laws may apply, ensure you do your own due diligence.
-    """   
+    """
 
     DEVICE_MODEL_IDENTIFIER = "device.model.identifier"
     """
     The model identifier for the device.
     Note: It's recommended this value represents a machine readable version of the model identifier rather than the market or consumer-friendly name of the device.
-    """   
+    """
 
     DEVICE_MODEL_NAME = "device.model.name"
     """
     The marketing name for the device model.
     Note: It's recommended this value represents a human readable version of the device model rather than a machine readable alternative.
-    """   
+    """
 
     DEVICE_MANUFACTURER = "device.manufacturer"
     """
     The name of the device manufacturer.
     Note: The Android OS provides this field via [Build](https://developer.android.com/reference/android/os/Build#MANUFACTURER). iOS apps SHOULD hardcode the value `Apple`.
-    """   
+    """
 
     FAAS_NAME = "faas.name"
     """
@@ -242,7 +247,7 @@ definition of function name MUST be used for this attribute
   This means that a span attribute MUST be used, as an Azure function
   app can host multiple functions that would usually share
   a TracerProvider (see also the `cloud.resource_id` attribute).
-    """   
+    """
 
     FAAS_VERSION = "faas.version"
     """
@@ -256,307 +261,307 @@ definition of function name MUST be used for this attribute
 * **Google Cloud Functions:** The value of the
   [`K_REVISION` environment variable](https://cloud.google.com/functions/docs/env-var#runtime_environment_variables_set_automatically).
 * **Azure Functions:** Not applicable. Do not set this attribute.
-    """   
+    """
 
     FAAS_INSTANCE = "faas.instance"
     """
     The execution environment ID as a string, that will be potentially reused for other invocations to the same function/function version.
     Note: * **AWS Lambda:** Use the (full) log stream name.
-    """   
+    """
 
     FAAS_MAX_MEMORY = "faas.max_memory"
     """
     The amount of memory available to the serverless function converted to Bytes.
     Note: It's recommended to set this attribute since e.g. too little memory can easily stop a Java AWS Lambda function from working correctly. On AWS Lambda, the environment variable `AWS_LAMBDA_FUNCTION_MEMORY_SIZE` provides this information (which must be multiplied by 1,048,576).
-    """   
+    """
 
     HOST_ID = "host.id"
     """
     Unique host ID. For Cloud, this must be the instance_id assigned by the cloud provider. For non-containerized systems, this should be the `machine-id`. See the table below for the sources to use to determine the `machine-id` based on operating system.
-    """   
+    """
 
     HOST_NAME = "host.name"
     """
     Name of the host. On Unix systems, it may contain what the hostname command returns, or the fully qualified hostname, or another name specified by the user.
-    """   
+    """
 
     HOST_TYPE = "host.type"
     """
     Type of host. For Cloud, this must be the machine type.
-    """   
+    """
 
     HOST_ARCH = "host.arch"
     """
     The CPU architecture the host system is running on.
-    """   
+    """
 
     HOST_IMAGE_NAME = "host.image.name"
     """
     Name of the VM image or OS install the host was instantiated from.
-    """   
+    """
 
     HOST_IMAGE_ID = "host.image.id"
     """
     VM image ID. For Cloud, this value is from the provider.
-    """   
+    """
 
     HOST_IMAGE_VERSION = "host.image.version"
     """
     The version string of the VM image as defined in [Version Attributes](README.md#version-attributes).
-    """   
+    """
 
     K8S_CLUSTER_NAME = "k8s.cluster.name"
     """
     The name of the cluster.
-    """   
+    """
 
     K8S_NODE_NAME = "k8s.node.name"
     """
     The name of the Node.
-    """   
+    """
 
     K8S_NODE_UID = "k8s.node.uid"
     """
     The UID of the Node.
-    """   
+    """
 
     K8S_NAMESPACE_NAME = "k8s.namespace.name"
     """
     The name of the namespace that the pod is running in.
-    """   
+    """
 
     K8S_POD_UID = "k8s.pod.uid"
     """
     The UID of the Pod.
-    """   
+    """
 
     K8S_POD_NAME = "k8s.pod.name"
     """
     The name of the Pod.
-    """   
+    """
 
     K8S_CONTAINER_NAME = "k8s.container.name"
     """
     The name of the Container from Pod specification, must be unique within a Pod. Container runtime usually uses different globally unique name (`container.name`).
-    """   
+    """
 
     K8S_CONTAINER_RESTART_COUNT = "k8s.container.restart_count"
     """
     Number of times the container was restarted. This attribute can be used to identify a particular container (running or stopped) within a container spec.
-    """   
+    """
 
     K8S_REPLICASET_UID = "k8s.replicaset.uid"
     """
     The UID of the ReplicaSet.
-    """   
+    """
 
     K8S_REPLICASET_NAME = "k8s.replicaset.name"
     """
     The name of the ReplicaSet.
-    """   
+    """
 
     K8S_DEPLOYMENT_UID = "k8s.deployment.uid"
     """
     The UID of the Deployment.
-    """   
+    """
 
     K8S_DEPLOYMENT_NAME = "k8s.deployment.name"
     """
     The name of the Deployment.
-    """   
+    """
 
     K8S_STATEFULSET_UID = "k8s.statefulset.uid"
     """
     The UID of the StatefulSet.
-    """   
+    """
 
     K8S_STATEFULSET_NAME = "k8s.statefulset.name"
     """
     The name of the StatefulSet.
-    """   
+    """
 
     K8S_DAEMONSET_UID = "k8s.daemonset.uid"
     """
     The UID of the DaemonSet.
-    """   
+    """
 
     K8S_DAEMONSET_NAME = "k8s.daemonset.name"
     """
     The name of the DaemonSet.
-    """   
+    """
 
     K8S_JOB_UID = "k8s.job.uid"
     """
     The UID of the Job.
-    """   
+    """
 
     K8S_JOB_NAME = "k8s.job.name"
     """
     The name of the Job.
-    """   
+    """
 
     K8S_CRONJOB_UID = "k8s.cronjob.uid"
     """
     The UID of the CronJob.
-    """   
+    """
 
     K8S_CRONJOB_NAME = "k8s.cronjob.name"
     """
     The name of the CronJob.
-    """   
+    """
 
     OS_TYPE = "os.type"
     """
     The operating system type.
-    """   
+    """
 
     OS_DESCRIPTION = "os.description"
     """
     Human readable (not intended to be parsed) OS version information, like e.g. reported by `ver` or `lsb_release -a` commands.
-    """   
+    """
 
     OS_NAME = "os.name"
     """
     Human readable operating system name.
-    """   
+    """
 
     OS_VERSION = "os.version"
     """
     The version string of the operating system as defined in [Version Attributes](../../resource/semantic_conventions/README.md#version-attributes).
-    """   
+    """
 
     PROCESS_PID = "process.pid"
     """
     Process identifier (PID).
-    """   
+    """
 
     PROCESS_PARENT_PID = "process.parent_pid"
     """
     Parent Process identifier (PID).
-    """   
+    """
 
     PROCESS_EXECUTABLE_NAME = "process.executable.name"
     """
     The name of the process executable. On Linux based systems, can be set to the `Name` in `proc/[pid]/status`. On Windows, can be set to the base name of `GetProcessImageFileNameW`.
-    """   
+    """
 
     PROCESS_EXECUTABLE_PATH = "process.executable.path"
     """
     The full path to the process executable. On Linux based systems, can be set to the target of `proc/[pid]/exe`. On Windows, can be set to the result of `GetProcessImageFileNameW`.
-    """   
+    """
 
     PROCESS_COMMAND = "process.command"
     """
     The command used to launch the process (i.e. the command name). On Linux based systems, can be set to the zeroth string in `proc/[pid]/cmdline`. On Windows, can be set to the first parameter extracted from `GetCommandLineW`.
-    """   
+    """
 
     PROCESS_COMMAND_LINE = "process.command_line"
     """
     The full command used to launch the process as a single string representing the full command. On Windows, can be set to the result of `GetCommandLineW`. Do not set this if you have to assemble it just for monitoring; use `process.command_args` instead.
-    """   
+    """
 
     PROCESS_COMMAND_ARGS = "process.command_args"
     """
     All the command arguments (including the command/executable itself) as received by the process. On Linux-based systems (and some other Unixoid systems supporting procfs), can be set according to the list of null-delimited strings extracted from `proc/[pid]/cmdline`. For libc-based executables, this would be the full argv vector passed to `main`.
-    """   
+    """
 
     PROCESS_OWNER = "process.owner"
     """
     The username of the user that owns the process.
-    """   
+    """
 
     PROCESS_RUNTIME_NAME = "process.runtime.name"
     """
     The name of the runtime of this process. For compiled native binaries, this SHOULD be the name of the compiler.
-    """   
+    """
 
     PROCESS_RUNTIME_VERSION = "process.runtime.version"
     """
     The version of the runtime of this process, as returned by the runtime without modification.
-    """   
+    """
 
     PROCESS_RUNTIME_DESCRIPTION = "process.runtime.description"
     """
     An additional description about the runtime of the process, for example a specific vendor customization of the runtime environment.
-    """   
+    """
 
     SERVICE_NAME = "service.name"
     """
     Logical name of the service.
     Note: MUST be the same for all instances of horizontally scaled services. If the value was not specified, SDKs MUST fallback to `unknown_service:` concatenated with [`process.executable.name`](process.md#process), e.g. `unknown_service:bash`. If `process.executable.name` is not available, the value MUST be set to `unknown_service`.
-    """   
+    """
 
     SERVICE_NAMESPACE = "service.namespace"
     """
     A namespace for `service.name`.
     Note: A string value having a meaning that helps to distinguish a group of services, for example the team name that owns a group of services. `service.name` is expected to be unique within the same namespace. If `service.namespace` is not specified in the Resource then `service.name` is expected to be unique for all services that have no explicit namespace defined (so the empty/unspecified namespace is simply one more valid namespace). Zero-length namespace string is assumed equal to unspecified namespace.
-    """   
+    """
 
     SERVICE_INSTANCE_ID = "service.instance.id"
     """
     The string ID of the service instance.
     Note: MUST be unique for each instance of the same `service.namespace,service.name` pair (in other words `service.namespace,service.name,service.instance.id` triplet MUST be globally unique). The ID helps to distinguish instances of the same service that exist at the same time (e.g. instances of a horizontally scaled service). It is preferable for the ID to be persistent and stay the same for the lifetime of the service instance, however it is acceptable that the ID is ephemeral and changes during important lifetime events for the service (e.g. service restarts). If the service has no inherent unique ID that can be used as the value of this attribute it is recommended to generate a random Version 1 or Version 4 RFC 4122 UUID (services aiming for reproducible UUIDs may also use Version 5, see RFC 4122 for more recommendations).
-    """   
+    """
 
     SERVICE_VERSION = "service.version"
     """
     The version string of the service API or implementation.
-    """   
+    """
 
     TELEMETRY_SDK_NAME = "telemetry.sdk.name"
     """
     The name of the telemetry SDK as defined above.
-    """   
+    """
 
     TELEMETRY_SDK_LANGUAGE = "telemetry.sdk.language"
     """
     The language of the telemetry SDK.
-    """   
+    """
 
     TELEMETRY_SDK_VERSION = "telemetry.sdk.version"
     """
     The version string of the telemetry SDK.
-    """   
+    """
 
     TELEMETRY_AUTO_VERSION = "telemetry.auto.version"
     """
     The version string of the auto instrumentation agent, if used.
-    """   
+    """
 
     WEBENGINE_NAME = "webengine.name"
     """
     The name of the web engine.
-    """   
+    """
 
     WEBENGINE_VERSION = "webengine.version"
     """
     The version of the web engine.
-    """   
+    """
 
     WEBENGINE_DESCRIPTION = "webengine.description"
     """
     Additional description of the web engine (e.g. detailed version and edition information).
-    """   
+    """
 
     OTEL_SCOPE_NAME = "otel.scope.name"
     """
     The name of the instrumentation scope - (`InstrumentationScope.Name` in OTLP).
-    """   
+    """
 
     OTEL_SCOPE_VERSION = "otel.scope.version"
     """
     The version of the instrumentation scope - (`InstrumentationScope.Version` in OTLP).
-    """   
+    """
 
     OTEL_LIBRARY_NAME = "otel.library.name"
     """
     Deprecated, use the `otel.scope.name` attribute.
-    """   
+    """
 
     OTEL_LIBRARY_VERSION = "otel.library.version"
     """
     Deprecated, use the `otel.scope.version` attribute.
-    """   
+    """
 
     # Manually defined deprecated attributes
 
@@ -564,7 +569,8 @@ definition of function name MUST be used for this attribute
     """
     Deprecated, use the `cloud.resource.id` attribute.
     """
-    
+
+
 class CloudProviderValues(Enum):
     ALIBABA_CLOUD = "alibaba_cloud"
     """Alibaba Cloud."""
@@ -770,4 +776,3 @@ class TelemetrySdkLanguageValues(Enum):
 
     SWIFT = "swift"
     """swift."""
-
