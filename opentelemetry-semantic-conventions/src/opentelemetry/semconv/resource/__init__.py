@@ -14,11 +14,10 @@
 
 from enum import Enum
 
-
 class ResourceAttributes:
-    SCHEMA_URL = "https://opentelemetry.io/schemas/v1.19.0"
+    SCHEMA_URL = "https://opentelemetry.io/schemas/v1.20.0"
     """
-    The URL of the OpenTelemetry schema for these keys and values.    
+    The URL of the OpenTelemetry schema for these keys and values.
     """
     BROWSER_BRANDS = "browser.brands"
     """
@@ -569,8 +568,7 @@ definition of function name MUST be used for this attribute
     """
     Deprecated, use the `cloud.resource.id` attribute.
     """
-
-
+    
 class CloudProviderValues(Enum):
     ALIBABA_CLOUD = "alibaba_cloud"
     """Alibaba Cloud."""
@@ -776,3 +774,4 @@ class TelemetrySdkLanguageValues(Enum):
 
     SWIFT = "swift"
     """swift."""
+

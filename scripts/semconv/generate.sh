@@ -4,7 +4,7 @@ SCRIPT_DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 ROOT_DIR="${SCRIPT_DIR}/../../"
 
 # freeze the spec version to make SemanticAttributes generation reproducible
-SPEC_VERSION=v1.19.0
+SPEC_VERSION=v1.20.0
 SCHEMA_URL=https://opentelemetry.io/schemas/$SPEC_VERSION
 OTEL_SEMCONV_GEN_IMG_VERSION=0.18.0
 

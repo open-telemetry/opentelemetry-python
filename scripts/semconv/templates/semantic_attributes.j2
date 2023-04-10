@@ -143,6 +143,16 @@ class {{class}}:
     Deprecated. Use `messaging.kafka.destination.tombstone` attribute.
     """
 
+    NET_APP_PROTOCOL_NAME = "net.app.protocol.name"
+    """
+    Deprecated. Use `net.protocol.name` attribute.
+    """
+
+    NET_APP_PROTOCOL_VERSION = "net.app.protocol.version"
+    """
+    Deprecated. Use `net.protocol.version` attribute.    
+    """
+
     {% endif %}
 
     {%- if class == "ResourceAttributes" %}
