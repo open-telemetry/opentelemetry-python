@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from enum import Enum
+from deprecated import deprecated
 
 class SpanAttributes:
     SCHEMA_URL = "https://opentelemetry.io/schemas/v1.20.0"
@@ -1178,6 +1179,34 @@ clear whether the exception will escape.
     """
     Deprecated. Use `net.protocol.version` attribute.    
     """
+
+    @deprecated(
+        version="1.18.0",
+        reason="Removed from the specification in favor of `net.protocol.name` and `net.protocol.version` attributes",
+    )
+    class HttpFlavorValues(Enum):
+        HTTP_1_0 = "1.0"
+
+        HTTP_1_1 = "1.1"
+
+        HTTP_2_0 = "2.0"
+
+        HTTP_3_0 = "3.0"
+
+        SPDY = "SPDY"
+
+        QUIC = "QUIC"
+
+    @deprecated(
+        version="1.18.0",
+        reason="Removed from the specification",
+    )
+    class MessagingDestinationKindValues(Enum):
+        QUEUE = "queue"
+        """A message sent to a queue."""
+
+        TOPIC = "topic"
+        """A message sent to a topic."""
 
     
 class EventDomainValues(Enum):

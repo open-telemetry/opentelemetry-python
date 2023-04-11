@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from enum import Enum
+from deprecated import deprecated
 
 class ResourceAttributes:
     SCHEMA_URL = "https://opentelemetry.io/schemas/v1.20.0"
