@@ -109,16 +109,16 @@ class TestPropagators(TestCase):
     )
     def test_composite_propagators_error(self):
 
-        # pylint: disable=import-outside-toplevel
-        import opentelemetry.propagate
+        with self.assertRaises(ValueError) as cm:
+            # pylint: disable=import-outside-toplevel
+            import opentelemetry.propagate
 
-        with self.assertRaises(Exception):
-            with self.assertLogs(level=ERROR) as err:
-                reload(opentelemetry.propagate)
-                self.assertIn(
-                    "Failed to load configured propagator `unknown`",
-                    err.output[0],
-                )
+            reload(opentelemetry.propagate)
+
+        self.assertEqual(
+            str(cm.exception),
+            "Propagator unknown not found. It is either misspelled or not installed.",
+        )
 
 
 class TestTraceContextTextMapPropagator(TestCase):
