@@ -148,8 +148,8 @@ for propagator in environ_propagators.split(","):
         raise ValueError(
             f"Propagator {propagator} not found. It is either misspelled or not installed."
         )
-    except Exception:
-        logger.exception("Failed to load propagator %s", propagator)
+    except Exception: # pylint: disable=broad-except
+        logger.exception("Failed to load propagator: %s", propagator)
         raise
 
 
