@@ -277,6 +277,7 @@ class OTLPMetricExporter(MetricExporter):
         return "metrics"
 
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        """Nothing is buffered in this exporter, so this method does nothing."""
         return True
 
 
