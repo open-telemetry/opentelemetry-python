@@ -13,9 +13,7 @@
 # limitations under the License.
 import pytest
 
-from opentelemetry.metrics import (
-    get_meter_provider,
-)
+
 from opentelemetry.sdk.metrics import (
     Counter,
     Histogram,
@@ -38,6 +36,10 @@ meter = provider.get_meter("sdk_meter_provider")
 meter2 = provider2.get_meter("sdk_meter_provider_delta")
 counter = meter.create_counter("test_counter")
 counter2 = meter2.create_counter("test_counter2")
+udcounter = meter.create_up_down_counter("test_udcounter")
+udcounter2 = meter2.create_up_down_counter("test_udcounter2")
+hist = meter.create_histogram("test_histogram")
+hist2 = meter2.create_histogram("test_histogram2")
 
 
 @pytest.mark.parametrize(("num_labels", "temporality"), [
@@ -63,3 +65,53 @@ def test_counter_add(benchmark, num_labels, temporality):
             counter2.add(1, labels)
 
     benchmark(benchmark_counter_add)
+
+
+@pytest.mark.parametrize(("num_labels", "temporality"), [
+    (0, "delta"),
+    (1, "delta"),
+    (3, "delta"),
+    (5, "delta"),
+    (10, "delta"),
+    (0, "cumulative"),
+    (1, "cumulative"),
+    (3, "cumulative"),
+    (5, "cumulative"),
+    (10, "cumulative"),
+])
+def test_up_down_counter_add(benchmark, num_labels, temporality):
+    labels = {}
+    for i in range(num_labels):
+        labels["Key{}".format(i)] = "Value{}".format(i)
+    def benchmark_up_down_counter_add():
+        if temporality == "cumulative":
+            udcounter.add(1, labels)
+        else:
+            udcounter2.add(1, labels)
+
+    benchmark(benchmark_up_down_counter_add)
+
+
+@pytest.mark.parametrize(("num_labels", "temporality"), [
+    (0, "delta"),
+    (1, "delta"),
+    (3, "delta"),
+    (5, "delta"),
+    (10, "delta"),
+    (0, "cumulative"),
+    (1, "cumulative"),
+    (3, "cumulative"),
+    (5, "cumulative"),
+    (10, "cumulative"),
+])
+def test_up_down_counter_add(benchmark, num_labels, temporality):
+    labels = {}
+    for i in range(num_labels):
+        labels["Key{}".format(i)] = "Value{}".format(i)
+    def benchmark_up_down_counter_add():
+        if temporality == "cumulative":
+            udcounter.add(1, labels)
+        else:
+            udcounter2.add(1, labels)
+
+    benchmark(benchmark_up_down_counter_add)
