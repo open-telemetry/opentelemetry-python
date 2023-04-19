@@ -11,13 +11,14 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import pytest
 import random
+
+import pytest
 
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 from opentelemetry.sdk.metrics.view import (
-    ExplicitBucketHistogramAggregation as Agg,
+    ExplicitBucketHistogramAggregation,
     View,
 )
 
@@ -33,19 +34,19 @@ def _generate_bounds(bound_count):
 
 hist_view_10 = View(
     instrument_name="test_histogram_10_bound",
-    aggregation=Agg(_generate_bounds(10)),
+    aggregation=ExplicitBucketHistogramAggregation(_generate_bounds(10)),
 )
 hist_view_49 = View(
     instrument_name="test_histogram_49_bound",
-    aggregation=Agg(_generate_bounds(49)),
+    aggregation=ExplicitBucketHistogramAggregation(_generate_bounds(49)),
 )
 hist_view_50 = View(
     instrument_name="test_histogram_50_bound",
-    aggregation=Agg(_generate_bounds(50)),
+    aggregation=ExplicitBucketHistogramAggregation(_generate_bounds(50)),
 )
 hist_view_1000 = View(
     instrument_name="test_histogram_1000_bound",
-    aggregation=Agg(_generate_bounds(1000)),
+    aggregation=ExplicitBucketHistogramAggregation(_generate_bounds(1000)),
 )
 reader = InMemoryMetricReader()
 provider = MeterProvider(
