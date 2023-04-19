@@ -30,17 +30,22 @@ def _generate_bounds(bound_count):
         bounds.append(i * MAX_BOUND_VALUE / bound_count)
     return bounds
 
+
 hist_view_10 = View(
-    instrument_name="test_histogram_10_bound", aggregation=Agg(_generate_bounds(10)),
+    instrument_name="test_histogram_10_bound",
+    aggregation=Agg(_generate_bounds(10)),
 )
 hist_view_49 = View(
-    instrument_name="test_histogram_49_bound", aggregation=Agg(_generate_bounds(49)),
+    instrument_name="test_histogram_49_bound",
+    aggregation=Agg(_generate_bounds(49)),
 )
 hist_view_50 = View(
-    instrument_name="test_histogram_50_bound", aggregation=Agg(_generate_bounds(50)),
+    instrument_name="test_histogram_50_bound",
+    aggregation=Agg(_generate_bounds(50)),
 )
 hist_view_1000 = View(
-    instrument_name="test_histogram_1000_bound", aggregation=Agg(_generate_bounds(1000)),
+    instrument_name="test_histogram_1000_bound",
+    aggregation=Agg(_generate_bounds(1000)),
 )
 reader = InMemoryMetricReader()
 provider = MeterProvider(
@@ -50,7 +55,8 @@ provider = MeterProvider(
         hist_view_49,
         hist_view_50,
         hist_view_1000,
-])
+    ],
+)
 meter = provider.get_meter("sdk_meter_provider")
 hist = meter.create_histogram("test_histogram_default")
 hist10 = meter.create_histogram("test_histogram_10_bound")
@@ -64,6 +70,7 @@ def test_histogram_record(benchmark, num_labels):
     labels = {}
     for i in range(num_labels):
         labels["Key{}".format(i)] = "Value{}".format(i)
+
     def benchmark_histogram_record():
         hist.record(random.random() * MAX_BOUND_VALUE)
 
@@ -75,6 +82,7 @@ def test_histogram_record_10(benchmark, num_labels):
     labels = {}
     for i in range(num_labels):
         labels["Key{}".format(i)] = "Value{}".format(i)
+
     def benchmark_histogram_record_10():
         hist10.record(random.random() * MAX_BOUND_VALUE)
 
@@ -86,6 +94,7 @@ def test_histogram_record_49(benchmark, num_labels):
     labels = {}
     for i in range(num_labels):
         labels["Key{}".format(i)] = "Value{}".format(i)
+
     def benchmark_histogram_record_49():
         hist49.record(random.random() * MAX_BOUND_VALUE)
 
@@ -97,6 +106,7 @@ def test_histogram_record_50(benchmark, num_labels):
     labels = {}
     for i in range(num_labels):
         labels["Key{}".format(i)] = "Value{}".format(i)
+
     def benchmark_histogram_record_50():
         hist50.record(random.random() * MAX_BOUND_VALUE)
 
@@ -108,6 +118,7 @@ def test_histogram_record_1000(benchmark, num_labels):
     labels = {}
     for i in range(num_labels):
         labels["Key{}".format(i)] = "Value{}".format(i)
+
     def benchmark_histogram_record_1000():
         hist1000.record(random.random() * MAX_BOUND_VALUE)
 

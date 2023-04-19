@@ -14,15 +14,20 @@
 import pytest
 
 from opentelemetry.sdk.metrics import Counter, MeterProvider
-from opentelemetry.sdk.metrics.export import AggregationTemporality, InMemoryMetricReader
+from opentelemetry.sdk.metrics.export import (
+    AggregationTemporality,
+    InMemoryMetricReader,
+)
 
 reader = InMemoryMetricReader()
 reader_delta = InMemoryMetricReader(
-    preferred_temporality = {
+    preferred_temporality={
         Counter: AggregationTemporality.DELTA,
     },
 )
-provider = MeterProvider(metric_readers=[reader], )
+provider = MeterProvider(
+    metric_readers=[reader],
+)
 provider2 = MeterProvider(metric_readers=[reader_delta])
 meter = provider.get_meter("sdk_meter_provider")
 meter2 = provider2.get_meter("sdk_meter_provider_delta")
@@ -31,22 +36,26 @@ counter2 = meter2.create_counter("test_counter2")
 udcounter = meter.create_up_down_counter("test_udcounter")
 
 
-@pytest.mark.parametrize(("num_labels", "temporality"), [
-    (0, "delta"),
-    (1, "delta"),
-    (3, "delta"),
-    (5, "delta"),
-    (10, "delta"),
-    (0, "cumulative"),
-    (1, "cumulative"),
-    (3, "cumulative"),
-    (5, "cumulative"),
-    (10, "cumulative"),
-])
+@pytest.mark.parametrize(
+    ("num_labels", "temporality"),
+    [
+        (0, "delta"),
+        (1, "delta"),
+        (3, "delta"),
+        (5, "delta"),
+        (10, "delta"),
+        (0, "cumulative"),
+        (1, "cumulative"),
+        (3, "cumulative"),
+        (5, "cumulative"),
+        (10, "cumulative"),
+    ],
+)
 def test_counter_add(benchmark, num_labels, temporality):
     labels = {}
     for i in range(num_labels):
         labels["Key{}".format(i)] = "Value{}".format(i)
+
     def benchmark_counter_add():
         if temporality == "cumulative":
             counter.add(1, labels)
@@ -61,6 +70,7 @@ def test_up_down_counter_add(benchmark, num_labels):
     labels = {}
     for i in range(num_labels):
         labels["Key{}".format(i)] = "Value{}".format(i)
+
     def benchmark_up_down_counter_add():
         udcounter.add(1, labels)
 
