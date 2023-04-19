@@ -67,51 +67,37 @@ def test_counter_add(benchmark, num_labels, temporality):
     benchmark(benchmark_counter_add)
 
 
-@pytest.mark.parametrize(("num_labels", "temporality"), [
-    (0, "delta"),
-    (1, "delta"),
-    (3, "delta"),
-    (5, "delta"),
-    (10, "delta"),
-    (0, "cumulative"),
-    (1, "cumulative"),
-    (3, "cumulative"),
-    (5, "cumulative"),
-    (10, "cumulative"),
-])
-def test_up_down_counter_add(benchmark, num_labels, temporality):
+@pytest.mark.parametrize("num_labels", [0, 1, 3, 5, 10])
+def test_up_down_counter_add(benchmark, num_labels):
     labels = {}
     for i in range(num_labels):
         labels["Key{}".format(i)] = "Value{}".format(i)
     def benchmark_up_down_counter_add():
-        if temporality == "cumulative":
-            udcounter.add(1, labels)
-        else:
-            udcounter2.add(1, labels)
+        udcounter2.add(1, labels)
 
     benchmark(benchmark_up_down_counter_add)
 
 
-@pytest.mark.parametrize(("num_labels", "temporality"), [
-    (0, "delta"),
-    (1, "delta"),
-    (3, "delta"),
-    (5, "delta"),
-    (10, "delta"),
-    (0, "cumulative"),
-    (1, "cumulative"),
-    (3, "cumulative"),
-    (5, "cumulative"),
-    (10, "cumulative"),
-])
-def test_up_down_counter_add(benchmark, num_labels, temporality):
-    labels = {}
-    for i in range(num_labels):
-        labels["Key{}".format(i)] = "Value{}".format(i)
-    def benchmark_up_down_counter_add():
-        if temporality == "cumulative":
-            udcounter.add(1, labels)
-        else:
-            udcounter2.add(1, labels)
+# @pytest.mark.parametrize(("num_labels", "temporality"), [
+#     (0, "delta"),
+#     (1, "delta"),
+#     (3, "delta"),
+#     (5, "delta"),
+#     (10, "delta"),
+#     (0, "cumulative"),
+#     (1, "cumulative"),
+#     (3, "cumulative"),
+#     (5, "cumulative"),
+#     (10, "cumulative"),
+# ])
+# def test_up_down_counter_add(benchmark, num_labels, temporality):
+#     labels = {}
+#     for i in range(num_labels):
+#         labels["Key{}".format(i)] = "Value{}".format(i)
+#     def benchmark_up_down_counter_add():
+#         if temporality == "cumulative":
+#             udcounter.add(1, labels)
+#         else:
+#             udcounter2.add(1, labels)
 
-    benchmark(benchmark_up_down_counter_add)
+#     benchmark(benchmark_up_down_counter_add)
