@@ -39,6 +39,10 @@ from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
     MetricsServiceServicer,
     add_MetricsServiceServicer_to_server,
 )
+from opentelemetry.sdk.environment_variables import (
+    OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION
+)
+
 from opentelemetry.proto.common.v1.common_pb2 import InstrumentationScope
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
@@ -49,6 +53,10 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
     OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
+)
+from opentelemetry.sdk.metrics.view import (
+    ExponentialBucketHistogramAggregation,
+    ExplicitBucketHistogramAggregation,
 )
 from opentelemetry.sdk.metrics import (
     Counter,
@@ -870,6 +878,53 @@ class TestOTLPMetricExporter(TestCase):
             self.assertEqual(
                 otlp_metric_exporter._preferred_temporality[ObservableGauge],
                 AggregationTemporality.CUMULATIVE,
+            )
+
+    def test_exponential_explicit_bucket_histogram(self):
+
+        self.assertIsInstance(
+            OTLPMetricExporter()._preferred_aggregation[Histogram],
+            ExplicitBucketHistogramAggregation,
+        )
+
+        with patch.dict(
+            environ,
+            {
+                OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "base2_exponential_bucket_histogram"
+            },
+        ):
+            self.assertIsInstance(
+                OTLPMetricExporter()._preferred_aggregation[Histogram],
+                ExponentialBucketHistogramAggregation,
+            )
+
+        with patch.dict(
+            environ,
+            {OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "abc"},
+        ):
+            with self.assertLogs(level=WARNING) as log:
+                self.assertIsInstance(
+                    OTLPMetricExporter()._preferred_aggregation[Histogram],
+                    ExplicitBucketHistogramAggregation,
+                )
+            self.assertIn(
+                (
+                    "Invalid value for OTEL_EXPORTER_OTLP_METRICS_DEFAULT_"
+                    "HISTOGRAM_AGGREGATION: abc, using explicit bucket "
+                    "histogram aggregation"
+                ),
+                log.output[0],
+            )
+
+        with patch.dict(
+            environ,
+            {
+                OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "explicit_bucket_histogram"
+            },
+        ):
+            self.assertIsInstance(
+                OTLPMetricExporter()._preferred_aggregation[Histogram],
+                ExplicitBucketHistogramAggregation,
             )
 
 

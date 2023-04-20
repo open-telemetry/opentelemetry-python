@@ -47,15 +47,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
-    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
-)
-from opentelemetry.sdk.metrics import (
-    Counter,
-    Histogram,
-    ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
-    UpDownCounter,
 )
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -73,6 +64,9 @@ from opentelemetry.sdk.metrics.export import (  # noqa: F401
     Sum,
     ExponentialHistogram as ExponentialHistogramType,
 )
+from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
+    OTLPMetricExporterMixin
+)
 
 _logger = getLogger(__name__)
 
@@ -80,6 +74,7 @@ _logger = getLogger(__name__)
 class OTLPMetricExporter(
     MetricExporter,
     OTLPExporterMixin[Metric, ExportMetricsServiceRequest, MetricExportResult],
+    OTLPMetricExporterMixin
 ):
     """OTLP metric exporter
 
@@ -132,63 +127,7 @@ class OTLPMetricExporter(
             else compression
         )
 
-        instrument_class_temporality = {}
-
-        otel_exporter_otlp_metrics_temporality_preference = (
-            environ.get(
-                OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
-                "CUMULATIVE",
-            )
-            .upper()
-            .strip()
-        )
-
-        if otel_exporter_otlp_metrics_temporality_preference == "DELTA":
-            instrument_class_temporality = {
-                Counter: AggregationTemporality.DELTA,
-                UpDownCounter: AggregationTemporality.CUMULATIVE,
-                Histogram: AggregationTemporality.DELTA,
-                ObservableCounter: AggregationTemporality.DELTA,
-                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-                ObservableGauge: AggregationTemporality.CUMULATIVE,
-            }
-
-        elif otel_exporter_otlp_metrics_temporality_preference == "LOWMEMORY":
-            instrument_class_temporality = {
-                Counter: AggregationTemporality.DELTA,
-                UpDownCounter: AggregationTemporality.CUMULATIVE,
-                Histogram: AggregationTemporality.DELTA,
-                ObservableCounter: AggregationTemporality.CUMULATIVE,
-                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-                ObservableGauge: AggregationTemporality.CUMULATIVE,
-            }
-
-        else:
-            if otel_exporter_otlp_metrics_temporality_preference != (
-                "CUMULATIVE"
-            ):
-                _logger.warning(
-                    "Unrecognized OTEL_EXPORTER_METRICS_TEMPORALITY_PREFERENCE"
-                    " value found: "
-                    f"{otel_exporter_otlp_metrics_temporality_preference}, "
-                    "using CUMULATIVE"
-                )
-            instrument_class_temporality = {
-                Counter: AggregationTemporality.CUMULATIVE,
-                UpDownCounter: AggregationTemporality.CUMULATIVE,
-                Histogram: AggregationTemporality.CUMULATIVE,
-                ObservableCounter: AggregationTemporality.CUMULATIVE,
-                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-                ObservableGauge: AggregationTemporality.CUMULATIVE,
-            }
-
-        instrument_class_temporality.update(preferred_temporality or {})
-
-        MetricExporter.__init__(
-            self,
-            preferred_temporality=instrument_class_temporality,
-            preferred_aggregation=preferred_aggregation,
-        )
+        self._common_configuration(preferred_temporality)
 
         OTLPExporterMixin.__init__(
             self,

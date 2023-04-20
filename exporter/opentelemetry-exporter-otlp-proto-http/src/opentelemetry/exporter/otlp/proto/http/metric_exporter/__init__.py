@@ -25,6 +25,9 @@ from deprecated import deprecated
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
 )
+from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
+    OTLPMetricExporterMixin
+)
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
@@ -45,7 +48,6 @@ from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
 from opentelemetry.proto.resource.v1.resource_pb2 import Resource  # noqa: F401
 from opentelemetry.proto.metrics.v1 import metrics_pb2 as pb2  # noqa: F401
 from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
     OTEL_EXPORTER_OTLP_ENDPOINT,
     OTEL_EXPORTER_OTLP_CERTIFICATE,
     OTEL_EXPORTER_OTLP_HEADERS,
@@ -56,14 +58,6 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
     OTEL_EXPORTER_OTLP_METRICS_COMPRESSION,
-)
-from opentelemetry.sdk.metrics import (
-    Counter,
-    Histogram,
-    ObservableCounter,
-    ObservableGauge,
-    ObservableUpDownCounter,
-    UpDownCounter,
 )
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -106,7 +100,7 @@ def _expo(*args, **kwargs):
     return gen
 
 
-class OTLPMetricExporter(MetricExporter):
+class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
 
     _MAX_RETRY_TIMEOUT = 64
 
@@ -153,63 +147,7 @@ class OTLPMetricExporter(MetricExporter):
                 {"Content-Encoding": self._compression.value}
             )
 
-        instrument_class_temporality = {}
-
-        otel_exporter_otlp_metrics_temporality_preference = (
-            environ.get(
-                OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
-                "CUMULATIVE",
-            )
-            .upper()
-            .strip()
-        )
-
-        if otel_exporter_otlp_metrics_temporality_preference == "DELTA":
-            instrument_class_temporality = {
-                Counter: AggregationTemporality.DELTA,
-                UpDownCounter: AggregationTemporality.CUMULATIVE,
-                Histogram: AggregationTemporality.DELTA,
-                ObservableCounter: AggregationTemporality.DELTA,
-                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-                ObservableGauge: AggregationTemporality.CUMULATIVE,
-            }
-
-        elif otel_exporter_otlp_metrics_temporality_preference == "LOWMEMORY":
-            instrument_class_temporality = {
-                Counter: AggregationTemporality.DELTA,
-                UpDownCounter: AggregationTemporality.CUMULATIVE,
-                Histogram: AggregationTemporality.DELTA,
-                ObservableCounter: AggregationTemporality.CUMULATIVE,
-                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-                ObservableGauge: AggregationTemporality.CUMULATIVE,
-            }
-
-        else:
-            if otel_exporter_otlp_metrics_temporality_preference != (
-                "CUMULATIVE"
-            ):
-                _logger.warning(
-                    "Unrecognized OTEL_EXPORTER_METRICS_TEMPORALITY_PREFERENCE"
-                    " value found: "
-                    f"{otel_exporter_otlp_metrics_temporality_preference}, "
-                    "using CUMULATIVE"
-                )
-            instrument_class_temporality = {
-                Counter: AggregationTemporality.CUMULATIVE,
-                UpDownCounter: AggregationTemporality.CUMULATIVE,
-                Histogram: AggregationTemporality.CUMULATIVE,
-                ObservableCounter: AggregationTemporality.CUMULATIVE,
-                ObservableUpDownCounter: AggregationTemporality.CUMULATIVE,
-                ObservableGauge: AggregationTemporality.CUMULATIVE,
-            }
-
-        instrument_class_temporality.update(preferred_temporality or {})
-
-        MetricExporter.__init__(
-            self,
-            preferred_temporality=instrument_class_temporality,
-            preferred_aggregation=preferred_aggregation,
-        )
+        self._common_configuration(preferred_temporality)
 
     def _export(self, serialized_data: str):
         data = serialized_data
