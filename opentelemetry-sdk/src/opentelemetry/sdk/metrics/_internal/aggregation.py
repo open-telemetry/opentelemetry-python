@@ -19,7 +19,6 @@ from bisect import bisect_left
 from enum import IntEnum
 from logging import getLogger
 from math import inf
-from os import environ
 from threading import Lock
 from typing import Generic, List, Optional, Sequence, TypeVar
 
@@ -33,9 +32,6 @@ from opentelemetry.metrics import (
     ObservableUpDownCounter,
     Synchronous,
     UpDownCounter,
-)
-from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
 )
 from opentelemetry.sdk.metrics._internal.exponential_histogram.buckets import (
     Buckets,
@@ -931,29 +927,6 @@ class DefaultAggregation(Aggregation):
             )
 
         if isinstance(instrument, Histogram):
-
-            histogram_type = environ.get(
-                OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
-                "explicit_bucket_histogram",
-            )
-
-            if histogram_type == "base2_exponential_bucket_histogram":
-
-                return _ExponentialBucketHistogramAggregation(
-                    attributes, start_time_unix_nano
-                )
-
-            if histogram_type != "explicit_bucket_histogram":
-
-                _logger.warning(
-                    (
-                        "Invalid value for %s: %s, using explicit bucket "
-                        "histogram aggregation"
-                    ),
-                    OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
-                    histogram_type,
-                )
-
             return _ExplicitBucketHistogramAggregation(
                 attributes, start_time_unix_nano
             )
