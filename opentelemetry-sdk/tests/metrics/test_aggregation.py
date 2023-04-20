@@ -12,21 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from logging import WARNING
 from math import inf
-from os import environ
 from time import sleep
 from typing import Union
 from unittest import TestCase
-from unittest.mock import Mock, patch
+from unittest.mock import Mock
 
-from opentelemetry.metrics import Histogram
-from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
-)
 from opentelemetry.sdk.metrics._internal.aggregation import (
     _ExplicitBucketHistogramAggregation,
-    _ExponentialBucketHistogramAggregation,
     _LastValueAggregation,
     _SumAggregation,
 )
@@ -548,60 +541,3 @@ class TestDefaultAggregation(TestCase):
             0,
         )
         self.assertIsInstance(aggregation, _LastValueAggregation)
-
-    def test_exponential_explicit_bucket_histogram(self):
-
-        histogram = Mock(spec=Histogram)
-        default_aggregation = DefaultAggregation()
-
-        self.assertIsInstance(
-            default_aggregation._create_aggregation(histogram, Mock(), Mock()),
-            _ExplicitBucketHistogramAggregation,
-        )
-
-        with patch.dict(
-            environ,
-            {
-                OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "base2_exponential_bucket_histogram"
-            },
-        ):
-            self.assertIsInstance(
-                default_aggregation._create_aggregation(
-                    histogram, Mock(), Mock()
-                ),
-                _ExponentialBucketHistogramAggregation,
-            )
-
-        with patch.dict(
-            environ,
-            {OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "abc"},
-        ):
-            with self.assertLogs(level=WARNING) as log:
-                self.assertIsInstance(
-                    default_aggregation._create_aggregation(
-                        histogram, Mock(), Mock()
-                    ),
-                    _ExplicitBucketHistogramAggregation,
-                )
-            self.assertEqual(
-                log.output[0],
-                (
-                    "WARNING:opentelemetry.sdk.metrics._internal.aggregation:"
-                    "Invalid value for OTEL_EXPORTER_OTLP_METRICS_DEFAULT_"
-                    "HISTOGRAM_AGGREGATION: abc, using explicit bucket "
-                    "histogram aggregation"
-                ),
-            )
-
-        with patch.dict(
-            environ,
-            {
-                OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION: "explicit_bucket_histogram"
-            },
-        ):
-            self.assertIsInstance(
-                default_aggregation._create_aggregation(
-                    histogram, Mock(), Mock()
-                ),
-                _ExplicitBucketHistogramAggregation,
-            )
