@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Select histogram aggregation with an environment variable
+  ([#3265](https://github.com/open-telemetry/opentelemetry-python/pull/3265))
 - Move Protobuf encoding to its own package
   ([#3169](https://github.com/open-telemetry/opentelemetry-python/pull/3169))
 - Add experimental feature to detect resource detectors in auto instrumentation
