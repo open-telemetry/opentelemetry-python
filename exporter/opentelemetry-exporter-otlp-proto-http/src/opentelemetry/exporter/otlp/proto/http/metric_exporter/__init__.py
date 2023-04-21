@@ -26,7 +26,7 @@ from opentelemetry.exporter.otlp.proto.common._internal import (
     _get_resource_data,
 )
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
-    OTLPMetricExporterMixin
+    OTLPMetricExporterMixin,
 )
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,

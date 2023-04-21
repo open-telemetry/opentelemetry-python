@@ -62,9 +62,9 @@ _logger = logging.getLogger(__name__)
 
 
 class OTLPMetricExporterMixin:
-
     def _common_configuration(
-        self, preferred_temporality: Dict[type, AggregationTemporality] = None,
+        self,
+        preferred_temporality: Dict[type, AggregationTemporality] = None,
     ) -> None:
 
         instrument_class_temporality = {}

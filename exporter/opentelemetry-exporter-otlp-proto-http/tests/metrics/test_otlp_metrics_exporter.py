@@ -17,10 +17,6 @@ from os import environ
 from unittest import TestCase
 from unittest.mock import patch
 
-from opentelemetry.sdk.metrics.view import (
-    ExponentialBucketHistogramAggregation,
-    ExplicitBucketHistogramAggregation,
-)
 from requests import Session
 from requests.models import Response
 from responses import POST, activate, add
@@ -65,6 +61,10 @@ from opentelemetry.sdk.metrics.export import (
     MetricsData,
     ResourceMetrics,
     ScopeMetrics,
+)
+from opentelemetry.sdk.metrics.view import (
+    ExplicitBucketHistogramAggregation,
+    ExponentialBucketHistogramAggregation,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import (

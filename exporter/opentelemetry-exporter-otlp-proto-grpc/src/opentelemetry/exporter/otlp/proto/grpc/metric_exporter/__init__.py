@@ -65,7 +65,7 @@ from opentelemetry.sdk.metrics.export import (  # noqa: F401
     ExponentialHistogram as ExponentialHistogramType,
 )
 from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
-    OTLPMetricExporterMixin
+    OTLPMetricExporterMixin,
 )
 
 _logger = getLogger(__name__)
@@ -74,7 +74,7 @@ _logger = getLogger(__name__)
 class OTLPMetricExporter(
     MetricExporter,
     OTLPExporterMixin[Metric, ExportMetricsServiceRequest, MetricExportResult],
-    OTLPMetricExporterMixin
+    OTLPMetricExporterMixin,
 ):
     """OTLP metric exporter
 

@@ -39,24 +39,17 @@ from opentelemetry.proto.collector.metrics.v1.metrics_service_pb2_grpc import (
     MetricsServiceServicer,
     add_MetricsServiceServicer_to_server,
 )
-from opentelemetry.sdk.environment_variables import (
-    OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION
-)
-
 from opentelemetry.proto.common.v1.common_pb2 import InstrumentationScope
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_COMPRESSION,
     OTEL_EXPORTER_OTLP_METRICS_CERTIFICATE,
     OTEL_EXPORTER_OTLP_METRICS_COMPRESSION,
+    OTEL_EXPORTER_OTLP_METRICS_DEFAULT_HISTOGRAM_AGGREGATION,
     OTEL_EXPORTER_OTLP_METRICS_ENDPOINT,
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
     OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
-)
-from opentelemetry.sdk.metrics.view import (
-    ExponentialBucketHistogramAggregation,
-    ExplicitBucketHistogramAggregation,
 )
 from opentelemetry.sdk.metrics import (
     Counter,
@@ -75,6 +68,10 @@ from opentelemetry.sdk.metrics.export import (
     NumberDataPoint,
     ResourceMetrics,
     ScopeMetrics,
+)
+from opentelemetry.sdk.metrics.view import (
+    ExplicitBucketHistogramAggregation,
+    ExponentialBucketHistogramAggregation,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util.instrumentation import (
@@ -883,6 +880,7 @@ class TestOTLPMetricExporter(TestCase):
     def test_exponential_explicit_bucket_histogram(self):
 
         self.assertIsInstance(
+            # pylint: disable=protected-access
             OTLPMetricExporter()._preferred_aggregation[Histogram],
             ExplicitBucketHistogramAggregation,
         )
@@ -894,6 +892,7 @@ class TestOTLPMetricExporter(TestCase):
             },
         ):
             self.assertIsInstance(
+                # pylint: disable=protected-access
                 OTLPMetricExporter()._preferred_aggregation[Histogram],
                 ExponentialBucketHistogramAggregation,
             )
@@ -904,6 +903,7 @@ class TestOTLPMetricExporter(TestCase):
         ):
             with self.assertLogs(level=WARNING) as log:
                 self.assertIsInstance(
+                    # pylint: disable=protected-access
                     OTLPMetricExporter()._preferred_aggregation[Histogram],
                     ExplicitBucketHistogramAggregation,
                 )
@@ -923,6 +923,7 @@ class TestOTLPMetricExporter(TestCase):
             },
         ):
             self.assertIsInstance(
+                # pylint: disable=protected-access
                 OTLPMetricExporter()._preferred_aggregation[Histogram],
                 ExplicitBucketHistogramAggregation,
             )
