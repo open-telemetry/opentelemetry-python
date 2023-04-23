@@ -20,7 +20,16 @@ from collections.abc import Sequence  # noqa: F401
 from logging import getLogger
 from os import environ
 from time import sleep
-from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, Union  # noqa: F401
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)  # noqa: F401
 from typing import Sequence as TypingSequence
 from typing import TypeVar
 from urllib.parse import urlparse
