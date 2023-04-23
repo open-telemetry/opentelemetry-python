@@ -12,12 +12,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from sys import argv
 
-import requests
-
-requested = requests.get(
-    "http://localhost:8082/server_request", params={"param": argv[1]}
+from opentelemetry.exporter.otlp.proto.common._internal.metrics_encoder import (
+    encode_metrics,
 )
-assert requested.status_code == 200
-print(requested.text)
+
+__all__ = ["encode_metrics"]

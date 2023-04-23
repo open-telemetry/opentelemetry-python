@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Move Protobuf encoding to its own package
+  ([#3169](https://github.com/open-telemetry/opentelemetry-python/pull/3169))
 - Add experimental feature to detect resource detectors in auto instrumentation
   ([#3181](https://github.com/open-telemetry/opentelemetry-python/pull/3181))
 - Fix exporting of ExponentialBucketHistogramAggregation from opentelemetry.sdk.metrics.view

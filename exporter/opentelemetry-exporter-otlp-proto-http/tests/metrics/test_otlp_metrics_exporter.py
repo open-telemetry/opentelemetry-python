@@ -21,6 +21,9 @@ from requests import Session
 from requests.models import Response
 from responses import POST, activate, add
 
+from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
+    encode_metrics,
+)
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     DEFAULT_COMPRESSION,
@@ -281,7 +284,7 @@ class TestOTLPMetricExporter(TestCase):
             MetricExportResult.SUCCESS,
         )
 
-        serialized_data = exporter._translate_data(self.metrics["sum_int"])
+        serialized_data = encode_metrics(self.metrics["sum_int"])
         mock_post.assert_called_once_with(
             url=exporter._endpoint,
             data=serialized_data.SerializeToString(),

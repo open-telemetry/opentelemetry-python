@@ -16,7 +16,8 @@ import logging
 import unittest
 from datetime import datetime
 
-from opencensus.trace import time_event
+from opencensus.trace import execution_context, time_event
+from opencensus.trace.span_context import SpanContext
 from opencensus.trace.status import Status as OcStatus
 from opencensus.trace.tracer import Tracer as OcTracer
 
@@ -61,6 +62,18 @@ class TestShimWithSdk(unittest.TestCase):
         oc_tracer.end_span()
         self.assertIs(trace.get_current_span(), trace.INVALID_SPAN)
 
+    def test_start_span_interacts_with_oc_context(self):
+        oc_tracer = OcTracer()
+        span = oc_tracer.start_span("foo")
+
+        # Should have put the shim span in OC's implicit context under the hood. OpenCensus
+        # does not require another step to set the span in context.
+        self.assertIs(execution_context.get_current_span(), span)
+
+        # This should end the span and remove it from context
+        oc_tracer.end_span()
+        self.assertIs(execution_context.get_current_span(), None)
+
     def test_context_manager_interacts_with_context(self):
         oc_tracer = OcTracer()
         with oc_tracer.start_span("foo") as span:
@@ -75,12 +88,67 @@ class TestShimWithSdk(unittest.TestCase):
         # The span should now be popped from context
         self.assertIs(trace.get_current_span(), trace.INVALID_SPAN)
 
+    def test_context_manager_interacts_with_oc_context(self):
+        oc_tracer = OcTracer()
+        with oc_tracer.start_span("foo") as span:
+            # Should have placed the shim span in implicit context under the hood
+            self.assertIs(execution_context.get_current_span(), span)
+
+        # The span should now be popped from context
+        self.assertIs(execution_context.get_current_span(), None)
+
     def test_exports_a_span(self):
         oc_tracer = OcTracer()
         with oc_tracer.start_span("span1"):
             pass
 
         self.assertEqual(len(self.mem_exporter.get_finished_spans()), 1)
+
+    def test_uses_tracers_span_context_when_no_parent_in_context(self):
+        # the SpanContext passed to the Tracer will become the parent when there is no span
+        # already set in the OTel context
+        oc_tracer = OcTracer(
+            span_context=SpanContext(
+                trace_id="ace0216bab2b7ba249761dbb19c871b7",
+                span_id="1fead89ecf242225",
+            )
+        )
+
+        with oc_tracer.start_span("span1"):
+            pass
+
+        exported_span: ReadableSpan = self.mem_exporter.get_finished_spans()[0]
+        parent = exported_span.parent
+        self.assertIsNotNone(parent)
+        self.assertEqual(
+            trace.format_trace_id(parent.trace_id),
+            "ace0216bab2b7ba249761dbb19c871b7",
+        )
+        self.assertEqual(
+            trace.format_span_id(parent.span_id), "1fead89ecf242225"
+        )
+
+    def test_ignores_tracers_span_context_when_parent_already_in_context(self):
+        # the SpanContext passed to the Tracer will be ignored since there is already a span
+        # set in the OTel context
+        oc_tracer = OcTracer(
+            span_context=SpanContext(
+                trace_id="ace0216bab2b7ba249761dbb19c871b7",
+                span_id="1fead89ecf242225",
+            )
+        )
+        otel_tracer = self.tracer_provider.get_tracer(__name__)
+
+        with otel_tracer.start_as_current_span("some_parent"):
+            with oc_tracer.start_span("span1"):
+                pass
+
+        oc_span: ReadableSpan = self.mem_exporter.get_finished_spans()[0]
+        otel_parent: ReadableSpan = self.mem_exporter.get_finished_spans()[1]
+        self.assertEqual(
+            oc_span.parent,
+            otel_parent.context,
+        )
 
     def test_span_attributes(self):
         oc_tracer = OcTracer()
