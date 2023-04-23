@@ -26,12 +26,10 @@ from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.exporter.otlp.proto.grpc.exporter import (
-    _is_backoff_v2,
-)
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_key_value,
 )
+from opentelemetry.exporter.otlp.proto.grpc.exporter import _is_backoff_v2
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
