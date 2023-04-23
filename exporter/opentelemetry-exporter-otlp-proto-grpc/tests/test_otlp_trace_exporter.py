@@ -28,7 +28,9 @@ from grpc import ChannelCredentials, Compression, StatusCode, server
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.exporter.otlp.proto.grpc.exporter import (
     _is_backoff_v2,
-    _translate_key_values,
+)
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    _encode_key_value,
 )
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
@@ -840,31 +842,31 @@ class TestOTLPSpanExporter(TestCase):
 
     # pylint:disable=no-member
     def test_translate_key_values(self):
-        bool_value = _translate_key_values("bool_type", False)
+        bool_value = _encode_key_value("bool_type", False)
         self.assertTrue(isinstance(bool_value, KeyValue))
         self.assertEqual(bool_value.key, "bool_type")
         self.assertTrue(isinstance(bool_value.value, AnyValue))
         self.assertFalse(bool_value.value.bool_value)
 
-        str_value = _translate_key_values("str_type", "str")
+        str_value = _encode_key_value("str_type", "str")
         self.assertTrue(isinstance(str_value, KeyValue))
         self.assertEqual(str_value.key, "str_type")
         self.assertTrue(isinstance(str_value.value, AnyValue))
         self.assertEqual(str_value.value.string_value, "str")
 
-        int_value = _translate_key_values("int_type", 2)
+        int_value = _encode_key_value("int_type", 2)
         self.assertTrue(isinstance(int_value, KeyValue))
         self.assertEqual(int_value.key, "int_type")
         self.assertTrue(isinstance(int_value.value, AnyValue))
         self.assertEqual(int_value.value.int_value, 2)
 
-        double_value = _translate_key_values("double_type", 3.2)
+        double_value = _encode_key_value("double_type", 3.2)
         self.assertTrue(isinstance(double_value, KeyValue))
         self.assertEqual(double_value.key, "double_type")
         self.assertTrue(isinstance(double_value.value, AnyValue))
         self.assertEqual(double_value.value.double_value, 3.2)
 
-        seq_value = _translate_key_values("seq_type", ["asd", "123"])
+        seq_value = _encode_key_value("seq_type", ["asd", "123"])
         self.assertTrue(isinstance(seq_value, KeyValue))
         self.assertEqual(seq_value.key, "seq_type")
         self.assertTrue(isinstance(seq_value.value, AnyValue))

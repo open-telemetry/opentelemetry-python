@@ -26,7 +26,7 @@ from opentelemetry._logs import SeverityNumber
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
     OTLPLogExporter,
 )
-from opentelemetry.exporter.otlp.proto.grpc.exporter import _translate_value
+from opentelemetry.exporter.otlp.proto.common._internal import _encode_value
 from opentelemetry.exporter.otlp.proto.grpc.version import __version__
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
@@ -367,7 +367,7 @@ class TestOTLPLogExporter(TestCase):
                                         16,
                                         "big",
                                     ),
-                                    body=_translate_value(
+                                    body=_encode_value(
                                         "Zhengzhou, We have a heaviest rains in 1000 years"
                                     ),
                                     attributes=[
@@ -426,7 +426,7 @@ class TestOTLPLogExporter(TestCase):
                                         16,
                                         "big",
                                     ),
-                                    body=_translate_value(
+                                    body=_encode_value(
                                         "Zhengzhou, We have a heaviest rains in 1000 years"
                                     ),
                                     attributes=[
@@ -463,13 +463,13 @@ class TestOTLPLogExporter(TestCase):
                                         16,
                                         "big",
                                     ),
-                                    body=_translate_value(
+                                    body=_encode_value(
                                         "Sydney, Opera House is closed"
                                     ),
                                     attributes=[
                                         KeyValue(
                                             key="custom_attr",
-                                            value=_translate_value([1, 2, 3]),
+                                            value=_encode_value([1, 2, 3]),
                                         ),
                                     ],
                                     flags=int(
@@ -508,7 +508,7 @@ class TestOTLPLogExporter(TestCase):
                                         16,
                                         "big",
                                     ),
-                                    body=_translate_value(
+                                    body=_encode_value(
                                         "Mumbai, Boil water before drinking"
                                     ),
                                     attributes=[],
