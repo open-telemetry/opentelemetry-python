@@ -98,8 +98,8 @@ from opentelemetry.sdk.metrics.export import (
 
 _logger = getLogger(__name__)
 
-TARGET_INFO_NAME = "target"
-TARGET_INFO_DESCRIPTION = "Target metadata"
+_TARGET_INFO_NAME = "target"
+_TARGET_INFO_DESCRIPTION = "Target metadata"
 
 
 def _convert_buckets(
@@ -188,10 +188,10 @@ class _CustomCollector:
                         attributes = {**attributes, **res.resource.attributes}
 
                     self._target_info = self._create_info_metric(
-                        TARGET_INFO_NAME, TARGET_INFO_DESCRIPTION, attributes
+                        _TARGET_INFO_NAME, _TARGET_INFO_DESCRIPTION, attributes
                     )
                 metric_family_id_metric_family[
-                    TARGET_INFO_NAME
+                    _TARGET_INFO_NAME
                 ] = self._target_info
 
         while self._metrics_datas:

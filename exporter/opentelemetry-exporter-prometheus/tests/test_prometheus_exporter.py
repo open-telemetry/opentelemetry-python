@@ -302,7 +302,8 @@ class TestPrometheusMetricReader(TestCase):
     def test_target_info_enabled_by_default(self):
         metric_reader = PrometheusMetricReader()
         provider = MeterProvider(
-            metric_readers=[metric_reader], resource=Resource({"os": "Unix", "histo": 1})
+            metric_readers=[metric_reader],
+            resource=Resource({"os": "Unix", "histo": 1}),
         )
         meter = provider.get_meter("getting-started", "0.1.2")
         counter = meter.create_counter("counter")
@@ -324,7 +325,8 @@ class TestPrometheusMetricReader(TestCase):
     def test_target_info_disabled(self):
         metric_reader = PrometheusMetricReader(disable_target_info=True)
         provider = MeterProvider(
-            metric_readers=[metric_reader], resource=Resource({"os": "Unix", "histo": 1})
+            metric_readers=[metric_reader],
+            resource=Resource({"os": "Unix", "histo": 1}),
         )
         meter = provider.get_meter("getting-started", "0.1.2")
         counter = meter.create_counter("counter")
