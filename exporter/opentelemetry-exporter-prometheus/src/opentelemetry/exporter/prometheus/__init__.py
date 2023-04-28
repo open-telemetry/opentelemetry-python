@@ -351,6 +351,6 @@ class _CustomCollector:
         self, name: str, description: str, attributes: Dict[str, str]
     ) -> InfoMetricFamily:
         """Create an Info Metric Family with list of attributes"""
-        i = InfoMetricFamily(name, description, labels=attributes)
-        i.add_metric(labels=list(attributes.keys()), value=attributes)
-        return i
+        info = InfoMetricFamily(name, description, labels=attributes)
+        info.add_metric(labels=list(attributes.keys()), value=attributes)
+        return info

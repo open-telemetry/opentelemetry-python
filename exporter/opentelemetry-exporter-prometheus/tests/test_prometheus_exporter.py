@@ -334,9 +334,9 @@ class TestPrometheusMetricReader(TestCase):
         result = list(metric_reader._collector.collect())
 
         for prometheus_metric in result:
-            self.assertNotEquals(type(prometheus_metric), InfoMetricFamily)
-            self.assertNotEquals(prometheus_metric.name, "target")
-            self.assertNotEquals(
+            self.assertNotEqual(type(prometheus_metric), InfoMetricFamily)
+            self.assertNotEqual(prometheus_metric.name, "target")
+            self.assertNotEqual(
                 prometheus_metric.documentation, "Target metadata"
             )
             self.assertNotIn("os", prometheus_metric.samples[0].labels)
