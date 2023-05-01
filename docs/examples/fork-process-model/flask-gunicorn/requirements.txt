@@ -1,5 +1,5 @@
 click==7.1.2
-Flask==1.1.2
+Flask==2.3.2
 googleapis-common-protos==1.52.0
 grpcio==1.35.0
 gunicorn==20.0.4
