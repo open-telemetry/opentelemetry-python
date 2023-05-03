@@ -296,7 +296,7 @@ _RESERVED_ATTRS = frozenset(
         "exc_text",
         "filename",
         "funcName",
-        "getMessage",
+        "message",
         "levelname",
         "levelno",
         "lineno",
