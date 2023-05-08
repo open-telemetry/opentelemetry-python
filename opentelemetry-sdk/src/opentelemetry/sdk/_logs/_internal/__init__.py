@@ -19,6 +19,8 @@ import json
 import logging
 import threading
 import traceback
+from logging import CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+from os import environ
 from time import time_ns
 from typing import Any, Callable, Optional, Tuple, Union
 
@@ -31,6 +33,7 @@ from opentelemetry._logs import (
     get_logger_provider,
     std_to_otel,
 )
+from opentelemetry.sdk.environment_variables import OTEL_LOG_LEVEL
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
@@ -323,9 +326,34 @@ class LoggingHandler(logging.Handler):
 
     def __init__(
         self,
-        level=logging.NOTSET,
+        level=None,
         logger_provider=None,
     ) -> None:
+        if level is None:
+            if OTEL_LOG_LEVEL in environ:
+                env_var_log_level = environ[OTEL_LOG_LEVEL].lower().strip()
+                if env_var_log_level == "critical":
+                    level = CRITICAL
+                elif env_var_log_level == "error":
+                    level = ERROR
+                elif env_var_log_level == "warning":
+                    level = WARNING
+                elif env_var_log_level == "info":
+                    level = INFO
+                elif env_var_log_level == "debug":
+                    level = DEBUG
+                elif env_var_log_level == "notset":
+                    level = NOTSET
+                else:
+                    try:
+                        level = int(env_var_log_level)
+                    except (ValueError, TypeError):
+                        _logger.warning(
+                            "Could not convert TRACES_SAMPLER_ARG to float. Using default value 1.0."
+                        )
+                        level = NOTSET
+            else:
+                level = NOTSET
         super().__init__(level=level)
         self._logger_provider = logger_provider or get_logger_provider()
         self._logger = get_logger(
