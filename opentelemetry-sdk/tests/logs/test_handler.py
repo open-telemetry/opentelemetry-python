@@ -13,7 +13,7 @@
 # limitations under the License.
 import logging
 import unittest
-from logging import NOTSET, basicConfig, root
+from logging import NOTSET, root
 from unittest.mock import Mock, patch
 
 from opentelemetry._logs import SeverityNumber
@@ -31,6 +31,7 @@ def get_logger(level=logging.NOTSET, logger_provider=None):
     logger.addHandler(handler)
     return logger
 
+
 def get_logger_with_default_level(logger_provider=None):
     logger = logging.getLogger(__name__)
     handler = LoggingHandler(logger_provider=logger_provider)
@@ -44,7 +45,9 @@ class TestLoggingHandler(unittest.TestCase):
         emitter_mock = APIGetLogger(
             __name__, logger_provider=emitter_provider_mock
         )
-        logger = get_logger_with_default_level(logger_provider=emitter_provider_mock)
+        logger = get_logger_with_default_level(
+            logger_provider=emitter_provider_mock
+        )
         # Make sure debug messages are ignored by default
         logger.debug("Debug message")
         self.assertEqual(emitter_mock.emit.call_count, 0)
@@ -58,7 +61,9 @@ class TestLoggingHandler(unittest.TestCase):
         emitter_mock = APIGetLogger(
             __name__, logger_provider=emitter_provider_mock
         )
-        logger = get_logger_with_default_level(logger_provider=emitter_provider_mock)
+        logger = get_logger_with_default_level(
+            logger_provider=emitter_provider_mock
+        )
         logger.error("Error message")
         self.assertEqual(emitter_mock.emit.call_count, 0)
         logger.critical("Critical message")
@@ -70,7 +75,9 @@ class TestLoggingHandler(unittest.TestCase):
         emitter_mock = APIGetLogger(
             __name__, logger_provider=emitter_provider_mock
         )
-        logger = get_logger_with_default_level(logger_provider=emitter_provider_mock)
+        logger = get_logger_with_default_level(
+            logger_provider=emitter_provider_mock
+        )
         logger.warning("Warning message")
         self.assertEqual(emitter_mock.emit.call_count, 0)
         logger.error("Error message")
@@ -82,7 +89,9 @@ class TestLoggingHandler(unittest.TestCase):
         emitter_mock = APIGetLogger(
             __name__, logger_provider=emitter_provider_mock
         )
-        logger = get_logger_with_default_level(logger_provider=emitter_provider_mock)
+        logger = get_logger_with_default_level(
+            logger_provider=emitter_provider_mock
+        )
         logger.info("Info message")
         self.assertEqual(emitter_mock.emit.call_count, 0)
         logger.warning("Warning message")
@@ -90,14 +99,14 @@ class TestLoggingHandler(unittest.TestCase):
 
     @patch.dict("os.environ", {OTEL_LOG_LEVEL: "INFO"})
     def test_handler_log_level_env_var_info(self):
-        root.setLevel(NOTSET)
-        basicConfig(level=NOTSET)
         emitter_provider_mock = Mock(spec=LoggerProvider)
         emitter_mock = APIGetLogger(
             __name__, logger_provider=emitter_provider_mock
         )
-        emitter_mock.setLevel(NOTSET)
-        logger = get_logger_with_default_level(logger_provider=emitter_provider_mock)
+        root.setLevel(NOTSET)
+        logger = get_logger_with_default_level(
+            logger_provider=emitter_provider_mock
+        )
         logger.debug("Debug message")
         self.assertEqual(emitter_mock.emit.call_count, 0)
         logger.info("Info message")
@@ -105,14 +114,14 @@ class TestLoggingHandler(unittest.TestCase):
 
     @patch.dict("os.environ", {OTEL_LOG_LEVEL: "DeBug"})
     def test_handler_log_level_env_var_debug(self):
-        root.setLevel(NOTSET)
-        basicConfig(level=NOTSET)
         emitter_provider_mock = Mock(spec=LoggerProvider)
         emitter_mock = APIGetLogger(
             __name__, logger_provider=emitter_provider_mock
         )
-        emitter_mock.setLevel(NOTSET)
-        logger = get_logger_with_default_level(logger_provider=emitter_provider_mock)
+        root.setLevel(NOTSET)
+        logger = get_logger_with_default_level(
+            logger_provider=emitter_provider_mock
+        )
         logger.log(NOTSET, "Notset message")
         self.assertEqual(emitter_mock.emit.call_count, 0)
         logger.debug("Debug message")
@@ -120,18 +129,19 @@ class TestLoggingHandler(unittest.TestCase):
 
     @patch.dict("os.environ", {OTEL_LOG_LEVEL: "notSet"})
     def test_handler_log_level_env_var_notset(self):
-        root.setLevel(NOTSET)
-        basicConfig(level=NOTSET)
         emitter_provider_mock = Mock(spec=LoggerProvider)
         emitter_mock = APIGetLogger(
             __name__, logger_provider=emitter_provider_mock
         )
-        emitter_mock.setLevel(NOTSET)
-        print("JEREVOSS: %s" % emitter_mock)
-        logger = get_logger_with_default_level(logger_provider=emitter_provider_mock)
+        root.setLevel(NOTSET)
+        logger = get_logger_with_default_level(
+            logger_provider=emitter_provider_mock
+        )
         logger.log(-1, "Negative level message")
         self.assertEqual(emitter_mock.emit.call_count, 0)
-        logger.debug("Debug message")
+        logger.log(NOTSET, "Notset message")
+        self.assertEqual(emitter_mock.emit.call_count, 0)
+        logger.log(1, "Postive level message")
         self.assertEqual(emitter_mock.emit.call_count, 1)
 
     @patch.dict("os.environ", {OTEL_LOG_LEVEL: "35"})
@@ -140,10 +150,34 @@ class TestLoggingHandler(unittest.TestCase):
         emitter_mock = APIGetLogger(
             __name__, logger_provider=emitter_provider_mock
         )
-        logger = get_logger_with_default_level(logger_provider=emitter_provider_mock)
+        logger = get_logger_with_default_level(
+            logger_provider=emitter_provider_mock
+        )
         logger.log(34, "34 message")
         self.assertEqual(emitter_mock.emit.call_count, 0)
         logger.log(36, "36 message")
+        self.assertEqual(emitter_mock.emit.call_count, 1)
+
+    @patch.dict("os.environ", {OTEL_LOG_LEVEL: "x"})
+    @patch("opentelemetry.sdk._logs._internal._logger")
+    def test_handler_log_level_env_var_cannot_parse(self, mock_logger):
+        emitter_provider_mock = Mock(spec=LoggerProvider)
+        emitter_mock = APIGetLogger(
+            __name__, logger_provider=emitter_provider_mock
+        )
+        root.setLevel(NOTSET)
+        logger = get_logger_with_default_level(
+            logger_provider=emitter_provider_mock
+        )
+        mock_logger.warning.assert_called_with(
+            'Could not convert %s to int. Defaulting to logging.NOTSET.',
+            'OTEL_LOG_LEVEL',
+        )
+        logger.log(-1, "Negative level message")
+        self.assertEqual(emitter_mock.emit.call_count, 0)
+        logger.log(NOTSET, "Notset message")
+        self.assertEqual(emitter_mock.emit.call_count, 0)
+        logger.log(1, "Postive level message")
         self.assertEqual(emitter_mock.emit.call_count, 1)
 
     def test_handler_custom_log_level(self):

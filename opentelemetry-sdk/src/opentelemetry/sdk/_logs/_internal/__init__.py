@@ -19,7 +19,17 @@ import json
 import logging
 import threading
 import traceback
-from logging import CRITICAL, ERROR, WARNING, INFO, DEBUG, NOTSET
+from logging import (
+    getLogger,
+    CRITICAL,
+    ERROR,
+    WARNING,
+    INFO,
+    DEBUG,
+    NOTSET,
+    basicConfig,
+    root,
+)
 from os import environ
 from time import time_ns
 from typing import Any, Callable, Optional, Tuple, Union
@@ -349,7 +359,8 @@ class LoggingHandler(logging.Handler):
                         level = int(env_var_log_level)
                     except (ValueError, TypeError):
                         _logger.warning(
-                            "Could not convert TRACES_SAMPLER_ARG to float. Using default value 1.0."
+                            "Could not convert %s to int. Defaulting to logging.NOTSET.",
+                            OTEL_LOG_LEVEL,
                         )
                         level = NOTSET
             else:
