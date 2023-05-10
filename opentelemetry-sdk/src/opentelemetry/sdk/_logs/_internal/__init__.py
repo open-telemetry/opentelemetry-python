@@ -31,6 +31,7 @@ from opentelemetry._logs import (
     get_logger_provider,
     std_to_otel,
 )
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
@@ -334,9 +335,9 @@ class LoggingHandler(logging.Handler):
 
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> Attributes:
-        attributes = {
+        attributes = BoundedAttributes({
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
-        }
+        })
         if record.exc_info:
             exc_type = ""
             message = ""
