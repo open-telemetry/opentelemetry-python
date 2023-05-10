@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Modify Prometheus exporter to translate non-monotonic Sums into Gauges
+  ([#3306](https://github.com/open-telemetry/opentelemetry-python/pull/3306))
+
 ## Version 1.18.0/0.39b0 (2023-05-04)
 
 - Select histogram aggregation with an environment variable
@@ -43,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version 1.16.0/0.37b0 (2023-02-17)
 
-- Change ``__all__`` to be statically defined.
+- Change `__all__` to be statically defined.
   ([#3143](https://github.com/open-telemetry/opentelemetry-python/pull/3143))
 - Remove the ability to set a global metric prefix for Prometheus exporter
   ([#3137](https://github.com/open-telemetry/opentelemetry-python/pull/3137))
@@ -66,7 +69,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Create a single resource instance
   ([#3118](https://github.com/open-telemetry/opentelemetry-python/pull/3118))
 
-
 ## Version 1.15.0/0.36b0 (2022-12-09)
 
 - PeriodicExportingMetricsReader with +Inf interval
@@ -84,7 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3027](https://github.com/open-telemetry/opentelemetry-python/pull/3027))
 - Update logging to include logging api as per specification
   ([#3038](https://github.com/open-telemetry/opentelemetry-python/pull/3038))
-- Fix: Avoid generator in metrics _ViewInstrumentMatch.collect()
+- Fix: Avoid generator in metrics \_ViewInstrumentMatch.collect()
   ([#3035](https://github.com/open-telemetry/opentelemetry-python/pull/3035)
 - [exporter-otlp-proto-grpc] add user agent string
   ([#3009](https://github.com/open-telemetry/opentelemetry-python/pull/3009))

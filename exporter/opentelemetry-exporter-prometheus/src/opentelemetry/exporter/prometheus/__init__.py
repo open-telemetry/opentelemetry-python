@@ -244,7 +244,13 @@ class _CustomCollector:
             for pre_metric_family_id, label_values, value in zip(
                 pre_metric_family_ids, label_valuess, values
             ):
-                if isinstance(metric.data, Sum):
+                is_non_monotonic_sum = isinstance(metric.data, Sum) and metric.data.is_monotonic == False
+                is_cumulative = isinstance(metric.data, Sum) and metric.data.aggregation_temporality == AggregationTemporality.CUMULATIVE
+
+                # The prometheus compatibility spec for sums says: If the aggregation temporality is cumulative and the sum is non-monotonic, it MUST be converted to a Prometheus Gauge.
+                should_convert_sum_to_gauge = (is_non_monotonic_sum and is_cumulative)
+
+                if isinstance(metric.data, Sum) and not should_convert_sum_to_gauge:
 
                     metric_family_id = "|".join(
                         [pre_metric_family_id, CounterMetricFamily.__name__]
@@ -262,7 +268,7 @@ class _CustomCollector:
                     metric_family_id_metric_family[
                         metric_family_id
                     ].add_metric(labels=label_values, value=value)
-                elif isinstance(metric.data, Gauge):
+                elif isinstance(metric.data, Gauge) or should_convert_sum_to_gauge:
 
                     metric_family_id = "|".join(
                         [pre_metric_family_id, GaugeMetricFamily.__name__]

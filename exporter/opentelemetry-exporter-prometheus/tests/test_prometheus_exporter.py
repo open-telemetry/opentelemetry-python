@@ -120,7 +120,7 @@ class TestPrometheusMetricReader(TestCase):
             ),
         )
 
-    def test_sum_to_prometheus(self):
+    def test_monotonic_sum_to_prometheus(self):
         labels = {"environment@": "staging", "os": "Windows"}
         metric = _generate_sum(
             "test@sum",
@@ -151,6 +151,50 @@ class TestPrometheusMetricReader(TestCase):
 
         for prometheus_metric in collector.collect():
             self.assertEqual(type(prometheus_metric), CounterMetricFamily)
+            self.assertEqual(prometheus_metric.name, "test_sum_testunit")
+            self.assertEqual(prometheus_metric.documentation, "testdesc")
+            self.assertTrue(len(prometheus_metric.samples) == 1)
+            self.assertEqual(prometheus_metric.samples[0].value, 123)
+            self.assertTrue(len(prometheus_metric.samples[0].labels) == 2)
+            self.assertEqual(
+                prometheus_metric.samples[0].labels["environment_"], "staging"
+            )
+            self.assertEqual(
+                prometheus_metric.samples[0].labels["os"], "Windows"
+            )
+
+    def test_non_monotonic_sum_to_prometheus(self):
+        labels = {"environment@": "staging", "os": "Windows"}
+        metric = _generate_sum(
+            "test@sum",
+            123,
+            attributes=labels,
+            description="testdesc",
+            unit="testunit",
+            is_monotonic=False
+        )
+
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Mock(),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=Mock(),
+                            metrics=[metric],
+                            schema_url="schema_url",
+                        )
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
+        )
+
+        collector = _CustomCollector()
+        collector.add_metrics_data(metrics_data)
+
+        for prometheus_metric in collector.collect():
+            self.assertEqual(type(prometheus_metric), GaugeMetricFamily)
             self.assertEqual(prometheus_metric.name, "test_sum_testunit")
             self.assertEqual(prometheus_metric.documentation, "testdesc")
             self.assertTrue(len(prometheus_metric.samples) == 1)
