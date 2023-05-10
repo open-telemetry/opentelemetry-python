@@ -338,6 +338,7 @@ class LoggingHandler(logging.Handler):
         attr_dict = {
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }
+        # using BoundedAttributes instead of a dict
         attributes = BoundedAttributes(
             maxlen=None,
             attributes=attr_dict if bool(attr_dict) else None,
