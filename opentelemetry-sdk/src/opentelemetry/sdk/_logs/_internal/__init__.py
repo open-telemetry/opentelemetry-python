@@ -339,9 +339,9 @@ class LoggingHandler(logging.Handler):
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }
         attributes = BoundedAttributes(
-            maxlen = None, 
-            attributes = attr_dict if bool(attr_dict) else None, 
-            immutable = False
+            maxlen=None,
+            attributes=attr_dict if bool(attr_dict) else None,
+            immutable=False,
         )
         if record.exc_info:
             exc_type = ""
