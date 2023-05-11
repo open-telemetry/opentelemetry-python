@@ -98,7 +98,7 @@ class LogRecord(APILogRecord):
                 "body": self.body,
                 "severity_number": repr(self.severity_number),
                 "severity_text": self.severity_text,
-                "attributes": self.attributes,
+                "attributes": dict(self.attributes) if bool(self.attributes) else None,
                 "timestamp": ns_to_iso_str(self.timestamp),
                 "trace_id": f"0x{format_trace_id(self.trace_id)}"
                 if self.trace_id is not None
