@@ -78,7 +78,11 @@ class LogRecord(APILogRecord):
                 "severity_text": severity_text,
                 "severity_number": severity_number,
                 "body": body,
-                "attributes": attributes,
+                "attributes": BoundedAttributes(
+                    maxlen=None,
+                    attributes=attributes if bool(attributes) else None,
+                    immutable=False,
+                ),
             }
         )
         self.resource = resource
@@ -335,15 +339,9 @@ class LoggingHandler(logging.Handler):
 
     @staticmethod
     def _get_attributes(record: logging.LogRecord) -> Attributes:
-        attr_dict = {
+        attributes = {
             k: v for k, v in vars(record).items() if k not in _RESERVED_ATTRS
         }
-        # using BoundedAttributes instead of a dict
-        attributes = BoundedAttributes(
-            maxlen=None,
-            attributes=attr_dict if bool(attr_dict) else None,
-            immutable=False,
-        )
         if record.exc_info:
             exc_type = ""
             message = ""
