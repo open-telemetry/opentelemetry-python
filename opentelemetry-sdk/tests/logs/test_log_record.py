@@ -44,10 +44,6 @@ class TestLogRecord(unittest.TestCase):
     def test_log_record_bounded_attributes(self):
         attr = {"key": "value"}
 
-        record = LogRecord(
-            timestamp=0,
-            body="a log line",
-            attributes=attr
-        )
+        record = LogRecord(timestamp=0, body="a log line", attributes=attr)
 
         self.assertTrue(isinstance(record.attributes, BoundedAttributes))
