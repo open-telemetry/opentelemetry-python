@@ -15,6 +15,7 @@
 import json
 import unittest
 
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk._logs import LogRecord
 
 
@@ -39,3 +40,14 @@ class TestLogRecord(unittest.TestCase):
             body="a log line",
         ).to_json()
         self.assertEqual(expected, actual)
+
+    def test_log_record_bounded_attributes(self):
+        attr = {"key": "value"}
+
+        record = LogRecord(
+            timestamp=0,
+            body="a log line",
+            attributes=attr
+        )
+
+        self.assertTrue(isinstance(record.attributes, BoundedAttributes))

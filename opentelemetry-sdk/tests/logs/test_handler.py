@@ -17,6 +17,7 @@ from unittest.mock import Mock
 
 from opentelemetry._logs import SeverityNumber
 from opentelemetry._logs import get_logger as APIGetLogger
+from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import LoggerProvider, LoggingHandler
 from opentelemetry.semconv.trace import SpanAttributes
@@ -91,6 +92,7 @@ class TestLoggingHandler(unittest.TestCase):
 
         self.assertIsNotNone(log_record)
         self.assertEqual(log_record.attributes, {"http.status_code": 200})
+        self.assertTrue(isinstance(log_record.attributes, BoundedAttributes))
 
     def test_log_record_exception(self):
         """Exception information will be included in attributes"""
