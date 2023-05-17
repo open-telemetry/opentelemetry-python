@@ -46,7 +46,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Version 1.16.0/0.37b0 (2023-02-17)
 
-- Change `__all__` to be statically defined.
+- Change ``__all__`` to be statically defined.
   ([#3143](https://github.com/open-telemetry/opentelemetry-python/pull/3143))
 - Remove the ability to set a global metric prefix for Prometheus exporter
   ([#3137](https://github.com/open-telemetry/opentelemetry-python/pull/3137))
@@ -86,7 +86,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3027](https://github.com/open-telemetry/opentelemetry-python/pull/3027))
 - Update logging to include logging api as per specification
   ([#3038](https://github.com/open-telemetry/opentelemetry-python/pull/3038))
-- Fix: Avoid generator in metrics \_ViewInstrumentMatch.collect()
+- Fix: Avoid generator in metrics _ViewInstrumentMatch.collect()
   ([#3035](https://github.com/open-telemetry/opentelemetry-python/pull/3035)
 - [exporter-otlp-proto-grpc] add user agent string
   ([#3009](https://github.com/open-telemetry/opentelemetry-python/pull/3009))
