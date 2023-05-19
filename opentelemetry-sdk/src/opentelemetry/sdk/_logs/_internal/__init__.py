@@ -33,6 +33,7 @@ from opentelemetry._logs import (
 )
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.trace import SpanLimits
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.semconv.trace import SpanAttributes
@@ -67,6 +68,7 @@ class LogRecord(APILogRecord):
         body: Optional[Any] = None,
         resource: Optional[Resource] = None,
         attributes: Optional[Attributes] = None,
+        limits: Optional[SpanLimits] = SpanLimits(),
     ):
         super().__init__(
             **{
@@ -79,10 +81,11 @@ class LogRecord(APILogRecord):
                 "severity_number": severity_number,
                 "body": body,
                 "attributes": BoundedAttributes(
-                    maxlen=None,
+                    maxlen=limits.max_span_attributes,
                     attributes=attributes if bool(attributes) else None,
                     immutable=False,
-                ),
+                    max_value_len=limits.max_attribute_length,
+                )
             }
         )
         self.resource = resource
@@ -115,6 +118,12 @@ class LogRecord(APILogRecord):
             },
             indent=indent,
         )
+
+    @property
+    def dropped_attributes(self) -> int:
+        if self.attributes:
+            return self.attributes.dropped
+        return 0
 
 
 class LogData:
