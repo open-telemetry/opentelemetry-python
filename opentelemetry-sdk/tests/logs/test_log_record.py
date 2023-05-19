@@ -67,7 +67,7 @@ class TestLogRecord(unittest.TestCase):
         self.assertTrue(result.dropped_attributes == 1)
 
     def test_log_record_dropped_attributes_set_limits_max_attribute_length(
-        self
+        self,
     ):
         attr = {"key": "value", "key2": "value2"}
         expected = {"key": "v", "key2": "v"}

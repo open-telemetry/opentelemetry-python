@@ -20,6 +20,7 @@ from opentelemetry.sdk._logs import (
     _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT,
 )
 
+
 class TestLogLimits(unittest.TestCase):
     def test_log_limits_repr_unset(self):
         expected = (

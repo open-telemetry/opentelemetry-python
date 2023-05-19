@@ -602,4 +602,3 @@ class LoggerProvider(APILoggerProvider):
             False otherwise.
         """
         return self._multi_log_record_processor.force_flush(timeout_millis)
-    
