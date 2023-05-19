@@ -16,7 +16,7 @@ import json
 import unittest
 
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.sdk._logs import LogRecord, LogLimits
+from opentelemetry.sdk._logs import LogLimits, LogRecord
 
 
 class TestLogRecord(unittest.TestCase):

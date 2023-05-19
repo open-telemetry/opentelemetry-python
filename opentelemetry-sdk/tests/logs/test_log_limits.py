@@ -16,8 +16,8 @@ import unittest
 
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk._logs import (
-    LogLimits,
     _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT,
+    LogLimits,
 )
 
 

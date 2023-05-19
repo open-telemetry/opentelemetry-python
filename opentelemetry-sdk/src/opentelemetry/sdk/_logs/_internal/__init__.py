@@ -19,9 +19,9 @@ import json
 import logging
 import threading
 import traceback
+from os import environ
 from time import time_ns
 from typing import Any, Callable, Optional, Tuple, Union
-from os import environ
 
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
