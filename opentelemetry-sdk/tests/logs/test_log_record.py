@@ -16,8 +16,10 @@ import json
 import unittest
 
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.sdk._logs import LogRecord
-from opentelemetry.sdk.trace import SpanLimits
+from opentelemetry.sdk._logs import (
+    LogRecord,
+    LogLimits
+)
 
 
 class TestLogRecord(unittest.TestCase):
@@ -58,7 +60,7 @@ class TestLogRecord(unittest.TestCase):
 
     def test_log_record_dropped_attributes_set_limits_max_attribute(self):
         attr = {"key": "value", "key2": "value2"}
-        limits = SpanLimits(
+        limits = LogLimits(
             max_attributes=1,
         )
 
@@ -68,7 +70,7 @@ class TestLogRecord(unittest.TestCase):
     def test_log_record_dropped_attributes_set_limits_max_attribute_length(self):
         attr = {"key": "value", "key2": "value2"}
         expected = {"key": "v", "key2": "v"}
-        limits = SpanLimits(
+        limits = LogLimits(
             max_attribute_length=1,
         )
 
@@ -79,7 +81,7 @@ class TestLogRecord(unittest.TestCase):
     def test_log_record_dropped_attributes_set_limits(self):
         attr = {"key": "value", "key2": "value2"}
         expected = {"key2": "v"}
-        limits = SpanLimits(
+        limits = LogLimits(
             max_attributes=1,
             max_attribute_length=1,
         )
@@ -90,7 +92,7 @@ class TestLogRecord(unittest.TestCase):
 
     def test_log_record_dropped_attributes_unset_limits(self):
         attr = {"key": "value", "key2": "value2"}
-        limits = SpanLimits()
+        limits = LogLimits()
 
         result = LogRecord(timestamp=0, body="a log line", attributes=attr, limits=limits)
         self.assertTrue(result.dropped_attributes == 0)

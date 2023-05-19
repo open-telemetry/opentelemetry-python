@@ -20,6 +20,8 @@ from opentelemetry.sdk._logs._internal import (
     LoggingHandler,
     LogRecord,
     LogRecordProcessor,
+    LogLimits,
+    _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT,
 )
 
 __all__ = [
@@ -29,4 +31,6 @@ __all__ = [
     "LoggingHandler",
     "LogRecord",
     "LogRecordProcessor",
+    "LogLimits",
+    "_DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT",
 ]
