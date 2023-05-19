@@ -22,7 +22,7 @@ from opentelemetry.sdk._logs import (
 
 class TestLogLimits(unittest.TestCase):
     def test_log_limits_repr_unset(self):
-        expected = f'LogLimits(max_attributes={_DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT}, max_attribute_length=None)'
+        expected = f"LogLimits(max_attributes={_DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT}, max_attribute_length=None)"
         limits = str(LogLimits())
 
         self.assertEqual(expected, limits)
