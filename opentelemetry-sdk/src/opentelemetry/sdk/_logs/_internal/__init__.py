@@ -58,9 +58,9 @@ _ENV_VALUE_UNSET = ""
 class LogLimits:
     """This class is based on a SpanLimits class in the Tracing module.
 
-    The limits that should be enforced on recorded data such as events, links, attributes etc.
+    This class represents the limits that should be enforced on recorded data such as events, links, attributes etc.
 
-    This class does not enforce any limits itself. It only provides an a way read limits from env,
+    This class does not enforce any limits itself. It only provides a way to read limits from env,
     default values and from user provided arguments.
 
     All limit arguments must be either a non-negative integer, ``None`` or ``LogLimits.UNSET``.
@@ -79,8 +79,8 @@ class LogLimits:
 
     Args:
         max_attributes: Maximum number of attributes that can be added to a span, event, and link.
-            Environment variable: OTEL_ATTRIBUTE_COUNT_LIMIT
-            Default: {_DEFAULT_ATTRIBUTE_COUNT_LIMIT}
+            Environment variable: ``OTEL_ATTRIBUTE_COUNT_LIMIT``
+            Default: {_DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT}
         max_attribute_length: Maximum length an attribute value can have. Values longer than
             the specified length will be truncated.
     """
