@@ -183,7 +183,7 @@ class LogRecord(APILogRecord):
                     attributes=attributes if bool(attributes) else None,
                     immutable=False,
                     max_value_len=limits.max_attribute_length,
-                )
+                ),
             }
         )
         self.resource = resource

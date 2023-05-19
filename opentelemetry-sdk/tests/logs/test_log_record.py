@@ -64,17 +64,23 @@ class TestLogRecord(unittest.TestCase):
             max_attributes=1,
         )
 
-        result = LogRecord(timestamp=0, body="a log line", attributes=attr, limits=limits)
+        result = LogRecord(
+            timestamp=0, body="a log line", attributes=attr, limits=limits
+        )
         self.assertTrue(result.dropped_attributes == 1)
 
-    def test_log_record_dropped_attributes_set_limits_max_attribute_length(self):
+    def test_log_record_dropped_attributes_set_limits_max_attribute_length(
+            self
+        ):
         attr = {"key": "value", "key2": "value2"}
         expected = {"key": "v", "key2": "v"}
         limits = LogLimits(
             max_attribute_length=1,
         )
 
-        result = LogRecord(timestamp=0, body="a log line", attributes=attr, limits=limits)
+        result = LogRecord(
+            timestamp=0, body="a log line", attributes=attr, limits=limits
+        )
         self.assertTrue(result.dropped_attributes == 0)
         self.assertEqual(expected, result.attributes)
 
@@ -86,7 +92,9 @@ class TestLogRecord(unittest.TestCase):
             max_attribute_length=1,
         )
 
-        result = LogRecord(timestamp=0, body="a log line", attributes=attr, limits=limits)
+        result = LogRecord(
+            timestamp=0, body="a log line", attributes=attr, limits=limits
+        )
         self.assertTrue(result.dropped_attributes == 1)
         self.assertEqual(expected, result.attributes)
 
@@ -94,6 +102,8 @@ class TestLogRecord(unittest.TestCase):
         attr = {"key": "value", "key2": "value2"}
         limits = LogLimits()
 
-        result = LogRecord(timestamp=0, body="a log line", attributes=attr, limits=limits)
+        result = LogRecord(
+            timestamp=0, body="a log line", attributes=attr, limits=limits
+        )
         self.assertTrue(result.dropped_attributes == 0)
         self.assertEqual(attr, result.attributes)
