@@ -54,6 +54,7 @@ _logger = logging.getLogger(__name__)
 _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
 _ENV_VALUE_UNSET = ""
 
+
 class LogLimits:
     """This class is based on a SpanLimits class in the Tracing module.
 
@@ -91,7 +92,6 @@ class LogLimits:
         max_attributes: Optional[int] = None,
         max_attribute_length: Optional[int] = None,
     ):
-
 
         # attribute count
         global_max_attributes = self._from_env_if_absent(
@@ -145,6 +145,7 @@ _UnsetLogLimits = LogLimits(
     max_attributes=LogLimits.UNSET,
     max_attribute_length=LogLimits.UNSET,
 )
+
 
 class LogRecord(APILogRecord):
     """A LogRecord instance represents an event being logged.
