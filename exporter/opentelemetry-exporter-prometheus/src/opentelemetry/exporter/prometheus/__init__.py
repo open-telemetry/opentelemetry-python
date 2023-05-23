@@ -180,7 +180,7 @@ class _CustomCollector:
 
         metric_family_id_metric_family = {}
 
-        if len(self._metrics_datas) != 0:
+        if len(self._metrics_datas):
             if not self._disable_target_info:
                 if self._target_info is None:
                     attributes = {}
