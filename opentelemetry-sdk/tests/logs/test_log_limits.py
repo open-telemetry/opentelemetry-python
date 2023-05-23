@@ -15,7 +15,9 @@
 import unittest
 
 from opentelemetry.sdk._logs import LogLimits
-from opentelemetry.sdk._logs._internal import _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT
+from opentelemetry.sdk._logs._internal import (
+    _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT,
+)
 
 
 class TestLogLimits(unittest.TestCase):
