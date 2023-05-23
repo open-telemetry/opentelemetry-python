@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- ([#3319](https://github.com/open-telemetry/opentelemetry-python/pull/3319)) Changed importlib-metadata dependency to use less strict 6.X version matching
+
 ## Version 1.18.0/0.39b0 (2023-05-04)
 
 - Select histogram aggregation with an environment variable
