@@ -14,7 +14,6 @@
 
 
 from opentelemetry.sdk._logs._internal import (
-    _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT,
     LogData,
     Logger,
     LoggerProvider,
@@ -25,7 +24,6 @@ from opentelemetry.sdk._logs._internal import (
 )
 
 __all__ = [
-    "_DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT",
     "LogData",
     "Logger",
     "LoggerProvider",
