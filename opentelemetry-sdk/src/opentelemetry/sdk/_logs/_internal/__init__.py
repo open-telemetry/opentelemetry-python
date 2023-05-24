@@ -19,6 +19,7 @@ import json
 import logging
 import threading
 import traceback
+from os import environ
 from time import time_ns
 from typing import Any, Callable, Optional, Tuple, Union
 
@@ -30,6 +31,11 @@ from opentelemetry._logs import (
     get_logger,
     get_logger_provider,
     std_to_otel,
+)
+from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.sdk.environment_variables import (
+    OTEL_ATTRIBUTE_COUNT_LIMIT,
+    OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.util import ns_to_iso_str
@@ -44,6 +50,101 @@ from opentelemetry.trace.span import TraceFlags
 from opentelemetry.util.types import Attributes
 
 _logger = logging.getLogger(__name__)
+
+_DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT = 128
+_ENV_VALUE_UNSET = ""
+
+
+class LogLimits:
+    """This class is based on a SpanLimits class in the Tracing module.
+
+    This class represents the limits that should be enforced on recorded data such as events, links, attributes etc.
+
+    This class does not enforce any limits itself. It only provides a way to read limits from env,
+    default values and from user provided arguments.
+
+    All limit arguments must be either a non-negative integer, ``None`` or ``LogLimits.UNSET``.
+
+    - All limit arguments are optional.
+    - If a limit argument is not set, the class will try to read its value from the corresponding
+      environment variable.
+    - If the environment variable is not set, the default value, if any, will be used.
+
+    Limit precedence:
+
+    - If a model specific limit is set, it will be used.
+    - Else if the corresponding global limit is set, it will be used.
+    - Else if the model specific limit has a default value, the default value will be used.
+    - Else if the global limit has a default value, the default value will be used.
+
+    Args:
+        max_attributes: Maximum number of attributes that can be added to a span, event, and link.
+            Environment variable: ``OTEL_ATTRIBUTE_COUNT_LIMIT``
+            Default: {_DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT}
+        max_attribute_length: Maximum length an attribute value can have. Values longer than
+            the specified length will be truncated.
+    """
+
+    UNSET = -1
+
+    def __init__(
+        self,
+        max_attributes: Optional[int] = None,
+        max_attribute_length: Optional[int] = None,
+    ):
+
+        # attribute count
+        global_max_attributes = self._from_env_if_absent(
+            max_attributes, OTEL_ATTRIBUTE_COUNT_LIMIT
+        )
+        self.max_attributes = (
+            global_max_attributes
+            if global_max_attributes is not None
+            else _DEFAULT_OTEL_ATTRIBUTE_COUNT_LIMIT
+        )
+
+        # attribute length
+        self.max_attribute_length = self._from_env_if_absent(
+            max_attribute_length,
+            OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
+        )
+
+    def __repr__(self):
+        return f"{type(self).__name__}(max_attributes={self.max_attributes}, max_attribute_length={self.max_attribute_length})"
+
+    @classmethod
+    def _from_env_if_absent(
+        cls, value: Optional[int], env_var: str, default: Optional[int] = None
+    ) -> Optional[int]:
+        if value == cls.UNSET:
+            return None
+
+        err_msg = "{0} must be a non-negative integer but got {}"
+
+        # if no value is provided for the limit, try to load it from env
+        if value is None:
+            # return default value if env var is not set
+            if env_var not in environ:
+                return default
+
+            str_value = environ.get(env_var, "").strip().lower()
+            if str_value == _ENV_VALUE_UNSET:
+                return None
+
+            try:
+                value = int(str_value)
+            except ValueError:
+                raise ValueError(err_msg.format(env_var, str_value))
+
+        if value < 0:
+            raise ValueError(err_msg.format(env_var, value))
+        return value
+
+
+_UnsetLogLimits = LogLimits(
+    max_attributes=LogLimits.UNSET,
+    max_attribute_length=LogLimits.UNSET,
+)
 
 
 class LogRecord(APILogRecord):
@@ -66,6 +167,7 @@ class LogRecord(APILogRecord):
         body: Optional[Any] = None,
         resource: Optional[Resource] = None,
         attributes: Optional[Attributes] = None,
+        limits: Optional[LogLimits] = _UnsetLogLimits,
     ):
         super().__init__(
             **{
@@ -77,7 +179,12 @@ class LogRecord(APILogRecord):
                 "severity_text": severity_text,
                 "severity_number": severity_number,
                 "body": body,
-                "attributes": attributes,
+                "attributes": BoundedAttributes(
+                    maxlen=limits.max_attributes,
+                    attributes=attributes if bool(attributes) else None,
+                    immutable=False,
+                    max_value_len=limits.max_attribute_length,
+                ),
             }
         )
         self.resource = resource
@@ -93,7 +200,9 @@ class LogRecord(APILogRecord):
                 "body": self.body,
                 "severity_number": repr(self.severity_number),
                 "severity_text": self.severity_text,
-                "attributes": self.attributes,
+                "attributes": dict(self.attributes)
+                if bool(self.attributes)
+                else None,
                 "timestamp": ns_to_iso_str(self.timestamp),
                 "trace_id": f"0x{format_trace_id(self.trace_id)}"
                 if self.trace_id is not None
@@ -108,6 +217,12 @@ class LogRecord(APILogRecord):
             },
             indent=indent,
         )
+
+    @property
+    def dropped_attributes(self) -> int:
+        if self.attributes:
+            return self.attributes.dropped
+        return 0
 
 
 class LogData:
