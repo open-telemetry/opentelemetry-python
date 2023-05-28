@@ -1,5 +1,5 @@
-sphinx~=3.5.4
-sphinx-rtd-theme~=0.5
+sphinx
+sphinx-rtd-theme
 sphinx-autodoc-typehints
 # used to generate docs for the website
 sphinx-jekyll-builder
@@ -15,7 +15,6 @@ ddtrace>=0.34.0
 grpcio~=1.27
 Deprecated>=1.2.6
 django>=2.2
-flask~=1.0
 opentracing~=2.2.0
 thrift>=0.10.0
 wrapt>=1.0.0,<2.0.0
