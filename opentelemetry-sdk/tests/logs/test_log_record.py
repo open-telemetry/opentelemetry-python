@@ -15,7 +15,8 @@
 import json
 import unittest
 
-from opentelemetry.sdk._logs import LogRecord
+from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.sdk._logs import LogLimits, LogRecord
 
 
 class TestLogRecord(unittest.TestCase):
@@ -39,3 +40,67 @@ class TestLogRecord(unittest.TestCase):
             body="a log line",
         ).to_json()
         self.assertEqual(expected, actual)
+
+    def test_log_record_bounded_attributes(self):
+        attr = {"key": "value"}
+
+        result = LogRecord(timestamp=0, body="a log line", attributes=attr)
+
+        self.assertTrue(isinstance(result.attributes, BoundedAttributes))
+
+    def test_log_record_dropped_attributes_empty_limits(self):
+        attr = {"key": "value"}
+
+        result = LogRecord(timestamp=0, body="a log line", attributes=attr)
+
+        self.assertTrue(result.dropped_attributes == 0)
+
+    def test_log_record_dropped_attributes_set_limits_max_attribute(self):
+        attr = {"key": "value", "key2": "value2"}
+        limits = LogLimits(
+            max_attributes=1,
+        )
+
+        result = LogRecord(
+            timestamp=0, body="a log line", attributes=attr, limits=limits
+        )
+        self.assertTrue(result.dropped_attributes == 1)
+
+    def test_log_record_dropped_attributes_set_limits_max_attribute_length(
+        self,
+    ):
+        attr = {"key": "value", "key2": "value2"}
+        expected = {"key": "v", "key2": "v"}
+        limits = LogLimits(
+            max_attribute_length=1,
+        )
+
+        result = LogRecord(
+            timestamp=0, body="a log line", attributes=attr, limits=limits
+        )
+        self.assertTrue(result.dropped_attributes == 0)
+        self.assertEqual(expected, result.attributes)
+
+    def test_log_record_dropped_attributes_set_limits(self):
+        attr = {"key": "value", "key2": "value2"}
+        expected = {"key2": "v"}
+        limits = LogLimits(
+            max_attributes=1,
+            max_attribute_length=1,
+        )
+
+        result = LogRecord(
+            timestamp=0, body="a log line", attributes=attr, limits=limits
+        )
+        self.assertTrue(result.dropped_attributes == 1)
+        self.assertEqual(expected, result.attributes)
+
+    def test_log_record_dropped_attributes_unset_limits(self):
+        attr = {"key": "value", "key2": "value2"}
+        limits = LogLimits()
+
+        result = LogRecord(
+            timestamp=0, body="a log line", attributes=attr, limits=limits
+        )
+        self.assertTrue(result.dropped_attributes == 0)
+        self.assertEqual(attr, result.attributes)
