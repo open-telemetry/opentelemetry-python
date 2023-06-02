@@ -150,8 +150,8 @@ class BoundedAttributes(MutableMapping):
         self._dict = OrderedDict()  # type: OrderedDict
         self._lock = threading.Lock()  # type: threading.Lock
         if attributes:
-            for key, value in attributes.items():
-                self[key] = value
+            # No locking necessary during constructor call
+            self._unsafe_update(attributes)
         self._immutable = immutable
 
     def __repr__(self):
@@ -162,25 +162,41 @@ class BoundedAttributes(MutableMapping):
     def __getitem__(self, key):
         return self._dict[key]
 
+    def _unsafe__setitem(self, key, value):
+        if self.maxlen is not None and self.maxlen == 0:
+            self.dropped += 1
+            return
+
+        value = _clean_attribute(key, value, self.max_value_len)
+        if value is not None:
+            if key in self._dict:
+                del self._dict[key]
+            elif (
+                self.maxlen is not None and len(self._dict) == self.maxlen
+            ):
+                self._dict.popitem(last=False)
+                self.dropped += 1
+
+            self._dict[key] = value
+
     def __setitem__(self, key, value):
         if getattr(self, "_immutable", False):
             raise TypeError
         with self._lock:
-            if self.maxlen is not None and self.maxlen == 0:
-                self.dropped += 1
-                return
+            self._unsafe__setitem(key, value)
 
-            value = _clean_attribute(key, value, self.max_value_len)
-            if value is not None:
-                if key in self._dict:
-                    del self._dict[key]
-                elif (
-                    self.maxlen is not None and len(self._dict) == self.maxlen
-                ):
-                    self._dict.popitem(last=False)
-                    self.dropped += 1
+    def _unsafe_update(self, attributes: Optional[types.Attributes] = None, **kwargs):
+        for key, value in (attributes or {}).items():
+            self._unsafe__setitem(key, value)
 
-                self._dict[key] = value
+        for key, value in kwargs.items():
+            self._unsafe__setitem(key, value)
+
+    def update(self, attributes: Optional[types.Attributes] = None, **kwargs):
+        if getattr(self, "_immutable", False):
+            raise TypeError
+        with self._lock:
+            self._unsafe_update(attributes, **kwargs)
 
     def __delitem__(self, key):
         if getattr(self, "_immutable", False):
