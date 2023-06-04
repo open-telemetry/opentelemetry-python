@@ -171,9 +171,7 @@ class BoundedAttributes(MutableMapping):
         if value is not None:
             if key in self._dict:
                 del self._dict[key]
-            elif (
-                self.maxlen is not None and len(self._dict) == self.maxlen
-            ):
+            elif self.maxlen is not None and len(self._dict) == self.maxlen:
                 self._dict.popitem(last=False)
                 self.dropped += 1
 
@@ -185,7 +183,9 @@ class BoundedAttributes(MutableMapping):
         with self._lock:
             self._unsafe__setitem(key, value)
 
-    def _unsafe_update(self, attributes: Optional[types.Attributes] = None, **kwargs):
+    def _unsafe_update(
+        self, attributes: Optional[types.Attributes] = None, **kwargs
+    ):
         for key, value in (attributes or {}).items():
             self._unsafe__setitem(key, value)
 
