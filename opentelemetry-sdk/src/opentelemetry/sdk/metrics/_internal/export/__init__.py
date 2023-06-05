@@ -344,7 +344,7 @@ class MetricReader(ABC):
     @abstractmethod
     def _receive_metrics(
         self,
-        metrics_data: "opentelemetry.sdk.metrics.export.MetricsData",
+        metrics_data: Optional[MetricsData],
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
@@ -386,9 +386,9 @@ class InMemoryMetricReader(MetricReader):
             preferred_aggregation=preferred_aggregation,
         )
         self._lock = RLock()
-        self._metrics_data: (
+        self._metrics_data: Optional[
             "opentelemetry.sdk.metrics.export.MetricsData"
-        ) = None
+        ] = None
 
     def get_metrics_data(
         self,
@@ -402,7 +402,7 @@ class InMemoryMetricReader(MetricReader):
 
     def _receive_metrics(
         self,
-        metrics_data: "opentelemetry.sdk.metrics.export.MetricsData",
+        metrics_data: Optional[MetricsData],
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
@@ -511,7 +511,7 @@ class PeriodicExportingMetricReader(MetricReader):
 
     def _receive_metrics(
         self,
-        metrics_data: MetricsData,
+        metrics_data: Optional[MetricsData],
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:

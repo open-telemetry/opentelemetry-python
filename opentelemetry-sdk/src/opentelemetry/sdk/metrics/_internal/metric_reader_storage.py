@@ -15,7 +15,7 @@
 from logging import getLogger
 from threading import RLock
 from time import time_ns
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from opentelemetry.metrics import (
     Asynchronous,
@@ -119,7 +119,7 @@ class MetricReaderStorage:
         ):
             view_instrument_match.consume_measurement(measurement)
 
-    def collect(self) -> MetricsData:
+    def collect(self) -> Optional[MetricsData]:
         # Use a list instead of yielding to prevent a slow reader from holding
         # SDK locks
 
@@ -231,17 +231,19 @@ class MetricReaderStorage:
                         instrument.instrumentation_scope
                     ].metrics.extend(metrics)
 
-        return MetricsData(
-            resource_metrics=[
-                ResourceMetrics(
-                    resource=self._sdk_config.resource,
-                    scope_metrics=list(
-                        instrumentation_scope_scope_metrics.values()
-                    ),
-                    schema_url=self._sdk_config.resource.schema_url,
-                )
-            ]
-        )
+        scope_metrics = list(instrumentation_scope_scope_metrics.values())
+
+        if scope_metrics:
+
+            return MetricsData(
+                resource_metrics=[
+                    ResourceMetrics(
+                        resource=self._sdk_config.resource,
+                        scope_metrics=scope_metrics,
+                        schema_url=self._sdk_config.resource.schema_url,
+                    )
+                ]
+            )
 
     def _handle_view_instrument_match(
         self,
