@@ -99,6 +99,7 @@ Meeting notes are available as a public [Google doc](https://docs.google.com/doc
 Approvers ([@open-telemetry/python-approvers](https://github.com/orgs/open-telemetry/teams/python-approvers)):
 
 - [Aaron Abbott](https://github.com/aabmass), Google
+- [Jeremy Voss](https://github.com/jeremydvoss), Microsoft
 - [Sanket Mehta](https://github.com/sanketmehta28), Cisco
 
 Emeritus Approvers
@@ -106,7 +107,7 @@ Emeritus Approvers
 - [Ashutosh Goel](https://github.com/ashu658), Cisco
 - [Carlos Alberto Cortez](https://github.com/carlosalberto), Lightstep
 - [Christian Neumüller](https://github.com/Oberon00), Dynatrace
-- [Hector Hernandez](https://github.com/hectorhdzg), Microsoft
+- [Héctor Hernández](https://github.com/hectorhdzg), Microsoft
 - [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Kinvolk
 - [Nathaniel Ruiz Nowell](https://github.com/NathanielRN), AWS
 - [Tahir H. Butt](https://github.com/majorgreys) DataDog
@@ -117,7 +118,6 @@ Maintainers ([@open-telemetry/python-maintainers](https://github.com/orgs/open-t
 
 - [Diego Hurtado](https://github.com/ocelotl), Lightstep
 - [Leighton Chen](https://github.com/lzchen), Microsoft
-- [Srikanth Chekuri](https://github.com/srikanthccv), signoz.io
 
 Emeritus Maintainers:
 
@@ -125,6 +125,7 @@ Emeritus Maintainers:
 - [Chris Kleinknecht](https://github.com/c24t), Google
 - [Owais Lone](https://github.com/owais), Splunk
 - [Reiley Yang](https://github.com/reyang), Microsoft
+- [Srikanth Chekuri](https://github.com/srikanthccv), signoz.io
 - [Yusuke Tsutsumi](https://github.com/toumorokoshi), Google
 
 *For more information about the maintainer role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#maintainer).*

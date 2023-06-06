@@ -576,13 +576,18 @@ def update_version_files(targets, version, packages):
 
 def update_dependencies(targets, version, packages):
     print("updating dependencies")
-    targets = filter_packages(targets, packages)
+    # PEP 508 allowed specifier operators
+    operators = ['==', '!=', '<=', '>=', '<', '>', '===', '~=', '=']
+    operators_pattern = '|'.join(re.escape(op) for op in operators)
+
     for pkg in packages:
+        search = rf"({basename(pkg)}[^,]*)({operators_pattern})(.*\.dev)"
+        replace = r"\1\2 " + version
         update_files(
             targets,
             "pyproject.toml",
-            rf"({basename(pkg)}.*)==(.*)",
-            r"\1== " + version + '",',
+            search,
+            replace,
         )
 
 
