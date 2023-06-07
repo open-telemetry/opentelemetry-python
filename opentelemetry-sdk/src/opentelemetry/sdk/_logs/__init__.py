@@ -18,6 +18,7 @@ from opentelemetry.sdk._logs._internal import (
     Logger,
     LoggerProvider,
     LoggingHandler,
+    LogLimits,
     LogRecord,
     LogRecordProcessor,
 )
@@ -27,6 +28,7 @@ __all__ = [
     "Logger",
     "LoggerProvider",
     "LoggingHandler",
+    "LogLimits",
     "LogRecord",
     "LogRecordProcessor",
 ]
