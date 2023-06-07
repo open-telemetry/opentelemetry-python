@@ -51,6 +51,11 @@ class TestOTLPLogEncoder(unittest.TestCase):
         sdk_logs, expected_encoding = self.get_test_logs()
         self.assertEqual(encode_logs(sdk_logs), expected_encoding)
 
+    def test_dropped_attributes_count(self):
+        sdk_logs, _ = self.get_test_logs()
+        encoded_logs = str(encode_logs(sdk_logs))
+        self.assertTrue("dropped_attributes_count" in encoded_logs)
+
     @staticmethod
     def _get_sdk_log_data() -> List[LogData]:
         log1 = LogData(
