@@ -1,7 +1,7 @@
 import logging
 
 from opentelemetry import trace
-from opentelemetry._logs import set_logger_provider
+from opentelemetry.sdk._logs import set_logger_provider
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
     OTLPLogExporter,
 )
@@ -38,6 +38,8 @@ logging.getLogger().addHandler(handler)
 
 # Log directly
 logging.info("Jackdaws love my big sphinx of quartz.")
+logging.warning("But, the sphinx is broken")
+logging.error("Alas, can't be fixed")
 
 # Create different namespaced loggers
 logger1 = logging.getLogger("myapp.area1")
