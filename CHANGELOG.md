@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3776](https://github.com/open-telemetry/opentelemetry-python/pull/3776))
 - Fix ValueError message for PeriodicExportingMetricsReader
   ([#3769](https://github.com/open-telemetry/opentelemetry-python/pull/3769))
+- Use `BaseException` instead of `Exception` in `record_exception`
+  ([#3354](https://github.com/open-telemetry/opentelemetry-python/pull/3354))
 
 ## Version 1.23.0/0.44b0 (2024-02-23)
 

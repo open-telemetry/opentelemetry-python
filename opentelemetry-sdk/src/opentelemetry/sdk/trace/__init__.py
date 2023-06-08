@@ -981,7 +981,7 @@ class Span(trace_api.Span, ReadableSpan):
 
     def record_exception(
         self,
-        exception: Exception,
+        exception: BaseException,
         attributes: types.Attributes = None,
         timestamp: Optional[int] = None,
         escaped: bool = False,
