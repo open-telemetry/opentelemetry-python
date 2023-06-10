@@ -27,7 +27,7 @@ class TestLogRecord(unittest.TestCase):
                 "severity_number": "None",
                 "severity_text": None,
                 "attributes": None,
-                "dropped+_attributes": "0",
+                "dropped_attributes": "0",
                 "timestamp": "1970-01-01T00:00:00.000000Z",
                 "trace_id": "",
                 "span_id": "",
