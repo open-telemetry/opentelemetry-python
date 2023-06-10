@@ -53,6 +53,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
 
     def test_dropped_attributes_count(self):
         sdk_logs, _ = self.get_test_logs()
+        self.assertTrue(hasattr(sdk_logs[0].log_record, "dropped_attributes"))
         encoded_logs = str(encode_logs(sdk_logs))
         self.assertTrue("dropped_attributes_count" in encoded_logs)
 
