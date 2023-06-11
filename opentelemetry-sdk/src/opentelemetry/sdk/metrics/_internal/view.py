@@ -85,6 +85,7 @@ class View:
         self,
         instrument_type: Optional[Type[Instrument]] = None,
         instrument_name: Optional[str] = None,
+        instrument_unit: Optional[str] = None,
         meter_name: Optional[str] = None,
         meter_version: Optional[str] = None,
         meter_schema_url: Optional[str] = None,
@@ -96,6 +97,7 @@ class View:
         if (
             instrument_type
             is instrument_name
+            is instrument_unit
             is meter_name
             is meter_version
             is meter_schema_url
@@ -122,6 +124,7 @@ class View:
         self._name = name
         self._instrument_type = instrument_type
         self._instrument_name = instrument_name
+        self._instrument_unit = instrument_unit
         self._meter_name = meter_name
         self._meter_version = meter_version
         self._meter_schema_url = meter_schema_url
@@ -141,6 +144,10 @@ class View:
 
         if self._instrument_name is not None:
             if not fnmatch(instrument.name, self._instrument_name):
+                return False
+
+        if self._instrument_unit is not None:
+            if not fnmatch(instrument.unit, self._instrument_unit):
                 return False
 
         if self._meter_name is not None:
