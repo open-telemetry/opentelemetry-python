@@ -51,6 +51,9 @@ class View:
             card characters should not be used with this attribute if the view has also a
             ``name`` defined.
 
+        instrument_unit: This is an instrument matching attribute: the unit the
+            instrument must have to match the view.
+
         meter_name: This is an instrument matching attribute: the name the
             instrument meter must have to match the view.
 
