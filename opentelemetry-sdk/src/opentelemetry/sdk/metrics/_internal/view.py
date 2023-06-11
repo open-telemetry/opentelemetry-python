@@ -51,9 +51,6 @@ class View:
             card characters should not be used with this attribute if the view has also a
             ``name`` defined.
 
-        instrument_unit: This is an instrument matching attribute: the unit the
-            instrument must have to match the view.
-
         meter_name: This is an instrument matching attribute: the name the
             instrument meter must have to match the view.
 
@@ -79,6 +76,9 @@ class View:
             corresponding metrics stream. If `None` an instance of
             `DefaultAggregation` will be used.
 
+        instrument_unit: This is an instrument matching attribute: the unit the
+            instrument must have to match the view.
+
     This class is not intended to be subclassed by the user.
     """
 
@@ -88,7 +88,6 @@ class View:
         self,
         instrument_type: Optional[Type[Instrument]] = None,
         instrument_name: Optional[str] = None,
-        instrument_unit: Optional[str] = None,
         meter_name: Optional[str] = None,
         meter_version: Optional[str] = None,
         meter_schema_url: Optional[str] = None,
@@ -96,6 +95,7 @@ class View:
         description: Optional[str] = None,
         attribute_keys: Optional[Set[str]] = None,
         aggregation: Optional[Aggregation] = None,
+        instrument_unit: Optional[str] = None,
     ):
         if (
             instrument_type
