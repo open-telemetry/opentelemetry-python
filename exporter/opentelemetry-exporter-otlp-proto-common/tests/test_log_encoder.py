@@ -133,45 +133,6 @@ class TestOTLPLogEncoder(unittest.TestCase):
 
         return [log1, log2, log3, log4]
 
-    @staticmethod
-    def _get_test_logs_dropped_attributes() -> List[LogData]:
-        log1 = LogData(
-            log_record=SDKLogRecord(
-                timestamp=1644650195189786880,
-                trace_id=89564621134313219400156819398935297684,
-                span_id=1312458408527513268,
-                trace_flags=TraceFlags(0x01),
-                severity_text="WARN",
-                severity_number=SeverityNumber.WARN,
-                body="Do not go gentle into that good night. Rage, rage against the dying of the light",
-                resource=SDKResource({"first_resource": "value"}),
-                attributes={"a": 1, "b": "c", "user_id": "B121092"},
-                limits=LogLimits(max_attributes=1),
-            ),
-            instrumentation_scope=InstrumentationScope(
-                "first_name", "first_version"
-            ),
-        )
-
-        log2 = LogData(
-            log_record=SDKLogRecord(
-                timestamp=1644650249738562048,
-                trace_id=0,
-                span_id=0,
-                trace_flags=TraceFlags.DEFAULT,
-                severity_text="WARN",
-                severity_number=SeverityNumber.WARN,
-                body="Cooper, this is no time for caution!",
-                resource=SDKResource({"second_resource": "CASE"}),
-                attributes={},
-            ),
-            instrumentation_scope=InstrumentationScope(
-                "second_name", "second_version"
-            ),
-        )
-
-        return [log1, log2]
-
     def get_test_logs(
         self,
     ) -> Tuple[List[SDKLogRecord], ExportLogsServiceRequest]:
@@ -302,3 +263,43 @@ class TestOTLPLogEncoder(unittest.TestCase):
         )
 
         return sdk_logs, pb2_service_request
+
+
+    @staticmethod
+    def _get_test_logs_dropped_attributes() -> List[LogData]:
+        log1 = LogData(
+            log_record=SDKLogRecord(
+                timestamp=1644650195189786880,
+                trace_id=89564621134313219400156819398935297684,
+                span_id=1312458408527513268,
+                trace_flags=TraceFlags(0x01),
+                severity_text="WARN",
+                severity_number=SeverityNumber.WARN,
+                body="Do not go gentle into that good night. Rage, rage against the dying of the light",
+                resource=SDKResource({"first_resource": "value"}),
+                attributes={"a": 1, "b": "c", "user_id": "B121092"},
+                limits=LogLimits(max_attributes=1),
+            ),
+            instrumentation_scope=InstrumentationScope(
+                "first_name", "first_version"
+            ),
+        )
+
+        log2 = LogData(
+            log_record=SDKLogRecord(
+                timestamp=1644650249738562048,
+                trace_id=0,
+                span_id=0,
+                trace_flags=TraceFlags.DEFAULT,
+                severity_text="WARN",
+                severity_number=SeverityNumber.WARN,
+                body="Cooper, this is no time for caution!",
+                resource=SDKResource({"second_resource": "CASE"}),
+                attributes={},
+            ),
+            instrumentation_scope=InstrumentationScope(
+                "second_name", "second_version"
+            ),
+        )
+
+        return [log1, log2]
