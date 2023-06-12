@@ -41,6 +41,7 @@ from opentelemetry.proto.resource.v1.resource_pb2 import (
 )
 from opentelemetry.sdk._logs import LogData
 from opentelemetry.sdk._logs import LogRecord as SDKLogRecord
+from opentelemetry.sdk._logs import LogLimits
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import TraceFlags
@@ -52,10 +53,13 @@ class TestOTLPLogEncoder(unittest.TestCase):
         self.assertEqual(encode_logs(sdk_logs), expected_encoding)
 
     def test_dropped_attributes_count(self):
-        sdk_logs, _ = self.get_test_logs()
+        sdk_logs = self._get_test_logs_dropped_attributes()
+        encoded_logs = encode_logs(sdk_logs)
         self.assertTrue(hasattr(sdk_logs[0].log_record, "dropped_attributes"))
-        encoded_logs = str(encode_logs(sdk_logs))
-        self.assertTrue("dropped_attributes_count" in encoded_logs)
+        self.assertEqual(
+            encoded_logs.resource_logs[0].scope_logs[0].log_records[0].dropped_attributes_count,
+            2
+        )
 
     @staticmethod
     def _get_sdk_log_data() -> List[LogData]:
@@ -126,6 +130,45 @@ class TestOTLPLogEncoder(unittest.TestCase):
         )
 
         return [log1, log2, log3, log4]
+    
+    @staticmethod
+    def _get_test_logs_dropped_attributes() -> List[LogData]:
+        log1 = LogData(
+            log_record=SDKLogRecord(
+                timestamp=1644650195189786880,
+                trace_id=89564621134313219400156819398935297684,
+                span_id=1312458408527513268,
+                trace_flags=TraceFlags(0x01),
+                severity_text="WARN",
+                severity_number=SeverityNumber.WARN,
+                body="Do not go gentle into that good night. Rage, rage against the dying of the light",
+                resource=SDKResource({"first_resource": "value"}),
+                attributes={"a": 1, "b": "c", "user_id": "B121092"},
+                limits=LogLimits(max_attributes=1),
+            ),
+            instrumentation_scope=InstrumentationScope(
+                "first_name", "first_version"
+            ),
+        )
+
+        log2 = LogData(
+            log_record=SDKLogRecord(
+                timestamp=1644650249738562048,
+                trace_id=0,
+                span_id=0,
+                trace_flags=TraceFlags.DEFAULT,
+                severity_text="WARN",
+                severity_number=SeverityNumber.WARN,
+                body="Cooper, this is no time for caution!",
+                resource=SDKResource({"second_resource": "CASE"}),
+                attributes={},
+            ),
+            instrumentation_scope=InstrumentationScope(
+                "second_name", "second_version"
+            ),
+        )
+
+        return [log1, log2]
 
     def get_test_logs(
         self,
