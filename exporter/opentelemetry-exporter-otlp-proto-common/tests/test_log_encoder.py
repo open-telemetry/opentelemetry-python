@@ -264,7 +264,6 @@ class TestOTLPLogEncoder(unittest.TestCase):
 
         return sdk_logs, pb2_service_request
 
-
     @staticmethod
     def _get_test_logs_dropped_attributes() -> List[LogData]:
         log1 = LogData(
@@ -303,3 +302,4 @@ class TestOTLPLogEncoder(unittest.TestCase):
         )
 
         return [log1, log2]
+    
