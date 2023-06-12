@@ -483,7 +483,7 @@ class LoggingHandler(logging.Handler):
             trace_flags=span_context.trace_flags,
             severity_text=record.levelname,
             severity_number=severity_number,
-            body=record.getMessage(),
+            body=record.msg,
             resource=self._logger.resource,
             attributes=attributes,
         )
