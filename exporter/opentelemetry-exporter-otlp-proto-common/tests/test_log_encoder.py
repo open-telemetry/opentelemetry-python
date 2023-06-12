@@ -61,7 +61,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
             .scope_logs[0]
             .log_records[0]
             .dropped_attributes_count,
-            2
+            2,
         )
 
     @staticmethod
