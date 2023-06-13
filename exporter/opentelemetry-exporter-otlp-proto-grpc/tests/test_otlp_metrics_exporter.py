@@ -746,6 +746,7 @@ class TestOTLPMetricExporter(TestCase):
                 warning.records[0].message,
                 "Exporter already shutdown, ignoring batch",
             )
+        self.exporter = OTLPMetricExporter()
 
     def test_shutdown_wait_last_export(self):
         add_MetricsServiceServicer_to_server(
