@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- LogRecord now JSON serializes resource objects to match ReadableSpan and MetricsData equivalents
+  ([#3365](https://github.com/open-telemetry/opentelemetry-python/issues/3365))
 - Include key in attribute sequence warning
   ([#3639](https://github.com/open-telemetry/opentelemetry-python/pull/3639))
 - Upgrade markupsafe, Flask and related dependencies to dev and test

@@ -17,6 +17,7 @@ import unittest
 
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk._logs import LogLimits, LogRecord
+from opentelemetry.sdk.resources import Resource
 
 
 class TestLogRecord(unittest.TestCase):
@@ -32,13 +33,37 @@ class TestLogRecord(unittest.TestCase):
                 "trace_id": "",
                 "span_id": "",
                 "trace_flags": None,
-                "resource": "",
+                "resource": None,
             },
             indent=4,
         )
         actual = LogRecord(
             timestamp=0,
             body="a log line",
+        ).to_json()
+        self.assertEqual(expected, actual)
+
+    def test_log_record_to_json_with_resource(self):
+        """Should JSON serialize/deserialize Resource objects within log records."""
+        expected = json.dumps(
+            {
+                "body": "a log line",
+                "severity_number": "None",
+                "severity_text": None,
+                "attributes": None,
+                "timestamp": "1970-01-01T00:00:00.000000Z",
+                "trace_id": "",
+                "span_id": "",
+                "trace_flags": None,
+                "resource": {"attributes": {"foo": "bar"}, "schema_url": ""},
+            },
+            indent=4,
+        )
+
+        actual = LogRecord(
+            timestamp=0,
+            body="a log line",
+            resource=Resource(attributes={"foo": "bar"}),
         ).to_json()
         self.assertEqual(expected, actual)
 
