@@ -23,9 +23,7 @@ from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_value,
 )
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
-from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
-    ExportLogsServiceRequest,
-)
+from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import ExportLogsServiceRequest
 from opentelemetry.proto.common.v1.common_pb2 import AnyValue as PB2AnyValue
 from opentelemetry.proto.common.v1.common_pb2 import (
     InstrumentationScope as PB2InstrumentationScope,
