@@ -302,5 +302,3 @@ class TestOTLPLogEncoder(unittest.TestCase):
         )
 
         return [log1, log2]
-
-    
