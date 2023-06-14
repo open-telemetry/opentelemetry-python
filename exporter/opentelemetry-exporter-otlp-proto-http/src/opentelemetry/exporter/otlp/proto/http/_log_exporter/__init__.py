@@ -173,6 +173,10 @@ class OTLPLogExporter(LogExporter):
                 return LogExportResult.FAILURE
         return LogExportResult.FAILURE
 
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        """Nothing is buffered in this exporter, so this method does nothing."""
+        return True
+
     def shutdown(self):
         if self._shutdown:
             _logger.warning("Exporter already shutdown, ignoring call")
