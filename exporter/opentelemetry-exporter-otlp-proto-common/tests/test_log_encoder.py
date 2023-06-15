@@ -56,7 +56,7 @@ class TestOTLPLogEncoder(unittest.TestCase):
         encoded_logs = encode_logs(sdk_logs)
         self.assertTrue(hasattr(sdk_logs[0].log_record, "dropped_attributes"))
         self.assertEqual(
-             # pylint:disable=no-member
+            # pylint:disable=no-member
             encoded_logs.resource_logs[0]
             .scope_logs[0]
             .log_records[0]
