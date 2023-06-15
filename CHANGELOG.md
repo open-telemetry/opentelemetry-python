@@ -6,8 +6,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
+
+- Add max_scale option to Exponential Bucket Histogram Aggregation [#3323](https://github.com/open-telemetry/opentelemetry-python/pull/3323))
 - Use BoundedAttributes instead of raw dict to extract attributes from LogRecord ([#3310](https://github.com/open-telemetry/opentelemetry-python/pull/3310)) 
 - Support dropped_attributes_count in LogRecord and exporters ([#3351](https://github.com/open-telemetry/opentelemetry-python/pull/3351))
+
 ## Version 1.18.0/0.39b0 (2023-05-04)
 
 - Select histogram aggregation with an environment variable
