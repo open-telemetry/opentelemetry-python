@@ -150,6 +150,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#2781](https://github.com/open-telemetry/opentelemetry-python/pull/2781))
 - Fix tracing decorator with late configuration
   ([#2754](https://github.com/open-telemetry/opentelemetry-python/pull/2754))
+- Add timer context manager for histogram
+  ([#2827](https://github.com/open-telemetry/opentelemetry-python/pull/2827))
 - Fix --insecure of CLI argument
   ([#2696](https://github.com/open-telemetry/opentelemetry-python/pull/2696))
 - Add temporality and aggregation configuration for metrics exporters,

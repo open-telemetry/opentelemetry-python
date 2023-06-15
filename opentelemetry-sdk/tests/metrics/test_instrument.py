@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import time
 from unittest import TestCase
 from unittest.mock import Mock
 
@@ -34,6 +35,7 @@ from opentelemetry.sdk.metrics._internal.instrument import (
     _UpDownCounter,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.sdk.util import get_timer
 
 
 class TestCounter(TestCase):
@@ -356,6 +358,33 @@ class TestHistogram(TestCase):
         hist = _Histogram("name", Mock(), mc)
         hist.record(1.0)
         mc.consume_measurement.assert_called_once()
+
+    def test_time(self):
+        mc = Mock()
+        hist = Histogram("name", Mock(), mc)
+        timer = get_timer(hist)
+
+        @timer.time({"a": "b"})
+        def foo():
+            time.sleep(0.5)
+
+        foo()
+        measurement = mc.consume_measurement.call_args[0][0]
+        mc.consume_measurement.assert_called_once()
+        self.assertGreaterEqual(measurement.value, 500)
+        self.assertEqual(measurement.attributes, {"a": "b"})
+
+    def test_time_attributes_update(self):
+        mc = Mock()
+        hist = Histogram("name", Mock(), mc)
+        timer = get_timer(hist)
+        with timer.time() as measurer:
+            time.sleep(0.2)
+            measurer.set_attributes({"k": "v"})
+        measurement = mc.consume_measurement.call_args[0][0]
+        mc.consume_measurement.assert_called_once()
+        self.assertGreaterEqual(measurement.value, 200)
+        self.assertEqual(measurement.attributes, {"k": "v"})
 
     def test_record_non_monotonic(self):
         mc = Mock()
