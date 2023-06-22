@@ -25,9 +25,9 @@ class TestLogRecord(unittest.TestCase):
         expected = json.dumps(
             {
                 "body": "a log line",
-                "severity_number": "None",
+                "severity_number": 0,
                 "severity_text": None,
-                "attributes": None,
+                "attributes": {},
                 "dropped_attributes": 0,
                 "timestamp": "1970-01-01T00:00:00.000000Z",
                 "trace_id": "",
@@ -48,9 +48,10 @@ class TestLogRecord(unittest.TestCase):
         expected = json.dumps(
             {
                 "body": "a log line",
-                "severity_number": "None",
+                "severity_number": 0,
                 "severity_text": None,
-                "attributes": None,
+                "attributes": {},
+                "dropped_attributes": 0,
                 "timestamp": "1970-01-01T00:00:00.000000Z",
                 "trace_id": "",
                 "span_id": "",

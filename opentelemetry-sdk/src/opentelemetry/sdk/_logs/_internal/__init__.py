@@ -19,6 +19,7 @@ import json
 import logging
 import threading
 import traceback
+import typing
 from os import environ
 from time import time_ns
 from typing import Any, Callable, Optional, Tuple, Union  # noqa
@@ -38,7 +39,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_ATTRIBUTE_COUNT_LIMIT,
     OTEL_ATTRIBUTE_VALUE_LENGTH_LIMIT,
 )
-from opentelemetry.sdk.resources import Resource
+from opentelemetry.sdk.resources import Resource, ResourceDict
 from opentelemetry.sdk.util import ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.semconv.trace import SpanAttributes
@@ -148,6 +149,21 @@ _UnsetLogLimits = LogLimits(
 )
 
 
+class LogRecordDict(typing.TypedDict):
+    """Dictionary representation of a LogRecord."""
+
+    body: typing.Optional[typing.Any]
+    severity_number: int
+    severity_text: typing.Optional[str]
+    attributes: Attributes
+    dropped_attributes: int
+    timestamp: typing.Optional[str]
+    trace_id: str
+    span_id: str
+    trace_flags: typing.Optional[int]
+    resource: typing.Optional[ResourceDict]
+
+
 class LogRecord(APILogRecord):
     """A LogRecord instance represents an event being logged.
 
@@ -195,30 +211,28 @@ class LogRecord(APILogRecord):
             return NotImplemented
         return self.__dict__ == other.__dict__
 
+    def to_dict(self) -> LogRecordDict:
+        return {
+            "body": self.body,
+            "severity_number": self.severity_number.value
+            if self.severity_number is not None
+            else SeverityNumber.UNSPECIFIED.value,
+            "severity_text": self.severity_text,
+            "attributes": dict(self.attributes or {}),
+            "dropped_attributes": self.dropped_attributes,
+            "timestamp": ns_to_iso_str(self.timestamp),
+            "trace_id": f"0x{format_trace_id(self.trace_id)}"
+            if self.trace_id is not None
+            else "",
+            "span_id": f"0x{format_span_id(self.span_id)}"
+            if self.span_id is not None
+            else "",
+            "trace_flags": self.trace_flags,
+            "resource": self.resource.to_dict() if self.resource else None,
+        }
+
     def to_json(self, indent=4) -> str:
-        return json.dumps(
-            {
-                "body": self.body,
-                "severity_number": repr(self.severity_number),
-                "severity_text": self.severity_text,
-                "attributes": dict(self.attributes)
-                if bool(self.attributes)
-                else None,
-                "dropped_attributes": self.dropped_attributes,
-                "timestamp": ns_to_iso_str(self.timestamp),
-                "trace_id": f"0x{format_trace_id(self.trace_id)}"
-                if self.trace_id is not None
-                else "",
-                "span_id": f"0x{format_span_id(self.span_id)}"
-                if self.span_id is not None
-                else "",
-                "trace_flags": self.trace_flags,
-                "resource": json.loads(self.resource.to_json())
-                if self.resource
-                else None,
-            },
-            indent=indent,
-        )
+        return json.dumps(self.to_dict(), indent=indent)
 
     @property
     def dropped_attributes(self) -> int:

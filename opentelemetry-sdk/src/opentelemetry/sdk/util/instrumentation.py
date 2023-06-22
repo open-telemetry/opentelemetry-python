@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import typing
 from json import dumps
 from typing import Optional
 
@@ -74,6 +75,14 @@ class InstrumentationInfo:
         return self._name
 
 
+class InstrumentationScopeDict(typing.TypedDict):
+    """Dictionary representation of an InstrumentationScope."""
+
+    name: str
+    version: typing.Optional[str]
+    schema_url: typing.Optional[str]
+
+
 class InstrumentationScope:
     """A logical unit of the application code with which the emitted telemetry can be
     associated.
@@ -132,12 +141,12 @@ class InstrumentationScope:
     def name(self) -> str:
         return self._name
 
+    def to_dict(self) -> InstrumentationScopeDict:
+        return {
+            "name": self._name,
+            "version": self._version,
+            "schema_url": self._schema_url,
+        }
+
     def to_json(self, indent=4) -> str:
-        return dumps(
-            {
-                "name": self._name,
-                "version": self._version,
-                "schema_url": self._schema_url,
-            },
-            indent=indent,
-        )
+        return dumps(self.to_dict(), indent=indent)

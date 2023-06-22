@@ -403,6 +403,14 @@ _TRACE_ID_MAX_VALUE = 2**128 - 1
 _SPAN_ID_MAX_VALUE = 2**64 - 1
 
 
+class SpanContextDict(typing.TypedDict):
+    """Dictionary representation of a SpanContext."""
+
+    trace_id: str
+    span_id: str
+    trace_state: typing.Dict[str, str]
+
+
 class SpanContext(
     typing.Tuple[int, int, bool, "TraceFlags", "TraceState", bool]
 ):
@@ -476,6 +484,13 @@ class SpanContext(
     @property
     def is_valid(self) -> bool:
         return self[5]  # pylint: disable=unsubscriptable-object
+
+    def to_dict(self) -> SpanContextDict:
+        return {
+            "trace_id": f"0x{format_trace_id(self.trace_id)}",
+            "span_id": f"0x{format_span_id(self.span_id)}",
+            "trace_state": dict(self.trace_state),
+        }
 
     def __setattr__(self, *args: str) -> None:
         _logger.debug(

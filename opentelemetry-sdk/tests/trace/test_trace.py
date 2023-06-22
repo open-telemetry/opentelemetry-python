@@ -1376,10 +1376,15 @@ class TestSpanProcessor(unittest.TestCase):
             is_remote=False,
             trace_flags=trace_api.TraceFlags(trace_api.TraceFlags.SAMPLED),
         )
-        parent = trace._Span("parent-name", context, resource=Resource({}))
+        parent = trace._Span(
+            "parent-name",
+            context,
+            resource=Resource({"hello": "world"}),
+        )
         span = trace._Span(
             "span-name", context, resource=Resource({}), parent=parent.context
         )
+        span.add_event("foo", {"spam": "ham"}, 1234567890987654321)
 
         self.assertEqual(
             span.to_json(),
@@ -1388,17 +1393,26 @@ class TestSpanProcessor(unittest.TestCase):
     "context": {
         "trace_id": "0x000000000000000000000000deadbeef",
         "span_id": "0x00000000deadbef0",
-        "trace_state": "[]"
+        "trace_state": {}
     },
     "kind": "SpanKind.INTERNAL",
     "parent_id": "0x00000000deadbef0",
     "start_time": null,
     "end_time": null,
     "status": {
-        "status_code": "UNSET"
+        "status_code": "UNSET",
+        "description": null
     },
     "attributes": {},
-    "events": [],
+    "events": [
+        {
+            "name": "foo",
+            "timestamp": "2009-02-13T23:31:30.987654Z",
+            "attributes": {
+                "spam": "ham"
+            }
+        }
+    ],
     "links": [],
     "resource": {
         "attributes": {},
@@ -1408,7 +1422,7 @@ class TestSpanProcessor(unittest.TestCase):
         )
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "[]"}, "kind": "SpanKind.INTERNAL", "parent_id": "0x00000000deadbef0", "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {}, "events": [], "links": [], "resource": {"attributes": {}, "schema_url": ""}}',
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": {}}, "kind": "SpanKind.INTERNAL", "parent_id": "0x00000000deadbef0", "start_time": null, "end_time": null, "status": {"status_code": "UNSET", "description": null}, "attributes": {}, "events": [{"name": "foo", "timestamp": "2009-02-13T23:31:30.987654Z", "attributes": {"spam": "ham"}}], "links": [], "resource": {"attributes": {}, "schema_url": ""}}',
         )
 
     def test_attributes_to_json(self):
@@ -1424,7 +1438,7 @@ class TestSpanProcessor(unittest.TestCase):
         date_str = ns_to_iso_str(123)
         self.assertEqual(
             span.to_json(indent=None),
-            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": "[]"}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET"}, "attributes": {"key": "value"}, "events": [{"name": "event", "timestamp": "'
+            '{"name": "span-name", "context": {"trace_id": "0x000000000000000000000000deadbeef", "span_id": "0x00000000deadbef0", "trace_state": {}}, "kind": "SpanKind.INTERNAL", "parent_id": null, "start_time": null, "end_time": null, "status": {"status_code": "UNSET", "description": null}, "attributes": {"key": "value"}, "events": [{"name": "event", "timestamp": "'
             + date_str
             + '", "attributes": {"key2": "value2"}}], "links": [], "resource": {"attributes": {}, "schema_url": ""}}',
         )

@@ -32,6 +32,13 @@ class StatusCode(enum.Enum):
     """The operation contains an error."""
 
 
+class StatusDict(typing.TypedDict):
+    """Dictionary representation of a trace Status."""
+
+    status_code: str
+    description: typing.Optional[str]
+
+
 class Status:
     """Represents the status of a finished Span.
 
@@ -80,3 +87,10 @@ class Status:
     def is_unset(self) -> bool:
         """Returns true if unset, false otherwise."""
         return self._status_code is StatusCode.UNSET
+
+    def to_dict(self) -> StatusDict:
+        """Convert to a dictionary representation of the status."""
+        return {
+            "status_code": str(self.status_code.name),
+            "description": self.description,
+        }
