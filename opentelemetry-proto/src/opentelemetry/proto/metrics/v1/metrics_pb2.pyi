@@ -170,23 +170,31 @@ class DataPointFlags(_DataPointFlags, metaclass=_DataPointFlagsEnumTypeWrapper):
     enum is a bit-mask.  To test the presence of a single flag in the flags of
     a data point, for example, use an expression like:
 
-      (point.flags & FLAG_NO_RECORDED_VALUE) == FLAG_NO_RECORDED_VALUE
+      (point.flags & DATA_POINT_FLAGS_NO_RECORDED_VALUE_MASK) == DATA_POINT_FLAGS_NO_RECORDED_VALUE_MASK
     """
     pass
 class _DataPointFlags:
     V = typing.NewType('V', builtins.int)
 class _DataPointFlagsEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_DataPointFlags.V], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor = ...
-    FLAG_NONE = DataPointFlags.V(0)
-    FLAG_NO_RECORDED_VALUE = DataPointFlags.V(1)
+    DATA_POINT_FLAGS_DO_NOT_USE = DataPointFlags.V(0)
+    """The zero value for the enum. Should not be used for comparisons.
+    Instead use bitwise "and" with the appropriate mask as shown above.
+    """
+
+    DATA_POINT_FLAGS_NO_RECORDED_VALUE_MASK = DataPointFlags.V(1)
     """This DataPoint is valid but has no recorded value.  This value
     SHOULD be used to reflect explicitly missing data in a series, as
     for an equivalent to the Prometheus "staleness marker".
     """
 
 
-FLAG_NONE = DataPointFlags.V(0)
-FLAG_NO_RECORDED_VALUE = DataPointFlags.V(1)
+DATA_POINT_FLAGS_DO_NOT_USE = DataPointFlags.V(0)
+"""The zero value for the enum. Should not be used for comparisons.
+Instead use bitwise "and" with the appropriate mask as shown above.
+"""
+
+DATA_POINT_FLAGS_NO_RECORDED_VALUE_MASK = DataPointFlags.V(1)
 """This DataPoint is valid but has no recorded value.  This value
 SHOULD be used to reflect explicitly missing data in a series, as
 for an equivalent to the Prometheus "staleness marker".
@@ -230,7 +238,6 @@ class ResourceMetrics(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     RESOURCE_FIELD_NUMBER: builtins.int
     SCOPE_METRICS_FIELD_NUMBER: builtins.int
-    INSTRUMENTATION_LIBRARY_METRICS_FIELD_NUMBER: builtins.int
     SCHEMA_URL_FIELD_NUMBER: builtins.int
     @property
     def resource(self) -> opentelemetry.proto.resource.v1.resource_pb2.Resource:
@@ -242,37 +249,6 @@ class ResourceMetrics(google.protobuf.message.Message):
     def scope_metrics(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ScopeMetrics]:
         """A list of metrics that originate from a resource."""
         pass
-    @property
-    def instrumentation_library_metrics(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___InstrumentationLibraryMetrics]:
-        """A list of InstrumentationLibraryMetrics that originate from a resource.
-        This field is deprecated and will be removed after grace period expires on June 15, 2022.
-
-        During the grace period the following rules SHOULD be followed:
-
-        For Binary Protobufs
-        ====================
-        Binary Protobuf senders SHOULD NOT set instrumentation_library_metrics. Instead
-        scope_metrics SHOULD be set.
-
-        Binary Protobuf receivers SHOULD check if instrumentation_library_metrics is set
-        and scope_metrics is not set then the value in instrumentation_library_metrics
-        SHOULD be used instead by converting InstrumentationLibraryMetrics into ScopeMetrics.
-        If scope_metrics is set then instrumentation_library_metrics SHOULD be ignored.
-
-        For JSON
-        ========
-        JSON senders that set instrumentation_library_metrics field MAY also set
-        scope_metrics to carry the same metrics, essentially double-publishing the same data.
-        Such double-publishing MAY be controlled by a user-settable option.
-        If double-publishing is not used then the senders SHOULD set scope_metrics and
-        SHOULD NOT set instrumentation_library_metrics.
-
-        JSON receivers SHOULD check if instrumentation_library_metrics is set and
-        scope_metrics is not set then the value in instrumentation_library_metrics
-        SHOULD be used instead by converting InstrumentationLibraryMetrics into ScopeMetrics.
-        If scope_metrics is set then instrumentation_library_metrics field SHOULD be ignored.
-        """
-        pass
     schema_url: typing.Text = ...
     """This schema_url applies to the data in the "resource" field. It does not apply
     to the data in the "scope_metrics" field which have their own schema_url field.
@@ -282,11 +258,10 @@ class ResourceMetrics(google.protobuf.message.Message):
         *,
         resource : typing.Optional[opentelemetry.proto.resource.v1.resource_pb2.Resource] = ...,
         scope_metrics : typing.Optional[typing.Iterable[global___ScopeMetrics]] = ...,
-        instrumentation_library_metrics : typing.Optional[typing.Iterable[global___InstrumentationLibraryMetrics]] = ...,
         schema_url : typing.Text = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["resource",b"resource"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["instrumentation_library_metrics",b"instrumentation_library_metrics","resource",b"resource","schema_url",b"schema_url","scope_metrics",b"scope_metrics"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["resource",b"resource","schema_url",b"schema_url","scope_metrics",b"scope_metrics"]) -> None: ...
 global___ResourceMetrics = ResourceMetrics
 
 class ScopeMetrics(google.protobuf.message.Message):
@@ -319,45 +294,11 @@ class ScopeMetrics(google.protobuf.message.Message):
     def ClearField(self, field_name: typing_extensions.Literal["metrics",b"metrics","schema_url",b"schema_url","scope",b"scope"]) -> None: ...
 global___ScopeMetrics = ScopeMetrics
 
-class InstrumentationLibraryMetrics(google.protobuf.message.Message):
-    """A collection of Metrics produced by an InstrumentationLibrary.
-    InstrumentationLibraryMetrics is wire-compatible with ScopeMetrics for binary
-    Protobuf format.
-    This message is deprecated and will be removed on June 15, 2022.
-    """
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    INSTRUMENTATION_LIBRARY_FIELD_NUMBER: builtins.int
-    METRICS_FIELD_NUMBER: builtins.int
-    SCHEMA_URL_FIELD_NUMBER: builtins.int
-    @property
-    def instrumentation_library(self) -> opentelemetry.proto.common.v1.common_pb2.InstrumentationLibrary:
-        """The instrumentation library information for the metrics in this message.
-        Semantically when InstrumentationLibrary isn't set, it is equivalent with
-        an empty instrumentation library name (unknown).
-        """
-        pass
-    @property
-    def metrics(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Metric]:
-        """A list of metrics that originate from an instrumentation library."""
-        pass
-    schema_url: typing.Text = ...
-    """This schema_url applies to all metrics in the "metrics" field."""
-
-    def __init__(self,
-        *,
-        instrumentation_library : typing.Optional[opentelemetry.proto.common.v1.common_pb2.InstrumentationLibrary] = ...,
-        metrics : typing.Optional[typing.Iterable[global___Metric]] = ...,
-        schema_url : typing.Text = ...,
-        ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["instrumentation_library",b"instrumentation_library"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["instrumentation_library",b"instrumentation_library","metrics",b"metrics","schema_url",b"schema_url"]) -> None: ...
-global___InstrumentationLibraryMetrics = InstrumentationLibraryMetrics
-
 class Metric(google.protobuf.message.Message):
     """Defines a Metric which has one or more timeseries.  The following is a
     brief summary of the Metric data model.  For more details, see:
 
-      https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/datamodel.md
+      https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/data-model.md
 
 
     The data model and relation between entities is shown in the
@@ -816,9 +757,9 @@ class ExponentialHistogramDataPoint(google.protobuf.message.Message):
 
         @property
         def bucket_counts(self) -> google.protobuf.internal.containers.RepeatedScalarFieldContainer[builtins.int]:
-            """Count is an array of counts, where count[i] carries the count
-            of the bucket at index (offset+i).  count[i] is the count of
-            values greater than or equal to base^(offset+i) and less than
+            """bucket_counts is an array of count values, where bucket_counts[i] carries
+            the count of the bucket at index (offset+i). bucket_counts[i] is the count
+            of values greater than base^(offset+i) and less than or equal to
             base^(offset+i+1).
 
             Note: By contrast, the explicit HistogramDataPoint uses
@@ -847,6 +788,7 @@ class ExponentialHistogramDataPoint(google.protobuf.message.Message):
     EXEMPLARS_FIELD_NUMBER: builtins.int
     MIN_FIELD_NUMBER: builtins.int
     MAX_FIELD_NUMBER: builtins.int
+    ZERO_THRESHOLD_FIELD_NUMBER: builtins.int
     @property
     def attributes(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[opentelemetry.proto.common.v1.common_pb2.KeyValue]:
         """The set of key/value pairs that uniquely identify the timeseries from
@@ -894,8 +836,8 @@ class ExponentialHistogramDataPoint(google.protobuf.message.Message):
       base = (2^(2^-scale))
 
     The histogram bucket identified by `index`, a signed integer,
-    contains values that are greater than or equal to (base^index) and
-    less than (base^(index+1)).
+    contains values that are greater than (base^index) and
+    less than or equal to (base^(index+1)).
 
     The positive and negative ranges of the histogram are expressed
     separately.  Negative values are mapped by their absolute value
@@ -941,6 +883,15 @@ class ExponentialHistogramDataPoint(google.protobuf.message.Message):
     max: builtins.float = ...
     """max is the maximum value over (start_time, end_time]."""
 
+    zero_threshold: builtins.float = ...
+    """ZeroThreshold may be optionally set to convey the width of the zero
+    region. Where the zero region is defined as the closed interval
+    [-ZeroThreshold, ZeroThreshold].
+    When ZeroThreshold is 0, zero count bucket stores values that cannot be
+    expressed using the standard exponential formula as well as values that
+    have been rounded to zero.
+    """
+
     def __init__(self,
         *,
         attributes : typing.Optional[typing.Iterable[opentelemetry.proto.common.v1.common_pb2.KeyValue]] = ...,
@@ -956,13 +907,16 @@ class ExponentialHistogramDataPoint(google.protobuf.message.Message):
         exemplars : typing.Optional[typing.Iterable[global___Exemplar]] = ...,
         min : builtins.float = ...,
         max : builtins.float = ...,
+        zero_threshold : builtins.float = ...,
         ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["_max",b"_max","_min",b"_min","max",b"max","min",b"min","negative",b"negative","positive",b"positive"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["_max",b"_max","_min",b"_min","attributes",b"attributes","count",b"count","exemplars",b"exemplars","flags",b"flags","max",b"max","min",b"min","negative",b"negative","positive",b"positive","scale",b"scale","start_time_unix_nano",b"start_time_unix_nano","sum",b"sum","time_unix_nano",b"time_unix_nano","zero_count",b"zero_count"]) -> None: ...
+    def HasField(self, field_name: typing_extensions.Literal["_max",b"_max","_min",b"_min","_sum",b"_sum","max",b"max","min",b"min","negative",b"negative","positive",b"positive","sum",b"sum"]) -> builtins.bool: ...
+    def ClearField(self, field_name: typing_extensions.Literal["_max",b"_max","_min",b"_min","_sum",b"_sum","attributes",b"attributes","count",b"count","exemplars",b"exemplars","flags",b"flags","max",b"max","min",b"min","negative",b"negative","positive",b"positive","scale",b"scale","start_time_unix_nano",b"start_time_unix_nano","sum",b"sum","time_unix_nano",b"time_unix_nano","zero_count",b"zero_count","zero_threshold",b"zero_threshold"]) -> None: ...
     @typing.overload
     def WhichOneof(self, oneof_group: typing_extensions.Literal["_max",b"_max"]) -> typing.Optional[typing_extensions.Literal["max"]]: ...
     @typing.overload
     def WhichOneof(self, oneof_group: typing_extensions.Literal["_min",b"_min"]) -> typing.Optional[typing_extensions.Literal["min"]]: ...
+    @typing.overload
+    def WhichOneof(self, oneof_group: typing_extensions.Literal["_sum",b"_sum"]) -> typing.Optional[typing_extensions.Literal["sum"]]: ...
 global___ExponentialHistogramDataPoint = ExponentialHistogramDataPoint
 
 class SummaryDataPoint(google.protobuf.message.Message):
