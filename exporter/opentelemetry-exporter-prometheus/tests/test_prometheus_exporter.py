@@ -171,7 +171,7 @@ class TestPrometheusMetricReader(TestCase):
             attributes=labels,
             description="testdesc",
             unit="testunit",
-            is_monotonic=False
+            is_monotonic=False,
         )
 
         metrics_data = MetricsData(

@@ -39,7 +39,12 @@ def _generate_metric(
 
 
 def _generate_sum(
-    name, value, attributes=None, description=None, unit=None, is_monotonic=True
+    name,
+    value,
+    attributes=None,
+    description=None,
+    unit=None,
+    is_monotonic=True,
 ) -> Metric:
     if attributes is None:
         attributes = BoundedAttributes(attributes={"a": 1, "b": True})
