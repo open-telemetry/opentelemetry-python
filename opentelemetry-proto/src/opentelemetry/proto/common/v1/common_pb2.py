@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n*opentelemetry/proto/common/v1/common.proto\x12\x1dopentelemetry.proto.common.v1\"\x8c\x02\n\x08\x41nyValue\x12\x16\n\x0cstring_value\x18\x01 \x01(\tH\x00\x12\x14\n\nbool_value\x18\x02 \x01(\x08H\x00\x12\x13\n\tint_value\x18\x03 \x01(\x03H\x00\x12\x16\n\x0c\x64ouble_value\x18\x04 \x01(\x01H\x00\x12@\n\x0b\x61rray_value\x18\x05 \x01(\x0b\x32).opentelemetry.proto.common.v1.ArrayValueH\x00\x12\x43\n\x0ckvlist_value\x18\x06 \x01(\x0b\x32+.opentelemetry.proto.common.v1.KeyValueListH\x00\x12\x15\n\x0b\x62ytes_value\x18\x07 \x01(\x0cH\x00\x42\x07\n\x05value\"E\n\nArrayValue\x12\x37\n\x06values\x18\x01 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.AnyValue\"G\n\x0cKeyValueList\x12\x37\n\x06values\x18\x01 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\"O\n\x08KeyValue\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x36\n\x05value\x18\x02 \x01(\x0b\x32\'.opentelemetry.proto.common.v1.AnyValue\";\n\x16InstrumentationLibrary\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07version\x18\x02 \x01(\t:\x02\x18\x01\"5\n\x14InstrumentationScope\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07version\x18\x02 \x01(\tB[\n io.opentelemetry.proto.common.v1B\x0b\x43ommonProtoP\x01Z(go.opentelemetry.io/proto/otlp/common/v1b\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n*opentelemetry/proto/common/v1/common.proto\x12\x1dopentelemetry.proto.common.v1\"\x8c\x02\n\x08\x41nyValue\x12\x16\n\x0cstring_value\x18\x01 \x01(\tH\x00\x12\x14\n\nbool_value\x18\x02 \x01(\x08H\x00\x12\x13\n\tint_value\x18\x03 \x01(\x03H\x00\x12\x16\n\x0c\x64ouble_value\x18\x04 \x01(\x01H\x00\x12@\n\x0b\x61rray_value\x18\x05 \x01(\x0b\x32).opentelemetry.proto.common.v1.ArrayValueH\x00\x12\x43\n\x0ckvlist_value\x18\x06 \x01(\x0b\x32+.opentelemetry.proto.common.v1.KeyValueListH\x00\x12\x15\n\x0b\x62ytes_value\x18\x07 \x01(\x0cH\x00\x42\x07\n\x05value\"E\n\nArrayValue\x12\x37\n\x06values\x18\x01 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.AnyValue\"G\n\x0cKeyValueList\x12\x37\n\x06values\x18\x01 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\"O\n\x08KeyValue\x12\x0b\n\x03key\x18\x01 \x01(\t\x12\x36\n\x05value\x18\x02 \x01(\x0b\x32\'.opentelemetry.proto.common.v1.AnyValue\"\x94\x01\n\x14InstrumentationScope\x12\x0c\n\x04name\x18\x01 \x01(\t\x12\x0f\n\x07version\x18\x02 \x01(\t\x12;\n\nattributes\x18\x03 \x03(\x0b\x32\'.opentelemetry.proto.common.v1.KeyValue\x12 \n\x18\x64ropped_attributes_count\x18\x04 \x01(\rB{\n io.opentelemetry.proto.common.v1B\x0b\x43ommonProtoP\x01Z(go.opentelemetry.io/proto/otlp/common/v1\xaa\x02\x1dOpenTelemetry.Proto.Common.V1b\x06proto3')
 
 
 
@@ -22,7 +22,6 @@ _ANYVALUE = DESCRIPTOR.message_types_by_name['AnyValue']
 _ARRAYVALUE = DESCRIPTOR.message_types_by_name['ArrayValue']
 _KEYVALUELIST = DESCRIPTOR.message_types_by_name['KeyValueList']
 _KEYVALUE = DESCRIPTOR.message_types_by_name['KeyValue']
-_INSTRUMENTATIONLIBRARY = DESCRIPTOR.message_types_by_name['InstrumentationLibrary']
 _INSTRUMENTATIONSCOPE = DESCRIPTOR.message_types_by_name['InstrumentationScope']
 AnyValue = _reflection.GeneratedProtocolMessageType('AnyValue', (_message.Message,), {
   'DESCRIPTOR' : _ANYVALUE,
@@ -52,13 +51,6 @@ KeyValue = _reflection.GeneratedProtocolMessageType('KeyValue', (_message.Messag
   })
 _sym_db.RegisterMessage(KeyValue)
 
-InstrumentationLibrary = _reflection.GeneratedProtocolMessageType('InstrumentationLibrary', (_message.Message,), {
-  'DESCRIPTOR' : _INSTRUMENTATIONLIBRARY,
-  '__module__' : 'opentelemetry.proto.common.v1.common_pb2'
-  # @@protoc_insertion_point(class_scope:opentelemetry.proto.common.v1.InstrumentationLibrary)
-  })
-_sym_db.RegisterMessage(InstrumentationLibrary)
-
 InstrumentationScope = _reflection.GeneratedProtocolMessageType('InstrumentationScope', (_message.Message,), {
   'DESCRIPTOR' : _INSTRUMENTATIONSCOPE,
   '__module__' : 'opentelemetry.proto.common.v1.common_pb2'
@@ -69,9 +61,7 @@ _sym_db.RegisterMessage(InstrumentationScope)
 if _descriptor._USE_C_DESCRIPTORS == False:
 
   DESCRIPTOR._options = None
-  DESCRIPTOR._serialized_options = b'\n io.opentelemetry.proto.common.v1B\013CommonProtoP\001Z(go.opentelemetry.io/proto/otlp/common/v1'
-  _INSTRUMENTATIONLIBRARY._options = None
-  _INSTRUMENTATIONLIBRARY._serialized_options = b'\030\001'
+  DESCRIPTOR._serialized_options = b'\n io.opentelemetry.proto.common.v1B\013CommonProtoP\001Z(go.opentelemetry.io/proto/otlp/common/v1\252\002\035OpenTelemetry.Proto.Common.V1'
   _ANYVALUE._serialized_start=78
   _ANYVALUE._serialized_end=346
   _ARRAYVALUE._serialized_start=348
@@ -80,8 +70,6 @@ if _descriptor._USE_C_DESCRIPTORS == False:
   _KEYVALUELIST._serialized_end=490
   _KEYVALUE._serialized_start=492
   _KEYVALUE._serialized_end=571
-  _INSTRUMENTATIONLIBRARY._serialized_start=573
-  _INSTRUMENTATIONLIBRARY._serialized_end=632
-  _INSTRUMENTATIONSCOPE._serialized_start=634
-  _INSTRUMENTATIONSCOPE._serialized_end=687
+  _INSTRUMENTATIONSCOPE._serialized_start=574
+  _INSTRUMENTATIONSCOPE._serialized_end=722
 # @@protoc_insertion_point(module_scope)
