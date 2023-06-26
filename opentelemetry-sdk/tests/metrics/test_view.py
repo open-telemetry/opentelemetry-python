@@ -37,6 +37,15 @@ class TestView(TestCase):
             View(instrument_name="instrument_name")._match(mock_instrument)
         )
 
+    def test_instrument_unit(self):
+
+        mock_instrument = Mock()
+        mock_instrument.configure_mock(**{"unit": "instrument_unit"})
+
+        self.assertTrue(
+            View(instrument_unit="instrument_unit")._match(mock_instrument)
+        )
+
     def test_meter_name(self):
 
         self.assertTrue(
