@@ -246,7 +246,7 @@ class _CustomCollector:
             ):
                 is_non_monotonic_sum = (
                     isinstance(metric.data, Sum)
-                    and metric.data.is_monotonic == False
+                    and metric.data.is_monotonic is False
                 )
                 is_cumulative = (
                     isinstance(metric.data, Sum)
