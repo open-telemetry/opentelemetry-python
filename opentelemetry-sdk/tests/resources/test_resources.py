@@ -16,7 +16,7 @@
 
 import unittest
 import uuid
-from logging import ERROR
+from logging import ERROR, WARNING
 from os import environ
 from unittest.mock import Mock, patch
 from urllib import parse
@@ -221,16 +221,19 @@ class TestResources(unittest.TestCase):
         )
 
     def test_invalid_resource_attribute_values(self):
-        resource = Resource(
-            {
-                SERVICE_NAME: "test",
-                "non-primitive-data-type": {},
-                "invalid-byte-type-attribute": b"\xd8\xe1\xb7\xeb\xa8\xe5 \xd2\xb7\xe1",
-                "": "empty-key-value",
-                None: "null-key-value",
-                "another-non-primitive": uuid.uuid4(),
-            }
-        )
+        with self.assertLogs(level=WARNING):
+            resource = Resource(
+                {
+                    SERVICE_NAME: "test",
+                    "non-primitive-data-type": {},
+                    "invalid-byte-type-attribute": (
+                        b"\xd8\xe1\xb7\xeb\xa8\xe5 \xd2\xb7\xe1"
+                    ),
+                    "": "empty-key-value",
+                    None: "null-key-value",
+                    "another-non-primitive": uuid.uuid4(),
+                }
+            )
         self.assertEqual(
             resource.attributes,
             {
@@ -390,12 +393,13 @@ class TestResources(unittest.TestCase):
         resource_detector = Mock(spec=ResourceDetector)
         resource_detector.detect.side_effect = Exception()
         resource_detector.raise_on_error = False
-        self.assertEqual(
-            get_aggregated_resources([resource_detector]),
-            _DEFAULT_RESOURCE.merge(
-                Resource({SERVICE_NAME: "unknown_service"}, "")
-            ),
-        )
+        with self.assertLogs(level=WARNING):
+            self.assertEqual(
+                get_aggregated_resources([resource_detector]),
+                _DEFAULT_RESOURCE.merge(
+                    Resource({SERVICE_NAME: "unknown_service"}, "")
+                ),
+            )
 
     def test_resource_detector_raise_error(self):
         resource_detector = Mock(spec=ResourceDetector)
@@ -470,10 +474,11 @@ class TestOTELResourceDetector(unittest.TestCase):
     def test_invalid_key_value_pairs(self):
         detector = OTELResourceDetector()
         environ[OTEL_RESOURCE_ATTRIBUTES] = "k=v,k2=v2,invalid,,foo=bar=baz,"
-        self.assertEqual(
-            detector.detect(),
-            Resource({"k": "v", "k2": "v2", "foo": "bar=baz"}),
-        )
+        with self.assertLogs(level=WARNING):
+            self.assertEqual(
+                detector.detect(),
+                Resource({"k": "v", "k2": "v2", "foo": "bar=baz"}),
+            )
 
     def test_multiple_with_url_decode(self):
         detector = OTELResourceDetector()
