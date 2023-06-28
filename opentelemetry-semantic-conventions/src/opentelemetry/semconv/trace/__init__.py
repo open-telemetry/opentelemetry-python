@@ -281,7 +281,9 @@ class SpanAttributes:
     Whether or not the query is idempotent.
     """
 
-    DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT = "db.cassandra.speculative_execution_count"
+    DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT = (
+        "db.cassandra.speculative_execution_count"
+    )
     """
     The number of times a query was speculatively executed. Not set or `0` if the query was not executed speculatively.
     """
@@ -489,12 +491,16 @@ class SpanAttributes:
     The [conversation ID](#conversations) identifying the conversation to which the message belongs, represented as a string. Sometimes called "Correlation ID".
     """
 
-    MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES = "messaging.message.payload_size_bytes"
+    MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES = (
+        "messaging.message.payload_size_bytes"
+    )
     """
     The (uncompressed) size of the message payload in bytes. Also use this attribute if it is unknown whether the compressed or uncompressed payload size is reported.
     """
 
-    MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES = "messaging.message.payload_compressed_size_bytes"
+    MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES = (
+        "messaging.message.payload_compressed_size_bytes"
+    )
     """
     The compressed size of the message payload in bytes.
     """
@@ -671,17 +677,23 @@ class SpanAttributes:
     The JSON-serialized value of each item in the `ConsumedCapacity` response field.
     """
 
-    AWS_DYNAMODB_ITEM_COLLECTION_METRICS = "aws.dynamodb.item_collection_metrics"
+    AWS_DYNAMODB_ITEM_COLLECTION_METRICS = (
+        "aws.dynamodb.item_collection_metrics"
+    )
     """
     The JSON-serialized value of the `ItemCollectionMetrics` response field.
     """
 
-    AWS_DYNAMODB_PROVISIONED_READ_CAPACITY = "aws.dynamodb.provisioned_read_capacity"
+    AWS_DYNAMODB_PROVISIONED_READ_CAPACITY = (
+        "aws.dynamodb.provisioned_read_capacity"
+    )
     """
     The value of the `ProvisionedThroughput.ReadCapacityUnits` request parameter.
     """
 
-    AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY = "aws.dynamodb.provisioned_write_capacity"
+    AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY = (
+        "aws.dynamodb.provisioned_write_capacity"
+    )
     """
     The value of the `ProvisionedThroughput.WriteCapacityUnits` request parameter.
     """
@@ -716,12 +728,16 @@ class SpanAttributes:
     The value of the `Select` request parameter.
     """
 
-    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEXES = "aws.dynamodb.global_secondary_indexes"
+    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEXES = (
+        "aws.dynamodb.global_secondary_indexes"
+    )
     """
     The JSON-serialized value of each item of the `GlobalSecondaryIndexes` request field.
     """
 
-    AWS_DYNAMODB_LOCAL_SECONDARY_INDEXES = "aws.dynamodb.local_secondary_indexes"
+    AWS_DYNAMODB_LOCAL_SECONDARY_INDEXES = (
+        "aws.dynamodb.local_secondary_indexes"
+    )
     """
     The JSON-serialized value of each item of the `LocalSecondaryIndexes` request field.
     """
@@ -766,7 +782,9 @@ class SpanAttributes:
     The JSON-serialized value of each item in the `AttributeDefinitions` request field.
     """
 
-    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEX_UPDATES = "aws.dynamodb.global_secondary_index_updates"
+    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEX_UPDATES = (
+        "aws.dynamodb.global_secondary_index_updates"
+    )
     """
     The JSON-serialized value of each item in the the `GlobalSecondaryIndexUpdates` request field.
     """
@@ -908,7 +926,9 @@ class SpanAttributes:
     The identifier for the consumer receiving a message. For Kafka, set it to `{messaging.kafka.consumer.group} - {messaging.kafka.client_id}`, if both are present, or only `messaging.kafka.consumer.group`. For brokers, such as RabbitMQ and Artemis, set it to the `client_id` of the client consuming the message.
     """
 
-    MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY = "messaging.rabbitmq.destination.routing_key"
+    MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY = (
+        "messaging.rabbitmq.destination.routing_key"
+    )
     """
     RabbitMQ message routing key.
     """
@@ -929,7 +949,9 @@ class SpanAttributes:
     Client Id for the Consumer or Producer that is handling the message.
     """
 
-    MESSAGING_KAFKA_DESTINATION_PARTITION = "messaging.kafka.destination.partition"
+    MESSAGING_KAFKA_DESTINATION_PARTITION = (
+        "messaging.kafka.destination.partition"
+    )
     """
     Partition the message is sent to.
     """
@@ -964,12 +986,16 @@ class SpanAttributes:
     The unique identifier for each client.
     """
 
-    MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP = "messaging.rocketmq.message.delivery_timestamp"
+    MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP = (
+        "messaging.rocketmq.message.delivery_timestamp"
+    )
     """
     The timestamp in milliseconds that the delay message is expected to be delivered to consumer.
     """
 
-    MESSAGING_ROCKETMQ_MESSAGE_DELAY_TIME_LEVEL = "messaging.rocketmq.message.delay_time_level"
+    MESSAGING_ROCKETMQ_MESSAGE_DELAY_TIME_LEVEL = (
+        "messaging.rocketmq.message.delay_time_level"
+    )
     """
     The delay time level for delay message, which determines the message delay time.
     """
@@ -994,7 +1020,9 @@ class SpanAttributes:
     Key(s) of message, another way to mark message besides message id.
     """
 
-    MESSAGING_ROCKETMQ_CONSUMPTION_MODEL = "messaging.rocketmq.consumption_model"
+    MESSAGING_ROCKETMQ_CONSUMPTION_MODEL = (
+        "messaging.rocketmq.consumption_model"
+    )
     """
     Model of message consumption. This only applies to consumer spans.
     """
@@ -1182,6 +1210,7 @@ class SpanAttributes:
     Deprecated. Use `net.protocol.version` attribute.
     """
 
+
 @deprecated(
     version="1.18.0",
     reason="Removed from the specification in favor of `net.protocol.name` and `net.protocol.version` attributes",
@@ -1199,6 +1228,7 @@ class HttpFlavorValues(Enum):
 
     QUIC = "QUIC"
 
+
 @deprecated(
     version="1.18.0",
     reason="Removed from the specification",
@@ -1209,7 +1239,8 @@ class MessagingDestinationKindValues(Enum):
 
     TOPIC = "topic"
     """A message sent to a topic."""
-    
+
+
 class EventDomainValues(Enum):
     BROWSER = "browser"
     """Events from browser apps."""
@@ -1810,4 +1841,3 @@ class RpcConnectRpcErrorCodeValues(Enum):
 
     UNAUTHENTICATED = "unauthenticated"
     """unauthenticated."""
-
