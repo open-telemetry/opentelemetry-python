@@ -198,6 +198,7 @@ class OTLPExporterMixin(
 
         if parsed_url.netloc:
             endpoint = parsed_url.netloc
+        self._endpoint = endpoint
 
         self._headers = headers or environ.get(OTEL_EXPORTER_OTLP_HEADERS)
         if isinstance(self._headers, str):
@@ -223,14 +224,14 @@ class OTLPExporterMixin(
 
         if insecure:
             self._client = self._stub(
-                insecure_channel(endpoint, compression=compression)
+                insecure_channel(self._endpoint, compression=compression)
             )
         else:
             credentials = _get_credentials(
                 credentials, OTEL_EXPORTER_OTLP_CERTIFICATE
             )
             self._client = self._stub(
-                secure_channel(endpoint, credentials, compression=compression)
+                secure_channel(self._endpoint, credentials, compression=compression)
             )
 
         self._export_lock = threading.Lock()
@@ -304,10 +305,11 @@ class OTLPExporterMixin(
                         logger.warning(
                             (
                                 "Transient error %s encountered while exporting "
-                                "%s, retrying in %ss."
+                                "%s to %s, retrying in %ss."
                             ),
                             error.code(),
                             self._exporting,
+                            self._endpoint,
                             delay,
                         )
                         sleep(delay)
