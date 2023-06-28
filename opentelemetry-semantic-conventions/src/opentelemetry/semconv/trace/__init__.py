@@ -63,11 +63,11 @@ class SpanAttributes:
     Host identifier of the ["URI origin"](https://www.rfc-editor.org/rfc/rfc9110.html#name-uri-origin) HTTP request is sent to.
     Note: Determined by using the first of the following that applies
 
-- Host identifier of the [request target](https://www.rfc-editor.org/rfc/rfc9110.html#target.resource)
-  if it's sent in absolute-form
-- Host identifier of the `Host` header
+    - Host identifier of the [request target](https://www.rfc-editor.org/rfc/rfc9110.html#target.resource)
+      if it's sent in absolute-form
+    - Host identifier of the `Host` header
 
-SHOULD NOT be set if capturing it would require an extra DNS lookup.
+    SHOULD NOT be set if capturing it would require an extra DNS lookup.
     """
 
     NET_PEER_PORT = "net.peer.port"
@@ -85,7 +85,7 @@ SHOULD NOT be set if capturing it would require an extra DNS lookup.
     """
     The matched route (path template in the format used by the respective server framework). See note below.
     Note: MUST NOT be populated when this is not supported by the HTTP server framework as the route attribute should have low-cardinality and the URI path can NOT substitute it.
-SHOULD include the [application root](/specification/trace/semantic_conventions/http.md#http-server-definitions) if there is one.
+    SHOULD include the [application root](/specification/trace/semantic_conventions/http.md#http-server-definitions) if there is one.
     """
 
     NET_HOST_NAME = "net.host.name"
@@ -93,13 +93,13 @@ SHOULD include the [application root](/specification/trace/semantic_conventions/
     Name of the local HTTP server that received the request.
     Note: Determined by using the first of the following that applies
 
-- The [primary server name](/specification/trace/semantic_conventions/http.md#http-server-definitions) of the matched virtual host. MUST only
-  include host identifier.
-- Host identifier of the [request target](https://www.rfc-editor.org/rfc/rfc9110.html#target.resource)
-  if it's sent in absolute-form.
-- Host identifier of the `Host` header
+    - The [primary server name](/specification/trace/semantic_conventions/http.md#http-server-definitions) of the matched virtual host. MUST only
+      include host identifier.
+    - Host identifier of the [request target](https://www.rfc-editor.org/rfc/rfc9110.html#target.resource)
+      if it's sent in absolute-form.
+    - Host identifier of the `Host` header
 
-SHOULD NOT be set if only IP address is available and capturing name would require a reverse DNS lookup.
+    SHOULD NOT be set if only IP address is available and capturing name would require a reverse DNS lookup.
     """
 
     NET_HOST_PORT = "net.host.port"
@@ -107,10 +107,10 @@ SHOULD NOT be set if only IP address is available and capturing name would requi
     Port of the local HTTP server that received the request.
     Note: Determined by using the first of the following that applies
 
-- Port identifier of the [primary server host](/specification/trace/semantic_conventions/http.md#http-server-definitions) of the matched virtual host.
-- Port identifier of the [request target](https://www.rfc-editor.org/rfc/rfc9110.html#target.resource)
-  if it's sent in absolute-form.
-- Port identifier of the `Host` header.
+    - Port identifier of the [primary server host](/specification/trace/semantic_conventions/http.md#http-server-definitions) of the matched virtual host.
+    - Port identifier of the [request target](https://www.rfc-editor.org/rfc/rfc9110.html#target.resource)
+      if it's sent in absolute-form.
+    - Port identifier of the `Host` header.
     """
 
     EVENT_NAME = "event.name"
@@ -122,14 +122,14 @@ SHOULD NOT be set if only IP address is available and capturing name would requi
     """
     The domain identifies the business context for the events.
     Note: Events across different domains may have same `event.name`, yet be
-unrelated events.
+    unrelated events.
     """
 
     LOG_RECORD_UID = "log.record.uid"
     """
     A unique identifier for the Log Record.
     Note: If an id is provided, other log records with the same id will be considered duplicates and can be removed safely. This means, that two distinguishable log records MUST have different values.
-The id MAY be an [Universally Unique Lexicographically Sortable Identifier (ULID)](https://github.com/ulid/spec), but other identifiers (e.g. UUID) may be used as needed.
+    The id MAY be an [Universally Unique Lexicographically Sortable Identifier (ULID)](https://github.com/ulid/spec), but other identifiers (e.g. UUID) may be used as needed.
     """
 
     FEATURE_FLAG_KEY = "feature_flag.key"
@@ -146,13 +146,13 @@ The id MAY be an [Universally Unique Lexicographically Sortable Identifier (ULID
     """
     SHOULD be a semantic identifier for a value. If one is unavailable, a stringified version of the value can be used.
     Note: A semantic identifier, commonly referred to as a variant, provides a means
-for referring to a value without including the value itself. This can
-provide additional context for understanding the meaning behind a value.
-For example, the variant `red` maybe be used for the value `#c05543`.
+    for referring to a value without including the value itself. This can
+    provide additional context for understanding the meaning behind a value.
+    For example, the variant `red` maybe be used for the value `#c05543`.
 
-A stringified version of the value can be used in situations where a
-semantic identifier is unavailable. String representation of the value
-should be determined by the implementer.
+    A stringified version of the value can be used in situations where a
+    semantic identifier is unavailable. String representation of the value
+    should be determined by the implementer.
     """
 
     AWS_LAMBDA_INVOKED_ARN = "aws.lambda.invoked_arn"
@@ -281,9 +281,7 @@ should be determined by the implementer.
     Whether or not the query is idempotent.
     """
 
-    DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT = (
-        "db.cassandra.speculative_execution_count"
-    )
+    DB_CASSANDRA_SPECULATIVE_EXECUTION_COUNT = "db.cassandra.speculative_execution_count"
     """
     The number of times a query was speculatively executed. Not set or `0` if the query was not executed speculatively.
     """
@@ -328,8 +326,8 @@ should be determined by the implementer.
     """
     Full user-agent string is generated by Cosmos DB SDK.
     Note: The user-agent value is generated by SDK which is a combination of<br> `sdk_version` : Current version of SDK. e.g. 'cosmos-netstandard-sdk/3.23.0'<br> `direct_pkg_version` : Direct package version used by Cosmos DB SDK. e.g. '3.23.1'<br> `number_of_client_instances` : Number of cosmos client instances created by the application. e.g. '1'<br> `type_of_machine_architecture` : Machine architecture. e.g. 'X64'<br> `operating_system` : Operating System. e.g. 'Linux 5.4.0-1098-azure 104 18'<br> `runtime_framework` : Runtime Framework. e.g. '.NET Core 3.1.32'<br> `failover_information` : Generated key to determine if region failover enabled.
-   Format Reg-{D (Disabled discovery)}-S(application region)|L(List of preferred regions)|N(None, user did not configure it).
-   Default value is "NS".
+       Format Reg-{D (Disabled discovery)}-S(application region)|L(List of preferred regions)|N(None, user did not configure it).
+       Default value is "NS".
     """
 
     DB_COSMOSDB_CONNECTION_MODE = "db.cosmosdb.connection_mode"
@@ -376,14 +374,14 @@ should be determined by the implementer.
     """
     Type of the trigger which caused this function invocation.
     Note: For the server/consumer span on the incoming side,
-`faas.trigger` MUST be set.
+    `faas.trigger` MUST be set.
 
-Clients invoking FaaS instances usually cannot set `faas.trigger`,
-since they would typically need to look in the payload to determine
-the event type. If clients set it, it should be the same as the
-trigger that corresponding incoming would have (i.e., this has
-nothing to do with the underlying transport used to make the API
-call to invoke the lambda, which is often HTTP).
+    Clients invoking FaaS instances usually cannot set `faas.trigger`,
+    since they would typically need to look in the payload to determine
+    the event type. If clients set it, it should be the same as the
+    trigger that corresponding incoming would have (i.e., this has
+    nothing to do with the underlying transport used to make the API
+    call to invoke the lambda, which is often HTTP).
     """
 
     FAAS_INVOCATION_ID = "faas.invocation_id"
@@ -395,22 +393,22 @@ call to invoke the lambda, which is often HTTP).
     """
     Cloud provider-specific native identifier of the monitored cloud resource (e.g. an [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) on AWS, a [fully qualified resource ID](https://learn.microsoft.com/en-us/rest/api/resources/resources/get-by-id) on Azure, a [full resource name](https://cloud.google.com/apis/design/resource_names#full_resource_name) on GCP).
     Note: On some cloud providers, it may not be possible to determine the full ID at startup,
-so it may be necessary to set `cloud.resource_id` as a span attribute instead.
+    so it may be necessary to set `cloud.resource_id` as a span attribute instead.
 
-The exact value to use for `cloud.resource_id` depends on the cloud provider.
-The following well-known definitions MUST be used if you set this attribute and they apply:
+    The exact value to use for `cloud.resource_id` depends on the cloud provider.
+    The following well-known definitions MUST be used if you set this attribute and they apply:
 
-* **AWS Lambda:** The function [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html).
-  Take care not to use the "invoked ARN" directly but replace any
-  [alias suffix](https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html)
-  with the resolved function version, as the same runtime instance may be invokable with
-  multiple different aliases.
-* **GCP:** The [URI of the resource](https://cloud.google.com/iam/docs/full-resource-names)
-* **Azure:** The [Fully Qualified Resource ID](https://docs.microsoft.com/en-us/rest/api/resources/resources/get-by-id) of the invoked function,
-  *not* the function app, having the form
-  `/subscriptions/<SUBSCIPTION_GUID>/resourceGroups/<RG>/providers/Microsoft.Web/sites/<FUNCAPP>/functions/<FUNC>`.
-  This means that a span attribute MUST be used, as an Azure function app can host multiple functions that would usually share
-  a TracerProvider.
+    * **AWS Lambda:** The function [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html).
+      Take care not to use the "invoked ARN" directly but replace any
+      [alias suffix](https://docs.aws.amazon.com/lambda/latest/dg/configuration-aliases.html)
+      with the resolved function version, as the same runtime instance may be invokable with
+      multiple different aliases.
+    * **GCP:** The [URI of the resource](https://cloud.google.com/iam/docs/full-resource-names)
+    * **Azure:** The [Fully Qualified Resource ID](https://docs.microsoft.com/en-us/rest/api/resources/resources/get-by-id) of the invoked function,
+      *not* the function app, having the form
+      `/subscriptions/<SUBSCIPTION_GUID>/resourceGroups/<RG>/providers/Microsoft.Web/sites/<FUNCAPP>/functions/<FUNC>`.
+      This means that a span attribute MUST be used, as an Azure function app can host multiple functions that would usually share
+      a TracerProvider.
     """
 
     FAAS_DOCUMENT_COLLECTION = "faas.document.collection"
@@ -442,16 +440,16 @@ The following well-known definitions MUST be used if you set this attribute and 
     """
     The IP address of the original client behind all proxies, if known (e.g. from [X-Forwarded-For](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For)).
     Note: This is not necessarily the same as `net.sock.peer.addr`, which would
-identify the network-level peer, which may be a proxy.
+    identify the network-level peer, which may be a proxy.
 
-This attribute should be set when a source of information different
-from the one used for `net.sock.peer.addr`, is available even if that other
-source just confirms the same value as `net.sock.peer.addr`.
-Rationale: For `net.sock.peer.addr`, one typically does not know if it
-comes from a proxy, reverse proxy, or the actual client. Setting
-`http.client_ip` when it's the same as `net.sock.peer.addr` means that
-one is at least somewhat confident that the address is not that of
-the closest proxy.
+    This attribute should be set when a source of information different
+    from the one used for `net.sock.peer.addr`, is available even if that other
+    source just confirms the same value as `net.sock.peer.addr`.
+    Rationale: For `net.sock.peer.addr`, one typically does not know if it
+    comes from a proxy, reverse proxy, or the actual client. Setting
+    `http.client_ip` when it's the same as `net.sock.peer.addr` means that
+    one is at least somewhat confident that the address is not that of
+    the closest proxy.
     """
 
     NET_SOCK_HOST_ADDR = "net.sock.host.addr"
@@ -491,16 +489,12 @@ the closest proxy.
     The [conversation ID](#conversations) identifying the conversation to which the message belongs, represented as a string. Sometimes called "Correlation ID".
     """
 
-    MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES = (
-        "messaging.message.payload_size_bytes"
-    )
+    MESSAGING_MESSAGE_PAYLOAD_SIZE_BYTES = "messaging.message.payload_size_bytes"
     """
     The (uncompressed) size of the message payload in bytes. Also use this attribute if it is unknown whether the compressed or uncompressed payload size is reported.
     """
 
-    MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES = (
-        "messaging.message.payload_compressed_size_bytes"
-    )
+    MESSAGING_MESSAGE_PAYLOAD_COMPRESSED_SIZE_BYTES = "messaging.message.payload_compressed_size_bytes"
     """
     The compressed size of the message payload in bytes.
     """
@@ -677,23 +671,17 @@ the closest proxy.
     The JSON-serialized value of each item in the `ConsumedCapacity` response field.
     """
 
-    AWS_DYNAMODB_ITEM_COLLECTION_METRICS = (
-        "aws.dynamodb.item_collection_metrics"
-    )
+    AWS_DYNAMODB_ITEM_COLLECTION_METRICS = "aws.dynamodb.item_collection_metrics"
     """
     The JSON-serialized value of the `ItemCollectionMetrics` response field.
     """
 
-    AWS_DYNAMODB_PROVISIONED_READ_CAPACITY = (
-        "aws.dynamodb.provisioned_read_capacity"
-    )
+    AWS_DYNAMODB_PROVISIONED_READ_CAPACITY = "aws.dynamodb.provisioned_read_capacity"
     """
     The value of the `ProvisionedThroughput.ReadCapacityUnits` request parameter.
     """
 
-    AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY = (
-        "aws.dynamodb.provisioned_write_capacity"
-    )
+    AWS_DYNAMODB_PROVISIONED_WRITE_CAPACITY = "aws.dynamodb.provisioned_write_capacity"
     """
     The value of the `ProvisionedThroughput.WriteCapacityUnits` request parameter.
     """
@@ -728,16 +716,12 @@ the closest proxy.
     The value of the `Select` request parameter.
     """
 
-    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEXES = (
-        "aws.dynamodb.global_secondary_indexes"
-    )
+    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEXES = "aws.dynamodb.global_secondary_indexes"
     """
     The JSON-serialized value of each item of the `GlobalSecondaryIndexes` request field.
     """
 
-    AWS_DYNAMODB_LOCAL_SECONDARY_INDEXES = (
-        "aws.dynamodb.local_secondary_indexes"
-    )
+    AWS_DYNAMODB_LOCAL_SECONDARY_INDEXES = "aws.dynamodb.local_secondary_indexes"
     """
     The JSON-serialized value of each item of the `LocalSecondaryIndexes` request field.
     """
@@ -782,9 +766,7 @@ the closest proxy.
     The JSON-serialized value of each item in the `AttributeDefinitions` request field.
     """
 
-    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEX_UPDATES = (
-        "aws.dynamodb.global_secondary_index_updates"
-    )
+    AWS_DYNAMODB_GLOBAL_SECONDARY_INDEX_UPDATES = "aws.dynamodb.global_secondary_index_updates"
     """
     The JSON-serialized value of each item in the the `GlobalSecondaryIndexUpdates` request field.
     """
@@ -793,70 +775,70 @@ the closest proxy.
     """
     The S3 bucket name the request refers to. Corresponds to the `--bucket` parameter of the [S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/index.html) operations.
     Note: The `bucket` attribute is applicable to all S3 operations that reference a bucket, i.e. that require the bucket name as a mandatory parameter.
-This applies to almost all S3 operations except `list-buckets`.
+    This applies to almost all S3 operations except `list-buckets`.
     """
 
     AWS_S3_KEY = "aws.s3.key"
     """
     The S3 object key the request refers to. Corresponds to the `--key` parameter of the [S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/index.html) operations.
     Note: The `key` attribute is applicable to all object-related S3 operations, i.e. that require the object key as a mandatory parameter.
-This applies in particular to the following operations:
+    This applies in particular to the following operations:
 
-- [copy-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/copy-object.html)
-- [delete-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/delete-object.html)
-- [get-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/get-object.html)
-- [head-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/head-object.html)
-- [put-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/put-object.html)
-- [restore-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/restore-object.html)
-- [select-object-content](https://docs.aws.amazon.com/cli/latest/reference/s3api/select-object-content.html)
-- [abort-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/abort-multipart-upload.html)
-- [complete-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/complete-multipart-upload.html)
-- [create-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/create-multipart-upload.html)
-- [list-parts](https://docs.aws.amazon.com/cli/latest/reference/s3api/list-parts.html)
-- [upload-part](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part.html)
-- [upload-part-copy](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part-copy.html).
+    - [copy-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/copy-object.html)
+    - [delete-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/delete-object.html)
+    - [get-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/get-object.html)
+    - [head-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/head-object.html)
+    - [put-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/put-object.html)
+    - [restore-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/restore-object.html)
+    - [select-object-content](https://docs.aws.amazon.com/cli/latest/reference/s3api/select-object-content.html)
+    - [abort-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/abort-multipart-upload.html)
+    - [complete-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/complete-multipart-upload.html)
+    - [create-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/create-multipart-upload.html)
+    - [list-parts](https://docs.aws.amazon.com/cli/latest/reference/s3api/list-parts.html)
+    - [upload-part](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part.html)
+    - [upload-part-copy](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part-copy.html).
     """
 
     AWS_S3_COPY_SOURCE = "aws.s3.copy_source"
     """
     The source object (in the form `bucket`/`key`) for the copy operation.
     Note: The `copy_source` attribute applies to S3 copy operations and corresponds to the `--copy-source` parameter
-of the [copy-object operation within the S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/copy-object.html).
-This applies in particular to the following operations:
+    of the [copy-object operation within the S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/copy-object.html).
+    This applies in particular to the following operations:
 
-- [copy-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/copy-object.html)
-- [upload-part-copy](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part-copy.html).
+    - [copy-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/copy-object.html)
+    - [upload-part-copy](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part-copy.html).
     """
 
     AWS_S3_UPLOAD_ID = "aws.s3.upload_id"
     """
     Upload ID that identifies the multipart upload.
     Note: The `upload_id` attribute applies to S3 multipart-upload operations and corresponds to the `--upload-id` parameter
-of the [S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/index.html) multipart operations.
-This applies in particular to the following operations:
+    of the [S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/index.html) multipart operations.
+    This applies in particular to the following operations:
 
-- [abort-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/abort-multipart-upload.html)
-- [complete-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/complete-multipart-upload.html)
-- [list-parts](https://docs.aws.amazon.com/cli/latest/reference/s3api/list-parts.html)
-- [upload-part](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part.html)
-- [upload-part-copy](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part-copy.html).
+    - [abort-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/abort-multipart-upload.html)
+    - [complete-multipart-upload](https://docs.aws.amazon.com/cli/latest/reference/s3api/complete-multipart-upload.html)
+    - [list-parts](https://docs.aws.amazon.com/cli/latest/reference/s3api/list-parts.html)
+    - [upload-part](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part.html)
+    - [upload-part-copy](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part-copy.html).
     """
 
     AWS_S3_DELETE = "aws.s3.delete"
     """
     The delete request container that specifies the objects to be deleted.
     Note: The `delete` attribute is only applicable to the [delete-object](https://docs.aws.amazon.com/cli/latest/reference/s3api/delete-object.html) operation.
-The `delete` attribute corresponds to the `--delete` parameter of the
-[delete-objects operation within the S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/delete-objects.html).
+    The `delete` attribute corresponds to the `--delete` parameter of the
+    [delete-objects operation within the S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/delete-objects.html).
     """
 
     AWS_S3_PART_NUMBER = "aws.s3.part_number"
     """
     The part number of the part being uploaded in a multipart-upload operation. This is a positive integer between 1 and 10,000.
     Note: The `part_number` attribute is only applicable to the [upload-part](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part.html)
-and [upload-part-copy](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part-copy.html) operations.
-The `part_number` attribute corresponds to the `--part-number` parameter of the
-[upload-part operation within the S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part.html).
+    and [upload-part-copy](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part-copy.html) operations.
+    The `part_number` attribute corresponds to the `--part-number` parameter of the
+    [upload-part operation within the S3 API](https://docs.aws.amazon.com/cli/latest/reference/s3api/upload-part.html).
     """
 
     GRAPHQL_OPERATION_NAME = "graphql.operation.name"
@@ -879,14 +861,14 @@ The `part_number` attribute corresponds to the `--part-number` parameter of the
     """
     The message destination name.
     Note: Destination name SHOULD uniquely identify a specific queue, topic or other entity within the broker. If
-the broker does not have such notion, the destination name SHOULD uniquely identify the broker.
+    the broker does not have such notion, the destination name SHOULD uniquely identify the broker.
     """
 
     MESSAGING_SOURCE_NAME = "messaging.source.name"
     """
     The message source name.
     Note: Source name SHOULD uniquely identify a specific queue, topic, or other entity within the broker. If
-the broker does not have such notion, the source name SHOULD uniquely identify the broker.
+    the broker does not have such notion, the source name SHOULD uniquely identify the broker.
     """
 
     MESSAGING_DESTINATION_TEMPLATE = "messaging.destination.template"
@@ -926,9 +908,7 @@ the broker does not have such notion, the source name SHOULD uniquely identify t
     The identifier for the consumer receiving a message. For Kafka, set it to `{messaging.kafka.consumer.group} - {messaging.kafka.client_id}`, if both are present, or only `messaging.kafka.consumer.group`. For brokers, such as RabbitMQ and Artemis, set it to the `client_id` of the client consuming the message.
     """
 
-    MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY = (
-        "messaging.rabbitmq.destination.routing_key"
-    )
+    MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY = "messaging.rabbitmq.destination.routing_key"
     """
     RabbitMQ message routing key.
     """
@@ -949,9 +929,7 @@ the broker does not have such notion, the source name SHOULD uniquely identify t
     Client Id for the Consumer or Producer that is handling the message.
     """
 
-    MESSAGING_KAFKA_DESTINATION_PARTITION = (
-        "messaging.kafka.destination.partition"
-    )
+    MESSAGING_KAFKA_DESTINATION_PARTITION = "messaging.kafka.destination.partition"
     """
     Partition the message is sent to.
     """
@@ -986,16 +964,12 @@ the broker does not have such notion, the source name SHOULD uniquely identify t
     The unique identifier for each client.
     """
 
-    MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP = (
-        "messaging.rocketmq.message.delivery_timestamp"
-    )
+    MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP = "messaging.rocketmq.message.delivery_timestamp"
     """
     The timestamp in milliseconds that the delay message is expected to be delivered to consumer.
     """
 
-    MESSAGING_ROCKETMQ_MESSAGE_DELAY_TIME_LEVEL = (
-        "messaging.rocketmq.message.delay_time_level"
-    )
+    MESSAGING_ROCKETMQ_MESSAGE_DELAY_TIME_LEVEL = "messaging.rocketmq.message.delay_time_level"
     """
     The delay time level for delay message, which determines the message delay time.
     """
@@ -1020,9 +994,7 @@ the broker does not have such notion, the source name SHOULD uniquely identify t
     Key(s) of message, another way to mark message besides message id.
     """
 
-    MESSAGING_ROCKETMQ_CONSUMPTION_MODEL = (
-        "messaging.rocketmq.consumption_model"
-    )
+    MESSAGING_ROCKETMQ_CONSUMPTION_MODEL = "messaging.rocketmq.consumption_model"
     """
     Model of message consumption. This only applies to consumer spans.
     """
@@ -1082,21 +1054,21 @@ the broker does not have such notion, the source name SHOULD uniquely identify t
     """
     SHOULD be set to true if the exception event is recorded at a point where it is known that the exception is escaping the scope of the span.
     Note: An exception is considered to have escaped (or left) the scope of a span,
-if that span is ended while the exception is still logically "in flight".
-This may be actually "in flight" in some languages (e.g. if the exception
-is passed to a Context manager's `__exit__` method in Python) but will
-usually be caught at the point of recording the exception in most languages.
+    if that span is ended while the exception is still logically "in flight".
+    This may be actually "in flight" in some languages (e.g. if the exception
+    is passed to a Context manager's `__exit__` method in Python) but will
+    usually be caught at the point of recording the exception in most languages.
 
-It is usually not possible to determine at the point where an exception is thrown
-whether it will escape the scope of a span.
-However, it is trivial to know that an exception
-will escape, if one checks for an active exception just before ending the span,
-as done in the [example above](#recording-an-exception).
+    It is usually not possible to determine at the point where an exception is thrown
+    whether it will escape the scope of a span.
+    However, it is trivial to know that an exception
+    will escape, if one checks for an active exception just before ending the span,
+    as done in the [example above](#recording-an-exception).
 
-It follows that an exception may still escape the scope of the span
-even if the `exception.escaped` attribute was not set or set to false,
-since the event might have been recorded at a time where it was not
-clear whether the exception will escape.
+    It follows that an exception may still escape the scope of the span
+    even if the `exception.escaped` attribute was not set or set to false,
+    since the event might have been recorded at a time where it was not
+    clear whether the exception will escape.
     """
 
     # Manually defined deprecated attributes
@@ -1210,7 +1182,6 @@ clear whether the exception will escape.
     Deprecated. Use `net.protocol.version` attribute.
     """
 
-
 @deprecated(
     version="1.18.0",
     reason="Removed from the specification in favor of `net.protocol.name` and `net.protocol.version` attributes",
@@ -1228,7 +1199,6 @@ class HttpFlavorValues(Enum):
 
     QUIC = "QUIC"
 
-
 @deprecated(
     version="1.18.0",
     reason="Removed from the specification",
@@ -1239,8 +1209,7 @@ class MessagingDestinationKindValues(Enum):
 
     TOPIC = "topic"
     """A message sent to a topic."""
-
-
+    
 class EventDomainValues(Enum):
     BROWSER = "browser"
     """Events from browser apps."""
@@ -1841,3 +1810,4 @@ class RpcConnectRpcErrorCodeValues(Enum):
 
     UNAUTHENTICATED = "unauthenticated"
     """unauthenticated."""
+

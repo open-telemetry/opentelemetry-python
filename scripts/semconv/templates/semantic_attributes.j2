@@ -37,7 +37,7 @@ class {{class}}:
     {{attribute.brief | to_doc_brief}}.
 
     {%- if attribute.note %}
-    Note: {{attribute.note | to_doc_brief}}.
+    Note: {{attribute.note | to_doc_brief | indent}}.
     {%- endif %}
 
     {%- if attribute.deprecated %}
