@@ -93,7 +93,7 @@ class TestOTLPExporterMixin(TestCase):
             otlp_mock_exporter._export(Mock())
             self.assertEqual(
                 warning.records[0].message,
-                "Failed to export mock, error code: None",
+                "Failed to export mock to localhost:4317, error code: None",
             )
 
         def code(self):  # pylint: disable=function-redefined

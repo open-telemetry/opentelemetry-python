@@ -318,8 +318,9 @@ class OTLPExporterMixin(
                         continue
                     else:
                         logger.error(
-                            "Failed to export %s, error code: %s",
+                            "Failed to export %s to %s, error code: %s",
                             self._exporting,
+                            self._endpoint,
                             error.code(),
                         )
 
