@@ -112,7 +112,7 @@ class TestOTLPExporterMixin(TestCase):
                 warning.records[0].message,
                 (
                     "Transient error StatusCode.CANCELLED encountered "
-                    "while exporting mock, retrying in 0s."
+                    "while exporting mock to localhost:4317, retrying in 0s."
                 ),
             )
 
