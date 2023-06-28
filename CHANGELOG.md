@@ -7,11 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Add max_scale option to Exponential Bucket Histogram Aggregation
-  ([#3323](https://github.com/open-telemetry/opentelemetry-python/pull/3323))
-- Use BoundedAttributes instead of raw dict to extract attributes from LogRecord and Support dropped_attributes_count in LogRecord
-  ([#3310](https://github.com/open-telemetry/opentelemetry-python/pull/3310))
 
+- Add max_scale option to Exponential Bucket Histogram Aggregation 
+  ([#3323](https://github.com/open-telemetry/opentelemetry-python/pull/3323))
+- Use BoundedAttributes instead of raw dict to extract attributes from LogRecord
+  ([#3310](https://github.com/open-telemetry/opentelemetry-python/pull/3310)) 
+- Support dropped_attributes_count in LogRecord and exporters
+  ([#3351](https://github.com/open-telemetry/opentelemetry-python/pull/3351))
+- Add unit to view instrument selection criteria
+  ([#3341](https://github.com/open-telemetry/opentelemetry-python/pull/3341))
+- Upgrade opentelemetry-proto to 0.20 and regen
+  [#3355](https://github.com/open-telemetry/opentelemetry-python/pull/3355))
 
 ## Version 1.18.0/0.39b0 (2023-05-04)
 
