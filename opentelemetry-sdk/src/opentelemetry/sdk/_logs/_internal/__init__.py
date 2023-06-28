@@ -88,9 +88,9 @@ class LogLimits:
     UNSET = -1
 
     def __init__(
-            self,
-            max_attributes: Optional[int] = None,
-            max_attribute_length: Optional[int] = None,
+        self,
+        max_attributes: Optional[int] = None,
+        max_attribute_length: Optional[int] = None,
     ):
 
         # attribute count
@@ -114,7 +114,7 @@ class LogLimits:
 
     @classmethod
     def _from_env_if_absent(
-            cls, value: Optional[int], env_var: str, default: Optional[int] = None
+        cls, value: Optional[int], env_var: str, default: Optional[int] = None
     ) -> Optional[int]:
         if value == cls.UNSET:
             return None
@@ -156,18 +156,18 @@ class LogRecord(APILogRecord):
     """
 
     def __init__(
-            self,
-            timestamp: Optional[int] = None,
-            observed_timestamp: Optional[int] = None,
-            trace_id: Optional[int] = None,
-            span_id: Optional[int] = None,
-            trace_flags: Optional[TraceFlags] = None,
-            severity_text: Optional[str] = None,
-            severity_number: Optional[SeverityNumber] = None,
-            body: Optional[Any] = None,
-            resource: Optional[Resource] = None,
-            attributes: Optional[Attributes] = None,
-            limits: Optional[LogLimits] = _UnsetLogLimits,
+        self,
+        timestamp: Optional[int] = None,
+        observed_timestamp: Optional[int] = None,
+        trace_id: Optional[int] = None,
+        span_id: Optional[int] = None,
+        trace_flags: Optional[TraceFlags] = None,
+        severity_text: Optional[str] = None,
+        severity_number: Optional[SeverityNumber] = None,
+        body: Optional[Any] = None,
+        resource: Optional[Resource] = None,
+        attributes: Optional[Attributes] = None,
+        limits: Optional[LogLimits] = _UnsetLogLimits,
     ):
         super().__init__(
             **{
@@ -229,9 +229,9 @@ class LogData:
     """Readable LogRecord data plus associated InstrumentationLibrary."""
 
     def __init__(
-            self,
-            log_record: LogRecord,
-            instrumentation_scope: InstrumentationScope,
+        self,
+        log_record: LogRecord,
+        instrumentation_scope: InstrumentationScope,
     ):
         self.log_record = log_record
         self.instrumentation_scope = instrumentation_scope
@@ -284,7 +284,7 @@ class SynchronousMultiLogRecordProcessor(LogRecordProcessor):
         self._lock = threading.Lock()
 
     def add_log_record_processor(
-            self, log_record_processor: LogRecordProcessor
+        self, log_record_processor: LogRecordProcessor
     ) -> None:
         """Adds a Logprocessor to the list of log processors handled by this instance"""
         with self._lock:
@@ -346,16 +346,16 @@ class ConcurrentMultiLogRecordProcessor(LogRecordProcessor):
         )
 
     def add_log_record_processor(
-            self, log_record_processor: LogRecordProcessor
+        self, log_record_processor: LogRecordProcessor
     ):
         with self._lock:
             self._log_record_processors += (log_record_processor,)
 
     def _submit_and_wait(
-            self,
-            func: Callable[[LogRecordProcessor], Callable[..., None]],
-            *args: Any,
-            **kwargs: Any,
+        self,
+        func: Callable[[LogRecordProcessor], Callable[..., None]],
+        *args: Any,
+        **kwargs: Any,
     ):
         futures = []
         for lp in self._log_record_processors:
@@ -437,9 +437,9 @@ class LoggingHandler(logging.Handler):
     """
 
     def __init__(
-            self,
-            level=logging.NOTSET,
-            logger_provider=None,
+        self,
+        level=logging.NOTSET,
+        logger_provider=None,
     ) -> None:
         super().__init__(level=level)
         self._logger_provider = logger_provider or get_logger_provider()
@@ -509,13 +509,13 @@ class LoggingHandler(logging.Handler):
 
 class Logger(APILogger):
     def __init__(
-            self,
-            resource: Resource,
-            multi_log_record_processor: Union[
-                SynchronousMultiLogRecordProcessor,
-                ConcurrentMultiLogRecordProcessor,
-            ],
-            instrumentation_scope: InstrumentationScope,
+        self,
+        resource: Resource,
+        multi_log_record_processor: Union[
+            SynchronousMultiLogRecordProcessor,
+            ConcurrentMultiLogRecordProcessor,
+        ],
+        instrumentation_scope: InstrumentationScope,
     ):
         super().__init__(
             instrumentation_scope.name,
@@ -540,17 +540,17 @@ class Logger(APILogger):
 
 class LoggerProvider(APILoggerProvider):
     def __init__(
-            self,
-            resource: Resource = Resource.create(),
-            shutdown_on_exit: bool = True,
-            multi_log_record_processor: Union[
-                SynchronousMultiLogRecordProcessor,
-                ConcurrentMultiLogRecordProcessor,
-            ] = None,
+        self,
+        resource: Resource = Resource.create(),
+        shutdown_on_exit: bool = True,
+        multi_log_record_processor: Union[
+            SynchronousMultiLogRecordProcessor,
+            ConcurrentMultiLogRecordProcessor,
+        ] = None,
     ):
         self._resource = resource
         self._multi_log_record_processor = (
-                multi_log_record_processor or SynchronousMultiLogRecordProcessor()
+            multi_log_record_processor or SynchronousMultiLogRecordProcessor()
         )
         self._at_exit_handler = None
         if shutdown_on_exit:
@@ -561,10 +561,10 @@ class LoggerProvider(APILoggerProvider):
         return self._resource
 
     def get_logger(
-            self,
-            name: str,
-            version: Optional[str] = None,
-            schema_url: Optional[str] = None,
+        self,
+        name: str,
+        version: Optional[str] = None,
+        schema_url: Optional[str] = None,
     ) -> Logger:
         return Logger(
             self._resource,
@@ -577,7 +577,7 @@ class LoggerProvider(APILoggerProvider):
         )
 
     def add_log_record_processor(
-            self, log_record_processor: LogRecordProcessor
+        self, log_record_processor: LogRecordProcessor
     ):
         """Registers a new :class:`LogRecordProcessor` for this `LoggerProvider` instance.
 
