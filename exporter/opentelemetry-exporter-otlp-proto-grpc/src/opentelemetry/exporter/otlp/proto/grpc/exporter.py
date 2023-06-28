@@ -231,7 +231,9 @@ class OTLPExporterMixin(
                 credentials, OTEL_EXPORTER_OTLP_CERTIFICATE
             )
             self._client = self._stub(
-                secure_channel(self._endpoint, credentials, compression=compression)
+                secure_channel(
+                    self._endpoint, credentials, compression=compression
+                )
             )
 
         self._export_lock = threading.Lock()
