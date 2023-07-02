@@ -212,9 +212,9 @@ class LogRecord(APILogRecord):
                 if self.span_id is not None
                 else "",
                 "trace_flags": self.trace_flags,
-                "resource": repr(self.resource.attributes)
+                "resource": json.loads(self.resource.to_json())
                 if self.resource
-                else "",
+                else None,
             },
             indent=indent,
         )
