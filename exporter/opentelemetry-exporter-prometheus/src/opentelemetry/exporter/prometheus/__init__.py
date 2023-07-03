@@ -74,6 +74,7 @@ from prometheus_client.core import (
     CounterMetricFamily,
     GaugeMetricFamily,
     HistogramMetricFamily,
+    InfoMetricFamily,
 )
 from prometheus_client.core import Metric as PrometheusMetric
 
@@ -97,6 +98,9 @@ from opentelemetry.sdk.metrics.export import (
 
 _logger = getLogger(__name__)
 
+_TARGET_INFO_NAME = "target"
+_TARGET_INFO_DESCRIPTION = "Target metadata"
+
 
 def _convert_buckets(
     bucket_counts: Sequence[int], explicit_bounds: Sequence[float]
@@ -116,8 +120,7 @@ def _convert_buckets(
 class PrometheusMetricReader(MetricReader):
     """Prometheus metric exporter for OpenTelemetry."""
 
-    def __init__(self) -> None:
-
+    def __init__(self, disable_target_info: bool = False) -> None:
         super().__init__(
             preferred_temporality={
                 Counter: AggregationTemporality.CUMULATIVE,
@@ -128,7 +131,7 @@ class PrometheusMetricReader(MetricReader):
                 ObservableGauge: AggregationTemporality.CUMULATIVE,
             }
         )
-        self._collector = _CustomCollector()
+        self._collector = _CustomCollector(disable_target_info)
         REGISTRY.register(self._collector)
         self._collector._callback = self.collect
 
@@ -153,12 +156,14 @@ class _CustomCollector:
     https://github.com/prometheus/client_python#custom-collectors
     """
 
-    def __init__(self):
+    def __init__(self, disable_target_info: bool = False):
         self._callback = None
         self._metrics_datas = deque()
         self._non_letters_digits_underscore_re = compile(
             r"[^\w]", UNICODE | IGNORECASE
         )
+        self._disable_target_info = disable_target_info
+        self._target_info = None
 
     def add_metrics_data(self, metrics_data: MetricsData) -> None:
         """Add metrics to Prometheus data"""
@@ -174,6 +179,20 @@ class _CustomCollector:
             self._callback()
 
         metric_family_id_metric_family = {}
+
+        if len(self._metrics_datas):
+            if not self._disable_target_info:
+                if self._target_info is None:
+                    attributes = {}
+                    for res in self._metrics_datas[0].resource_metrics:
+                        attributes = {**attributes, **res.resource.attributes}
+
+                    self._target_info = self._create_info_metric(
+                        _TARGET_INFO_NAME, _TARGET_INFO_DESCRIPTION, attributes
+                    )
+                metric_family_id_metric_family[
+                    _TARGET_INFO_NAME
+                ] = self._target_info
 
         while self._metrics_datas:
             self._translate_to_prometheus(
@@ -348,3 +367,11 @@ class _CustomCollector:
         if not isinstance(value, str):
             return dumps(value, default=str)
         return str(value)
+
+    def _create_info_metric(
+        self, name: str, description: str, attributes: Dict[str, str]
+    ) -> InfoMetricFamily:
+        """Create an Info Metric Family with list of attributes"""
+        info = InfoMetricFamily(name, description, labels=attributes)
+        info.add_metric(labels=list(attributes.keys()), value=attributes)
+        return info

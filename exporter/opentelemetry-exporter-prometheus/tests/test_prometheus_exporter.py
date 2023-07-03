@@ -17,7 +17,11 @@ from unittest import TestCase
 from unittest.mock import Mock, patch
 
 from prometheus_client import generate_latest
-from prometheus_client.core import CounterMetricFamily, GaugeMetricFamily
+from prometheus_client.core import (
+    CounterMetricFamily,
+    GaugeMetricFamily,
+    InfoMetricFamily,
+)
 
 from opentelemetry.exporter.prometheus import (
     PrometheusMetricReader,
@@ -33,6 +37,7 @@ from opentelemetry.sdk.metrics.export import (
     ResourceMetrics,
     ScopeMetrics,
 )
+from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.metrictestutil import (
     _generate_gauge,
     _generate_sum,
@@ -101,7 +106,7 @@ class TestPrometheusMetricReader(TestCase):
             ]
         )
 
-        collector = _CustomCollector()
+        collector = _CustomCollector(disable_target_info=True)
         collector.add_metrics_data(metrics_data)
         result_bytes = generate_latest(collector)
         result = result_bytes.decode("utf-8")
@@ -146,7 +151,7 @@ class TestPrometheusMetricReader(TestCase):
             ]
         )
 
-        collector = _CustomCollector()
+        collector = _CustomCollector(disable_target_info=True)
         collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
@@ -233,7 +238,7 @@ class TestPrometheusMetricReader(TestCase):
             ]
         )
 
-        collector = _CustomCollector()
+        collector = _CustomCollector(disable_target_info=True)
         collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
@@ -295,7 +300,7 @@ class TestPrometheusMetricReader(TestCase):
                 )
             ]
         )
-        collector = _CustomCollector()
+        collector = _CustomCollector(disable_target_info=True)
         collector.add_metrics_data(metrics_data)
 
         for prometheus_metric in collector.collect():
@@ -337,3 +342,46 @@ class TestPrometheusMetricReader(TestCase):
         result_2 = list(metric_reader._collector.collect())
         self.assertEqual(result_0, result_1)
         self.assertEqual(result_1, result_2)
+
+    def test_target_info_enabled_by_default(self):
+        metric_reader = PrometheusMetricReader()
+        provider = MeterProvider(
+            metric_readers=[metric_reader],
+            resource=Resource({"os": "Unix", "histo": 1}),
+        )
+        meter = provider.get_meter("getting-started", "0.1.2")
+        counter = meter.create_counter("counter")
+        counter.add(1)
+        result = list(metric_reader._collector.collect())
+
+        for prometheus_metric in result[:0]:
+            self.assertEqual(type(prometheus_metric), InfoMetricFamily)
+            self.assertEqual(prometheus_metric.name, "target")
+            self.assertEqual(
+                prometheus_metric.documentation, "Target metadata"
+            )
+            self.assertTrue(len(prometheus_metric.samples) == 1)
+            self.assertEqual(prometheus_metric.samples[0].value, 1)
+            self.assertTrue(len(prometheus_metric.samples[0].labels) == 2)
+            self.assertEqual(prometheus_metric.samples[0].labels["os"], "Unix")
+            self.assertEqual(prometheus_metric.samples[0].labels["histo"], "1")
+
+    def test_target_info_disabled(self):
+        metric_reader = PrometheusMetricReader(disable_target_info=True)
+        provider = MeterProvider(
+            metric_readers=[metric_reader],
+            resource=Resource({"os": "Unix", "histo": 1}),
+        )
+        meter = provider.get_meter("getting-started", "0.1.2")
+        counter = meter.create_counter("counter")
+        counter.add(1)
+        result = list(metric_reader._collector.collect())
+
+        for prometheus_metric in result:
+            self.assertNotEqual(type(prometheus_metric), InfoMetricFamily)
+            self.assertNotEqual(prometheus_metric.name, "target")
+            self.assertNotEqual(
+                prometheus_metric.documentation, "Target metadata"
+            )
+            self.assertNotIn("os", prometheus_metric.samples[0].labels)
+            self.assertNotIn("histo", prometheus_metric.samples[0].labels)
