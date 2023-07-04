@@ -386,6 +386,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         # See the derivation here:
         # https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/metrics/sdk.md#exponential-bucket-histogram-aggregation)
         max_size: int = 160,
+        max_scale: int = 20,
     ):
         super().__init__(attributes)
         # max_size is the maximum capacity of the positive and negative
@@ -403,6 +404,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             )
 
         self._max_size = max_size
+        self._max_scale = max_scale
 
         # _sum is the sum of all the values aggregated by this aggregator.
         self._sum = 0
@@ -428,7 +430,14 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
         # _mapping corresponds to the current scale, is shared by both the
         # positive and negative buckets.
-        self._mapping = LogarithmMapping(LogarithmMapping._max_scale)
+
+        if self._max_scale > 20:
+            _logger.warning(
+                "max_scale is set to %s which is "
+                "larger than the recommended value of 20",
+                self._max_scale,
+            )
+        self._mapping = LogarithmMapping(self._max_scale)
 
         self._instrument_temporality = AggregationTemporality.DELTA
         self._start_time_unix_nano = start_time_unix_nano
@@ -941,9 +950,10 @@ class ExponentialBucketHistogramAggregation(Aggregation):
     def __init__(
         self,
         max_size: int = 160,
+        max_scale: int = 20,
     ):
-
         self._max_size = max_size
+        self._max_scale = max_scale
 
     def _create_aggregation(
         self,
@@ -955,6 +965,7 @@ class ExponentialBucketHistogramAggregation(Aggregation):
             attributes,
             start_time_unix_nano,
             max_size=self._max_size,
+            max_scale=self._max_scale,
         )
 
 

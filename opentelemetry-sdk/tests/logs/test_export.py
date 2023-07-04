@@ -58,6 +58,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
 
         logger = logging.getLogger("default_level")
+        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=logger_provider))
 
         logger.warning("Something is wrong")
@@ -79,6 +80,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
 
         logger = logging.getLogger("custom_level")
+        logger.propagate = False
         logger.setLevel(logging.ERROR)
         logger.addHandler(LoggingHandler(logger_provider=logger_provider))
 
@@ -111,6 +113,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
 
         logger = logging.getLogger("trace_correlation")
+        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=logger_provider))
 
         logger.warning("Warning message")
@@ -150,6 +153,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
 
         logger = logging.getLogger("shutdown")
+        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=logger_provider))
 
         logger.warning("Something is wrong")
@@ -210,6 +214,7 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         provider.add_log_record_processor(log_record_processor)
 
         logger = logging.getLogger("emit_call")
+        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=provider))
 
         logger.error("error")
@@ -344,6 +349,7 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         provider.add_log_record_processor(log_record_processor)
 
         logger = logging.getLogger("shutdown")
+        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=provider))
 
         logger.warning("warning message: %s", "possible upcoming heatwave")
@@ -376,6 +382,7 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         provider.add_log_record_processor(log_record_processor)
 
         logger = logging.getLogger("force_flush")
+        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=provider))
 
         logger.critical("Earth is burning")
@@ -394,6 +401,7 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         provider.add_log_record_processor(log_record_processor)
 
         logger = logging.getLogger("many_logs")
+        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=provider))
 
         for log_no in range(1000):
@@ -411,6 +419,7 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         provider.add_log_record_processor(log_record_processor)
 
         logger = logging.getLogger("threads")
+        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=provider))
 
         def bulk_log_and_flush(num_logs):
@@ -445,6 +454,7 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         provider.add_log_record_processor(log_record_processor)
 
         logger = logging.getLogger("test-fork")
+        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=provider))
 
         logger.critical("yolo")
