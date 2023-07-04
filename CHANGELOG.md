@@ -7,7 +7,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-- Use BoundedAttributes instead of raw dict to extract attributes from LogRecord and Support dropped_attributes_count in LogRecord ([#3310](https://github.com/open-telemetry/opentelemetry-python/pull/3310))
 - Update the body type in the log
   ([$3343](https://github.com/open-telemetry/opentelemetry-python/pull/3343))
 - Add max_scale option to Exponential Bucket Histogram Aggregation 
