@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import math
+from logging import WARNING
 from time import sleep, time_ns
 from typing import Optional, Sequence
 from unittest.mock import Mock
@@ -127,7 +128,8 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         pmr = PeriodicExportingMetricReader(FakeMetricsExporter())
         self.assertEqual(pmr._export_interval_millis, 60000)
         self.assertEqual(pmr._export_timeout_millis, 30000)
-        pmr.shutdown()
+        with self.assertLogs(level=WARNING):
+            pmr.shutdown()
 
     def _create_periodic_reader(
         self, metrics, exporter, collect_wait=0, interval=60000, timeout=30000
@@ -212,8 +214,9 @@ class TestPeriodicExportingMetricReader(ConcurrencyTestBase):
         pmr = self._create_periodic_reader([], FakeMetricsExporter())
         with self.assertLogs(level="WARNING") as w:
             self.run_with_many_threads(pmr.shutdown)
-            self.assertTrue("Can't shutdown multiple times", w.output[0])
-        pmr.shutdown()
+        self.assertTrue("Can't shutdown multiple times", w.output[0])
+        with self.assertLogs(level="WARNING") as w:
+            pmr.shutdown()
 
     def test_exporter_temporality_preference(self):
         exporter = FakeMetricsExporter(

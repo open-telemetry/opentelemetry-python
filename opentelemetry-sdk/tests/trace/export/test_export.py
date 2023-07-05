@@ -34,6 +34,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_BSP_SCHEDULE_DELAY,
 )
 from opentelemetry.sdk.trace import export
+from opentelemetry.sdk.trace.export import logger
 from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
@@ -208,9 +209,11 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
     )
     def test_args_env_var_value_error(self):
 
+        logger.disabled = True
         batch_span_processor = export.BatchSpanProcessor(
             MySpanExporter(destination=[])
         )
+        logger.disabled = False
 
         self.assertEqual(batch_span_processor.max_queue_size, 2048)
         self.assertEqual(batch_span_processor.schedule_delay_millis, 5000)

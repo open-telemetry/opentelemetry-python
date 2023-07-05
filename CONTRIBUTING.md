@@ -71,6 +71,28 @@ behind this is that every PR that adds/removes public symbols fails in CI, forci
 If after checking them, it is considered that they are indeed necessary, the PR will be labeled with `Skip Public API check` so that this check is not
 run.
 
+Also, we try to keep our console output as clean as possible. Most of the time this means catching expected log messages in the test cases:
+
+``` python
+from logging import WARNING
+
+...
+
+    def test_case(self):
+        with self.assertLogs(level=WARNING):
+            some_function_that_will_log_a_warning_message()
+```
+
+Other options can be to disable logging propagation or disabling a logger altogether.
+
+A similar approach can be followed to catch warnings:
+
+``` python
+    def test_case(self):
+        with self.assertWarns(DeprecationWarning):
+            some_function_that_will_raise_a_deprecation_warning()
+```
+
 See
 [`tox.ini`](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini)
 for more detail on available tox commands.
