@@ -7,6 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+
 - Add max_scale option to Exponential Bucket Histogram Aggregation 
   ([#3323](https://github.com/open-telemetry/opentelemetry-python/pull/3323))
 - Use BoundedAttributes instead of raw dict to extract attributes from LogRecord
@@ -34,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3223](https://github.com/open-telemetry/opentelemetry-python/pull/3223))
 - Add speced out environment variables and arguments for BatchLogRecordProcessor
   ([#3237](https://github.com/open-telemetry/opentelemetry-python/pull/3237))
+
 
 ## Version 1.17.0/0.38b0 (2023-03-22)
 
