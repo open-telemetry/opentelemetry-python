@@ -24,7 +24,7 @@ class HttpTestBase(unittest.TestCase):
 
     class Handler(BaseHTTPRequestHandler):
         protocol_version = "HTTP/1.1"  # Support keep-alive.
-        # timeout = 3 # No timeout -- if shutdown hangs, make sure to close your connection
+        timeout = 3  # Seconds
 
         STATUS_RE = re.compile(r"/status/(\d+)")
 

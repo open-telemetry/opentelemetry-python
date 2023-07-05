@@ -16,11 +16,20 @@
 
 import threading
 from abc import ABC, abstractmethod
-from collections.abc import Sequence
+from collections.abc import Sequence  # noqa: F401
 from logging import getLogger
 from os import environ
 from time import sleep
-from typing import Any, Callable, Dict, Generic, List, Optional, Tuple, Union
+from typing import (  # noqa: F401
+    Any,
+    Callable,
+    Dict,
+    Generic,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 from typing import Sequence as TypingSequence
 from typing import TypeVar
 from urllib.parse import urlparse
@@ -45,7 +54,7 @@ from grpc import (
 from opentelemetry.exporter.otlp.proto.grpc import (
     _OTLP_GRPC_HEADERS,
 )
-from opentelemetry.proto.common.v1.common_pb2 import (
+from opentelemetry.proto.common.v1.common_pb2 import (  # noqa: F401
     AnyValue,
     ArrayValue,
     KeyValue,
@@ -95,44 +104,6 @@ def environ_to_compression(environ_key: str) -> Optional[Compression]:
     if environ_value not in _ENVIRON_TO_COMPRESSION:
         raise InvalidCompressionValueException(environ_key, environ_value)
     return _ENVIRON_TO_COMPRESSION[environ_value]
-
-
-def _translate_value(value: Any) -> KeyValue:
-    if isinstance(value, bool):
-        any_value = AnyValue(bool_value=value)
-
-    elif isinstance(value, str):
-        any_value = AnyValue(string_value=value)
-
-    elif isinstance(value, int):
-        any_value = AnyValue(int_value=value)
-
-    elif isinstance(value, float):
-        any_value = AnyValue(double_value=value)
-
-    elif isinstance(value, Sequence):
-        any_value = AnyValue(
-            array_value=ArrayValue(values=[_translate_value(v) for v in value])
-        )
-
-    # Tracing specs currently does not support Mapping type attributes
-    # elif isinstance(value, Mapping):
-    #     any_value = AnyValue(
-    #         kvlist_value=KeyValueList(
-    #             values=[
-    #                 _translate_key_values(str(k), v) for k, v in value.items()
-    #             ]
-    #         )
-    #     )
-
-    else:
-        raise Exception(f"Invalid type {type(value)} of value {value}")
-
-    return any_value
-
-
-def _translate_key_values(key: str, value: Any) -> KeyValue:
-    return KeyValue(key=key, value=_translate_value(value))
 
 
 @deprecated(
@@ -270,17 +241,6 @@ class OTLPExporterMixin(
         self, data: TypingSequence[SDKDataT]
     ) -> ExportServiceRequestT:
         pass
-
-    def _translate_attributes(self, attributes) -> TypingSequence[KeyValue]:
-        output = []
-        if attributes:
-
-            for key, value in attributes.items():
-                try:
-                    output.append(_translate_key_values(key, value))
-                except Exception as error:  # pylint: disable=broad-except
-                    logger.exception(error)
-        return output
 
     def _export(
         self, data: Union[TypingSequence[ReadableSpan], MetricsData]

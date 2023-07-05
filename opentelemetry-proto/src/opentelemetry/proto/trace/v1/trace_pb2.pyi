@@ -49,7 +49,6 @@ class ResourceSpans(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     RESOURCE_FIELD_NUMBER: builtins.int
     SCOPE_SPANS_FIELD_NUMBER: builtins.int
-    INSTRUMENTATION_LIBRARY_SPANS_FIELD_NUMBER: builtins.int
     SCHEMA_URL_FIELD_NUMBER: builtins.int
     @property
     def resource(self) -> opentelemetry.proto.resource.v1.resource_pb2.Resource:
@@ -61,37 +60,6 @@ class ResourceSpans(google.protobuf.message.Message):
     def scope_spans(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ScopeSpans]:
         """A list of ScopeSpans that originate from a resource."""
         pass
-    @property
-    def instrumentation_library_spans(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___InstrumentationLibrarySpans]:
-        """A list of InstrumentationLibrarySpans that originate from a resource.
-        This field is deprecated and will be removed after grace period expires on June 15, 2022.
-
-        During the grace period the following rules SHOULD be followed:
-
-        For Binary Protobufs
-        ====================
-        Binary Protobuf senders SHOULD NOT set instrumentation_library_spans. Instead
-        scope_spans SHOULD be set.
-
-        Binary Protobuf receivers SHOULD check if instrumentation_library_spans is set
-        and scope_spans is not set then the value in instrumentation_library_spans
-        SHOULD be used instead by converting InstrumentationLibrarySpans into ScopeSpans.
-        If scope_spans is set then instrumentation_library_spans SHOULD be ignored.
-
-        For JSON
-        ========
-        JSON senders that set instrumentation_library_spans field MAY also set
-        scope_spans to carry the same spans, essentially double-publishing the same data.
-        Such double-publishing MAY be controlled by a user-settable option.
-        If double-publishing is not used then the senders SHOULD set scope_spans and
-        SHOULD NOT set instrumentation_library_spans.
-
-        JSON receivers SHOULD check if instrumentation_library_spans is set and
-        scope_spans is not set then the value in instrumentation_library_spans
-        SHOULD be used instead by converting InstrumentationLibrarySpans into ScopeSpans.
-        If scope_spans is set then instrumentation_library_spans field SHOULD be ignored.
-        """
-        pass
     schema_url: typing.Text = ...
     """This schema_url applies to the data in the "resource" field. It does not apply
     to the data in the "scope_spans" field which have their own schema_url field.
@@ -101,11 +69,10 @@ class ResourceSpans(google.protobuf.message.Message):
         *,
         resource : typing.Optional[opentelemetry.proto.resource.v1.resource_pb2.Resource] = ...,
         scope_spans : typing.Optional[typing.Iterable[global___ScopeSpans]] = ...,
-        instrumentation_library_spans : typing.Optional[typing.Iterable[global___InstrumentationLibrarySpans]] = ...,
         schema_url : typing.Text = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["resource",b"resource"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["instrumentation_library_spans",b"instrumentation_library_spans","resource",b"resource","schema_url",b"schema_url","scope_spans",b"scope_spans"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["resource",b"resource","schema_url",b"schema_url","scope_spans",b"scope_spans"]) -> None: ...
 global___ResourceSpans = ResourceSpans
 
 class ScopeSpans(google.protobuf.message.Message):
@@ -138,48 +105,8 @@ class ScopeSpans(google.protobuf.message.Message):
     def ClearField(self, field_name: typing_extensions.Literal["schema_url",b"schema_url","scope",b"scope","spans",b"spans"]) -> None: ...
 global___ScopeSpans = ScopeSpans
 
-class InstrumentationLibrarySpans(google.protobuf.message.Message):
-    """A collection of Spans produced by an InstrumentationLibrary.
-    InstrumentationLibrarySpans is wire-compatible with ScopeSpans for binary
-    Protobuf format.
-    This message is deprecated and will be removed on June 15, 2022.
-    """
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    INSTRUMENTATION_LIBRARY_FIELD_NUMBER: builtins.int
-    SPANS_FIELD_NUMBER: builtins.int
-    SCHEMA_URL_FIELD_NUMBER: builtins.int
-    @property
-    def instrumentation_library(self) -> opentelemetry.proto.common.v1.common_pb2.InstrumentationLibrary:
-        """The instrumentation library information for the spans in this message.
-        Semantically when InstrumentationLibrary isn't set, it is equivalent with
-        an empty instrumentation library name (unknown).
-        """
-        pass
-    @property
-    def spans(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___Span]:
-        """A list of Spans that originate from an instrumentation library."""
-        pass
-    schema_url: typing.Text = ...
-    """This schema_url applies to all spans and span events in the "spans" field."""
-
-    def __init__(self,
-        *,
-        instrumentation_library : typing.Optional[opentelemetry.proto.common.v1.common_pb2.InstrumentationLibrary] = ...,
-        spans : typing.Optional[typing.Iterable[global___Span]] = ...,
-        schema_url : typing.Text = ...,
-        ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["instrumentation_library",b"instrumentation_library"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["instrumentation_library",b"instrumentation_library","schema_url",b"schema_url","spans",b"spans"]) -> None: ...
-global___InstrumentationLibrarySpans = InstrumentationLibrarySpans
-
 class Span(google.protobuf.message.Message):
-    """Span represents a single operation within a trace. Spans can be
-    nested to form a trace tree. Spans may also be linked to other spans
-    from the same or different trace and form graphs. Often, a trace
-    contains a root span that describes the end-to-end latency, and one
-    or more subspans for its sub-operations. A trace can also contain
-    multiple root spans, or none at all. Spans do not need to be
-    contiguous - there may be gaps or overlaps between spans in a trace.
+    """A Span represents a single operation performed by a single component of the system.
 
     The next available field id is 17.
     """
@@ -357,22 +284,18 @@ class Span(google.protobuf.message.Message):
     STATUS_FIELD_NUMBER: builtins.int
     trace_id: builtins.bytes = ...
     """A unique identifier for a trace. All spans from the same trace share
-    the same `trace_id`. The ID is a 16-byte array. An ID with all zeroes
-    is considered invalid.
-
-    This field is semantically required. Receiver should generate new
-    random trace_id if empty or invalid trace_id was received.
+    the same `trace_id`. The ID is a 16-byte array. An ID with all zeroes OR
+    of length other than 16 bytes is considered invalid (empty string in OTLP/JSON
+    is zero-length and thus is also invalid).
 
     This field is required.
     """
 
     span_id: builtins.bytes = ...
     """A unique identifier for a span within a trace, assigned when the span
-    is created. The ID is an 8-byte array. An ID with all zeroes is considered
-    invalid.
-
-    This field is semantically required. Receiver should generate new
-    random span_id if empty or invalid span_id was received.
+    is created. The ID is an 8-byte array. An ID with all zeroes OR of length
+    other than 8 bytes is considered invalid (empty string in OTLP/JSON
+    is zero-length and thus is also invalid).
 
     This field is required.
     """
@@ -433,11 +356,11 @@ class Span(google.protobuf.message.Message):
 
             "/http/user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/71.0.3578.98 Safari/537.36"
             "/http/server_latency": 300
-            "abc.com/myattribute": true
-            "abc.com/score": 10.239
+            "example.com/myattribute": true
+            "example.com/score": 10.239
 
         The OpenTelemetry API specification further restricts the allowed value types:
-        https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/common/common.md#attributes
+        https://github.com/open-telemetry/opentelemetry-specification/blob/main/specification/common/README.md#attribute
         Attribute keys MUST be unique (it is not allowed to have more than one
         attribute with the same key).
         """
@@ -514,8 +437,8 @@ class Status(google.protobuf.message.Message):
         """The default status."""
 
         STATUS_CODE_OK = Status.StatusCode.V(1)
-        """The Span has been validated by an Application developers or Operator to have
-        completed successfully.
+        """The Span has been validated by an Application developer or Operator to 
+        have completed successfully.
         """
 
         STATUS_CODE_ERROR = Status.StatusCode.V(2)
@@ -526,8 +449,8 @@ class Status(google.protobuf.message.Message):
     """The default status."""
 
     STATUS_CODE_OK = Status.StatusCode.V(1)
-    """The Span has been validated by an Application developers or Operator to have
-    completed successfully.
+    """The Span has been validated by an Application developer or Operator to 
+    have completed successfully.
     """
 
     STATUS_CODE_ERROR = Status.StatusCode.V(2)
