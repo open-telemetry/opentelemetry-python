@@ -55,7 +55,12 @@ from opentelemetry.test.spantestutil import (
     get_span_with_dropped_attributes_events_links,
     new_tracer,
 )
-from opentelemetry.trace import Status, StatusCode
+from opentelemetry.trace import (
+    Status,
+    StatusCode,
+    get_tracer,
+    set_tracer_provider,
+)
 
 
 class TestTracer(unittest.TestCase):
@@ -1852,3 +1857,88 @@ class TestTraceFlags(unittest.TestCase):
         self.assertEqual(
             trace_api.DEFAULT_TRACE_OPTIONS, trace_api.TraceFlags.DEFAULT
         )
+
+
+class TestParentChildSpanException(unittest.TestCase):
+    def test_parent_child_span_exception(self):
+        """
+        Tests that a parent span has its status set to ERROR when a child span
+        raises an exception even when the child span has its
+        ``record_exception`` and ``set_status_on_exception`` attributes
+        set to ``False``.
+        """
+
+        set_tracer_provider(TracerProvider())
+        tracer = get_tracer(__name__)
+
+        exception = Exception("exception")
+
+        exception_type = exception.__class__.__name__
+        exception_message = exception.args[0]
+
+        try:
+            with tracer.start_as_current_span(
+                "parent",
+            ) as parent_span:
+                with tracer.start_as_current_span(
+                    "child",
+                    record_exception=False,
+                    set_status_on_exception=False,
+                ) as child_span:
+                    raise exception
+
+        except Exception:  # pylint: disable=broad-except
+            pass
+
+        self.assertTrue(child_span.status.is_ok)
+        self.assertIsNone(child_span.status.description)
+        self.assertTupleEqual(child_span.events, ())
+
+        self.assertFalse(parent_span.status.is_ok)
+        self.assertEqual(
+            parent_span.status.description,
+            f"{exception_type}: {exception_message}",
+        )
+        self.assertEqual(
+            parent_span.events[0].attributes["exception.type"], exception_type
+        )
+        self.assertEqual(
+            parent_span.events[0].attributes["exception.message"],
+            exception_message,
+        )
+
+    def test_child_parent_span_exception(self):
+        """
+        Tests that a child span does not have its status set to ERROR when a
+        parent span raises an exception and the parent span has its
+        ``record_exception`` and ``set_status_on_exception`` attributes
+        set to ``False``.
+        """
+
+        set_tracer_provider(TracerProvider())
+        tracer = get_tracer(__name__)
+
+        exception = Exception("exception")
+
+        try:
+            with tracer.start_as_current_span(
+                "parent",
+                record_exception=False,
+                set_status_on_exception=False,
+            ) as parent_span:
+                with tracer.start_as_current_span(
+                    "child",
+                ) as child_span:
+                    pass
+                raise exception
+
+        except Exception:  # pylint: disable=broad-except
+            pass
+
+        self.assertTrue(child_span.status.is_ok)
+        self.assertIsNone(child_span.status.description)
+        self.assertTupleEqual(child_span.events, ())
+
+        self.assertTrue(parent_span.status.is_ok)
+        self.assertIsNone(parent_span.status.description)
+        self.assertTupleEqual(parent_span.events, ())
