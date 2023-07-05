@@ -172,3 +172,13 @@ _SUPPRESS_INSTRUMENTATION_KEY = create_key("suppress_instrumentation")
 _SUPPRESS_HTTP_INSTRUMENTATION_KEY = create_key(
     "suppress_http_instrumentation"
 )
+
+__all__ = [
+    "Context",
+    "attach",
+    "create_key",
+    "detach",
+    "get_current",
+    "get_value",
+    "set_value",
+]
