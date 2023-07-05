@@ -265,21 +265,27 @@ class TestSpanCreation(unittest.TestCase):
         tracer2 = tracer_provider.get_tracer("instr2", "1.3b3", schema_url)
         span1 = tracer1.start_span("s1")
         span2 = tracer2.start_span("s2")
-        self.assertEqual(
-            span1.instrumentation_info, InstrumentationInfo("instr1", "")
-        )
-        self.assertEqual(
-            span2.instrumentation_info,
-            InstrumentationInfo("instr2", "1.3b3", schema_url),
-        )
+        with self.assertWarns(DeprecationWarning):
+            self.assertEqual(
+                span1.instrumentation_info, InstrumentationInfo("instr1", "")
+            )
+        with self.assertWarns(DeprecationWarning):
+            self.assertEqual(
+                span2.instrumentation_info,
+                InstrumentationInfo("instr2", "1.3b3", schema_url),
+            )
 
-        self.assertEqual(span2.instrumentation_info.schema_url, schema_url)
-        self.assertEqual(span2.instrumentation_info.version, "1.3b3")
-        self.assertEqual(span2.instrumentation_info.name, "instr2")
+        with self.assertWarns(DeprecationWarning):
+            self.assertEqual(span2.instrumentation_info.schema_url, schema_url)
+        with self.assertWarns(DeprecationWarning):
+            self.assertEqual(span2.instrumentation_info.version, "1.3b3")
+        with self.assertWarns(DeprecationWarning):
+            self.assertEqual(span2.instrumentation_info.name, "instr2")
 
-        self.assertLess(
-            span1.instrumentation_info, span2.instrumentation_info
-        )  # Check sortability.
+        with self.assertWarns(DeprecationWarning):
+            self.assertLess(
+                span1.instrumentation_info, span2.instrumentation_info
+            )  # Check sortability.
 
     def test_invalid_instrumentation_info(self):
         tracer_provider = trace.TracerProvider()
@@ -690,24 +696,34 @@ class TestSpan(unittest.TestCase):
 
     def test_invalid_attribute_values(self):
         with self.tracer.start_as_current_span("root") as root:
-            root.set_attributes(
-                {"correct-value": "foo", "non-primitive-data-type": {}}
-            )
+            with self.assertLogs(level=WARNING):
+                root.set_attributes(
+                    {"correct-value": "foo", "non-primitive-data-type": {}}
+                )
 
-            root.set_attribute("non-primitive-data-type", {})
-            root.set_attribute(
-                "list-of-mixed-data-types-numeric-first",
-                [123, False, "string"],
-            )
-            root.set_attribute(
-                "list-of-mixed-data-types-non-numeric-first",
-                [False, 123, "string"],
-            )
-            root.set_attribute("list-with-non-primitive-data-type", [{}, 123])
-            root.set_attribute("list-with-numeric-and-bool", [1, True])
+            with self.assertLogs(level=WARNING):
+                root.set_attribute("non-primitive-data-type", {})
+            with self.assertLogs(level=WARNING):
+                root.set_attribute(
+                    "list-of-mixed-data-types-numeric-first",
+                    [123, False, "string"],
+                )
+            with self.assertLogs(level=WARNING):
+                root.set_attribute(
+                    "list-of-mixed-data-types-non-numeric-first",
+                    [False, 123, "string"],
+                )
+            with self.assertLogs(level=WARNING):
+                root.set_attribute(
+                    "list-with-non-primitive-data-type", [{}, 123]
+                )
+            with self.assertLogs(level=WARNING):
+                root.set_attribute("list-with-numeric-and-bool", [1, True])
 
-            root.set_attribute("", 123)
-            root.set_attribute(None, 123)
+            with self.assertLogs(level=WARNING):
+                root.set_attribute("", 123)
+            with self.assertLogs(level=WARNING):
+                root.set_attribute(None, 123)
 
             self.assertEqual(len(root.attributes), 1)
             self.assertEqual(root.attributes["correct-value"], "foo")
@@ -823,10 +839,16 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(trace_api.get_current_span(), trace_api.INVALID_SPAN)
 
         with self.tracer.start_as_current_span("root") as root:
-            root.add_event("event0", {"attr1": True, "attr2": ["hi", False]})
-            root.add_event("event0", {"attr1": {}})
-            root.add_event("event0", {"attr1": [[True]]})
-            root.add_event("event0", {"attr1": [{}], "attr2": [1, 2]})
+            with self.assertLogs(level=WARNING):
+                root.add_event(
+                    "event0", {"attr1": True, "attr2": ["hi", False]}
+                )
+            with self.assertLogs(level=WARNING):
+                root.add_event("event0", {"attr1": {}})
+            with self.assertLogs(level=WARNING):
+                root.add_event("event0", {"attr1": [[True]]})
+            with self.assertLogs(level=WARNING):
+                root.add_event("event0", {"attr1": [{}], "attr2": [1, 2]})
 
             self.assertEqual(len(root.events), 4)
             self.assertEqual(root.events[0].attributes, {"attr1": True})
@@ -1047,14 +1069,16 @@ class TestSpan(unittest.TestCase):
                 root.status.description, "AssertionError: unknown"
             )
 
-        unset_status_test(
-            trace.TracerProvider().get_tracer(__name__).start_span("root")
-        )
-        unset_status_test(
-            trace.TracerProvider()
-            .get_tracer(__name__)
-            .start_as_current_span("root")
-        )
+        with self.assertLogs(level=WARNING):
+            unset_status_test(
+                trace.TracerProvider().get_tracer(__name__).start_span("root")
+            )
+        with self.assertLogs(level=WARNING):
+            unset_status_test(
+                trace.TracerProvider()
+                .get_tracer(__name__)
+                .start_as_current_span("root")
+            )
 
     def test_last_status_wins(self):
         def error_status_test(context):
