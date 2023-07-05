@@ -122,19 +122,21 @@ class TestMeterProvider(ConcurrencyTestBase):
         should return a NoOpMeter.
         """
 
-        meter = MeterProvider().get_meter(
-            None,
-            version="version",
-            schema_url="schema_url",
-        )
+        with self.assertLogs(level=WARNING):
+            meter = MeterProvider().get_meter(
+                None,
+                version="version",
+                schema_url="schema_url",
+            )
         self.assertIsInstance(meter, NoOpMeter)
         self.assertEqual(meter._name, None)
 
-        meter = MeterProvider().get_meter(
-            "",
-            version="version",
-            schema_url="schema_url",
-        )
+        with self.assertLogs(level=WARNING):
+            meter = MeterProvider().get_meter(
+                "",
+                version="version",
+                schema_url="schema_url",
+            )
         self.assertIsInstance(meter, NoOpMeter)
         self.assertEqual(meter._name, "")
 
@@ -483,9 +485,10 @@ class TestDuplicateInstrumentAggregateData(TestCase):
         counter_0_0 = meter_0.create_counter(
             "counter", unit="unit", description="description"
         )
-        counter_0_1 = meter_0.create_counter(
-            "counter", unit="unit", description="description"
-        )
+        with self.assertLogs(level=WARNING):
+            counter_0_1 = meter_0.create_counter(
+                "counter", unit="unit", description="description"
+            )
         counter_1_0 = meter_1.create_counter(
             "counter", unit="unit", description="description"
         )
@@ -496,7 +499,8 @@ class TestDuplicateInstrumentAggregateData(TestCase):
         counter_0_0.add(1, {})
         counter_0_1.add(2, {})
 
-        counter_1_0.add(7, {})
+        with self.assertLogs(level=WARNING):
+            counter_1_0.add(7, {})
 
         sleep(1)
 

@@ -14,7 +14,7 @@
 # type: ignore
 # pylint: skip-file
 
-from logging import getLogger
+from logging import WARNING, getLogger
 from os import environ
 from typing import Dict, Iterable, Optional, Sequence
 from unittest import TestCase
@@ -377,7 +377,8 @@ class TestTraceInit(TestCase):
     )
     def test_trace_init_custom_sampler_with_env_non_existent_entry_point(self):
         sampler_name = _get_sampler()
-        sampler = _import_sampler(sampler_name)
+        with self.assertLogs(level=WARNING):
+            sampler = _import_sampler(sampler_name)
         _init_tracing({}, sampler=sampler)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsNone(provider.sampler)
@@ -415,7 +416,8 @@ class TestTraceInit(TestCase):
         )
 
         sampler_name = _get_sampler()
-        sampler = _import_sampler(sampler_name)
+        with self.assertLogs(level=WARNING):
+            sampler = _import_sampler(sampler_name)
         _init_tracing({}, sampler=sampler)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsNone(provider.sampler)
@@ -492,7 +494,8 @@ class TestTraceInit(TestCase):
         )
 
         sampler_name = _get_sampler()
-        sampler = _import_sampler(sampler_name)
+        with self.assertLogs(level=WARNING):
+            sampler = _import_sampler(sampler_name)
         _init_tracing({}, sampler=sampler)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsNone(provider.sampler)
@@ -517,7 +520,8 @@ class TestTraceInit(TestCase):
         )
 
         sampler_name = _get_sampler()
-        sampler = _import_sampler(sampler_name)
+        with self.assertLogs(level=WARNING):
+            sampler = _import_sampler(sampler_name)
         _init_tracing({}, sampler=sampler)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsNone(provider.sampler)
@@ -642,7 +646,8 @@ class TestLoggingInit(TestCase):
     @patch("opentelemetry.sdk._configuration._init_tracing")
     @patch("opentelemetry.sdk._configuration._init_logging")
     def test_logging_init_enable_env(self, logging_mock, tracing_mock):
-        _initialize_components("auto-version")
+        with self.assertLogs(level=WARNING):
+            _initialize_components("auto-version")
         self.assertEqual(logging_mock.call_count, 1)
         self.assertEqual(tracing_mock.call_count, 1)
 

@@ -99,7 +99,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         # instrument2 matches view2, so should create a single
         # ViewInstrumentMatch
         MockViewInstrumentMatch.call_args_list.clear()
-        storage.consume_measurement(Measurement(1, instrument2))
+        with self.assertLogs(level=WARNING):
+            storage.consume_measurement(Measurement(1, instrument2))
         self.assertEqual(len(MockViewInstrumentMatch.call_args_list), 1)
 
     @patch(
@@ -150,7 +151,8 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         view_instrument_match3.consume_measurement.assert_not_called()
 
         measurement = Measurement(1, instrument2)
-        storage.consume_measurement(measurement)
+        with self.assertLogs(level=WARNING):
+            storage.consume_measurement(measurement)
         view_instrument_match3.consume_measurement.assert_called_once_with(
             measurement
         )

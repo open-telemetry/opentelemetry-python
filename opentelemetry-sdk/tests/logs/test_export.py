@@ -29,6 +29,7 @@ from opentelemetry.sdk._logs import (
     LoggingHandler,
     LogRecord,
 )
+from opentelemetry.sdk._logs._internal.export import _logger
 from opentelemetry.sdk._logs.export import (
     BatchLogRecordProcessor,
     ConsoleLogExporter,
@@ -58,6 +59,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
 
         logger = logging.getLogger("default_level")
+        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=logger_provider))
 
         logger.warning("Something is wrong")
@@ -79,6 +81,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
 
         logger = logging.getLogger("custom_level")
+        logger.propagate = False
         logger.setLevel(logging.ERROR)
         logger.addHandler(LoggingHandler(logger_provider=logger_provider))
 
@@ -111,6 +114,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
 
         logger = logging.getLogger("trace_correlation")
+        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=logger_provider))
 
         logger.warning("Warning message")
@@ -150,6 +154,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
 
         logger = logging.getLogger("shutdown")
+        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=logger_provider))
 
         logger.warning("Something is wrong")
@@ -163,7 +168,8 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         )
         exporter.clear()
         logger_provider.shutdown()
-        logger.warning("Log after shutdown")
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Log after shutdown")
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 0)
 
@@ -176,6 +182,7 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         provider.add_log_record_processor(log_record_processor)
 
         logger = logging.getLogger("emit_call")
+        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=provider))
 
         logger.error("error")
@@ -234,7 +241,9 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
     )
     def test_args_env_var_value_error(self):
         exporter = InMemoryLogExporter()
+        _logger.disabled = True
         log_record_processor = BatchLogRecordProcessor(exporter)
+        _logger.disabled = False
         self.assertEqual(log_record_processor._exporter, exporter)
         self.assertEqual(log_record_processor._max_queue_size, 2048)
         self.assertEqual(log_record_processor._schedule_delay_millis, 5000)
@@ -312,9 +321,12 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         logger = logging.getLogger("shutdown")
         logger.addHandler(LoggingHandler(logger_provider=provider))
 
-        logger.warning("warning message: %s", "possible upcoming heatwave")
-        logger.error("Very high rise in temperatures across the globe")
-        logger.critical("Temperature hits high 420 C in Hyderabad")
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("warning message: %s", "possible upcoming heatwave")
+        with self.assertLogs(level=logging.WARNING):
+            logger.error("Very high rise in temperatures across the globe")
+        with self.assertLogs(level=logging.WARNING):
+            logger.critical("Temperature hits high 420 C in Hyderabad")
 
         log_record_processor.shutdown()
         self.assertTrue(exporter._stopped)
@@ -342,6 +354,7 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         provider.add_log_record_processor(log_record_processor)
 
         logger = logging.getLogger("force_flush")
+        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=provider))
 
         logger.critical("Earth is burning")
@@ -360,6 +373,7 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         provider.add_log_record_processor(log_record_processor)
 
         logger = logging.getLogger("many_logs")
+        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=provider))
 
         for log_no in range(1000):
@@ -377,6 +391,7 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         provider.add_log_record_processor(log_record_processor)
 
         logger = logging.getLogger("threads")
+        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=provider))
 
         def bulk_log_and_flush(num_logs):
@@ -411,6 +426,7 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         provider.add_log_record_processor(log_record_processor)
 
         logger = logging.getLogger("test-fork")
+        logger.propagate = False
         logger.addHandler(LoggingHandler(logger_provider=provider))
 
         logger.critical("yolo")
