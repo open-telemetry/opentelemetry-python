@@ -12,18 +12,26 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# FIXME: Use importlib.metadata when support for 3.11 is dropped if the rest of
-# the supported versions at that time have the same API.
-from importlib_metadata import (  # type: ignore
-    EntryPoint,
-    EntryPoints,
-    entry_points,
-    version,
-)
+# this module is a shim between the std lib importlib.metadata and
+# the backport importlib_metadata for python 3.9 and older
+# once support for these versions has been dropped this shim
+# can be removed.
 
-# The importlib-metadata library has introduced breaking changes before to its
-# API, this module is kept just to act as a layer between the
-# importlib-metadata library and our project if in any case it is necessary to
-# do so.
+import sys
+
+if sys.version_info > (3,10):
+    from importlib.metadata import (
+        EntryPoint,
+        EntryPoints,
+        entry_points,
+        version,
+    )
+else:
+    from importlib_metadata import (  # type: ignore
+        EntryPoint,
+        EntryPoints,
+        entry_points,
+        version,
+    )
 
 __all__ = ["entry_points", "version", "EntryPoint", "EntryPoints"]
