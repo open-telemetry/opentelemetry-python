@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock
 
@@ -50,7 +51,8 @@ class TestCounter(TestCase):
     def test_add_non_monotonic(self):
         mc = Mock()
         counter = _Counter("name", Mock(), mc)
-        counter.add(-1.0)
+        with self.assertLogs(level=WARNING):
+            counter.add(-1.0)
         mc.consume_measurement.assert_not_called()
 
     def test_disallow_direct_counter_creation(self):
@@ -360,7 +362,8 @@ class TestHistogram(TestCase):
     def test_record_non_monotonic(self):
         mc = Mock()
         hist = _Histogram("name", Mock(), mc)
-        hist.record(-1.0)
+        with self.assertLogs(level=WARNING):
+            hist.record(-1.0)
         mc.consume_measurement.assert_not_called()
 
     def test_disallow_direct_histogram_creation(self):

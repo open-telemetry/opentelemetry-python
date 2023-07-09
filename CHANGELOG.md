@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3341](https://github.com/open-telemetry/opentelemetry-python/pull/3341))
 - Upgrade opentelemetry-proto to 0.20 and regen
   [#3355](https://github.com/open-telemetry/opentelemetry-python/pull/3355))
+- Include endpoint in Grpc transient error warning
+  [#3362](https://github.com/open-telemetry/opentelemetry-python/pull/3362))
 
 ## Version 1.18.0/0.39b0 (2023-05-04)
 
