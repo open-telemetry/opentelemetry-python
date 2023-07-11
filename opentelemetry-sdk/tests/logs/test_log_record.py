@@ -14,9 +14,13 @@
 
 import json
 import unittest
+from unittest.mock import patch
 
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk._logs import LogLimits, LogRecord
+
+
+OBSERVED_TIMESTAMP = "OBSERVED_TIMESTAMP"
 
 
 class TestLogRecord(unittest.TestCase):
@@ -105,3 +109,7 @@ class TestLogRecord(unittest.TestCase):
         )
         self.assertTrue(result.dropped_attributes == 0)
         self.assertEqual(attr, result.attributes)
+
+    @patch("opentelemetry.sdk._logs._internal.time_ns", return_value=OBSERVED_TIMESTAMP)
+    def test_log_record_observed_timestamp_default(self, time_ns_mock):
+        self.assertEqual(LogRecord().observed_timestamp, OBSERVED_TIMESTAMP)

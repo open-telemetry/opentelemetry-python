@@ -37,6 +37,7 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
+from time import time_ns
 from typing import Any, Optional, cast
 
 from opentelemetry._logs.severity import SeverityNumber
@@ -70,6 +71,8 @@ class LogRecord(ABC):
         attributes: Optional["Attributes"] = None,
     ):
         self.timestamp = timestamp
+        if not observed_timestamp:
+            observed_timestamp = time_ns()
         self.observed_timestamp = observed_timestamp
         self.trace_id = trace_id
         self.span_id = span_id
