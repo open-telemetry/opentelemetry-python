@@ -199,7 +199,7 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
                 "CRITICAL",
             ),
             (["list", "of", "strings"], "WARNING"),
-            ({"key": "value"}, "ERROR")
+            ({"key": "value"}, "ERROR"),
         ]
         emitted = [
             (item.log_record.body, item.log_record.severity_text)

@@ -21,7 +21,7 @@ import threading
 import traceback
 from os import environ
 from time import time_ns
-from typing import Any, Callable, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Tuple, Union  # noqa
 
 from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
@@ -476,6 +476,43 @@ class LoggingHandler(logging.Handler):
         timestamp = int(record.created * 1e9)
         span_context = get_current_span().get_span_context()
         attributes = self._get_attributes(record)
+        # This comment is taken from GanyedeNil's PR #3343, I have redacted it
+        # slightly for clarity:
+        # According to the definition of the Body field type in the
+        # OTel 1.22.0 Logs Data Model article, the Body field should be of
+        # type 'any' and should not use the str method to directly translate
+        # the msg. This is because str only converts non-text types into a
+        # human-readable form, rather than a standard format, which leads to
+        # the need for additional operations when collected through a log
+        # collector.
+        # Considering that he Body field should be of type 'any' and should not
+        # use the str method but record.msg is also a string type, then the
+        # difference is just the self.args formatting?
+        # The primary consideration depends on the ultimate purpose of the log.
+        # Converting the default log directly into a string is acceptable as it
+        # will be required to be presented in a more readable format. However,
+        # this approach might not be as "standard" when hoping to aggregate
+        # logs and perform subsequent data analysis. In the context of log
+        # extraction, it would be more appropriate for the msg to be
+        # converted into JSON format or remain unchanged, as it will eventually
+        # be transformed into JSON. If the final output JSON data contains a
+        # structure that appears similar to JSON but is not, it may confuse
+        # users. This is particularly true for operation and maintenance
+        # personnel who need to deal with log data in various languages.
+        # Where is the JSON converting occur? and what about when the msg
+        # represents something else but JSON, the expected behavior change?
+        # For the ConsoleLogExporter, it performs the to_json operation in
+        # opentelemetry.sdk._logs._internal.export.ConsoleLogExporter.__init__,
+        # so it can handle any type of input without problems. As for the
+        # OTLPLogExporter, it also handles any type of input encoding in
+        # _encode_log located in
+        # opentelemetry.exporter.otlp.proto.common._internal._log_encoder.
+        # Therefore, no extra operation is needed to support this change.
+        # The only thing to consider is the users who have already been using
+        # this SDK. If they upgrade the SDK after this change, they will need
+        # to readjust their logging collection rules to adapt to the latest
+        # output format. Therefore, this change is considered a breaking
+        # change and needs to be upgraded at an appropriate time.
         severity_number = std_to_otel(record.levelno)
         if isinstance(record.msg, str) and record.args:
             body = record.msg % record.args
