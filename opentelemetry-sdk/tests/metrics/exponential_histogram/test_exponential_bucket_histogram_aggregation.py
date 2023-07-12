@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from itertools import permutations
+from logging import WARNING
 from math import ldexp
 from sys import float_info
 from types import MethodType
@@ -37,6 +38,9 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.logarithm
     LogarithmMapping,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
+from opentelemetry.sdk.metrics.view import (
+    ExponentialBucketHistogramAggregation,
+)
 
 
 def get_counts(buckets: Buckets) -> int:
@@ -77,6 +81,39 @@ def swap(
 
 
 class TestExponentialBucketHistogramAggregation(TestCase):
+    @patch("opentelemetry.sdk.metrics._internal.aggregation.LogarithmMapping")
+    def test_create_aggregation(self, mock_logarithm_mapping):
+        exponential_bucket_histogram_aggregation = (
+            ExponentialBucketHistogramAggregation()
+        )._create_aggregation(Mock(), Mock(), Mock())
+
+        self.assertEqual(
+            exponential_bucket_histogram_aggregation._max_scale, 20
+        )
+
+        mock_logarithm_mapping.assert_called_with(20)
+
+        exponential_bucket_histogram_aggregation = (
+            ExponentialBucketHistogramAggregation(max_scale=10)
+        )._create_aggregation(Mock(), Mock(), Mock())
+
+        self.assertEqual(
+            exponential_bucket_histogram_aggregation._max_scale, 10
+        )
+
+        mock_logarithm_mapping.assert_called_with(10)
+
+        with self.assertLogs(level=WARNING):
+            exponential_bucket_histogram_aggregation = (
+                ExponentialBucketHistogramAggregation(max_scale=100)
+            )._create_aggregation(Mock(), Mock(), Mock())
+
+        self.assertEqual(
+            exponential_bucket_histogram_aggregation._max_scale, 100
+        )
+
+        mock_logarithm_mapping.assert_called_with(100)
+
     def assertInEpsilon(self, first, second, epsilon):
         self.assertLessEqual(first, (second * (1 + epsilon)))
         self.assertGreaterEqual(first, (second * (1 - epsilon)))

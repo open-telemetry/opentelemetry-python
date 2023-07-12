@@ -80,17 +80,34 @@ global___SeverityNumber = SeverityNumber
 
 
 class LogRecordFlags(_LogRecordFlags, metaclass=_LogRecordFlagsEnumTypeWrapper):
-    """Masks for LogRecord.flags field."""
+    """LogRecordFlags is defined as a protobuf 'uint32' type and is to be used as
+    bit-fields. Each non-zero value defined in this enum is a bit-mask.
+    To extract the bit-field, for example, use an expression like:
+
+      (logRecord.flags & LOG_RECORD_FLAGS_TRACE_FLAGS_MASK)
+    """
     pass
 class _LogRecordFlags:
     V = typing.NewType('V', builtins.int)
 class _LogRecordFlagsEnumTypeWrapper(google.protobuf.internal.enum_type_wrapper._EnumTypeWrapper[_LogRecordFlags.V], builtins.type):
     DESCRIPTOR: google.protobuf.descriptor.EnumDescriptor = ...
-    LOG_RECORD_FLAG_UNSPECIFIED = LogRecordFlags.V(0)
-    LOG_RECORD_FLAG_TRACE_FLAGS_MASK = LogRecordFlags.V(255)
+    LOG_RECORD_FLAGS_DO_NOT_USE = LogRecordFlags.V(0)
+    """The zero value for the enum. Should not be used for comparisons.
+    Instead use bitwise "and" with the appropriate mask as shown above.
+    """
 
-LOG_RECORD_FLAG_UNSPECIFIED = LogRecordFlags.V(0)
-LOG_RECORD_FLAG_TRACE_FLAGS_MASK = LogRecordFlags.V(255)
+    LOG_RECORD_FLAGS_TRACE_FLAGS_MASK = LogRecordFlags.V(255)
+    """Bits 0-7 are used for trace flags."""
+
+
+LOG_RECORD_FLAGS_DO_NOT_USE = LogRecordFlags.V(0)
+"""The zero value for the enum. Should not be used for comparisons.
+Instead use bitwise "and" with the appropriate mask as shown above.
+"""
+
+LOG_RECORD_FLAGS_TRACE_FLAGS_MASK = LogRecordFlags.V(255)
+"""Bits 0-7 are used for trace flags."""
+
 global___LogRecordFlags = LogRecordFlags
 
 
@@ -129,7 +146,6 @@ class ResourceLogs(google.protobuf.message.Message):
     DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
     RESOURCE_FIELD_NUMBER: builtins.int
     SCOPE_LOGS_FIELD_NUMBER: builtins.int
-    INSTRUMENTATION_LIBRARY_LOGS_FIELD_NUMBER: builtins.int
     SCHEMA_URL_FIELD_NUMBER: builtins.int
     @property
     def resource(self) -> opentelemetry.proto.resource.v1.resource_pb2.Resource:
@@ -141,37 +157,6 @@ class ResourceLogs(google.protobuf.message.Message):
     def scope_logs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___ScopeLogs]:
         """A list of ScopeLogs that originate from a resource."""
         pass
-    @property
-    def instrumentation_library_logs(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___InstrumentationLibraryLogs]:
-        """A list of InstrumentationLibraryLogs that originate from a resource.
-        This field is deprecated and will be removed after grace period expires on June 15, 2022.
-
-        During the grace period the following rules SHOULD be followed:
-
-        For Binary Protobufs
-        ====================
-        Binary Protobuf senders SHOULD NOT set instrumentation_library_logs. Instead
-        scope_logs SHOULD be set.
-
-        Binary Protobuf receivers SHOULD check if instrumentation_library_logs is set
-        and scope_logs is not set then the value in instrumentation_library_logs
-        SHOULD be used instead by converting InstrumentationLibraryLogs into ScopeLogs.
-        If scope_logs is set then instrumentation_library_logs SHOULD be ignored.
-
-        For JSON
-        ========
-        JSON senders that set instrumentation_library_logs field MAY also set
-        scope_logs to carry the same logs, essentially double-publishing the same data.
-        Such double-publishing MAY be controlled by a user-settable option.
-        If double-publishing is not used then the senders SHOULD set scope_logs and
-        SHOULD NOT set instrumentation_library_logs.
-
-        JSON receivers SHOULD check if instrumentation_library_logs is set and
-        scope_logs is not set then the value in instrumentation_library_logs
-        SHOULD be used instead by converting InstrumentationLibraryLogs into ScopeLogs.
-        If scope_logs is set then instrumentation_library_logs field SHOULD be ignored.
-        """
-        pass
     schema_url: typing.Text = ...
     """This schema_url applies to the data in the "resource" field. It does not apply
     to the data in the "scope_logs" field which have their own schema_url field.
@@ -181,11 +166,10 @@ class ResourceLogs(google.protobuf.message.Message):
         *,
         resource : typing.Optional[opentelemetry.proto.resource.v1.resource_pb2.Resource] = ...,
         scope_logs : typing.Optional[typing.Iterable[global___ScopeLogs]] = ...,
-        instrumentation_library_logs : typing.Optional[typing.Iterable[global___InstrumentationLibraryLogs]] = ...,
         schema_url : typing.Text = ...,
         ) -> None: ...
     def HasField(self, field_name: typing_extensions.Literal["resource",b"resource"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["instrumentation_library_logs",b"instrumentation_library_logs","resource",b"resource","schema_url",b"schema_url","scope_logs",b"scope_logs"]) -> None: ...
+    def ClearField(self, field_name: typing_extensions.Literal["resource",b"resource","schema_url",b"schema_url","scope_logs",b"scope_logs"]) -> None: ...
 global___ResourceLogs = ResourceLogs
 
 class ScopeLogs(google.protobuf.message.Message):
@@ -217,40 +201,6 @@ class ScopeLogs(google.protobuf.message.Message):
     def HasField(self, field_name: typing_extensions.Literal["scope",b"scope"]) -> builtins.bool: ...
     def ClearField(self, field_name: typing_extensions.Literal["log_records",b"log_records","schema_url",b"schema_url","scope",b"scope"]) -> None: ...
 global___ScopeLogs = ScopeLogs
-
-class InstrumentationLibraryLogs(google.protobuf.message.Message):
-    """A collection of Logs produced by an InstrumentationLibrary.
-    InstrumentationLibraryLogs is wire-compatible with ScopeLogs for binary
-    Protobuf format.
-    This message is deprecated and will be removed on June 15, 2022.
-    """
-    DESCRIPTOR: google.protobuf.descriptor.Descriptor = ...
-    INSTRUMENTATION_LIBRARY_FIELD_NUMBER: builtins.int
-    LOG_RECORDS_FIELD_NUMBER: builtins.int
-    SCHEMA_URL_FIELD_NUMBER: builtins.int
-    @property
-    def instrumentation_library(self) -> opentelemetry.proto.common.v1.common_pb2.InstrumentationLibrary:
-        """The instrumentation library information for the logs in this message.
-        Semantically when InstrumentationLibrary isn't set, it is equivalent with
-        an empty instrumentation library name (unknown).
-        """
-        pass
-    @property
-    def log_records(self) -> google.protobuf.internal.containers.RepeatedCompositeFieldContainer[global___LogRecord]:
-        """A list of logs that originate from an instrumentation library."""
-        pass
-    schema_url: typing.Text = ...
-    """This schema_url applies to all logs in the "logs" field."""
-
-    def __init__(self,
-        *,
-        instrumentation_library : typing.Optional[opentelemetry.proto.common.v1.common_pb2.InstrumentationLibrary] = ...,
-        log_records : typing.Optional[typing.Iterable[global___LogRecord]] = ...,
-        schema_url : typing.Text = ...,
-        ) -> None: ...
-    def HasField(self, field_name: typing_extensions.Literal["instrumentation_library",b"instrumentation_library"]) -> builtins.bool: ...
-    def ClearField(self, field_name: typing_extensions.Literal["instrumentation_library",b"instrumentation_library","log_records",b"log_records","schema_url",b"schema_url"]) -> None: ...
-global___InstrumentationLibraryLogs = InstrumentationLibraryLogs
 
 class LogRecord(google.protobuf.message.Message):
     """A log record according to OpenTelemetry Log Data Model:
@@ -321,21 +271,36 @@ class LogRecord(google.protobuf.message.Message):
     defined in W3C Trace Context specification. 24 most significant bits are reserved
     and must be set to 0. Readers must not assume that 24 most significant bits
     will be zero and must correctly mask the bits when reading 8-bit trace flag (use
-    flags & TRACE_FLAGS_MASK). [Optional].
+    flags & LOG_RECORD_FLAGS_TRACE_FLAGS_MASK). [Optional].
     """
 
     trace_id: builtins.bytes = ...
     """A unique identifier for a trace. All logs from the same trace share
-    the same `trace_id`. The ID is a 16-byte array. An ID with all zeroes
-    is considered invalid. Can be set for logs that are part of request processing
-    and have an assigned trace id. [Optional].
+    the same `trace_id`. The ID is a 16-byte array. An ID with all zeroes OR
+    of length other than 16 bytes is considered invalid (empty string in OTLP/JSON
+    is zero-length and thus is also invalid).
+
+    This field is optional.
+
+    The receivers SHOULD assume that the log record is not associated with a
+    trace if any of the following is true:
+      - the field is not present,
+      - the field contains an invalid value.
     """
 
     span_id: builtins.bytes = ...
     """A unique identifier for a span within a trace, assigned when the span
-    is created. The ID is an 8-byte array. An ID with all zeroes is considered
-    invalid. Can be set for logs that are part of a particular processing span.
-    If span_id is present trace_id SHOULD be also present. [Optional].
+    is created. The ID is an 8-byte array. An ID with all zeroes OR of length
+    other than 8 bytes is considered invalid (empty string in OTLP/JSON
+    is zero-length and thus is also invalid).
+
+    This field is optional. If the sender specifies a valid span_id then it SHOULD also
+    specify a valid trace_id.
+
+    The receivers SHOULD assume that the log record is not associated with a
+    span if any of the following is true:
+      - the field is not present,
+      - the field contains an invalid value.
     """
 
     def __init__(self,
