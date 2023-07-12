@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Fixed bug where logging export is tracked as trace
   [#3375](https://github.com/open-telemetry/opentelemetry-python/pull/3375))
 
-## Version 1.18.0/0.39b0 (2023-05-04)
+## Version 1.18.0/0.39b0 (2023-05-19)
 
 - Select histogram aggregation with an environment variable
   ([#3265](https://github.com/open-telemetry/opentelemetry-python/pull/3265))
