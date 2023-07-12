@@ -7,7 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
-
+- Update the body type in the log
+  ([$3343](https://github.com/open-telemetry/opentelemetry-python/pull/3343))
 - Add max_scale option to Exponential Bucket Histogram Aggregation 
   ([#3323](https://github.com/open-telemetry/opentelemetry-python/pull/3323))
 - Use BoundedAttributes instead of raw dict to extract attributes from LogRecord
@@ -22,6 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   [#3362](https://github.com/open-telemetry/opentelemetry-python/pull/3362))
 - Fixed bug where logging export is tracked as trace
   [#3375](https://github.com/open-telemetry/opentelemetry-python/pull/3375))
+
 
 ## Version 1.18.0/0.39b0 (2023-05-19)
 
