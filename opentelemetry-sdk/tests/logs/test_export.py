@@ -173,6 +173,40 @@ class TestSimpleLogRecordProcessor(unittest.TestCase):
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 0)
 
+    def test_simple_log_record_processor_different_msg_types(self):
+        exporter = InMemoryLogExporter()
+        log_record_processor = BatchLogRecordProcessor(exporter)
+
+        provider = LoggerProvider()
+        provider.add_log_record_processor(log_record_processor)
+
+        logger = logging.getLogger("different_msg_types")
+        logger.addHandler(LoggingHandler(logger_provider=provider))
+
+        logger.warning("warning message: %s", "possible upcoming heatwave")
+        logger.error("Very high rise in temperatures across the globe")
+        logger.critical("Temperature hits high 420 C in Hyderabad")
+        logger.warning(["list", "of", "strings"])
+        logger.error({"key": "value"})
+        log_record_processor.shutdown()
+
+        finished_logs = exporter.get_finished_logs()
+        expected = [
+            ("warning message: possible upcoming heatwave", "WARNING"),
+            ("Very high rise in temperatures across the globe", "ERROR"),
+            (
+                "Temperature hits high 420 C in Hyderabad",
+                "CRITICAL",
+            ),
+            (["list", "of", "strings"], "WARNING"),
+            ({"key": "value"}, "ERROR"),
+        ]
+        emitted = [
+            (item.log_record.body, item.log_record.severity_text)
+            for item in finished_logs
+        ]
+        self.assertEqual(expected, emitted)
+
 
 class TestBatchLogRecordProcessor(ConcurrencyTestBase):
     def test_emit_call_log_record(self):
