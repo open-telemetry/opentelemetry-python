@@ -71,7 +71,7 @@ class LogRecord(ABC):
         attributes: Optional["Attributes"] = None,
     ):
         self.timestamp = timestamp
-        if not observed_timestamp:
+        if observed_timestamp is None:
             observed_timestamp = time_ns()
         self.observed_timestamp = observed_timestamp
         self.trace_id = trace_id
