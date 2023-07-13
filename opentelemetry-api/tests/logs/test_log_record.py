@@ -24,6 +24,7 @@ OBSERVED_TIMESTAMP = "OBSERVED_TIMESTAMP"
 
 
 class TestLogRecord(unittest.TestCase):
-    @patch("opentelemetry._logs._internal.time_ns", return_value=OBSERVED_TIMESTAMP)
+    @patch("opentelemetry._logs._internal.time_ns")
     def test_log_record_observed_timestamp_default(self, time_ns_mock):
+        time_ns_mock.return_value = OBSERVED_TIMESTAMP
         self.assertEqual(LogRecord().observed_timestamp, OBSERVED_TIMESTAMP)
