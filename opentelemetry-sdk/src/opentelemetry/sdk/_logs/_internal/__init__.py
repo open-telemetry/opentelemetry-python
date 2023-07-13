@@ -169,8 +169,6 @@ class LogRecord(APILogRecord):
         attributes: Optional[Attributes] = None,
         limits: Optional[LogLimits] = _UnsetLogLimits,
     ):
-        if not observed_timestamp:
-            observed_timestamp = time_ns()
         super().__init__(
             **{
                 "timestamp": timestamp,
