@@ -9,10 +9,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Modify Prometheus exporter to translate non-monotonic Sums into Gauges
   ([#3306](https://github.com/open-telemetry/opentelemetry-python/pull/3306))
+
+
+## Version 1.19.0/0.40b0 (2023-07-13)
+
+- Drop `setuptools` runtime requirement.
+  ([#3372](https://github.com/open-telemetry/opentelemetry-python/pull/3372))
+- Update the body type in the log
+  ([$3343](https://github.com/open-telemetry/opentelemetry-python/pull/3343))
 - Add max_scale option to Exponential Bucket Histogram Aggregation 
   ([#3323](https://github.com/open-telemetry/opentelemetry-python/pull/3323))
 - Use BoundedAttributes instead of raw dict to extract attributes from LogRecord
-  ([#3310](https://github.com/open-telemetry/opentelemetry-python/pull/3310)) 
+  ([#3310](https://github.com/open-telemetry/opentelemetry-python/pull/3310))
 - Support dropped_attributes_count in LogRecord and exporters
   ([#3351](https://github.com/open-telemetry/opentelemetry-python/pull/3351))
 - Add unit to view instrument selection criteria
@@ -21,8 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   [#3355](https://github.com/open-telemetry/opentelemetry-python/pull/3355))
 - Include endpoint in Grpc transient error warning
   [#3362](https://github.com/open-telemetry/opentelemetry-python/pull/3362))
+- Fixed bug where logging export is tracked as trace
+  [#3375](https://github.com/open-telemetry/opentelemetry-python/pull/3375))
 
-## Version 1.18.0/0.39b0 (2023-05-04)
+
+## Version 1.18.0/0.39b0 (2023-05-19)
 
 - Select histogram aggregation with an environment variable
   ([#3265](https://github.com/open-telemetry/opentelemetry-python/pull/3265))
