@@ -261,6 +261,7 @@ def _import_exporters(
     Dict[str, Union[Type[MetricExporter], Type[MetricReader]]],
     Dict[str, Type[LogExporter]],
 ]:
+    logging.info("dsssdw")
     trace_exporters = {}
     metric_exporters = {}
     log_exporters = {}
@@ -436,6 +437,7 @@ class _BaseConfigurator(ABC):
 
     def configure(self, **kwargs):
         """Configure the SDK"""
+        logger.exception("dsscsd")
         self._configure(**kwargs)
 
 

@@ -134,6 +134,7 @@ for propagator in environ_propagators.split(","):
     propagator = propagator.strip()
 
     try:
+        logger.info("hello")
 
         propagators.append(  # type: ignore
             next(  # type: ignore
