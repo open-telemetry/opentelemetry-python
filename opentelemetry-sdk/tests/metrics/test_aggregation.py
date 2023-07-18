@@ -65,7 +65,7 @@ class TestSynchronousSumAggregation(TestCase):
         synchronous_sum_aggregation.aggregate(measurement(2))
         synchronous_sum_aggregation.aggregate(measurement(3))
 
-        self.assertEqual(synchronous_sum_aggregation._value, 6)
+        self.assertEqual(synchronous_sum_aggregation._current_value, 6)
 
         synchronous_sum_aggregation = _SumAggregation(
             Mock(), True, AggregationTemporality.DELTA, 0
@@ -75,7 +75,7 @@ class TestSynchronousSumAggregation(TestCase):
         synchronous_sum_aggregation.aggregate(measurement(-2))
         synchronous_sum_aggregation.aggregate(measurement(3))
 
-        self.assertEqual(synchronous_sum_aggregation._value, 2)
+        self.assertEqual(synchronous_sum_aggregation._current_value, 2)
 
     def test_aggregate_cumulative(self):
         """
@@ -90,7 +90,7 @@ class TestSynchronousSumAggregation(TestCase):
         synchronous_sum_aggregation.aggregate(measurement(2))
         synchronous_sum_aggregation.aggregate(measurement(3))
 
-        self.assertEqual(synchronous_sum_aggregation._value, 6)
+        self.assertEqual(synchronous_sum_aggregation._current_value, 6)
 
         synchronous_sum_aggregation = _SumAggregation(
             Mock(), True, AggregationTemporality.CUMULATIVE, 0
@@ -100,7 +100,7 @@ class TestSynchronousSumAggregation(TestCase):
         synchronous_sum_aggregation.aggregate(measurement(-2))
         synchronous_sum_aggregation.aggregate(measurement(3))
 
-        self.assertEqual(synchronous_sum_aggregation._value, 2)
+        self.assertEqual(synchronous_sum_aggregation._current_value, 2)
 
     def test_collect_delta(self):
         """
