@@ -17,7 +17,6 @@ from unittest.mock import patch
 
 from opentelemetry._logs import LogRecord
 
-
 OBSERVED_TIMESTAMP = "OBSERVED_TIMESTAMP"
 
 
