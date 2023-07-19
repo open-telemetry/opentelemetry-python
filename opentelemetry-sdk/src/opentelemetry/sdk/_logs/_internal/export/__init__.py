@@ -364,8 +364,8 @@ class BatchLogRecordProcessor(LogRecordProcessor):
         self._shutdown = True
         with self._condition:
             self._condition.notify_all()
-        self._worker_thread.join()
         self._exporter.shutdown()
+        self._worker_thread.join()
 
     def force_flush(self, timeout_millis: Optional[int] = None) -> bool:
         if timeout_millis is None:

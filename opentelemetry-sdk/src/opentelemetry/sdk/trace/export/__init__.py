@@ -409,8 +409,8 @@ class BatchSpanProcessor(SpanProcessor):
         self.done = True
         with self.condition:
             self.condition.notify_all()
-        self.worker_thread.join()
         self.span_exporter.shutdown()
+        self.worker_thread.join()
 
     @staticmethod
     def _default_max_queue_size():
