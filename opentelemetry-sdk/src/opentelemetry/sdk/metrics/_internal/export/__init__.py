@@ -106,7 +106,7 @@ class MetricExporter(ABC):
         """Exports a batch of telemetry data.
 
         Args:
-            metrics: The list of `opentelemetry.sdk.metrics.export.Metric` objects to be exported
+            metrics: The `opentelemetry.sdk.metrics.export.MetricsData` object to be exported
 
         Returns:
             The result of the export
@@ -217,7 +217,7 @@ class MetricReader(ABC):
                 "opentelemetry.sdk.metrics.export.MetricReader",
                 AggregationTemporality,
             ],
-            Iterable["opentelemetry.sdk.metrics.export.Metric"],
+            Optional["opentelemetry.sdk.metrics.export.MetricsData"],
         ] = None
 
         self._instrument_class_temporality = {
@@ -306,7 +306,8 @@ class MetricReader(ABC):
     @final
     def collect(self, timeout_millis: float = 10_000) -> None:
         """Collects the metrics from the internal SDK state and
-        invokes the `_receive_metrics` with the collection.
+        invokes the `_receive_metrics` with the collection if it
+        contains any data.
 
         Args:
             timeout_millis: Amount of time in milliseconds before this function
@@ -335,7 +336,7 @@ class MetricReader(ABC):
                 "opentelemetry.sdk.metrics.export.MetricReader",
                 AggregationTemporality,
             ],
-            Iterable["opentelemetry.sdk.metrics.export.Metric"],
+            Optional["opentelemetry.sdk.metrics.export.MetricsData"],
         ],
     ) -> None:
         """This function is internal to the SDK. It should not be called or overridden by users"""

@@ -46,7 +46,7 @@ from opentelemetry.sdk.metrics.export import (
     Sum,
     ExponentialHistogram as ExponentialHistogramType,
 )
-from typing import Dict
+from typing import Dict, Optional
 from opentelemetry.proto.resource.v1.resource_pb2 import (
     Resource as PB2Resource,
 )
@@ -154,7 +154,7 @@ class OTLPMetricExporterMixin:
         )
 
 
-def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
+def encode_metrics(data: MetricsData) -> Optional[ExportMetricsServiceRequest]:
     resource_metrics_dict = {}
 
     for resource_metrics in data.resource_metrics:
@@ -164,8 +164,6 @@ def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
         # It is safe to assume that each entry in data.resource_metrics is
         # associated with an unique resource.
         scope_metrics_dict = {}
-
-        resource_metrics_dict[resource] = scope_metrics_dict
 
         for scope_metrics in resource_metrics.scope_metrics:
 
@@ -181,9 +179,10 @@ def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
                 )
             )
 
-            scope_metrics_dict[instrumentation_scope] = pb2_scope_metrics
-
             for metric in scope_metrics.metrics:
+                if len(metric.data.data_points) == 0:
+                    continue
+
                 pb2_metric = pb2.Metric(
                     name=metric.name,
                     description=metric.description,
@@ -301,6 +300,16 @@ def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
 
                 pb2_scope_metrics.metrics.append(pb2_metric)
 
+            if len(pb2_scope_metrics.metrics) > 0:
+                # It's possible that all the metrics have zero
+                # datapoints. If so, we'll have no metrics at all to
+                # send.
+                scope_metrics_dict[instrumentation_scope] = pb2_scope_metrics
+
+        if len(scope_metrics_dict) > 0:
+            # Analogous to the above, it's possible that all scopes are empty.
+            resource_metrics_dict[resource] = scope_metrics_dict
+
     resource_data = []
     for (
         sdk_resource,
@@ -315,4 +324,6 @@ def encode_metrics(data: MetricsData) -> ExportMetricsServiceRequest:
             )
         )
     resource_metrics = resource_data
+    if len(resource_metrics) == 0:
+        return None
     return ExportMetricsServiceRequest(resource_metrics=resource_metrics)

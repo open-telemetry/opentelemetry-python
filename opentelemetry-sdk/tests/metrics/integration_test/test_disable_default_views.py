@@ -32,13 +32,7 @@ class TestDisableDefaultViews(TestCase):
         counter.add(10, {"label": "value2"})
         counter.add(10, {"label": "value3"})
         self.assertEqual(
-            (
-                reader.get_metrics_data()
-                .resource_metrics[0]
-                .scope_metrics[0]
-                .metrics
-            ),
-            [],
+            None, reader.get_metrics_data()
         )
 
     def test_disable_default_views_add_custom(self):

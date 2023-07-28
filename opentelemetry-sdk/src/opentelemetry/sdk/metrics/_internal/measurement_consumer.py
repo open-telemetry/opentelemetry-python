@@ -17,7 +17,7 @@
 from abc import ABC, abstractmethod
 from threading import Lock
 from time import time_ns
-from typing import Iterable, List, Mapping
+from typing import Iterable, List, Mapping, Optional
 
 # This kind of import is needed to avoid Sphinx errors.
 import opentelemetry.sdk.metrics
@@ -29,7 +29,7 @@ from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.metric_reader_storage import (
     MetricReaderStorage,
 )
-from opentelemetry.sdk.metrics._internal.point import Metric
+from opentelemetry.sdk.metrics._internal.point import MetricsData
 
 
 class MeasurementConsumer(ABC):
@@ -51,7 +51,7 @@ class MeasurementConsumer(ABC):
         self,
         metric_reader: "opentelemetry.sdk.metrics.MetricReader",
         timeout_millis: float = 10_000,
-    ) -> Iterable[Metric]:
+    ) -> Optional[MetricsData]:
         pass
 
 
@@ -94,7 +94,7 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
         self,
         metric_reader: "opentelemetry.sdk.metrics.MetricReader",
         timeout_millis: float = 10_000,
-    ) -> Iterable[Metric]:
+    ) -> Optional[MetricsData]:
 
         with self._lock:
             metric_reader_storage = self._reader_storages[metric_reader]

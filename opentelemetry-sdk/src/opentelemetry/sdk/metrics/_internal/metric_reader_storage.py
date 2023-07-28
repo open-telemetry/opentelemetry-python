@@ -15,7 +15,7 @@
 from logging import getLogger
 from threading import RLock
 from time import time_ns
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from opentelemetry.metrics import (
     Asynchronous,
@@ -119,7 +119,7 @@ class MetricReaderStorage:
         ):
             view_instrument_match.consume_measurement(measurement)
 
-    def collect(self) -> MetricsData:
+    def collect(self) -> Optional[MetricsData]:
         # Use a list instead of yielding to prevent a slow reader from holding
         # SDK locks
 
@@ -206,15 +206,19 @@ class MetricReaderStorage:
                             aggregation_temporality=aggregation_temporality,
                         )
 
-                    metrics.append(
-                        Metric(
-                            # pylint: disable=protected-access
-                            name=view_instrument_match._name,
-                            description=view_instrument_match._description,
-                            unit=view_instrument_match._instrument.unit,
-                            data=data,
+                    if len(data.data_points) > 0:
+                        metrics.append(
+                            Metric(
+                                # pylint: disable=protected-access
+                                name=view_instrument_match._name,
+                                description=view_instrument_match._description,
+                                unit=view_instrument_match._instrument.unit,
+                                data=data,
+                            )
                         )
-                    )
+
+                if len(metrics) == 0:
+                    continue
 
                 if instrument.instrumentation_scope not in (
                     instrumentation_scope_scope_metrics
@@ -231,13 +235,15 @@ class MetricReaderStorage:
                         instrument.instrumentation_scope
                     ].metrics.extend(metrics)
 
+        scope_metrics = list(instrumentation_scope_scope_metrics.values())
+        if len(scope_metrics) == 0:
+            return None
+
         return MetricsData(
             resource_metrics=[
                 ResourceMetrics(
                     resource=self._sdk_config.resource,
-                    scope_metrics=list(
-                        instrumentation_scope_scope_metrics.values()
-                    ),
+                    scope_metrics=scope_metrics,
                     schema_url=self._sdk_config.resource.schema_url,
                 )
             ]
