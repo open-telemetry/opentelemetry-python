@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Add missing sem conv value for cloud.resource_id
+  ([#3394](https://github.com/open-telemetry/opentelemetry-python/pull/3394))
+
 ## Version 1.19.0/0.40b0 (2023-07-13)
 
 - Drop `setuptools` runtime requirement.

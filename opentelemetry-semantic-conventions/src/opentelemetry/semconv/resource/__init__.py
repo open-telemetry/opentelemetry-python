@@ -32,6 +32,12 @@ class ResourceAttributes:
     Note: Refer to your provider's docs to see the available regions, for example [Alibaba Cloud regions](https://www.alibabacloud.com/help/doc-detail/40654.htm), [AWS regions](https://aws.amazon.com/about-aws/global-infrastructure/regions_az/), [Azure regions](https://azure.microsoft.com/en-us/global-infrastructure/geographies/), [Google Cloud regions](https://cloud.google.com/about/locations), or [Tencent Cloud regions](https://intl.cloud.tencent.com/document/product/213/6091).
     """
 
+    CLOUD_RESOURCE_ID = "cloud.resource_id"
+    """
+    Cloud provider-specific native identifier of the monitored cloud resource (e.g. an [ARN](https://docs.aws.amazon.com/general/latest/gr/aws-arns-and-namespaces.html) on AWS, a [fully qualified resource ID on Azure](https://learn.microsoft.com/en-us/rest/api/resources/resources/get-by-id), a [full resource name on GCP](https://cloud.google.com/apis/design/resource_names#full_resource_name)
+    Note: On some cloud providers, it may not be possible to determine the full ID at startup, so it may be necessary to set cloud.resource_id as a span attribute instead.
+    """
+
     CLOUD_AVAILABILITY_ZONE = "cloud.availability_zone"
     """
     Cloud regions often have multiple, isolated locations known as zones to increase availability. Availability zone represents the zone where the resource is running.
