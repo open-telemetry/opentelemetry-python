@@ -28,8 +28,8 @@ from grpc import ChannelCredentials, Compression, StatusCode, server
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_key_value,
+    _is_backoff_v2,
 )
-from opentelemetry.exporter.otlp.proto.grpc.exporter import _is_backoff_v2
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
@@ -460,7 +460,7 @@ class TestOTLPSpanExporter(TestCase):
             (("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),),
         )
 
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.backoff")
+    @patch("opentelemetry.exporter.otlp.proto.common._internal.backoff")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
         # In backoff ~= 2.0.0 the first value yielded from expo is None.
@@ -477,7 +477,7 @@ class TestOTLPSpanExporter(TestCase):
         self.exporter.export([self.span])
         mock_sleep.assert_called_once_with(1)
 
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
+    @patch("opentelemetry.exporter.otlp.proto.common._internal._create_exp_backoff_generator")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
@@ -486,12 +486,11 @@ class TestOTLPSpanExporter(TestCase):
         add_TraceServiceServicer_to_server(
             TraceServiceServicerUNAVAILABLE(), self.server
         )
-        self.assertEqual(
-            self.exporter.export([self.span]), SpanExportResult.FAILURE
-        )
+        result = self.exporter.export([self.span])
+        self.assertEqual(result, SpanExportResult.FAILURE)
         mock_sleep.assert_called_with(1)
 
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
+    @patch("opentelemetry.exporter.otlp.proto.common._internal._create_exp_backoff_generator")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable_delay(self, mock_sleep, mock_expo):
 

@@ -369,7 +369,7 @@ class TestOTLPMetricExporter(TestCase):
             mock_method.reset_mock()
 
     # pylint: disable=no-self-use
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
+    @patch("opentelemetry.exporter.otlp.proto.common._internal._create_exp_backoff_generator")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
     def test_otlp_exporter_otlp_compression_envvar(
@@ -405,7 +405,7 @@ class TestOTLPMetricExporter(TestCase):
             "localhost:4317", compression=Compression.NoCompression
         )
 
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
+    @patch("opentelemetry.exporter.otlp.proto.common._internal._create_exp_backoff_generator")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
@@ -420,7 +420,7 @@ class TestOTLPMetricExporter(TestCase):
         )
         mock_sleep.assert_called_with(1)
 
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
+    @patch("opentelemetry.exporter.otlp.proto.common._internal._create_exp_backoff_generator")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable_delay(self, mock_sleep, mock_expo):
 
