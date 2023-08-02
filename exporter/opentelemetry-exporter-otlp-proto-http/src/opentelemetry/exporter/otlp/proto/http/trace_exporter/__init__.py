@@ -14,6 +14,7 @@
 
 import gzip
 import logging
+from typing_extensions import Literal
 import zlib
 from io import BytesIO
 from os import environ
@@ -22,6 +23,8 @@ from time import sleep
 
 import backoff
 import requests
+from google.protobuf.json_format import MessageToJson
+
 
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
@@ -40,10 +43,22 @@ from opentelemetry.sdk.environment_variables import (
 )
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.exporter.otlp.proto.http import (
-    _OTLP_HTTP_HEADERS,
     Compression,
 )
+from ..version import __version__
 from opentelemetry.util.re import parse_env_headers
+
+_USER_AGENT = "OTel-OTLP-Exporter-Python/" + __version__
+_PROTOBUF_CONTENT_TYPE = "application/x-protobuf"
+_JSON_CONTENT_TYPE = "application/json"
+_PROTOBUF_HEADERS = {
+    "Content-Type": _PROTOBUF_CONTENT_TYPE,
+    "User-Agent": _USER_AGENT,
+}
+_JSON_HEADERS = {
+    "Content-Type": _JSON_CONTENT_TYPE,
+    "User-Agent": _USER_AGENT,
+}
 
 
 _logger = logging.getLogger(__name__)
@@ -79,6 +94,7 @@ class OTLPSpanExporter(SpanExporter):
         timeout: Optional[int] = None,
         compression: Optional[Compression] = None,
         session: Optional[requests.Session] = None,
+        format: Literal["json", "protobuf"] = "protobuf",
     ):
         self._endpoint = endpoint or environ.get(
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT,
@@ -104,12 +120,16 @@ class OTLPSpanExporter(SpanExporter):
         self._compression = compression or _compression_from_env()
         self._session = session or requests.Session()
         self._session.headers.update(self._headers)
-        self._session.headers.update(_OTLP_HTTP_HEADERS)
+        if format == "json":
+            self._session.headers.update(_JSON_HEADERS)
+        else:
+            self._session.headers.update(_PROTOBUF_HEADERS)
         if self._compression is not Compression.NoCompression:
             self._session.headers.update(
                 {"Content-Encoding": self._compression.value}
             )
         self._shutdown = False
+        self._format = format
 
     def _export(self, serialized_data: str):
         data = serialized_data
@@ -144,6 +164,11 @@ class OTLPSpanExporter(SpanExporter):
             return SpanExportResult.FAILURE
 
         serialized_data = encode_spans(spans).SerializeToString()
+
+        if self._format == "json":
+            serialized_data = MessageToJson(
+                serialized_data, use_integers_for_enums=True
+            )
 
         for delay in _expo(max_value=self._MAX_RETRY_TIMEOUT):
 
