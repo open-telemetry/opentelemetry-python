@@ -199,7 +199,7 @@ class BatchSpanProcessor(SpanProcessor):
         self.done = False
         # flag that indicates that spans are being dropped
         self._spans_dropped = False
-        self._dropped_counter = None
+        self._dropped_spans_counter = None
         # precallocated list to send spans to exporter
         self.spans_list = [
             None
@@ -230,10 +230,10 @@ class BatchSpanProcessor(SpanProcessor):
             if not self._spans_dropped:
                 logger.warning("Queue is full, likely spans will be dropped.")
                 self._spans_dropped = True
-                self._dropped_counter = Meter.create_counter(
-                    name="dropped_spans_counter", description="To count dropped Spans"
-                    )
-            dropped_counter.add(1)
+                self._dropped_spans_counter = Meter.create_counter(
+                    name="dropped_spans_counter", description="Dropped Spans counter"
+                )
+            self._dropped_spans_counter.add(1)
         self.queue.appendleft(span)
 
         if len(self.queue) >= self.max_export_batch_size:
