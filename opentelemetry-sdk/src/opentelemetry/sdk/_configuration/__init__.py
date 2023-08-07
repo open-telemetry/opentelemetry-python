@@ -261,7 +261,6 @@ def _import_exporters(
     Dict[str, Union[Type[MetricExporter], Type[MetricReader]]],
     Dict[str, Type[LogExporter]],
 ]:
-    logging.info("dsssdw")
     trace_exporters = {}
     metric_exporters = {}
     log_exporters = {}
