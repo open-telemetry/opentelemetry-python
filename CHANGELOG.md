@@ -27,6 +27,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   [#3362](https://github.com/open-telemetry/opentelemetry-python/pull/3362))
 - Fixed bug where logging export is tracked as trace
   [#3375](https://github.com/open-telemetry/opentelemetry-python/pull/3375))
+- Default LogRecord observed_timestamp to current timestamp
+  [#3377](https://github.com/open-telemetry/opentelemetry-python/pull/3377))
 
 
 ## Version 1.18.0/0.39b0 (2023-05-19)
