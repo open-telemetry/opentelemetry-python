@@ -437,7 +437,6 @@ class _BaseConfigurator(ABC):
 
     def configure(self, **kwargs):
         """Configure the SDK"""
-        logger.exception("dsscsd")
         self._configure(**kwargs)
 
 
