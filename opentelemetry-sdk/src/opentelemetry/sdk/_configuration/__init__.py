@@ -421,5 +421,4 @@ class _OTelSDKConfigurator(_BaseConfigurator):
     """
 
     def _configure(self, **kwargs):
-        logger.exception("dsscsd")
         _initialize_components(kwargs.get("auto_instrumentation_version"))
