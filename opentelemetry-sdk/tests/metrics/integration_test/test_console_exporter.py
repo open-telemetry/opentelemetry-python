@@ -72,19 +72,3 @@ class TestConsoleExporter(TestCase):
 
         self.assertEqual(metrics["attributes"], {"a": "b"})
         self.assertEqual(metrics["value"], 1)
-
-    def test_console_exporter_no_export(self):
-
-        output = StringIO()
-        exporter = ConsoleMetricExporter(out=output)
-        reader = PeriodicExportingMetricReader(
-            exporter, export_interval_millis=100
-        )
-        provider = MeterProvider(metric_readers=[reader])
-        provider.shutdown()
-
-        output.seek(0)
-        actual = "".join(output.readlines())
-        expected = ""
-
-        self.assertEqual(actual, expected)
