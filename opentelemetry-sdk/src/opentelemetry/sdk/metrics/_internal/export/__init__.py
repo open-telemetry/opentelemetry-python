@@ -322,10 +322,14 @@ class MetricReader(ABC):
             )
             return
 
-        self._receive_metrics(
-            self._collect(self, timeout_millis=timeout_millis),
-            timeout_millis=timeout_millis,
-        )
+        metrics = self._collect(self, timeout_millis=timeout_millis)
+
+        if metrics is not None:
+
+            self._receive_metrics(
+                metrics,
+                timeout_millis=timeout_millis,
+            )
 
     @final
     def _set_collect_callback(
@@ -515,8 +519,7 @@ class PeriodicExportingMetricReader(MetricReader):
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
-        if metrics_data is None:
-            return
+
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             with self._export_lock:
