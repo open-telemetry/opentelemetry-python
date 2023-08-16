@@ -1,13 +1,11 @@
 [build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+requires = []
 
 [project]
 name = "opentelemetry-semantic-conventions"
 dynamic = ["version"]
 description = "OpenTelemetry Semantic Conventions"
 readme = "README.rst"
-license = "Apache-2.0"
 requires-python = ">=3.7"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
