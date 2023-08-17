@@ -93,7 +93,7 @@ class TestOTLPExporterMixin(TestCase):
             otlp_mock_exporter._export(Mock())
             self.assertEqual(
                 warning.records[0].message,
-                "Failed to export mock, error code: None",
+                "Failed to export mock to localhost:4317, error code: None",
             )
 
         def code(self):  # pylint: disable=function-redefined
@@ -112,7 +112,7 @@ class TestOTLPExporterMixin(TestCase):
                 warning.records[0].message,
                 (
                     "Transient error StatusCode.CANCELLED encountered "
-                    "while exporting mock, retrying in 0s."
+                    "while exporting mock to localhost:4317, retrying in 0s."
                 ),
             )
 

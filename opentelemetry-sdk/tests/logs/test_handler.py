@@ -42,7 +42,8 @@ class TestLoggingHandler(unittest.TestCase):
         logger.debug("Debug message")
         self.assertEqual(emitter_mock.emit.call_count, 0)
         # Assert emit gets called for warning message
-        logger.warning("Warning message")
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Warning message")
         self.assertEqual(emitter_mock.emit.call_count, 1)
 
     def test_handler_custom_log_level(self):
@@ -53,11 +54,14 @@ class TestLoggingHandler(unittest.TestCase):
         logger = get_logger(
             level=logging.ERROR, logger_provider=emitter_provider_mock
         )
-        logger.warning("Warning message test custom log level")
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Warning message test custom log level")
         # Make sure any log with level < ERROR is ignored
         self.assertEqual(emitter_mock.emit.call_count, 0)
-        logger.error("Mumbai, we have a major problem")
-        logger.critical("No Time For Caution")
+        with self.assertLogs(level=logging.ERROR):
+            logger.error("Mumbai, we have a major problem")
+        with self.assertLogs(level=logging.CRITICAL):
+            logger.critical("No Time For Caution")
         self.assertEqual(emitter_mock.emit.call_count, 2)
 
     def test_log_record_no_span_context(self):
@@ -67,7 +71,8 @@ class TestLoggingHandler(unittest.TestCase):
         )
         logger = get_logger(logger_provider=emitter_provider_mock)
         # Assert emit gets called for warning message
-        logger.warning("Warning message")
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Warning message")
         args, _ = emitter_mock.emit.call_args_list[0]
         log_record = args[0]
 
@@ -86,7 +91,8 @@ class TestLoggingHandler(unittest.TestCase):
         )
         logger = get_logger(logger_provider=emitter_provider_mock)
         # Assert emit gets called for warning message
-        logger.warning("Warning message", extra={"http.status_code": 200})
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Warning message", extra={"http.status_code": 200})
         args, _ = emitter_mock.emit.call_args_list[0]
         log_record = args[0]
 
@@ -104,7 +110,8 @@ class TestLoggingHandler(unittest.TestCase):
         try:
             raise ZeroDivisionError("division by zero")
         except ZeroDivisionError:
-            logger.exception("Zero Division Error")
+            with self.assertLogs(level=logging.ERROR):
+                logger.exception("Zero Division Error")
         args, _ = emitter_mock.emit.call_args_list[0]
         log_record = args[0]
 
@@ -137,7 +144,8 @@ class TestLoggingHandler(unittest.TestCase):
         try:
             raise ZeroDivisionError("division by zero")
         except ZeroDivisionError:
-            logger.error("Zero Division Error", exc_info=False)
+            with self.assertLogs(level=logging.ERROR):
+                logger.error("Zero Division Error", exc_info=False)
         args, _ = emitter_mock.emit.call_args_list[0]
         log_record = args[0]
 
@@ -160,7 +168,8 @@ class TestLoggingHandler(unittest.TestCase):
 
         tracer = trace.TracerProvider().get_tracer(__name__)
         with tracer.start_as_current_span("test") as span:
-            logger.critical("Critical message within span")
+            with self.assertLogs(level=logging.CRITICAL):
+                logger.critical("Critical message within span")
 
             args, _ = emitter_mock.emit.call_args_list[0]
             log_record = args[0]
