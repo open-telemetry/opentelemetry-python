@@ -1,11 +1,13 @@
 [build-system]
-requires = []
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "opentelemetry-sdk"
 dynamic = ["version"]
 description = "OpenTelemetry Python SDK"
 readme = "README.rst"
+license = "Apache-2.0"
 requires-python = ">=3.7"
 authors = [
   { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },

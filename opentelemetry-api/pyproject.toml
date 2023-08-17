@@ -1,10 +1,12 @@
 [build-system]
-requires = []
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [project]
 name = "opentelemetry-api"
 description = "OpenTelemetry Python API"
 readme = "README.rst"
+license = "Apache-2.0"
 requires-python = ">=3.7"
 authors = [
     { name = "OpenTelemetry Authors", email = "cncf-opentelemetry-contributors@lists.cncf.io" },
