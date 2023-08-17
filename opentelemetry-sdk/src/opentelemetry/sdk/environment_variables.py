@@ -277,14 +277,14 @@ OTEL_EXPORTER_OTLP_METRICS_PROTOCOL = "OTEL_EXPORTER_OTLP_METRICS_PROTOCOL"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_METRICS_PROTOCOL
 
-The :envvar:`OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` represents the the transport protocol for metrics.
+The :envvar:`OTEL_EXPORTER_OTLP_METRICS_PROTOCOL` represents the the transport protocol for metrics.
 """
 
 OTEL_EXPORTER_OTLP_LOGS_PROTOCOL = "OTEL_EXPORTER_OTLP_LOGS_PROTOCOL"
 """
 .. envvar:: OTEL_EXPORTER_OTLP_LOGS_PROTOCOL
 
-The :envvar:`OTEL_EXPORTER_OTLP_TRACES_PROTOCOL` represents the the transport protocol for logs.
+The :envvar:`OTEL_EXPORTER_OTLP_LOGS_PROTOCOL` represents the the transport protocol for logs.
 """
 
 OTEL_EXPORTER_OTLP_CERTIFICATE = "OTEL_EXPORTER_OTLP_CERTIFICATE"
