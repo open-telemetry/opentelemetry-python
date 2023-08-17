@@ -19,21 +19,21 @@ from opentelemetry.sdk.metrics.export import (
     InMemoryMetricReader,
 )
 
-reader = InMemoryMetricReader()
+reader_cumulative = InMemoryMetricReader()
 reader_delta = InMemoryMetricReader(
     preferred_temporality={
         Counter: AggregationTemporality.DELTA,
     },
 )
-provider = MeterProvider(
-    metric_readers=[reader],
+provider_reader_cumulative = MeterProvider(
+    metric_readers=[reader_cumulative],
 )
-provider2 = MeterProvider(metric_readers=[reader_delta])
-meter = provider.get_meter("sdk_meter_provider")
-meter2 = provider2.get_meter("sdk_meter_provider_delta")
-counter = meter.create_counter("test_counter")
-counter2 = meter2.create_counter("test_counter2")
-udcounter = meter.create_up_down_counter("test_udcounter")
+provider_reader_delta = MeterProvider(metric_readers=[reader_delta])
+meter_cumulative = provider_reader_cumulative.get_meter("sdk_meter_provider")
+meter_delta = provider_reader_delta.get_meter("sdk_meter_provider_delta")
+counter_cumulative = meter_cumulative.create_counter("test_counter")
+counter_delta = meter_delta.create_counter("test_counter2")
+udcounter = meter_cumulative.create_up_down_counter("test_udcounter")
 
 
 @pytest.mark.parametrize(
@@ -54,13 +54,13 @@ udcounter = meter.create_up_down_counter("test_udcounter")
 def test_counter_add(benchmark, num_labels, temporality):
     labels = {}
     for i in range(num_labels):
-        labels["Key{}".format(i)] = "Value{}".format(i)
+        labels = {f"Key{i}": f"Value{i}" for i in range(num_labels)}
 
     def benchmark_counter_add():
         if temporality == "cumulative":
-            counter.add(1, labels)
+            counter_cumulative.add(1, labels)
         else:
-            counter2.add(1, labels)
+            counter_delta.add(1, labels)
 
     benchmark(benchmark_counter_add)
 
@@ -69,7 +69,7 @@ def test_counter_add(benchmark, num_labels, temporality):
 def test_up_down_counter_add(benchmark, num_labels):
     labels = {}
     for i in range(num_labels):
-        labels["Key{}".format(i)] = "Value{}".format(i)
+        labels = {f"Key{i}": f"Value{i}" for i in range(num_labels)}
 
     def benchmark_up_down_counter_add():
         udcounter.add(1, labels)
