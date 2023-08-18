@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Modify Prometheus exporter to translate non-monotonic Sums into Gauges
+  ([#3306](https://github.com/open-telemetry/opentelemetry-python/pull/3306))
+
+
 ## Version 1.19.0/0.40b0 (2023-07-13)
 
 - Drop `setuptools` runtime requirement.
@@ -47,6 +51,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3223](https://github.com/open-telemetry/opentelemetry-python/pull/3223))
 - Add speced out environment variables and arguments for BatchLogRecordProcessor
   ([#3237](https://github.com/open-telemetry/opentelemetry-python/pull/3237))
+- Add benchmark tests for metrics
+  ([#3267](https://github.com/open-telemetry/opentelemetry-python/pull/3267))
 
 
 ## Version 1.17.0/0.38b0 (2023-03-22)
@@ -90,7 +96,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3158](https://github.com/open-telemetry/opentelemetry-python/pull/3158))
 - Create a single resource instance
   ([#3118](https://github.com/open-telemetry/opentelemetry-python/pull/3118))
-
 
 ## Version 1.15.0/0.36b0 (2022-12-09)
 
