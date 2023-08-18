@@ -19,6 +19,7 @@ from unittest.mock import Mock, patch
 import requests
 import responses
 
+from opentelemetry.exporter.otlp.proto.common._internal import _is_backoff_v2
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_COMPRESSION,
@@ -47,7 +48,6 @@ OS_ENV_CERTIFICATE = "os/env/base.crt"
 OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2"
 OS_ENV_TIMEOUT = "30"
 
-from opentelemetry.exporter.otlp.proto.common._internal import _is_backoff_v2
 
 # pylint: disable=protected-access
 class TestOTLPSpanExporter(unittest.TestCase):

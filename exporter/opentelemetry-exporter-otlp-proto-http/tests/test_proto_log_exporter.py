@@ -22,6 +22,7 @@ import requests
 import responses
 
 from opentelemetry._logs import SeverityNumber
+from opentelemetry.exporter.otlp.proto.common._internal import _is_backoff_v2
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_COMPRESSION,
@@ -48,8 +49,6 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import TraceFlags
-
-from opentelemetry.exporter.otlp.proto.common._internal import _is_backoff_v2
 
 ENV_ENDPOINT = "http://localhost.env:8080/"
 ENV_CERTIFICATE = "/etc/base.crt"

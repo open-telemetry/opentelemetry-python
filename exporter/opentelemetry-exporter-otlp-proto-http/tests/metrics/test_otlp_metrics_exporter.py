@@ -21,6 +21,7 @@ from requests import Session
 from requests.models import Response
 from responses import POST, activate, add
 
+from opentelemetry.exporter.otlp.proto.common._internal import _is_backoff_v2
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
@@ -70,7 +71,6 @@ from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope as SDKInstrumentationScope,
 )
 from opentelemetry.test.metrictestutil import _generate_sum
-from opentelemetry.exporter.otlp.proto.common._internal import _is_backoff_v2
 
 OS_ENV_ENDPOINT = "os.env.base"
 OS_ENV_CERTIFICATE = "os/env/base.crt"
