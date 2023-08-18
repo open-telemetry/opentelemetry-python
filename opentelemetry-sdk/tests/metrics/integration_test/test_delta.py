@@ -12,9 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from io import StringIO
 from itertools import count
-from json import loads
 from time import sleep
 from unittest import TestCase
 
@@ -26,8 +24,7 @@ from opentelemetry.metrics import (
 from opentelemetry.sdk.metrics import MeterProvider, ObservableCounter
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
-    ConsoleMetricExporter,
-    PeriodicExportingMetricReader,
+    InMemoryMetricReader,
 )
 from opentelemetry.sdk.metrics.view import SumAggregation
 from opentelemetry.test.globals_test import reset_metrics_globals
@@ -54,20 +51,13 @@ class TestDelta(TestCase):
         def tearDown(self):
             reset_metrics_globals()
 
-        output = StringIO()
-
         aggregation = SumAggregation()
 
-        exporter = ConsoleMetricExporter(
-            out=output,
+        reader = InMemoryMetricReader(
             preferred_aggregation={ObservableCounter: aggregation},
             preferred_temporality={
                 ObservableCounter: AggregationTemporality.DELTA
             },
-        )
-
-        reader = PeriodicExportingMetricReader(
-            exporter, export_interval_millis=100
         )
 
         provider = MeterProvider(metric_readers=[reader])
@@ -81,56 +71,35 @@ class TestDelta(TestCase):
             "observable_counter", [observable_counter_callback]
         )
 
-        sleep(1)
+        results = []
+
+        for _ in range(10):
+
+            results.append(reader.get_metrics_data())
+            sleep(0.1)
 
         provider.shutdown()
 
-        output.seek(0)
+        previous_time_unix_nano = (
+            results[0]
+            .resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points[0]
+            .time_unix_nano
+        )
 
-        joined_output = "".join(output.readlines())
+        for metrics_data in results[1:]:
 
-        stack = []
-
-        sections = []
-
-        previous_index = 0
-
-        for current_index, character in enumerate(joined_output):
-
-            if character == "{":
-
-                if not stack:
-                    previous_index = current_index
-
-                stack.append(character)
-
-            elif character == "}":
-                stack.pop()
-
-                if not stack:
-
-                    sections.append(
-                        joined_output[
-                            previous_index : current_index + 1
-                        ].strip()
-                    )
-
-        joined_output = f"[{','.join(sections)}]"
-
-        result = loads(joined_output)
-
-        previous_time_unix_nano = result[0]["resource_metrics"][0][
-            "scope_metrics"
-        ][0]["metrics"][0]["data"]["data_points"][0]["time_unix_nano"]
-
-        for element in result[1:]:
-
-            metric_data = element["resource_metrics"][0]["scope_metrics"][0][
-                "metrics"
-            ][0]["data"]["data_points"][0]
+            metric_data = (
+                metrics_data.resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[0]
+                .data.data_points[0]
+            )
 
             self.assertEqual(
-                previous_time_unix_nano, metric_data["start_time_unix_nano"]
+                previous_time_unix_nano, metric_data.start_time_unix_nano
             )
-            previous_time_unix_nano = metric_data["time_unix_nano"]
-            self.assertEqual(metric_data["value"], 8)
+            previous_time_unix_nano = metric_data.time_unix_nano
+            self.assertEqual(metric_data.value, 8)
