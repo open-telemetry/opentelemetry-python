@@ -369,7 +369,7 @@ class TestOTLPMetricExporter(TestCase):
             mock_method.reset_mock()
 
     # pylint: disable=no-self-use
-    @patch("opentelemetry.exporter.otlp.proto.common._internal._create_exp_backoff_generator")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator")
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.insecure_channel")
     @patch.dict("os.environ", {OTEL_EXPORTER_OTLP_COMPRESSION: "gzip"})
     def test_otlp_exporter_otlp_compression_envvar(

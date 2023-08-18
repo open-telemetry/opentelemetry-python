@@ -60,7 +60,7 @@ class TestOTLPExporterMixin(TestCase):
             with self.assertRaises(InvalidCompressionValueException):
                 environ_to_compression("test_invalid")
 
-    @patch("opentelemetry.exporter.otlp.proto.common._internal._create_exp_backoff_generator")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator")
     def test_export_warning(self, mock_expo):
         mock_expo.configure_mock(**{"return_value": [0]})
 
