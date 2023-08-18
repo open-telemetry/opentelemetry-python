@@ -26,7 +26,6 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_TIMEOUT,
     DEFAULT_TRACES_EXPORT_PATH,
     OTLPSpanExporter,
-    _is_backoff_v2,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.sdk.environment_variables import (
@@ -48,6 +47,7 @@ OS_ENV_CERTIFICATE = "os/env/base.crt"
 OS_ENV_HEADERS = "envHeader1=val1,envHeader2=val2"
 OS_ENV_TIMEOUT = "30"
 
+from opentelemetry.exporter.otlp.proto.common._internal import _is_backoff_v2
 
 # pylint: disable=protected-access
 class TestOTLPSpanExporter(unittest.TestCase):
@@ -204,7 +204,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
     # pylint: disable=no-self-use
     @responses.activate
-    @patch("opentelemetry.exporter.otlp.proto.http.trace_exporter.backoff")
+    @patch("opentelemetry.exporter.otlp.proto.common._internal.backoff")
     @patch("opentelemetry.exporter.otlp.proto.http.trace_exporter.sleep")
     def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
         # In backoff ~= 2.0.0 the first value yielded from expo is None.

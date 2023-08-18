@@ -22,7 +22,9 @@ from time import sleep
 
 import requests
 
-from opentelemetry.exporter.otlp.proto.common._internal import _create_exp_backoff_generator
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    _create_exp_backoff_generator,
+)
 from opentelemetry.exporter.otlp.proto.common._log_encoder import encode_logs
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
@@ -55,6 +57,7 @@ DEFAULT_COMPRESSION = Compression.NoCompression
 DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_LOGS_EXPORT_PATH = "v1/logs"
 DEFAULT_TIMEOUT = 10  # in seconds
+
 
 class OTLPLogExporter(LogExporter):
 
@@ -134,7 +137,9 @@ class OTLPLogExporter(LogExporter):
 
         serialized_data = encode_logs(batch).SerializeToString()
 
-        for delay in _create_exp_backoff_generator(max_value=self._MAX_RETRY_TIMEOUT):
+        for delay in _create_exp_backoff_generator(
+            max_value=self._MAX_RETRY_TIMEOUT
+        ):
 
             if delay == self._MAX_RETRY_TIMEOUT:
                 return LogExportResult.FAILURE

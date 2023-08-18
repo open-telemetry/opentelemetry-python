@@ -87,6 +87,7 @@ DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_METRICS_EXPORT_PATH = "v1/metrics"
 DEFAULT_TIMEOUT = 10  # in seconds
 
+
 class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
 
     _MAX_RETRY_TIMEOUT = 64
@@ -168,7 +169,9 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
         **kwargs,
     ) -> MetricExportResult:
         serialized_data = encode_metrics(metrics_data)
-        for delay in _create_exp_backoff_generator(max_value=self._MAX_RETRY_TIMEOUT):
+        for delay in _create_exp_backoff_generator(
+            max_value=self._MAX_RETRY_TIMEOUT
+        ):
 
             if delay == self._MAX_RETRY_TIMEOUT:
                 return MetricExportResult.FAILURE

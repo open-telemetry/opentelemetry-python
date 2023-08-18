@@ -31,7 +31,6 @@ from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     DEFAULT_METRICS_EXPORT_PATH,
     DEFAULT_TIMEOUT,
     OTLPMetricExporter,
-    _is_backoff_v2,
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
@@ -71,6 +70,7 @@ from opentelemetry.sdk.util.instrumentation import (
     InstrumentationScope as SDKInstrumentationScope,
 )
 from opentelemetry.test.metrictestutil import _generate_sum
+from opentelemetry.exporter.otlp.proto.common._internal import _is_backoff_v2
 
 OS_ENV_ENDPOINT = "os.env.base"
 OS_ENV_CERTIFICATE = "os/env/base.crt"
@@ -298,7 +298,7 @@ class TestOTLPMetricExporter(TestCase):
         )
 
     @activate
-    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.backoff")
+    @patch("opentelemetry.exporter.otlp.proto.common._internal.backoff")
     @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.sleep")
     def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
         # In backoff ~= 2.0.0 the first value yielded from expo is None.

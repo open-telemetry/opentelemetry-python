@@ -22,7 +22,9 @@ from time import sleep
 
 import requests
 
-from opentelemetry.exporter.otlp.proto.common._internal import _create_exp_backoff_generator
+from opentelemetry.exporter.otlp.proto.common._internal import (
+    _create_exp_backoff_generator,
+)
 from opentelemetry.exporter.otlp.proto.common.trace_encoder import (
     encode_spans,
 )
@@ -53,6 +55,7 @@ DEFAULT_COMPRESSION = Compression.NoCompression
 DEFAULT_ENDPOINT = "http://localhost:4318/"
 DEFAULT_TRACES_EXPORT_PATH = "v1/traces"
 DEFAULT_TIMEOUT = 10  # in seconds
+
 
 class OTLPSpanExporter(SpanExporter):
 
@@ -132,7 +135,9 @@ class OTLPSpanExporter(SpanExporter):
 
         serialized_data = encode_spans(spans).SerializeToString()
 
-        for delay in _create_exp_backoff_generator(max_value=self._MAX_RETRY_TIMEOUT):
+        for delay in _create_exp_backoff_generator(
+            max_value=self._MAX_RETRY_TIMEOUT
+        ):
 
             if delay == self._MAX_RETRY_TIMEOUT:
                 return SpanExportResult.FAILURE

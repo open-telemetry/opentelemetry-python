@@ -29,7 +29,6 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_LOGS_EXPORT_PATH,
     DEFAULT_TIMEOUT,
     OTLPLogExporter,
-    _is_backoff_v2,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.sdk._logs import LogData
@@ -49,6 +48,8 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.resources import Resource as SDKResource
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.trace import TraceFlags
+
+from opentelemetry.exporter.otlp.proto.common._internal import _is_backoff_v2
 
 ENV_ENDPOINT = "http://localhost.env:8080/"
 ENV_CERTIFICATE = "/etc/base.crt"
@@ -168,7 +169,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertIsInstance(exporter._session, requests.Session)
 
     @responses.activate
-    @patch("opentelemetry.exporter.otlp.proto.http._log_exporter.backoff")
+    @patch("opentelemetry.exporter.otlp.proto.common._internal.backoff")
     @patch("opentelemetry.exporter.otlp.proto.http._log_exporter.sleep")
     def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
         # In backoff ~= 2.0.0 the first value yielded from expo is None.
