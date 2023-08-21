@@ -28,6 +28,7 @@ from grpc import ChannelCredentials, Compression, StatusCode, server
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.exporter.otlp.proto.common._internal import (
     _encode_key_value,
+    _is_backoff_v2,
 )
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
@@ -458,6 +459,23 @@ class TestOTLPSpanExporter(TestCase):
             exporter._headers,
             (("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),),
         )
+
+    @patch("opentelemetry.exporter.otlp.proto.common._internal.backoff")
+    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
+    def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
+        # In backoff ~= 2.0.0 the first value yielded from expo is None.
+        def generate_delays(*args, **kwargs):
+            if _is_backoff_v2:
+                yield None
+            yield 1
+
+        mock_backoff.expo.configure_mock(**{"side_effect": generate_delays})
+
+        add_TraceServiceServicer_to_server(
+            TraceServiceServicerUNAVAILABLE(), self.server
+        )
+        self.exporter.export([self.span])
+        mock_sleep.assert_called_once_with(1)
 
     @patch(
         "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
