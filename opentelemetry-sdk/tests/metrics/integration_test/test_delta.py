@@ -89,6 +89,16 @@ class TestDelta(TestCase):
             .time_unix_nano
         )
 
+        self.assertEqual(
+            (
+                results[0].resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[0]
+                .data.data_points[0].value
+            ),
+            8
+        )
+
         for metrics_data in results[1:]:
 
             metric_data = (
