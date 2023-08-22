@@ -17,8 +17,6 @@ from unittest import TestCase
 
 from opentelemetry.metrics import (
     Observation,
-    get_meter_provider,
-    set_meter_provider,
 )
 from opentelemetry.sdk.metrics import MeterProvider, ObservableCounter
 from opentelemetry.sdk.metrics.export import (
@@ -26,7 +24,6 @@ from opentelemetry.sdk.metrics.export import (
     InMemoryMetricReader,
 )
 from opentelemetry.sdk.metrics.view import SumAggregation
-from opentelemetry.test.globals_test import reset_metrics_globals
 
 eight_multiple_generator = count(start=8, step=8)
 
@@ -44,12 +41,6 @@ def observable_counter_callback(callback_options):
 
 class TestDelta(TestCase):
     def test_observable_counter_delta(self):
-        def setUp(self):
-            reset_metrics_globals()
-
-        def tearDown(self):
-            reset_metrics_globals()
-
         aggregation = SumAggregation()
 
         reader = InMemoryMetricReader(
