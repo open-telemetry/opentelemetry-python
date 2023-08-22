@@ -13,7 +13,6 @@
 # limitations under the License.
 
 from itertools import count
-from time import sleep
 from unittest import TestCase
 
 from opentelemetry.metrics import (
@@ -29,7 +28,7 @@ from opentelemetry.sdk.metrics.export import (
 from opentelemetry.sdk.metrics.view import SumAggregation
 from opentelemetry.test.globals_test import reset_metrics_globals
 
-network_bytes_generator = count(start=8, step=8)
+eight_multiple_generator = count(start=8, step=8)
 
 counter = 0
 
@@ -40,7 +39,7 @@ def observable_counter_callback(callback_options):
 
     counter += 1
 
-    yield Observation(next(network_bytes_generator))
+    yield Observation(next(eight_multiple_generator))
 
 
 class TestDelta(TestCase):
@@ -76,7 +75,8 @@ class TestDelta(TestCase):
         for _ in range(10):
 
             results.append(reader.get_metrics_data())
-            sleep(0.1)
+
+        self.assertEqual(counter, 10)
 
         provider.shutdown()
 
