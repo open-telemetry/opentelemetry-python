@@ -60,9 +60,7 @@ class TestDelta(TestCase):
         )
 
         provider = MeterProvider(metric_readers=[reader])
-        set_meter_provider(provider)
-
-        meter = get_meter_provider().get_meter(
+        meter = provider.get_meter(
             "preferred-aggregation", "0.1.2"
         )
 
