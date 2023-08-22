@@ -23,22 +23,19 @@ from opentelemetry.sdk.metrics.export import (
 )
 from opentelemetry.sdk.metrics.view import SumAggregation
 
-eight_multiple_generator = count(start=8, step=8)
-
-counter = 0
-
-
-def observable_counter_callback(callback_options):
-
-    global counter
-
-    counter += 1
-
-    yield Observation(next(eight_multiple_generator))
-
 
 class TestDelta(TestCase):
     def test_observable_counter_delta(self):
+
+        eight_multiple_generator = count(start=8, step=8)
+
+        counter = 0
+
+        def observable_counter_callback(callback_options):
+            nonlocal counter
+            counter += 1
+            yield Observation(next(eight_multiple_generator))
+
         aggregation = SumAggregation()
 
         reader = InMemoryMetricReader(
