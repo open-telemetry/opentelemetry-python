@@ -15,9 +15,7 @@
 from itertools import count
 from unittest import TestCase
 
-from opentelemetry.metrics import (
-    Observation,
-)
+from opentelemetry.metrics import Observation
 from opentelemetry.sdk.metrics import MeterProvider, ObservableCounter
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
@@ -51,9 +49,7 @@ class TestDelta(TestCase):
         )
 
         provider = MeterProvider(metric_readers=[reader])
-        meter = provider.get_meter(
-            "preferred-aggregation", "0.1.2"
-        )
+        meter = provider.get_meter("preferred-aggregation", "0.1.2")
 
         meter.create_observable_counter(
             "observable_counter", [observable_counter_callback]
@@ -80,12 +76,14 @@ class TestDelta(TestCase):
 
         self.assertEqual(
             (
-                results[0].resource_metrics[0]
+                results[0]
+                .resource_metrics[0]
                 .scope_metrics[0]
                 .metrics[0]
-                .data.data_points[0].value
+                .data.data_points[0]
+                .value
             ),
-            8
+            8,
         )
 
         for metrics_data in results[1:]:
