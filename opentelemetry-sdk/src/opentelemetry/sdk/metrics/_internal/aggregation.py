@@ -398,8 +398,12 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         record_min_max: bool = True,
     ):
         super().__init__(attributes)
+
+        self._start_time_unix_nano = start_time_unix_nano
         self._boundaries = tuple(boundaries)
-        self._bucket_counts = self._get_empty_bucket_counts()
+        self._record_min_max = record_min_max
+
+        self._current_value = None
         self._min = inf
         self._max = -inf
         self._sum = 0
@@ -416,15 +420,19 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
     def aggregate(self, measurement: Measurement) -> None:
 
-        value = measurement.value
+        with self._lock:
 
-        if self._record_min_max:
-            self._min = min(self._min, value)
-            self._max = max(self._max, value)
+            if self._current_value is None:
+                self._current_value = self._get_empty_bucket_counts()
 
-        self._sum += value
+            value = measurement.value
 
-        self._bucket_counts[bisect_left(self._boundaries, value)] += 1
+            if self._record_min_max:
+                self._min = min(self._min, value)
+                self._max = max(self._max, value)
+
+            self._current_value[bisect_left(self._boundaries, value)] += 1
+            self._sum = self._sum + value
 
     def collect(
         self,
@@ -435,14 +443,8 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         Atomically return a point for the current value of the metric.
         """
         with self._lock:
-            if not any(self._bucket_counts):
-                return None
 
-            bucket_counts = self._bucket_counts
-            start_time_unix_nano = self._start_time_unix_nano
-            sum_ = self._sum
-            max_ = self._max
-            min_ = self._min
+            if aggregation_temporality is AggregationTemporality.DELTA:
 
             self._bucket_counts = self._get_empty_bucket_counts()
             self._start_time_unix_nano = collection_start_nano
@@ -487,31 +489,39 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     current_point.bucket_counts,
                     self._previous_point.bucket_counts,
                 )
-            ]
-        else:
-            start_time_unix_nano = self._previous_point.time_unix_nano
-            sum_ = current_point.sum - self._previous_point.sum
-            bucket_counts = [
-                curr_count - prev_count
-                for curr_count, prev_count in zip(
-                    current_point.bucket_counts,
-                    self._previous_point.bucket_counts,
-                )
-            ]
 
-        current_point = HistogramDataPoint(
-            attributes=self._attributes,
-            start_time_unix_nano=start_time_unix_nano,
-            time_unix_nano=current_point.time_unix_nano,
-            count=sum(bucket_counts),
-            sum=sum_,
-            bucket_counts=tuple(bucket_counts),
-            explicit_bounds=current_point.explicit_bounds,
-            min=min_,
-            max=max_,
-        )
-        self._previous_point = current_point
-        return current_point
+                self._current_value = None
+                self._min = inf
+                self._max = -inf
+                self._sum = 0
+                self._previous_collection_start_nano = collection_start_nano
+
+                if current_value is None:
+                    return None
+
+                return HistogramDataPoint(
+                    attributes=self._attributes,
+                    start_time_unix_nano=previous_collection_start_nano,
+                    time_unix_nano=collection_start_nano,
+                    count=sum(current_value),
+                    sum=sum_,
+                    bucket_counts=tuple(current_value),
+                    explicit_bounds=self._boundaries,
+                    min=min_,
+                    max=max_,
+                )
+
+            return HistogramDataPoint(
+                attributes=self._attributes,
+                start_time_unix_nano=self._start_time_unix_nano,
+                time_unix_nano=collection_start_nano,
+                count=sum(self._current_value),
+                sum=self._sum,
+                bucket_counts=tuple(self._current_value),
+                explicit_bounds=self._boundaries,
+                min=self._min,
+                max=self._max,
+            )
 
 
 # pylint: disable=protected-access
