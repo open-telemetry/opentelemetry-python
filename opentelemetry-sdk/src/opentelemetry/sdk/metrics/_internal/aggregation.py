@@ -140,7 +140,6 @@ class _SumAggregation(_Aggregation[Sum]):
         Atomically return a point for the current value of the metric and
         reset the aggregation value.
         """
-
         if self._instrument_temporality is AggregationTemporality.DELTA:
 
             with self._lock:
@@ -290,7 +289,6 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         Atomically return a point for the current value of the metric.
         """
         with self._lock:
-
             if not any(self._bucket_counts):
                 return None
 
