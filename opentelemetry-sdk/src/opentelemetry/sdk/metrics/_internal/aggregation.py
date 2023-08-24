@@ -227,7 +227,7 @@ class _SumAggregation(_Aggregation[Sum]):
         current_point = NumberDataPoint(
             attributes=self._attributes,
             start_time_unix_nano=output_start_time_unix_nano,
-            time_unix_nano=current_point.time_unix_nano,
+            time_unix_nano=collection_start_nano,
             value=current_point_value,
         )
 
