@@ -218,7 +218,7 @@ class _SumAggregation(_Aggregation[Sum]):
             # aggregation is synchronous and aggregation_temporality is
             # CUMULATIVE.
             current_point_value = (
-                current_value_delta + self._previous_point.value
+                current_value_delta + self._previous_value_cumulative
             )
             output_start_time_unix_nano = (
                 self._previous_point.start_time_unix_nano
