@@ -14,28 +14,25 @@
 
 from unittest import TestCase
 
-from opentelemetry.metrics import set_meter_provider
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import InMemoryMetricReader
 from opentelemetry.sdk.resources import SERVICE_NAME, Resource
-
-in_memory_metric_reader = InMemoryMetricReader()
-
-provider = MeterProvider(
-    resource=Resource.create({SERVICE_NAME: "otel-test"}),
-    metric_readers=[in_memory_metric_reader],
-)
-set_meter_provider(provider)
-
-meter = provider.get_meter("my-meter")
-
-histogram = meter.create_histogram("my_histogram")
-counter = meter.create_counter("my_counter")
 
 
 class TestHistogramExport(TestCase):
     def test_histogram_counter_collection(self):
 
+        in_memory_metric_reader = InMemoryMetricReader()
+
+        provider = MeterProvider(
+            resource=Resource.create({SERVICE_NAME: "otel-test"}),
+            metric_readers=[in_memory_metric_reader],
+        )
+
+        meter = provider.get_meter("my-meter")
+
+        histogram = meter.create_histogram("my_histogram")
+        counter = meter.create_counter("my_counter")
         histogram.record(5, {"attribute": "value"})
         counter.add(1, {"attribute": "value_counter"})
 
