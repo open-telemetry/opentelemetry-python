@@ -136,6 +136,7 @@ class _SumAggregation(_Aggregation[Sum]):
         with self._lock:
             if self._current_value_delta is None:
                 self._current_value_delta = 0
+
             self._current_value_delta = (
                 self._current_value_delta + measurement.value
             )
@@ -150,14 +151,15 @@ class _SumAggregation(_Aggregation[Sum]):
         reset the aggregation value.
         """
 
+        with self._lock:
+            current_value_delta = self._current_value_delta
+            start_time_unix_nano = self._start_time_unix_nano
+
         if self._instrument_temporality is AggregationTemporality.DELTA:
             # This happens when the corresponding instrument for this
             # aggregation is synchronous.
 
             with self._lock:
-                current_value_delta = self._current_value_delta
-                start_time_unix_nano = self._start_time_unix_nano
-
                 self._current_value_delta = 0
                 self._start_time_unix_nano = collection_start_nano
 
@@ -170,9 +172,7 @@ class _SumAggregation(_Aggregation[Sum]):
                     # This happens when the corresponding instrument callback
                     # does not produce measurements.
                     return None
-                current_value_delta = self._current_value_delta
                 self._current_value_delta = None
-                start_time_unix_nano = self._start_time_unix_nano
 
         current_point = NumberDataPoint(
             attributes=self._attributes,
