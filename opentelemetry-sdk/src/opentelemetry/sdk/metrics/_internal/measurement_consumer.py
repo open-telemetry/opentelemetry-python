@@ -51,7 +51,7 @@ class MeasurementConsumer(ABC):
         self,
         metric_reader: "opentelemetry.sdk.metrics.MetricReader",
         timeout_millis: float = 10_000,
-    ) -> Iterable[Metric]:
+    ) -> Optional[Iterable[Metric]]:
         pass
 
 
