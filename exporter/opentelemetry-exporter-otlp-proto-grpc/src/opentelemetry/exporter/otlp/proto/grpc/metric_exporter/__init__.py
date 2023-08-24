@@ -54,7 +54,9 @@ from opentelemetry.sdk.metrics.export import (
     Metric,
     MetricExporter,
     MetricExportResult,
+    MetricReader,
     MetricsData,
+    PeriodicExportingMetricReader,
     ResourceMetrics,
     ScopeMetrics,
 )
@@ -102,7 +104,6 @@ class OTLPMetricExporter(
         preferred_aggregation: Dict[type, Aggregation] = None,
         max_export_batch_size: Optional[int] = None,
     ):
-
         if insecure is None:
             insecure = environ.get(OTEL_EXPORTER_OTLP_METRICS_INSECURE)
             if insecure is not None:
@@ -260,3 +261,8 @@ class OTLPMetricExporter(
     def force_flush(self, timeout_millis: float = 10_000) -> bool:
         """Nothing is buffered in this exporter, so this method does nothing."""
         return True
+
+
+def _otlp_metric_exporter_entrypoint() -> MetricReader:
+    """Implementation of opentelemetry_metrics_exporter entrypoint"""
+    return PeriodicExportingMetricReader(OTLPMetricExporter())

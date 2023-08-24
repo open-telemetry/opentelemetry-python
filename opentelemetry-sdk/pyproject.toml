@@ -58,7 +58,7 @@ console = "opentelemetry.sdk._logs.export:ConsoleLogExporter"
 sdk_meter_provider = "opentelemetry.sdk.metrics:MeterProvider"
 
 [project.entry-points.opentelemetry_metrics_exporter]
-console = "opentelemetry.sdk.metrics.export:ConsoleMetricExporter"
+console = "opentelemetry.sdk.metrics._internal.export:_console_metric_exporter_entrypoint"
 
 [project.entry-points.opentelemetry_tracer_provider]
 sdk_tracer_provider = "opentelemetry.sdk.trace:TracerProvider"

@@ -392,7 +392,7 @@ class InMemoryMetricReader(MetricReader):
 
     def get_metrics_data(
         self,
-    ) -> ("opentelemetry.sdk.metrics.export.MetricsData"):
+    ) -> "opentelemetry.sdk.metrics.export.MetricsData":
         """Reads and returns current metrics from the SDK"""
         with self._lock:
             self.collect()
@@ -549,3 +549,8 @@ class PeriodicExportingMetricReader(MetricReader):
         super().force_flush(timeout_millis=timeout_millis)
         self._exporter.force_flush(timeout_millis=timeout_millis)
         return True
+
+
+def _console_metric_exporter_entrypoint() -> MetricReader:
+    """Implementation of opentelemetry_metrics_exporter entrypoint for the console exporter"""
+    return PeriodicExportingMetricReader(ConsoleMetricExporter())

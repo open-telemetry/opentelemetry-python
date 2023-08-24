@@ -45,10 +45,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER_ARG,
 )
 from opentelemetry.sdk.metrics import MeterProvider
-from opentelemetry.sdk.metrics.export import (
-    MetricExporter,
-    PeriodicExportingMetricReader,
-)
+from opentelemetry.sdk.metrics.export import MetricReader
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor, SpanExporter
@@ -84,13 +81,15 @@ _DEFAULT_ID_GENERATOR = _RANDOM_ID_GENERATOR
 
 _OTEL_SAMPLER_ENTRY_POINT_GROUP = "opentelemetry_traces_sampler"
 
+# opentelemetry_metrics_exporter entrypoint implementations should implement this type
+_MetricReaderFactory = Callable[[], MetricReader]
+
 _logger = logging.getLogger(__name__)
 
 
 def _import_config_components(
     selected_components: List[str], entry_point_name: str
 ) -> Sequence[Tuple[str, object]]:
-
     component_implementations = []
 
     for selected_component in selected_components:
@@ -108,13 +107,11 @@ def _import_config_components(
                 )
             )
         except KeyError:
-
             raise RuntimeError(
                 f"Requested entry point '{entry_point_name}' not found"
             )
 
         except StopIteration:
-
             raise RuntimeError(
                 f"Requested component '{selected_component}' not found in "
                 f"entry point '{entry_point_name}'"
@@ -210,16 +207,13 @@ def _init_tracing(
 
 
 def _init_metrics(
-    exporters: Dict[str, Type[MetricExporter]],
+    factories: Dict[str, _MetricReaderFactory],
     resource: Resource = None,
 ):
     metric_readers = []
 
-    for _, exporter_class in exporters.items():
-        exporter_args = {}
-        metric_readers.append(
-            PeriodicExportingMetricReader(exporter_class(**exporter_args))
-        )
+    for _, factory in factories.items():
+        metric_readers.append(factory())
 
     provider = MeterProvider(resource=resource, metric_readers=metric_readers)
     set_meter_provider(provider)
@@ -249,11 +243,11 @@ def _import_exporters(
     log_exporter_names: Sequence[str],
 ) -> Tuple[
     Dict[str, Type[SpanExporter]],
-    Dict[str, Type[MetricExporter]],
+    Dict[str, _MetricReaderFactory],
     Dict[str, Type[LogExporter]],
 ]:
     trace_exporters = {}
-    metric_exporters = {}
+    metric_reader_factories = {}
     log_exporters = {}
 
     for (exporter_name, exporter_impl,) in _import_config_components(
@@ -264,13 +258,15 @@ def _import_exporters(
         else:
             raise RuntimeError(f"{exporter_name} is not a trace exporter")
 
-    for (exporter_name, exporter_impl,) in _import_config_components(
+    for exporter_name, metric_reader_factory in _import_config_components(
         metric_exporter_names, "opentelemetry_metrics_exporter"
     ):
-        if issubclass(exporter_impl, MetricExporter):
-            metric_exporters[exporter_name] = exporter_impl
+        if callable(metric_reader_factory):
+            metric_reader_factories[exporter_name] = metric_reader_factory
         else:
-            raise RuntimeError(f"{exporter_name} is not a metric exporter")
+            raise RuntimeError(
+                f"{exporter_name} is not a callable, should be a {_MetricReaderFactory}"
+            )
 
     for (exporter_name, exporter_impl,) in _import_config_components(
         log_exporter_names, "opentelemetry_logs_exporter"
@@ -280,7 +276,7 @@ def _import_exporters(
         else:
             raise RuntimeError(f"{exporter_name} is not a log exporter")
 
-    return trace_exporters, metric_exporters, log_exporters
+    return trace_exporters, metric_reader_factories, log_exporters
 
 
 def _import_sampler_factory(sampler_name: str) -> Callable[[str], Sampler]:
@@ -335,7 +331,11 @@ def _import_id_generator(id_generator_name: str) -> IdGenerator:
 
 
 def _initialize_components(auto_instrumentation_version):
-    trace_exporters, metric_exporters, log_exporters = _import_exporters(
+    (
+        trace_exporters,
+        metric_reader_factories,
+        log_exporters,
+    ) = _import_exporters(
         _get_exporter_names("traces"),
         _get_exporter_names("metrics"),
         _get_exporter_names("logs"),
@@ -360,7 +360,7 @@ def _initialize_components(auto_instrumentation_version):
         sampler=sampler,
         resource=resource,
     )
-    _init_metrics(metric_exporters, resource)
+    _init_metrics(metric_reader_factories, resource)
     logging_enabled = os.getenv(
         _OTEL_PYTHON_LOGGING_AUTO_INSTRUMENTATION_ENABLED, "false"
     )
@@ -380,7 +380,6 @@ class _BaseConfigurator(ABC):
     _is_instrumented = False
 
     def __new__(cls, *args, **kwargs):
-
         if cls._instance is None:
             cls._instance = object.__new__(cls, *args, **kwargs)
 

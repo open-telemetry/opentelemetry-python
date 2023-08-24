@@ -45,7 +45,7 @@ test = [
 otlp_proto_http = "opentelemetry.exporter.otlp.proto.http.trace_exporter:OTLPSpanExporter"
 
 [project.entry-points.opentelemetry_metrics_exporter]
-otlp_proto_http = "opentelemetry.exporter.otlp.proto.http.metric_exporter:OTLPMetricExporter"
+otlp_proto_http = "opentelemetry.exporter.otlp.proto.http.metric_exporter:_otlp_metric_exporter_entrypoint"
 
 [project.entry-points.opentelemetry_logs_exporter]
 otlp_proto_http = "opentelemetry.exporter.otlp.proto.http._log_exporter:OTLPLogExporter"

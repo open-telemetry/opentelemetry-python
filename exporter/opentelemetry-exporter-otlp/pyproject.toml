@@ -34,7 +34,7 @@ dependencies = [
 otlp = "opentelemetry.exporter.otlp.proto.grpc._log_exporter:OTLPLogExporter"
 
 [project.entry-points.opentelemetry_metrics_exporter]
-otlp = "opentelemetry.exporter.otlp.proto.grpc.metric_exporter:OTLPMetricExporter"
+otlp = "opentelemetry.exporter.otlp.proto.grpc.metric_exporter:_otlp_metric_exporter_entrypoint"
 
 [project.entry-points.opentelemetry_traces_exporter]
 otlp = "opentelemetry.exporter.otlp.proto.grpc.trace_exporter:OTLPSpanExporter"

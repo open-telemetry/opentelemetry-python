@@ -63,7 +63,9 @@ from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     MetricExporter,
     MetricExportResult,
+    MetricReader,
     MetricsData,
+    PeriodicExportingMetricReader,
 )
 from opentelemetry.sdk.metrics.export import (  # noqa: F401
     Gauge,
@@ -101,7 +103,6 @@ def _expo(*args, **kwargs):
 
 
 class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
-
     _MAX_RETRY_TIMEOUT = 64
 
     def __init__(
@@ -182,7 +183,6 @@ class OTLPMetricExporter(MetricExporter, OTLPMetricExporterMixin):
     ) -> MetricExportResult:
         serialized_data = encode_metrics(metrics_data)
         for delay in _expo(max_value=self._MAX_RETRY_TIMEOUT):
-
             if delay == self._MAX_RETRY_TIMEOUT:
                 return MetricExportResult.FAILURE
 
@@ -247,3 +247,8 @@ def _append_metrics_path(endpoint: str) -> str:
     if endpoint.endswith("/"):
         return endpoint + DEFAULT_METRICS_EXPORT_PATH
     return endpoint + f"/{DEFAULT_METRICS_EXPORT_PATH}"
+
+
+def _otlp_metric_exporter_entrypoint() -> MetricReader:
+    """Implementation of opentelemetry_metrics_exporter entrypoint"""
+    return PeriodicExportingMetricReader(OTLPMetricExporter())

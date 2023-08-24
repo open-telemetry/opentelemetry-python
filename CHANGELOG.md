@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Modify Prometheus exporter to translate non-monotonic Sums into Gauges
   ([#3306](https://github.com/open-telemetry/opentelemetry-python/pull/3306))
+- Update `opentelemetry_metrics_exporter` entrypoint to a MetricReader factory
+  ([#3412](https://github.com/open-telemetry/opentelemetry-python/pull/3412))
+
 
 
 ## Version 1.19.0/0.40b0 (2023-07-13)

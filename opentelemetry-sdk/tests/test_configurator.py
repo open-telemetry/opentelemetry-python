@@ -48,6 +48,9 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER_ARG,
 )
 from opentelemetry.sdk.metrics import MeterProvider
+from opentelemetry.sdk.metrics._internal.export import (
+    PeriodicExportingMetricReader,
+)
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     ConsoleMetricExporter,
@@ -167,6 +170,10 @@ class DummyOTLPMetricExporter:
 
     def shutdown(self):
         pass
+
+
+def dummy_otlp_metric_exporter_factory() -> MetricReader:
+    return DummyMetricReader(DummyOTLPMetricExporter())
 
 
 class Exporter:
@@ -309,7 +316,6 @@ class TestTraceInit(TestCase):
         environ, {"OTEL_RESOURCE_ATTRIBUTES": "service.name=my-test-service"}
     )
     def test_trace_init_default(self):
-
         auto_resource = Resource.create(
             {
                 "telemetry.auto.version": "test-version",
@@ -682,10 +688,6 @@ class TestLoggingInit(TestCase):
 
 class TestMetricsInit(TestCase):
     def setUp(self):
-        self.metric_reader_patch = patch(
-            "opentelemetry.sdk._configuration.PeriodicExportingMetricReader",
-            DummyMetricReader,
-        )
         self.provider_patch = patch(
             "opentelemetry.sdk._configuration.MeterProvider",
             DummyMeterProvider,
@@ -694,12 +696,10 @@ class TestMetricsInit(TestCase):
             "opentelemetry.sdk._configuration.set_meter_provider"
         )
 
-        self.metric_reader_mock = self.metric_reader_patch.start()
         self.provider_mock = self.provider_patch.start()
         self.set_provider_mock = self.set_provider_patch.start()
 
     def tearDown(self):
-        self.metric_reader_patch.stop()
         self.set_provider_patch.stop()
         self.provider_patch.stop()
 
@@ -727,7 +727,9 @@ class TestMetricsInit(TestCase):
     )
     def test_metrics_init_exporter(self):
         resource = Resource.create({})
-        _init_metrics({"otlp": DummyOTLPMetricExporter}, resource=resource)
+        _init_metrics(
+            {"otlp": dummy_otlp_metric_exporter_factory}, resource=resource
+        )
         self.assertEqual(self.set_provider_mock.call_count, 1)
         provider = self.set_provider_mock.call_args[0][0]
         self.assertIsInstance(provider, DummyMeterProvider)
@@ -830,10 +832,12 @@ class TestImportExporters(TestCase):
         self.assertEqual(
             logs_exporters["console"].__class__, ConsoleLogExporter.__class__
         )
-        self.assertEqual(
-            metric_exporterts["console"].__class__,
-            ConsoleMetricExporter.__class__,
+        metric_reader = metric_exporterts["console"]()
+        self.assertIsInstance(
+            metric_reader,
+            PeriodicExportingMetricReader,
         )
+        self.assertIsInstance(metric_reader._exporter, ConsoleMetricExporter)
 
 
 class TestImportConfigComponents(TestCase):
@@ -844,7 +848,6 @@ class TestImportConfigComponents(TestCase):
     def test__import_config_components_missing_entry_point(
         self, mock_entry_points
     ):
-
         with raises(RuntimeError) as error:
             _import_config_components(["a", "b", "c"], "name")
         self.assertEqual(
@@ -858,7 +861,6 @@ class TestImportConfigComponents(TestCase):
     def test__import_config_components_missing_component(
         self, mock_entry_points
     ):
-
         with raises(RuntimeError) as error:
             _import_config_components(["a", "b", "c"], "name")
         self.assertEqual(
