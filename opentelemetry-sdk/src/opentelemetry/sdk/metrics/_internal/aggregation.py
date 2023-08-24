@@ -121,17 +121,23 @@ class _SumAggregation(_Aggregation[Sum]):
         self._instrument_is_monotonic = instrument_is_monotonic
 
         if self._instrument_temporality is AggregationTemporality.DELTA:
-            self._current_value = 0
+            # This happens when the corresponding instrument for this
+            # aggregation is synchronous.
+            self._current_value_delta = 0
         else:
-            self._current_value = None
+            # This happens when the corresponding instrument for this
+            # aggregation is asynchronous.
+            self._current_value_delta = None
 
         self._previous_value = None
 
     def aggregate(self, measurement: Measurement) -> None:
         with self._lock:
-            if self._current_value is None:
-                self._current_value = 0
-            self._current_value = self._current_value + measurement.value
+            if self._current_value_delta is None:
+                self._current_value_delta = 0
+            self._current_value_delta = (
+                self._current_value_delta + measurement.value
+            )
 
     def collect(
         self,
@@ -146,26 +152,26 @@ class _SumAggregation(_Aggregation[Sum]):
         if self._instrument_temporality is AggregationTemporality.DELTA:
 
             with self._lock:
-                current_value = self._current_value
+                current_value_delta = self._current_value_delta
                 start_time_unix_nano = self._start_time_unix_nano
 
-                self._current_value = 0
+                self._current_value_delta = 0
                 self._start_time_unix_nano = collection_start_nano
 
         else:
 
             with self._lock:
-                if self._current_value is None:
+                if self._current_value_delta is None:
                     return None
-                current_value = self._current_value
-                self._current_value = None
+                current_value_delta = self._current_value_delta
+                self._current_value_delta = None
                 start_time_unix_nano = self._start_time_unix_nano
 
         current_point = NumberDataPoint(
             attributes=self._attributes,
             start_time_unix_nano=start_time_unix_nano,
             time_unix_nano=collection_start_nano,
-            value=current_value,
+            value=current_value_delta,
         )
 
         if self._previous_point is None or (
@@ -174,18 +180,20 @@ class _SumAggregation(_Aggregation[Sum]):
             # Output DELTA for a synchronous instrument
             # Output CUMULATIVE for an asynchronous instrument
             self._previous_point = current_point
-            self._previous_value = current_value
+            self._previous_value = current_value_delta
             return current_point
 
         if aggregation_temporality is AggregationTemporality.DELTA:
             # Output temporality DELTA for an asynchronous instrument
-            current_value = current_point.value - self._previous_value
+            current_value_delta = current_point.value - self._previous_value
             self._previous_value = current_point.value
             output_start_time_unix_nano = self._previous_point.time_unix_nano
 
         else:
             # Output CUMULATIVE for a synchronous instrument
-            current_value = current_point.value + self._previous_point.value
+            current_value_delta = (
+                current_point.value + self._previous_point.value
+            )
             output_start_time_unix_nano = (
                 self._previous_point.start_time_unix_nano
             )
@@ -194,7 +202,7 @@ class _SumAggregation(_Aggregation[Sum]):
             attributes=self._attributes,
             start_time_unix_nano=output_start_time_unix_nano,
             time_unix_nano=current_point.time_unix_nano,
-            value=current_value,
+            value=current_value_delta,
         )
 
         self._previous_point = current_point
