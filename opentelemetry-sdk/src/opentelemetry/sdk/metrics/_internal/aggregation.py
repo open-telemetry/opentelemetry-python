@@ -185,8 +185,12 @@ class _SumAggregation(_Aggregation[Sum]):
         if self._previous_collection_start_nano is None or (
             self._instrument_temporality is aggregation_temporality
         ):
-            # Output DELTA for a synchronous instrument
-            # Output CUMULATIVE for an asynchronous instrument
+            # This happens during the first collection cycle.
+            # This happens when the corresponding instrument for this
+            # aggregation is synchronous and aggregation_temporality is DELTA.
+            # This happens when the corresponding instrument for this
+            # aggregation is asynchronous and aggregation_temporality is
+            # CUMULATIVE.
             self._previous_point = current_point
             self._previous_value = current_value_delta
 
@@ -203,13 +207,16 @@ class _SumAggregation(_Aggregation[Sum]):
             )
 
         if aggregation_temporality is AggregationTemporality.DELTA:
-            # Output temporality DELTA for an asynchronous instrument
+            # This happens when the corresponding instrument for this
+            # aggregation is asynchronous and aggregation_temporality is DELTA.
             current_point_value = current_point.value - self._previous_value
             self._previous_value = current_point.value
             output_start_time_unix_nano = self._previous_point.time_unix_nano
 
         else:
-            # Output CUMULATIVE for a synchronous instrument
+            # This happens when the corresponding instrument for this
+            # aggregation is synchronous and aggregation_temporality is
+            # CUMULATIVE.
             current_point_value = (
                 current_point.value + self._previous_point.value
             )
