@@ -130,6 +130,7 @@ class _SumAggregation(_Aggregation[Sum]):
             self._current_value_delta = None
 
         self._previous_value = None
+        self._previous_collection_start_nano = None
 
     def aggregate(self, measurement: Measurement) -> None:
         with self._lock:
@@ -180,13 +181,16 @@ class _SumAggregation(_Aggregation[Sum]):
             value=current_value_delta,
         )
 
-        if self._previous_point is None or (
+        if self._previous_collection_start_nano is None or (
             self._instrument_temporality is aggregation_temporality
         ):
             # Output DELTA for a synchronous instrument
             # Output CUMULATIVE for an asynchronous instrument
             self._previous_point = current_point
             self._previous_value = current_value_delta
+
+            self._previous_collection_start_nano = collection_start_nano
+
             return NumberDataPoint(
                 attributes=self._attributes,
                 start_time_unix_nano=start_time_unix_nano,
@@ -217,6 +221,7 @@ class _SumAggregation(_Aggregation[Sum]):
         )
 
         self._previous_point = current_point
+        self._previous_collection_start_nano = collection_start_nano
 
         return current_point
 
