@@ -141,6 +141,7 @@ class PrometheusMetricReader(MetricReader):
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> None:
+        print(metrics_data.to_json())
         if metrics_data is None:
             return
         self._collector.add_metrics_data(metrics_data)
@@ -217,6 +218,7 @@ class _CustomCollector:
                     metrics.append(metric)
 
         for metric in metrics:
+            label_keyss = []
             label_valuess = []
             values = []
 
@@ -246,6 +248,7 @@ class _CustomCollector:
                     )
                 )
 
+                label_keyss.append(label_keys)
                 label_valuess.append(label_values)
                 if isinstance(number_data_point, HistogramDataPoint):
                     values.append(
@@ -260,8 +263,8 @@ class _CustomCollector:
                 else:
                     values.append(number_data_point.value)
 
-            for pre_metric_family_id, label_values, value in zip(
-                pre_metric_family_ids, label_valuess, values
+            for pre_metric_family_id, label_keys, label_values, value in zip(
+                pre_metric_family_ids, label_keyss, label_valuess, values
             ):
                 is_non_monotonic_sum = (
                     isinstance(metric.data, Sum)

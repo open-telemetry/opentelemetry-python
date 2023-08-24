@@ -34,8 +34,10 @@ from opentelemetry.sdk.metrics.export import (
     HistogramDataPoint,
     Metric,
     MetricsData,
+    NumberDataPoint,
     ResourceMetrics,
     ScopeMetrics,
+    Sum,
 )
 from opentelemetry.sdk.resources import Resource
 from opentelemetry.test.metrictestutil import (
@@ -321,7 +323,6 @@ class TestPrometheusMetricReader(TestCase):
             self.assertEqual(prometheus_metric.samples[0].labels["os"], "Unix")
 
     def test_check_value(self):
-
         collector = _CustomCollector()
 
         self.assertEqual(collector._check_value(1), "1")
@@ -335,7 +336,6 @@ class TestPrometheusMetricReader(TestCase):
         self.assertEqual(collector._check_value(None), "null")
 
     def test_multiple_collection_calls(self):
-
         metric_reader = PrometheusMetricReader()
         provider = MeterProvider(metric_readers=[metric_reader])
         meter = provider.get_meter("getting-started", "0.1.2")
@@ -389,3 +389,64 @@ class TestPrometheusMetricReader(TestCase):
             )
             self.assertNotIn("os", prometheus_metric.samples[0].labels)
             self.assertNotIn("histo", prometheus_metric.samples[0].labels)
+
+    def test_metric_with_inconsistent_label_keys(self):
+        # Metric has two data points with different label keys
+        metric = Metric(
+            name="inconsistent_labels",
+            description="This metric has two different label key sets",
+            unit="s",
+            data=Sum(
+                data_points=[
+                    NumberDataPoint(
+                        attributes={"first_attr": "abc"},
+                        start_time_unix_nano=1641946015139533244,
+                        time_unix_nano=1641946016139533244,
+                        value=1,
+                    ),
+                    NumberDataPoint(
+                        attributes={"different": "abc", "attributes": "123"},
+                        start_time_unix_nano=1641946015139533244,
+                        time_unix_nano=1641946016139533244,
+                        value=2,
+                    ),
+                ],
+                aggregation_temporality=AggregationTemporality.CUMULATIVE,
+                is_monotonic=True,
+            ),
+        )
+
+        metrics_data = MetricsData(
+            resource_metrics=[
+                ResourceMetrics(
+                    resource=Mock(),
+                    scope_metrics=[
+                        ScopeMetrics(
+                            scope=Mock(),
+                            metrics=[metric],
+                            schema_url="schema_url",
+                        )
+                    ],
+                    schema_url="schema_url",
+                )
+            ]
+        )
+
+        collector = _CustomCollector(disable_target_info=True)
+        collector.add_metrics_data(metrics_data)
+        result_bytes = generate_latest(collector)
+        result = result_bytes.decode("utf-8")
+        print("\n", result, "\n")
+        self.assertEqual(
+            result,
+            dedent(
+                """\
+                # HELP inconsistent_labels_s_total This metric has two different label key sets
+                # TYPE inconsistent_labels_s_total counter
+                inconsistent_labels_s_total{first_attr="abc"} 1.0
+                # HELP inconsistent_labels_s_total This metric has two different label key sets
+                # TYPE inconsistent_labels_s_total counter
+                inconsistent_labels_s_total{attributes="123",different="abc"} 2.0
+                """
+            ),
+        )
