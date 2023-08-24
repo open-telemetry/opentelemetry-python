@@ -150,6 +150,8 @@ class _SumAggregation(_Aggregation[Sum]):
         """
 
         if self._instrument_temporality is AggregationTemporality.DELTA:
+            # This happens when the corresponding instrument for this
+            # aggregation is synchronous.
 
             with self._lock:
                 current_value_delta = self._current_value_delta
@@ -159,9 +161,13 @@ class _SumAggregation(_Aggregation[Sum]):
                 self._start_time_unix_nano = collection_start_nano
 
         else:
+            # This happens when the corresponding instrument for this
+            # aggregation is asynchronous.
 
             with self._lock:
                 if self._current_value_delta is None:
+                    # This happens when the corresponding instrument callback
+                    # does not produce measurements.
                     return None
                 current_value_delta = self._current_value_delta
                 self._current_value_delta = None
@@ -181,7 +187,12 @@ class _SumAggregation(_Aggregation[Sum]):
             # Output CUMULATIVE for an asynchronous instrument
             self._previous_point = current_point
             self._previous_value = current_value_delta
-            return current_point
+            return NumberDataPoint(
+                attributes=self._attributes,
+                start_time_unix_nano=start_time_unix_nano,
+                time_unix_nano=collection_start_nano,
+                value=current_value_delta,
+            )
 
         if aggregation_temporality is AggregationTemporality.DELTA:
             # Output temporality DELTA for an asynchronous instrument
