@@ -211,7 +211,7 @@ class _SumAggregation(_Aggregation[Sum]):
             # aggregation is asynchronous and aggregation_temporality is DELTA.
             current_point_value = current_value_delta - self._previous_value
             self._previous_value = current_value_delta
-            output_start_time_unix_nano = self._previous_point.time_unix_nano
+            output_start_time_unix_nano = self._previous_collection_start_nano
 
         else:
             # This happens when the corresponding instrument for this
