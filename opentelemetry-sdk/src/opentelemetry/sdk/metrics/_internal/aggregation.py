@@ -131,6 +131,7 @@ class _SumAggregation(_Aggregation[Sum]):
 
         self._previous_value = None
         self._previous_collection_start_nano = None
+        self._previous_value_cumulative = 0
 
     def aggregate(self, measurement: Measurement) -> None:
         with self._lock:
@@ -190,6 +191,9 @@ class _SumAggregation(_Aggregation[Sum]):
             self._previous_value = current_value_delta
 
             self._previous_collection_start_nano = collection_start_nano
+            self._previous_value_cumulative = (
+                self._previous_value_cumulative + current_value_delta
+            )
 
             return NumberDataPoint(
                 attributes=self._attributes,
@@ -200,13 +204,13 @@ class _SumAggregation(_Aggregation[Sum]):
 
         if aggregation_temporality is AggregationTemporality.DELTA:
             # Output temporality DELTA for an asynchronous instrument
-            current_value_delta = current_point.value - self._previous_value
+            current_point_value = current_point.value - self._previous_value
             self._previous_value = current_point.value
             output_start_time_unix_nano = self._previous_point.time_unix_nano
 
         else:
             # Output CUMULATIVE for a synchronous instrument
-            current_value_delta = (
+            current_point_value = (
                 current_point.value + self._previous_point.value
             )
             output_start_time_unix_nano = (
@@ -217,10 +221,13 @@ class _SumAggregation(_Aggregation[Sum]):
             attributes=self._attributes,
             start_time_unix_nano=output_start_time_unix_nano,
             time_unix_nano=current_point.time_unix_nano,
-            value=current_value_delta,
+            value=current_point_value,
         )
 
         self._previous_point = current_point
+        self._previous_value_cumulative = (
+            self._previous_value_cumulative + current_value_delta
+        )
         self._previous_collection_start_nano = collection_start_nano
 
         return current_point
