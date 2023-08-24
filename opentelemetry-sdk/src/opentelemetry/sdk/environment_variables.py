@@ -678,3 +678,27 @@ entry points for the `opentelemetry_resource_detector` entry point. This is an
 experimental feature and the name of this variable and its behavior can change
 in a non-backwards compatible way.
 """
+
+OTEL_EXPORTER_PROMETHEUS_HOST = "OTEL_EXPORTER_PROMETHEUS_HOST"
+"""
+.. envvar:: OTEL_EXPORTER_PROMETHEUS_HOST
+
+The :envvar:`OTEL_EXPORTER_PROMETHEUS_HOST` environment variable configures the host used by
+the Prometheus exporter.
+Default: "localhost"
+
+This is an experimental environment variable and the name of this variable and its behavior can
+change in a non-backwards compatible way.
+"""
+
+OTEL_EXPORTER_PROMETHEUS_PORT = "OTEL_EXPORTER_PROMETHEUS_PORT"
+"""
+.. envvar:: OTEL_EXPORTER_PROMETHEUS_PORT
+
+The :envvar:`OTEL_EXPORTER_PROMETHEUS_PORT` environment variable configures the port used by
+the Prometheus exporter.
+Default: 9464
+
+This is an experimental environment variable and the name of this variable and its behavior can
+change in a non-backwards compatible way.
+"""

@@ -15,6 +15,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3428](https://github.com/open-telemetry/opentelemetry-python/pull/3428))
 - Allow instrument names to have '/' and up to 255 characters
   ([#3442](https://github.com/open-telemetry/opentelemetry-python/pull/3442))
+- Prometheus exporter support for auto instrumentation 
+  ([#3413](https://github.com/open-telemetry/opentelemetry-python/pull/3413))
 
 ## Version 1.20.0/0.41b0 (2023-09-04)
 
