@@ -209,8 +209,8 @@ class _SumAggregation(_Aggregation[Sum]):
         if aggregation_temporality is AggregationTemporality.DELTA:
             # This happens when the corresponding instrument for this
             # aggregation is asynchronous and aggregation_temporality is DELTA.
-            current_point_value = current_point.value - self._previous_value
-            self._previous_value = current_point.value
+            current_point_value = current_value_delta - self._previous_value
+            self._previous_value = current_value_delta
             output_start_time_unix_nano = self._previous_point.time_unix_nano
 
         else:
@@ -218,7 +218,7 @@ class _SumAggregation(_Aggregation[Sum]):
             # aggregation is synchronous and aggregation_temporality is
             # CUMULATIVE.
             current_point_value = (
-                current_point.value + self._previous_point.value
+                current_value_delta + self._previous_point.value
             )
             output_start_time_unix_nano = (
                 self._previous_point.start_time_unix_nano
