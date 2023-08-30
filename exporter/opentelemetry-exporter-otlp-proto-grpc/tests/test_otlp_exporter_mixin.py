@@ -60,7 +60,9 @@ class TestOTLPExporterMixin(TestCase):
             with self.assertRaises(InvalidCompressionValueException):
                 environ_to_compression("test_invalid")
 
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
+    )
     def test_export_warning(self, mock_expo):
         mock_expo.configure_mock(**{"return_value": [0]})
 
@@ -93,7 +95,7 @@ class TestOTLPExporterMixin(TestCase):
             otlp_mock_exporter._export(Mock())
             self.assertEqual(
                 warning.records[0].message,
-                "Failed to export mock, error code: None",
+                "Failed to export mock to localhost:4317, error code: None",
             )
 
         def code(self):  # pylint: disable=function-redefined
@@ -112,7 +114,7 @@ class TestOTLPExporterMixin(TestCase):
                 warning.records[0].message,
                 (
                     "Transient error StatusCode.CANCELLED encountered "
-                    "while exporting mock, retrying in 0s."
+                    "while exporting mock to localhost:4317, retrying in 0s."
                 ),
             )
 
