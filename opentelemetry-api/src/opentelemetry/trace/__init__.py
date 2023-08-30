@@ -588,6 +588,11 @@ def use_span(
                         description=f"{type(exc).__name__}: {exc}",
                     )
                 )
+
+        # This causes parent spans to set their status to ERROR and to record
+        # an exception as an event if a child span raises an exception even if
+        # such child span was started with both record_exception and
+        # set_status_on_exception attributes set to False.
         raise
 
     finally:

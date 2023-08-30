@@ -19,6 +19,7 @@ from unittest.mock import Mock, patch
 import requests
 import responses
 
+from opentelemetry.exporter.otlp.proto.common._internal import _is_backoff_v2
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_COMPRESSION,
@@ -26,7 +27,6 @@ from opentelemetry.exporter.otlp.proto.http.trace_exporter import (
     DEFAULT_TIMEOUT,
     DEFAULT_TRACES_EXPORT_PATH,
     OTLPSpanExporter,
-    _is_backoff_v2,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.sdk.environment_variables import (
@@ -204,7 +204,7 @@ class TestOTLPSpanExporter(unittest.TestCase):
 
     # pylint: disable=no-self-use
     @responses.activate
-    @patch("opentelemetry.exporter.otlp.proto.http.trace_exporter.backoff")
+    @patch("opentelemetry.exporter.otlp.proto.common._internal.backoff")
     @patch("opentelemetry.exporter.otlp.proto.http.trace_exporter.sleep")
     def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
         # In backoff ~= 2.0.0 the first value yielded from expo is None.

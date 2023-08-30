@@ -17,6 +17,8 @@ import logging
 from collections.abc import Sequence
 from typing import Any, Mapping, Optional, List, Callable, TypeVar, Dict
 
+import backoff
+
 from opentelemetry.sdk.util.instrumentation import InstrumentationScope
 from opentelemetry.proto.common.v1.common_pb2 import (
     InstrumentationScope as PB2InstrumentationScope,
@@ -130,3 +132,16 @@ def _get_resource_data(
             )
         )
     return resource_data
+
+
+# Work around API change between backoff 1.x and 2.x. Since 2.0.0 the backoff
+# wait generator API requires a first .send(None) before reading the backoff
+# values from the generator.
+_is_backoff_v2 = next(backoff.expo()) is None
+
+
+def _create_exp_backoff_generator(*args, **kwargs):
+    gen = backoff.expo(*args, **kwargs)
+    if _is_backoff_v2:
+        gen.send(None)
+    return gen

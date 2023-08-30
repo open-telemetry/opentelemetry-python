@@ -21,6 +21,7 @@ from requests import Session
 from requests.models import Response
 from responses import POST, activate, add
 
+from opentelemetry.exporter.otlp.proto.common._internal import _is_backoff_v2
 from opentelemetry.exporter.otlp.proto.common.metrics_encoder import (
     encode_metrics,
 )
@@ -31,7 +32,6 @@ from opentelemetry.exporter.otlp.proto.http.metric_exporter import (
     DEFAULT_METRICS_EXPORT_PATH,
     DEFAULT_TIMEOUT,
     OTLPMetricExporter,
-    _is_backoff_v2,
 )
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_CERTIFICATE,
@@ -298,7 +298,7 @@ class TestOTLPMetricExporter(TestCase):
         )
 
     @activate
-    @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.backoff")
+    @patch("opentelemetry.exporter.otlp.proto.common._internal.backoff")
     @patch("opentelemetry.exporter.otlp.proto.http.metric_exporter.sleep")
     def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
         # In backoff ~= 2.0.0 the first value yielded from expo is None.
