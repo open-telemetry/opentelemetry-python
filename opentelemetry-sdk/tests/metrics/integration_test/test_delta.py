@@ -247,7 +247,7 @@ class TestSumAggregation(TestCase):
                 0
             )
 
-    def test_synchronous_delta_temporality_with_measurements(self):
+    def test_synchronous_delta_temporality(self):
 
         aggregation = SumAggregation()
 
@@ -267,10 +267,19 @@ class TestSumAggregation(TestCase):
 
         for _ in range(10):
 
-            counter.add(8)
             results.append(reader.get_metrics_data())
 
-        provider.shutdown()
+        for metrics_data in results:
+            self.assertEqual(
+                len(metrics_data.resource_metrics[0].scope_metrics),
+                0
+            )
+
+        results = []
+
+        for _ in range(10):
+            counter.add(8)
+            results.append(reader.get_metrics_data())
 
         previous_time_unix_nano = (
             results[0]
@@ -323,21 +332,40 @@ class TestSumAggregation(TestCase):
                 metric_data.start_time_unix_nano, metric_data.time_unix_nano
             )
 
-    def test_synchronous_delta_temporality_with_no_measurements(self):
+        results = []
+
+        for _ in range(10):
+
+            results.append(reader.get_metrics_data())
+
+        for metrics_data in results:
+            self.assertEqual(
+                len(
+                    metrics_data.
+                    resource_metrics[0].
+                    scope_metrics[0].
+                    metrics[0].
+                    data.
+                    data_points
+                ),
+                0
+            )
+
+    def test_synchronous_cumulative_temporality(self):
 
         aggregation = SumAggregation()
 
         reader = InMemoryMetricReader(
             preferred_aggregation={Counter: aggregation},
             preferred_temporality={
-                Counter: AggregationTemporality.DELTA
+                Counter: AggregationTemporality.CUMULATIVE
             },
         )
 
         provider = MeterProvider(metric_readers=[reader])
         meter = provider.get_meter("name", "version")
 
-        meter.create_counter("counter")
+        counter = meter.create_counter("counter")
 
         results = []
 
@@ -350,3 +378,64 @@ class TestSumAggregation(TestCase):
                 len(metrics_data.resource_metrics[0].scope_metrics),
                 0
             )
+
+        results = []
+
+        for _ in range(10):
+
+            counter.add(8)
+            results.append(reader.get_metrics_data())
+
+        start_time_unix_nano = (
+            results[0]
+            .resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points[0]
+            .start_time_unix_nano
+        )
+
+        for index, metrics_data in enumerate(results):
+
+            metric_data = (
+                metrics_data.resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[0]
+                .data.data_points[0]
+            )
+
+            self.assertEqual(
+                start_time_unix_nano, metric_data.start_time_unix_nano
+            )
+            self.assertEqual(metric_data.value, 8 * (index + 1))
+
+        results = []
+
+        for _ in range(10):
+
+            results.append(reader.get_metrics_data())
+
+        provider.shutdown()
+
+        start_time_unix_nano = (
+            results[0]
+            .resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points[0]
+            .start_time_unix_nano
+        )
+
+        for metrics_data in results:
+
+            metric_data = (
+                metrics_data.resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[0]
+                .data.data_points[0]
+            )
+
+            self.assertEqual(
+                start_time_unix_nano, metric_data.start_time_unix_nano
+            )
+            self.assertEqual(metric_data.value, 80)
