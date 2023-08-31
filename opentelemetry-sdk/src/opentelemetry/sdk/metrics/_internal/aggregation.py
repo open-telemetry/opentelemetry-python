@@ -130,9 +130,7 @@ class _SumAggregation(_Aggregation[Sum]):
             if self._current_value is None:
                 self._current_value = 0
 
-            self._current_value = (
-                self._current_value + measurement.value
-            )
+            self._current_value = self._current_value + measurement.value
 
     def collect(
         self,
@@ -148,9 +146,7 @@ class _SumAggregation(_Aggregation[Sum]):
             current_value = self._current_value
             self._current_value = None
 
-            if (
-                self._instrument_temporality is AggregationTemporality.DELTA
-            ):
+            if self._instrument_temporality is AggregationTemporality.DELTA:
                 # This happens when the corresponding instrument for this
                 # aggregation is synchronous.
                 if aggregation_temporality is AggregationTemporality.DELTA:
@@ -172,7 +168,10 @@ class _SumAggregation(_Aggregation[Sum]):
                         value=current_value,
                     )
 
-                if aggregation_temporality is AggregationTemporality.CUMULATIVE:
+                if (
+                    aggregation_temporality
+                    is AggregationTemporality.CUMULATIVE
+                ):
 
                     if current_value is None:
                         current_value = 0

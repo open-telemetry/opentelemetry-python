@@ -16,7 +16,7 @@ from itertools import count
 from unittest import TestCase
 
 from opentelemetry.metrics import Observation
-from opentelemetry.sdk.metrics import MeterProvider, ObservableCounter, Counter
+from opentelemetry.sdk.metrics import Counter, MeterProvider, ObservableCounter
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     InMemoryMetricReader,
@@ -25,7 +25,7 @@ from opentelemetry.sdk.metrics.view import SumAggregation
 
 
 class TestSumAggregation(TestCase):
-    def test_asynchronous_delta_temporality_with_measurements(self):
+    def test_asynchronous_delta_temporality(self):
 
         eight_multiple_generator = count(start=8, step=8)
 
@@ -34,7 +34,14 @@ class TestSumAggregation(TestCase):
         def observable_counter_callback(callback_options):
             nonlocal counter
             counter += 1
-            yield Observation(next(eight_multiple_generator))
+
+            if counter < 11:
+                yield
+
+            elif counter < 21:
+                yield Observation(next(eight_multiple_generator))
+
+            yield
 
         aggregation = SumAggregation()
 
@@ -60,7 +67,18 @@ class TestSumAggregation(TestCase):
 
         self.assertEqual(counter, 10)
 
-        provider.shutdown()
+        for metrics_data in results:
+            self.assertEqual(
+                len(metrics_data.resource_metrics[0].scope_metrics), 0
+            )
+
+        results = []
+
+        for _ in range(10):
+
+            results.append(reader.get_metrics_data())
+
+        self.assertEqual(counter, 20)
 
         previous_time_unix_nano = (
             results[0]
@@ -113,44 +131,28 @@ class TestSumAggregation(TestCase):
                 metric_data.start_time_unix_nano, metric_data.time_unix_nano
             )
 
-    def test_asynchronous_delta_temporality_with_no_measurements(self):
-
-        counter = 0
-
-        def observable_counter_callback(callback_options):
-            nonlocal counter
-            counter += 1
-            yield
-
-        aggregation = SumAggregation()
-
-        reader = InMemoryMetricReader(
-            preferred_aggregation={ObservableCounter: aggregation},
-            preferred_temporality={
-                ObservableCounter: AggregationTemporality.DELTA
-            },
-        )
-
-        provider = MeterProvider(metric_readers=[reader])
-        meter = provider.get_meter("name", "version")
-
-        meter.create_observable_counter(
-            "observable_counter", [observable_counter_callback]
-        )
-
         results = []
 
         for _ in range(10):
 
             results.append(reader.get_metrics_data())
 
+        self.assertEqual(counter, 30)
+
+        provider.shutdown()
+
         for metrics_data in results:
             self.assertEqual(
-                len(metrics_data.resource_metrics[0].scope_metrics),
-                0
+                len(
+                    metrics_data.resource_metrics[0]
+                    .scope_metrics[0]
+                    .metrics[0]
+                    .data.data_points
+                ),
+                0,
             )
 
-    def test_asynchronous_cumulative_temporality_with_measurements(self):
+    def test_asynchronous_cumulative_temporality(self):
 
         eight_multiple_generator = count(start=8, step=8)
 
@@ -159,7 +161,14 @@ class TestSumAggregation(TestCase):
         def observable_counter_callback(callback_options):
             nonlocal counter
             counter += 1
-            yield Observation(next(eight_multiple_generator))
+
+            if counter < 11:
+                yield
+
+            elif counter < 21:
+                yield Observation(next(eight_multiple_generator))
+
+            yield
 
         aggregation = SumAggregation()
 
@@ -185,7 +194,18 @@ class TestSumAggregation(TestCase):
 
         self.assertEqual(counter, 10)
 
-        provider.shutdown()
+        for metrics_data in results:
+            self.assertEqual(
+                len(metrics_data.resource_metrics[0].scope_metrics), 0
+            )
+
+        results = []
+
+        for _ in range(10):
+
+            results.append(reader.get_metrics_data())
+
+        self.assertEqual(counter, 20)
 
         start_time_unix_nano = (
             results[0]
@@ -210,41 +230,25 @@ class TestSumAggregation(TestCase):
             )
             self.assertEqual(metric_data.value, 8 * (index + 1))
 
-    def test_asynchronous_cumulative_temporality_with_no_measurements(self):
-
-        counter = 0
-
-        def observable_counter_callback(callback_options):
-            nonlocal counter
-            counter += 1
-            yield
-
-        aggregation = SumAggregation()
-
-        reader = InMemoryMetricReader(
-            preferred_aggregation={ObservableCounter: aggregation},
-            preferred_temporality={
-                ObservableCounter: AggregationTemporality.CUMULATIVE
-            },
-        )
-
-        provider = MeterProvider(metric_readers=[reader])
-        meter = provider.get_meter("name", "version")
-
-        meter.create_observable_counter(
-            "observable_counter", [observable_counter_callback]
-        )
-
         results = []
 
         for _ in range(10):
 
             results.append(reader.get_metrics_data())
 
+        self.assertEqual(counter, 30)
+
+        provider.shutdown()
+
         for metrics_data in results:
             self.assertEqual(
-                len(metrics_data.resource_metrics[0].scope_metrics),
-                0
+                len(
+                    metrics_data.resource_metrics[0]
+                    .scope_metrics[0]
+                    .metrics[0]
+                    .data.data_points
+                ),
+                0,
             )
 
     def test_synchronous_delta_temporality(self):
@@ -253,9 +257,7 @@ class TestSumAggregation(TestCase):
 
         reader = InMemoryMetricReader(
             preferred_aggregation={Counter: aggregation},
-            preferred_temporality={
-                Counter: AggregationTemporality.DELTA
-            },
+            preferred_temporality={Counter: AggregationTemporality.DELTA},
         )
 
         provider = MeterProvider(metric_readers=[reader])
@@ -271,8 +273,7 @@ class TestSumAggregation(TestCase):
 
         for metrics_data in results:
             self.assertEqual(
-                len(metrics_data.resource_metrics[0].scope_metrics),
-                0
+                len(metrics_data.resource_metrics[0].scope_metrics), 0
             )
 
         results = []
@@ -341,14 +342,12 @@ class TestSumAggregation(TestCase):
         for metrics_data in results:
             self.assertEqual(
                 len(
-                    metrics_data.
-                    resource_metrics[0].
-                    scope_metrics[0].
-                    metrics[0].
-                    data.
-                    data_points
+                    metrics_data.resource_metrics[0]
+                    .scope_metrics[0]
+                    .metrics[0]
+                    .data.data_points
                 ),
-                0
+                0,
             )
 
     def test_synchronous_cumulative_temporality(self):
@@ -357,9 +356,7 @@ class TestSumAggregation(TestCase):
 
         reader = InMemoryMetricReader(
             preferred_aggregation={Counter: aggregation},
-            preferred_temporality={
-                Counter: AggregationTemporality.CUMULATIVE
-            },
+            preferred_temporality={Counter: AggregationTemporality.CUMULATIVE},
         )
 
         provider = MeterProvider(metric_readers=[reader])
@@ -375,8 +372,7 @@ class TestSumAggregation(TestCase):
 
         for metrics_data in results:
             self.assertEqual(
-                len(metrics_data.resource_metrics[0].scope_metrics),
-                0
+                len(metrics_data.resource_metrics[0].scope_metrics), 0
             )
 
         results = []
