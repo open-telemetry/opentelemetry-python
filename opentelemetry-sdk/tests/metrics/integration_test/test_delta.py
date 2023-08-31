@@ -16,7 +16,7 @@ from itertools import count
 from unittest import TestCase
 
 from opentelemetry.metrics import Observation
-from opentelemetry.sdk.metrics import MeterProvider, ObservableCounter
+from opentelemetry.sdk.metrics import MeterProvider, ObservableCounter, Counter
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     InMemoryMetricReader,
@@ -245,4 +245,80 @@ class TestSumAggregation(TestCase):
             self.assertEqual(
                 len(metrics_data.resource_metrics[0].scope_metrics),
                 0
+            )
+
+    def test_synchronous_delta_temporality_with_measurements(self):
+
+        aggregation = SumAggregation()
+
+        reader = InMemoryMetricReader(
+            preferred_aggregation={Counter: aggregation},
+            preferred_temporality={
+                Counter: AggregationTemporality.DELTA
+            },
+        )
+
+        provider = MeterProvider(metric_readers=[reader])
+        meter = provider.get_meter("name", "version")
+
+        counter = meter.create_counter("counter")
+
+        results = []
+
+        for _ in range(10):
+
+            counter.add(8)
+            results.append(reader.get_metrics_data())
+
+        provider.shutdown()
+
+        previous_time_unix_nano = (
+            results[0]
+            .resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points[0]
+            .time_unix_nano
+        )
+
+        self.assertEqual(
+            (
+                results[0]
+                .resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[0]
+                .data.data_points[0]
+                .value
+            ),
+            8,
+        )
+
+        self.assertLess(
+            (
+                results[0]
+                .resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[0]
+                .data.data_points[0]
+                .start_time_unix_nano
+            ),
+            previous_time_unix_nano,
+        )
+
+        for metrics_data in results[1:]:
+
+            metric_data = (
+                metrics_data.resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[0]
+                .data.data_points[0]
+            )
+
+            self.assertEqual(
+                previous_time_unix_nano, metric_data.start_time_unix_nano
+            )
+            previous_time_unix_nano = metric_data.time_unix_nano
+            self.assertEqual(metric_data.value, 8)
+            self.assertLess(
+                metric_data.start_time_unix_nano, metric_data.time_unix_nano
             )
