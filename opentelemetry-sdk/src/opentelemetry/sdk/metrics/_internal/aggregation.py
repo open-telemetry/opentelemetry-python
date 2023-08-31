@@ -131,6 +131,7 @@ class _SumAggregation(_Aggregation[Sum]):
 
         self._previous_value = None
         self._previous_collection_start_nano = None
+        self._previous_collection_start_nano_sd = self._start_time_unix_nano
         self._previous_value_cumulative = 0
 
     def aggregate(self, measurement: Measurement) -> None:
@@ -151,6 +152,47 @@ class _SumAggregation(_Aggregation[Sum]):
         Atomically return a point for the current value of the metric and
         reset the aggregation value.
         """
+
+        with self._lock:
+            current_value_delta = self._current_value_delta
+
+            if (
+                self._instrument_temporality is AggregationTemporality.DELTA
+            ):
+                previous_collection_start_nano_sd = self._previous_collection_start_nano_sd
+                # This should be actually set to None after every collection
+                # cycle. This would allow to detect when no measurements have
+                # been taken between collection cycles and return None for
+                # synchronous instruments with delta temporality.
+                self._current_value_delta = 0
+                self._previous_collection_start_nano_sd = collection_start_nano
+
+                if aggregation_temporality is AggregationTemporality.DELTA:
+
+                    current_point_value = current_value_delta
+
+                    return NumberDataPoint(
+                        attributes=self._attributes,
+                        start_time_unix_nano=previous_collection_start_nano_sd,
+                        time_unix_nano=collection_start_nano,
+                        value=current_point_value,
+                    )
+
+                if aggregation_temporality is AggregationTemporality.CUMULATIVE:
+
+                    current_point_value = (
+                        current_value_delta + self._previous_value_cumulative
+                    )
+                    self._previous_value_cumulative = (
+                        self._previous_value_cumulative + current_value_delta
+                    )
+
+                    return NumberDataPoint(
+                        attributes=self._attributes,
+                        start_time_unix_nano=self._start_time_unix_nano,
+                        time_unix_nano=collection_start_nano,
+                        value=current_point_value,
+                    )
 
         with self._lock:
             current_value_delta = self._current_value_delta
