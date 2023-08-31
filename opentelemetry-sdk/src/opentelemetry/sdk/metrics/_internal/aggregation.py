@@ -123,11 +123,11 @@ class _SumAggregation(_Aggregation[Sum]):
         if self._instrument_temporality is AggregationTemporality.DELTA:
             # This happens when the corresponding instrument for this
             # aggregation is synchronous.
-            self._current_value_delta = 0
+            self._current_value = 0
         else:
             # This happens when the corresponding instrument for this
             # aggregation is asynchronous.
-            self._current_value_delta = None
+            self._current_value = None
 
         self._previous_value = None
         self._previous_collection_start_nano = None
@@ -136,11 +136,11 @@ class _SumAggregation(_Aggregation[Sum]):
 
     def aggregate(self, measurement: Measurement) -> None:
         with self._lock:
-            if self._current_value_delta is None:
-                self._current_value_delta = 0
+            if self._current_value is None:
+                self._current_value = 0
 
-            self._current_value_delta = (
-                self._current_value_delta + measurement.value
+            self._current_value = (
+                self._current_value + measurement.value
             )
 
     def collect(
@@ -154,22 +154,24 @@ class _SumAggregation(_Aggregation[Sum]):
         """
 
         with self._lock:
-            current_value_delta = self._current_value_delta
+            current_value = self._current_value
 
             if (
                 self._instrument_temporality is AggregationTemporality.DELTA
             ):
+                # This happens when the corresponding instrument for this
+                # aggregation is synchronous.
                 previous_collection_start_nano_sd = self._previous_collection_start_nano_sd
                 # This should be actually set to None after every collection
                 # cycle. This would allow to detect when no measurements have
                 # been taken between collection cycles and return None for
                 # synchronous instruments with delta temporality.
-                self._current_value_delta = 0
+                self._current_value = 0
                 self._previous_collection_start_nano_sd = collection_start_nano
 
                 if aggregation_temporality is AggregationTemporality.DELTA:
 
-                    current_point_value = current_value_delta
+                    current_point_value = current_value
 
                     return NumberDataPoint(
                         attributes=self._attributes,
@@ -181,10 +183,10 @@ class _SumAggregation(_Aggregation[Sum]):
                 if aggregation_temporality is AggregationTemporality.CUMULATIVE:
 
                     current_point_value = (
-                        current_value_delta + self._previous_value_cumulative
+                        current_value + self._previous_value_cumulative
                     )
                     self._previous_value_cumulative = (
-                        self._previous_value_cumulative + current_value_delta
+                        self._previous_value_cumulative + current_value
                     )
 
                     return NumberDataPoint(
@@ -195,7 +197,7 @@ class _SumAggregation(_Aggregation[Sum]):
                     )
 
         with self._lock:
-            current_value_delta = self._current_value_delta
+            current_value = self._current_value
             start_time_unix_nano = self._start_time_unix_nano
 
         if self._instrument_temporality is AggregationTemporality.DELTA:
@@ -203,7 +205,7 @@ class _SumAggregation(_Aggregation[Sum]):
             # aggregation is synchronous.
 
             with self._lock:
-                self._current_value_delta = 0
+                self._current_value = 0
                 self._start_time_unix_nano = collection_start_nano
 
         else:
@@ -211,17 +213,17 @@ class _SumAggregation(_Aggregation[Sum]):
             # aggregation is asynchronous.
 
             with self._lock:
-                if self._current_value_delta is None:
+                if self._current_value is None:
                     # This happens when the corresponding instrument callback
                     # does not produce measurements.
                     return None
-                self._current_value_delta = None
+                self._current_value = None
 
         current_point = NumberDataPoint(
             attributes=self._attributes,
             start_time_unix_nano=start_time_unix_nano,
             time_unix_nano=collection_start_nano,
-            value=current_value_delta,
+            value=current_value,
         )
 
         if self._previous_collection_start_nano is None or (
@@ -234,25 +236,25 @@ class _SumAggregation(_Aggregation[Sum]):
             # aggregation is asynchronous and aggregation_temporality is
             # CUMULATIVE.
             self._previous_point = current_point
-            self._previous_value = current_value_delta
+            self._previous_value = current_value
 
             self._previous_collection_start_nano = collection_start_nano
             self._previous_value_cumulative = (
-                self._previous_value_cumulative + current_value_delta
+                self._previous_value_cumulative + current_value
             )
 
             return NumberDataPoint(
                 attributes=self._attributes,
                 start_time_unix_nano=start_time_unix_nano,
                 time_unix_nano=collection_start_nano,
-                value=current_value_delta,
+                value=current_value,
             )
 
         if aggregation_temporality is AggregationTemporality.DELTA:
             # This happens when the corresponding instrument for this
             # aggregation is asynchronous and aggregation_temporality is DELTA.
-            current_point_value = current_value_delta - self._previous_value
-            self._previous_value = current_value_delta
+            current_point_value = current_value - self._previous_value
+            self._previous_value = current_value
             output_start_time_unix_nano = self._previous_collection_start_nano
 
         else:
@@ -260,7 +262,7 @@ class _SumAggregation(_Aggregation[Sum]):
             # aggregation is synchronous and aggregation_temporality is
             # CUMULATIVE.
             current_point_value = (
-                current_value_delta + self._previous_value_cumulative
+                current_value + self._previous_value_cumulative
             )
             output_start_time_unix_nano = (
                 self._previous_point.start_time_unix_nano
@@ -275,7 +277,7 @@ class _SumAggregation(_Aggregation[Sum]):
 
         self._previous_point = current_point
         self._previous_value_cumulative = (
-            self._previous_value_cumulative + current_value_delta
+            self._previous_value_cumulative + current_value
         )
         self._previous_collection_start_nano = collection_start_nano
 
