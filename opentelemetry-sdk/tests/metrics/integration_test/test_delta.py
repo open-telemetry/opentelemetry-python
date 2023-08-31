@@ -322,3 +322,31 @@ class TestSumAggregation(TestCase):
             self.assertLess(
                 metric_data.start_time_unix_nano, metric_data.time_unix_nano
             )
+
+    def test_synchronous_delta_temporality_with_no_measurements(self):
+
+        aggregation = SumAggregation()
+
+        reader = InMemoryMetricReader(
+            preferred_aggregation={Counter: aggregation},
+            preferred_temporality={
+                Counter: AggregationTemporality.DELTA
+            },
+        )
+
+        provider = MeterProvider(metric_readers=[reader])
+        meter = provider.get_meter("name", "version")
+
+        meter.create_counter("counter")
+
+        results = []
+
+        for _ in range(10):
+
+            results.append(reader.get_metrics_data())
+
+        for metrics_data in results:
+            self.assertEqual(
+                len(metrics_data.resource_metrics[0].scope_metrics),
+                0
+            )
