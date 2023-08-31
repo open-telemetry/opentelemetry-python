@@ -168,61 +168,52 @@ class _SumAggregation(_Aggregation[Sum]):
                         value=current_value,
                     )
 
-                if (
-                    aggregation_temporality
-                    is AggregationTemporality.CUMULATIVE
-                ):
-
-                    if current_value is None:
-                        current_value = 0
-
-                    self._previous_cumulative_value = (
-                        current_value + self._previous_cumulative_value
-                    )
-
-                    return NumberDataPoint(
-                        attributes=self._attributes,
-                        start_time_unix_nano=self._start_time_unix_nano,
-                        time_unix_nano=collection_start_nano,
-                        value=self._previous_cumulative_value,
-                    )
-
-            else:
-                # This happens when the corresponding instrument for this
-                # aggregation is asynchronous.
-
                 if current_value is None:
-                    # This happens when the corresponding instrument callback
-                    # does not produce measurements.
-                    return None
+                    current_value = 0
 
-                if aggregation_temporality is AggregationTemporality.DELTA:
-                    current_point_value = (
-                        current_value - self._previous_cumulative_value
-                    )
-                    self._previous_cumulative_value = current_value
+                self._previous_cumulative_value = (
+                    current_value + self._previous_cumulative_value
+                )
 
-                    previous_collection_start_nano = (
-                        self._previous_collection_start_nano
-                    )
-                    self._previous_collection_start_nano = (
-                        collection_start_nano
-                    )
+                return NumberDataPoint(
+                    attributes=self._attributes,
+                    start_time_unix_nano=self._start_time_unix_nano,
+                    time_unix_nano=collection_start_nano,
+                    value=self._previous_cumulative_value,
+                )
 
-                    return NumberDataPoint(
-                        attributes=self._attributes,
-                        start_time_unix_nano=previous_collection_start_nano,
-                        time_unix_nano=collection_start_nano,
-                        value=current_point_value,
-                    )
-                else:
+            # This happens when the corresponding instrument for this
+            # aggregation is asynchronous.
 
-                    return NumberDataPoint(
-                        attributes=self._attributes,
-                        start_time_unix_nano=self._start_time_unix_nano,
-                        time_unix_nano=collection_start_nano,
-                        value=current_value,
-                    )
+            if current_value is None:
+                # This happens when the corresponding instrument callback
+                # does not produce measurements.
+                return None
+
+            if aggregation_temporality is AggregationTemporality.DELTA:
+                current_point_value = (
+                    current_value - self._previous_cumulative_value
+                )
+                self._previous_cumulative_value = current_value
+
+                previous_collection_start_nano = (
+                    self._previous_collection_start_nano
+                )
+                self._previous_collection_start_nano = collection_start_nano
+
+                return NumberDataPoint(
+                    attributes=self._attributes,
+                    start_time_unix_nano=previous_collection_start_nano,
+                    time_unix_nano=collection_start_nano,
+                    value=current_point_value,
+                )
+
+            return NumberDataPoint(
+                attributes=self._attributes,
+                start_time_unix_nano=self._start_time_unix_nano,
+                time_unix_nano=collection_start_nano,
+                value=current_value,
+            )
 
 
 class _LastValueAggregation(_Aggregation[Gauge]):
