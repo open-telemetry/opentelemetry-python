@@ -123,7 +123,7 @@ class _SumAggregation(_Aggregation[Sum]):
         self._current_value = None
 
         self._previous_collection_start_nano = self._start_time_unix_nano
-        self._previous_value_cumulative = 0
+        self._previous_cumulative_value = 0
 
     def aggregate(self, measurement: Measurement) -> None:
         with self._lock:
@@ -165,13 +165,11 @@ class _SumAggregation(_Aggregation[Sum]):
                         collection_start_nano
                     )
 
-                    current_point_value = current_value
-
                     return NumberDataPoint(
                         attributes=self._attributes,
                         start_time_unix_nano=previous_collection_start_nano,
                         time_unix_nano=collection_start_nano,
-                        value=current_point_value,
+                        value=current_value,
                     )
 
                 if aggregation_temporality is AggregationTemporality.CUMULATIVE:
@@ -179,18 +177,15 @@ class _SumAggregation(_Aggregation[Sum]):
                     if current_value is None:
                         current_value = 0
 
-                    current_point_value = (
-                        current_value + self._previous_value_cumulative
-                    )
-                    self._previous_value_cumulative = (
-                        self._previous_value_cumulative + current_value
+                    self._previous_cumulative_value = (
+                        current_value + self._previous_cumulative_value
                     )
 
                     return NumberDataPoint(
                         attributes=self._attributes,
                         start_time_unix_nano=self._start_time_unix_nano,
                         time_unix_nano=collection_start_nano,
-                        value=current_point_value,
+                        value=self._previous_cumulative_value,
                     )
 
             else:
@@ -204,16 +199,20 @@ class _SumAggregation(_Aggregation[Sum]):
 
                 if aggregation_temporality is AggregationTemporality.DELTA:
                     current_point_value = (
-                        current_value - self._previous_value_cumulative
+                        current_value - self._previous_cumulative_value
                     )
-                    output_start_time_unix_nano = self._previous_collection_start_nano
+                    self._previous_cumulative_value = current_value
 
-                    self._previous_value_cumulative = current_value
-                    self._previous_collection_start_nano = collection_start_nano
+                    previous_collection_start_nano = (
+                        self._previous_collection_start_nano
+                    )
+                    self._previous_collection_start_nano = (
+                        collection_start_nano
+                    )
 
                     return NumberDataPoint(
                         attributes=self._attributes,
-                        start_time_unix_nano=output_start_time_unix_nano,
+                        start_time_unix_nano=previous_collection_start_nano,
                         time_unix_nano=collection_start_nano,
                         value=current_point_value,
                     )
