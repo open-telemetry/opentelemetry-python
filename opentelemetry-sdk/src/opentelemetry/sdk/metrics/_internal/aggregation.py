@@ -196,6 +196,42 @@ class _SumAggregation(_Aggregation[Sum]):
                         value=current_point_value,
                     )
 
+            else:
+                # This happens when the corresponding instrument for this
+                # aggregation is asynchronous.
+
+                if self._current_value is None:
+                    # This happens when the corresponding instrument callback
+                    # does not produce measurements.
+                    return None
+                self._current_value = None
+
+                if aggregation_temporality is AggregationTemporality.DELTA:
+                    # This happens when the corresponding instrument for this
+                    # aggregation is asynchronous and aggregation_temporality is DELTA.
+                    current_point_value = (
+                        current_value - self._previous_value_cumulative
+                    )
+                    output_start_time_unix_nano = self._previous_collection_start_nano
+
+                    self._previous_value_cumulative = current_value
+                    self._previous_collection_start_nano = collection_start_nano
+
+                    return NumberDataPoint(
+                        attributes=self._attributes,
+                        start_time_unix_nano=output_start_time_unix_nano,
+                        time_unix_nano=collection_start_nano,
+                        value=current_point_value,
+                    )
+                else:
+
+                    return NumberDataPoint(
+                        attributes=self._attributes,
+                        start_time_unix_nano=self._start_time_unix_nano,
+                        time_unix_nano=collection_start_nano,
+                        value=current_value,
+                    )
+
         with self._lock:
             current_value = self._current_value
             start_time_unix_nano = self._start_time_unix_nano
