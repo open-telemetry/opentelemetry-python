@@ -13,7 +13,10 @@
 # limitations under the License.
 
 from itertools import count
+from platform import system
 from unittest import TestCase
+
+from pytest import mark
 
 from opentelemetry.metrics import Observation
 from opentelemetry.sdk.metrics import Counter, MeterProvider, ObservableCounter
@@ -25,6 +28,14 @@ from opentelemetry.sdk.metrics.view import SumAggregation
 
 
 class TestSumAggregation(TestCase):
+    @mark.skipif(
+        system() != "Linux",
+        reason=(
+            "Tests fail because Windows time_ns resolution is too low so "
+            "two different time measurements may end up having the exact same"
+            "value."
+        ),
+    )
     def test_asynchronous_delta_temporality(self):
 
         eight_multiple_generator = count(start=8, step=8)
@@ -152,6 +163,14 @@ class TestSumAggregation(TestCase):
                 0,
             )
 
+    @mark.skipif(
+        system() != "Linux",
+        reason=(
+            "Tests fail because Windows time_ns resolution is too low so "
+            "two different time measurements may end up having the exact same"
+            "value."
+        ),
+    )
     def test_asynchronous_cumulative_temporality(self):
 
         eight_multiple_generator = count(start=8, step=8)
@@ -251,6 +270,14 @@ class TestSumAggregation(TestCase):
                 0,
             )
 
+    @mark.skipif(
+        system() != "Linux",
+        reason=(
+            "Tests fail because Windows time_ns resolution is too low so "
+            "two different time measurements may end up having the exact same"
+            "value."
+        ),
+    )
     def test_synchronous_delta_temporality(self):
 
         aggregation = SumAggregation()
@@ -352,6 +379,14 @@ class TestSumAggregation(TestCase):
                 0,
             )
 
+    @mark.skipif(
+        system() != "Linux",
+        reason=(
+            "Tests fail because Windows time_ns resolution is too low so "
+            "two different time measurements may end up having the exact same"
+            "value."
+        ),
+    )
     def test_synchronous_cumulative_temporality(self):
 
         aggregation = SumAggregation()
