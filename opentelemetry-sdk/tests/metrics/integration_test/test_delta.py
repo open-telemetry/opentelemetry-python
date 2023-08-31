@@ -24,8 +24,8 @@ from opentelemetry.sdk.metrics.export import (
 from opentelemetry.sdk.metrics.view import SumAggregation
 
 
-class TestDelta(TestCase):
-    def test_observable_counter_delta(self):
+class TestSumAggregation(TestCase):
+    def test_asynchronous_delta_temporality_with_measurements(self):
 
         eight_multiple_generator = count(start=8, step=8)
 
@@ -46,7 +46,7 @@ class TestDelta(TestCase):
         )
 
         provider = MeterProvider(metric_readers=[reader])
-        meter = provider.get_meter("preferred-aggregation", "0.1.2")
+        meter = provider.get_meter("name", "version")
 
         meter.create_observable_counter(
             "observable_counter", [observable_counter_callback]
@@ -109,3 +109,140 @@ class TestDelta(TestCase):
             )
             previous_time_unix_nano = metric_data.time_unix_nano
             self.assertEqual(metric_data.value, 8)
+            self.assertLess(
+                metric_data.start_time_unix_nano, metric_data.time_unix_nano
+            )
+
+    def test_asynchronous_delta_temporality_with_no_measurements(self):
+
+        counter = 0
+
+        def observable_counter_callback(callback_options):
+            nonlocal counter
+            counter += 1
+            yield
+
+        aggregation = SumAggregation()
+
+        reader = InMemoryMetricReader(
+            preferred_aggregation={ObservableCounter: aggregation},
+            preferred_temporality={
+                ObservableCounter: AggregationTemporality.DELTA
+            },
+        )
+
+        provider = MeterProvider(metric_readers=[reader])
+        meter = provider.get_meter("name", "version")
+
+        meter.create_observable_counter(
+            "observable_counter", [observable_counter_callback]
+        )
+
+        results = []
+
+        for _ in range(10):
+
+            results.append(reader.get_metrics_data())
+
+        for metrics_data in results:
+            self.assertEqual(
+                len(metrics_data.resource_metrics[0].scope_metrics),
+                0
+            )
+
+    def test_asynchronous_cumulative_temporality_with_measurements(self):
+
+        eight_multiple_generator = count(start=8, step=8)
+
+        counter = 0
+
+        def observable_counter_callback(callback_options):
+            nonlocal counter
+            counter += 1
+            yield Observation(next(eight_multiple_generator))
+
+        aggregation = SumAggregation()
+
+        reader = InMemoryMetricReader(
+            preferred_aggregation={ObservableCounter: aggregation},
+            preferred_temporality={
+                ObservableCounter: AggregationTemporality.CUMULATIVE
+            },
+        )
+
+        provider = MeterProvider(metric_readers=[reader])
+        meter = provider.get_meter("name", "version")
+
+        meter.create_observable_counter(
+            "observable_counter", [observable_counter_callback]
+        )
+
+        results = []
+
+        for _ in range(10):
+
+            results.append(reader.get_metrics_data())
+
+        self.assertEqual(counter, 10)
+
+        provider.shutdown()
+
+        start_time_unix_nano = (
+            results[0]
+            .resource_metrics[0]
+            .scope_metrics[0]
+            .metrics[0]
+            .data.data_points[0]
+            .start_time_unix_nano
+        )
+
+        for index, metrics_data in enumerate(results):
+
+            metric_data = (
+                metrics_data.resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[0]
+                .data.data_points[0]
+            )
+
+            self.assertEqual(
+                start_time_unix_nano, metric_data.start_time_unix_nano
+            )
+            self.assertEqual(metric_data.value, 8 * (index + 1))
+
+    def test_asynchronous_cumulative_temporality_with_no_measurements(self):
+
+        counter = 0
+
+        def observable_counter_callback(callback_options):
+            nonlocal counter
+            counter += 1
+            yield
+
+        aggregation = SumAggregation()
+
+        reader = InMemoryMetricReader(
+            preferred_aggregation={ObservableCounter: aggregation},
+            preferred_temporality={
+                ObservableCounter: AggregationTemporality.CUMULATIVE
+            },
+        )
+
+        provider = MeterProvider(metric_readers=[reader])
+        meter = provider.get_meter("name", "version")
+
+        meter.create_observable_counter(
+            "observable_counter", [observable_counter_callback]
+        )
+
+        results = []
+
+        for _ in range(10):
+
+            results.append(reader.get_metrics_data())
+
+        for metrics_data in results:
+            self.assertEqual(
+                len(metrics_data.resource_metrics[0].scope_metrics),
+                0
+            )

@@ -130,11 +130,16 @@ class _Asynchronous:
         for callback in self._callbacks:
             try:
                 for api_measurement in callback(callback_options):
-                    yield Measurement(
-                        api_measurement.value,
-                        instrument=self,
-                        attributes=api_measurement.attributes,
-                    )
+
+                    if api_measurement is None:
+                        yield
+
+                    else:
+                        yield Measurement(
+                            api_measurement.value,
+                            instrument=self,
+                            attributes=api_measurement.attributes,
+                        )
             except Exception:  # pylint: disable=broad-except
                 _logger.exception(
                     "Callback failed for instrument %s.", self.name
