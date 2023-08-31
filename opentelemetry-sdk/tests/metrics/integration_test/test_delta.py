@@ -83,6 +83,18 @@ class TestDelta(TestCase):
             8,
         )
 
+        self.assertLess(
+            (
+                results[0]
+                .resource_metrics[0]
+                .scope_metrics[0]
+                .metrics[0]
+                .data.data_points[0]
+                .start_time_unix_nano
+            ),
+            previous_time_unix_nano,
+        )
+
         for metrics_data in results[1:]:
 
             metric_data = (
