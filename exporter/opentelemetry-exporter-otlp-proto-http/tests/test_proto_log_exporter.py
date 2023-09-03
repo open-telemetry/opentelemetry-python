@@ -22,6 +22,7 @@ import requests
 import responses
 
 from opentelemetry._logs import SeverityNumber
+from opentelemetry.exporter.otlp.proto.common._internal import _is_backoff_v2
 from opentelemetry.exporter.otlp.proto.http import Compression
 from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_COMPRESSION,
@@ -29,7 +30,6 @@ from opentelemetry.exporter.otlp.proto.http._log_exporter import (
     DEFAULT_LOGS_EXPORT_PATH,
     DEFAULT_TIMEOUT,
     OTLPLogExporter,
-    _is_backoff_v2,
 )
 from opentelemetry.exporter.otlp.proto.http.version import __version__
 from opentelemetry.sdk._logs import LogData
@@ -168,7 +168,7 @@ class TestOTLPHTTPLogExporter(unittest.TestCase):
         self.assertIsInstance(exporter._session, requests.Session)
 
     @responses.activate
-    @patch("opentelemetry.exporter.otlp.proto.http._log_exporter.backoff")
+    @patch("opentelemetry.exporter.otlp.proto.common._internal.backoff")
     @patch("opentelemetry.exporter.otlp.proto.http._log_exporter.sleep")
     def test_handles_backoff_v2_api(self, mock_sleep, mock_backoff):
         # In backoff ~= 2.0.0 the first value yielded from expo is None.

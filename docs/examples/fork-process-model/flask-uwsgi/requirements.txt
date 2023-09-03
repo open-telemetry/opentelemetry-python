@@ -1,5 +1,5 @@
 click==7.1.2
-Flask==1.1.2
+Flask==2.3.2
 googleapis-common-protos==1.52.0
 grpcio==1.56.0
 gunicorn==20.0.4
@@ -15,6 +15,6 @@ opentelemetry-sdk==0.18b0
 protobuf==3.18.3
 six==1.15.0
 thrift==0.13.0
-uWSGI==2.0.19.1
+uWSGI==2.0.22
 Werkzeug==2.2.3
 wrapt==1.12.1
