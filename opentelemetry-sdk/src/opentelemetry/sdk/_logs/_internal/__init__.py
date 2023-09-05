@@ -526,7 +526,7 @@ class LoggingHandler(logging.Handler):
             severity_text=record.levelname,
             severity_number=severity_number,
             body=body,
-            resource=record.resource,
+            resource=self._logger.resource,
             attributes=attributes,
         )
 
