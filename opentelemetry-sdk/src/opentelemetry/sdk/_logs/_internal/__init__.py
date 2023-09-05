@@ -23,10 +23,11 @@ from os import environ
 from time import time_ns
 from typing import Any, Callable, Optional, Tuple, Union  # noqa
 
-from opentelemetry._logs import Logger as APILogger, NoOpLogger
+from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
 from opentelemetry._logs import LogRecord as APILogRecord
 from opentelemetry._logs import (
+    NoOpLogger,
     SeverityNumber,
     get_logger,
     get_logger_provider,
