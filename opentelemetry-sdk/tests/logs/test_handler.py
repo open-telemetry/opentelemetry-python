@@ -15,7 +15,7 @@ import logging
 import unittest
 from unittest.mock import Mock
 
-from opentelemetry._logs import SeverityNumber
+from opentelemetry._logs import NoOpLoggerProvider, SeverityNumber
 from opentelemetry._logs import get_logger as APIGetLogger
 from opentelemetry.attributes import BoundedAttributes
 from opentelemetry.sdk import trace
@@ -63,6 +63,20 @@ class TestLoggingHandler(unittest.TestCase):
         with self.assertLogs(level=logging.CRITICAL):
             logger.critical("No Time For Caution")
         self.assertEqual(emitter_mock.emit.call_count, 2)
+
+    # pylint: disable=protected-access
+    def test_log_record_emit_noop(self):
+        noop_logger_provder = NoOpLoggerProvider()
+        logger_mock = APIGetLogger(
+            __name__, logger_provider=noop_logger_provder
+        )
+        logger = logging.getLogger(__name__)
+        handler_mock = Mock(spec=LoggingHandler)
+        handler_mock._logger = logger_mock
+        handler_mock.level = logging.WARNING
+        logger.addHandler(handler_mock)
+        logger.warning("Warning message")
+        handler_mock._translate.assert_not_called()
 
     def test_log_record_no_span_context(self):
         emitter_provider_mock = Mock(spec=LoggerProvider)
