@@ -75,7 +75,8 @@ class TestLoggingHandler(unittest.TestCase):
         handler_mock._logger = logger_mock
         handler_mock.level = logging.WARNING
         logger.addHandler(handler_mock)
-        logger.warning("Warning message")
+        with self.assertLogs(level=logging.WARNING):
+            logger.warning("Warning message")
         handler_mock._translate.assert_not_called()
 
     def test_log_record_no_span_context(self):
