@@ -230,21 +230,21 @@ class MetricReaderStorage:
                             instrument.instrumentation_scope
                         ].metrics.extend(metrics)
 
-        if instrumentation_scope_scope_metrics:
+            if instrumentation_scope_scope_metrics:
 
-            return MetricsData(
-                resource_metrics=[
-                    ResourceMetrics(
-                        resource=self._sdk_config.resource,
-                        scope_metrics=list(
-                            instrumentation_scope_scope_metrics.values()
-                        ),
-                        schema_url=self._sdk_config.resource.schema_url,
-                    )
-                ]
-            )
+                return MetricsData(
+                    resource_metrics=[
+                        ResourceMetrics(
+                            resource=self._sdk_config.resource,
+                            scope_metrics=list(
+                                instrumentation_scope_scope_metrics.values()
+                            ),
+                            schema_url=self._sdk_config.resource.schema_url,
+                        )
+                    ]
+                )
 
-        return None
+            return None
 
     def _handle_view_instrument_match(
         self,
