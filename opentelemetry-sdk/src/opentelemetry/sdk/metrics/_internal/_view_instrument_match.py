@@ -136,6 +136,4 @@ class _ViewInstrumentMatch:
                 )
                 if data_point is not None:
                     data_points.append(data_point)
-        if data_points:
-            return data_points
-        return None
+        return data_points or None
