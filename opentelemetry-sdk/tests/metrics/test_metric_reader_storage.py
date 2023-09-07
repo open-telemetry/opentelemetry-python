@@ -314,15 +314,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
         )
         metric_reader_storage.consume_measurement(Measurement(1, counter))
 
-        self.assertEqual(
-            [],
-            (
-                metric_reader_storage.collect()
-                .resource_metrics[0]
-                .scope_metrics[0]
-                .metrics
-            ),
-        )
+        self.assertIsNone(metric_reader_storage.collect())
 
     def test_same_collection_start(self):
 
