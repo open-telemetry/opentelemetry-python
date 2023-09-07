@@ -27,6 +27,7 @@ from opentelemetry._logs import Logger as APILogger
 from opentelemetry._logs import LoggerProvider as APILoggerProvider
 from opentelemetry._logs import LogRecord as APILogRecord
 from opentelemetry._logs import (
+    NoOpLogger,
     SeverityNumber,
     get_logger,
     get_logger_provider,
@@ -532,11 +533,12 @@ class LoggingHandler(logging.Handler):
 
     def emit(self, record: logging.LogRecord) -> None:
         """
-        Emit a record.
+        Emit a record. Skip emitting if logger is NoOp.
 
         The record is translated to OTel format, and then sent across the pipeline.
         """
-        self._logger.emit(self._translate(record))
+        if not isinstance(self._logger, NoOpLogger):
+            self._logger.emit(self._translate(record))
 
     def flush(self) -> None:
         """
