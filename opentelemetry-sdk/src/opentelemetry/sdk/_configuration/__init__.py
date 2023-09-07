@@ -91,6 +91,7 @@ _logger = logging.getLogger(__name__)
 def _import_config_components(
     selected_components: List[str], entry_point_name: str
 ) -> Sequence[Tuple[str, object]]:
+
     component_implementations = []
 
     for selected_component in selected_components:
@@ -108,11 +109,13 @@ def _import_config_components(
                 )
             )
         except KeyError:
+
             raise RuntimeError(
                 f"Requested entry point '{entry_point_name}' not found"
             )
 
         except StopIteration:
+
             raise RuntimeError(
                 f"Requested component '{selected_component}' not found in "
                 f"entry point '{entry_point_name}'"
@@ -388,6 +391,7 @@ class _BaseConfigurator(ABC):
     _is_instrumented = False
 
     def __new__(cls, *args, **kwargs):
+
         if cls._instance is None:
             cls._instance = object.__new__(cls, *args, **kwargs)
 
