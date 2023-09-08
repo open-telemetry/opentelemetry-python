@@ -79,9 +79,7 @@ class TestSumAggregation(TestCase):
         self.assertEqual(counter, 10)
 
         for metrics_data in results:
-            self.assertEqual(
-                len(metrics_data.resource_metrics[0].scope_metrics), 0
-            )
+            self.assertIsNone(metrics_data)
 
         results = []
 
@@ -153,15 +151,7 @@ class TestSumAggregation(TestCase):
         provider.shutdown()
 
         for metrics_data in results:
-            self.assertEqual(
-                len(
-                    metrics_data.resource_metrics[0]
-                    .scope_metrics[0]
-                    .metrics[0]
-                    .data.data_points
-                ),
-                0,
-            )
+            self.assertIsNone(metrics_data)
 
     @mark.skipif(
         system() != "Linux",
@@ -214,9 +204,7 @@ class TestSumAggregation(TestCase):
         self.assertEqual(counter, 10)
 
         for metrics_data in results:
-            self.assertEqual(
-                len(metrics_data.resource_metrics[0].scope_metrics), 0
-            )
+            self.assertIsNone(metrics_data)
 
         results = []
 
@@ -260,15 +248,7 @@ class TestSumAggregation(TestCase):
         provider.shutdown()
 
         for metrics_data in results:
-            self.assertEqual(
-                len(
-                    metrics_data.resource_metrics[0]
-                    .scope_metrics[0]
-                    .metrics[0]
-                    .data.data_points
-                ),
-                0,
-            )
+            self.assertIsNone(metrics_data)
 
     @mark.skipif(
         system() != "Linux",
@@ -299,9 +279,7 @@ class TestSumAggregation(TestCase):
             results.append(reader.get_metrics_data())
 
         for metrics_data in results:
-            self.assertEqual(
-                len(metrics_data.resource_metrics[0].scope_metrics), 0
-            )
+            self.assertIsNone(metrics_data)
 
         results = []
 
@@ -369,15 +347,7 @@ class TestSumAggregation(TestCase):
         provider.shutdown()
 
         for metrics_data in results:
-            self.assertEqual(
-                len(
-                    metrics_data.resource_metrics[0]
-                    .scope_metrics[0]
-                    .metrics[0]
-                    .data.data_points
-                ),
-                0,
-            )
+            self.assertIsNone(metrics_data)
 
     @mark.skipif(
         system() != "Linux",
@@ -408,9 +378,7 @@ class TestSumAggregation(TestCase):
             results.append(reader.get_metrics_data())
 
         for metrics_data in results:
-            self.assertEqual(
-                len(metrics_data.resource_metrics[0].scope_metrics), 0
-            )
+            self.assertIsNone(metrics_data)
 
         results = []
 
