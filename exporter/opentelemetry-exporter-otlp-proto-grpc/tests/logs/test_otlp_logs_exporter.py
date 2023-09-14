@@ -23,10 +23,10 @@ from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
 
 from opentelemetry._logs import SeverityNumber
+from opentelemetry.exporter.otlp.proto.common._internal import _encode_value
 from opentelemetry.exporter.otlp.proto.grpc._log_exporter import (
     OTLPLogExporter,
 )
-from opentelemetry.exporter.otlp.proto.grpc.exporter import _translate_value
 from opentelemetry.exporter.otlp.proto.grpc.version import __version__
 from opentelemetry.proto.collector.logs.v1.logs_service_pb2 import (
     ExportLogsServiceRequest,
@@ -292,7 +292,9 @@ class TestOTLPLogExporter(TestCase):
             (("user-agent", "OTel-OTLP-Exporter-Python/" + __version__),),
         )
 
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
+    )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable(self, mock_sleep, mock_expo):
 
@@ -306,7 +308,9 @@ class TestOTLPLogExporter(TestCase):
         )
         mock_sleep.assert_called_with(1)
 
-    @patch("opentelemetry.exporter.otlp.proto.grpc.exporter._expo")
+    @patch(
+        "opentelemetry.exporter.otlp.proto.grpc.exporter._create_exp_backoff_generator"
+    )
     @patch("opentelemetry.exporter.otlp.proto.grpc.exporter.sleep")
     def test_unavailable_delay(self, mock_sleep, mock_expo):
 
@@ -367,7 +371,7 @@ class TestOTLPLogExporter(TestCase):
                                         16,
                                         "big",
                                     ),
-                                    body=_translate_value(
+                                    body=_encode_value(
                                         "Zhengzhou, We have a heaviest rains in 1000 years"
                                     ),
                                     attributes=[
@@ -426,7 +430,7 @@ class TestOTLPLogExporter(TestCase):
                                         16,
                                         "big",
                                     ),
-                                    body=_translate_value(
+                                    body=_encode_value(
                                         "Zhengzhou, We have a heaviest rains in 1000 years"
                                     ),
                                     attributes=[
@@ -463,13 +467,13 @@ class TestOTLPLogExporter(TestCase):
                                         16,
                                         "big",
                                     ),
-                                    body=_translate_value(
+                                    body=_encode_value(
                                         "Sydney, Opera House is closed"
                                     ),
                                     attributes=[
                                         KeyValue(
                                             key="custom_attr",
-                                            value=_translate_value([1, 2, 3]),
+                                            value=_encode_value([1, 2, 3]),
                                         ),
                                     ],
                                     flags=int(
@@ -508,7 +512,7 @@ class TestOTLPLogExporter(TestCase):
                                         16,
                                         "big",
                                     ),
-                                    body=_translate_value(
+                                    body=_encode_value(
                                         "Mumbai, Boil water before drinking"
                                     ),
                                     attributes=[],

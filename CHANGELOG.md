@@ -6,8 +6,43 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## Unreleased
-- Use BoundedAttributes instead of raw dict to extract attributes from LogRecord and Support dropped_attributes_count in LogRecord ([#3310](https://github.com/open-telemetry/opentelemetry-python/pull/3310))
-## Version 1.18.0/0.39b0 (2023-05-04)
+
+- Fix handling of empty metric collection cycles
+  ([#3335](https://github.com/open-telemetry/opentelemetry-python/pull/3335))
+- Fix error when no LoggerProvider configured for LoggingHandler
+  ([#3423](https://github.com/open-telemetry/opentelemetry-python/pull/3423))
+
+
+## Version 1.20.0/0.41b0 (2023-09-04)
+
+- Modify Prometheus exporter to translate non-monotonic Sums into Gauges
+  ([#3306](https://github.com/open-telemetry/opentelemetry-python/pull/3306))
+
+## Version 1.19.0/0.40b0 (2023-07-13)
+
+- Drop `setuptools` runtime requirement.
+  ([#3372](https://github.com/open-telemetry/opentelemetry-python/pull/3372))
+- Update the body type in the log
+  ([$3343](https://github.com/open-telemetry/opentelemetry-python/pull/3343))
+- Add max_scale option to Exponential Bucket Histogram Aggregation 
+  ([#3323](https://github.com/open-telemetry/opentelemetry-python/pull/3323))
+- Use BoundedAttributes instead of raw dict to extract attributes from LogRecord
+  ([#3310](https://github.com/open-telemetry/opentelemetry-python/pull/3310))
+- Support dropped_attributes_count in LogRecord and exporters
+  ([#3351](https://github.com/open-telemetry/opentelemetry-python/pull/3351))
+- Add unit to view instrument selection criteria
+  ([#3341](https://github.com/open-telemetry/opentelemetry-python/pull/3341))
+- Upgrade opentelemetry-proto to 0.20 and regen
+  [#3355](https://github.com/open-telemetry/opentelemetry-python/pull/3355))
+- Include endpoint in Grpc transient error warning
+  [#3362](https://github.com/open-telemetry/opentelemetry-python/pull/3362))
+- Fixed bug where logging export is tracked as trace
+  [#3375](https://github.com/open-telemetry/opentelemetry-python/pull/3375))
+- Default LogRecord observed_timestamp to current timestamp
+  [#3377](https://github.com/open-telemetry/opentelemetry-python/pull/3377))
+
+
+## Version 1.18.0/0.39b0 (2023-05-19)
 
 - Select histogram aggregation with an environment variable
   ([#3265](https://github.com/open-telemetry/opentelemetry-python/pull/3265))
@@ -23,6 +58,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3223](https://github.com/open-telemetry/opentelemetry-python/pull/3223))
 - Add speced out environment variables and arguments for BatchLogRecordProcessor
   ([#3237](https://github.com/open-telemetry/opentelemetry-python/pull/3237))
+- Add benchmark tests for metrics
+  ([#3267](https://github.com/open-telemetry/opentelemetry-python/pull/3267))
+
 
 ## Version 1.17.0/0.38b0 (2023-03-22)
 
@@ -65,7 +103,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3158](https://github.com/open-telemetry/opentelemetry-python/pull/3158))
 - Create a single resource instance
   ([#3118](https://github.com/open-telemetry/opentelemetry-python/pull/3118))
-
 
 ## Version 1.15.0/0.36b0 (2022-12-09)
 

@@ -33,5 +33,5 @@ References
 ----------
 
 * `OpenTelemetry Project <https://opentelemetry.io/>`_
-* `OpenTelemetry Semantic Conventions YAML Definitions <https://github.com/open-telemetry/opentelemetry-specification/tree/main/semantic_conventions>`_
+* `OpenTelemetry Semantic Conventions Definitions <https://github.com/open-telemetry/semantic-conventions/blob/main/docs/README.md>`_
 * `generate.sh script <https://github.com/open-telemetry/opentelemetry-python/blob/main/scripts/semconv/generate.sh>`_

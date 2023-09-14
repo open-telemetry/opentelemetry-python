@@ -307,7 +307,7 @@ class BatchLogRecordProcessor(LogRecordProcessor):
             record = self._queue.pop()
             self._log_records[idx] = record
             idx += 1
-        token = attach(set_value("suppress_instrumentation", True))
+        token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
         try:
             self._exporter.export(self._log_records[:idx])  # type: ignore
         except Exception:  # pylint: disable=broad-except
