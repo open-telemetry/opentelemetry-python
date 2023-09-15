@@ -208,8 +208,9 @@ def parse_args(args=None):
         editable=True,
         with_dev_deps=True,
         eager_upgrades=True,
-        with_test_deps=True,
+        with_test_deps=False,
     )
+    devparser.add_argument("--with-test-deps", action="store_true")
 
     lintparser = subparsers.add_parser(
         "lint", help="Lint everything, autofixing if possible."

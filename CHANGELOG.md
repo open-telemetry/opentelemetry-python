@@ -11,7 +11,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3335](https://github.com/open-telemetry/opentelemetry-python/pull/3335))
 - Fix error when no LoggerProvider configured for LoggingHandler
   ([#3423](https://github.com/open-telemetry/opentelemetry-python/pull/3423))
-
+- Tweak eachdist.py so "develop" subcommand works by default
+  ([#3435](https://github.com/open-telemetry/opentelemetry-python/pull/3435))
 
 ## Version 1.20.0/0.41b0 (2023-09-04)
 
