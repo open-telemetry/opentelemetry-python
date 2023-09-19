@@ -53,3 +53,29 @@ def get_span_with_dropped_attributes_events_links():
         for index in range(131):
             span.add_event(f"event{index}", attributes=attributes)
         return span
+
+
+def get_readable_span_with_dropped_attributes_events_links():
+    attributes = {}
+    for index in range(10):
+        attributes[f"key{index}"] = [f"value{index}"]
+    links = []
+    for index in range(10):
+        links.append(
+            trace_api.Link(
+                trace_sdk._Span(
+                    name=f"span{index}",
+                    context=trace_api.INVALID_SPAN_CONTEXT,
+                    attributes=attributes,
+                ).get_span_context(),
+                attributes=attributes,
+            )
+        )
+    events = []
+    for index in range(10):
+        events.append(
+            trace_sdk.Event(
+                name=f"event{index}",
+            )
+        )
+    return trace_sdk.ReadableSpan("span", links=links, attributes=attributes, events=events)

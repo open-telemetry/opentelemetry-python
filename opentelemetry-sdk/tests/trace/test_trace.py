@@ -52,6 +52,7 @@ from opentelemetry.sdk.trace.sampling import (
 from opentelemetry.sdk.util import BoundedDict, ns_to_iso_str
 from opentelemetry.sdk.util.instrumentation import InstrumentationInfo
 from opentelemetry.test.spantestutil import (
+    get_readable_span_with_dropped_attributes_events_links,
     get_span_with_dropped_attributes_events_links,
     new_tracer,
 )
@@ -1736,6 +1737,12 @@ class TestSpanLimits(unittest.TestCase):
         self.assertEqual(3, span.dropped_events)
         self.assertEqual(2, span.events[0].attributes.dropped)
         self.assertEqual(2, span.links[0].attributes.dropped)
+
+    def test_span_no_dropped_attributes_field(self):
+        span = get_readable_span_with_dropped_attributes_events_links()
+        self.assertEqual(0, span.dropped_links)
+        self.assertEqual(0, span.dropped_attributes)
+        self.assertEqual(0, span.dropped_events)
 
     def _test_span_limits(
         self,

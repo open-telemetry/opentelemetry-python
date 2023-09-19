@@ -378,19 +378,19 @@ class ReadableSpan:
 
     @property
     def dropped_attributes(self) -> int:
-        if self._attributes:
+        if self._attributes and hasattr(self._attributes, "dropped"):
             return self._attributes.dropped
         return 0
 
     @property
     def dropped_events(self) -> int:
-        if self._events:
+        if self._events and hasattr(self._events, "dropped"):
             return self._events.dropped
         return 0
 
     @property
     def dropped_links(self) -> int:
-        if self._links:
+        if self._links and hasattr(self._links, "dropped"):
             return self._links.dropped
         return 0
 
