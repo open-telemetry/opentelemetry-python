@@ -13,6 +13,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3423](https://github.com/open-telemetry/opentelemetry-python/pull/3423))
 - Make `opentelemetry_metrics_exporter` entrypoint support pull exporters
   ([#3428](https://github.com/open-telemetry/opentelemetry-python/pull/3428))
+- Allow instrument names to have '/' and up to 255 characters
+  ([#3442](https://github.com/open-telemetry/opentelemetry-python/pull/3442))
 
 ## Version 1.20.0/0.41b0 (2023-09-04)
 

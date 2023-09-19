@@ -38,7 +38,7 @@ from opentelemetry.util.types import Attributes
 
 _logger = getLogger(__name__)
 
-_name_regex = re_compile(r"[a-zA-Z][-_.a-zA-Z0-9]{0,62}")
+_name_regex = re_compile(r"[a-zA-Z][-_./a-zA-Z0-9]{0,254}")
 _unit_regex = re_compile(r"[\x00-\x7F]{0,63}")
 
 

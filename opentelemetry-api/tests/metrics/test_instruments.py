@@ -564,14 +564,13 @@ class TestObservableUpDownCounter(TestCase):
         )
 
     def test_name_check(self):
-
         instrument = ChildInstrument("name")
 
         self.assertEqual(
             instrument._check_name_unit_description(
-                "a" * 63, "unit", "description"
+                "a" * 255, "unit", "description"
             )["name"],
-            "a" * 63,
+            "a" * 255,
         )
         self.assertEqual(
             instrument._check_name_unit_description(
@@ -591,10 +590,22 @@ class TestObservableUpDownCounter(TestCase):
             )["name"],
             "a_",
         )
+        self.assertEqual(
+            instrument._check_name_unit_description(
+                "a/", "unit", "description"
+            )["name"],
+            "a/",
+        )
 
-        self.assertIsNone(
+        # the old max length
+        self.assertIsNotNone(
             instrument._check_name_unit_description(
                 "a" * 64, "unit", "description"
+            )["name"]
+        )
+        self.assertIsNone(
+            instrument._check_name_unit_description(
+                "a" * 256, "unit", "description"
             )["name"]
         )
         self.assertIsNone(
