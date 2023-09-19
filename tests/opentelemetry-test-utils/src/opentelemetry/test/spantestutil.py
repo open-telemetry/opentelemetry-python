@@ -78,4 +78,6 @@ def get_readable_span_with_dropped_attributes_events_links():
                 name=f"event{index}",
             )
         )
-    return trace_sdk.ReadableSpan("span", links=links, attributes=attributes, events=events)
+    return trace_sdk.ReadableSpan(
+        "span", links=links, attributes=attributes, events=events
+    )
