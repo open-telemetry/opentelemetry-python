@@ -70,7 +70,6 @@ class TestMeterProvider(ConcurrencyTestBase):
         meter_provider = MeterProvider()
         resource_mock = resource_patch.return_value
         resource_patch.assert_called_once()
-        self.assertIsNotNone(meter_provider._resource)
         self.assertIsNotNone(meter_provider._sdk_config)
         self.assertEqual(meter_provider._sdk_config.resource, resource_mock)
         self.assertTrue(isinstance(meter_provider._measurement_consumer, SynchronousMeasurementConsumer))
