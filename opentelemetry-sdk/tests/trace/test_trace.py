@@ -23,7 +23,7 @@ from random import randint
 from time import time_ns
 from typing import Optional
 from unittest import mock
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
@@ -40,7 +40,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
-from opentelemetry.sdk.trace import Resource, TracerProvider
+from opentelemetry.sdk.trace import Resource, SpanLimits, TracerProvider
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
@@ -1942,3 +1942,20 @@ class TestParentChildSpanException(unittest.TestCase):
         self.assertTrue(parent_span.status.is_ok)
         self.assertIsNone(parent_span.status.description)
         self.assertTupleEqual(parent_span.events, ())
+
+class TestTracerProvider(unittest.TestCase):
+
+    @patch(
+        "opentelemetry.sdk.trace.sampling._get_from_env_or_default"
+    )
+    @patch.object(
+        Resource,
+        "create"
+    )
+    def test_tracer_provider_init_default(self, resource_patch, sample_patch):
+        tracer_provider = trace.TracerProvider()
+        self.assertTrue(isinstance(tracer_provider.id_generator, RandomIdGenerator))
+        resource_patch.assert_called_once()
+        sample_patch.assert_called_once()
+        self.assertIsNotNone(tracer_provider._span_limits)
+        self.assertIsNotNone(tracer_provider._atexit_handler)
