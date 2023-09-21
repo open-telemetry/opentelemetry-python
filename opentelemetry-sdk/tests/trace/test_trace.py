@@ -1951,9 +1951,7 @@ class TestTracerProvider(unittest.TestCase):
     def test_tracer_provider_init_default(self, resource_patch, sample_patch):
         tracer_provider = trace.TracerProvider()
         self.assertTrue(
-            isinstance(
-                tracer_provider.id_generator, RandomIdGenerator
-            )
+            isinstance(tracer_provider.id_generator, RandomIdGenerator)
         )
         resource_patch.assert_called_once()
         self.assertIsNotNone(tracer_provider._resource)

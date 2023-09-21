@@ -76,7 +76,8 @@ class TestMeterProvider(ConcurrencyTestBase):
         self.assertEqual(meter_provider._sdk_config.resource, resource_mock)
         self.assertTrue(
             isinstance(
-                meter_provider._measurement_consumer, SynchronousMeasurementConsumer
+                meter_provider._measurement_consumer,
+                SynchronousMeasurementConsumer,
             )
         )
         self.assertIsNotNone(meter_provider._atexit_handler)
