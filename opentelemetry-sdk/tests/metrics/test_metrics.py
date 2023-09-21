@@ -20,7 +20,9 @@ from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.metrics import NoOpMeter
-from opentelemetry.sdk.metrics._internal.sdk_configuration import SdkConfiguration
+from opentelemetry.sdk.metrics._internal.sdk_configuration import (
+    SdkConfiguration,
+)
 from opentelemetry.sdk.metrics._internal import SynchronousMeasurementConsumer
 from opentelemetry.sdk.metrics import (
     Counter,
@@ -72,7 +74,11 @@ class TestMeterProvider(ConcurrencyTestBase):
         resource_patch.assert_called_once()
         self.assertIsNotNone(meter_provider._sdk_config)
         self.assertEqual(meter_provider._sdk_config.resource, resource_mock)
-        self.assertTrue(isinstance(meter_provider._measurement_consumer, SynchronousMeasurementConsumer))
+        self.assertTrue(
+            isinstance(
+                meter_provider._measurement_consumer, SynchronousMeasurementConsumer
+            )
+        )
         self.assertIsNotNone(meter_provider._atexit_handler)
 
     def test_register_metric_readers(self):

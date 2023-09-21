@@ -1943,15 +1943,18 @@ class TestParentChildSpanException(unittest.TestCase):
         self.assertIsNone(parent_span.status.description)
         self.assertTupleEqual(parent_span.events, ())
 
+
 class TestTracerProvider(unittest.TestCase):
 
-    @patch(
-        "opentelemetry.sdk.trace.sampling._get_from_env_or_default"
-    )
+    @patch("opentelemetry.sdk.trace.sampling._get_from_env_or_default")
     @patch.object(Resource, "create")
     def test_tracer_provider_init_default(self, resource_patch, sample_patch):
         tracer_provider = trace.TracerProvider()
-        self.assertTrue(isinstance(tracer_provider.id_generator, RandomIdGenerator))
+        self.assertTrue(
+            isinstance(
+                tracer_provider.id_generator, RandomIdGenerator
+            )
+        )
         resource_patch.assert_called_once()
         self.assertIsNotNone(tracer_provider._resource)
         sample_patch.assert_called_once()
