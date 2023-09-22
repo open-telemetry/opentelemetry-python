@@ -1945,7 +1945,6 @@ class TestParentChildSpanException(unittest.TestCase):
 
 
 class TestTracerProvider(unittest.TestCase):
-
     @patch("opentelemetry.sdk.trace.sampling._get_from_env_or_default")
     @patch.object(Resource, "create")
     def test_tracer_provider_init_default(self, resource_patch, sample_patch):
