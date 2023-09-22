@@ -1943,7 +1943,7 @@ class TestParentChildSpanException(unittest.TestCase):
         self.assertIsNone(parent_span.status.description)
         self.assertTupleEqual(parent_span.events, ())
 
-
+# pylint: disable=protected-access
 class TestTracerProvider(unittest.TestCase):
     @patch("opentelemetry.sdk.trace.sampling._get_from_env_or_default")
     @patch.object(Resource, "create")
