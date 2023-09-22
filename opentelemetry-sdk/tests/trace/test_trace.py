@@ -40,7 +40,7 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_TRACES_SAMPLER,
     OTEL_TRACES_SAMPLER_ARG,
 )
-from opentelemetry.sdk.trace import Resource, SpanLimits, TracerProvider
+from opentelemetry.sdk.trace import Resource, TracerProvider
 from opentelemetry.sdk.trace.id_generator import RandomIdGenerator
 from opentelemetry.sdk.trace.sampling import (
     ALWAYS_OFF,
