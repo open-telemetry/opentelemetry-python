@@ -20,10 +20,6 @@ from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
 from opentelemetry.metrics import NoOpMeter
-from opentelemetry.sdk.metrics._internal.sdk_configuration import (
-    SdkConfiguration,
-)
-from opentelemetry.sdk.metrics._internal import SynchronousMeasurementConsumer
 from opentelemetry.sdk.metrics import (
     Counter,
     Histogram,
@@ -34,6 +30,7 @@ from opentelemetry.sdk.metrics import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk.metrics._internal import SynchronousMeasurementConsumer
 from opentelemetry.sdk.metrics.export import (
     Metric,
     MetricExporter,
