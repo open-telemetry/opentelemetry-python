@@ -344,7 +344,12 @@ def _check_span_ended(func):
 
 
 class ReadableSpan:
-    """Provides read-only access to span attributes"""
+    """Provides read-only access to span attributes.
+
+    Users should NOT be creating these objects directly. `ReadableSpan`s are created as
+    a direct result from using the tracing pipeline via the `Tracer`.
+
+    """
 
     def __init__(
         self,
