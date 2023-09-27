@@ -20,10 +20,148 @@ from deprecated import deprecated
 
 
 class SpanAttributes:
-    SCHEMA_URL = "https://opentelemetry.io/schemas/v1.20.0"
+    SCHEMA_URL = "https://opentelemetry.io/schemas/v1.21.0"
     """
     The URL of the OpenTelemetry schema for these keys and values.
     """
+    CLIENT_ADDRESS = "client.address"
+    """
+    Client address - unix domain socket name, IPv4 or IPv6 address.
+    Note: When observed from the server side, and when communicating through an intermediary, `client.address` SHOULD represent client address behind any intermediaries (e.g. proxies) if it's available.
+    """
+
+    CLIENT_PORT = "client.port"
+    """
+    Client port number.
+    Note: When observed from the server side, and when communicating through an intermediary, `client.port` SHOULD represent client port behind any intermediaries (e.g. proxies) if it's available.
+    """
+
+    CLIENT_SOCKET_ADDRESS = "client.socket.address"
+    """
+    Immediate client peer address - unix domain socket name, IPv4 or IPv6 address.
+    """
+
+    CLIENT_SOCKET_PORT = "client.socket.port"
+    """
+    Immediate client peer port number.
+    """
+
+    HTTP_METHOD = "http.method"
+    """
+    Deprecated, use `http.request.method` instead.
+    """
+
+    HTTP_STATUS_CODE = "http.status_code"
+    """
+    Deprecated, use `http.response.status_code` instead.
+    """
+
+    HTTP_SCHEME = "http.scheme"
+    """
+    Deprecated, use `url.scheme` instead.
+    """
+
+    HTTP_URL = "http.url"
+    """
+    Deprecated, use `url.full` instead.
+    """
+
+    HTTP_TARGET = "http.target"
+    """
+    Deprecated, use `url.path` and `url.query` instead.
+    """
+
+    HTTP_REQUEST_CONTENT_LENGTH = "http.request_content_length"
+    """
+    Deprecated, use `http.request.body.size` instead.
+    """
+
+    HTTP_RESPONSE_CONTENT_LENGTH = "http.response_content_length"
+    """
+    Deprecated, use `http.response.body.size` instead.
+    """
+
+    NET_SOCK_PEER_NAME = "net.sock.peer.name"
+    """
+    Deprecated, use `server.socket.domain` on client spans.
+    """
+
+    NET_SOCK_PEER_ADDR = "net.sock.peer.addr"
+    """
+    Deprecated, use `server.socket.address` on client spans and `client.socket.address` on server spans.
+    """
+
+    NET_SOCK_PEER_PORT = "net.sock.peer.port"
+    """
+    Deprecated, use `server.socket.port` on client spans and `client.socket.port` on server spans.
+    """
+
+    NET_PEER_NAME = "net.peer.name"
+    """
+    Deprecated, use `server.address` on client spans and `client.address` on server spans.
+    """
+
+    NET_PEER_PORT = "net.peer.port"
+    """
+    Deprecated, use `server.port` on client spans and `client.port` on server spans.
+    """
+
+    NET_HOST_NAME = "net.host.name"
+    """
+    Deprecated, use `server.address`.
+    """
+
+    NET_HOST_PORT = "net.host.port"
+    """
+    Deprecated, use `server.port`.
+    """
+
+    NET_SOCK_HOST_ADDR = "net.sock.host.addr"
+    """
+    Deprecated, use `server.socket.address`.
+    """
+
+    NET_SOCK_HOST_PORT = "net.sock.host.port"
+    """
+    Deprecated, use `server.socket.port`.
+    """
+
+    NET_TRANSPORT = "net.transport"
+    """
+    Deprecated, use `network.transport`.
+    """
+
+    NET_PROTOCOL_NAME = "net.protocol.name"
+    """
+    Deprecated, use `network.protocol.name`.
+    """
+
+    NET_PROTOCOL_VERSION = "net.protocol.version"
+    """
+    Deprecated, use `network.protocol.version`.
+    """
+
+    NET_SOCK_FAMILY = "net.sock.family"
+    """
+    Deprecated, use `network.transport` and `network.type`.
+    """
+
+    DESTINATION_DOMAIN = "destination.domain"
+    """
+    The domain name of the destination system.
+    Note: This value may be a host name, a fully qualified domain name, or another host naming format.
+    """
+
+    DESTINATION_ADDRESS = "destination.address"
+    """
+    Peer address, for example IP address or UNIX socket name.
+    """
+
+    DESTINATION_PORT = "destination.port"
+    """
+    Peer port number.
+    """
+
     EXCEPTION_TYPE = "exception.type"
     """
     The type of the exception (its fully-qualified class name, if applicable). The dynamic type of the exception should be preferred over the static type in languages that support it.
@@ -39,28 +177,43 @@ class SpanAttributes:
     A stacktrace as a string in the natural representation for the language runtime. The representation is to be determined and documented by each language SIG.
     """
 
-    HTTP_METHOD = "http.method"
+    HTTP_REQUEST_METHOD = "http.request.method"
     """
     HTTP request method.
+    Note: HTTP request method value SHOULD be "known" to the instrumentation.
+    By default, this convention defines "known" methods as the ones listed in [RFC9110](https://www.rfc-editor.org/rfc/rfc9110.html#name-methods)
+    and the PATCH method defined in [RFC5789](https://www.rfc-editor.org/rfc/rfc5789.html).
+
+    If the HTTP request method is not known to instrumentation, it MUST set the `http.request.method` attribute to `_OTHER` and, except if reporting a metric, MUST
+    set the exact method received in the request line as value of the `http.request.method_original` attribute.
+
+    If the HTTP instrumentation could end up converting valid HTTP request methods to `_OTHER`, then it MUST provide a way to override
+    the list of known HTTP methods. If this override is done via environment variable, then the environment variable MUST be named
+    OTEL_INSTRUMENTATION_HTTP_KNOWN_METHODS and support a comma-separated list of case-sensitive known HTTP methods
+    (this list MUST be a full override of the default known method, it is not a list of known methods in addition to the defaults).
+
+    HTTP method names are case-sensitive and `http.request.method` attribute value MUST match a known HTTP method name exactly.
+    Instrumentations for specific web frameworks that consider HTTP methods to be case insensitive, SHOULD populate a canonical equivalent.
+    Tracing instrumentations that do so, MUST also set `http.request.method_original` to the original value.
     """
 
-    HTTP_STATUS_CODE = "http.status_code"
+    HTTP_RESPONSE_STATUS_CODE = "http.response.status_code"
     """
     [HTTP response status code](https://tools.ietf.org/html/rfc7231#section-6).
     """
 
-    NET_PROTOCOL_NAME = "net.protocol.name"
+    NETWORK_PROTOCOL_NAME = "network.protocol.name"
     """
-    Application layer protocol used. The value SHOULD be normalized to lowercase.
+    [OSI Application Layer](https://osi-model.com/application-layer/) or non-OSI equivalent. The value SHOULD be normalized to lowercase.
     """
 
-    NET_PROTOCOL_VERSION = "net.protocol.version"
+    NETWORK_PROTOCOL_VERSION = "network.protocol.version"
     """
     Version of the application layer protocol used. See note below.
-    Note: `net.protocol.version` refers to the version of the protocol used and might be different from the protocol client's version. If the HTTP client used has a version of `0.27.2`, but sends HTTP version `1.1`, this attribute should be set to `1.1`.
+    Note: `network.protocol.version` refers to the version of the protocol used and might be different from the protocol client's version. If the HTTP client used has a version of `0.27.2`, but sends HTTP version `1.1`, this attribute should be set to `1.1`.
     """
 
-    NET_PEER_NAME = "net.peer.name"
+    SERVER_ADDRESS = "server.address"
     """
     Host identifier of the ["URI origin"](https://www.rfc-editor.org/rfc/rfc9110.html#name-uri-origin) HTTP request is sent to.
     Note: Determined by using the first of the following that applies
@@ -72,47 +225,22 @@ class SpanAttributes:
     SHOULD NOT be set if capturing it would require an extra DNS lookup.
     """
 
-    NET_PEER_PORT = "net.peer.port"
+    SERVER_PORT = "server.port"
     """
     Port identifier of the ["URI origin"](https://www.rfc-editor.org/rfc/rfc9110.html#name-uri-origin) HTTP request is sent to.
-    Note: When [request target](https://www.rfc-editor.org/rfc/rfc9110.html#target.resource) is absolute URI, `net.peer.name` MUST match URI port identifier, otherwise it MUST match `Host` header port identifier.
-    """
-
-    HTTP_SCHEME = "http.scheme"
-    """
-    The URI scheme identifying the used protocol.
+    Note: When [request target](https://www.rfc-editor.org/rfc/rfc9110.html#target.resource) is absolute URI, `server.port` MUST match URI port identifier, otherwise it MUST match `Host` header port identifier.
     """
 
     HTTP_ROUTE = "http.route"
     """
     The matched route (path template in the format used by the respective server framework). See note below.
     Note: MUST NOT be populated when this is not supported by the HTTP server framework as the route attribute should have low-cardinality and the URI path can NOT substitute it.
-    SHOULD include the [application root](/specification/trace/semantic_conventions/http.md#http-server-definitions) if there is one.
+    SHOULD include the [application root](/docs/http/http-spans.md#http-server-definitions) if there is one.
     """
 
-    NET_HOST_NAME = "net.host.name"
+    URL_SCHEME = "url.scheme"
     """
-    Name of the local HTTP server that received the request.
-    Note: Determined by using the first of the following that applies
-
-    - The [primary server name](/specification/trace/semantic_conventions/http.md#http-server-definitions) of the matched virtual host. MUST only
-      include host identifier.
-    - Host identifier of the [request target](https://www.rfc-editor.org/rfc/rfc9110.html#target.resource)
-      if it's sent in absolute-form.
-    - Host identifier of the `Host` header
-
-    SHOULD NOT be set if only IP address is available and capturing name would require a reverse DNS lookup.
-    """
-
-    NET_HOST_PORT = "net.host.port"
-    """
-    Port of the local HTTP server that received the request.
-    Note: Determined by using the first of the following that applies
-
-    - Port identifier of the [primary server host](/specification/trace/semantic_conventions/http.md#http-server-definitions) of the matched virtual host.
-    - Port identifier of the [request target](https://www.rfc-editor.org/rfc/rfc9110.html#target.resource)
-      if it's sent in absolute-form.
-    - Port identifier of the `Host` header.
+    The [URI scheme](https://www.rfc-editor.org/rfc/rfc3986#section-3.1) component identifying the used protocol.
     """
 
     EVENT_NAME = "event.name"
@@ -155,6 +283,74 @@ class SpanAttributes:
     A stringified version of the value can be used in situations where a
     semantic identifier is unavailable. String representation of the value
     should be determined by the implementer.
+    """
+
+    LOG_IOSTREAM = "log.iostream"
+    """
+    The stream associated with the log. See below for a list of well-known values.
+    """
+
+    LOG_FILE_NAME = "log.file.name"
+    """
+    The basename of the file.
+    """
+
+    LOG_FILE_PATH = "log.file.path"
+    """
+    The full path to the file.
+    """
+
+    LOG_FILE_NAME_RESOLVED = "log.file.name_resolved"
+    """
+    The basename of the file, with symlinks resolved.
+    """
+
+    LOG_FILE_PATH_RESOLVED = "log.file.path_resolved"
+    """
+    The full path to the file, with symlinks resolved.
+    """
+
+    SERVER_SOCKET_ADDRESS = "server.socket.address"
+    """
+    Physical server IP address or Unix socket address. If set from the client, should simply use the socket's peer address, and not attempt to find any actual server IP (i.e., if set from client, this may represent some proxy server instead of the logical server).
+    """
+
+    POOL = "pool"
+    """
+    Name of the buffer pool.
+    Note: Pool names are generally obtained via [BufferPoolMXBean#getName()](https://docs.oracle.com/en/java/javase/11/docs/api/java.management/java/lang/management/BufferPoolMXBean.html#getName()).
+    """
+
+    TYPE = "type"
+    """
+    The type of memory.
+    """
+
+    SERVER_SOCKET_DOMAIN = "server.socket.domain"
+    """
+    The domain name of an immediate peer.
+    Note: Typically observed from the client side, and represents a proxy or other intermediary domain name.
+    """
+
+    SERVER_SOCKET_PORT = "server.socket.port"
+    """
+    Physical server port.
+    """
+
+    SOURCE_DOMAIN = "source.domain"
+    """
+    The domain name of the source system.
+    Note: This value may be a host name, a fully qualified domain name, or another host naming format.
+    """
+
+    SOURCE_ADDRESS = "source.address"
+    """
+    Source address, for example IP address or Unix socket name.
+    """
+
+    SOURCE_PORT = "source.port"
+    """
+    Source port number.
     """
 
     AWS_LAMBDA_INVOKED_ARN = "aws.lambda.invoked_arn"
@@ -231,35 +427,20 @@ class SpanAttributes:
     Note: When setting this to an SQL keyword, it is not recommended to attempt any client-side parsing of `db.statement` just to get this property, but it should be set if the operation name is provided by the library being instrumented. If the SQL statement has an ambiguous operation, or performs more than one operation, this value may be omitted.
     """
 
-    NET_SOCK_PEER_ADDR = "net.sock.peer.addr"
+    NETWORK_TRANSPORT = "network.transport"
     """
-    Remote socket peer address: IPv4 or IPv6 for internet protocols, path for local communication, [etc](https://man7.org/linux/man-pages/man7/address_families.7.html).
-    """
-
-    NET_SOCK_PEER_PORT = "net.sock.peer.port"
-    """
-    Remote socket peer port.
+    [OSI Transport Layer](https://osi-model.com/transport-layer/) or [Inter-process Communication method](https://en.wikipedia.org/wiki/Inter-process_communication). The value SHOULD be normalized to lowercase.
     """
 
-    NET_SOCK_FAMILY = "net.sock.family"
+    NETWORK_TYPE = "network.type"
     """
-    Protocol [address family](https://man7.org/linux/man-pages/man7/address_families.7.html) which is used for communication.
-    """
-
-    NET_SOCK_PEER_NAME = "net.sock.peer.name"
-    """
-    Remote socket peer name.
-    """
-
-    NET_TRANSPORT = "net.transport"
-    """
-    Transport protocol used. See note below.
+    [OSI Network Layer](https://osi-model.com/network-layer/) or non-OSI equivalent. The value SHOULD be normalized to lowercase.
     """
 
     DB_MSSQL_INSTANCE_NAME = "db.mssql.instance_name"
     """
     The Microsoft SQL Server [instance name](https://docs.microsoft.com/en-us/sql/connect/jdbc/building-the-connection-url?view=sql-server-ver15) connecting to. This name is used to determine the port of a named instance.
-    Note: If setting a `db.mssql.instance_name`, `net.peer.port` is no longer required (but still recommended if non-standard).
+    Note: If setting a `db.mssql.instance_name`, `server.port` is no longer required (but still recommended if non-standard).
     """
 
     DB_CASSANDRA_PAGE_SIZE = "db.cassandra.page_size"
@@ -308,6 +489,14 @@ class SpanAttributes:
     DB_MONGODB_COLLECTION = "db.mongodb.collection"
     """
     The collection being accessed within the database stated in `db.name`.
+    """
+
+    URL_FULL = "url.full"
+    """
+    Absolute URL describing a network resource according to [RFC3986](https://www.rfc-editor.org/rfc/rfc3986).
+    Note: For network calls, URL usually has `scheme://host[:port][path][?query][#fragment]` format, where the fragment is not transmitted over HTTP, but if it is known, it should be included nevertheless.
+    `url.full` MUST NOT contain credentials passed via URL in form of `https://username:password@www.example.com/`. In such case username and password should be redacted and attribute's value should be `https://REDACTED:REDACTED@www.example.com/`.
+    `url.full` SHOULD capture the absolute URL when it is available (or can be reconstructed) and SHOULD NOT be validated or modified except for sanitizing purposes.
     """
 
     DB_SQL_TABLE = "db.sql.table"
@@ -435,35 +624,16 @@ class SpanAttributes:
     The document name/table subjected to the operation. For example, in Cloud Storage or S3 is the name of the file, and in Cosmos DB the table name.
     """
 
-    HTTP_TARGET = "http.target"
+    URL_PATH = "url.path"
     """
-    The full request target as passed in a HTTP request line or equivalent.
-    """
-
-    HTTP_CLIENT_IP = "http.client_ip"
-    """
-    The IP address of the original client behind all proxies, if known (e.g. from [X-Forwarded-For](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Forwarded-For)).
-    Note: This is not necessarily the same as `net.sock.peer.addr`, which would
-    identify the network-level peer, which may be a proxy.
-
-    This attribute should be set when a source of information different
-    from the one used for `net.sock.peer.addr`, is available even if that other
-    source just confirms the same value as `net.sock.peer.addr`.
-    Rationale: For `net.sock.peer.addr`, one typically does not know if it
-    comes from a proxy, reverse proxy, or the actual client. Setting
-    `http.client_ip` when it's the same as `net.sock.peer.addr` means that
-    one is at least somewhat confident that the address is not that of
-    the closest proxy.
+    The [URI path](https://www.rfc-editor.org/rfc/rfc3986#section-3.3) component.
+    Note: When missing, the value is assumed to be `/`.
     """
 
-    NET_SOCK_HOST_ADDR = "net.sock.host.addr"
+    URL_QUERY = "url.query"
     """
-    Local socket address. Useful in case of a multi-IP host.
-    """
-
-    NET_SOCK_HOST_PORT = "net.sock.host.port"
-    """
-    Local socket port number.
+    The [URI query](https://www.rfc-editor.org/rfc/rfc3986#section-3.4) component.
+    Note: Sensitive content provided in query string SHOULD be scrubbed when instrumentations can identify it.
     """
 
     MESSAGING_SYSTEM = "messaging.system"
@@ -481,6 +651,34 @@ class SpanAttributes:
     """
     The number of messages sent, received, or processed in the scope of the batching operation.
     Note: Instrumentations SHOULD NOT set `messaging.batch.message_count` on spans that operate with a single message. When a messaging client library supports both batch and single-message API for the same operation, instrumentations SHOULD use `messaging.batch.message_count` for batching APIs and SHOULD NOT use it for single-message APIs.
+    """
+
+    MESSAGING_CLIENT_ID = "messaging.client_id"
+    """
+    A unique identifier for the client that consumes or produces a message.
+    """
+
+    MESSAGING_DESTINATION_NAME = "messaging.destination.name"
+    """
+    The message destination name.
+    Note: Destination name SHOULD uniquely identify a specific queue, topic or other entity within the broker. If
+    the broker does not have such notion, the destination name SHOULD uniquely identify the broker.
+    """
+
+    MESSAGING_DESTINATION_TEMPLATE = "messaging.destination.template"
+    """
+    Low cardinality representation of the messaging destination name.
+    Note: Destination names could be constructed from templates. An example would be a destination name involving a user name or product id. Although the destination name in this case is of high cardinality, the underlying template is of low cardinality and can be effectively used for grouping and aggregation.
+    """
+
+    MESSAGING_DESTINATION_TEMPORARY = "messaging.destination.temporary"
+    """
+    A boolean that is true if the message destination is temporary and might not exist anymore after messages are processed.
+    """
+
+    MESSAGING_DESTINATION_ANONYMOUS = "messaging.destination.anonymous"
+    """
+    A boolean that is true if the message destination is anonymous (could be unnamed or have auto-generated name).
     """
 
     MESSAGING_MESSAGE_ID = "messaging.message.id"
@@ -540,39 +738,39 @@ class SpanAttributes:
     Note: SHOULD be equal to the `cloud.region` resource attribute of the invoked function.
     """
 
-    NET_HOST_CONNECTION_TYPE = "net.host.connection.type"
+    NETWORK_CONNECTION_TYPE = "network.connection.type"
     """
-    The internet connection type currently being used by the host.
+    The internet connection type.
     """
 
-    NET_HOST_CONNECTION_SUBTYPE = "net.host.connection.subtype"
+    NETWORK_CONNECTION_SUBTYPE = "network.connection.subtype"
     """
     This describes more details regarding the connection.type. It may be the type of cell technology connection, but it could be used for describing details about a wifi connection.
     """
 
-    NET_HOST_CARRIER_NAME = "net.host.carrier.name"
+    NETWORK_CARRIER_NAME = "network.carrier.name"
     """
     The name of the mobile carrier.
     """
 
-    NET_HOST_CARRIER_MCC = "net.host.carrier.mcc"
+    NETWORK_CARRIER_MCC = "network.carrier.mcc"
     """
     The mobile carrier country code.
     """
 
-    NET_HOST_CARRIER_MNC = "net.host.carrier.mnc"
+    NETWORK_CARRIER_MNC = "network.carrier.mnc"
     """
     The mobile carrier network code.
     """
 
-    NET_HOST_CARRIER_ICC = "net.host.carrier.icc"
+    NETWORK_CARRIER_ICC = "network.carrier.icc"
     """
     The ISO 3166-1 alpha-2 2-character country code associated with the mobile carrier network.
     """
 
     PEER_SERVICE = "peer.service"
     """
-    The [`service.name`](../../resource/semantic_conventions/README.md#service) of the remote service. SHOULD be equal to the actual `service.name` resource attribute of the remote service if any.
+    The [`service.name`](/docs/resource/README.md#service) of the remote service. SHOULD be equal to the actual `service.name` resource attribute of the remote service if any.
     """
 
     ENDUSER_ID = "enduser.id"
@@ -625,20 +823,19 @@ class SpanAttributes:
     The column number in `code.filepath` best representing the operation. It SHOULD point within the code unit named in `code.function`.
     """
 
-    HTTP_REQUEST_CONTENT_LENGTH = "http.request_content_length"
+    HTTP_REQUEST_METHOD_ORIGINAL = "http.request.method_original"
+    """
+    Original HTTP method sent by the client in the request line.
+    """
+
+    HTTP_REQUEST_BODY_SIZE = "http.request.body.size"
     """
     The size of the request payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-length) header. For requests using transport encoding, this should be the compressed size.
     """
 
-    HTTP_RESPONSE_CONTENT_LENGTH = "http.response_content_length"
+    HTTP_RESPONSE_BODY_SIZE = "http.response.body.size"
     """
     The size of the response payload body in bytes. This is the number of bytes transferred excluding headers and is often, but not always, present as the [Content-Length](https://www.rfc-editor.org/rfc/rfc9110.html#field.content-length) header. For requests using transport encoding, this should be the compressed size.
-    """
-
-    HTTP_URL = "http.url"
-    """
-    Full HTTP request URL in the form `scheme://host[:port]/path?query[#fragment]`. Usually the fragment is not transmitted over HTTP, but if it is known, it should be included nevertheless.
-    Note: `http.url` MUST NOT contain credentials passed via URL in form of `https://username:password@www.example.com/`. In such case the attribute's value should be `https://www.example.com/`.
     """
 
     HTTP_RESEND_COUNT = "http.resend_count"
@@ -877,57 +1074,6 @@ class SpanAttributes:
     Note: The value may be sanitized to exclude sensitive information.
     """
 
-    MESSAGING_DESTINATION_NAME = "messaging.destination.name"
-    """
-    The message destination name.
-    Note: Destination name SHOULD uniquely identify a specific queue, topic or other entity within the broker. If
-    the broker does not have such notion, the destination name SHOULD uniquely identify the broker.
-    """
-
-    MESSAGING_SOURCE_NAME = "messaging.source.name"
-    """
-    The message source name.
-    Note: Source name SHOULD uniquely identify a specific queue, topic, or other entity within the broker. If
-    the broker does not have such notion, the source name SHOULD uniquely identify the broker.
-    """
-
-    MESSAGING_DESTINATION_TEMPLATE = "messaging.destination.template"
-    """
-    Low cardinality representation of the messaging destination name.
-    Note: Destination names could be constructed from templates. An example would be a destination name involving a user name or product id. Although the destination name in this case is of high cardinality, the underlying template is of low cardinality and can be effectively used for grouping and aggregation.
-    """
-
-    MESSAGING_DESTINATION_TEMPORARY = "messaging.destination.temporary"
-    """
-    A boolean that is true if the message destination is temporary and might not exist anymore after messages are processed.
-    """
-
-    MESSAGING_DESTINATION_ANONYMOUS = "messaging.destination.anonymous"
-    """
-    A boolean that is true if the message destination is anonymous (could be unnamed or have auto-generated name).
-    """
-
-    MESSAGING_SOURCE_TEMPLATE = "messaging.source.template"
-    """
-    Low cardinality representation of the messaging source name.
-    Note: Source names could be constructed from templates. An example would be a source name involving a user name or product id. Although the source name in this case is of high cardinality, the underlying template is of low cardinality and can be effectively used for grouping and aggregation.
-    """
-
-    MESSAGING_SOURCE_TEMPORARY = "messaging.source.temporary"
-    """
-    A boolean that is true if the message source is temporary and might not exist anymore after messages are processed.
-    """
-
-    MESSAGING_SOURCE_ANONYMOUS = "messaging.source.anonymous"
-    """
-    A boolean that is true if the message source is anonymous (could be unnamed or have auto-generated name).
-    """
-
-    MESSAGING_CONSUMER_ID = "messaging.consumer.id"
-    """
-    The identifier for the consumer receiving a message. For Kafka, set it to `{messaging.kafka.consumer.group} - {messaging.kafka.client_id}`, if both are present, or only `messaging.kafka.consumer.group`. For brokers, such as RabbitMQ and Artemis, set it to the `client_id` of the client consuming the message.
-    """
-
     MESSAGING_RABBITMQ_DESTINATION_ROUTING_KEY = (
         "messaging.rabbitmq.destination.routing_key"
     )
@@ -946,21 +1092,11 @@ class SpanAttributes:
     Name of the Kafka Consumer Group that is handling the message. Only applies to consumers, not producers.
     """
 
-    MESSAGING_KAFKA_CLIENT_ID = "messaging.kafka.client_id"
-    """
-    Client Id for the Consumer or Producer that is handling the message.
-    """
-
     MESSAGING_KAFKA_DESTINATION_PARTITION = (
         "messaging.kafka.destination.partition"
     )
     """
     Partition the message is sent to.
-    """
-
-    MESSAGING_KAFKA_SOURCE_PARTITION = "messaging.kafka.source.partition"
-    """
-    Partition the message is received from.
     """
 
     MESSAGING_KAFKA_MESSAGE_OFFSET = "messaging.kafka.message.offset"
@@ -981,11 +1117,6 @@ class SpanAttributes:
     MESSAGING_ROCKETMQ_CLIENT_GROUP = "messaging.rocketmq.client_group"
     """
     Name of the RocketMQ producer/consumer group that is handling the message. The client type is identified by the SpanKind.
-    """
-
-    MESSAGING_ROCKETMQ_CLIENT_ID = "messaging.rocketmq.client_id"
-    """
-    The unique identifier for each client.
     """
 
     MESSAGING_ROCKETMQ_MESSAGE_DELIVERY_TIMESTAMP = (
@@ -1099,6 +1230,11 @@ class SpanAttributes:
     even if the `exception.escaped` attribute was not set or set to false,
     since the event might have been recorded at a time where it was not
     clear whether the exception will escape.
+    """
+
+    URL_FRAGMENT = "url.fragment"
+    """
+    The [URI fragment](https://www.rfc-editor.org/rfc/rfc3986#section-3.5) component.
     """
 
     # Manually defined deprecated attributes
@@ -1243,6 +1379,66 @@ class MessagingDestinationKindValues(Enum):
     """A message sent to a topic."""
 
 
+class NetTransportValues(Enum):
+    IP_TCP = "ip_tcp"
+    """ip_tcp."""
+
+    IP_UDP = "ip_udp"
+    """ip_udp."""
+
+    PIPE = "pipe"
+    """Named or anonymous pipe."""
+
+    INPROC = "inproc"
+    """In-process communication."""
+
+    OTHER = "other"
+    """Something else (non IP-based)."""
+
+
+class NetSockFamilyValues(Enum):
+    INET = "inet"
+    """IPv4 address."""
+
+    INET6 = "inet6"
+    """IPv6 address."""
+
+    UNIX = "unix"
+    """Unix domain socket path."""
+
+
+class HttpRequestMethodValues(Enum):
+    CONNECT = "CONNECT"
+    """CONNECT method."""
+
+    DELETE = "DELETE"
+    """DELETE method."""
+
+    GET = "GET"
+    """GET method."""
+
+    HEAD = "HEAD"
+    """HEAD method."""
+
+    OPTIONS = "OPTIONS"
+    """OPTIONS method."""
+
+    PATCH = "PATCH"
+    """PATCH method."""
+
+    POST = "POST"
+    """POST method."""
+
+    PUT = "PUT"
+    """PUT method."""
+
+    TRACE = "TRACE"
+    """TRACE method."""
+
+    OTHER = "_OTHER"
+    """Any HTTP method that the instrumentation has no prior knowledge of."""
+
+
 class EventDomainValues(Enum):
     BROWSER = "browser"
     """Events from browser apps."""
@@ -1252,6 +1448,22 @@ class EventDomainValues(Enum):
 
     K8S = "k8s"
     """Events from Kubernetes."""
+
+
+class LogIostreamValues(Enum):
+    STDOUT = "stdout"
+    """Logs from stdout stream."""
+
+    STDERR = "stderr"
+    """Events from stderr stream."""
+
+
+class TypeValues(Enum):
+    HEAP = "heap"
+    """Heap memory."""
+
+    NON_HEAP = "non_heap"
+    """Non-heap memory."""
 
 
 class OpentracingRefTypeValues(Enum):
@@ -1420,32 +1632,26 @@ class DbSystemValues(Enum):
     """Trino."""
 
 
-class NetSockFamilyValues(Enum):
-    INET = "inet"
-    """IPv4 address."""
+class NetworkTransportValues(Enum):
+    TCP = "tcp"
+    """TCP."""
 
-    INET6 = "inet6"
-    """IPv6 address."""
-
-    UNIX = "unix"
-    """Unix domain socket path."""
-
-
-class NetTransportValues(Enum):
-    IP_TCP = "ip_tcp"
-    """ip_tcp."""
-
-    IP_UDP = "ip_udp"
-    """ip_udp."""
+    UDP = "udp"
+    """UDP."""
 
     PIPE = "pipe"
     """Named or anonymous pipe. See note below."""
 
-    INPROC = "inproc"
-    """In-process communication."""
+    UNIX = "unix"
+    """Unix domain socket."""
 
-    OTHER = "other"
-    """Something else (non IP-based)."""
+
+class NetworkTypeValues(Enum):
+    IPV4 = "ipv4"
+    """IPv4."""
+
+    IPV6 = "ipv6"
+    """IPv6."""
 
 
 class DbCassandraConsistencyLevelValues(Enum):
@@ -1602,7 +1808,7 @@ class FaasInvokedProviderValues(Enum):
     """Tencent Cloud."""
 
 
-class NetHostConnectionTypeValues(Enum):
+class NetworkConnectionTypeValues(Enum):
     WIFI = "wifi"
     """wifi."""
 
@@ -1619,7 +1825,7 @@ class NetHostConnectionTypeValues(Enum):
     """unknown."""
 
 
-class NetHostConnectionSubtypeValues(Enum):
+class NetworkConnectionSubtypeValues(Enum):
     GPRS = "gprs"
     """GPRS."""
 

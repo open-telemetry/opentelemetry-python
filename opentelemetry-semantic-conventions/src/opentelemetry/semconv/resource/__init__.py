@@ -18,7 +18,7 @@ from enum import Enum
 
 
 class ResourceAttributes:
-    SCHEMA_URL = "https://opentelemetry.io/schemas/v1.20.0"
+    SCHEMA_URL = "https://opentelemetry.io/schemas/v1.21.0"
     """
     The URL of the OpenTelemetry schema for these keys and values.
     """
@@ -161,6 +161,26 @@ class ResourceAttributes:
     Note: See the [log stream ARN format documentation](https://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/iam-access-control-overview-cwl.html#CWL_ARN_Format). One log group can contain several log streams, so these ARNs necessarily identify both a log group and a log stream.
     """
 
+    GCP_CLOUD_RUN_JOB_EXECUTION = "gcp.cloud_run.job.execution"
+    """
+    The name of the Cloud Run [execution](https://cloud.google.com/run/docs/managing/job-executions) being run for the Job, as set by the [`CLOUD_RUN_EXECUTION`](https://cloud.google.com/run/docs/container-contract#jobs-env-vars) environment variable.
+    """
+
+    GCP_CLOUD_RUN_JOB_TASK_INDEX = "gcp.cloud_run.job.task_index"
+    """
+    The index for a task within an execution as provided by the [`CLOUD_RUN_TASK_INDEX`](https://cloud.google.com/run/docs/container-contract#jobs-env-vars) environment variable.
+    """
+
+    GCP_GCE_INSTANCE_NAME = "gcp.gce.instance.name"
+    """
+    The instance name of a GCE instance. This is the value provided by `host.name`, the visible name of the instance in the Cloud Console UI, and the prefix for the default hostname of the instance as defined by the [default internal DNS name](https://cloud.google.com/compute/docs/internal-dns#instance-fully-qualified-domain-names).
+    """
+
+    GCP_GCE_INSTANCE_HOSTNAME = "gcp.gce.instance.hostname"
+    """
+    The hostname of a GCE instance. This is the full value of the default or [custom hostname](https://cloud.google.com/compute/docs/instances/custom-hostname-vm).
+    """
+
     HEROKU_RELEASE_CREATION_TIMESTAMP = "heroku.release.creation_timestamp"
     """
     Time and date the release was created.
@@ -201,6 +221,30 @@ class ResourceAttributes:
     Container image tag.
     """
 
+    CONTAINER_IMAGE_ID = "container.image.id"
+    """
+    Runtime specific image identifier. Usually a hash algorithm followed by a UUID.
+    Note: Docker defines a sha256 of the image id; `container.image.id` corresponds to the `Image` field from the Docker container inspect [API](https://docs.docker.com/engine/api/v1.43/#tag/Container/operation/ContainerInspect) endpoint.
+    K8s defines a link to the container registry repository with digest `"imageID": "registry.azurecr.io /namespace/service/dockerfile@sha256:bdeabd40c3a8a492eaf9e8e44d0ebbb84bac7ee25ac0cf8a7159d25f62555625"`.
+    OCI defines a digest of manifest.
+    """
+
+    CONTAINER_COMMAND = "container.command"
+    """
+    The command used to run the container (i.e. the command name).
+    Note: If using embedded credentials or sensitive data, it is recommended to remove them to prevent potential leakage.
+    """
+
+    CONTAINER_COMMAND_LINE = "container.command_line"
+    """
+    The full command run by the container as a single string representing the full command. [2].
+    """
+
+    CONTAINER_COMMAND_ARGS = "container.command_args"
+    """
+    All the command arguments (including the command/executable itself) run by the container. [2].
+    """
+
     DEPLOYMENT_ENVIRONMENT = "deployment.environment"
     """
     Name of the [deployment environment](https://en.wikipedia.org/wiki/Deployment_environment) (aka deployment tier).
@@ -236,7 +280,7 @@ class ResourceAttributes:
     Note: This is the name of the function as configured/deployed on the FaaS
     platform and is usually different from the name of the callback
     function (which may be stored in the
-    [`code.namespace`/`code.function`](../../trace/semantic_conventions/span-general.md#source-code-attributes)
+    [`code.namespace`/`code.function`](/docs/general/general-attributes.md#source-code-attributes)
     span attributes).
 
     For some cloud providers, the above definition is ambiguous. The following
@@ -258,7 +302,7 @@ class ResourceAttributes:
 
     * **AWS Lambda:** The [function version](https://docs.aws.amazon.com/lambda/latest/dg/configuration-versions.html)
       (an integer represented as a decimal string).
-    * **Google Cloud Run:** The [revision](https://cloud.google.com/run/docs/managing/revisions)
+    * **Google Cloud Run (Services):** The [revision](https://cloud.google.com/run/docs/managing/revisions)
       (i.e., the function name plus the revision suffix).
     * **Google Cloud Functions:** The value of the
       [`K_REVISION` environment variable](https://cloud.google.com/functions/docs/env-var#runtime_environment_variables_set_automatically).
@@ -304,17 +348,44 @@ class ResourceAttributes:
 
     HOST_IMAGE_ID = "host.image.id"
     """
-    VM image ID. For Cloud, this value is from the provider.
+    VM image ID or host OS image ID. For Cloud, this value is from the provider.
     """
 
     HOST_IMAGE_VERSION = "host.image.version"
     """
-    The version string of the VM image as defined in [Version Attributes](README.md#version-attributes).
+    The version string of the VM image or host OS as defined in [Version Attributes](README.md#version-attributes).
     """
 
     K8S_CLUSTER_NAME = "k8s.cluster.name"
     """
     The name of the cluster.
+    """
+
+    K8S_CLUSTER_UID = "k8s.cluster.uid"
+    """
+    A pseudo-ID for the cluster, set to the UID of the `kube-system` namespace.
+    Note: K8s does not have support for obtaining a cluster ID. If this is ever
+    added, we will recommend collecting the `k8s.cluster.uid` through the
+    official APIs. In the meantime, we are able to use the `uid` of the
+    `kube-system` namespace as a proxy for cluster ID. Read on for the
+    rationale.
+
+    Every object created in a K8s cluster is assigned a distinct UID. The
+    `kube-system` namespace is used by Kubernetes itself and will exist
+    for the lifetime of the cluster. Using the `uid` of the `kube-system`
+    namespace is a reasonable proxy for the K8s ClusterID as it will only
+    change if the cluster is rebuilt. Furthermore, Kubernetes UIDs are
+    UUIDs as standardized by
+    [ISO/IEC 9834-8 and ITU-T X.667](https://www.itu.int/ITU-T/studygroups/com17/oid.html).
+    Which states:
+
+    > If generated according to one of the mechanisms defined in Rec.
+      ITU-T X.667 | ISO/IEC 9834-8, a UUID is either guaranteed to be
+      different from all other UUIDs generated before 3603 A.D., or is
+      extremely likely to be different (depending on the mechanism chosen).
+
+    Therefore, UIDs between clusters should be extremely unlikely to
+    conflict.
     """
 
     K8S_NODE_NAME = "k8s.node.name"
@@ -429,7 +500,7 @@ class ResourceAttributes:
 
     OS_VERSION = "os.version"
     """
-    The version string of the operating system as defined in [Version Attributes](../../resource/semantic_conventions/README.md#version-attributes).
+    The version string of the operating system as defined in [Version Attributes](/docs/resource/README.md#version-attributes).
     """
 
     PROCESS_PID = "process.pid"
@@ -493,6 +564,11 @@ class ResourceAttributes:
     Note: MUST be the same for all instances of horizontally scaled services. If the value was not specified, SDKs MUST fallback to `unknown_service:` concatenated with [`process.executable.name`](process.md#process), e.g. `unknown_service:bash`. If `process.executable.name` is not available, the value MUST be set to `unknown_service`.
     """
 
+    SERVICE_VERSION = "service.version"
+    """
+    The version string of the service API or implementation. The format is not defined by these conventions.
+    """
+
     SERVICE_NAMESPACE = "service.namespace"
     """
     A namespace for `service.name`.
@@ -505,14 +581,15 @@ class ResourceAttributes:
     Note: MUST be unique for each instance of the same `service.namespace,service.name` pair (in other words `service.namespace,service.name,service.instance.id` triplet MUST be globally unique). The ID helps to distinguish instances of the same service that exist at the same time (e.g. instances of a horizontally scaled service). It is preferable for the ID to be persistent and stay the same for the lifetime of the service instance, however it is acceptable that the ID is ephemeral and changes during important lifetime events for the service (e.g. service restarts). If the service has no inherent unique ID that can be used as the value of this attribute it is recommended to generate a random Version 1 or Version 4 RFC 4122 UUID (services aiming for reproducible UUIDs may also use Version 5, see RFC 4122 for more recommendations).
     """
 
-    SERVICE_VERSION = "service.version"
-    """
-    The version string of the service API or implementation.
-    """
-
     TELEMETRY_SDK_NAME = "telemetry.sdk.name"
     """
     The name of the telemetry SDK as defined above.
+    Note: The OpenTelemetry SDK MUST set the `telemetry.sdk.name` attribute to `opentelemetry`.
+    If another SDK, like a fork or a vendor-provided implementation, is used, this SDK MUST set the
+    `telemetry.sdk.name` attribute to the fully-qualified class or module name of this SDK's main entry point
+    or another suitable identifier depending on the language.
+    The identifier `opentelemetry` is reserved and MUST NOT be used in this case.
+    All custom identifiers SHOULD be stable across different versions of an implementation.
     """
 
     TELEMETRY_SDK_LANGUAGE = "telemetry.sdk.language"
@@ -645,6 +722,9 @@ class CloudPlatformValues(Enum):
     AZURE_OPENSHIFT = "azure_openshift"
     """Azure Red Hat OpenShift."""
 
+    GCP_BARE_METAL_SOLUTION = "gcp_bare_metal_solution"
+    """Google Bare Metal Solution (BMS)."""
+
     GCP_COMPUTE_ENGINE = "gcp_compute_engine"
     """Google Cloud Compute Engine (GCE)."""
 
@@ -773,8 +853,11 @@ class TelemetrySdkLanguageValues(Enum):
     RUBY = "ruby"
     """ruby."""
 
-    WEBJS = "webjs"
-    """webjs."""
+    RUST = "rust"
+    """rust."""
 
     SWIFT = "swift"
     """swift."""
+
+    WEBJS = "webjs"
+    """webjs."""
