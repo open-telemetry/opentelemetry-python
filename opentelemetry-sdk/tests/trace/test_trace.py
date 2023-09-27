@@ -661,7 +661,7 @@ class TestSpan(unittest.TestCase):
             root.set_attribute("list-of-numerics", list_of_numerics)
 
             self.assertEqual(len(root.attributes), 9)
-            self.assertEqual(root.attributes["http.method"], "GET")
+            self.assertEqual(root.attributes["http.request.method"], "GET")
             self.assertEqual(
                 root.attributes["url.full"],
                 "https://example.com:779/path/12/?q=d#123",

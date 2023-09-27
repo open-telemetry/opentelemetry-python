@@ -1353,6 +1353,11 @@ class SpanAttributes:
     Deprecated. Use `client.address` attribute.
     """
 
+    HTTP_FLAVOR = "http.flavor"
+    """
+    Deprecated. Use `network.protocol.name` and `network.protocol.version` attributes.
+    """
+
     NET_HOST_CONNECTION_TYPE = "net.host.connection.type"
     """
     Deprecated. Use `network.connection.type` attribute.

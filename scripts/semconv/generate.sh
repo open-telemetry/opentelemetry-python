@@ -10,7 +10,7 @@ OTEL_SEMCONV_GEN_IMG_VERSION=0.21.0
 
 cd ${SCRIPT_DIR}
 
-rm -rf semantic-c || true
+rm -rf semantic-conventions || true
 mkdir semantic-conventions
 cd semantic-conventions
 

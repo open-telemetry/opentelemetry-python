@@ -79,14 +79,14 @@ class {{class}}:
         "http.request_content_length_uncompressed"
     )
     """
-    Deprecated, use the `http.request_content_length` attribute.
+    Deprecated, use the `http.request.body.size` attribute.
     """
 
     HTTP_RESPONSE_CONTENT_LENGTH_UNCOMPRESSED = (
         "http.response_content_length_uncompressed"
     )
     """
-    Deprecated, use the `http.response_content_length` attribute.
+    Deprecated, use the `http.response.body.size` attribute.
     """
 
     MESSAGING_DESTINATION = "messaging.destination"
@@ -162,6 +162,11 @@ class {{class}}:
     HTTP_CLIENT_IP = "http.client_ip"
     """
     Deprecated. Use `client.address` attribute.
+    """
+
+    HTTP_FLAVOR = "http.flavor"
+    """
+    Deprecated. Use `network.protocol.name` and `network.protocol.version` attributes.
     """
 
     NET_HOST_CONNECTION_TYPE = "net.host.connection.type"
