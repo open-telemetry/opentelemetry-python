@@ -68,6 +68,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Add benchmark tests for metrics
   ([#3267](https://github.com/open-telemetry/opentelemetry-python/pull/3267))
 
+
 ## Version 1.17.0/0.38b0 (2023-03-22)
 
 - Implement LowMemory temporality

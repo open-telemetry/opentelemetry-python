@@ -1241,22 +1241,22 @@ class SpanAttributes:
 
     NET_PEER_IP = "net.peer.ip"
     """
-    Deprecated, use the `net.peer.sock.addr` attribute.
+    Deprecated, use the `client.socket.address` attribute.
     """
 
     NET_HOST_IP = "net.host.ip"
     """
-    Deprecated, use the `net.host.sock.addr` attribute.
+    Deprecated, use the `server.socket.address` attribute.
     """
 
     HTTP_SERVER_NAME = "http.server_name"
     """
-    Deprecated, use the `net.host.name` attribute.
+    Deprecated, use the `server.address` attribute.
     """
 
     HTTP_HOST = "http.host"
     """
-    Deprecated, use the `net.peer.name` attribute.
+    Deprecated, use the `server.address` and `server.port` attributes.
     """
 
     HTTP_RETRY_COUNT = "http.retry_count"
@@ -1295,17 +1295,17 @@ class SpanAttributes:
 
     MESSAGING_PROTOCOL = "messaging.protocol"
     """
-    Deprecated. Use `net.protocol.name` attribute.
+    Deprecated. Use `network.protocol.name` attribute.
     """
 
     MESSAGING_PROTOCOL_VERSION = "messaging.protocol_version"
     """
-    Deprecated. Use `net.protocol.version` attribute.
+    Deprecated. Use `network.protocol.version` attribute.
     """
 
     MESSAGING_URL = "messaging.url"
     """
-    Deprecated. Use `net.peer.name` attribute.
+    Deprecated. Use `server.address` and `server.port` attributes.
     """
 
     MESSAGING_CONVERSATION_ID = "messaging.conversation_id"
@@ -1340,18 +1340,63 @@ class SpanAttributes:
 
     NET_APP_PROTOCOL_NAME = "net.app.protocol.name"
     """
-    Deprecated. Use `net.protocol.name` attribute.
+    Deprecated. Use `network.protocol.name` attribute.
     """
 
     NET_APP_PROTOCOL_VERSION = "net.app.protocol.version"
     """
-    Deprecated. Use `net.protocol.version` attribute.
+    Deprecated. Use `network.protocol.version` attribute.
+    """
+
+    HTTP_CLIENT_IP = "http.client_ip"
+    """
+    Deprecated. Use `client.address` attribute.
+    """
+
+    NET_HOST_CONNECTION_TYPE = "net.host.connection.type"
+    """
+    Deprecated. Use `network.connection.type` attribute.
+    """
+
+    NET_HOST_CONNECTION_SUBTYPE = "net.host.connection.subtype"
+    """
+    Deprecated. Use `network.connection.subtype` attribute.
+    """
+
+    NET_HOST_CARRIER_NAME = "net.host.carrier.name"
+    """
+    Deprecated. Use `network.carrier.name` attribute.
+    """
+
+    NET_HOST_CARRIER_MCC = "net.host.carrier.mcc"
+    """
+    Deprecated. Use `network.carrier.mcc` attribute.
+    """
+
+    NET_HOST_CARRIER_MNC = "net.host.carrier.mnc"
+    """
+    Deprecated. Use `network.carrier.mnc` attribute.
+    """
+
+    MESSAGING_CONSUMER_ID = "messaging.consumer_id"
+    """
+    Deprecated. Use `messaging.client_id` attribute.
+    """
+
+    MESSAGING_KAFKA_CLIENT_ID = "messaging.kafka.client_id"
+    """
+    Deprecated. Use `messaging.client_id` attribute.
+    """
+
+    MESSAGING_ROCKETMQ_CLIENT_ID = "messaging.rocketmq.client_id"
+    """
+    Deprecated. Use `messaging.client_id` attribute.
     """
 
 
 @deprecated(
     version="1.18.0",
-    reason="Removed from the specification in favor of `net.protocol.name` and `net.protocol.version` attributes",
+    reason="Removed from the specification in favor of `network.protocol.name` and `network.protocol.version` attributes",
 )
 class HttpFlavorValues(Enum):
     HTTP_1_0 = "1.0"
@@ -1377,6 +1422,96 @@ class MessagingDestinationKindValues(Enum):
 
     TOPIC = "topic"
     """A message sent to a topic."""
+
+
+@deprecated(
+    version="1.21.0",
+    reason="Renamed to NetworkConnectionTypeValues",
+)
+class NetHostConnectionTypeValues(Enum):
+    WIFI = "wifi"
+    """wifi."""
+
+    WIRED = "wired"
+    """wired."""
+
+    CELL = "cell"
+    """cell."""
+
+    UNAVAILABLE = "unavailable"
+    """unavailable."""
+
+    UNKNOWN = "unknown"
+    """unknown."""
+
+
+@deprecated(
+    version="1.21.0",
+    reason="Renamed to NetworkConnectionSubtypeValues",
+)
+class NetHostConnectionSubtypeValues(Enum):
+    GPRS = "gprs"
+    """GPRS."""
+
+    EDGE = "edge"
+    """EDGE."""
+
+    UMTS = "umts"
+    """UMTS."""
+
+    CDMA = "cdma"
+    """CDMA."""
+
+    EVDO_0 = "evdo_0"
+    """EVDO Rel. 0."""
+
+    EVDO_A = "evdo_a"
+    """EVDO Rev. A."""
+
+    CDMA2000_1XRTT = "cdma2000_1xrtt"
+    """CDMA2000 1XRTT."""
+
+    HSDPA = "hsdpa"
+    """HSDPA."""
+
+    HSUPA = "hsupa"
+    """HSUPA."""
+
+    HSPA = "hspa"
+    """HSPA."""
+
+    IDEN = "iden"
+    """IDEN."""
+
+    EVDO_B = "evdo_b"
+    """EVDO Rev. B."""
+
+    LTE = "lte"
+    """LTE."""
+
+    EHRPD = "ehrpd"
+    """EHRPD."""
+
+    HSPAP = "hspap"
+    """HSPAP."""
+
+    GSM = "gsm"
+    """GSM."""
+
+    TD_SCDMA = "td_scdma"
+    """TD-SCDMA."""
+
+    IWLAN = "iwlan"
+    """IWLAN."""
+
+    NR = "nr"
+    """5G NR (New Radio)."""
+
+    NRNSA = "nrnsa"
+    """5G NRNSA (New Radio Non-Standalone)."""
+
+    LTE_CA = "lte_ca"
+    """LTE CA."""
 
 
 class NetTransportValues(Enum):

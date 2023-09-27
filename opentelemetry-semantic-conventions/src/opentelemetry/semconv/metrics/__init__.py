@@ -18,17 +18,47 @@
 class MetricInstruments:
 
     HTTP_SERVER_DURATION = "http.server.duration"
+    """
+    Deprecated. Use `http.server.request.duration` metric.
+    """
 
     HTTP_SERVER_REQUEST_SIZE = "http.server.request.size"
+    """
+    Deprecated. Use `http.server.request.body.size` metric.
+    """
 
     HTTP_SERVER_RESPONSE_SIZE = "http.server.response.size"
+    """
+    Deprecated. Use `http.server.response.body.size` metric.
+    """
+
+    HTTP_CLIENT_DURATION = "http.client.duration"
+    """
+    Deprecated. Use `http.client.request.duration` metric.
+    """
+
+    HTTP_CLIENT_REQUEST_SIZE = "http.client.request.size"
+    """
+    Deprecated. Use `http.client.response.body.size` metric.
+    """
+
+    HTTP_CLIENT_RESPONSE_SIZE = "http.client.response.size"
+    """
+    Deprecated. Use `http.client.response.body.size` metric.
+    """
+
+    HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
+
+    HTTP_SERVER_REQUEST_BODY_SIZE = "http.server.request.body.size"
+
+    HTTP_SERVER_RESPONSE_BODY_SIZE = "http.server.response.body.size"
 
     HTTP_SERVER_ACTIVE_REQUESTS = "http.server.active_requests"
 
-    HTTP_CLIENT_DURATION = "http.client.duration"
+    HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
 
-    HTTP_CLIENT_REQUEST_SIZE = "http.client.request.size"
+    HTTP_CLIENT_REQUEST_BODY_SIZE = "http.client.request.body.size"
 
-    HTTP_CLIENT_RESPONSE_SIZE = "http.client.response.size"
+    HTTP_CLIENT_RESPONSE_BODY_SIZE = "http.client.response.body.size"
 
     DB_CLIENT_CONNECTIONS_USAGE = "db.client.connections.usage"

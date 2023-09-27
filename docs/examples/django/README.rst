@@ -84,14 +84,14 @@ output similar to this one:
             "status_code": "OK"
         },
         "attributes": {
-            "http.method": "GET",
-            "net.peer.name": "localhost",
-            "http.scheme": "http",
-            "net.peer.port": 8000,
-            "http.url": "http://localhost:8000/?param=hello",
-            "net.sock.peer.addr": "127.0.0.1",
-            "net.protocol.version": "1.1",
-            "http.status_code": 200
+            "http.request.method": "GET",
+            "server.address": "localhost",
+            "url.scheme": "http",
+            "server.port": 8000,
+            "url.full": "http://localhost:8000/?param=hello",
+            "server.socket.address": "127.0.0.1",
+            "network.protocol.version": "1.1",
+            "http.response.status_code": 200
         },
         "events": [],
         "links": []
