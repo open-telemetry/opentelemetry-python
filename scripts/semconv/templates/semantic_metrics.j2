@@ -12,12 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# pylint: disable=too-many-lines
-
-{%- macro print_value(type, value) -%}
-    {{ "\"" if type == "string"}}{{value}}{{ "\"" if type == "string"}}
-{%- endmacro %}
-
 class {{class}}:
     SCHEMA_URL = "{{schemaUrl}}"
     """
@@ -27,8 +21,8 @@ class {{class}}:
     {{metric.metric_name | to_const_name}} = "{{metric.metric_name}}"
     """
     {{metric.brief | to_doc_brief}}
-    Instrument: {{metric.instrument }}
-    Unit: {{metric.unit }}
+    Instrument: {{ metric.instrument }}
+    Unit: {{ metric.unit }}
     """
 {# Extra line #}
     {%- endif %}{% endfor %}

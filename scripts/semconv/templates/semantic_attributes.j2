@@ -49,6 +49,15 @@ class {{class}}:
 
     {%- if class == "SpanAttributes" %}
     # Manually defined deprecated attributes
+    {#
+       Deprecated attributes and types are defined here for backward compatibility reasons.
+       They were removed from OpenTelemetry semantic conventions completely.
+
+       Attributes that were deprecated in OpenTelemetry semantic conventions
+       (https://github.com/open-telemetry/semantic-conventions/tree/main/model/deprecated)
+       are auto-generated with comments indicating deprecated status, so they don't need
+       to be manually defined.
+    #}
 
     NET_PEER_IP = "net.peer.ip"
     """
@@ -331,6 +340,15 @@ class NetHostConnectionSubtypeValues(Enum):
 
     {%- if class == "ResourceAttributes" %}
     # Manually defined deprecated attributes
+    {#
+       Deprecated attributes and types are defined here for backward compatibility reasons.
+       They were removed from OpenTelemetry semantic conventions completely.
+
+       Attributes that were deprecated in OpenTelemetry semantic conventions
+       (https://github.com/open-telemetry/semantic-conventions/tree/main/model/deprecated)
+       are auto-generated with comments indicating deprecated status, so they don't need
+       to be manually defined.
+    #}
 
     FAAS_ID = "faas.id"
     """
