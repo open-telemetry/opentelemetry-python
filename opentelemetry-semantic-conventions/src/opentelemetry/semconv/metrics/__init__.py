@@ -200,3 +200,12 @@ class MetricInstruments:
     Instrument: gauge
     Unit: 1
     """
+
+    # Manually defined metrics
+
+    DB_CLIENT_CONNECTIONS_USAGE = "db.client.connections.usage"
+    """
+    The number of connections that are currently in state described by the `state` attribute
+    Instrument: UpDownCounter
+    Unit: {connection}
+    """

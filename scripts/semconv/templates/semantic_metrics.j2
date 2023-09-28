@@ -26,3 +26,15 @@ class {{class}}:
     """
 {# Extra line #}
     {%- endif %}{% endfor %}
+
+    # Manually defined metrics
+    {#
+       Metrics defined here manually were not yaml-ified in 1.21.0 release
+       and therefore are not auto-generated.
+    #}
+    DB_CLIENT_CONNECTIONS_USAGE = "db.client.connections.usage"
+    """
+    The number of connections that are currently in state described by the `state` attribute
+    Instrument: UpDownCounter
+    Unit: {connection}
+    """
