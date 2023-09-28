@@ -44,4 +44,16 @@ docker run --rm \
   -Dclass=ResourceAttributes \
   -DschemaUrl=$SCHEMA_URL
 
+docker run --rm \
+  -v ${SCRIPT_DIR}/semantic-conventions/model:/source \
+  -v ${SCRIPT_DIR}/templates:/templates \
+  -v ${ROOT_DIR}/opentelemetry-semantic-conventions/src/opentelemetry/semconv/metrics/:/output \
+  otel/semconvgen:$OTEL_SEMCONV_GEN_IMG_VERSION \
+  --only metric \
+  -f /source code \
+  --template /templates/semantic_metrics.j2 \
+  --output /output/__init__.py \
+  -Dclass=MetricInstruments \
+  -DschemaUrl=$SCHEMA_URL
+
 cd "$ROOT_DIR"

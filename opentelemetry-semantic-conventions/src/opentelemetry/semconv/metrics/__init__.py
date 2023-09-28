@@ -14,51 +14,176 @@
 
 # pylint: disable=too-many-lines
 
-
 class MetricInstruments:
-
+    SCHEMA_URL = "https://opentelemetry.io/schemas/v1.21.0"
+    """
+    The URL of the OpenTelemetry schema for these keys and values.
+    """
+    
     HTTP_SERVER_DURATION = "http.server.duration"
     """
-    Deprecated. Use `http.server.request.duration` metric.
+    Measures the duration of inbound HTTP requests
+    Instrument: histogram
+    Unit: s
+    """
+
+    HTTP_SERVER_ACTIVE_REQUESTS = "http.server.active_requests"
+    """
+    Measures the number of concurrent HTTP requests that are currently in-flight
+    Instrument: updowncounter
+    Unit: {request}
     """
 
     HTTP_SERVER_REQUEST_SIZE = "http.server.request.size"
     """
-    Deprecated. Use `http.server.request.body.size` metric.
+    Measures the size of HTTP request messages (compressed)
+    Instrument: histogram
+    Unit: By
     """
 
     HTTP_SERVER_RESPONSE_SIZE = "http.server.response.size"
     """
-    Deprecated. Use `http.server.response.body.size` metric.
+    Measures the size of HTTP response messages (compressed)
+    Instrument: histogram
+    Unit: By
     """
 
     HTTP_CLIENT_DURATION = "http.client.duration"
     """
-    Deprecated. Use `http.client.request.duration` metric.
+    Measures the duration of outbound HTTP requests
+    Instrument: histogram
+    Unit: s
     """
 
     HTTP_CLIENT_REQUEST_SIZE = "http.client.request.size"
     """
-    Deprecated. Use `http.client.response.body.size` metric.
+    Measures the size of HTTP request messages (compressed)
+    Instrument: histogram
+    Unit: By
     """
 
     HTTP_CLIENT_RESPONSE_SIZE = "http.client.response.size"
     """
-    Deprecated. Use `http.client.response.body.size` metric.
+    Measures the size of HTTP response messages (compressed)
+    Instrument: histogram
+    Unit: By
     """
 
-    HTTP_SERVER_REQUEST_DURATION = "http.server.request.duration"
+    PROCESS_RUNTIME_JVM_MEMORY_INIT = "process.runtime.jvm.memory.init"
+    """
+    Measure of initial memory requested
+    Instrument: updowncounter
+    Unit: By
+    """
 
-    HTTP_SERVER_REQUEST_BODY_SIZE = "http.server.request.body.size"
+    PROCESS_RUNTIME_JVM_SYSTEM_CPU_UTILIZATION = "process.runtime.jvm.system.cpu.utilization"
+    """
+    Recent CPU utilization for the whole system as reported by the JVM
+    Instrument: gauge
+    Unit: 1
+    """
 
-    HTTP_SERVER_RESPONSE_BODY_SIZE = "http.server.response.body.size"
+    PROCESS_RUNTIME_JVM_SYSTEM_CPU_LOAD_1M = "process.runtime.jvm.system.cpu.load_1m"
+    """
+    Average CPU load of the whole system for the last minute as reported by the JVM
+    Instrument: gauge
+    Unit: 1
+    """
 
-    HTTP_SERVER_ACTIVE_REQUESTS = "http.server.active_requests"
+    PROCESS_RUNTIME_JVM_BUFFER_USAGE = "process.runtime.jvm.buffer.usage"
+    """
+    Measure of memory used by buffers
+    Instrument: updowncounter
+    Unit: By
+    """
 
-    HTTP_CLIENT_REQUEST_DURATION = "http.client.request.duration"
+    PROCESS_RUNTIME_JVM_BUFFER_LIMIT = "process.runtime.jvm.buffer.limit"
+    """
+    Measure of total memory capacity of buffers
+    Instrument: updowncounter
+    Unit: By
+    """
 
-    HTTP_CLIENT_REQUEST_BODY_SIZE = "http.client.request.body.size"
+    PROCESS_RUNTIME_JVM_BUFFER_COUNT = "process.runtime.jvm.buffer.count"
+    """
+    Number of buffers in the pool
+    Instrument: updowncounter
+    Unit: {buffer}
+    """
 
-    HTTP_CLIENT_RESPONSE_BODY_SIZE = "http.client.response.body.size"
+    PROCESS_RUNTIME_JVM_MEMORY_USAGE = "process.runtime.jvm.memory.usage"
+    """
+    Measure of memory used
+    Instrument: updowncounter
+    Unit: By
+    """
 
-    DB_CLIENT_CONNECTIONS_USAGE = "db.client.connections.usage"
+    PROCESS_RUNTIME_JVM_MEMORY_COMMITTED = "process.runtime.jvm.memory.committed"
+    """
+    Measure of memory committed
+    Instrument: updowncounter
+    Unit: By
+    """
+
+    PROCESS_RUNTIME_JVM_MEMORY_LIMIT = "process.runtime.jvm.memory.limit"
+    """
+    Measure of max obtainable memory
+    Instrument: updowncounter
+    Unit: By
+    """
+
+    PROCESS_RUNTIME_JVM_MEMORY_USAGE_AFTER_LAST_GC = "process.runtime.jvm.memory.usage_after_last_gc"
+    """
+    Measure of memory used, as measured after the most recent garbage collection event on this pool
+    Instrument: updowncounter
+    Unit: By
+    """
+
+    PROCESS_RUNTIME_JVM_GC_DURATION = "process.runtime.jvm.gc.duration"
+    """
+    Duration of JVM garbage collection actions
+    Instrument: histogram
+    Unit: s
+    """
+
+    PROCESS_RUNTIME_JVM_THREADS_COUNT = "process.runtime.jvm.threads.count"
+    """
+    Number of executing platform threads
+    Instrument: updowncounter
+    Unit: {thread}
+    """
+
+    PROCESS_RUNTIME_JVM_CLASSES_LOADED = "process.runtime.jvm.classes.loaded"
+    """
+    Number of classes loaded since JVM start
+    Instrument: counter
+    Unit: {class}
+    """
+
+    PROCESS_RUNTIME_JVM_CLASSES_UNLOADED = "process.runtime.jvm.classes.unloaded"
+    """
+    Number of classes unloaded since JVM start
+    Instrument: counter
+    Unit: {class}
+    """
+
+    PROCESS_RUNTIME_JVM_CLASSES_CURRENT_LOADED = "process.runtime.jvm.classes.current_loaded"
+    """
+    Number of classes currently loaded
+    Instrument: updowncounter
+    Unit: {class}
+    """
+
+    PROCESS_RUNTIME_JVM_CPU_TIME = "process.runtime.jvm.cpu.time"
+    """
+    CPU time used by the process as reported by the JVM
+    Instrument: counter
+    Unit: s
+    """
+
+    PROCESS_RUNTIME_JVM_CPU_RECENT_UTILIZATION = "process.runtime.jvm.cpu.recent_utilization"
+    """
+    Recent CPU utilization for the process as reported by the JVM
+    Instrument: gauge
+    Unit: 1
+    """
