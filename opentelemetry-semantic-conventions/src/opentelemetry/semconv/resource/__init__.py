@@ -648,7 +648,8 @@ class ResourceAttributes:
     """
     Deprecated, use the `cloud.resource.id` attribute.
     """
-    
+
+
 class CloudProviderValues(Enum):
     ALIBABA_CLOUD = "alibaba_cloud"
     """Alibaba Cloud."""
@@ -860,4 +861,3 @@ class TelemetrySdkLanguageValues(Enum):
 
     WEBJS = "webjs"
     """webjs."""
-
