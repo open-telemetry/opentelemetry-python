@@ -1,0 +1,59 @@
+name: SDK Benchmark Tests
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  sdk-benchmarks:
+    env:
+      py37: 3.7
+      py38: 3.8
+      py39: 3.9
+      py310: "3.10"
+      py311: "3.11"
+      pypy3: pypy-3.7
+      RUN_MATRIX_COMBINATION: ${{ matrix.python-version }}-sdk-${{ matrix.os }}
+    runs-on: self-hosted
+    strategy:
+      # Ensures the entire test matrix is run, even if one permutation fails
+      fail-fast: false
+      matrix:
+        python-version: [py37, py38, py39, py310, py311, pypy3]
+        os: [ubuntu-20.04, windows-2019]
+    steps:
+    - name: Checkout Core Repo @ SHA - ${{ github.sha }}
+      uses: actions/checkout@v2
+    - name: Set up Python ${{ env[matrix.python-version] }}
+      uses: actions/setup-python@v2
+      with:
+        python-version: ${{ env[matrix.python-version] }}
+        architecture: 'x64'
+    - name: Install tox
+      run: pip install tox==3.27.1 -U tox-factor
+    - name: Cache tox environment
+      # Preserves .tox directory between runs for faster installs
+      uses: actions/cache@v2
+      with:
+        path: |
+          .tox
+          ~/.cache/pip
+        key: v3-tox-cache-${{ env.RUN_MATRIX_COMBINATION }}-${{ hashFiles('tox.ini',
+          'dev-requirements.txt') }}-core
+    - name: Run tox
+      run: tox -f ${{ matrix.python-version }}-sdk -- -k opentelemetry-sdk/tests/performance/benchmarks --benchmark-json=output.json
+    - name: Report on SDK benchmark results
+      uses: benchmark-action/github-action-benchmark@v1
+      with:
+        name: OpenTelemetry Python SDK Benchmarks - Python ${{ env[matrix.python-version ]}} - SDK
+        tool: pytest
+        output-file-path: opentelemetry-sdk/tests/output.json
+        gh-pages-branch: benchmarks
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        # Make a commit on `gh-pages` with benchmarks from previous step
+        benchmark-data-dir-path: "docs/benchmarks/loadtests"
+        auto-push: true
+        max-items-in-chart: 100
+        # Alert with a commit comment on possible performance regression
+        alert-threshold: 200%
+        fail-on-alert: true
