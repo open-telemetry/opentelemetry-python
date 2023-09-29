@@ -39,6 +39,7 @@ class _ViewInstrumentMatch:
         view: View,
         instrument: Instrument,
         instrument_class_aggregation: Dict[type, Aggregation],
+        aggregation_cardinality_limit: None,
     ):
         self._start_time_unix_nano = time_ns()
         self._view = view
@@ -46,6 +47,7 @@ class _ViewInstrumentMatch:
         self._attributes_aggregation: Dict[frozenset, _Aggregation] = {}
         self._lock = Lock()
         self._instrument_class_aggregation = instrument_class_aggregation
+        self._aggregation_cardinality_limit = aggregation_cardinality_limit
         self._name = self._view._name or self._instrument.name
         self._description = (
             self._view._description or self._instrument.description
@@ -100,26 +102,30 @@ class _ViewInstrumentMatch:
         if aggr_key not in self._attributes_aggregation:
             with self._lock:
                 if aggr_key not in self._attributes_aggregation:
-                    if not isinstance(
-                        self._view._aggregation, DefaultAggregation
-                    ):
-                        aggregation = (
-                            self._view._aggregation._create_aggregation(
+                    if len(self._attributes_aggregation) < self._aggregation_cardinality_limit:
+                        if not isinstance(
+                            self._view._aggregation, DefaultAggregation
+                        ):
+                            aggregation = (
+                                self._view._aggregation._create_aggregation(
+                                    self._instrument,
+                                    attributes,
+                                    self._start_time_unix_nano,
+                                )
+                            )
+                        else:
+                            aggregation = self._instrument_class_aggregation[
+                                self._instrument.__class__
+                            ]._create_aggregation(
                                 self._instrument,
                                 attributes,
                                 self._start_time_unix_nano,
                             )
-                        )
+                        self._attributes_aggregation[aggr_key] = aggregation
                     else:
-                        aggregation = self._instrument_class_aggregation[
-                            self._instrument.__class__
-                        ]._create_aggregation(
-                            self._instrument,
-                            attributes,
-                            self._start_time_unix_nano,
-                        )
-                    self._attributes_aggregation[aggr_key] = aggregation
-
+                        # here need to create the aggregate key for the cardinality overflow aggregation
+                        # also use otel.metric.overflow:True
+                        self._attributes_aggregation[aggr_key].aggregate(measurement)
         self._attributes_aggregation[aggr_key].aggregate(measurement)
 
     def collect(
