@@ -1,8 +1,8 @@
 name: SDK Benchmark Tests
 
 on:
-  release:
-    types: [published]
+  push:
+    branches: [ main ]
 
 jobs:
   sdk-benchmarks:
@@ -51,7 +51,7 @@ jobs:
         gh-pages-branch: benchmarks
         github-token: ${{ secrets.GITHUB_TOKEN }}
         # Make a commit on `gh-pages` with benchmarks from previous step
-        benchmark-data-dir-path: "docs/benchmarks/loadtests"
+        benchmark-data-dir-path: "benchmarks"
         auto-push: true
         max-items-in-chart: 100
         # Alert with a commit comment on possible performance regression
