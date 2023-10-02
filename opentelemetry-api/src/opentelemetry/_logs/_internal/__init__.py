@@ -215,6 +215,7 @@ def get_logger(
     instrumenting_module_name: str,
     instrumenting_library_version: str = "",
     logger_provider: Optional[LoggerProvider] = None,
+    schema_url: Optional[str] = None,
 ) -> "Logger":
     """Returns a `Logger` for use within a python process.
 
@@ -226,5 +227,5 @@ def get_logger(
     if logger_provider is None:
         logger_provider = get_logger_provider()
     return logger_provider.get_logger(
-        instrumenting_module_name, instrumenting_library_version
+        instrumenting_module_name, instrumenting_library_version, schema_url
     )

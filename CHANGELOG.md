@@ -19,6 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3447](https://github.com/open-telemetry/opentelemetry-python/pull/3447))
 - Update semantic conventions to version 1.21.0
   ([#3251](https://github.com/open-telemetry/opentelemetry-python/pull/3251))
+- Add missing schema_url in global api for logging and metrics
+  ([#3251](https://github.com/open-telemetry/opentelemetry-python/pull/3251))
 
 ## Version 1.20.0/0.41b0 (2023-09-04)
 
