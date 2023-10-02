@@ -384,7 +384,7 @@ class _CustomCollector:
 
 
 class _AutoPrometheusMetricReader(PrometheusMetricReader):
-    """Thin wrapper around PrometheusMetricReader used for opentelemetry_metrics_exporter
+    """Thin wrapper around PrometheusMetricReader used for the opentelemetry_metrics_exporter entry point.
 
     This allows users to use the prometheus exporter with opentelemetry-instrument. It handles
     starting the Prometheus http server on the the correct port and host.
