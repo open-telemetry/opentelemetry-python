@@ -23,7 +23,7 @@ from random import randint
 from time import time_ns
 from typing import Optional
 from unittest import mock
-from unittest.mock import Mock
+from unittest.mock import Mock, patch
 
 from opentelemetry import trace as trace_api
 from opentelemetry.context import Context
@@ -640,12 +640,12 @@ class TestSpan(unittest.TestCase):
         with self.tracer.start_as_current_span("root") as root:
             root.set_attributes(
                 {
-                    "http.method": "GET",
-                    "http.url": "https://example.com:779/path/12/?q=d#123",
+                    "http.request.method": "GET",
+                    "url.full": "https://example.com:779/path/12/?q=d#123",
                 }
             )
 
-            root.set_attribute("http.status_code", 200)
+            root.set_attribute("http.response.status_code", 200)
             root.set_attribute("http.status_text", "OK")
             root.set_attribute("misc.pi", 3.14)
 
@@ -661,12 +661,12 @@ class TestSpan(unittest.TestCase):
             root.set_attribute("list-of-numerics", list_of_numerics)
 
             self.assertEqual(len(root.attributes), 9)
-            self.assertEqual(root.attributes["http.method"], "GET")
+            self.assertEqual(root.attributes["http.request.method"], "GET")
             self.assertEqual(
-                root.attributes["http.url"],
+                root.attributes["url.full"],
                 "https://example.com:779/path/12/?q=d#123",
             )
-            self.assertEqual(root.attributes["http.status_code"], 200)
+            self.assertEqual(root.attributes["http.response.status_code"], 200)
             self.assertEqual(root.attributes["http.status_text"], "OK")
             self.assertEqual(root.attributes["misc.pi"], 3.14)
             self.assertEqual(root.attributes["attr-key"], "attr-value2")
@@ -1007,7 +1007,7 @@ class TestSpan(unittest.TestCase):
         self.assertEqual(end_time0, root.end_time)
 
         with self.assertLogs(level=WARNING):
-            root.set_attribute("http.method", "GET")
+            root.set_attribute("http.request.method", "GET")
         self.assertEqual(len(root.attributes), 0)
 
         with self.assertLogs(level=WARNING):
@@ -1942,3 +1942,19 @@ class TestParentChildSpanException(unittest.TestCase):
         self.assertTrue(parent_span.status.is_ok)
         self.assertIsNone(parent_span.status.description)
         self.assertTupleEqual(parent_span.events, ())
+
+
+# pylint: disable=protected-access
+class TestTracerProvider(unittest.TestCase):
+    @patch("opentelemetry.sdk.trace.sampling._get_from_env_or_default")
+    @patch.object(Resource, "create")
+    def test_tracer_provider_init_default(self, resource_patch, sample_patch):
+        tracer_provider = trace.TracerProvider()
+        self.assertTrue(
+            isinstance(tracer_provider.id_generator, RandomIdGenerator)
+        )
+        resource_patch.assert_called_once()
+        self.assertIsNotNone(tracer_provider._resource)
+        sample_patch.assert_called_once()
+        self.assertIsNotNone(tracer_provider._span_limits)
+        self.assertIsNotNone(tracer_provider._atexit_handler)

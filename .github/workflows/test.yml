@@ -119,7 +119,7 @@ jobs:
 
   # Contrib unit test suite in order to ensure changes in core do not break anything in contrib.
   # We only run contrib unit tests on the oldest supported Python version (3.7) as running the same tests
-  # on all versions is somewhat redundant. 
+  # on all versions is somewhat redundant.
   contrib-build:
     env:
       # We use these variables to convert between tox and GHA version literals

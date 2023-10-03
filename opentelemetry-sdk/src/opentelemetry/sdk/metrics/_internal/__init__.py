@@ -341,13 +341,15 @@ class MeterProvider(APIMeterProvider):
         metric_readers: Sequence[
             "opentelemetry.sdk.metrics.export.MetricReader"
         ] = (),
-        resource: Resource = Resource.create({}),
+        resource: Resource = None,
         shutdown_on_exit: bool = True,
         views: Sequence["opentelemetry.sdk.metrics.view.View"] = (),
     ):
         self._lock = Lock()
         self._meter_lock = Lock()
         self._atexit_handler = None
+        if resource is None:
+            resource = Resource.create({})
         self._sdk_config = SdkConfiguration(
             resource=resource,
             metric_readers=metric_readers,

@@ -15,8 +15,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3428](https://github.com/open-telemetry/opentelemetry-python/pull/3428))
 - Allow instrument names to have '/' and up to 255 characters
   ([#3442](https://github.com/open-telemetry/opentelemetry-python/pull/3442))
+- Do not load Resource on sdk import
+  ([#3447](https://github.com/open-telemetry/opentelemetry-python/pull/3447))
+- Update semantic conventions to version 1.21.0
+  ([#3251](https://github.com/open-telemetry/opentelemetry-python/pull/3251))
+- Add missing schema_url in global api for logging and metrics
+  ([#3251](https://github.com/open-telemetry/opentelemetry-python/pull/3251))
 - Prometheus exporter support for auto instrumentation 
   ([#3413](https://github.com/open-telemetry/opentelemetry-python/pull/3413))
+
 
 ## Version 1.20.0/0.41b0 (2023-09-04)
 
@@ -29,7 +36,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3372](https://github.com/open-telemetry/opentelemetry-python/pull/3372))
 - Update the body type in the log
   ([$3343](https://github.com/open-telemetry/opentelemetry-python/pull/3343))
-- Add max_scale option to Exponential Bucket Histogram Aggregation 
+- Add max_scale option to Exponential Bucket Histogram Aggregation
   ([#3323](https://github.com/open-telemetry/opentelemetry-python/pull/3323))
 - Use BoundedAttributes instead of raw dict to extract attributes from LogRecord
   ([#3310](https://github.com/open-telemetry/opentelemetry-python/pull/3310))

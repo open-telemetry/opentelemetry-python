@@ -581,14 +581,17 @@ class Logger(APILogger):
 class LoggerProvider(APILoggerProvider):
     def __init__(
         self,
-        resource: Resource = Resource.create(),
+        resource: Resource = None,
         shutdown_on_exit: bool = True,
         multi_log_record_processor: Union[
             SynchronousMultiLogRecordProcessor,
             ConcurrentMultiLogRecordProcessor,
         ] = None,
     ):
-        self._resource = resource
+        if resource is None:
+            self._resource = Resource.create({})
+        else:
+            self._resource = resource
         self._multi_log_record_processor = (
             multi_log_record_processor or SynchronousMultiLogRecordProcessor()
         )
