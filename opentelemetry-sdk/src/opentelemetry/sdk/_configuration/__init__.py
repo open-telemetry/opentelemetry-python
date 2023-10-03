@@ -415,7 +415,7 @@ class _OTelSDKConfigurator(_BaseConfigurator):
 
     NOTE: This class should not be instantiated nor should it become an entry
     point on the `opentelemetry-sdk` package. Instead, distros should subclass
-    this Configurator and enchance it as needed.
+    this Configurator and enhance it as needed.
     """
 
     def _configure(self, **kwargs):
