@@ -21,6 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   ([#3251](https://github.com/open-telemetry/opentelemetry-python/pull/3251))
 - Add missing schema_url in global api for logging and metrics
   ([#3251](https://github.com/open-telemetry/opentelemetry-python/pull/3251))
+- Prometheus exporter support for auto instrumentation 
+  ([#3413](https://github.com/open-telemetry/opentelemetry-python/pull/3413))
+
 
 ## Version 1.20.0/0.41b0 (2023-09-04)
 
