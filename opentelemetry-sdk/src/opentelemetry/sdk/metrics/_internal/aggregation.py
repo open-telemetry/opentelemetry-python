@@ -44,15 +44,11 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.logarithm
     LogarithmMapping,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
-<<<<<<< HEAD
 from opentelemetry.sdk.metrics._internal.point import Buckets as BucketsPoint
 from opentelemetry.sdk.metrics._internal.point import (
     ExponentialHistogramDataPoint,
-    Gauge,
+    Gauge as GaugePoint,
 )
-=======
-from opentelemetry.sdk.metrics._internal.point import Gauge as GaugePoint
->>>>>>> ad714a7ab (Add synchronous gauge)
 from opentelemetry.sdk.metrics._internal.point import (
     Histogram as HistogramPoint,
 )
