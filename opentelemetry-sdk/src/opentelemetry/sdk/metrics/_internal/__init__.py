@@ -22,6 +22,7 @@ from typing import Optional, Sequence
 import opentelemetry.sdk.metrics
 from opentelemetry.metrics import Counter as APICounter
 from opentelemetry.metrics import Histogram as APIHistogram
+from opentelemetry.metrics import Gauge as APIGauge
 from opentelemetry.metrics import Meter as APIMeter
 from opentelemetry.metrics import MeterProvider as APIMeterProvider
 from opentelemetry.metrics import NoOpMeter
@@ -35,6 +36,7 @@ from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
     _Histogram,
+    _Gauge,
     _ObservableCounter,
     _ObservableGauge,
     _ObservableUpDownCounter,
@@ -214,6 +216,40 @@ class Meter(APIMeter):
             unit,
             description,
         )
+        with self._instrument_id_instrument_lock:
+            self._instrument_id_instrument[instrument_id] = instrument
+            return instrument
+    
+    def create_gauge(self, name, unit="", description="") -> APIGauge:
+
+        (
+            is_instrument_registered,
+            instrument_id,
+        ) = self._is_instrument_registered(name, _Gauge, unit, description)
+
+        if is_instrument_registered:
+            # FIXME #2558 go through all views here and check if this
+            # instrument registration conflict can be fixed. If it can be, do
+            # not log the following warning.
+            _logger.warning(
+                "An instrument with name %s, type %s, unit %s and "
+                "description %s has been created already.",
+                name,
+                APIGauge.__name__,
+                unit,
+                description,
+            )
+            with self._instrument_id_instrument_lock:
+                return self._instrument_id_instrument[instrument_id]
+
+        instrument = _Gauge(
+            name,
+            self._instrumentation_scope,
+            self._measurement_consumer,
+            unit,
+            description,
+        )
+
         with self._instrument_id_instrument_lock:
             self._instrument_id_instrument[instrument_id] = instrument
             return instrument

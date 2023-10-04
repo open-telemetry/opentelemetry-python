@@ -52,8 +52,10 @@ from opentelemetry.metrics._internal.instrument import (
     CallbackT,
     Counter,
     Histogram,
+    Gauge,
     NoOpCounter,
     NoOpHistogram,
+    NoOpGauge,
     NoOpObservableCounter,
     NoOpObservableGauge,
     NoOpObservableUpDownCounter,
@@ -64,6 +66,7 @@ from opentelemetry.metrics._internal.instrument import (
     UpDownCounter,
     _ProxyCounter,
     _ProxyHistogram,
+    _ProxyGauge,
     _ProxyObservableCounter,
     _ProxyObservableGauge,
     _ProxyObservableUpDownCounter,
@@ -79,6 +82,7 @@ _logger = getLogger(__name__)
 _ProxyInstrumentT = Union[
     _ProxyCounter,
     _ProxyHistogram,
+    _ProxyGauge,
     _ProxyObservableCounter,
     _ProxyObservableGauge,
     _ProxyObservableUpDownCounter,
@@ -382,6 +386,22 @@ class Meter(ABC):
         """
 
     @abstractmethod
+    def create_gauge(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+    ) -> Gauge:
+        """Creates an `Gauge` instrument
+
+        Args:
+            name: The name of the instrument to be created
+            unit: The unit for observations this instrument reports. For
+                example, ``By`` for bytes. UCUM units are recommended.
+            description: A description for this instrument and what it measures.
+        """
+
+    @abstractmethod
     def create_observable_gauge(
         self,
         name: str,
@@ -511,6 +531,19 @@ class _ProxyMeter(Meter):
             proxy = _ProxyHistogram(name, unit, description)
             self._instruments.append(proxy)
             return proxy
+    
+    def create_gauge(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+    ) -> Gauge:
+        with self._lock:
+            if self._real_meter:
+                return self._real_meter.create_gauge(name, unit, description)
+            proxy = _ProxyGauge(name, unit, description)
+            self._instruments.append(proxy)
+            return proxy
 
     def create_observable_gauge(
         self,
@@ -578,6 +611,27 @@ class NoOpMeter(Meter):
                 description,
             )
         return NoOpCounter(name, unit=unit, description=description)
+    
+    def create_gauge(
+        self,
+        name: str,
+        unit: str = "",
+        description: str = "",
+    ) -> Gauge:
+        """Returns a no-op Gauge."""
+        super().create_gauge(name, unit=unit, description=description)
+        if self._is_instrument_registered(
+            name, NoOpGauge, unit, description
+        )[0]:
+            _logger.warning(
+                "An instrument with name %s, type %s, unit %s and "
+                "description %s has been created already.",
+                name,
+                Gauge.__name__,
+                unit,
+                description,
+            )
+        return NoOpGauge(name, unit=unit, description=description)
 
     def create_up_down_counter(
         self,

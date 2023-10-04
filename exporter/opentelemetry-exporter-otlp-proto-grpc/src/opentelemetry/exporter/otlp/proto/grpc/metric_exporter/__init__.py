@@ -47,10 +47,28 @@ from opentelemetry.sdk.environment_variables import (
     OTEL_EXPORTER_OTLP_METRICS_HEADERS,
     OTEL_EXPORTER_OTLP_METRICS_INSECURE,
     OTEL_EXPORTER_OTLP_METRICS_TIMEOUT,
+<<<<<<< HEAD
+=======
+    OTEL_EXPORTER_OTLP_METRICS_TEMPORALITY_PREFERENCE,
+)
+from opentelemetry.sdk.metrics import (
+    Counter,
+    Histogram,
+    Gauge,
+    ObservableCounter,
+    ObservableGauge,
+    ObservableUpDownCounter,
+    UpDownCounter,
+>>>>>>> ad714a7ab (Add synchronous gauge)
 )
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     DataPointT,
+<<<<<<< HEAD
+=======
+    Gauge as GaugeType,
+    Histogram as HistogramType,
+>>>>>>> ad714a7ab (Add synchronous gauge)
     Metric,
     MetricExporter,
     MetricExportResult,

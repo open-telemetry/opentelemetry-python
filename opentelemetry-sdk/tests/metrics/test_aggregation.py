@@ -25,6 +25,7 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
 )
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
+    _Gauge,
     _Histogram,
     _ObservableCounter,
     _ObservableGauge,
@@ -531,6 +532,19 @@ class TestDefaultAggregation(TestCase):
             0,
         )
         self.assertIsInstance(aggregation, _ExplicitBucketHistogramAggregation)
+    
+    def test_gauge(self):
+
+        aggregation = self.default_aggregation._create_aggregation(
+            _Gauge(
+                "name",
+                Mock(),
+                Mock(),
+            ),
+            Mock(),
+            0,
+        )
+        self.assertIsInstance(aggregation, _LastValueAggregation)
 
     def test_observable_gauge(self):
 

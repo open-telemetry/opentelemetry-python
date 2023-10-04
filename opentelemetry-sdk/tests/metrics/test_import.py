@@ -27,6 +27,7 @@ class TestImport(TestCase):
             from opentelemetry.sdk.metrics import (  # noqa: F401
                 Counter,
                 Histogram,
+                Gauge,
                 Meter,
                 MeterProvider,
                 ObservableCounter,

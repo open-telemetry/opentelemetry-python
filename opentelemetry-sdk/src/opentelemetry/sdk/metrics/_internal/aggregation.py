@@ -26,6 +26,7 @@ from opentelemetry.metrics import (
     Asynchronous,
     Counter,
     Histogram,
+    Gauge,
     Instrument,
     ObservableCounter,
     ObservableGauge,
@@ -43,11 +44,15 @@ from opentelemetry.sdk.metrics._internal.exponential_histogram.mapping.logarithm
     LogarithmMapping,
 )
 from opentelemetry.sdk.metrics._internal.measurement import Measurement
+<<<<<<< HEAD
 from opentelemetry.sdk.metrics._internal.point import Buckets as BucketsPoint
 from opentelemetry.sdk.metrics._internal.point import (
     ExponentialHistogramDataPoint,
     Gauge,
 )
+=======
+from opentelemetry.sdk.metrics._internal.point import Gauge as GaugePoint
+>>>>>>> ad714a7ab (Add synchronous gauge)
 from opentelemetry.sdk.metrics._internal.point import (
     Histogram as HistogramPoint,
 )
@@ -341,7 +346,7 @@ class _SumAggregation(_Aggregation[Sum]):
             )
 
 
-class _LastValueAggregation(_Aggregation[Gauge]):
+class _LastValueAggregation(_Aggregation[GaugePoint]):
     def __init__(self, attributes: Attributes):
         super().__init__(attributes)
         self._value = None
@@ -1046,6 +1051,7 @@ class DefaultAggregation(Aggregation):
     `opentelemetry.sdk.metrics.ObservableCounter`        `SumAggregation`
     `opentelemetry.sdk.metrics.ObservableUpDownCounter`  `SumAggregation`
     `opentelemetry.sdk.metrics.Histogram`                `ExplicitBucketHistogramAggregation`
+    `opentelemetry.sdk.metrics.Gauge`                    `LastValueAggregation`
     `opentelemetry.sdk.metrics.ObservableGauge`          `LastValueAggregation`
     ==================================================== ====================================
     """
@@ -1103,6 +1109,9 @@ class DefaultAggregation(Aggregation):
             )
 
         if isinstance(instrument, ObservableGauge):
+            return _LastValueAggregation(attributes)
+        
+        if isinstance(instrument, Gauge):
             return _LastValueAggregation(attributes)
 
         raise Exception(f"Invalid instrument type {type(instrument)} found")
