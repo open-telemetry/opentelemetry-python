@@ -14,6 +14,7 @@
 
 from itertools import count
 from platform import system
+from time import sleep
 from unittest import TestCase
 
 from pytest import mark
@@ -28,14 +29,6 @@ from opentelemetry.sdk.metrics.view import SumAggregation
 
 
 class TestSumAggregation(TestCase):
-    @mark.skipif(
-        system() != "Linux",
-        reason=(
-            "Tests fail because Windows time_ns resolution is too low so "
-            "two different time measurements may end up having the exact same"
-            "value."
-        ),
-    )
     def test_asynchronous_delta_temporality(self):
 
         eight_multiple_generator = count(start=8, step=8)
@@ -73,7 +66,7 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
+            sleep(0)
             results.append(reader.get_metrics_data())
 
         self.assertEqual(counter, 10)
@@ -84,7 +77,7 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
+            sleep(0)
             results.append(reader.get_metrics_data())
 
         self.assertEqual(counter, 20)
@@ -143,7 +136,7 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
+            sleep(0)
             results.append(reader.get_metrics_data())
 
         self.assertEqual(counter, 30)
@@ -153,14 +146,6 @@ class TestSumAggregation(TestCase):
         for metrics_data in results:
             self.assertIsNone(metrics_data)
 
-    @mark.skipif(
-        system() != "Linux",
-        reason=(
-            "Tests fail because Windows time_ns resolution is too low so "
-            "two different time measurements may end up having the exact same"
-            "value."
-        ),
-    )
     def test_asynchronous_cumulative_temporality(self):
 
         eight_multiple_generator = count(start=8, step=8)
@@ -198,7 +183,7 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
+            sleep(0)
             results.append(reader.get_metrics_data())
 
         self.assertEqual(counter, 10)
@@ -209,7 +194,7 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
+            sleep(0)
             results.append(reader.get_metrics_data())
 
         self.assertEqual(counter, 20)
@@ -240,7 +225,7 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
+            sleep(0)
             results.append(reader.get_metrics_data())
 
         self.assertEqual(counter, 30)
@@ -250,14 +235,6 @@ class TestSumAggregation(TestCase):
         for metrics_data in results:
             self.assertIsNone(metrics_data)
 
-    @mark.skipif(
-        system() != "Linux",
-        reason=(
-            "Tests fail because Windows time_ns resolution is too low so "
-            "two different time measurements may end up having the exact same"
-            "value."
-        ),
-    )
     def test_synchronous_delta_temporality(self):
 
         aggregation = SumAggregation()
@@ -275,7 +252,7 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
+            sleep(0)
             results.append(reader.get_metrics_data())
 
         for metrics_data in results:
@@ -285,6 +262,7 @@ class TestSumAggregation(TestCase):
 
         for _ in range(10):
             counter.add(8)
+            sleep(0)
             results.append(reader.get_metrics_data())
 
         previous_time_unix_nano = (
@@ -341,7 +319,7 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
+            sleep(0)
             results.append(reader.get_metrics_data())
 
         provider.shutdown()
@@ -349,14 +327,6 @@ class TestSumAggregation(TestCase):
         for metrics_data in results:
             self.assertIsNone(metrics_data)
 
-    @mark.skipif(
-        system() != "Linux",
-        reason=(
-            "Tests fail because Windows time_ns resolution is too low so "
-            "two different time measurements may end up having the exact same"
-            "value."
-        ),
-    )
     def test_synchronous_cumulative_temporality(self):
 
         aggregation = SumAggregation()
