@@ -88,7 +88,7 @@ class _Aggregation(ABC, Generic[_DataPointVarT]):
     @abstractmethod
     def collect(
         self,
-        aggregation_temporality: AggregationTemporality,
+        collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
     ) -> Optional[_DataPointVarT]:
         pass
@@ -100,7 +100,7 @@ class _DropAggregation(_Aggregation):
 
     def collect(
         self,
-        aggregation_temporality: AggregationTemporality,
+        collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
     ) -> Optional[_DataPointVarT]:
         pass
@@ -111,13 +111,15 @@ class _SumAggregation(_Aggregation[Sum]):
         self,
         attributes: Attributes,
         instrument_is_monotonic: bool,
-        instrument_temporality: AggregationTemporality,
+        instrument_aggregation_temporality: AggregationTemporality,
         start_time_unix_nano: int,
     ):
         super().__init__(attributes)
 
         self._start_time_unix_nano = start_time_unix_nano
-        self._instrument_temporality = instrument_temporality
+        self._instrument_aggregation_temporality = (
+            instrument_aggregation_temporality
+        )
         self._instrument_is_monotonic = instrument_is_monotonic
 
         self._current_value = None
@@ -134,22 +136,143 @@ class _SumAggregation(_Aggregation[Sum]):
 
     def collect(
         self,
-        aggregation_temporality: AggregationTemporality,
+        collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
     ) -> Optional[NumberDataPoint]:
         """
         Atomically return a point for the current value of the metric and
         reset the aggregation value.
+
+        Synchronous instruments have a method which is called directly with
+        increments for a given quantity:
+
+        For example, an instrument that counts the amount of passengers in
+        every vehicle that crosses a certain point in a highway:
+
+        synchronous_instrument.add(2)
+        collect(...)  # 2 passengers are counted
+        synchronous_instrument.add(3)
+        collect(...)  # 3 passengers are counted
+        synchronous_instrument.add(1)
+        collect(...)  # 1 passenger is counted
+
+        In this case the instrument aggregation temporality is DELTA because
+        every value represents an increment to the count,
+
+        Asynchronous instruments have a callback which returns the total value
+        of a given quantity:
+
+        For example, an instrument that measures the amount of bytes written to
+        a certain hard drive:
+
+        callback() -> 1352
+        collect(...) # 1352 bytes have been written so far
+        callback() -> 2324
+        collect(...) # 2324 bytes have been written so far
+        callback() -> 4542
+        collect(...) # 4542 bytes have been written so far
+
+        In this case the instrument aggregation temporality is CUMULATIVE
+        because every value represents the total of the measurement.
+
+        There is also the collection aggregation temporality, which is passed
+        to this method. The collection aggregation temporality defines the
+        nature of the returned value by this aggregation.
+
+        When the collection aggregation temporality matches the
+        instrument aggregation temporality, then this method returns the
+        current value directly:
+
+        synchronous_instrument.add(2)
+        collect(DELTA) -> 2
+        synchronous_instrument.add(3)
+        collect(DELTA) -> 3
+        synchronous_instrument.add(1)
+        collect(DELTA) -> 1
+
+        callback() -> 1352
+        collect(CUMULATIVE) -> 1352
+        callback() -> 2324
+        collect(CUMULATIVE) -> 2324
+        callback() -> 4542
+        collect(CUMULATIVE) -> 4542
+
+        When the collection aggregation temporality does not match the
+        instrument aggregation temporality, then a conversion is made. For this
+        purpose, this aggregation keeps a private attribute,
+        self._previous_cumulative.
+
+        When the instrument is synchronous:
+
+        self._previous_cumulative_value is the sum of every previously
+        collected (delta) value. In this case, the returned (cumulative) value
+        will be:
+
+        self._previous_cumulative_value + current_value
+
+        synchronous_instrument.add(2)
+        collect(CUMULATIVE) -> 2
+        synchronous_instrument.add(3)
+        collect(CUMULATIVE) -> 5
+        synchronous_instrument.add(1)
+        collect(CUMULATIVE) -> 6
+
+        Also, as a diagram:
+
+        time ->
+
+        self._previous_cumulative_value
+        |-------------|
+
+        current_value (delta)
+                      |----|
+
+        returned value (cumulative)
+        |------------------|
+
+        When the instrument is asynchronous:
+
+        self._previous_cumulative_value is the value of the previously
+        collected (cumulative) value. In this case, the returned (delta) value
+        will be:
+
+        current_value - self._previous_cumulative_value
+
+        callback() -> 1352
+        collect(DELTA) -> 1352
+        callback() -> 2324
+        collect(DELTA) -> 972
+        callback() -> 4542
+        collect(DELTA) -> 2218
+
+        Also, as a diagram:
+
+        time ->
+
+        self._previous_cumulative_value
+        |-------------|
+
+        current_value (cumulative)
+        |------------------|
+
+        returned value (delta)
+                      |----|
         """
 
         with self._lock:
             current_value = self._current_value
             self._current_value = None
 
-            if self._instrument_temporality is AggregationTemporality.DELTA:
+            if (
+                self._instrument_aggregation_temporality
+                is AggregationTemporality.DELTA
+            ):
                 # This happens when the corresponding instrument for this
                 # aggregation is synchronous.
-                if aggregation_temporality is AggregationTemporality.DELTA:
+                if (
+                    collection_aggregation_temporality
+                    is AggregationTemporality.DELTA
+                ):
 
                     if current_value is None:
                         return None
@@ -190,10 +313,12 @@ class _SumAggregation(_Aggregation[Sum]):
                 # does not produce measurements.
                 return None
 
-            if aggregation_temporality is AggregationTemporality.DELTA:
-                current_point_value = (
-                    current_value - self._previous_cumulative_value
-                )
+            if (
+                collection_aggregation_temporality
+                is AggregationTemporality.DELTA
+            ):
+                result_value = current_value - self._previous_cumulative_value
+
                 self._previous_cumulative_value = current_value
 
                 previous_collection_start_nano = (
@@ -205,7 +330,7 @@ class _SumAggregation(_Aggregation[Sum]):
                     attributes=self._attributes,
                     start_time_unix_nano=previous_collection_start_nano,
                     time_unix_nano=collection_start_nano,
-                    value=current_point_value,
+                    value=result_value,
                 )
 
             return NumberDataPoint(
@@ -227,7 +352,7 @@ class _LastValueAggregation(_Aggregation[Gauge]):
 
     def collect(
         self,
-        aggregation_temporality: AggregationTemporality,
+        collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
     ) -> Optional[_DataPointVarT]:
         """
@@ -283,7 +408,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         # Histogram instrument is DELTA, like the "natural" aggregation
         # temporality for a Counter is DELTA and the "natural" aggregation
         # temporality for an ObservableCounter is CUMULATIVE.
-        self._instrument_temporality = AggregationTemporality.DELTA
+        self._instrument_aggregation_temporality = AggregationTemporality.DELTA
 
     def _get_empty_bucket_counts(self) -> List[int]:
         return [0] * (len(self._boundaries) + 1)
@@ -302,7 +427,7 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
     def collect(
         self,
-        aggregation_temporality: AggregationTemporality,
+        collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
     ) -> Optional[_DataPointVarT]:
         """
@@ -337,7 +462,8 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         )
 
         if self._previous_point is None or (
-            self._instrument_temporality is aggregation_temporality
+            self._instrument_aggregation_temporality
+            is collection_aggregation_temporality
         ):
             self._previous_point = current_point
             return current_point
@@ -345,7 +471,10 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
         max_ = current_point.max
         min_ = current_point.min
 
-        if aggregation_temporality is AggregationTemporality.CUMULATIVE:
+        if (
+            collection_aggregation_temporality
+            is AggregationTemporality.CUMULATIVE
+        ):
             start_time_unix_nano = self._previous_point.start_time_unix_nano
             sum_ = current_point.sum + self._previous_point.sum
             # Only update min/max on delta -> cumulative
@@ -459,7 +588,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             )
         self._mapping = LogarithmMapping(self._max_scale)
 
-        self._instrument_temporality = AggregationTemporality.DELTA
+        self._instrument_aggregation_temporality = AggregationTemporality.DELTA
         self._start_time_unix_nano = start_time_unix_nano
 
         self._previous_scale = None
@@ -580,7 +709,7 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
 
     def collect(
         self,
-        aggregation_temporality: AggregationTemporality,
+        collection_aggregation_temporality: AggregationTemporality,
         collection_start_nano: int,
     ) -> Optional[_DataPointVarT]:
         """
@@ -643,7 +772,8 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
             )
 
             if self._previous_scale is None or (
-                self._instrument_temporality is aggregation_temporality
+                self._instrument_aggregation_temporality
+                is collection_aggregation_temporality
             ):
                 self._previous_scale = current_scale
                 self._previous_start_time_unix_nano = (
@@ -682,7 +812,10 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                 self._previous_negative,
             )
 
-            if aggregation_temporality is AggregationTemporality.CUMULATIVE:
+            if (
+                collection_aggregation_temporality
+                is AggregationTemporality.CUMULATIVE
+            ):
 
                 start_time_unix_nano = self._previous_start_time_unix_nano
                 sum_ = current_sum + self._previous_sum
@@ -695,14 +828,14 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     current_positive,
                     current_scale,
                     min_scale,
-                    aggregation_temporality,
+                    collection_aggregation_temporality,
                 )
                 self._merge(
                     self._previous_negative,
                     current_negative,
                     current_scale,
                     min_scale,
-                    aggregation_temporality,
+                    collection_aggregation_temporality,
                 )
 
             else:
@@ -716,14 +849,14 @@ class _ExponentialBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     current_positive,
                     current_scale,
                     min_scale,
-                    aggregation_temporality,
+                    collection_aggregation_temporality,
                 )
                 self._merge(
                     self._previous_negative,
                     current_negative,
                     current_scale,
                     min_scale,
-                    aggregation_temporality,
+                    collection_aggregation_temporality,
                 )
 
             current_point = ExponentialHistogramDataPoint(
@@ -928,14 +1061,18 @@ class DefaultAggregation(Aggregation):
             return _SumAggregation(
                 attributes,
                 instrument_is_monotonic=True,
-                instrument_temporality=AggregationTemporality.DELTA,
+                instrument_aggregation_temporality=(
+                    AggregationTemporality.DELTA
+                ),
                 start_time_unix_nano=start_time_unix_nano,
             )
         if isinstance(instrument, UpDownCounter):
             return _SumAggregation(
                 attributes,
                 instrument_is_monotonic=False,
-                instrument_temporality=AggregationTemporality.DELTA,
+                instrument_aggregation_temporality=(
+                    AggregationTemporality.DELTA
+                ),
                 start_time_unix_nano=start_time_unix_nano,
             )
 
@@ -943,7 +1080,9 @@ class DefaultAggregation(Aggregation):
             return _SumAggregation(
                 attributes,
                 instrument_is_monotonic=True,
-                instrument_temporality=AggregationTemporality.CUMULATIVE,
+                instrument_aggregation_temporality=(
+                    AggregationTemporality.CUMULATIVE
+                ),
                 start_time_unix_nano=start_time_unix_nano,
             )
 
@@ -951,7 +1090,9 @@ class DefaultAggregation(Aggregation):
             return _SumAggregation(
                 attributes,
                 instrument_is_monotonic=False,
-                instrument_temporality=AggregationTemporality.CUMULATIVE,
+                instrument_aggregation_temporality=(
+                    AggregationTemporality.CUMULATIVE
+                ),
                 start_time_unix_nano=start_time_unix_nano,
             )
 
