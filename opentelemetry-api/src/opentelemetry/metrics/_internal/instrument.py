@@ -398,9 +398,7 @@ class _ProxyObservableGauge(
         )
 
 class Gauge(Synchronous):
-    """A Gauge is a synchronous `Instrument` which reports non-additive value(s) (e.g.
-    the room temperature - it makes no sense to report the temperature value from multiple rooms
-    and sum them up) when the instrument is being observed."""
+    """A Gauge is a synchronous `Instrument` which can be used to record non-additive values as they occur."""
     @abstractmethod
     def set(
         self,
