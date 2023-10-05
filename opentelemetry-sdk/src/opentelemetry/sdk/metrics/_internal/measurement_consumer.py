@@ -121,7 +121,8 @@ class SynchronousMeasurementConsumer(MeasurementConsumer):
                     )
 
                 for measurement in measurements:
-                    metric_reader_storage.consume_measurement(measurement)
+                    if measurement is not None:
+                        metric_reader_storage.consume_measurement(measurement)
 
             result = self._reader_storages[metric_reader].collect()
 
