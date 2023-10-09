@@ -344,14 +344,19 @@ def _check_span_ended(func):
 
 
 class ReadableSpan:
-    """Provides read-only access to span attributes"""
+    """Provides read-only access to span attributes.
+
+    Users should NOT be creating these objects directly. `ReadableSpan`s are created as
+    a direct result from using the tracing pipeline via the `Tracer`.
+
+    """
 
     def __init__(
         self,
         name: str = None,
         context: trace_api.SpanContext = None,
         parent: Optional[trace_api.SpanContext] = None,
-        resource: Resource = Resource.create({}),
+        resource: Resource = None,
         attributes: types.Attributes = None,
         events: Sequence[Event] = (),
         links: Sequence[trace_api.Link] = (),
@@ -373,7 +378,10 @@ class ReadableSpan:
         self._attributes = attributes
         self._events = events
         self._links = links
-        self._resource = resource
+        if resource is None:
+            self._resource = Resource.create({})
+        else:
+            self._resource = resource
         self._status = status
 
     @property
@@ -745,7 +753,7 @@ class Span(trace_api.Span, ReadableSpan):
         parent: Optional[trace_api.SpanContext] = None,
         sampler: Optional[sampling.Sampler] = None,
         trace_config: None = None,  # TODO
-        resource: Resource = Resource.create({}),
+        resource: Resource = None,
         attributes: types.Attributes = None,
         events: Sequence[Event] = None,
         links: Sequence[trace_api.Link] = (),
@@ -757,6 +765,8 @@ class Span(trace_api.Span, ReadableSpan):
         limits=_UnsetLimits,
         instrumentation_scope: InstrumentationScope = None,
     ) -> None:
+        if resource is None:
+            resource = Resource.create({})
         super().__init__(
             name=name,
             context=context,
@@ -1128,7 +1138,7 @@ class TracerProvider(trace_api.TracerProvider):
     def __init__(
         self,
         sampler: sampling.Sampler = None,
-        resource: Resource = Resource.create({}),
+        resource: Resource = None,
         shutdown_on_exit: bool = True,
         active_span_processor: Union[
             SynchronousMultiSpanProcessor, ConcurrentMultiSpanProcessor
@@ -1143,7 +1153,10 @@ class TracerProvider(trace_api.TracerProvider):
             self.id_generator = RandomIdGenerator()
         else:
             self.id_generator = id_generator
-        self._resource = resource
+        if resource is None:
+            self._resource = Resource.create({})
+        else:
+            self._resource = resource
         if not sampler:
             sampler = sampling._get_from_env_or_default()
         self.sampler = sampler

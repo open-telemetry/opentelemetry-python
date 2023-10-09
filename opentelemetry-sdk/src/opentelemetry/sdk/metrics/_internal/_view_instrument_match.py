@@ -16,7 +16,7 @@
 from logging import getLogger
 from threading import Lock
 from time import time_ns
-from typing import Dict, List, Sequence
+from typing import Dict, List, Optional, Sequence
 
 from opentelemetry.metrics import Instrument
 from opentelemetry.sdk.metrics._internal.aggregation import (
@@ -132,7 +132,7 @@ class _ViewInstrumentMatch:
         self,
         aggregation_temporality: AggregationTemporality,
         collection_start_nanos: int,
-    ) -> Sequence[DataPointT]:
+    ) -> Optional[Sequence[DataPointT]]:
 
         data_points: List[DataPointT] = []
         with self._lock:
@@ -142,4 +142,8 @@ class _ViewInstrumentMatch:
                 )
                 if data_point is not None:
                     data_points.append(data_point)
-        return data_points
+
+        # Returning here None instead of an empty list because the caller
+        # does not consume a sequence and to be consistent with the rest of
+        # collect methods that also return None.
+        return data_points or None

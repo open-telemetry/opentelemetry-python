@@ -12,4 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-__version__ = "1.21.0.dev"
+import unittest
+from unittest.mock import patch
+
+from opentelemetry._logs import LogRecord
+
+OBSERVED_TIMESTAMP = "OBSERVED_TIMESTAMP"
+
+
+class TestLogRecord(unittest.TestCase):
+    @patch("opentelemetry._logs._internal.time_ns")
+    def test_log_record_observed_timestamp_default(self, time_ns_mock):  # type: ignore
+        time_ns_mock.return_value = OBSERVED_TIMESTAMP
+        self.assertEqual(LogRecord().observed_timestamp, OBSERVED_TIMESTAMP)

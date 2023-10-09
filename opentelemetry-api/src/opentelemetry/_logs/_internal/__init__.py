@@ -37,6 +37,7 @@ The following code shows how to obtain a logger using the global :class:`.Logger
 from abc import ABC, abstractmethod
 from logging import getLogger
 from os import environ
+from time import time_ns
 from typing import Any, Optional, cast
 
 from opentelemetry._logs.severity import SeverityNumber
@@ -70,6 +71,8 @@ class LogRecord(ABC):
         attributes: Optional["Attributes"] = None,
     ):
         self.timestamp = timestamp
+        if observed_timestamp is None:
+            observed_timestamp = time_ns()
         self.observed_timestamp = observed_timestamp
         self.trace_id = trace_id
         self.span_id = span_id
@@ -143,7 +146,7 @@ class LoggerProvider(ABC):
 
             version: Optional. The version string of the
                 instrumenting library.  Usually this should be the same as
-                ``pkg_resources.get_distribution(instrumenting_library_name).version``.
+                ``importlib.metadata.version(instrumenting_library_name)``.
 
             schema_url: Optional. Specifies the Schema URL of the emitted telemetry.
         """
@@ -212,6 +215,7 @@ def get_logger(
     instrumenting_module_name: str,
     instrumenting_library_version: str = "",
     logger_provider: Optional[LoggerProvider] = None,
+    schema_url: Optional[str] = None,
 ) -> "Logger":
     """Returns a `Logger` for use within a python process.
 
@@ -223,5 +227,5 @@ def get_logger(
     if logger_provider is None:
         logger_provider = get_logger_provider()
     return logger_provider.get_logger(
-        instrumenting_module_name, instrumenting_library_version
+        instrumenting_module_name, instrumenting_library_version, schema_url
     )

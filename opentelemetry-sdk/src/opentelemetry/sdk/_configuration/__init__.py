@@ -21,7 +21,7 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from os import environ
-from typing import Callable, Dict, List, Optional, Sequence, Tuple, Type
+from typing import Callable, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 from typing_extensions import Literal
 
@@ -47,6 +47,7 @@ from opentelemetry.sdk.environment_variables import (
 from opentelemetry.sdk.metrics import MeterProvider
 from opentelemetry.sdk.metrics.export import (
     MetricExporter,
+    MetricReader,
     PeriodicExportingMetricReader,
 )
 from opentelemetry.sdk.resources import Resource
@@ -210,16 +211,24 @@ def _init_tracing(
 
 
 def _init_metrics(
-    exporters: Dict[str, Type[MetricExporter]],
+    exporters_or_readers: Dict[
+        str, Union[Type[MetricExporter], Type[MetricReader]]
+    ],
     resource: Resource = None,
 ):
     metric_readers = []
 
-    for _, exporter_class in exporters.items():
+    for _, exporter_or_reader_class in exporters_or_readers.items():
         exporter_args = {}
-        metric_readers.append(
-            PeriodicExportingMetricReader(exporter_class(**exporter_args))
-        )
+
+        if issubclass(exporter_or_reader_class, MetricReader):
+            metric_readers.append(exporter_or_reader_class(**exporter_args))
+        else:
+            metric_readers.append(
+                PeriodicExportingMetricReader(
+                    exporter_or_reader_class(**exporter_args)
+                )
+            )
 
     provider = MeterProvider(resource=resource, metric_readers=metric_readers)
     set_meter_provider(provider)
@@ -249,7 +258,7 @@ def _import_exporters(
     log_exporter_names: Sequence[str],
 ) -> Tuple[
     Dict[str, Type[SpanExporter]],
-    Dict[str, Type[MetricExporter]],
+    Dict[str, Union[Type[MetricExporter], Type[MetricReader]]],
     Dict[str, Type[LogExporter]],
 ]:
     trace_exporters = {}
@@ -267,7 +276,9 @@ def _import_exporters(
     for (exporter_name, exporter_impl,) in _import_config_components(
         metric_exporter_names, "opentelemetry_metrics_exporter"
     ):
-        if issubclass(exporter_impl, MetricExporter):
+        # The metric exporter components may be push MetricExporter or pull exporters which
+        # subclass MetricReader directly
+        if issubclass(exporter_impl, (MetricExporter, MetricReader)):
             metric_exporters[exporter_name] = exporter_impl
         else:
             raise RuntimeError(f"{exporter_name} is not a metric exporter")
@@ -404,7 +415,7 @@ class _OTelSDKConfigurator(_BaseConfigurator):
 
     NOTE: This class should not be instantiated nor should it become an entry
     point on the `opentelemetry-sdk` package. Instead, distros should subclass
-    this Configurator and enchance it as needed.
+    this Configurator and enhance it as needed.
     """
 
     def _configure(self, **kwargs):

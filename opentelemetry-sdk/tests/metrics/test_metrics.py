@@ -30,6 +30,7 @@ from opentelemetry.sdk.metrics import (
     ObservableUpDownCounter,
     UpDownCounter,
 )
+from opentelemetry.sdk.metrics._internal import SynchronousMeasurementConsumer
 from opentelemetry.sdk.metrics.export import (
     Metric,
     MetricExporter,
@@ -63,6 +64,21 @@ class TestMeterProvider(ConcurrencyTestBase):
 
         MeterProvider._all_metric_readers = set()
 
+    @patch.object(Resource, "create")
+    def test_init_default(self, resource_patch):
+        meter_provider = MeterProvider()
+        resource_mock = resource_patch.return_value
+        resource_patch.assert_called_once()
+        self.assertIsNotNone(meter_provider._sdk_config)
+        self.assertEqual(meter_provider._sdk_config.resource, resource_mock)
+        self.assertTrue(
+            isinstance(
+                meter_provider._measurement_consumer,
+                SynchronousMeasurementConsumer,
+            )
+        )
+        self.assertIsNotNone(meter_provider._atexit_handler)
+
     def test_register_metric_readers(self):
         mock_exporter = Mock()
         mock_exporter._preferred_temporality = None
@@ -88,7 +104,7 @@ class TestMeterProvider(ConcurrencyTestBase):
         meter_provider_0 = MeterProvider()
         meter_provider_1 = MeterProvider()
 
-        self.assertIs(
+        self.assertEqual(
             meter_provider_0._sdk_config.resource,
             meter_provider_1._sdk_config.resource,
         )
@@ -122,19 +138,21 @@ class TestMeterProvider(ConcurrencyTestBase):
         should return a NoOpMeter.
         """
 
-        meter = MeterProvider().get_meter(
-            None,
-            version="version",
-            schema_url="schema_url",
-        )
+        with self.assertLogs(level=WARNING):
+            meter = MeterProvider().get_meter(
+                None,
+                version="version",
+                schema_url="schema_url",
+            )
         self.assertIsInstance(meter, NoOpMeter)
         self.assertEqual(meter._name, None)
 
-        meter = MeterProvider().get_meter(
-            "",
-            version="version",
-            schema_url="schema_url",
-        )
+        with self.assertLogs(level=WARNING):
+            meter = MeterProvider().get_meter(
+                "",
+                version="version",
+                schema_url="schema_url",
+            )
         self.assertIsInstance(meter, NoOpMeter)
         self.assertEqual(meter._name, "")
 
@@ -483,9 +501,10 @@ class TestDuplicateInstrumentAggregateData(TestCase):
         counter_0_0 = meter_0.create_counter(
             "counter", unit="unit", description="description"
         )
-        counter_0_1 = meter_0.create_counter(
-            "counter", unit="unit", description="description"
-        )
+        with self.assertLogs(level=WARNING):
+            counter_0_1 = meter_0.create_counter(
+                "counter", unit="unit", description="description"
+            )
         counter_1_0 = meter_1.create_counter(
             "counter", unit="unit", description="description"
         )
@@ -496,7 +515,8 @@ class TestDuplicateInstrumentAggregateData(TestCase):
         counter_0_0.add(1, {})
         counter_0_1.add(2, {})
 
-        counter_1_0.add(7, {})
+        with self.assertLogs(level=WARNING):
+            counter_1_0.add(7, {})
 
         sleep(1)
 
