@@ -29,7 +29,12 @@ from opentelemetry.sdk.resources import (
     _OPENTELEMETRY_SDK_VERSION,
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
+    PROCESS_COMMAND,
+    PROCESS_COMMAND_ARGS,
+    PROCESS_COMMAND_LINE,
     PROCESS_EXECUTABLE_NAME,
+    PROCESS_EXECUTABLE_PATH,
+    PROCESS_PID,
     PROCESS_RUNTIME_DESCRIPTION,
     PROCESS_RUNTIME_NAME,
     PROCESS_RUNTIME_VERSION,
@@ -41,10 +46,8 @@ from opentelemetry.sdk.resources import (
     ProcessResourceDetector,
     Resource,
     ResourceDetector,
-    get_aggregated_resources, PROCESS_PID, PROCESS_EXECUTABLE_PATH, PROCESS_COMMAND, PROCESS_COMMAND_LINE,
-    PROCESS_COMMAND_ARGS, PROCESS_OWNER,
+    get_aggregated_resources,
 )
-
 
 # pylint: disable=protected-access
 
@@ -255,7 +258,7 @@ class TestResources(unittest.TestCase):
         )
 
     def test_aggregated_resources_with_default_destroying_static_resource(
-            self,
+        self,
     ):
         static_resource = Resource({"static_key": "static_value"})
 
@@ -527,8 +530,10 @@ class TestOTELResourceDetector(unittest.TestCase):
             Resource({"service.name": "from-service-name"}),
         )
 
-    @patch("sys.argv",
-           ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"])
+    @patch(
+        "sys.argv",
+        ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"],
+    )
     def test_process_detector(self):
         initial_resource = Resource({"foo": "bar"})
         aggregated_resource = get_aggregated_resources(
@@ -548,12 +553,28 @@ class TestOTELResourceDetector(unittest.TestCase):
             aggregated_resource.attributes.keys(),
         )
 
-        self.assertEqual(aggregated_resource.attributes[PROCESS_PID], os.getpid())
-        self.assertEqual(aggregated_resource.attributes[PROCESS_EXECUTABLE_NAME], sys.executable)
-        self.assertEqual(aggregated_resource.attributes[PROCESS_EXECUTABLE_PATH], os.path.dirname(sys.executable))
-        self.assertEqual(aggregated_resource.attributes[PROCESS_COMMAND], sys.argv[0])
-        self.assertEqual(aggregated_resource.attributes[PROCESS_COMMAND_LINE], " ".join(sys.argv))
-        self.assertEqual(aggregated_resource.attributes[PROCESS_COMMAND_ARGS], tuple(sys.argv[1:]))
+        self.assertEqual(
+            aggregated_resource.attributes[PROCESS_PID], os.getpid()
+        )
+        self.assertEqual(
+            aggregated_resource.attributes[PROCESS_EXECUTABLE_NAME],
+            sys.executable,
+        )
+        self.assertEqual(
+            aggregated_resource.attributes[PROCESS_EXECUTABLE_PATH],
+            os.path.dirname(sys.executable),
+        )
+        self.assertEqual(
+            aggregated_resource.attributes[PROCESS_COMMAND], sys.argv[0]
+        )
+        self.assertEqual(
+            aggregated_resource.attributes[PROCESS_COMMAND_LINE],
+            " ".join(sys.argv),
+        )
+        self.assertEqual(
+            aggregated_resource.attributes[PROCESS_COMMAND_ARGS],
+            tuple(sys.argv[1:]),
+        )
 
     def test_resource_detector_entry_points_default(self):
         resource = Resource({}).create()
@@ -623,7 +644,7 @@ class TestOTELResourceDetector(unittest.TestCase):
         always being added.
         """
         with patch.dict(
-                environ, {OTEL_RESOURCE_ATTRIBUTES: "a=b,c=d"}, clear=True
+            environ, {OTEL_RESOURCE_ATTRIBUTES: "a=b,c=d"}, clear=True
         ):
             resource = Resource({}).create()
             self.assertEqual(
@@ -640,12 +661,12 @@ class TestOTELResourceDetector(unittest.TestCase):
             self.assertEqual(resource.schema_url, "")
 
         with patch.dict(
-                environ,
-                {
-                    OTEL_RESOURCE_ATTRIBUTES: "a=b,c=d",
-                    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "process",
-                },
-                clear=True,
+            environ,
+            {
+                OTEL_RESOURCE_ATTRIBUTES: "a=b,c=d",
+                OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "process",
+            },
+            clear=True,
         ):
             resource = Resource({}).create()
             self.assertEqual(

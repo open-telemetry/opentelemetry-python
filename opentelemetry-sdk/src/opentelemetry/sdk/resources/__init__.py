@@ -66,15 +66,14 @@ from os import environ
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
-from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.util._importlib_metadata import entry_points, version
-from opentelemetry.util.types import AttributeValue
-
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
 )
+from opentelemetry.semconv.resource import ResourceAttributes
+from opentelemetry.util._importlib_metadata import entry_points, version
+from opentelemetry.util.types import AttributeValue
 
 LabelValue = AttributeValue
 Attributes = typing.Dict[str, LabelValue]
@@ -143,7 +142,7 @@ class Resource:
     """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
 
     def __init__(
-            self, attributes: Attributes, schema_url: typing.Optional[str] = None
+        self, attributes: Attributes, schema_url: typing.Optional[str] = None
     ):
         self._attributes = BoundedAttributes(attributes=attributes)
         if schema_url is None:
@@ -152,8 +151,8 @@ class Resource:
 
     @staticmethod
     def create(
-            attributes: typing.Optional[Attributes] = None,
-            schema_url: typing.Optional[str] = None,
+        attributes: typing.Optional[Attributes] = None,
+        schema_url: typing.Optional[str] = None,
     ) -> "Resource":
         """Creates a new `Resource` from attributes.
 
@@ -259,8 +258,8 @@ class Resource:
         if not isinstance(other, Resource):
             return False
         return (
-                self._attributes == other._attributes
-                and self._schema_url == other._schema_url
+            self._attributes == other._attributes
+            and self._schema_url == other._schema_url
         )
 
     def __hash__(self):
@@ -332,7 +331,7 @@ class ProcessResourceDetector(ResourceDetector):
                 str,
                 sys.version_info[:3]
                 if sys.version_info.releaselevel == "final"
-                   and not sys.version_info.serial
+                and not sys.version_info.serial
                 else sys.version_info,
             )
         )
@@ -358,9 +357,9 @@ class ProcessResourceDetector(ResourceDetector):
 
 
 def get_aggregated_resources(
-        detectors: typing.List["ResourceDetector"],
-        initial_resource: typing.Optional[Resource] = None,
-        timeout=5,
+    detectors: typing.List["ResourceDetector"],
+    initial_resource: typing.Optional[Resource] = None,
+    timeout=5,
 ) -> "Resource":
     """Retrieves resources from detectors in the order that they were passed
 
