@@ -11,9 +11,8 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
-# pylint: disable=protected-access
-
+import os
+import sys
 import unittest
 import uuid
 from logging import ERROR, WARNING
@@ -42,8 +41,12 @@ from opentelemetry.sdk.resources import (
     ProcessResourceDetector,
     Resource,
     ResourceDetector,
-    get_aggregated_resources,
+    get_aggregated_resources, PROCESS_PID, PROCESS_EXECUTABLE_PATH, PROCESS_COMMAND, PROCESS_COMMAND_LINE,
+    PROCESS_COMMAND_ARGS, PROCESS_OWNER,
 )
+
+
+# pylint: disable=protected-access
 
 
 class TestResources(unittest.TestCase):
@@ -252,7 +255,7 @@ class TestResources(unittest.TestCase):
         )
 
     def test_aggregated_resources_with_default_destroying_static_resource(
-        self,
+            self,
     ):
         static_resource = Resource({"static_key": "static_value"})
 
@@ -524,6 +527,8 @@ class TestOTELResourceDetector(unittest.TestCase):
             Resource({"service.name": "from-service-name"}),
         )
 
+    @patch("sys.argv",
+           ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"])
     def test_process_detector(self):
         initial_resource = Resource({"foo": "bar"})
         aggregated_resource = get_aggregated_resources(
@@ -543,8 +548,16 @@ class TestOTELResourceDetector(unittest.TestCase):
             aggregated_resource.attributes.keys(),
         )
 
-    def test_resource_detector_entry_points_default(self):
+        import pwd
+        self.assertEqual(aggregated_resource.attributes[PROCESS_PID], os.getpid())
+        self.assertEqual(aggregated_resource.attributes[PROCESS_EXECUTABLE_NAME], sys.executable)
+        self.assertEqual(aggregated_resource.attributes[PROCESS_EXECUTABLE_PATH], os.path.dirname(sys.executable))
+        self.assertEqual(aggregated_resource.attributes[PROCESS_COMMAND], sys.argv[0])
+        self.assertEqual(aggregated_resource.attributes[PROCESS_COMMAND_LINE], " ".join(sys.argv))
+        self.assertEqual(aggregated_resource.attributes[PROCESS_COMMAND_ARGS], tuple(sys.argv[1:]))
+        self.assertEqual(aggregated_resource.attributes[PROCESS_OWNER], pwd.getpwuid(os.getuid()).pw_name)
 
+    def test_resource_detector_entry_points_default(self):
         resource = Resource({}).create()
 
         self.assertEqual(
@@ -612,7 +625,7 @@ class TestOTELResourceDetector(unittest.TestCase):
         always being added.
         """
         with patch.dict(
-            environ, {OTEL_RESOURCE_ATTRIBUTES: "a=b,c=d"}, clear=True
+                environ, {OTEL_RESOURCE_ATTRIBUTES: "a=b,c=d"}, clear=True
         ):
             resource = Resource({}).create()
             self.assertEqual(
@@ -629,12 +642,12 @@ class TestOTELResourceDetector(unittest.TestCase):
             self.assertEqual(resource.schema_url, "")
 
         with patch.dict(
-            environ,
-            {
-                OTEL_RESOURCE_ATTRIBUTES: "a=b,c=d",
-                OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "process",
-            },
-            clear=True,
+                environ,
+                {
+                    OTEL_RESOURCE_ATTRIBUTES: "a=b,c=d",
+                    OTEL_EXPERIMENTAL_RESOURCE_DETECTORS: "process",
+                },
+                clear=True,
         ):
             resource = Resource({}).create()
             self.assertEqual(

@@ -58,6 +58,8 @@ above example.
 import abc
 import concurrent.futures
 import logging
+import os
+import pwd
 import sys
 import typing
 from json import dumps
@@ -65,19 +67,19 @@ from os import environ
 from urllib import parse
 
 from opentelemetry.attributes import BoundedAttributes
+from opentelemetry.semconv.resource import ResourceAttributes
+from opentelemetry.util._importlib_metadata import entry_points, version
+from opentelemetry.util.types import AttributeValue
+
 from opentelemetry.sdk.environment_variables import (
     OTEL_EXPERIMENTAL_RESOURCE_DETECTORS,
     OTEL_RESOURCE_ATTRIBUTES,
     OTEL_SERVICE_NAME,
 )
-from opentelemetry.semconv.resource import ResourceAttributes
-from opentelemetry.util._importlib_metadata import entry_points, version
-from opentelemetry.util.types import AttributeValue
 
 LabelValue = AttributeValue
 Attributes = typing.Dict[str, LabelValue]
 logger = logging.getLogger(__name__)
-
 
 CLOUD_PROVIDER = ResourceAttributes.CLOUD_PROVIDER
 CLOUD_ACCOUNT_ID = ResourceAttributes.CLOUD_ACCOUNT_ID
@@ -135,7 +137,6 @@ TELEMETRY_SDK_VERSION = ResourceAttributes.TELEMETRY_SDK_VERSION
 TELEMETRY_AUTO_VERSION = ResourceAttributes.TELEMETRY_AUTO_VERSION
 TELEMETRY_SDK_LANGUAGE = ResourceAttributes.TELEMETRY_SDK_LANGUAGE
 
-
 _OPENTELEMETRY_SDK_VERSION = version("opentelemetry-sdk")
 
 
@@ -143,7 +144,7 @@ class Resource:
     """A Resource is an immutable representation of the entity producing telemetry as Attributes."""
 
     def __init__(
-        self, attributes: Attributes, schema_url: typing.Optional[str] = None
+            self, attributes: Attributes, schema_url: typing.Optional[str] = None
     ):
         self._attributes = BoundedAttributes(attributes=attributes)
         if schema_url is None:
@@ -152,8 +153,8 @@ class Resource:
 
     @staticmethod
     def create(
-        attributes: typing.Optional[Attributes] = None,
-        schema_url: typing.Optional[str] = None,
+            attributes: typing.Optional[Attributes] = None,
+            schema_url: typing.Optional[str] = None,
     ) -> "Resource":
         """Creates a new `Resource` from attributes.
 
@@ -180,7 +181,6 @@ class Resource:
             otel_experimental_resource_detectors.append("otel")
 
         for resource_detector in otel_experimental_resource_detectors:
-
             resource_detectors.append(
                 next(
                     iter(
@@ -260,8 +260,8 @@ class Resource:
         if not isinstance(other, Resource):
             return False
         return (
-            self._attributes == other._attributes
-            and self._schema_url == other._schema_url
+                self._attributes == other._attributes
+                and self._schema_url == other._schema_url
         )
 
     def __hash__(self):
@@ -337,20 +337,33 @@ class ProcessResourceDetector(ResourceDetector):
                 else sys.version_info,
             )
         )
-
+        _process_pid = os.getpid()
+        _process_owner = pwd.getpwuid(os.getuid()).pw_name
+        _process_executable_name = sys.executable
+        _process_executable_path = os.path.dirname(_process_executable_name)
+        _process_command = sys.argv[0]
+        _process_command_line = " ".join(sys.argv)
+        _process_command_args = sys.argv[1:]
         return Resource(
             {
                 PROCESS_RUNTIME_DESCRIPTION: sys.version,
                 PROCESS_RUNTIME_NAME: sys.implementation.name,
                 PROCESS_RUNTIME_VERSION: _runtime_version,
+                PROCESS_PID: _process_pid,
+                PROCESS_EXECUTABLE_NAME: _process_executable_name,
+                PROCESS_EXECUTABLE_PATH: _process_executable_path,
+                PROCESS_COMMAND: _process_command,
+                PROCESS_COMMAND_LINE: _process_command_line,
+                PROCESS_COMMAND_ARGS: _process_command_args,
+                PROCESS_OWNER: _process_owner,
             }
         )
 
 
 def get_aggregated_resources(
-    detectors: typing.List["ResourceDetector"],
-    initial_resource: typing.Optional[Resource] = None,
-    timeout=5,
+        detectors: typing.List["ResourceDetector"],
+        initial_resource: typing.Optional[Resource] = None,
+        timeout=5,
 ) -> "Resource":
     """Retrieves resources from detectors in the order that they were passed
 
