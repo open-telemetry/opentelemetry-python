@@ -59,7 +59,6 @@ import abc
 import concurrent.futures
 import logging
 import os
-import pwd
 import sys
 import typing
 from json import dumps
@@ -333,12 +332,11 @@ class ProcessResourceDetector(ResourceDetector):
                 str,
                 sys.version_info[:3]
                 if sys.version_info.releaselevel == "final"
-                and not sys.version_info.serial
+                   and not sys.version_info.serial
                 else sys.version_info,
             )
         )
         _process_pid = os.getpid()
-        _process_owner = pwd.getpwuid(os.getuid()).pw_name
         _process_executable_name = sys.executable
         _process_executable_path = os.path.dirname(_process_executable_name)
         _process_command = sys.argv[0]
@@ -355,7 +353,6 @@ class ProcessResourceDetector(ResourceDetector):
                 PROCESS_COMMAND: _process_command,
                 PROCESS_COMMAND_LINE: _process_command_line,
                 PROCESS_COMMAND_ARGS: _process_command_args,
-                PROCESS_OWNER: _process_owner,
             }
         )
 

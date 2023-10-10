@@ -548,14 +548,12 @@ class TestOTELResourceDetector(unittest.TestCase):
             aggregated_resource.attributes.keys(),
         )
 
-        import pwd
         self.assertEqual(aggregated_resource.attributes[PROCESS_PID], os.getpid())
         self.assertEqual(aggregated_resource.attributes[PROCESS_EXECUTABLE_NAME], sys.executable)
         self.assertEqual(aggregated_resource.attributes[PROCESS_EXECUTABLE_PATH], os.path.dirname(sys.executable))
         self.assertEqual(aggregated_resource.attributes[PROCESS_COMMAND], sys.argv[0])
         self.assertEqual(aggregated_resource.attributes[PROCESS_COMMAND_LINE], " ".join(sys.argv))
         self.assertEqual(aggregated_resource.attributes[PROCESS_COMMAND_ARGS], tuple(sys.argv[1:]))
-        self.assertEqual(aggregated_resource.attributes[PROCESS_OWNER], pwd.getpwuid(os.getuid()).pw_name)
 
     def test_resource_detector_entry_points_default(self):
         resource = Resource({}).create()
