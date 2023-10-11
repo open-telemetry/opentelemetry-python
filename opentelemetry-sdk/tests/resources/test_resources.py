@@ -676,7 +676,9 @@ class TestOTELResourceDetector(unittest.TestCase):
                 resource.attributes["telemetry.sdk.name"], "opentelemetry"
             )
             self.assertEqual(
-                resource.attributes["service.name"], "unknown_service:"+resource.attributes["process.executable.name"]
+                resource.attributes["service.name"],
+                "unknown_service:"
+                + resource.attributes["process.executable.name"],
             )
             self.assertEqual(resource.attributes["a"], "b")
             self.assertEqual(resource.attributes["c"], "d")
