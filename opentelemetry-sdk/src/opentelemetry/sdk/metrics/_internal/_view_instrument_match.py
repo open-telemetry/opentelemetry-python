@@ -31,7 +31,7 @@ from opentelemetry.sdk.metrics._internal.point import DataPointT
 from opentelemetry.sdk.metrics._internal.view import View
 
 _logger = getLogger(__name__)
-
+OVERFLOW_ATTRIBUTE = ("otel.metric.overflow", "true")
 
 class _ViewInstrumentMatch:
     def __init__(
@@ -99,33 +99,31 @@ class _ViewInstrumentMatch:
 
         aggr_key = frozenset(attributes.items())
 
+        if len(self._attributes_aggregation) >= self._aggregation_cardinality_limit:
+            aggr_key = frozenset([OVERFLOW_ATTRIBUTE])
+
         if aggr_key not in self._attributes_aggregation:
             with self._lock:
                 if aggr_key not in self._attributes_aggregation:
-                    if len(self._attributes_aggregation) < self._aggregation_cardinality_limit:
-                        if not isinstance(
-                            self._view._aggregation, DefaultAggregation
-                        ):
-                            aggregation = (
-                                self._view._aggregation._create_aggregation(
-                                    self._instrument,
-                                    attributes,
-                                    self._start_time_unix_nano,
-                                )
-                            )
-                        else:
-                            aggregation = self._instrument_class_aggregation[
-                                self._instrument.__class__
-                            ]._create_aggregation(
+                    if not isinstance(
+                        self._view._aggregation, DefaultAggregation
+                    ):
+                        aggregation = (
+                            self._view._aggregation._create_aggregation(
                                 self._instrument,
                                 attributes,
                                 self._start_time_unix_nano,
                             )
-                        self._attributes_aggregation[aggr_key] = aggregation
+                        )
                     else:
-                        # here need to create the aggregate key for the cardinality overflow aggregation
-                        # also use otel.metric.overflow:True
-                        self._attributes_aggregation[aggr_key].aggregate(measurement)
+                        aggregation = self._instrument_class_aggregation[
+                            self._instrument.__class__
+                        ]._create_aggregation(
+                            self._instrument,
+                            attributes,
+                            self._start_time_unix_nano,
+                        )
+                    self._attributes_aggregation[aggr_key] = aggregation
         self._attributes_aggregation[aggr_key].aggregate(measurement)
 
     def collect(
