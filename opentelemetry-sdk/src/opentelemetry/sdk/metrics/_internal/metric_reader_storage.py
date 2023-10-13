@@ -114,10 +114,6 @@ class MetricReaderStorage:
             return view_instrument_matches
 
     def consume_measurement(self, measurement: Measurement) -> None:
-
-        if measurement is None:
-            return
-
         for view_instrument_match in self._get_or_init_view_instrument_match(
             measurement.instrument
         ):
