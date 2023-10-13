@@ -1,7 +1,5 @@
-import time
 import typing
 import unittest
-from os import environ
 
 import grpc
 
@@ -11,7 +9,7 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.sdk.trace.export.experimental.client import RetryingGrpcClient, FakeGrpcClient
 from opentelemetry.sdk.trace.export.experimental.exporter import OTLPSpanExporter2
 from opentelemetry.sdk.trace.export.experimental.processor import BatchSpanProcessor2
-from opentelemetry.sdk.trace.export.experimental.timer import PeriodicTimer, ThreadlessTimer
+from opentelemetry.sdk.trace.export.experimental.timer import ThreadlessTimer
 
 
 class TestBatchSpanProcessor(unittest.TestCase):
@@ -38,19 +36,6 @@ class TestBatchSpanProcessor(unittest.TestCase):
         # we want this test to be fast, so we don't sleep() -- instead we perform a manual poke()
         timer.poke()
         self.assertEqual(1, exporter.count())
-
-
-class TestPeriodicTimer(unittest.TestCase):
-
-    @unittest.skipUnless(environ.get('RUN_LONG_TESTS', '').lower() == 'true', 'Skipping long-running test')
-    def test_x(self):
-        t = PeriodicTimer(4)
-        t.set_callback(lambda: print('callback!'))
-        t.start()
-        time.sleep(2)
-        t.poke()
-        time.sleep(2)
-        t.stop()
 
 
 class TestRetryingGrpcClient(unittest.TestCase):

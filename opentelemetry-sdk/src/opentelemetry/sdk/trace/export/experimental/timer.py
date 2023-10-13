@@ -67,7 +67,6 @@ class PeriodicTimer(TimerABC):
             if self._stop.is_set():
                 break
             self._callback()
-            self._poke.clear()
 
     def poke(self) -> None:
         """

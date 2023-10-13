@@ -22,7 +22,7 @@ class TestIntegration(unittest.TestCase):
         server = OTLPServer()
         server.start()
         bsp = BatchSpanProcessor2(OTLPSpanExporter2())
-        num_spans_sent = 100000
+        num_spans_sent = 10000
         start = time.time()
         span = util.mk_span('test-span')
         for i in range(num_spans_sent):

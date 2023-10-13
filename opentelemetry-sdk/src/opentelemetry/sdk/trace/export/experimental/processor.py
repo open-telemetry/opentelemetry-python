@@ -3,8 +3,8 @@ import typing
 from opentelemetry.context import Context
 from opentelemetry.sdk.trace import ReadableSpan, SpanProcessor, Span
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+from opentelemetry.sdk.trace.export.experimental.accumulator import SpanAccumulator
 from opentelemetry.sdk.trace.export.experimental.timer import TimerABC, PeriodicTimer
-from opentelemetry.sdk.trace.export.experimental.util import SpanAccumulator
 
 
 class BatchSpanProcessor2(SpanProcessor):
@@ -21,10 +21,9 @@ class BatchSpanProcessor2(SpanProcessor):
         timer: typing.Optional[TimerABC] = None,
     ):
         self._exporter = exporter
-        self._max_batch_size = max_batch_size
-        self._accumulator = SpanAccumulator()
+        self._accumulator = SpanAccumulator(max_batch_size)
         self._timer = timer or PeriodicTimer(interval_sec)
-        self._timer.set_callback(self._export)
+        self._timer.set_callback(self._export_batch)
         self._timer.start()
 
     def on_start(self, span: Span, parent_context: typing.Optional[Context] = None) -> None:
@@ -35,8 +34,8 @@ class BatchSpanProcessor2(SpanProcessor):
         This method must be extremely fast. It adds the span to the accumulator for later sending and pokes the timer
         if the number of spans waiting to be sent has reached the maximum batch size.
         """
-        size = self._accumulator.push(span)
-        if size >= self._max_batch_size:
+        full = self._accumulator.push(span)
+        if full:
             self._timer.poke()
 
     def force_flush(self, timeout_millis: int = 30000) -> bool:
@@ -44,20 +43,25 @@ class BatchSpanProcessor2(SpanProcessor):
         Stops the timer, exports any spans in the accumulator then restarts the timer.
         """
         self._timer.stop()
-        self._exporter.force_flush(timeout_millis)
-        result = self._export()
+        self._exporter.force_flush(timeout_millis)  # this may be a no-op depending on the impl
+        while self._accumulator.nonempty():
+            result = self._export_batch()
+            if result != SpanExportResult.SUCCESS:
+                return False
         self._timer.start()
-        return result == SpanExportResult.SUCCESS
+
 
     def shutdown(self) -> None:
         self._timer.stop()
-        self._export()
+        while self._accumulator.nonempty():
+            self._export_batch()
         self._exporter.shutdown()
 
-    def _export(self) -> SpanExportResult:
+    def _export_batch(self) -> SpanExportResult:
+        """
+        This is the timer's callback. It runs on its own thread.
+        """
         batch = self._accumulator.batch()
         if len(batch) > 0:
-            out = self._exporter.export(batch)
-        else:
-            out = SpanExportResult.SUCCESS
-        return out
+            return self._exporter.export(batch)
+        return SpanExportResult.SUCCESS
