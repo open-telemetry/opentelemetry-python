@@ -65,7 +65,7 @@ class TestSynchronousSumAggregation(TestCase):
         synchronous_sum_aggregation.aggregate(measurement(2))
         synchronous_sum_aggregation.aggregate(measurement(3))
 
-        self.assertEqual(synchronous_sum_aggregation._value, 6)
+        self.assertEqual(synchronous_sum_aggregation._current_value, 6)
 
         synchronous_sum_aggregation = _SumAggregation(
             Mock(), True, AggregationTemporality.DELTA, 0
@@ -75,7 +75,7 @@ class TestSynchronousSumAggregation(TestCase):
         synchronous_sum_aggregation.aggregate(measurement(-2))
         synchronous_sum_aggregation.aggregate(measurement(3))
 
-        self.assertEqual(synchronous_sum_aggregation._value, 2)
+        self.assertEqual(synchronous_sum_aggregation._current_value, 2)
 
     def test_aggregate_cumulative(self):
         """
@@ -90,7 +90,7 @@ class TestSynchronousSumAggregation(TestCase):
         synchronous_sum_aggregation.aggregate(measurement(2))
         synchronous_sum_aggregation.aggregate(measurement(3))
 
-        self.assertEqual(synchronous_sum_aggregation._value, 6)
+        self.assertEqual(synchronous_sum_aggregation._current_value, 6)
 
         synchronous_sum_aggregation = _SumAggregation(
             Mock(), True, AggregationTemporality.CUMULATIVE, 0
@@ -100,7 +100,7 @@ class TestSynchronousSumAggregation(TestCase):
         synchronous_sum_aggregation.aggregate(measurement(-2))
         synchronous_sum_aggregation.aggregate(measurement(3))
 
-        self.assertEqual(synchronous_sum_aggregation._value, 2)
+        self.assertEqual(synchronous_sum_aggregation._current_value, 2)
 
     def test_collect_delta(self):
         """
@@ -409,7 +409,8 @@ class TestAggregationFactory(TestCase):
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertTrue(aggregation._instrument_is_monotonic)
         self.assertEqual(
-            aggregation._instrument_temporality, AggregationTemporality.DELTA
+            aggregation._instrument_aggregation_temporality,
+            AggregationTemporality.DELTA,
         )
         aggregation2 = factory._create_aggregation(counter, Mock(), 0)
         self.assertNotEqual(aggregation, aggregation2)
@@ -420,7 +421,8 @@ class TestAggregationFactory(TestCase):
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertFalse(aggregation._instrument_is_monotonic)
         self.assertEqual(
-            aggregation._instrument_temporality, AggregationTemporality.DELTA
+            aggregation._instrument_aggregation_temporality,
+            AggregationTemporality.DELTA,
         )
 
         counter = _ObservableCounter("name", Mock(), Mock(), None)
@@ -429,7 +431,7 @@ class TestAggregationFactory(TestCase):
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertTrue(aggregation._instrument_is_monotonic)
         self.assertEqual(
-            aggregation._instrument_temporality,
+            aggregation._instrument_aggregation_temporality,
             AggregationTemporality.CUMULATIVE,
         )
 
@@ -471,7 +473,8 @@ class TestDefaultAggregation(TestCase):
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertTrue(aggregation._instrument_is_monotonic)
         self.assertEqual(
-            aggregation._instrument_temporality, AggregationTemporality.DELTA
+            aggregation._instrument_aggregation_temporality,
+            AggregationTemporality.DELTA,
         )
 
     def test_up_down_counter(self):
@@ -482,7 +485,8 @@ class TestDefaultAggregation(TestCase):
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertFalse(aggregation._instrument_is_monotonic)
         self.assertEqual(
-            aggregation._instrument_temporality, AggregationTemporality.DELTA
+            aggregation._instrument_aggregation_temporality,
+            AggregationTemporality.DELTA,
         )
 
     def test_observable_counter(self):
@@ -495,7 +499,7 @@ class TestDefaultAggregation(TestCase):
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertTrue(aggregation._instrument_is_monotonic)
         self.assertEqual(
-            aggregation._instrument_temporality,
+            aggregation._instrument_aggregation_temporality,
             AggregationTemporality.CUMULATIVE,
         )
 
@@ -511,7 +515,7 @@ class TestDefaultAggregation(TestCase):
         self.assertIsInstance(aggregation, _SumAggregation)
         self.assertFalse(aggregation._instrument_is_monotonic)
         self.assertEqual(
-            aggregation._instrument_temporality,
+            aggregation._instrument_aggregation_temporality,
             AggregationTemporality.CUMULATIVE,
         )
 
