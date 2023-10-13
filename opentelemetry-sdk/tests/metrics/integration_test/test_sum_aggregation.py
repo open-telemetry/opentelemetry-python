@@ -13,6 +13,7 @@
 # limitations under the License.
 
 from itertools import count
+from logging import ERROR
 from platform import system
 from unittest import TestCase
 
@@ -52,7 +53,8 @@ class TestSumAggregation(TestCase):
             elif counter < 21:
                 yield Observation(next(eight_multiple_generator))
 
-            yield
+            else:
+                yield
 
         aggregation = SumAggregation()
 
@@ -73,8 +75,8 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
-            results.append(reader.get_metrics_data())
+            with self.assertLogs(level=ERROR):
+                results.append(reader.get_metrics_data())
 
         self.assertEqual(counter, 10)
 
@@ -84,7 +86,6 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         self.assertEqual(counter, 20)
@@ -143,8 +144,8 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
-            results.append(reader.get_metrics_data())
+            with self.assertLogs(level=ERROR):
+                results.append(reader.get_metrics_data())
 
         self.assertEqual(counter, 30)
 
@@ -177,7 +178,8 @@ class TestSumAggregation(TestCase):
             elif counter < 21:
                 yield Observation(next(eight_multiple_generator))
 
-            yield
+            else:
+                yield
 
         aggregation = SumAggregation()
 
@@ -198,8 +200,8 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
-            results.append(reader.get_metrics_data())
+            with self.assertLogs(level=ERROR):
+                results.append(reader.get_metrics_data())
 
         self.assertEqual(counter, 10)
 
@@ -209,7 +211,6 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
             results.append(reader.get_metrics_data())
 
         self.assertEqual(counter, 20)
@@ -240,8 +241,8 @@ class TestSumAggregation(TestCase):
         results = []
 
         for _ in range(10):
-
-            results.append(reader.get_metrics_data())
+            with self.assertLogs(level=ERROR):
+                results.append(reader.get_metrics_data())
 
         self.assertEqual(counter, 30)
 
