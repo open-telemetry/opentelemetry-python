@@ -45,11 +45,15 @@ class PeriodicTimer(TimerABC):
         callback: typing.Callable[[], None] = lambda: None,
         daemon: bool = True,
     ):
-        self._callback = callback
         self._interval_sec = interval_sec
+        self._callback = callback
+        self._daemon = daemon
         self._stop = threading.Event()
         self._poke = threading.Event()
-        self._thread = threading.Thread(target=self._work, daemon=daemon)
+        self._new_thread()
+
+    def _new_thread(self):
+        self._thread = threading.Thread(target=self._work, daemon=self._daemon)
 
     def set_callback(self, callback: typing.Callable[[], None]) -> None:
         self._callback = callback
@@ -76,6 +80,7 @@ class PeriodicTimer(TimerABC):
         self._stop.set()
         self.poke()  # in case we're waiting for a poke timeout
         self._thread.join()
+        self._new_thread()  # in case we want to start it again
 
     def started(self) -> bool:
         return self._thread.is_alive()

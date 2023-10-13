@@ -7,7 +7,7 @@ from opentelemetry.sdk.trace.export.experimental.timer import TimerABC, Periodic
 from opentelemetry.sdk.trace.export.experimental.util import SpanAccumulator
 
 
-class BatchSpanProcessor(SpanProcessor):
+class BatchSpanProcessor2(SpanProcessor):
     """
     A SpanProcessor that sends spans in batches on an interval or when a maximum number of spans has been reached,
     whichever comes first.

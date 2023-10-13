@@ -14,7 +14,7 @@ class ExporterFlushResult(Enum):
     TIMEOUT = 3
 
 
-class OTLPSpanExporter(SpanExporter):
+class OTLPSpanExporter2(SpanExporter):
     """
     An implementation of SpanExporter. Accepts an optional client. If one is not supplied, creates a retrying client.
     Sends spans immediately -- has no queue to flush or separate thread to shut down.
