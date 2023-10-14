@@ -532,7 +532,7 @@ class TestDefaultAggregation(TestCase):
             0,
         )
         self.assertIsInstance(aggregation, _ExplicitBucketHistogramAggregation)
-    
+
     def test_gauge(self):
 
         aggregation = self.default_aggregation._create_aggregation(

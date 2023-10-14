@@ -21,8 +21,8 @@ from typing import Dict, Generator, Iterable, List, Optional, Union
 import opentelemetry.sdk.metrics
 from opentelemetry.metrics import CallbackT
 from opentelemetry.metrics import Counter as APICounter
-from opentelemetry.metrics import Histogram as APIHistogram
 from opentelemetry.metrics import Gauge as APIGauge
+from opentelemetry.metrics import Histogram as APIHistogram
 from opentelemetry.metrics import ObservableCounter as APIObservableCounter
 from opentelemetry.metrics import ObservableGauge as APIObservableGauge
 from opentelemetry.metrics import (
@@ -212,6 +212,7 @@ class Histogram(_Synchronous, APIHistogram):
             Measurement(amount, self, attributes)
         )
 
+
 class Gauge(_Synchronous, APIGauge):
     def __new__(cls, *args, **kwargs):
         if cls is Gauge:
@@ -224,6 +225,7 @@ class Gauge(_Synchronous, APIGauge):
         self._measurement_consumer.consume_measurement(
             Measurement(amount, self, attributes)
         )
+
 
 class ObservableGauge(_Asynchronous, APIObservableGauge):
     def __new__(cls, *args, **kwargs):
@@ -254,8 +256,10 @@ class _ObservableUpDownCounter(ObservableUpDownCounter):
 class _Histogram(Histogram):
     pass
 
+
 class _Gauge(Gauge):
     pass
+
 
 class _ObservableGauge(ObservableGauge):
     pass

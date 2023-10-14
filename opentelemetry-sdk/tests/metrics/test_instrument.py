@@ -20,8 +20,8 @@ from opentelemetry.metrics import Observation
 from opentelemetry.metrics._internal.instrument import CallbackOptions
 from opentelemetry.sdk.metrics import (
     Counter,
-    Histogram,
     Gauge,
+    Histogram,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
@@ -29,8 +29,8 @@ from opentelemetry.sdk.metrics import (
 )
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
-    _Histogram,
     _Gauge,
+    _Histogram,
     _ObservableCounter,
     _ObservableGauge,
     _ObservableUpDownCounter,
@@ -294,7 +294,8 @@ class TestObservableCounter(TestCase):
             # pylint: disable=abstract-class-instantiated
             ObservableCounter("name", Mock(), Mock())
 
-class TestCounter(TestCase):
+
+class TestGauge(TestCase):
     def testname(self):
         self.assertEqual(_Gauge("name", Mock(), Mock()).name, "name")
         self.assertEqual(_Gauge("Name", Mock(), Mock()).name, "name")
@@ -309,6 +310,7 @@ class TestCounter(TestCase):
         with self.assertRaises(TypeError):
             # pylint: disable=abstract-class-instantiated
             Gauge("name", Mock(), Mock())
+
 
 class TestObservableUpDownCounter(TestCase):
     def test_callable_callback_0(self):

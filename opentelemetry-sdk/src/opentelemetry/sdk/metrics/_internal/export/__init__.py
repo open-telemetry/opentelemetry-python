@@ -44,15 +44,15 @@ from opentelemetry.sdk.metrics._internal.aggregation import (
 from opentelemetry.sdk.metrics._internal.exceptions import MetricsTimeoutError
 from opentelemetry.sdk.metrics._internal.instrument import (
     Counter,
-    Histogram,
     Gauge,
+    Histogram,
     ObservableCounter,
     ObservableGauge,
     ObservableUpDownCounter,
     UpDownCounter,
     _Counter,
-    _Histogram,
     _Gauge,
+    _Histogram,
     _ObservableCounter,
     _ObservableGauge,
     _ObservableUpDownCounter,
@@ -255,9 +255,7 @@ class MetricReader(ABC):
                         _Histogram
                     ] = temporality
                 elif typ is Gauge:
-                    self._instrument_class_temporality[
-                        _Gauge
-                    ] = temporality
+                    self._instrument_class_temporality[_Gauge] = temporality
                 elif typ is ObservableCounter:
                     self._instrument_class_temporality[
                         _ObservableCounter
@@ -297,9 +295,7 @@ class MetricReader(ABC):
                         _Histogram
                     ] = aggregation
                 elif typ is Gauge:
-                    self._instrument_class_aggregation[
-                        _Gauge
-                    ] = aggregation
+                    self._instrument_class_aggregation[_Gauge] = aggregation
                 elif typ is ObservableCounter:
                     self._instrument_class_aggregation[
                         _ObservableCounter

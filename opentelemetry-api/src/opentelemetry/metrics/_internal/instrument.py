@@ -397,8 +397,10 @@ class _ProxyObservableGauge(
             self._name, self._callbacks, self._unit, self._description
         )
 
+
 class Gauge(Synchronous):
     """A Gauge is a synchronous `Instrument` which can be used to record non-additive values as they occur."""
+
     @abstractmethod
     def set(
         self,
@@ -406,6 +408,7 @@ class Gauge(Synchronous):
         attributes: Optional[Attributes] = None,
     ) -> None:
         pass
+
 
 class NoOpGauge(Gauge):
     """No-op implementation of `Gauge`."""
@@ -425,6 +428,7 @@ class NoOpGauge(Gauge):
     ) -> None:
         return super().set(amount, attributes=attributes)
 
+
 class _ProxyGauge(
     _ProxyInstrument[Gauge],
     Gauge,
@@ -437,9 +441,5 @@ class _ProxyGauge(
         if self._real_instrument:
             self._real_instrument.set(amount, attributes)
 
-    def _create_real_instrument(
-        self, meter: "metrics.Meter"
-    ) -> Gauge:
-        return meter.create_gauge(
-            self._name, self._unit, self._description
-        )
+    def _create_real_instrument(self, meter: "metrics.Meter") -> Gauge:
+        return meter.create_gauge(self._name, self._unit, self._description)

@@ -51,11 +51,11 @@ from opentelemetry.environment_variables import OTEL_PYTHON_METER_PROVIDER
 from opentelemetry.metrics._internal.instrument import (
     CallbackT,
     Counter,
-    Histogram,
     Gauge,
+    Histogram,
     NoOpCounter,
-    NoOpHistogram,
     NoOpGauge,
+    NoOpHistogram,
     NoOpObservableCounter,
     NoOpObservableGauge,
     NoOpObservableUpDownCounter,
@@ -65,8 +65,8 @@ from opentelemetry.metrics._internal.instrument import (
     ObservableUpDownCounter,
     UpDownCounter,
     _ProxyCounter,
-    _ProxyHistogram,
     _ProxyGauge,
+    _ProxyHistogram,
     _ProxyObservableCounter,
     _ProxyObservableGauge,
     _ProxyObservableUpDownCounter,
@@ -531,7 +531,7 @@ class _ProxyMeter(Meter):
             proxy = _ProxyHistogram(name, unit, description)
             self._instruments.append(proxy)
             return proxy
-    
+
     def create_gauge(
         self,
         name: str,
@@ -611,7 +611,7 @@ class NoOpMeter(Meter):
                 description,
             )
         return NoOpCounter(name, unit=unit, description=description)
-    
+
     def create_gauge(
         self,
         name: str,
@@ -620,9 +620,9 @@ class NoOpMeter(Meter):
     ) -> Gauge:
         """Returns a no-op Gauge."""
         super().create_gauge(name, unit=unit, description=description)
-        if self._is_instrument_registered(
-            name, NoOpGauge, unit, description
-        )[0]:
+        if self._is_instrument_registered(name, NoOpGauge, unit, description)[
+            0
+        ]:
             _logger.warning(
                 "An instrument with name %s, type %s, unit %s and "
                 "description %s has been created already.",

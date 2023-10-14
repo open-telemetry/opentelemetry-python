@@ -26,8 +26,8 @@ class TestImport(TestCase):
         with self.assertNotRaises(Exception):
             from opentelemetry.sdk.metrics import (  # noqa: F401
                 Counter,
-                Histogram,
                 Gauge,
+                Histogram,
                 Meter,
                 MeterProvider,
                 ObservableCounter,

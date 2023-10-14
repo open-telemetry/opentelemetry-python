@@ -30,8 +30,8 @@ from opentelemetry.metrics import (
 from opentelemetry.metrics._internal import _ProxyMeter, _ProxyMeterProvider
 from opentelemetry.metrics._internal.instrument import (
     _ProxyCounter,
-    _ProxyHistogram,
     _ProxyGauge,
+    _ProxyHistogram,
     _ProxyObservableCounter,
     _ProxyObservableGauge,
     _ProxyObservableUpDownCounter,
@@ -283,7 +283,6 @@ class TestProxy(MetricsGlobalsTest, TestCase):
         real_histogram.record.assert_called_once_with(amount, attributes)
         proxy_gauge.set(amount, attributes=attributes)
         real_gauge.set.assert_called_once_with(amount, attributes)
-
 
     def test_proxy_meter_with_real_meter(self) -> None:
         # Creating new instruments on the _ProxyMeter with a real meter set

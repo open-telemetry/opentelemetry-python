@@ -25,8 +25,8 @@ from typing import Generic, List, Optional, Sequence, TypeVar
 from opentelemetry.metrics import (
     Asynchronous,
     Counter,
-    Histogram,
     Gauge,
+    Histogram,
     Instrument,
     ObservableCounter,
     ObservableGauge,
@@ -47,8 +47,8 @@ from opentelemetry.sdk.metrics._internal.measurement import Measurement
 from opentelemetry.sdk.metrics._internal.point import Buckets as BucketsPoint
 from opentelemetry.sdk.metrics._internal.point import (
     ExponentialHistogramDataPoint,
-    Gauge as GaugePoint,
 )
+from opentelemetry.sdk.metrics._internal.point import Gauge as GaugePoint
 from opentelemetry.sdk.metrics._internal.point import (
     Histogram as HistogramPoint,
 )
@@ -1106,7 +1106,7 @@ class DefaultAggregation(Aggregation):
 
         if isinstance(instrument, ObservableGauge):
             return _LastValueAggregation(attributes)
-        
+
         if isinstance(instrument, Gauge):
             return _LastValueAggregation(attributes)
 

@@ -16,11 +16,16 @@ from typing import Dict, Iterable
 from unittest import TestCase
 from unittest.mock import patch
 
-from opentelemetry.sdk.metrics import Counter, Histogram, Gauge, ObservableGauge
+from opentelemetry.sdk.metrics import (
+    Counter,
+    Gauge,
+    Histogram,
+    ObservableGauge,
+)
 from opentelemetry.sdk.metrics._internal.instrument import (
     _Counter,
-    _Histogram,
     _Gauge,
+    _Histogram,
     _ObservableCounter,
     _ObservableGauge,
     _ObservableUpDownCounter,
@@ -118,9 +123,7 @@ class TestMetricReader(TestCase):
         )
 
         self.assertEqual(
-            dummy_metric_reader._instrument_class_temporality[
-                _Gauge
-            ],
+            dummy_metric_reader._instrument_class_temporality[_Gauge],
             AggregationTemporality.DELTA,
         )
 

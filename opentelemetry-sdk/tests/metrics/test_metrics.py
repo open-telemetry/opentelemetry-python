@@ -21,8 +21,8 @@ from unittest.mock import MagicMock, Mock, patch
 from opentelemetry.metrics import NoOpMeter
 from opentelemetry.sdk.metrics import (
     Counter,
-    Histogram,
     Gauge,
+    Histogram,
     Meter,
     MeterProvider,
     ObservableCounter,
@@ -348,13 +348,11 @@ class TestMeterProvider(ConcurrencyTestBase, TestCase):
         counter.record(1)
 
         sync_consumer_instance.consume_measurement.assert_called()
-    
+
     @patch(
         "opentelemetry.sdk.metrics._internal." "SynchronousMeasurementConsumer"
     )
-    def test_consume_measurement_gauge(
-        self, mock_sync_measurement_consumer
-    ):
+    def test_consume_measurement_gauge(self, mock_sync_measurement_consumer):
         sync_consumer_instance = mock_sync_measurement_consumer()
         meter_provider = MeterProvider()
         gauge = meter_provider.get_meter("name").create_gauge("name")
@@ -444,7 +442,7 @@ class TestMeter(TestCase):
 
         self.assertIsInstance(observable_gauge, ObservableGauge)
         self.assertEqual(observable_gauge.name, "name")
-    
+
     def test_create_gauge(self):
         gauge = self.meter.create_gauge(
             "name", unit="unit", description="description"

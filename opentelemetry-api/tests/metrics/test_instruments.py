@@ -277,6 +277,7 @@ class TestHistogram(TestCase):
 
         self.assertIsNone(NoOpHistogram("name").record(1))
 
+
 class TestGauge(TestCase):
     def test_create_gauge(self):
         """
@@ -302,42 +303,23 @@ class TestGauge(TestCase):
         Test that the API for creating a gauge accepts the description of the instrument
         """
 
-        create_gauge_signature = signature(
-            Meter.create_gauge
-        )
-        self.assertIn(
-            "name", create_gauge_signature.parameters.keys()
-        )
+        create_gauge_signature = signature(Meter.create_gauge)
+        self.assertIn("name", create_gauge_signature.parameters.keys())
         self.assertIs(
             create_gauge_signature.parameters["name"].default,
             Signature.empty,
         )
-        create_gauge_signature = signature(
-            Meter.create_gauge
-        )
-        create_gauge_signature = signature(
-            Meter.create_gauge
-        )
-        self.assertIn(
-            "unit", create_gauge_signature.parameters.keys()
-        )
-        self.assertIs(
-            create_gauge_signature.parameters["unit"].default, ""
-        )
+        create_gauge_signature = signature(Meter.create_gauge)
+        create_gauge_signature = signature(Meter.create_gauge)
+        self.assertIn("unit", create_gauge_signature.parameters.keys())
+        self.assertIs(create_gauge_signature.parameters["unit"].default, "")
 
-        create_gauge_signature = signature(
-            Meter.create_gauge
-        )
-        self.assertIn(
-            "description", create_gauge_signature.parameters.keys()
-        )
+        create_gauge_signature = signature(Meter.create_gauge)
+        self.assertIn("description", create_gauge_signature.parameters.keys())
         self.assertIs(
-            create_gauge_signature.parameters[
-                "description"
-            ].default,
+            create_gauge_signature.parameters["description"].default,
             "",
         )
-
 
 
 class TestObservableGauge(TestCase):
