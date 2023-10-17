@@ -50,7 +50,6 @@ class BatchSpanProcessor2(SpanProcessor):
                 return False
         self._timer.start()
 
-
     def shutdown(self) -> None:
         self._timer.stop()
         while self._accumulator.nonempty():

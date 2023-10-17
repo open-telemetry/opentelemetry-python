@@ -32,7 +32,7 @@ class SpanAccumulator:
         try:
             return self._batches.pop()
         except IndexError:
-            # if there are no batches, batch the current spans
+            # if there are no batches left, return the current spans
             with self._lock:
                 out = self._spans
                 self._spans = []

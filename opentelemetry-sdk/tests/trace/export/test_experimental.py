@@ -1,3 +1,4 @@
+import time
 import typing
 import unittest
 
@@ -9,7 +10,7 @@ from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.sdk.trace.export.experimental.client import RetryingGrpcClient, FakeGrpcClient
 from opentelemetry.sdk.trace.export.experimental.exporter import OTLPSpanExporter2
 from opentelemetry.sdk.trace.export.experimental.processor import BatchSpanProcessor2
-from opentelemetry.sdk.trace.export.experimental.timer import ThreadlessTimer
+from opentelemetry.sdk.trace.export.experimental.timer import ThreadlessTimer, ThreadingTimer
 
 
 class TestBatchSpanProcessor(unittest.TestCase):

@@ -1,3 +1,4 @@
+import threading
 import time
 import unittest
 from concurrent import futures
@@ -6,54 +7,104 @@ from os import environ
 import grpc
 
 import util
-from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
 from opentelemetry.proto.collector.logs.v1 import logs_service_pb2, logs_service_pb2_grpc
 from opentelemetry.proto.collector.metrics.v1 import metrics_service_pb2, metrics_service_pb2_grpc
 from opentelemetry.proto.collector.trace.v1 import trace_service_pb2, trace_service_pb2_grpc
-from opentelemetry.sdk.trace.export import BatchSpanProcessor
+from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.sdk.trace.export.experimental.exporter import OTLPSpanExporter2
 from opentelemetry.sdk.trace.export.experimental.processor import BatchSpanProcessor2
+from opentelemetry.sdk.trace.export.experimental.timer import ThreadingTimer, PeriodicTimer, ThreadlessTimer
 
 
-@unittest.skipUnless(environ.get('RUN_LONG_TESTS', '').lower() == 'true', 'Skipping long-running test')
+@unittest.skipUnless(environ.get('RUN_LONG_TESTS', '').lower() == 'true', 'Skipping, RUN_LONG_TESTS not set')
 class TestIntegration(unittest.TestCase):
 
-    def test_bsp2(self):
+    def test_full_speed(self):
+        server = OTLPServer()
+        server.start()
+        max_interval_sec = 4
+
+        # timer = ThreadingTimer(max_interval_sec)
+        timer = PeriodicTimer(max_interval_sec)
+
+        bsp = BatchSpanProcessor2(OTLPSpanExporter2(), timer=timer)
+        num_spans_per_firehose = 1_000
+        sf = SpanFirehose(bsp, num_spans=num_spans_per_firehose, sleep_sec=0)
+
+        start = time.time()
+
+        threads = []
+        num_threads = 128
+        for _ in range(num_threads):
+            thread = threading.Thread(target=sf.run)
+            thread.start()
+            threads.append(thread)
+
+        checkpoint = time.time()
+
+        for thread in threads:
+            thread.join()
+
+        joined = time.time()
+
+        # ThreadingTimer: checkpoint: 0.72, joined: 5.89
+        # PeriodicTimer: checkpoint: 0.8266980648040771, joined: 4.759222030639648
+        print(f'checkpoint: {checkpoint - start}, joined: {joined - start}')
+
+        time.sleep(max_interval_sec * 2)
+
+        num_span_received = server.get_num_spans_received()
+        self.assertEqual(num_spans_per_firehose * num_threads, num_span_received)
+        server.stop()
+
+    def test_slower(self):
+        server = OTLPServer()
+        server.start()
+        max_interval_sec = 4
+        bsp = BatchSpanProcessor2(OTLPSpanExporter2(), timer=ThreadingTimer(max_interval_sec))
+        num_spans_per_firehose = 1000
+        sf = SpanFirehose(bsp, num_spans=num_spans_per_firehose, sleep_sec=0.01)
+        threads = []
+        num_threads = 128
+        for _ in range(num_threads):
+            thread = threading.Thread(target=sf.run)
+            thread.start()
+            threads.append(thread)
+        for thread in threads:
+            thread.join()
+        time.sleep(max_interval_sec * 2)
+        num_span_received = server.get_num_spans_received()
+        self.assertEqual(num_spans_per_firehose * num_threads, num_span_received)
+        server.stop()
+
+    def test_slow_enough_to_engage_timer(self):
         server = OTLPServer()
         server.start()
         bsp = BatchSpanProcessor2(OTLPSpanExporter2())
-        num_spans_sent = 10000
-        start = time.time()
-        span = util.mk_span('test-span')
-        for i in range(num_spans_sent):
-            bsp.on_end(span)
-        end = time.time()
-        elapsed = end - start
-        print()
-        print(f'new: elapsed: {elapsed}')
-        bsp.force_flush()
+        num_spans = 10
+        sf = SpanFirehose(bsp, num_spans=num_spans, sleep_sec=1)
+        sf.run()
+        time.sleep(5)
+        # bsp.force_flush()
         num_span_received = server.get_num_spans_received()
-        self.assertEqual(num_spans_sent, num_span_received)
+        self.assertEqual(num_spans, num_span_received)
         server.stop()
 
-    @unittest.SkipTest
-    def test_bsp(self):
-        server = OTLPServer()
-        server.start()
-        bsp = BatchSpanProcessor(OTLPSpanExporter())
-        num_spans_sent = 10000
+
+class SpanFirehose:
+
+    def __init__(self, sp: SpanProcessor, num_spans: int, sleep_sec: float):
+        self._sp = sp
+        self._num_spans = num_spans
+        self._sleep_sec = sleep_sec
+
+    def run(self) -> float:
         start = time.time()
         span = util.mk_span('test-span')
-        for i in range(num_spans_sent):
-            bsp.on_end(span)
-        end = time.time()
-        elapsed = end - start
-        print()
-        print(f'old: elapsed: {elapsed}')
-        bsp.force_flush()
-        while num_spans_sent > server.get_num_spans_received():
-            time.sleep(0.1)
-        server.stop()
+        for _ in range(self._num_spans):
+            time.sleep(self._sleep_sec)
+            self._sp.on_end(span)
+        return time.time() - start
 
 
 class OTLPServer:
