@@ -35,6 +35,6 @@ class TestMetricCardinalityLimit(TestCase):
         # Check if the length of the metric data doesn't exceed 2000
         self.assertTrue(len(metric_data) <= 2000)
 
-        # Optionally: Check if a warning or an error was logged
+        # Check if a warning or an error was logged
         with self.assertLogs(level=WARNING):
             counter.add(1, {"key": "value_2101"})
