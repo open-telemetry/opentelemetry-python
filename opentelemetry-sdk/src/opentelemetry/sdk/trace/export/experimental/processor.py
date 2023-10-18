@@ -4,7 +4,7 @@ from opentelemetry.context import Context
 from opentelemetry.sdk.trace import ReadableSpan, SpanProcessor, Span
 from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
 from opentelemetry.sdk.trace.export.experimental.accumulator import SpanAccumulator
-from opentelemetry.sdk.trace.export.experimental.timer import TimerABC, PeriodicTimer
+from opentelemetry.sdk.trace.export.experimental.timer import TimerABC, PeriodicTimer, ThreadingTimer
 
 
 class BatchSpanProcessor2(SpanProcessor):
@@ -22,7 +22,7 @@ class BatchSpanProcessor2(SpanProcessor):
     ):
         self._exporter = exporter
         self._accumulator = SpanAccumulator(max_batch_size)
-        self._timer = timer or PeriodicTimer(interval_sec)
+        self._timer = timer or ThreadingTimer(interval_sec)
         self._timer.set_callback(self._export_batch)
         self._timer.start()
 

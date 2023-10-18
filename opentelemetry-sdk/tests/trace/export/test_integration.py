@@ -24,14 +24,9 @@ class TestIntegration(unittest.TestCase):
         server.start()
         max_interval_sec = 4
 
-        # timer = ThreadingTimer(max_interval_sec)
-        timer = PeriodicTimer(max_interval_sec)
-
-        bsp = BatchSpanProcessor2(OTLPSpanExporter2(), timer=timer)
+        bsp = BatchSpanProcessor2(OTLPSpanExporter2())
         num_spans_per_firehose = 1_000
         sf = SpanFirehose(bsp, num_spans=num_spans_per_firehose, sleep_sec=0)
-
-        start = time.time()
 
         threads = []
         num_threads = 128
@@ -40,16 +35,8 @@ class TestIntegration(unittest.TestCase):
             thread.start()
             threads.append(thread)
 
-        checkpoint = time.time()
-
         for thread in threads:
             thread.join()
-
-        joined = time.time()
-
-        # ThreadingTimer: checkpoint: 0.72, joined: 5.89
-        # PeriodicTimer: checkpoint: 0.8266980648040771, joined: 4.759222030639648
-        print(f'checkpoint: {checkpoint - start}, joined: {joined - start}')
 
         time.sleep(max_interval_sec * 2)
 
@@ -85,7 +72,6 @@ class TestIntegration(unittest.TestCase):
         sf = SpanFirehose(bsp, num_spans=num_spans, sleep_sec=1)
         sf.run()
         time.sleep(5)
-        # bsp.force_flush()
         num_span_received = server.get_num_spans_received()
         self.assertEqual(num_spans, num_span_received)
         server.stop()

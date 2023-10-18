@@ -2,8 +2,6 @@ import abc
 import threading
 import typing
 
-from icecream import icecream
-
 
 class TimerABC(abc.ABC):
     """
@@ -27,9 +25,47 @@ class TimerABC(abc.ABC):
         pass
 
 
+class ThreadingTimer(TimerABC):
+
+    def __init__(self, interval_sec: int):
+        self.interval_sec = interval_sec
+        self.cb = lambda: None
+        self.timer = None
+        self.lock = threading.Lock()
+
+    def set_callback(self, cb) -> None:
+        with self.lock:
+            self.cb = cb
+
+    def start(self) -> None:
+        with self.lock:
+            self.timer = threading.Timer(self.interval_sec, self._work)
+            self.timer.daemon = True
+            self.timer.start()
+
+    def _work(self):
+        self.cb()
+        self.start()
+
+    def poke(self) -> None:
+        with self.lock:
+            self._do_stop()
+            threading.Thread(target=self._work, daemon=True).start()
+
+    def stop(self) -> None:
+        with self.lock:
+            self._do_stop()
+
+    def _do_stop(self):
+        if self.timer is None:
+            return
+        self.timer.cancel()
+        self.timer = None
+
+
 class PeriodicTimer(TimerABC):
     """
-    Executes the passed-in callback on a timer at the specified interval. The callback can be run sooner than the
+    DEPRECATED. Executes the passed-in callback on a timer at the specified interval. The callback can be run sooner than the
     interval via the poke() method, which also resets the timer.
     """
 
@@ -80,80 +116,6 @@ class PeriodicTimer(TimerABC):
 
     def stopped(self) -> bool:
         return self._stop.is_set()
-
-
-class IntervalTimer(TimerABC):
-
-    def __init__(self, interval_sec):
-        self._thread = threading.Thread(target=self._work)
-        self._interval_sec = interval_sec
-        self._cb = lambda: None
-        self._poke = threading.Event()
-        self._stop = threading.Event()
-
-    def set_callback(self, cb) -> None:
-        self._cb = cb
-
-    def start(self) -> None:
-        self._thread.start()
-
-    def _work(self):
-        while True:
-            self._poke.wait(self._interval_sec)
-            if self._stop.is_set():
-                return
-            self._poke.clear()
-            self._cb()
-
-    def poke(self) -> None:
-        self._poke.set()
-
-    def stop(self) -> None:
-        self._stop.set()
-
-    def started(self) -> bool:
-        pass
-
-    def stopped(self) -> bool:
-        pass
-
-
-class ThreadingTimer(TimerABC):
-
-    def __init__(self, interval_sec: int):
-        self.interval_sec = interval_sec
-        self.cb = lambda: None
-        self.timer = None
-        self.lock = threading.Lock()
-
-    def set_callback(self, cb) -> None:
-        with self.lock:
-            self.cb = cb
-
-    def start(self) -> None:
-        with self.lock:
-            self.timer = threading.Timer(self.interval_sec, self._work)
-            self.timer.start()
-
-    def _work(self):
-        self.cb()
-        self.start()
-
-    def poke(self) -> None:
-        with self.lock:
-            self._do_stop()
-            # start a new thread from a thread that's just about to be shut down
-            threading.Thread(target=self._work, daemon=True).start()
-
-    def stop(self) -> None:
-        with self.lock:
-            self._do_stop()
-
-    def _do_stop(self):
-        if self.timer is None:
-            return
-        self.timer.cancel()
-        self.timer = None
 
 
 class ThreadlessTimer(TimerABC):
