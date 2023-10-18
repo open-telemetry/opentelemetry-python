@@ -16,8 +16,8 @@ class BatchSpanProcessor2(SpanProcessor):
     def __init__(
         self,
         exporter: SpanExporter,
-        max_batch_size: int = 1024,
-        interval_sec: int = 4,
+        max_batch_size: int = 512,
+        interval_sec: int = 5,
         timer: typing.Optional[TimerABC] = None,
     ):
         self._exporter = exporter

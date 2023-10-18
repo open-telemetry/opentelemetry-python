@@ -6,7 +6,7 @@ import grpc
 
 import util
 from opentelemetry.sdk.trace import ReadableSpan
-from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult
+from opentelemetry.sdk.trace.export import SpanExporter, SpanExportResult, BatchSpanProcessor
 from opentelemetry.sdk.trace.export.experimental.client import RetryingGrpcClient, FakeGrpcClient
 from opentelemetry.sdk.trace.export.experimental.exporter import OTLPSpanExporter2
 from opentelemetry.sdk.trace.export.experimental.processor import BatchSpanProcessor2
