@@ -11,12 +11,12 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-
+import collections
 import datetime
 import threading
 from collections import OrderedDict, deque
 from collections.abc import MutableMapping, Sequence
-from typing import Optional
+from typing import Optional, TypeVar, Generic
 
 from deprecated import deprecated
 
@@ -148,3 +148,44 @@ class BoundedDict(MutableMapping):
         for key, value in mapping.items():
             bounded_dict[key] = value
         return bounded_dict
+
+T = TypeVar('T')
+
+class BatchAccumulator(Generic[T]):
+
+    def __init__(self, batch_size):
+        self.batch_size = batch_size
+        self.spans = []
+        self.batches = collections.deque()
+        self.lock = threading.Lock()
+
+    def empty(self):
+        """
+        Returns True if the span list and the batch queue are empty, and False otherwise.
+        """
+        with self.lock:
+            return len(self.spans) == 0 and len(self.batches) == 0
+
+    def push(self, span):
+        with self.lock:
+            self.spans.append(span)
+            if len(self.spans) < self.batch_size:
+                return False
+            self.batches.appendleft(self.spans)
+            self.spans = []
+            return True
+
+    def batch(self):
+        """
+        Returns the earliest (first in line) batch of spans from the FIFO queue. If the queue is empty, returns any
+        remaining spans that haven't been batched.
+        """
+        try:
+            return self.batches.pop()
+        except IndexError:
+            # if there are no batches left, return the current spans
+            with self.lock:
+                out = self.spans
+                self.spans = []
+                return out
+

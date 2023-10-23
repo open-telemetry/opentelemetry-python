@@ -14,7 +14,7 @@
 
 import unittest
 
-from opentelemetry.sdk.util import BoundedList
+from opentelemetry.sdk.util import BoundedList, BatchAccumulator
 
 
 class TestBoundedList(unittest.TestCase):
@@ -141,3 +141,27 @@ class TestBoundedList(unittest.TestCase):
 
         for num in range(100):
             self.assertEqual(blist[num], num)
+
+
+class TestBatchAccumulator(unittest.TestCase):
+
+    def test_push(self):
+        acc = BatchAccumulator[int](4)
+        self.assertTrue(acc.empty())
+        self.assertFalse(acc.push(1))
+        self.assertFalse(acc.push(2))
+        self.assertFalse(acc.push(3))
+        self.assertTrue(acc.push(4))
+        self.assertListEqual([1, 2, 3, 4], acc.batch())
+        self.assertEqual(0, len(acc.batch()))
+        self.assertTrue(acc.empty())
+
+    def test_batch(self):
+        acc = BatchAccumulator[int](4)
+        for i in range(10):
+            acc.push(i)
+        self.assertListEqual([0, 1, 2, 3], acc.batch())
+        self.assertListEqual([4, 5, 6, 7], acc.batch())
+        self.assertListEqual([8, 9], acc.batch())
+        self.assertListEqual([], acc.batch())
+        self.assertTrue(acc.empty())
