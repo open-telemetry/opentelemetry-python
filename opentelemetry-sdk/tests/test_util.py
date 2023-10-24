@@ -14,7 +14,7 @@
 
 import unittest
 
-from opentelemetry.sdk.util import BoundedList, BatchAccumulator
+from opentelemetry.sdk.util import BatchAccumulator, BoundedList
 
 
 class TestBoundedList(unittest.TestCase):
@@ -144,7 +144,6 @@ class TestBoundedList(unittest.TestCase):
 
 
 class TestBatchAccumulator(unittest.TestCase):
-
     def test_push(self):
         acc = BatchAccumulator[int](4)
         self.assertTrue(acc.empty())

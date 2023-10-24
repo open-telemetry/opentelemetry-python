@@ -11,19 +11,20 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-import collections
 import threading
 from typing import (
+    Deque,
+    Generic,
     Iterable,
     Iterator,
+    List,
     Mapping,
     MutableMapping,
     Sequence,
     TypeVar,
-    overload, Generic, List, Deque,
+    overload,
 )
 
-from opentelemetry.sdk.trace import ReadableSpan
 from opentelemetry.util.types import AttributesAsKey, AttributeValue
 
 _T = TypeVar("_T")
@@ -74,15 +75,13 @@ class BoundedDict(MutableMapping[_KT, _VT]):
         cls, maxlen: int, mapping: Mapping[_KT, _VT]
     ) -> BoundedDict[_KT, _VT]: ...
 
-T = TypeVar('T')
-
-class BatchAccumulator(Generic[T]):
+class BatchAccumulator(Generic[_T]):
     batch_size: int
     lock: threading.Lock
-    spans: List[T]
-    batches: Deque[T]
+    items: List[_T]
+    batches: Deque[_T]
 
     def __init__(self, batch_size: int): ...
     def empty(self): ...
-    def push(self, span: T): ...
+    def push(self, span: _T): ...
     def batch(self): ...

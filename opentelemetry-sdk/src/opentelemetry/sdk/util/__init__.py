@@ -16,7 +16,7 @@ import datetime
 import threading
 from collections import OrderedDict, deque
 from collections.abc import MutableMapping, Sequence
-from typing import Optional, TypeVar, Generic
+from typing import Generic, Optional, TypeVar
 
 from deprecated import deprecated
 
@@ -149,43 +149,47 @@ class BoundedDict(MutableMapping):
             bounded_dict[key] = value
         return bounded_dict
 
-T = TypeVar('T')
 
-class BatchAccumulator(Generic[T]):
+_T = TypeVar("_T")
 
+
+class BatchAccumulator(Generic[_T]):
+    """
+    A thread-safe data structure to accumulate and manage items in batches. Designed to collect individual items up to a
+    specified batch size and then enqueue these batches in a FIFO queue.
+    """
     def __init__(self, batch_size):
         self.batch_size = batch_size
-        self.spans = []
+        self.items = []
         self.batches = collections.deque()
         self.lock = threading.Lock()
 
     def empty(self):
         """
-        Returns True if the span list and the batch queue are empty, and False otherwise.
+        Returns True if the item list and the batch queue are empty, and False otherwise.
         """
         with self.lock:
-            return len(self.spans) == 0 and len(self.batches) == 0
+            return len(self.items) == 0 and len(self.batches) == 0
 
-    def push(self, span):
+    def push(self, item):
         with self.lock:
-            self.spans.append(span)
-            if len(self.spans) < self.batch_size:
+            self.items.append(item)
+            if len(self.items) < self.batch_size:
                 return False
-            self.batches.appendleft(self.spans)
-            self.spans = []
+            self.batches.appendleft(self.items)
+            self.items = []
             return True
 
     def batch(self):
         """
-        Returns the earliest (first in line) batch of spans from the FIFO queue. If the queue is empty, returns any
-        remaining spans that haven't been batched.
+        Returns the earliest (first in line) batch of items from the FIFO queue. If the queue is empty, returns a batch
+        consisting of any remaining items that haven't been batched.
         """
         try:
             return self.batches.pop()
         except IndexError:
-            # if there are no batches left, return the current spans
+            # if there are no batches left, return the items that haven't been batched
             with self.lock:
-                out = self.spans
-                self.spans = []
+                out = self.items
+                self.items = []
                 return out
-

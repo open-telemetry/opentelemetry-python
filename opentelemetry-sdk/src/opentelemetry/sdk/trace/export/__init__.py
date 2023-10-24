@@ -124,16 +124,6 @@ class SimpleSpanProcessor(SpanProcessor):
         return True
 
 
-class _FlushRequest:
-    """Represents a request for the BatchSpanProcessor to flush spans."""
-
-    __slots__ = ["event", "num_spans"]
-
-    def __init__(self):
-        self.event = threading.Event()
-        self.num_spans = 0
-
-
 _BSP_RESET_ONCE = Once()
 
 
@@ -183,24 +173,23 @@ class BatchSpanProcessor(SpanProcessor):
         )
 
         self.accumulator = BatchAccumulator(max_export_batch_size)
+        self.flush_lock = threading.Lock()
 
         self.span_exporter = span_exporter
-        self.worker_thread = threading.Thread(
-            name="OtelBatchSpanProcessor", target=self.worker, daemon=True
-        )
         self.condition = threading.Condition(threading.Lock())
-        self.max_export_interval = schedule_delay_millis
+        self.schedule_delay_millis = schedule_delay_millis
         self.max_export_batch_size = max_export_batch_size
         self.max_queue_size = max_queue_size
         self.export_timeout_millis = export_timeout_millis
-        self.done = False
+
+        self.worker_stopped: AtomicBool = AtomicBool(False)
+        self.processor_shutdown: AtomicBool = AtomicBool(False)
+
         # flag that indicates that spans are being dropped
         self._spans_dropped = False
-        # precallocated list to send spans to exporter
-        self.spans_list = [
-            None
-        ] * self.max_export_batch_size  # type: typing.List[typing.Optional[Span]]
-        self.worker_thread.start()
+
+        self._start_worker()
+
         # Only available in *nix since py37.
         if hasattr(os, "register_at_fork"):
             os.register_at_fork(
@@ -208,13 +197,26 @@ class BatchSpanProcessor(SpanProcessor):
             )  # pylint: disable=protected-access
         self._pid = os.getpid()
 
+    def _start_worker(self):
+        self.worker_stopped.set(False)
+        self.worker_thread = threading.Thread(
+            name="OtelBatchSpanProcessor", target=self.worker, daemon=True
+        )
+        self.worker_thread.start()
+
+    def _stop_worker(self):
+        self.worker_stopped.set(True)
+        with self.condition:
+            self.condition.notify_all()
+        self.worker_thread.join()
+
     def on_start(
         self, span: Span, parent_context: typing.Optional[Context] = None
     ) -> None:
         pass
 
     def on_end(self, span: ReadableSpan) -> None:
-        if self.done:
+        if self.processor_shutdown.get():
             logger.warning("Already shutdown, dropping span.")
             return
         if not span.context.trace_flags.sampled:
@@ -230,9 +232,6 @@ class BatchSpanProcessor(SpanProcessor):
     def _at_fork_reinit(self):
         self.condition = threading.Condition(threading.Lock())
 
-        # fixme: clear accumulator?
-        # self.queue.clear()
-
         # worker_thread is local to a process, only the thread that issued fork continues
         # to exist. A new worker thread must be started in child process.
         self.worker_thread = threading.Thread(
@@ -242,17 +241,18 @@ class BatchSpanProcessor(SpanProcessor):
         self._pid = os.getpid()
 
     def worker(self):
-        timeout = self.max_export_interval / 1e3
-        while not self.done:
+        timeout = self.schedule_delay_millis / 1e3
+        while not self.worker_stopped.get():
             with self.condition:
-                if self.done:
+                if self.worker_stopped.get():
                     break
                 self.condition.wait(timeout)
+            batch = self.accumulator.batch()
             start = time_ns()
-            self._export(self.accumulator.batch())
+            self._export(batch)
             end = time_ns()
             duration = (end - start) / 1e9
-            timeout = self.max_export_interval / 1e3 - duration
+            timeout = self.schedule_delay_millis / 1e3 - duration
 
     def _export(self, batch):
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
@@ -264,15 +264,31 @@ class BatchSpanProcessor(SpanProcessor):
         detach(token)
 
     def force_flush(self, timeout_millis: int = None) -> bool:
-        return True
+        with self.flush_lock:
+            start = time_ns()
+            self._stop_worker()
+            out = True
+            while not self.accumulator.empty():
+                batch = self.accumulator.batch()
+                self._export(batch)
+                if self._has_timed_out(start, timeout_millis):
+                    logger.warning("Timeout was exceeded in force_flush().")
+                    out = False
+                    break
+            self._start_worker()
+            return out
 
     def shutdown(self) -> None:
-        # signal the worker thread to finish and then wait for it
-        self.done = True
-        with self.condition:
-            self.condition.notify_all()
-        self.worker_thread.join()
+        self.processor_shutdown.set(True)
+        self._stop_worker()
         self.span_exporter.shutdown()
+
+    @staticmethod
+    def _has_timed_out(start_time_ns, timeout_millis):
+        if timeout_millis is None:
+            return False
+        elapsed_millis = (time_ns() - start_time_ns) / 1e6
+        return elapsed_millis > timeout_millis
 
     @staticmethod
     def _default_max_queue_size():
@@ -356,6 +372,20 @@ class BatchSpanProcessor(SpanProcessor):
             raise ValueError(
                 "max_export_batch_size must be less than or equal to max_queue_size."
             )
+
+
+class AtomicBool:
+    def __init__(self, v: bool):
+        self.lock = threading.Lock()
+        self.v = v
+
+    def set(self, v: bool):
+        with self.lock:
+            self.v = v
+
+    def get(self) -> bool:
+        with self.lock:
+            return self.v
 
 
 class ConsoleSpanExporter(SpanExporter):
