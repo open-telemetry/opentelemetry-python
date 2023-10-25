@@ -247,12 +247,11 @@ class BatchSpanProcessor(SpanProcessor):
                 if self.worker_stopped.get():
                     break
                 self.condition.wait(timeout)
-            batch = self.accumulator.batch()
-            start = time_ns()
-            self._export(batch)
-            end = time_ns()
-            duration = (end - start) / 1e9
-            timeout = self.schedule_delay_millis / 1e3 - duration
+            while True:
+                batch = self.accumulator.batch()
+                if len(batch) == 0:
+                    break
+                self._export(batch)
 
     def _export(self, batch):
         token = attach(set_value(_SUPPRESS_INSTRUMENTATION_KEY, True))
@@ -403,7 +402,7 @@ class ConsoleSpanExporter(SpanExporter):
         formatter: typing.Callable[
             [ReadableSpan], str
         ] = lambda span: span.to_json()
-        + linesep,
+                         + linesep,
     ):
         self.out = out
         self.formatter = formatter
