@@ -13,7 +13,7 @@ from opentelemetry.proto.collector.trace.v1 import trace_service_pb2, trace_serv
 from opentelemetry.sdk.trace import SpanProcessor
 from opentelemetry.sdk.trace.export.experimental.exporter import OTLPSpanExporter2
 from opentelemetry.sdk.trace.export.experimental.processor import BatchSpanProcessor2
-from opentelemetry.sdk.trace.export.experimental.timer import ThreadingTimer, PeriodicTimer, ThreadlessTimer
+from opentelemetry.sdk.trace.export.experimental.timer import ThreadBasedTimer, EventBasedTimer, ThreadlessTimer
 
 
 @unittest.skipUnless(environ.get('RUN_LONG_TESTS', '').lower() == 'true', 'Skipping, RUN_LONG_TESTS not set')
@@ -48,7 +48,7 @@ class TestIntegration(unittest.TestCase):
         server = OTLPServer()
         server.start()
         max_interval_sec = 4
-        bsp = BatchSpanProcessor2(OTLPSpanExporter2(), timer=ThreadingTimer(max_interval_sec))
+        bsp = BatchSpanProcessor2(OTLPSpanExporter2(), timer=ThreadBasedTimer(max_interval_sec))
         num_spans_per_firehose = 1000
         sf = SpanFirehose(bsp, num_spans=num_spans_per_firehose, sleep_sec=0.01)
         threads = []

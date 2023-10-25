@@ -6,6 +6,9 @@ import typing
 class TimerABC(abc.ABC):
     """
     An interface extracted from PeriodicTimer so alternative implementations can be used for testing.
+
+    Implementations should execute the passed-in callback on a timer at the specified interval at a minimum. The
+    callback can be run sooner than the interval via the poke() method, which also resets the timer.
     """
 
     @abc.abstractmethod
@@ -25,7 +28,11 @@ class TimerABC(abc.ABC):
         pass
 
 
-class ThreadingTimer(TimerABC):
+class ThreadBasedTimer(TimerABC):
+    """
+    A Timer implementation that uses a threading.Timer for each interval and runs the callback asynchronously using a
+    new Thread on poke().
+    """
 
     def __init__(self, interval_sec: int):
         self.interval_sec = interval_sec
@@ -63,10 +70,9 @@ class ThreadingTimer(TimerABC):
         self.timer = None
 
 
-class PeriodicTimer(TimerABC):
+class EventBasedTimer(TimerABC):
     """
-    DEPRECATED. Executes the passed-in callback on a timer at the specified interval. The callback can be run sooner than the
-    interval via the poke() method, which also resets the timer.
+    Deprecated but left here for reference. I believe this implementation is unnecessarily complicated.
     """
 
     def __init__(
@@ -120,7 +126,7 @@ class PeriodicTimer(TimerABC):
 
 class ThreadlessTimer(TimerABC):
     """
-    For testing/experimentation. Only executes the callback when you run poke().
+    For testing/experimentation. Synchronously executes the callback when you call poke().
     """
 
     def __init__(self):
