@@ -49,8 +49,6 @@ from opentelemetry.sdk.resources import (
     get_aggregated_resources,
 )
 
-# pylint: disable=protected-access
-
 
 class TestResources(unittest.TestCase):
     def setUp(self) -> None:
