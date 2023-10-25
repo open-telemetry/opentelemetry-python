@@ -343,7 +343,6 @@ class MeterProvider(APIMeterProvider):
         ] = (),
         resource: Resource = None,
         shutdown_on_exit: bool = True,
-        default_cardinality_limit: int = 2000,
         views: Sequence["opentelemetry.sdk.metrics.view.View"] = (),
     ):
         self._lock = Lock()
