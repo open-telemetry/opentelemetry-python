@@ -96,6 +96,7 @@ class View:
         attribute_keys: Optional[Set[str]] = None,
         aggregation: Optional[Aggregation] = None,
         instrument_unit: Optional[str] = None,
+        aggregation_cardinality_limit: Optional[int] = None,
     ):
         if (
             instrument_type
@@ -135,6 +136,7 @@ class View:
         self._description = description
         self._attribute_keys = attribute_keys
         self._aggregation = aggregation or self._default_aggregation
+        self._aggregation_cardinality_limit = aggregation_cardinality_limit
 
     # pylint: disable=too-many-return-statements
     # pylint: disable=too-many-branches

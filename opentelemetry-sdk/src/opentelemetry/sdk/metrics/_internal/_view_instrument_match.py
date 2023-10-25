@@ -32,6 +32,7 @@ from opentelemetry.sdk.metrics._internal.view import View
 
 _logger = getLogger(__name__)
 OVERFLOW_ATTRIBUTE = ("otel.metric.overflow", "true")
+DEFAULT_AGGREGATION_LIMIT = 2000
 
 class _ViewInstrumentMatch:
     def __init__(
@@ -39,7 +40,7 @@ class _ViewInstrumentMatch:
         view: View,
         instrument: Instrument,
         instrument_class_aggregation: Dict[type, Aggregation],
-        aggregation_cardinality_limit: Optional[int] = 2000,
+        aggregation_cardinality_limit: Optional[int],
     ):
         self._start_time_unix_nano = time_ns()
         self._view = view
@@ -47,7 +48,7 @@ class _ViewInstrumentMatch:
         self._attributes_aggregation: Dict[frozenset, _Aggregation] = {}
         self._lock = Lock()
         self._instrument_class_aggregation = instrument_class_aggregation
-        self._aggregation_cardinality_limit = aggregation_cardinality_limit
+        self._aggregation_cardinality_limit = view._aggregation_cardinality_limit or DEFAULT_AGGREGATION_LIMIT
         self._name = self._view._name or self._instrument.name
         self._description = (
             self._view._description or self._instrument.description
