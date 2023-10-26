@@ -100,7 +100,7 @@ class _ViewInstrumentMatch:
 
         aggr_key = frozenset(attributes.items())
 
-        if len(self._attributes_aggregation) >= self._aggregation_cardinality_limit:
+        if len(self._attributes_aggregation) >= self._aggregation_cardinality_limit - 1:
             _logger.warning(
                 "Metric cardinality limit of {} exceeded. Aggregating under overflow attribute."
                 .format(self._aggregation_cardinality_limit)
