@@ -77,8 +77,8 @@ class _ViewInstrumentMatch:
                 result
                 and self._aggregation._instrument_is_monotonic
                 == other._aggregation._instrument_is_monotonic
-                and self._aggregation._instrument_temporality
-                == other._aggregation._instrument_temporality
+                and self._aggregation._instrument_aggregation_temporality
+                == other._aggregation._instrument_aggregation_temporality
             )
 
         return result
@@ -133,7 +133,7 @@ class _ViewInstrumentMatch:
 
     def collect(
         self,
-        aggregation_temporality: AggregationTemporality,
+        collection_aggregation_temporality: AggregationTemporality,
         collection_start_nanos: int,
     ) -> Optional[Sequence[DataPointT]]:
 
@@ -141,7 +141,7 @@ class _ViewInstrumentMatch:
         with self._lock:
             for aggregation in self._attributes_aggregation.values():
                 data_point = aggregation.collect(
-                    aggregation_temporality, collection_start_nanos
+                    collection_aggregation_temporality, collection_start_nanos
                 )
                 if data_point is not None:
                     data_points.append(data_point)
