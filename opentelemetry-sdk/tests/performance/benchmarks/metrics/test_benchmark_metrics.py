@@ -36,6 +36,7 @@ counter_delta = meter_delta.create_counter("test_counter2")
 udcounter = meter_cumulative.create_up_down_counter("test_udcounter")
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize(
     ("num_labels", "temporality"),
     [
@@ -65,6 +66,7 @@ def test_counter_add(benchmark, num_labels, temporality):
     benchmark(benchmark_counter_add)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("num_labels", [0, 1, 3, 5, 10])
 def test_up_down_counter_add(benchmark, num_labels):
     labels = {}

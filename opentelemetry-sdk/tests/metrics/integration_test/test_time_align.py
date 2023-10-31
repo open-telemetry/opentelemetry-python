@@ -16,6 +16,7 @@ from platform import system
 from time import sleep
 from unittest import TestCase
 
+import pytest
 from pytest import mark
 
 from opentelemetry.sdk.metrics import Counter, MeterProvider
@@ -26,6 +27,8 @@ from opentelemetry.sdk.metrics.export import (
 
 
 class TestTimeAlign(TestCase):
+
+    @pytest.mark.slow
     def test_time_align_cumulative(self):
         reader = InMemoryMetricReader()
         meter_provider = MeterProvider(metric_readers=[reader])

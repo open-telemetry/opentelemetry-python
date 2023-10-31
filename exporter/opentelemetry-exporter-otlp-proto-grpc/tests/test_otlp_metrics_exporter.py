@@ -24,6 +24,7 @@ from typing import List
 from unittest import TestCase
 from unittest.mock import patch
 
+import pytest
 from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
@@ -754,6 +755,7 @@ class TestOTLPMetricExporter(TestCase):
             )
         self.exporter = OTLPMetricExporter()
 
+    @pytest.mark.slow
     def test_shutdown_wait_last_export(self):
         add_MetricsServiceServicer_to_server(
             MetricsServiceServicerUNAVAILABLEDelay(), self.server

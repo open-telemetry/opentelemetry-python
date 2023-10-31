@@ -14,6 +14,8 @@
 
 from unittest.mock import patch
 
+import pytest
+
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import (
     OTLPSpanExporter,
 )
@@ -38,6 +40,7 @@ class MockTraceServiceStub:
         self.Export = lambda *args, **kwargs: None
 
 
+@pytest.mark.slow
 @patch(
     "opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter._stub",
     new=MockTraceServiceStub,
@@ -59,6 +62,7 @@ def test_simple_span_processor(benchmark):
     benchmark(create_spans_to_be_exported)
 
 
+@pytest.mark.slow
 @patch(
     "opentelemetry.exporter.otlp.proto.grpc.trace_exporter.OTLPSpanExporter._stub",
     new=MockTraceServiceStub,

@@ -22,6 +22,7 @@ from logging import WARNING
 from platform import python_implementation, system
 from unittest import mock
 
+import pytest
 from pytest import mark
 
 from opentelemetry import trace as trace_api
@@ -287,6 +288,7 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
 
         self.assertTrue(span_processor.force_flush())
 
+    @pytest.mark.slow
     def test_flush_from_multiple_threads(self):
         num_threads = 50
         num_spans = 10
@@ -330,6 +332,7 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
             self.assertFalse(span_processor.force_flush(100))
         span_processor.shutdown()
 
+    @pytest.mark.slow
     def test_batch_span_processor_lossless(self):
         """Test that no spans are lost when sending max_queue_size spans"""
         spans_names_list = []
@@ -349,6 +352,7 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
         self.assertEqual(len(spans_names_list), 512)
         span_processor.shutdown()
 
+    @pytest.mark.slow
     def test_batch_span_processor_many_spans(self):
         """Test that no spans are lost when sending many spans"""
         spans_names_list = []
@@ -404,6 +408,7 @@ class TestBatchSpanProcessor(ConcurrencyTestBase):
         for span in spans:
             self.assertIn(span.name, expected)
 
+    @pytest.mark.slow
     @unittest.skipUnless(
         hasattr(os, "fork"),
         "needs *nix",

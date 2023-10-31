@@ -21,6 +21,8 @@ import unittest
 from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import Mock, patch
 
+import pytest
+
 from opentelemetry._logs import SeverityNumber
 from opentelemetry.sdk import trace
 from opentelemetry.sdk._logs import (
@@ -444,6 +446,7 @@ class TestBatchLogRecordProcessor(ConcurrencyTestBase):
         finished_logs = exporter.get_finished_logs()
         self.assertEqual(len(finished_logs), 2415)
 
+    @pytest.mark.slow
     @unittest.skipUnless(
         hasattr(os, "fork"),
         "needs *nix",

@@ -21,6 +21,7 @@ from logging import WARNING
 from unittest import TestCase
 from unittest.mock import Mock, PropertyMock, patch
 
+import pytest
 from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import ChannelCredentials, Compression, StatusCode, server
@@ -893,6 +894,7 @@ class TestOTLPSpanExporter(TestCase):
         # self.assertEqual(kvlist_value.values[0].key, "asd")
         # self.assertEqual(kvlist_value.values[0].value.string_value, "123")
 
+    @pytest.mark.slow
     def test_dropped_values(self):
         span = get_span_with_dropped_attributes_events_links()
         # pylint:disable=protected-access
@@ -952,6 +954,7 @@ class TestOTLPSpanExporter(TestCase):
                 "Exporter already shutdown, ignoring batch",
             )
 
+    @pytest.mark.slow
     def test_shutdown_wait_last_export(self):
         add_TraceServiceServicer_to_server(
             TraceServiceServicerUNAVAILABLEDelay(), self.server

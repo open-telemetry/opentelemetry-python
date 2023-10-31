@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import pytest
 
 import opentelemetry.propagators.b3 as b3_format
 import opentelemetry.sdk.trace as trace
@@ -18,6 +19,7 @@ import opentelemetry.sdk.trace as trace
 FORMAT = b3_format.B3Format()
 
 
+@pytest.mark.slow
 def test_extract_single_header(benchmark):
     benchmark(
         FORMAT.extract,

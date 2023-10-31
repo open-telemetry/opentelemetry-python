@@ -19,6 +19,8 @@ from typing import Iterable, Sequence
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
+import pytest
+
 from opentelemetry.metrics import NoOpMeter
 from opentelemetry.sdk.metrics import (
     Counter,
@@ -471,6 +473,8 @@ class InMemoryMetricExporter(MetricExporter):
 
 
 class TestDuplicateInstrumentAggregateData(TestCase):
+
+    @pytest.mark.slow
     def test_duplicate_instrument_aggregate_data(self):
 
         exporter = InMemoryMetricExporter()

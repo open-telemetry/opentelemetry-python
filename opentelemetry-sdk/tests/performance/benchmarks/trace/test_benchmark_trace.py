@@ -11,6 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+import pytest
 
 import opentelemetry.sdk.trace as trace
 from opentelemetry.sdk.resources import Resource
@@ -28,6 +29,7 @@ tracer = trace.TracerProvider(
 ).get_tracer("sdk_tracer_provider")
 
 
+@pytest.mark.slow
 def test_simple_start_span(benchmark):
     def benchmark_start_as_current_span():
         span = tracer.start_span(
@@ -40,6 +42,7 @@ def test_simple_start_span(benchmark):
     benchmark(benchmark_start_as_current_span)
 
 
+@pytest.mark.slow
 def test_simple_start_as_current_span(benchmark):
     def benchmark_start_as_current_span():
         with tracer.start_as_current_span(

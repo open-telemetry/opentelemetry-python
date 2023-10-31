@@ -15,6 +15,8 @@
 from logging import WARNING
 from unittest.mock import MagicMock, Mock, patch
 
+import pytest
+
 from opentelemetry.sdk.metrics._internal.aggregation import (
     _LastValueAggregation,
 )
@@ -223,6 +225,7 @@ class TestMetricReaderStorage(ConcurrencyTestBase):
             all_metrics[5],
         )
 
+    @pytest.mark.slow
     @patch(
         "opentelemetry.sdk.metrics._internal."
         "metric_reader_storage._ViewInstrumentMatch"

@@ -66,6 +66,7 @@ hist50 = meter.create_histogram("test_histogram_50_bound")
 hist1000 = meter.create_histogram("test_histogram_1000_bound")
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("num_labels", [0, 1, 3, 5, 7])
 def test_histogram_record(benchmark, num_labels):
     labels = {}
@@ -78,6 +79,7 @@ def test_histogram_record(benchmark, num_labels):
     benchmark(benchmark_histogram_record)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("num_labels", [0, 1, 3, 5, 7])
 def test_histogram_record_10(benchmark, num_labels):
     labels = {}
@@ -90,6 +92,7 @@ def test_histogram_record_10(benchmark, num_labels):
     benchmark(benchmark_histogram_record_10)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("num_labels", [0, 1, 3, 5, 7])
 def test_histogram_record_49(benchmark, num_labels):
     labels = {}
@@ -102,6 +105,7 @@ def test_histogram_record_49(benchmark, num_labels):
     benchmark(benchmark_histogram_record_49)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("num_labels", [0, 1, 3, 5, 7])
 def test_histogram_record_50(benchmark, num_labels):
     labels = {}
@@ -114,6 +118,7 @@ def test_histogram_record_50(benchmark, num_labels):
     benchmark(benchmark_histogram_record_50)
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("num_labels", [0, 1, 3, 5, 7])
 def test_histogram_record_1000(benchmark, num_labels):
     labels = {}

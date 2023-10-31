@@ -1,6 +1,8 @@
 import unittest
 from unittest.mock import Mock, patch
 
+import pytest
+
 from opentelemetry import context, trace
 from opentelemetry.test.concurrency_test import ConcurrencyTestBase, MockFunc
 from opentelemetry.test.globals_test import TraceGlobalsTest
@@ -40,6 +42,8 @@ class TestGlobals(TraceGlobalsTest, unittest.TestCase):
 
 
 class TestGlobalsConcurrency(TraceGlobalsTest, ConcurrencyTestBase):
+
+    @pytest.mark.slow
     @patch("opentelemetry.trace.logger")
     def test_set_tracer_provider_many_threads(self, mock_logger) -> None:  # type: ignore
         mock_logger.warning = MockFunc()

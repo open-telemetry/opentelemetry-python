@@ -97,6 +97,13 @@ See
 [`tox.ini`](https://github.com/open-telemetry/opentelemetry-python/blob/main/tox.ini)
 for more detail on available tox commands.
 
+#### Tests
+
+For developer convenience, test methods that take longer than roughly a full second may be marked with the annotation
+`@pytest.mark.slow`. If you add a test that takes longer than a second, you are encouraged to add this annotation. To
+then run tests while filtering out any marked as `slow`, you can add `-m 'not slow'` to `tox` or `pytest`, as in
+`tox -- -m 'not slow'` or `pytest -m 'not slow'`. However, by default, all tests are run.
+
 #### Contrib repo
 
 Some of the `tox` targets install packages from the [OpenTelemetry Python Contrib Repository](https://github.com/open-telemetry/opentelemetry-python.git) via

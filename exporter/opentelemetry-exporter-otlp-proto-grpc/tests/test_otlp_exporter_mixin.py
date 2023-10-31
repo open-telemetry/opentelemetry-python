@@ -20,6 +20,7 @@ from typing import Sequence
 from unittest import TestCase
 from unittest.mock import Mock, patch
 
+import pytest
 from google.protobuf.duration_pb2 import Duration
 from google.rpc.error_details_pb2 import RetryInfo
 from grpc import Compression
@@ -151,6 +152,7 @@ class TestOTLPExporterMixin(TestCase):
                 "Exporter already shutdown, ignoring batch",
             )
 
+    @pytest.mark.slow
     def test_shutdown_wait_last_export(self):
         result_mock = Mock()
         rpc_error = RpcError()

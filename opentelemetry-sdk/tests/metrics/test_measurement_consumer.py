@@ -17,6 +17,8 @@ from time import sleep
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
+import pytest
+
 from opentelemetry.sdk.metrics._internal.measurement_consumer import (
     MeasurementConsumer,
     SynchronousMeasurementConsumer,
@@ -118,6 +120,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
             len(reader_storage_mock.consume_measurement.mock_calls), 5
         )
 
+    @pytest.mark.slow
     def test_collect_timeout(self, MockMetricReaderStorage):
         reader_mock = Mock()
         reader_storage_mock = Mock()
@@ -144,6 +147,7 @@ class TestSynchronousMeasurementConsumer(TestCase):
             "Timed out while executing callback", error.exception.args[0]
         )
 
+    @pytest.mark.slow
     @patch(
         "opentelemetry.sdk.metrics._internal."
         "measurement_consumer.CallbackOptions"

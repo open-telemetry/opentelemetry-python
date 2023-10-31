@@ -14,6 +14,8 @@
 import ipaddress
 import json
 
+import pytest
+
 from opentelemetry.exporter.zipkin.encoder import (
     _SCOPE_NAME_KEY,
     _SCOPE_VERSION_KEY,
@@ -249,6 +251,7 @@ class TestProtobufEncoder(CommonEncoderTestCases.CommonEncoderTest):
 
         self.assertEqual(actual_output, expected_output)
 
+    @pytest.mark.slow
     def test_dropped_span_attributes(self):
         otel_span = get_span_with_dropped_attributes_events_links()
         # pylint: disable=no-member

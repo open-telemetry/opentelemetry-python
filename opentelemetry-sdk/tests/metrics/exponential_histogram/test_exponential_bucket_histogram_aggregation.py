@@ -14,6 +14,8 @@
 
 from itertools import permutations
 from logging import WARNING
+
+import pytest
 from math import ldexp
 from sys import float_info
 from types import MethodType
@@ -270,6 +272,7 @@ class TestExponentialBucketHistogramAggregation(TestCase):
                     expected["at_1"],
                 )
 
+    @pytest.mark.slow
     def test_ascending_sequence(self):
 
         for max_size in [3, 4, 6, 9]:
