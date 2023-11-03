@@ -23,6 +23,3 @@ class TestGlobals(unittest.TestCase):
                 ],
             )
         self.assertIs(tracer_provider, trace.get_tracer_provider())
-
-    def test_fail(self):
-        assert False
