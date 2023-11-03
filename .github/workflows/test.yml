@@ -36,29 +36,28 @@ jobs:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
         python-version: [py37, py38, py39, py310, py311, pypy3]
-        package: [
-          "api",
-          "sdk",
-          "semantic-conventions",
-          "getting-started",
-          "opentracing-shim",
-          "opencensus-shim",
-          "exporter-jaeger-combined",
-          "exporter-jaeger-proto-grpc",
-          "exporter-jaeger-thrift",
-          "exporter-opencensus",
-          "exporter-otlp-proto-common",
-          "exporter-otlp-combined",
-          "exporter-otlp-proto-grpc",
-          "exporter-otlp-proto-http",
-          "exporter-prometheus",
-          "exporter-zipkin-combined",
-          "exporter-zipkin-proto-http",
-          "exporter-zipkin-json",
-          "protobuf",
-          "propagator-b3"
-          "propagator-jaeger"
-        ]
+        package:
+        - "api",
+        - "sdk",
+        - "semantic-conventions",
+        - "getting-started",
+        - "opentracing-shim",
+        - "opencensus-shim",
+        - "exporter-jaeger-combined",
+        - "exporter-jaeger-proto-grpc",
+        - "exporter-jaeger-thrift",
+        - "exporter-opencensus",
+        - "exporter-otlp-proto-common",
+        - "exporter-otlp-combined",
+        - "exporter-otlp-proto-grpc",
+        - "exporter-otlp-proto-http",
+        - "exporter-prometheus",
+        - "exporter-zipkin-combined",
+        - "exporter-zipkin-proto-http",
+        - "exporter-zipkin-json",
+        - "protobuf",
+        - "propagator-b3"
+        - "propagator-jaeger"
         os: [ubuntu-20.04, windows-2019]
     steps:
     - name: Checkout Core Repo @ SHA - ${{ github.sha }}
@@ -127,55 +126,54 @@ jobs:
       fail-fast: false  # ensures the entire test matrix is run, even if one permutation fails
       matrix:
         python-version: [py37]
-        package: [
-          "aiohttp-client",
-          "aiohttp-server",
-          "aiopg",
-          "aio-pika",
-          "asgi",
-          "asyncpg",
-          "aws-lambda",
-          "boto",
-          "boto3sqs",
-          "botocore",
-          "cassandra",
-          "celery",
-          "confluent-kafka",
-          "dbapi",
-          "django",
-          "elasticsearch",
-          "falcon",
-          "fastapi",
-          "flask",
-          "grpc",
-          "httpx",
-          "jinja2",
-          "kafka-python",
-          "logging",
-          "mysql",
-          "mysqlclient",
-          "pika",
-          "psycopg2",
-          "pymemcache",
-          "pymongo",
-          "pymysql",
-          "pyramid",
-          "redis",
-          "remoulade",
-          "requests",
-          "sklearn",
-          "sqlalchemy",
-          "sqlite3",
-          "starlette",
-          "system-metrics",
-          "tornado",
-          "tortoiseorm",
-          "urllib",
-          "urllib3",
-          "wsgi",
-          "prometheus-remote-write",
-          "richconsole"
-        ]
+        package:
+        - "aiohttp-client"
+        - "aiohttp-server"
+        - "aiopg"
+        - "aio-pika"
+        - "asgi"
+        - "asyncpg"
+        - "aws-lambda"
+        - "boto"
+        - "boto3sqs"
+        - "botocore"
+        - "cassandra"
+        - "celery"
+        - "confluent-kafka"
+        - "dbapi"
+        - "django"
+        - "elasticsearch"
+        - "falcon"
+        - "fastapi"
+        - "flask"
+        - "grpc"
+        - "httpx"
+        - "jinja2"
+        - "kafka-python"
+        - "logging"
+        - "mysql"
+        - "mysqlclient"
+        - "pika"
+        - "psycopg2"
+        - "pymemcache"
+        - "pymongo"
+        - "pymysql"
+        - "pyramid"
+        - "redis"
+        - "remoulade"
+        - "requests"
+        - "sklearn"
+        - "sqlalchemy"
+        - "sqlite3"
+        - "starlette"
+        - "system-metrics"
+        - "tornado"
+        - "tortoiseorm"
+        - "urllib"
+        - "urllib3"
+        - "wsgi"
+        - "prometheus-remote-write"
+        - "richconsole"
         os: [ubuntu-20.04]
     steps:
     - name: Checkout Contrib Repo @ SHA - ${{ env.CONTRIB_REPO_SHA }}
