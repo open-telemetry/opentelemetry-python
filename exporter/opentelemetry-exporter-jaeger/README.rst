@@ -5,6 +5,8 @@ OpenTelemetry Jaeger Exporter
     Since v1.35, the Jaeger supports OTLP natively. Please use the OTLP exporter instead.
     Support for this exporter will end July 2023.
 
+    This package is no longer being tested.
+
 |pypi|
 
 .. |pypi| image:: https://badge.fury.io/py/opentelemetry-exporter-jaeger.svg
