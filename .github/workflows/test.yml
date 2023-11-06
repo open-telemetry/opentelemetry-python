@@ -64,29 +64,6 @@ jobs:
     - name: run tox
       run: tox -f ${{ matrix.python-version }}-${{ matrix.package }} -- -ra --benchmark-json=${{
         env.RUN_MATRIX_COMBINATION }}-benchmark.json
-#       - name: Find and merge benchmarks
-#         id: find_and_merge_benchmarks
-#         run: >-
-#           jq -s '.[0].benchmarks = ([.[].benchmarks] | add)
-#           | if .[0].benchmarks == null then null else .[0] end'
-#           $(find . -name '*${{ matrix.package }}*-benchmark.json') > output.json
-#           && echo "json_plaintext=$(cat output.json)" >> $GITHUB_OUTPUT
-#       - name: Report on benchmark results
-#         if: steps.find_and_merge_benchmarks.outputs.json_plaintext != 'null'
-#         uses: rhysd/github-action-benchmark@v1
-#         with:
-#           name: OpenTelemetry Python Benchmarks - Python ${{ env[matrix.python-version ]}} - ${{ matrix.package }}
-#           tool: pytest
-#           output-file-path: output.json
-#           github-token: ${{ secrets.GITHUB_TOKEN }}
-#           max-items-in-chart: 100
-#           # Alert with a commit comment on possible performance regression
-#           alert-threshold: 200%
-#           fail-on-alert: true
-#           # Make a commit on `gh-pages` with benchmarks from previous step
-#           auto-push: ${{ github.ref == 'refs/heads/main' }}
-#           gh-pages-branch: gh-pages
-#           benchmark-data-dir-path: benchmarks
   misc:
     strategy:
       fail-fast: false
