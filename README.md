@@ -111,7 +111,7 @@ Emeritus Approvers
 - [Héctor Hernández](https://github.com/hectorhdzg), Microsoft
 - [Mauricio Vásquez](https://github.com/mauriciovasquezbernal), Kinvolk
 - [Nathaniel Ruiz Nowell](https://github.com/NathanielRN), AWS
-- [Tahir H. Butt](https://github.com/majorgreys) DataDog
+- [Tahir H. Butt](https://github.com/majorgreys), DataDog
 
 *For more information about the approver role, see the [community repository](https://github.com/open-telemetry/community/blob/main/community-membership.md#approver).*
 
