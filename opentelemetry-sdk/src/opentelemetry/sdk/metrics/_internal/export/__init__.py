@@ -21,7 +21,7 @@ from os import environ, linesep
 from sys import stdout
 from threading import Event, Lock, RLock, Thread
 from time import time_ns
-from typing import IO, Callable, Dict, Iterable, Optional
+from typing import IO, Callable, Dict, Iterable, Optional, Sequence
 
 from typing_extensions import final
 
@@ -56,7 +56,7 @@ from opentelemetry.sdk.metrics._internal.instrument import (
     _ObservableUpDownCounter,
     _UpDownCounter,
 )
-from opentelemetry.sdk.metrics._internal.point import MetricsData
+from opentelemetry.sdk.metrics._internal.point import MetricsData, Metric
 from opentelemetry.util._once import Once
 
 _logger = getLogger(__name__)
@@ -162,6 +162,38 @@ class ConsoleMetricExporter(MetricExporter):
     ) -> MetricExportResult:
         self.out.write(self.formatter(metrics_data))
         self.out.flush()
+        return MetricExportResult.SUCCESS
+
+    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
+        pass
+
+    def force_flush(self, timeout_millis: float = 10_000) -> bool:
+        return True
+
+
+class InMemoryMetricExporter(MetricExporter):
+    """Implementation of :class:`.MetricExporter` that stores metrics in memory.
+
+    This class can be used for testing purposes. It stores the exported metrics
+    in a dictionary in memory, indexed by an auto-incrementing counter that can
+    be retrieved using the `metrics` attribute.
+
+    The `export` method adds the metrics to the in-memory store and increments
+    the counter. Each set of metrics can be accessed by its unique index.
+    """
+    def __init__(self):
+        super().__init__()
+        self.metrics = {}
+        self._counter = 0
+
+    def export(
+        self,
+        metrics: Sequence[Metric],
+        timeout_millis: float = 10_000,
+        **kwargs,
+    ) -> MetricExportResult:
+        self.metrics[self._counter] = metrics
+        self._counter += 1
         return MetricExportResult.SUCCESS
 
     def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
