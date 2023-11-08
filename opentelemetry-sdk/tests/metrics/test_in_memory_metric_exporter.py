@@ -18,7 +18,7 @@ from typing import Sequence
 
 from opentelemetry.sdk.metrics.export import (
     InMemoryMetricExporter,
-    MetricExportResult
+    MetricExportResult,
 )
 
 class MockMetric:
@@ -26,7 +26,6 @@ class MockMetric:
     pass
 
 class TestInMemoryMetricExporter(TestCase):
-
     def setUp(self):
         self.exporter = InMemoryMetricExporter()
 
