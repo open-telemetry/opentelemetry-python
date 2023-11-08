@@ -34,6 +34,7 @@ from opentelemetry.sdk.resources import (
     PROCESS_COMMAND_LINE,
     PROCESS_EXECUTABLE_NAME,
     PROCESS_EXECUTABLE_PATH,
+    PROCESS_PARENT_PID,
     PROCESS_PID,
     PROCESS_RUNTIME_DESCRIPTION,
     PROCESS_RUNTIME_NAME,
@@ -553,6 +554,9 @@ class TestOTELResourceDetector(unittest.TestCase):
 
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_PID], os.getpid()
+        )
+        self.assertEqual(
+            aggregated_resource.attributes[PROCESS_PARENT_PID], os.getppid()
         )
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_EXECUTABLE_NAME],
