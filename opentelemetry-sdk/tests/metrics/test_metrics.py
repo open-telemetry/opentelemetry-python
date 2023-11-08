@@ -15,7 +15,7 @@
 
 from logging import WARNING
 from time import sleep
-from typing import Iterable, Sequence
+from typing import Iterable
 from unittest import TestCase
 from unittest.mock import MagicMock, Mock, patch
 
@@ -34,7 +34,6 @@ from opentelemetry.sdk.metrics._internal import SynchronousMeasurementConsumer
 from opentelemetry.sdk.metrics.export import (
     InMemoryMetricExporter,
     Metric,
-    MetricExportResult,
     MetricReader,
     PeriodicExportingMetricReader,
 )
