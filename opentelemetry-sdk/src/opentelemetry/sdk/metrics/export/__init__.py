@@ -16,8 +16,8 @@
 from opentelemetry.sdk.metrics._internal.export import (
     AggregationTemporality,
     ConsoleMetricExporter,
-    InMemoryMetricReader,
     InMemoryMetricExporter,
+    InMemoryMetricReader,
     MetricExporter,
     MetricExportResult,
     MetricReader,
