@@ -555,9 +555,10 @@ class TestOTELResourceDetector(unittest.TestCase):
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_PID], os.getpid()
         )
-        self.assertEqual(
-            aggregated_resource.attributes[PROCESS_PARENT_PID], os.getppid()
-        )
+        if hasattr(os, "getppid"):
+            self.assertEqual(
+                aggregated_resource.attributes[PROCESS_PARENT_PID], os.getppid()
+            )
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_EXECUTABLE_NAME],
             sys.executable,
