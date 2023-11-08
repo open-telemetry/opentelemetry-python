@@ -337,26 +337,27 @@ class ProcessResourceDetector(ResourceDetector):
             )
         )
         _process_pid = os.getpid()
-        _process_parent_pid = os.getppid()
         _process_executable_name = sys.executable
         _process_executable_path = os.path.dirname(_process_executable_name)
         _process_command = sys.argv[0]
         _process_command_line = " ".join(sys.argv)
         _process_command_args = sys.argv[1:]
-        return Resource(
-            {
-                PROCESS_RUNTIME_DESCRIPTION: sys.version,
-                PROCESS_RUNTIME_NAME: sys.implementation.name,
-                PROCESS_RUNTIME_VERSION: _runtime_version,
-                PROCESS_PID: _process_pid,
-                PROCESS_PARENT_PID: _process_parent_pid,
-                PROCESS_EXECUTABLE_NAME: _process_executable_name,
-                PROCESS_EXECUTABLE_PATH: _process_executable_path,
-                PROCESS_COMMAND: _process_command,
-                PROCESS_COMMAND_LINE: _process_command_line,
-                PROCESS_COMMAND_ARGS: _process_command_args,
-            }
-        )
+        resource_info = {
+            PROCESS_RUNTIME_DESCRIPTION: sys.version,
+            PROCESS_RUNTIME_NAME: sys.implementation.name,
+            PROCESS_RUNTIME_VERSION: _runtime_version,
+            PROCESS_PID: _process_pid,
+            PROCESS_EXECUTABLE_NAME: _process_executable_name,
+            PROCESS_EXECUTABLE_PATH: _process_executable_path,
+            PROCESS_COMMAND: _process_command,
+            PROCESS_COMMAND_LINE: _process_command_line,
+            PROCESS_COMMAND_ARGS: _process_command_args,
+        }
+        if hasattr(os, "getppid"):
+            # pypy3 does not have getppid()
+            resource_info[PROCESS_PARENT_PID] = os.getppid()
+
+        return Resource(resource_info)
 
 
 def get_aggregated_resources(
