@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+## Version 1.21.0/0.42b0 (2023-11-01)
+
 - Fix `SumAggregation`
 ￼  ([#3390](https://github.com/open-telemetry/opentelemetry-python/pull/3390))
 - Fix handling of empty metric collection cycles
