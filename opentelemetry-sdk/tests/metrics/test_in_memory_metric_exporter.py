@@ -21,9 +21,11 @@ from opentelemetry.sdk.metrics.export import (
     MetricExportResult,
 )
 
+
 class MockMetric:
     # A placeholder class for mock metrics
     pass
+
 
 class TestInMemoryMetricExporter(TestCase):
     def setUp(self):

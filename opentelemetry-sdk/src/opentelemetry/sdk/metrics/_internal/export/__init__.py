@@ -181,7 +181,7 @@ class InMemoryMetricExporter(MetricExporter):
     The `export` method adds the metrics to the in-memory store and increments
     the counter. Each set of metrics can be accessed by its unique index.
     """
-    
+
     def __init__(self):
         super().__init__()
         self.metrics = {}
