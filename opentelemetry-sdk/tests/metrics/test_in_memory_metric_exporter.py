@@ -13,8 +13,8 @@
 # limitations under the License.
 
 from time import sleep
-from unittest import TestCase
 from typing import Sequence
+from unittest import TestCase
 
 from opentelemetry.sdk.metrics.export import (
     InMemoryMetricExporter,

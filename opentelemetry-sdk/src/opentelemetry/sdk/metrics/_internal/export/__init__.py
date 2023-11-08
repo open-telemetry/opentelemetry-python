@@ -56,7 +56,7 @@ from opentelemetry.sdk.metrics._internal.instrument import (
     _ObservableUpDownCounter,
     _UpDownCounter,
 )
-from opentelemetry.sdk.metrics._internal.point import MetricsData, Metric
+from opentelemetry.sdk.metrics._internal.point import Metric, MetricsData
 from opentelemetry.util._once import Once
 
 _logger = getLogger(__name__)
