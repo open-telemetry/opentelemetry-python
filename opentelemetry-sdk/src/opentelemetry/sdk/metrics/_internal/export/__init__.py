@@ -189,11 +189,11 @@ class InMemoryMetricExporter(MetricExporter):
 
     def export(
         self,
-        metrics: Sequence[Metric],
+        metrics_data: Sequence[Metric],
         timeout_millis: float = 10_000,
         **kwargs,
     ) -> MetricExportResult:
-        self.metrics[self._counter] = metrics
+        self.metrics[self._counter] = metrics_data
         self._counter += 1
         return MetricExportResult.SUCCESS
 
