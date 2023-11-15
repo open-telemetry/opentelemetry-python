@@ -1377,7 +1377,7 @@ class TestSpanProcessor(unittest.TestCase):
         )
         parent = trace._Span("parent-name", context, resource=Resource({}))
         span = trace._Span(
-            "span-name", context, resource=Resource({}), parent=parent
+            "span-name", context, resource=Resource({}), parent=parent.context
         )
 
         self.assertEqual(
