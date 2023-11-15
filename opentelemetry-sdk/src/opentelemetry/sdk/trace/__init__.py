@@ -505,7 +505,7 @@ class ReadableSpan:
         }
 
     @staticmethod
-    def _format_attributes(attributes: types.Attributes) -> dict[str, Any] | None:
+    def _format_attributes(attributes: types.Attributes) -> Optional[Dict[str, Any]]:
         if attributes is not None and not isinstance(attributes, dict):
             return dict(attributes)
         return attributes
