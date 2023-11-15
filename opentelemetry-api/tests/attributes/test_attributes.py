@@ -183,3 +183,18 @@ class TestBoundedAttributes(unittest.TestCase):
         bdict = BoundedAttributes()
         with self.assertRaises(TypeError):
             bdict["should-not-work"] = "dict immutable"
+
+    def test_update(self):
+        attrs = BoundedAttributes(attributes={'foo': 42}, immutable=False)
+        self.assertMappingEqual({'foo': 42}, attrs)
+        attrs.update(attributes={'bar': 111})
+        self.assertMappingEqual({'foo': 42, 'bar': 111}, attrs)
+        attrs.update(baz=123)
+        self.assertMappingEqual({'foo': 42, 'bar': 111, 'baz': 123}, attrs)
+
+    def assertMappingEqual(self, expected, actual):
+        keys = set(expected.keys())
+        keys.update(actual.keys())
+        for k in keys:
+            if expected[k] != actual[k]:
+                self.fail()
