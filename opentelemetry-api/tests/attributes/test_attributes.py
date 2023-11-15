@@ -185,12 +185,12 @@ class TestBoundedAttributes(unittest.TestCase):
             bdict["should-not-work"] = "dict immutable"
 
     def test_update(self):
-        attrs = BoundedAttributes(attributes={'foo': 42}, immutable=False)
-        self.assertMappingEqual({'foo': 42}, attrs)
-        attrs.update(attributes={'bar': 111})
-        self.assertMappingEqual({'foo': 42, 'bar': 111}, attrs)
+        attrs = BoundedAttributes(attributes={"foo": 42}, immutable=False)
+        self.assertMappingEqual({"foo": 42}, attrs)
+        attrs.update(attributes={"bar": 111})
+        self.assertMappingEqual({"foo": 42, "bar": 111}, attrs)
         attrs.update(baz=123)
-        self.assertMappingEqual({'foo': 42, 'bar': 111, 'baz': 123}, attrs)
+        self.assertMappingEqual({"foo": 42, "bar": 111, "baz": 123}, attrs)
 
     def assertMappingEqual(self, expected, actual):
         keys = set(expected.keys())
