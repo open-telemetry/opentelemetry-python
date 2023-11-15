@@ -211,9 +211,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
         # iterating through it on "on_start" and "on_end".
         self._span_processors = ()  # type: Tuple[SpanProcessor, ...]
         self._lock = threading.Lock()
-        self._executor = concurrent.futures.ThreadPoolExecutor(
-            max_workers=num_threads
-        )
+        self._executor = concurrent.futures.ThreadPoolExecutor(max_workers=num_threads)
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
         """Adds a SpanProcessor to the list handled by this instance."""
@@ -266,9 +264,7 @@ class ConcurrentMultiSpanProcessor(SpanProcessor):
             futures.append(future)
 
         timeout_sec = timeout_millis / 1e3
-        done_futures, not_done_futures = concurrent.futures.wait(
-            futures, timeout_sec
-        )
+        done_futures, not_done_futures = concurrent.futures.wait(futures, timeout_sec)
         if not_done_futures:
             return False
 
@@ -449,9 +445,7 @@ class ReadableSpan:
         return self._resource
 
     @property
-    @deprecated(
-        version="1.11.1", reason="You should use instrumentation_scope"
-    )
+    @deprecated(version="1.11.1", reason="You should use instrumentation_scope")
     def instrumentation_info(self) -> Optional[InstrumentationInfo]:
         return self._instrumentation_info
 
@@ -459,12 +453,10 @@ class ReadableSpan:
     def instrumentation_scope(self) -> Optional[InstrumentationScope]:
         return self._instrumentation_scope
 
-    def to_json(self, indent: int =4):
+    def to_json(self, indent: int = 4):
         parent_id = None
         if self.parent is not None:
-            parent_id = (
-                f"0x{trace_api.format_span_id(self.parent.span_id)}"
-            )
+            parent_id = f"0x{trace_api.format_span_id(self.parent.span_id)}"
 
         start_time = None
         if self._start_time:
@@ -527,8 +519,12 @@ class ReadableSpan:
     def _format_links(links: Sequence[trace_api.Link]) -> List[Dict[str, Any]]:
         return [
             {
-                "context": Span._format_context(link.context),  # pylint: disable=protected-access
-                "attributes": Span._format_attributes(link.attributes),  # pylint: disable=protected-access
+                "context": Span._format_context(
+                    link.context
+                ),  # pylint: disable=protected-access
+                "attributes": Span._format_attributes(
+                    link.attributes
+                ),  # pylint: disable=protected-access
             }
             for link in links
         ]
@@ -804,9 +800,7 @@ class Span(trace_api.Span, ReadableSpan):
     def get_span_context(self):
         return self._context
 
-    def set_attributes(
-        self, attributes: Dict[str, types.AttributeValue]
-    ) -> None:
+    def set_attributes(self, attributes: Dict[str, types.AttributeValue]) -> None:
         with self._lock:
             if self._end_time is not None:
                 logger.warning("Setting attribute on ended span.")
@@ -867,9 +861,7 @@ class Span(trace_api.Span, ReadableSpan):
             if self._start_time is not None:
                 logger.warning("Calling start() on a started span.")
                 return
-            self._start_time = (
-                start_time if start_time is not None else time_ns()
-            )
+            self._start_time = start_time if start_time is not None else time_ns()
 
         self._span_processor.on_start(self, parent_context=parent_context)
 
@@ -969,9 +961,7 @@ class Span(trace_api.Span, ReadableSpan):
         }
         if attributes:
             _attributes.update(attributes)
-        self.add_event(
-            name="exception", attributes=_attributes, timestamp=timestamp
-        )
+        self.add_event(name="exception", attributes=_attributes, timestamp=timestamp)
 
 
 class _Span(Span):
@@ -1048,16 +1038,12 @@ class Tracer(trace_api.Tracer):
         set_status_on_exception: bool = True,
     ) -> trace_api.Span:
 
-        parent_span_context = trace_api.get_current_span(
-            context
-        ).get_span_context()
+        parent_span_context = trace_api.get_current_span(context).get_span_context()
 
         if parent_span_context is not None and not isinstance(
             parent_span_context, trace_api.SpanContext
         ):
-            raise TypeError(
-                "parent_span_context must be a SpanContext or None."
-            )
+            raise TypeError("parent_span_context must be a SpanContext or None.")
 
         # is_valid determines root span
         if parent_span_context is None or not parent_span_context.is_valid:
