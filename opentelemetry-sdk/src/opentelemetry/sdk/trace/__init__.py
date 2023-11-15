@@ -33,8 +33,8 @@ from typing import (
     List,
     Optional,
     Sequence,
-    Type,
     Tuple,
+    Type,
     Union,
 )
 from warnings import filterwarnings
