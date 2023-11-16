@@ -530,12 +530,12 @@ class ReadableSpan:
     def _format_links(links: Sequence[trace_api.Link]) -> List[Dict[str, Any]]:
         return [
             {
-                "context": Span._format_context(
+                "context": Span._format_context(  # pylint: disable=protected-access
                     link.context
-                ),  # pylint: disable=protected-access
-                "attributes": Span._format_attributes(
+                ),
+                "attributes": Span._format_attributes(  # pylint: disable=protected-access
                     link.attributes
-                ),  # pylint: disable=protected-access
+                ),
             }
             for link in links
         ]
