@@ -13,13 +13,12 @@ sphinx-jekyll-builder==0.3.0
 ./shim/opentelemetry-opentracing-shim
 
 # Required by instrumentation and exporter packages
-ddtrace>=0.34.0
 grpcio~=1.27
-Deprecated>=1.2.6
-django>=2.2
+Deprecated~=1.2
+django~=4.2
 flask~=1.0
 opentracing~=2.2.0
-thrift>=0.10.0
+thrift~=0.10
 wrapt>=1.0.0,<2.0.0
 # temporary fix. we should update the jinja, flask deps
 # See https://github.com/pallets/markupsafe/issues/282
