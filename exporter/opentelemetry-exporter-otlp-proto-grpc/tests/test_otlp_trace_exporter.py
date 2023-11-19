@@ -855,11 +855,11 @@ class TestOTLPSpanExporter(TestCase):
         self.assertTrue(isinstance(str_value.value, AnyValue))
         self.assertEqual(str_value.value.string_value, "str")
 
-        int_value = _encode_key_value("int_type", 2)
+        int_value = _encode_key_value("int_type", 2**63)
         self.assertTrue(isinstance(int_value, KeyValue))
         self.assertEqual(int_value.key, "int_type")
         self.assertTrue(isinstance(int_value.value, AnyValue))
-        self.assertEqual(int_value.value.int_value, 2)
+        self.assertEqual(int_value.value.int_value, 2**63 -1)
 
         double_value = _encode_key_value("double_type", 3.2)
         self.assertTrue(isinstance(double_value, KeyValue))
