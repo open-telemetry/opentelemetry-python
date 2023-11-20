@@ -140,10 +140,12 @@ class SynchronousMultiSpanProcessor(SpanProcessor):
     added.
     """
 
+    _span_processors: Tuple[SpanProcessor, ...]
+
     def __init__(self):
         # use a tuple to avoid race conditions when adding a new span and
         # iterating through it on "on_start" and "on_end".
-        self._span_processors = ()  # type: Tuple[SpanProcessor, ...]
+        self._span_processors = ()
         self._lock = threading.Lock()
 
     def add_span_processor(self, span_processor: SpanProcessor) -> None:
