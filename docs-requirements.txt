@@ -1,6 +1,6 @@
-sphinx~=7.1
+sphinx==7.1.2
 sphinx-rtd-theme==2.0.0rc4
-sphinx-autodoc-typehints~=1.25
+sphinx-autodoc-typehints==1.25.2
 # used to generate docs for the website
 sphinx-jekyll-builder==0.3.0
 
