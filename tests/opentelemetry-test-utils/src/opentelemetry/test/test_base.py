@@ -76,7 +76,9 @@ class TestBase(unittest.TestCase):
 
     def assertEqualSpanInstrumentationScope(self, span, module):
         self.assertEqual(span.instrumentation_scope.name, module.__name__)
-        self.assertEqual(span.instrumentation_scope.version, module.__version__)
+        self.assertEqual(
+            span.instrumentation_scope.version, module.__version__
+        )
 
     def assertSpanHasAttributes(self, span, attributes):
         for key, val in attributes.items():
