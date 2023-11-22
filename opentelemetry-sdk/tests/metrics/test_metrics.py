@@ -32,8 +32,8 @@ from opentelemetry.sdk.metrics import (
 )
 from opentelemetry.sdk.metrics._internal import SynchronousMeasurementConsumer
 from opentelemetry.sdk.metrics.export import (
+    InMemoryMetricExporter,
     Metric,
-    MetricExporter,
     MetricExportResult,
     MetricReader,
     PeriodicExportingMetricReader,
@@ -445,29 +445,6 @@ class TestMeter(TestCase):
             observable_up_down_counter, ObservableUpDownCounter
         )
         self.assertEqual(observable_up_down_counter.name, "name")
-
-
-class InMemoryMetricExporter(MetricExporter):
-    def __init__(self):
-        super().__init__()
-        self.metrics = {}
-        self._counter = 0
-
-    def export(
-        self,
-        metrics: Sequence[Metric],
-        timeout_millis: float = 10_000,
-        **kwargs,
-    ) -> MetricExportResult:
-        self.metrics[self._counter] = metrics
-        self._counter += 1
-        return MetricExportResult.SUCCESS
-
-    def shutdown(self, timeout_millis: float = 30_000, **kwargs) -> None:
-        pass
-
-    def force_flush(self, timeout_millis: float = 10_000) -> bool:
-        return True
 
 
 class TestDuplicateInstrumentAggregateData(TestCase):

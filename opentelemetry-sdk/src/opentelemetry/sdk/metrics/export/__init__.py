@@ -17,6 +17,7 @@ from opentelemetry.sdk.metrics._internal.export import (
     AggregationTemporality,
     ConsoleMetricExporter,
     InMemoryMetricReader,
+    InMemoryMetricExporter,
     MetricExporter,
     MetricExportResult,
     MetricReader,
@@ -44,6 +45,7 @@ from opentelemetry.sdk.metrics._internal.point import (  # noqa: F401
 __all__ = [
     "AggregationTemporality",
     "ConsoleMetricExporter",
+    "InMemoryMetricExporter",
     "InMemoryMetricReader",
     "MetricExporter",
     "MetricExportResult",
