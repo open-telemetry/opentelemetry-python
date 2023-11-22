@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## Unreleased
 
+- Log stacktrace on `UNKNOWN` status OTLP export error 
+  ([#3536](https://github.com/open-telemetry/opentelemetry-python/pull/3536))
 - Fix OTLPExporterMixin shutdown timeout period
   ([#3524](https://github.com/open-telemetry/opentelemetry-python/pull/3524))
 
