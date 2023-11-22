@@ -365,11 +365,11 @@ def get_aggregated_resources(
         futures = [executor.submit(detector.detect) for detector in detectors]
         for detector_ind, future in enumerate(futures):
             detector = detectors[detector_ind]
+            detected_resource: Resource = _EMPTY_RESOURCE
             try:
                 detected_resource = future.result(timeout=timeout)
             # pylint: disable=broad-except
             except Exception as ex:
-                detected_resource = _EMPTY_RESOURCE
                 if detector.raise_on_error:
                     raise ex
                 logger.warning(
