@@ -34,6 +34,7 @@ from opentelemetry.sdk.resources import (
     PROCESS_COMMAND_LINE,
     PROCESS_EXECUTABLE_NAME,
     PROCESS_EXECUTABLE_PATH,
+    PROCESS_OWNER,
     PROCESS_PARENT_PID,
     PROCESS_PID,
     PROCESS_RUNTIME_DESCRIPTION,
@@ -49,6 +50,11 @@ from opentelemetry.sdk.resources import (
     ResourceDetector,
     get_aggregated_resources,
 )
+
+try:
+    import psutil
+except ImportError:
+    psutil = None
 
 
 class TestResources(unittest.TestCase):
@@ -560,6 +566,13 @@ class TestOTELResourceDetector(unittest.TestCase):
                 aggregated_resource.attributes[PROCESS_PARENT_PID],
                 os.getppid(),
             )
+
+        if psutil is not None:
+            self.assertEqual(
+                aggregated_resource.attributes[PROCESS_OWNER],
+                psutil.Process().username(),
+            )
+
         self.assertEqual(
             aggregated_resource.attributes[PROCESS_EXECUTABLE_NAME],
             sys.executable,

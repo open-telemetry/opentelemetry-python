@@ -75,6 +75,11 @@ from opentelemetry.semconv.resource import ResourceAttributes
 from opentelemetry.util._importlib_metadata import entry_points, version
 from opentelemetry.util.types import AttributeValue
 
+try:
+    import psutil
+except ImportError:
+    psutil = None
+
 LabelValue = AttributeValue
 Attributes = typing.Dict[str, LabelValue]
 logger = logging.getLogger(__name__)
@@ -356,6 +361,10 @@ class ProcessResourceDetector(ResourceDetector):
         if hasattr(os, "getppid"):
             # pypy3 does not have getppid()
             resource_info[PROCESS_PARENT_PID] = os.getppid()
+
+        if psutil is not None:
+            process = psutil.Process()
+            resource_info[PROCESS_OWNER] = process.username()
 
         return Resource(resource_info)
 
