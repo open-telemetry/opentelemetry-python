@@ -55,6 +55,7 @@ class CallbackOptions:
 
 
 InstrumentT = TypeVar("InstrumentT", bound="Instrument")
+# pylint: disable=invalid-name
 CallbackT = Union[
     Callable[[CallbackOptions], Iterable[Observation]],
     Generator[Iterable[Observation], CallbackOptions, None],

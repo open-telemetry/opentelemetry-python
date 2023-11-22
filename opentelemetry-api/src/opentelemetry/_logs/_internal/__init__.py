@@ -177,7 +177,7 @@ def get_logger_provider() -> LoggerProvider:
     """Gets the current global :class:`~.LoggerProvider` object."""
     global _LOGGER_PROVIDER  # pylint: disable=global-statement
     if _LOGGER_PROVIDER is None:
-        if _OTEL_PYTHON_LOGGER_PROVIDER not in environ.keys():
+        if _OTEL_PYTHON_LOGGER_PROVIDER not in environ:
             # TODO: return proxy
             _LOGGER_PROVIDER = NoOpLoggerProvider()
             return _LOGGER_PROVIDER

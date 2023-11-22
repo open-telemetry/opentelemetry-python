@@ -674,7 +674,7 @@ OTEL_EXPERIMENTAL_RESOURCE_DETECTORS = "OTEL_EXPERIMENTAL_RESOURCE_DETECTORS"
 
 The :envvar:`OTEL_EXPERIMENTAL_RESOURCE_DETECTORS` is a comma-separated string
 of names of resource detectors. These names must be the same as the names of
-entry points for the `opentelemetry_resource_detector` entry point. This is an
+entry points for the ```opentelemetry_resource_detector``` entry point. This is an
 experimental feature and the name of this variable and its behavior can change
 in a non-backwards compatible way.
 """
