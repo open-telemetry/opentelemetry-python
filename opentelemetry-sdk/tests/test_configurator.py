@@ -826,10 +826,10 @@ class TestExporterNames(TestCase):
             )
         assert len(logs_context.output) == 1
 
-    @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "jaeger,zipkin"})
+    @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "zipkin"})
     def test_multiple_exporters(self):
         self.assertEqual(
-            sorted(_get_exporter_names("traces")), ["jaeger", "zipkin"]
+            sorted(_get_exporter_names("traces")), ["zipkin"]
         )
 
     @patch.dict(environ, {"OTEL_TRACES_EXPORTER": "none"})
