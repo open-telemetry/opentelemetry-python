@@ -12,244 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from itertools import count
-from logging import ERROR
 from platform import system
 from unittest import TestCase
 
 from pytest import mark
 
-from opentelemetry.metrics import Observation
-from opentelemetry.sdk.metrics import Counter, MeterProvider, ObservableCounter
+from opentelemetry.sdk.metrics import Histogram, MeterProvider
 from opentelemetry.sdk.metrics.export import (
     AggregationTemporality,
     InMemoryMetricReader,
 )
-from opentelemetry.sdk.metrics.view import SumAggregation
+from opentelemetry.sdk.metrics.view import ExplicitBucketHistogramAggregation
 
 
-class TestSumAggregation(TestCase):
-    @mark.skipif(
-        system() != "Linux",
-        reason=(
-            "Tests fail because Windows time_ns resolution is too low so "
-            "two different time measurements may end up having the exact same"
-            "value."
-        ),
-    )
-    def test_asynchronous_delta_temporality(self):
+class TestExplicitBucketHistogramAggregation(TestCase):
 
-        eight_multiple_generator = count(start=8, step=8)
-
-        counter = 0
-
-        def observable_counter_callback(callback_options):
-            nonlocal counter
-            counter += 1
-
-            if counter < 11:
-                yield
-
-            elif counter < 21:
-                yield Observation(next(eight_multiple_generator))
-
-            else:
-                yield
-
-        aggregation = SumAggregation()
-
-        reader = InMemoryMetricReader(
-            preferred_aggregation={ObservableCounter: aggregation},
-            preferred_temporality={
-                ObservableCounter: AggregationTemporality.DELTA
-            },
-        )
-
-        provider = MeterProvider(metric_readers=[reader])
-        meter = provider.get_meter("name", "version")
-
-        meter.create_observable_counter(
-            "observable_counter", [observable_counter_callback]
-        )
-
-        results = []
-
-        for _ in range(10):
-            with self.assertLogs(level=ERROR):
-                results.append(reader.get_metrics_data())
-
-        self.assertEqual(counter, 10)
-
-        for metrics_data in results:
-            self.assertIsNone(metrics_data)
-
-        results = []
-
-        for _ in range(10):
-            results.append(reader.get_metrics_data())
-
-        self.assertEqual(counter, 20)
-
-        previous_time_unix_nano = (
-            results[0]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-            .time_unix_nano
-        )
-
-        self.assertEqual(
-            (
-                results[0]
-                .resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-                .value
-            ),
-            8,
-        )
-
-        self.assertLess(
-            (
-                results[0]
-                .resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-                .start_time_unix_nano
-            ),
-            previous_time_unix_nano,
-        )
-
-        for metrics_data in results[1:]:
-
-            metric_data = (
-                metrics_data.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-            )
-
-            self.assertEqual(
-                previous_time_unix_nano, metric_data.start_time_unix_nano
-            )
-            previous_time_unix_nano = metric_data.time_unix_nano
-            self.assertEqual(metric_data.value, 8)
-            self.assertLess(
-                metric_data.start_time_unix_nano, metric_data.time_unix_nano
-            )
-
-        results = []
-
-        for _ in range(10):
-            with self.assertLogs(level=ERROR):
-                results.append(reader.get_metrics_data())
-
-        self.assertEqual(counter, 30)
-
-        provider.shutdown()
-
-        for metrics_data in results:
-            self.assertIsNone(metrics_data)
-
-    @mark.skipif(
-        system() != "Linux",
-        reason=(
-            "Tests fail because Windows time_ns resolution is too low so "
-            "two different time measurements may end up having the exact same"
-            "value."
-        ),
-    )
-    def test_asynchronous_cumulative_temporality(self):
-
-        eight_multiple_generator = count(start=8, step=8)
-
-        counter = 0
-
-        def observable_counter_callback(callback_options):
-            nonlocal counter
-            counter += 1
-
-            if counter < 11:
-                yield
-
-            elif counter < 21:
-                yield Observation(next(eight_multiple_generator))
-
-            else:
-                yield
-
-        aggregation = SumAggregation()
-
-        reader = InMemoryMetricReader(
-            preferred_aggregation={ObservableCounter: aggregation},
-            preferred_temporality={
-                ObservableCounter: AggregationTemporality.CUMULATIVE
-            },
-        )
-
-        provider = MeterProvider(metric_readers=[reader])
-        meter = provider.get_meter("name", "version")
-
-        meter.create_observable_counter(
-            "observable_counter", [observable_counter_callback]
-        )
-
-        results = []
-
-        for _ in range(10):
-            with self.assertLogs(level=ERROR):
-                results.append(reader.get_metrics_data())
-
-        self.assertEqual(counter, 10)
-
-        for metrics_data in results:
-            self.assertIsNone(metrics_data)
-
-        results = []
-
-        for _ in range(10):
-            results.append(reader.get_metrics_data())
-
-        self.assertEqual(counter, 20)
-
-        start_time_unix_nano = (
-            results[0]
-            .resource_metrics[0]
-            .scope_metrics[0]
-            .metrics[0]
-            .data.data_points[0]
-            .start_time_unix_nano
-        )
-
-        for index, metrics_data in enumerate(results):
-
-            metric_data = (
-                metrics_data.resource_metrics[0]
-                .scope_metrics[0]
-                .metrics[0]
-                .data.data_points[0]
-            )
-
-            self.assertEqual(
-                start_time_unix_nano, metric_data.start_time_unix_nano
-            )
-            self.assertEqual(metric_data.value, 8 * (index + 1))
-
-        results = []
-
-        for _ in range(10):
-            with self.assertLogs(level=ERROR):
-                results.append(reader.get_metrics_data())
-
-        self.assertEqual(counter, 30)
-
-        provider.shutdown()
-
-        for metrics_data in results:
-            self.assertIsNone(metrics_data)
+    def setUp(self):
+        self.test_values = iter([1, 6, 11, 26, 51, 76, 101, 251, 501, 751])
 
     @mark.skipif(
         system() != "Linux",
@@ -261,17 +40,17 @@ class TestSumAggregation(TestCase):
     )
     def test_synchronous_delta_temporality(self):
 
-        aggregation = SumAggregation()
+        aggregation = ExplicitBucketHistogramAggregation()
 
         reader = InMemoryMetricReader(
-            preferred_aggregation={Counter: aggregation},
-            preferred_temporality={Counter: AggregationTemporality.DELTA},
+            preferred_aggregation={Histogram: aggregation},
+            preferred_temporality={Histogram: AggregationTemporality.DELTA},
         )
 
         provider = MeterProvider(metric_readers=[reader])
         meter = provider.get_meter("name", "version")
 
-        counter = meter.create_counter("counter")
+        histogram = meter.create_histogram("histogram")
 
         results = []
 
@@ -284,8 +63,8 @@ class TestSumAggregation(TestCase):
 
         results = []
 
-        for _ in range(10):
-            counter.add(8)
+        for test_value in self.test_values:
+            histogram.record(test_value)
             results.append(reader.get_metrics_data())
 
         previous_time_unix_nano = (
@@ -304,9 +83,9 @@ class TestSumAggregation(TestCase):
                 .scope_metrics[0]
                 .metrics[0]
                 .data.data_points[0]
-                .value
+                .bucket_counts
             ),
-            8,
+            (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
         )
 
         self.assertLess(
@@ -321,8 +100,7 @@ class TestSumAggregation(TestCase):
             previous_time_unix_nano,
         )
 
-        for metrics_data in results[1:]:
-
+        for index, metrics_data in enumerate(results[1:]):
             metric_data = (
                 metrics_data.resource_metrics[0]
                 .scope_metrics[0]
@@ -334,7 +112,16 @@ class TestSumAggregation(TestCase):
                 previous_time_unix_nano, metric_data.start_time_unix_nano
             )
             previous_time_unix_nano = metric_data.time_unix_nano
-            self.assertEqual(metric_data.value, 8)
+            self.assertEqual(
+                metric_data.bucket_counts,
+                tuple(
+                    [
+                        1 if internal_index == index + 2 else 0
+                        for internal_index in range(16)
+                    ]
+                )
+
+            )
             self.assertLess(
                 metric_data.start_time_unix_nano, metric_data.time_unix_nano
             )
@@ -360,17 +147,17 @@ class TestSumAggregation(TestCase):
     )
     def test_synchronous_cumulative_temporality(self):
 
-        aggregation = SumAggregation()
+        aggregation = ExplicitBucketHistogramAggregation()
 
         reader = InMemoryMetricReader(
-            preferred_aggregation={Counter: aggregation},
-            preferred_temporality={Counter: AggregationTemporality.CUMULATIVE},
+            preferred_aggregation={Histogram: aggregation},
+            preferred_temporality={Histogram: AggregationTemporality.CUMULATIVE},
         )
 
         provider = MeterProvider(metric_readers=[reader])
         meter = provider.get_meter("name", "version")
 
-        counter = meter.create_counter("counter")
+        histogram = meter.create_histogram("histogram")
 
         results = []
 
@@ -383,9 +170,9 @@ class TestSumAggregation(TestCase):
 
         results = []
 
-        for _ in range(10):
+        for test_value in self.test_values:
 
-            counter.add(8)
+            histogram.record(test_value)
             results.append(reader.get_metrics_data())
 
         start_time_unix_nano = (
@@ -409,7 +196,15 @@ class TestSumAggregation(TestCase):
             self.assertEqual(
                 start_time_unix_nano, metric_data.start_time_unix_nano
             )
-            self.assertEqual(metric_data.value, 8 * (index + 1))
+            self.assertEqual(
+                metric_data.bucket_counts,
+                tuple(
+                    [
+                        0 if internal_index < 1 or internal_index > index + 1 else 1
+                        for internal_index in range(16)
+                    ]
+                )
+            )
 
         results = []
 
@@ -440,4 +235,7 @@ class TestSumAggregation(TestCase):
             self.assertEqual(
                 start_time_unix_nano, metric_data.start_time_unix_nano
             )
-            self.assertEqual(metric_data.value, 80)
+            self.assertEqual(
+                metric_data.bucket_counts,
+                (0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0)
+            )
