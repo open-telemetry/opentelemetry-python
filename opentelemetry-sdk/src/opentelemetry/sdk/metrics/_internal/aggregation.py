@@ -502,9 +502,9 @@ class _ExplicitBucketHistogramAggregation(_Aggregation[HistogramPoint]):
                     attributes=self._attributes,
                     start_time_unix_nano=self._start_time_unix_nano,
                     time_unix_nano=collection_start_nano,
-                    count=sum(current_value),
+                    count=sum(self._previous_cumulative_value),
                     sum=sum_,
-                    bucket_counts=tuple(current_value),
+                    bucket_counts=tuple(self._previous_cumulative_value),
                     explicit_bounds=self._boundaries,
                     min=min_,
                     max=max_,
@@ -1151,7 +1151,7 @@ class DefaultAggregation(Aggregation):
             return _ExplicitBucketHistogramAggregation(
                 attributes,
                 instrument_aggregation_temporality=(
-                    AggregationTemporality.CUMULATIVE
+                    AggregationTemporality.DELTA
                 ),
                 start_time_unix_nano=start_time_unix_nano,
             )

@@ -376,9 +376,12 @@ class TestExplicitBucketHistogramAggregation(TestCase):
         # CI fails the last assertion without this
         sleep(0.1)
 
+        from ipdb import set_trace
+        set_trace()
         explicit_bucket_histogram_aggregation.aggregate(measurement(1))
         # 2 is used here directly to simulate the instant the second
         # collection process starts.
+
         second_histogram = explicit_bucket_histogram_aggregation.collect(
             AggregationTemporality.CUMULATIVE, 2
         )
