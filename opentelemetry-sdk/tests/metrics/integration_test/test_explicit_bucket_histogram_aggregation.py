@@ -71,15 +71,14 @@ class TestExplicitBucketHistogramAggregation(TestCase):
             .resource_metrics[0]
             .scope_metrics[0]
             .metrics[0]
-            .data.
-            data_points[0]
+            .data.data_points[0]
         )
 
         previous_time_unix_nano = metric_data.time_unix_nano
 
         self.assertEqual(
             metric_data.bucket_counts,
-            (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+            (0, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0),
         )
 
         self.assertLess(
@@ -109,8 +108,7 @@ class TestExplicitBucketHistogramAggregation(TestCase):
                         1 if internal_index == index + 2 else 0
                         for internal_index in range(16)
                     ]
-                )
-
+                ),
             )
             self.assertLess(
                 metric_data.start_time_unix_nano, metric_data.time_unix_nano
@@ -144,7 +142,9 @@ class TestExplicitBucketHistogramAggregation(TestCase):
 
         reader = InMemoryMetricReader(
             preferred_aggregation={Histogram: aggregation},
-            preferred_temporality={Histogram: AggregationTemporality.CUMULATIVE},
+            preferred_temporality={
+                Histogram: AggregationTemporality.CUMULATIVE
+            },
         )
 
         provider = MeterProvider(metric_readers=[reader])
@@ -193,15 +193,17 @@ class TestExplicitBucketHistogramAggregation(TestCase):
                 metric_data.bucket_counts,
                 tuple(
                     [
-                        0 if internal_index < 1 or internal_index > index + 1 else 1
+                        0
+                        if internal_index < 1 or internal_index > index + 1
+                        else 1
                         for internal_index in range(16)
                     ]
-                )
+                ),
             )
             self.assertEqual(metric_data.min, self.test_values[0])
             self.assertEqual(metric_data.max, self.test_values[index])
             self.assertEqual(
-                metric_data.sum, sum(self.test_values[:index + 1])
+                metric_data.sum, sum(self.test_values[: index + 1])
             )
 
         results = []
@@ -235,10 +237,8 @@ class TestExplicitBucketHistogramAggregation(TestCase):
             )
             self.assertEqual(
                 metric_data.bucket_counts,
-                (0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0)
+                (0, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0),
             )
             self.assertEqual(metric_data.min, self.test_values[0])
             self.assertEqual(metric_data.max, self.test_values[-1])
-            self.assertEqual(
-                metric_data.sum, sum(self.test_values)
-            )
+            self.assertEqual(metric_data.sum, sum(self.test_values))
